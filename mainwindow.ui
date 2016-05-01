@@ -1,0 +1,967 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1065</width>
+    <height>746</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>640</width>
+    <height>640</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>DFTFringe</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="1">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string/>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="IgramTab">
+       <attribute name="title">
+        <string>Igram</string>
+       </attribute>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1065</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFiles">
+    <property name="title">
+     <string>Files</string>
+    </property>
+    <addaction name="actionLoad_Interferogram"/>
+    <addaction name="actionLoad_outline"/>
+    <addaction name="actionRead_WaveFront"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave_outline"/>
+    <addaction name="actionSave_Wavefront"/>
+    <addaction name="actionSave_All_WaveFront_stats"/>
+    <addaction name="actionSave_screen"/>
+    <addaction name="actionSave_interferogram"/>
+    <addaction name="actionSave_nulled_smoothed_wavefront"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave_PDF_report"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="actionLighting_properties"/>
+    <addaction name="actionError_Margins"/>
+   </widget>
+   <widget class="QMenu" name="menuConfiguration">
+    <property name="title">
+     <string>Configuration</string>
+    </property>
+    <addaction name="actionMirror"/>
+    <addaction name="actionPreferences"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionNext_Wave_Front"/>
+    <addaction name="actionPrevious_Wave_front"/>
+    <addaction name="actionDelete_wave_front"/>
+    <addaction name="actionSubtract_wave_front"/>
+    <addaction name="actionWave_Front_Inspector"/>
+    <addaction name="actionUser_Color_Map"/>
+    <addaction name="actionTest_Stand_Astig_Removal"/>
+   </widget>
+   <widget class="QMenu" name="menuSimulations">
+    <property name="title">
+     <string>Simulations</string>
+    </property>
+    <addaction name="actionIgram"/>
+    <addaction name="actionWavefront"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+    <addaction name="actionHelp"/>
+    <addaction name="actionVideos"/>
+   </widget>
+   <addaction name="menuFiles"/>
+   <addaction name="menuView"/>
+   <addaction name="menuConfiguration"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuSimulations"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QDockWidget" name="outlineTools">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>344</width>
+     <height>867</height>
+    </size>
+   </property>
+   <property name="whatsThis">
+    <string/>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string>Interferogram Tools</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0" colspan="2">
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QPushButton" name="pushButton">
+         <property name="toolTip">
+          <string>Crop to within 20 pixels of mirror outline and go to DFT analysis </string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {border-style: outset;
+border-width: 3px; border-radius:15px; border-color: darkgray;
+font: bold 12px;
+min-width: 5em;
+padding: 6px;}
+QPushButton:hover{rgb(85, 255, 255)}
+
+</string>
+         </property>
+         <property name="text">
+          <string>Done</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <weight>75</weight>
+           <italic>false</italic>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="cursor">
+          <cursorShape>WhatsThisCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;div style = &quot;width: 300px&quot;;&gt;1. Load an interferogram image file.&lt;/p&gt;&lt;p&gt;Left click the mouse on one edge of the mirror.&lt;/p&gt;&lt;p&gt;With the left button down drag the mouse to the other side of the mirror.&lt;/p&gt;&lt;p&gt;scroll wheel will zoom the image.&lt;/p&gt;&lt;p&gt;[Shift] drag moves the circle.&lt;/p&gt;&lt;p&gt;[control] scroll wheel enlareges/shrink the circle.&lt;/p&gt;&lt;p&gt;Use the adjust buttons to modify the outline.&lt;/p&gt;&lt;p&gt;[ctrl z] Undo&lt;/p&gt;&lt;p&gt;[ctrl y] redo&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Panel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+         <property name="text">
+          <string> HELP  </string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <widget class="QGroupBox" name="groupBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="whatsThis">
+        <string/>
+       </property>
+       <property name="title">
+        <string>Outline Selector</string>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QRadioButton" name="SelectOutSideOutline">
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selet the to edit the mirror's outside outline.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="statusTip">
+           <string>Work on outside outline</string>
+          </property>
+          <property name="text">
+           <string>Mirror Outside</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="SelectObsOutline">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selet this to edit the center hole of the mirror if present.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="statusTip">
+           <string>Work on center hole outline</string>
+          </property>
+          <property name="text">
+           <string>Central hole</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QPushButton" name="pushButton_7">
+         <property name="toolTip">
+          <string>Read outline from a file.</string>
+         </property>
+         <property name="statusTip">
+          <string>Read outline from file</string>
+         </property>
+         <property name="text">
+          <string>Read Outline</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="saveOutline">
+         <property name="toolTip">
+          <string>Save outline to a file.</string>
+         </property>
+         <property name="text">
+          <string>Save Outline</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>200</height>
+        </size>
+       </property>
+       <property name="sizeIncrement">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="title">
+        <string>Outline Adjust</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="2">
+         <widget class="QPushButton" name="undo">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Undo last outline modification&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="statusTip">
+           <string>Undo last modification</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 2
+em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461975017_undo.png</normaloff>:/icons/res/1461975017_undo.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QPushButton" name="ShiftUp">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Move outline up one pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461974262_f-top_256.png</normaloff>:/icons/res/1461974262_f-top_256.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="shiftLeft">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>move outline left one pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461974250_f-left_256.png</normaloff>:/icons/res/1461974250_f-left_256.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QPushButton" name="minus">
+          <property name="toolTip">
+           <string>Decrease outline radius 1 pixel</string>
+          </property>
+          <property name="whatsThis">
+           <string>Decrease outline radius 1 pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461975092_minimize.png</normaloff>:/icons/res/1461975092_minimize.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QPushButton" name="shiftDown">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>move outline down one pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461974268_f-bottom_256.png</normaloff>:/icons/res/1461974268_f-bottom_256.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="4">
+         <widget class="QPushButton" name="pluss">
+          <property name="toolTip">
+           <string>Expand outline radius 1 pixel</string>
+          </property>
+          <property name="statusTip">
+           <string>Expand outline radius 1 pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461975084_maximize.png</normaloff>:/icons/res/1461975084_maximize.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <widget class="QPushButton" name="shiftRight">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>move outline right one pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461974256_f-right_256.png</normaloff>:/icons/res/1461974256_f-right_256.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QPushButton" name="Redo">
+          <property name="toolTip">
+           <string>Redo last modification</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 2em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/redo.png</normaloff>:/icons/res/redo.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QCheckBox" name="checkBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+         </property>
+         <property name="text">
+          <string>Hide Outline</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_8">
+         <property name="text">
+          <string>Delete Outline</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_5">
+         <property name="toolTip">
+          <string>Crop image to within 20 pixels of outline.</string>
+         </property>
+         <property name="text">
+          <string>Crop</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="5" column="0" colspan="2">
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <item>
+        <widget class="QCheckBox" name="reverseGammaCB">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Enable Reverse gamma</string>
+         </property>
+         <property name="text">
+          <string>Reverse Gamma correction</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="gammaValue">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="whatsThis">
+          <string>Reverse Gamma value</string>
+         </property>
+         <property name="text">
+          <string>2.2</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="6" column="0">
+      <widget class="QCheckBox" name="showIntensity">
+       <property name="whatsThis">
+        <string>Show intensity graph of cross section of interferogram</string>
+       </property>
+       <property name="text">
+        <string>Show intensity Graph</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QCheckBox" name="showChannels">
+       <property name="whatsThis">
+        <string>Show each of the color channels of interferogram</string>
+       </property>
+       <property name="text">
+        <string>Show color Channels</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="dftThumb">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>240</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>233</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolTip">
+    <string>Crop to mirror outline and go to DFT analysis</string>
+   </property>
+   <property name="whatsThis">
+    <string/>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>40</width>
+     <height>40</height>
+    </size>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionLoad_Interferogram"/>
+   <addaction name="actionRead_WaveFront"/>
+   <addaction name="actionPrevious_Wave_front"/>
+   <addaction name="actionNext_Wave_Front"/>
+   <addaction name="actionDelete_wave_front"/>
+   <addaction name="actionSubtract_wave_front"/>
+   <addaction name="separator"/>
+  </widget>
+  <action name="actionLoad_Interferogram">
+   <property name="icon">
+    <iconset resource="DFTResources.qrc">
+     <normaloff>:/icons/igram6.png</normaloff>:/icons/igram6.png</iconset>
+   </property>
+   <property name="text">
+    <string>Load Interferogram</string>
+   </property>
+  </action>
+  <action name="actionLoad_outline">
+   <property name="text">
+    <string>Load outline</string>
+   </property>
+  </action>
+  <action name="actionWrite_wavefront">
+   <property name="text">
+    <string>Save WaveFront</string>
+   </property>
+  </action>
+  <action name="actionWrite_WaveFront">
+   <property name="text">
+    <string>Write WaveFront</string>
+   </property>
+  </action>
+  <action name="actionSave_outline">
+   <property name="text">
+    <string>Save outline</string>
+   </property>
+  </action>
+  <action name="actionOutline_tools">
+   <property name="text">
+    <string>outline tools</string>
+   </property>
+  </action>
+  <action name="actionSurface_Tool_bar">
+   <property name="text">
+    <string>Surface Tool bar</string>
+   </property>
+  </action>
+  <action name="actionMirror">
+   <property name="text">
+    <string>Mirror</string>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="text">
+    <string>Preferences</string>
+   </property>
+  </action>
+  <action name="actionRead_WaveFront">
+   <property name="text">
+    <string>Read Wavefront</string>
+   </property>
+  </action>
+  <action name="actionNext_Wave_Front">
+   <property name="icon">
+    <iconset resource="DFTResources.qrc">
+     <normaloff>:/icons/Button-Next-icon.png</normaloff>:/icons/Button-Next-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Next Wave Front</string>
+   </property>
+  </action>
+  <action name="actionPrevious_Wave_front">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/Button-Previous-icon.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Previous Wave front</string>
+   </property>
+  </action>
+  <action name="actionDelete_wave_front">
+   <property name="icon">
+    <iconset resource="DFTResources.qrc">
+     <normaloff>:/icons/Button-Close-icon.png</normaloff>:/icons/Button-Close-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete wave front</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete current wave front</string>
+   </property>
+  </action>
+  <action name="actionSubtract_wave_front">
+   <property name="text">
+    <string>Subtract wave front</string>
+   </property>
+  </action>
+  <action name="actionIgram">
+   <property name="text">
+    <string>Igram</string>
+   </property>
+  </action>
+  <action name="actionSave_All_WaveFront_stats">
+   <property name="text">
+    <string>Save All WaveFront stats</string>
+   </property>
+  </action>
+  <action name="actionSave_Wavefront">
+   <property name="text">
+    <string>Save Wavefront</string>
+   </property>
+  </action>
+  <action name="actionLighting_properties">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>lighting properties</string>
+   </property>
+  </action>
+  <action name="actionSave_screen">
+   <property name="text">
+    <string>save screen</string>
+   </property>
+  </action>
+  <action name="actionSave_interferogram">
+   <property name="text">
+    <string>Save interferogram</string>
+   </property>
+  </action>
+  <action name="actionWavefront">
+   <property name="text">
+    <string>wavefront</string>
+   </property>
+  </action>
+  <action name="actionWave_Front_Inspector">
+   <property name="text">
+    <string>Wave Front Inspector</string>
+   </property>
+  </action>
+  <action name="actionUser_Color_Map">
+   <property name="text">
+    <string>User Color Map</string>
+   </property>
+  </action>
+  <action name="actionSave_nulled_smoothed_wavefront">
+   <property name="text">
+    <string>save nulled smoothed wavefront</string>
+   </property>
+  </action>
+  <action name="actionTest_Stand_Astig_Removal">
+   <property name="text">
+    <string>Test Stand Astig Removal</string>
+   </property>
+  </action>
+  <action name="actionSave_PDF_report">
+   <property name="text">
+    <string>Save PDF report</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
+   </property>
+  </action>
+  <action name="actionVideos">
+   <property name="text">
+    <string>Videos</string>
+   </property>
+  </action>
+  <action name="actionError_Margins">
+   <property name="text">
+    <string>Error Margins</string>
+   </property>
+  </action>
+  <action name="actionXxxxx">
+   <property name="text">
+    <string>xxxxx</string>
+   </property>
+  </action>
+  <action name="actionXxxxx_2">
+   <property name="text">
+    <string>xxxxx</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="DFTResources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -1,0 +1,73 @@
+    /*  how to make a gif player
+    QMovie *movie = new QMovie("C:\\Users\\DOE\\Videos\\a.gif");
+    QLabel *processLabel = new QLabel(this);
+    processLabel->setMovie(movie);
+    movie->start();
+    */
+
+Quick overview
+    Why a new version of OpenFringe
+        To be able to modify it using modern software tools.
+    What is DFTFringe
+        Successor to OpenFringe with modern Uers interface.
+        Focuses on the most used Features of OpenFringe.
+    New features
+            stats.
+
+
+Quick start Guide.
+    Setup the Mirror data in the MirrorDialog.
+    Load an interferogram.
+    Outline it
+    Analyze it.
+
+Mirror dialog in depth.
+Outlining mirror in depth.
+    mouse
+    zoom
+    undo
+    crop/not crop
+
+New features in Depth.
+
+
+
+
+Hello I'm Dale Eason and this is a Quick start guide for DFT Fringe the successor to OpenFringe.
+
+If you are fimiliar with OPenFringe then a lot of this will be familiar to you.  However some
+things work differently so I hope it will be useful to you as well.
+
+For detailed info on each of the steps see other help videos.
+
+DFTfringe is a program used to anayze interferograms of Telescope Optics
+
+I assume you alaready have interferograms stored as images on your computer.
+
+So lets get started.
+
+First input the mirror and laser data using the configuration dialog.  Here is an example I already filled out.
+
+Second Open an interferogram and outline the mirror in it.
+
+Outlining is a bit easier than in OPenFringe I think.
+
+When the outline is complete press the done button.
+
+At this point you can simply press the "Compute surface button."
+
+Now you have your first anlaysis completed.
+
+
+See the other videos for more information.
+
+Thank you for watching and happy analizing.
+
+
+
+
+
+
+
+
+

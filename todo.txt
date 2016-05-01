@@ -1,0 +1,34 @@
+
+wizards batch,
+
+check accuracy against openFringe using simulated igrams.
+
+Mirror dialog saves readable by openFringe.
+
+Check that sign of conic is same for all in the average.
+
+dftarea getgreyimage.  Center of center outline should be center of center circle
+
+mirror dialog does not read OPenFringe oln files correctly.
+
+QT saved wavefront is upside down when read by OpenFringe and DFT.
+
+
+WHen more than one wavefront is loaded program can hang when switching between them.
+
+Large wavefront does not display well.  OGL is missing.
+
+
+Why do I need to decrease the radius of the mask by one after unwrapping vortex.
+
+
+So what is the difference between reducing mask and recompute? Reducing mask Did not recompute zernike.
+need to reduce the mask radius by 2 when using vortex.  But do not know why yet.
+
+simulated igram analysis leaves a fringe around the left half edge of the mirror.
+
+show null wavefront when deleting last wavefront in list.
+
+grey error limit does not work right.
+
+

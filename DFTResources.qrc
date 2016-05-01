@@ -1,0 +1,31 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>btn_next.png</file>
+        <file>Button-Close-icon.png</file>
+        <file>Button-Next-icon.png</file>
+        <file>Button-Previous-icon.png</file>
+        <file>fileopen.png</file>
+        <file>igram3.png</file>
+        <file>igram6.png</file>
+        <file>res/arrow-up.png</file>
+        <file>res/arrow-left.png</file>
+        <file>res/1461974250_f-left_256.png</file>
+        <file>res/1461974256_f-right_256.png</file>
+        <file>res/1461974262_f-top_256.png</file>
+        <file>res/1461974268_f-bottom_256.png</file>
+        <file>res/1461974307_f-zoom-in_128.png</file>
+        <file>res/1461974313_f-zoom-out_128.png</file>
+        <file>res/1461974551_collapse.png</file>
+        <file>res/1461974588_expand.png</file>
+        <file>res/1461975084_maximize.png</file>
+        <file>res/1461975092_minimize.png</file>
+        <file>res/1461975073_undo.png</file>
+        <file>res/1461975017_undo.png</file>
+        <file>res/redo.png</file>
+        <file>res/1461975134_Help_mark_query_question_support_talk.png</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>res/wats2.png</file>
+        <file>res/mirror_stand.png</file>
+    </qresource>
+</RCC>
