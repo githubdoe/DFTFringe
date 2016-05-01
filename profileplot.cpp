@@ -30,60 +30,6 @@
 double g_angle = 270. * PITORAD; //start at 90 deg (pointing east)
 double y_offset = 0.;
 
-class RadiusScaleDraw: public QwtScaleDraw
-{
-public:
-    double m_radius;
-    double m_mirrorRad;
-    double pixelsPerMM;
-    RadiusScaleDraw(double radius, double mirrorDiameter):
-        m_radius(radius),m_mirrorRad(mirrorDiameter/2)
-    {
-        pixelsPerMM = m_radius/m_mirrorRad;
-    }
-    virtual QwtText label( double value ) const
-    {
-        return QString().sprintf("%d",(int)(value / pixelsPerMM));
-    }
-};
-class SurfaceData: public QwtSyntheticPointData
-{
-
-public:
-    SurfaceData( double units, wavefront* wf = 0 ):
-
-        QwtSyntheticPointData( wf->data.cols ),m_wf(wf), m_angle(90), units(units)
-    {
-
-        if (wf)
-            m_sf = (m_wf->diameter / 2.)/( m_wf->m_outside.m_radius);
-    }
-
-    virtual double y( double x ) const
-    {
-        int dx, dy;
-        double rad = x;
-        dx = rad * cos(g_angle + M_PI_2) + m_wf->m_outside.m_center.x();
-        dy = -rad * sin(g_angle + M_PI_2) + m_wf->m_outside.m_center.y();
-
-
-        if (dy >= m_wf->data.rows || dx >= m_wf->data.cols || dy < 0 || dx < 0){
-            return 0.0;
-        }
-        if (m_wf->workMask.at<bool>(dy,dx)){
-            return (units * (m_wf->workData.at<double>((int)dy,(int)dx)) * m_wf->lambda/550.) +y_offset * units;
-        }
-        else
-            return 0.0;
-    }
-
-
-private:
-    wavefront* m_wf;
-    double m_sf;
-    double m_angle;
-    double units;
-};
 
 bool ProfilePlot::eventFilter( QObject *object, QEvent *event )
 {
@@ -98,8 +44,8 @@ bool ProfilePlot::eventFilter( QObject *object, QEvent *event )
     else if (dragging && event->type() == QEvent::MouseMove){
         QMouseEvent *mouseEvent = static_cast<QMouseEvent *>( event );
         QPoint p = mouseEvent->pos();
-        y_offset = .001 * (startPos.y() - p.y());
-
+        y_offset = .005 * (startPos.y() - p.y());
+        populate();
         m_plot->replot();
         return true;
     }
@@ -267,7 +213,7 @@ void ProfilePlot::newDisplayErrorRange(double min, double max){
 
 void ProfilePlot::angleChanged(double a){
     g_angle = a * PITORAD;
-    if (type == 2)
+    if (type == 2 || type == 0)
         populate();
     m_plot->replot();
 }
@@ -293,7 +239,27 @@ void ProfilePlot::setSurface(wavefront * wf){
     populate();
     m_plot->replot();
 }
-
+QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
+    QPolygonF points;
+    double steps = 1./wf->m_outside.m_radius;
+    for (double rad = -1.; rad < 1.; rad += steps){
+        int dx, dy;
+        double radn = rad * wf->m_outside.m_radius;
+        double radx = rad * wf->diameter/2.;
+        dx = radn * cos(g_angle + M_PI_2) + wf->m_outside.m_center.x();
+        dy = -radn * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y();
+        if (dy >= wf->data.rows || dx >= wf->data.cols || dy < 0 || dx < 0){
+            points << QPointF(radx,0.0);
+        }
+        if (wf->workMask.at<bool>(dy,dx)){
+            points << QPointF(radx,(units * (wf->workData.at<double>((int)dy,(int)dx)) *
+                                    wf->lambda/550.) +y_offset * units);
+        }
+        else
+            points << QPointF(radx, 0.0);
+    }
+    return points;
+}
 void ProfilePlot::populate()
 {
     compass->setGeometry(QRect(70,5,70,70));
@@ -302,6 +268,7 @@ void ProfilePlot::populate()
         tmp = "wavelength at 550 nm";
     m_plot->setAxisTitle( m_plot->yLeft, "Error in " + tmp );
     m_plot->setAxisTitle( m_plot->xBottom, "Radius mm" );
+
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->enableXMin(true);
     grid->enableYMin(true);
@@ -311,11 +278,17 @@ void ProfilePlot::populate()
     if (m_wf == 0)
         return;
     // axes
+    double lower = -m_wf->diameter/2 - 10;
+    double upper = m_wf->diameter/2 + 10;
+    m_plot->setAxisScale(QwtPlot::xBottom, lower, upper);
+    QwtScaleEngine * se1 = m_plot->axisScaleEngine(QwtPlot::xBottom);
+    QwtScaleDiv sd1 = se1->divideScale(lower,upper, 40,5);
+    m_plot->setAxisScaleDiv(QwtPlot::xBottom, sd1);
     m_plot->detachItems( QwtPlotItem::Rtti_PlotCurve);
     m_plot->detachItems( QwtPlotItem::Rtti_PlotMarker);
-    double b = 10. * ceil((m_wf->workData.cols/2.)/10.)+10;
-    m_plot->setAxisScale( QwtPlot::xBottom, -b, b,50);
-    m_plot->setAxisScaleDraw(m_plot->xBottom, new RadiusScaleDraw(m_wf->m_outside.m_radius,m_wf->diameter));
+    //double b = 10. * ceil((m_wf->workData.cols/2.)/10.)+10;
+    //m_plot->setAxisScale( QwtPlot::xBottom, -b, b,50);
+    //m_plot->setAxisScaleDraw(m_plot->xBottom, new RadiusScaleDraw(m_wf->m_outside.m_radius,m_wf->diameter));
 
     // Insert new curves
     switch (type) {
@@ -325,16 +298,12 @@ void ProfilePlot::populate()
         cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
         cprofile->setPen( Qt::black );
         cprofile->attach( m_plot );
-        cprofile->setData( new SurfaceData( m_showNm * m_showSurface,m_wf) );
+        cprofile->setSamples( createProfile( m_showNm * m_showSurface,m_wf) );
 
         break;
     }
     case 1: {
         double startAngle = g_angle;
-        SurfaceData *sf = new SurfaceData(   m_showNm * m_showSurface * m_showSurface,m_wf);
-
-        int bigr = (m_wf->workData.cols-1)/2.;
-
         for (int i = 0; i < 16; ++i){
             QPolygonF points;
             g_angle = startAngle + i * M_PI/ 16;
@@ -343,18 +312,11 @@ void ProfilePlot::populate()
             cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
             cprofile->setPen( Qt::black );
 
-            for (int i = 0; i < m_wf->workData.cols; ++i){
-
-                double y = sf->y(i-bigr);
-                points << QPointF(i-bigr,y);
-
-
-            }
-            cprofile->setSamples(points);
+            cprofile->setSamples( createProfile( m_showNm * m_showSurface,m_wf));
             cprofile->attach( m_plot );
 
         }
-        delete sf;
+
         g_angle = startAngle;
         break;
 
@@ -363,23 +325,12 @@ void ProfilePlot::populate()
 
         m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
         for (int i = 0; i < wfs->size(); ++i){
-            SurfaceData *sf = new SurfaceData(   m_showNm * m_showSurface * m_showSurface,wfs->at(i));
-            QPolygonF points;
             QwtPlotCurve *cprofile = new QwtPlotCurve(wfs->at(i)->name );
             cprofile->setPen(QPen(Settings2::m_profile->getColor(i)));
             cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
-            //cprofile->setLegendegendAttribute( QwtPlotCurve::LegendShowLine, true );
-            int bigr = (wfs->at(i)->workData.cols-1)/2.;
-            for (int j = 0; j < wfs->at(i)->workData.cols; ++j){
-
-                double y = sf->y(j-bigr);
-                points << QPointF(j-bigr,y);
-
-
-            }
-            cprofile->setSamples(points);
+            cprofile->setSamples( createProfile( m_showNm * m_showSurface,wfs->at(i)));
             cprofile->attach( m_plot );
-            delete sf;
+
 
         }
 

@@ -347,12 +347,11 @@ void SurfaceManager::makeMask(int waveNdx){
         // add central obstruction
         mirrorDlg *md = mirrorDlg::get_Instance();
         double r = md->obs * (2. * radm)/md->diameter;
+        r/= 2.;
         if (r > 0){
             cv::Mat m = m_wavefronts[waveNdx]->workMask;
             circle(m,Point(m.cols/2,m.cols/2),r, Scalar(0),-1);
         }
-    qDebug() << "mask" << mask.at<bool>(0,0) << mask.at<bool>(width/2,height/2)
-                << "mask int " << (int)(mask.at<bool>(0,0)) << (int)(mask.at<bool>(width/2,height/2));
 }
 void SurfaceManager::wftNameChanged(int ndx, QString name){
     m_wavefronts[ndx]->name = name;

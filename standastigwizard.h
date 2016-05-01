@@ -77,6 +77,8 @@ public:
     QList<rotationDef *> rotationList;
     QPushButton *pdfName;
     QLineEdit *title;
+    QLineEdit *basePath;
+
     //int nextId() const;
 
 private:
@@ -89,6 +91,9 @@ private slots:
     void pdfNamesPressed();
     void browse();
     void deleteSelected();
+    void setBasePath();
+    void showContextMenu(const QPoint &pdos);
+    void changeRotation();
 signals:
     void computeStandAstig(QList<rotationDef *>);
 };

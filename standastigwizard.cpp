@@ -114,9 +114,18 @@ void define_input::pdfNamesPressed(){
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".pdf"); }
     AstigReportPdfName = fileName;
     pdfName->setText(fileName);
-
-
 }
+void define_input::setBasePath(){
+    QString baseName = QFileDialog::getExistingDirectory(
+                this, "Get Base Directory of rotation average files.",
+                basePath->text());
+    if (baseName.isEmpty())
+        return;
+    basePath->setText(baseName);
+    QSettings set;
+    set.setValue("rotation base path", baseName);
+}
+
 void define_input::deleteSelected(){
    QList<QListWidgetItem *> list =  listDisplay->selectedItems();
    for (int i=0; i<list.size(); i++) {
@@ -125,14 +134,30 @@ void define_input::deleteSelected(){
    }
 }
 
+void define_input::changeRotation(){
+}
+
+void define_input::showContextMenu(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = listDisplay->mapToGlobal(pos);
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    myMenu.addAction("Change Rotataion", this, SLOT(changeRotation()));
+    myMenu.addAction("Erase",  this, SLOT(deleteSelected()));
+
+    // Show context menu at handling position
+    myMenu.exec(globalPos);
+}
+
 define_input::define_input(QWidget *parent)
     : QWizardPage(parent)
 {
     setTitle(tr("Specify average input files"));
     setSubTitle(tr("Add each averaged wavefront for each rotation angle. Then Press Compute."));
     browsePb = new QPushButton("Add average Wavefront file to List");
-    QPushButton *deletePb = new QPushButton("Delete selected file from list");
-    connect(deletePb, SIGNAL(pressed()), this, SLOT(deleteSelected()));
+
     connect(browsePb, SIGNAL(pressed()), this, SLOT(browse()));
     AstigReportTitle = mirrorDlg::get_Instance()->m_name;
     AstigReportPdfName = mirrorDlg::get_Instance()->getProjectPath() + "/stand.pdf";
@@ -169,42 +194,38 @@ define_input::define_input(QWidget *parent)
                         "padding: 6px;"
                                    " }");
 
-    /*
-     *
-     *     background-color: red;
-    border-style: outset;
-    border-width: 2px;
-    border-radius: 10px;
-    border-color: beige;
-    font: bold 14px;
-    min-width: 10em;
-    padding: 6px;
-    QLabel {
-    border-width: 1px;
-    padding: 1px;
-    border-style: solid;
-    border-radius: 5px;
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-    stop:0 white, stop: 0.8 lawngreen, stop:1 black)
-    }
-    */
+
     connect(runpb, SIGNAL(pressed()), this, SLOT(compute()));
+    QSettings settings;
+    QString lastPath = settings.value("projectPath","").toString();
+    basePath = new QLineEdit(settings.value("rotation base path",lastPath).toString());
+    basePath->setToolTip("Directory were rotation files are stored.");
+    QPushButton *browsePath = new QPushButton("...");
+    connect(browsePath, SIGNAL(pressed()), this, SLOT(setBasePath()));
 
-
+    browsePath->setStyleSheet("");
     QGridLayout *l = new QGridLayout();
-    l->addWidget(browsePb,0,0);
-    l->addWidget(deletePb,0,1, Qt::AlignRight);
-    lab2 = new QLabel(tr("List of Average files to counter rotate and the angle they were made at originally:"));
-    l->addWidget(new QLabel("   "),1,0);
-    l->addWidget(lab2,3,0,1,3);
+
+    lab2 = new QLabel(tr("List of Average files to counter rotate and the angle they were made at originally:"
+                         "   Hint: left click to select then right click to modify item."));
+    l->addWidget(new QLabel("        Base path: "),2,0);
+    l->addWidget(basePath,2,1,1,3);
+    l->addWidget(browsePath,2,4);
+    l->addWidget(browsePb,3,0,1,2,Qt::AlignLeft);
+    l->addWidget(new QLabel("   "),4,0);
+    l->addWidget(lab2,6,0,1,3);
     listDisplay = new QListWidget();
     listDisplay->setSelectionMode( QAbstractItemView::MultiSelection);
-    l->addWidget(listDisplay,4,0,10,3);
-    l->addWidget(new QLabel("Report Title:"),15,0);
-    l->addWidget(title, 15,1);
-    l->addWidget(new QLabel("Pdf File Name:"), 16,0);
-    l->addWidget(pdfName, 16,1);
-    l->addWidget(runpb, 17,1,Qt::AlignLeft);
+    listDisplay->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(listDisplay, SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(showContextMenu(QPoint)));
+
+    l->addWidget(listDisplay,7,0,10,-1);
+    l->addWidget(new QLabel("Report Title:"),18,0);
+    l->addWidget(title, 18,1);
+    l->addWidget(new QLabel("Pdf File Name:"), 19,0);
+    l->addWidget(pdfName, 19,1,1,-1);
+    l->addWidget(runpb, 20,1,Qt::AlignLeft);
     setLayout(l);
 
 }
@@ -224,20 +245,21 @@ QString getNumberFromQString(const QString &xString)
 
   QStringList l = xString.split("/");
   QString fn = l[l.size()-1];
-  QRegExp xRegExp("(\\d+(\\.\\d+)?)");
+  QRegExp xRegExp("(\\d+([\\.p]\\d+)?)");
   xRegExp.indexIn(fn);
   QString c = xRegExp.cap();
+  c.replace("p",".");
   if (c == ""){
       xRegExp.indexIn(l[l.size()-2]);
       c = xRegExp.cap();
+      c.replace("p",".");
   }
   return c;
 }
 void define_input::browse(){
-    QSettings settings;
-    QString lastPath = settings.value("projectPath","").toString();
+
     QString fileName = QFileDialog::getOpenFileName(this,
-                        tr("Select average ffile"), lastPath,
+                        tr("Select average ffile"), basePath->text(),
                         tr("wft (*.wft)"));
     if (fileName.isEmpty())
         return;

@@ -27,6 +27,7 @@ public:
     QVector<wavefront*> *wfs;
     void setSurface(wavefront * wf);
     virtual void resizeEvent( QResizeEvent * );
+    QPolygonF createProfile(double units, wavefront *wf);
     ContourTools *m_tools;
     double m_waveRange;
     virtual bool eventFilter( QObject *, QEvent * );
