@@ -15,6 +15,7 @@ public:
     explicit CounterRotationDlg( QString fn, double rot, bool dir, QWidget *parent = 0);
     ~CounterRotationDlg();
     QString getRotation();
+    void setCCW(bool);
     bool isClockwise();
 
 private:

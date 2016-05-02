@@ -201,6 +201,9 @@ define_input::define_input(QWidget *parent)
     basePath = new QLineEdit(settings.value("rotation base path",lastPath).toString());
     basePath->setToolTip("Directory were rotation files are stored.");
     QPushButton *browsePath = new QPushButton("...");
+    CWRb = new QRadioButton("Counter Rotate CW");
+    CCWRb = new QRadioButton("Counter Rotate Counter Clockwise");
+    CCWRb->setChecked(true);
     connect(browsePath, SIGNAL(pressed()), this, SLOT(setBasePath()));
 
     browsePath->setStyleSheet("");
@@ -209,8 +212,10 @@ define_input::define_input(QWidget *parent)
     lab2 = new QLabel(tr("List of Average files to counter rotate and the angle they were made at originally:"
                          "   Hint: left click to select then right click to modify item."));
     l->addWidget(new QLabel("        Base path: "),2,0);
-    l->addWidget(basePath,2,1,1,3);
-    l->addWidget(browsePath,2,4);
+    l->addWidget(basePath,2,1,1,4);
+    l->addWidget(CWRb, 3,4);
+    l->addWidget(CCWRb, 3,5);
+    l->addWidget(browsePath,2,5);
     l->addWidget(browsePb,3,0,1,2,Qt::AlignLeft);
     l->addWidget(new QLabel("   "),4,0);
     l->addWidget(lab2,6,0,1,3);
@@ -258,22 +263,25 @@ QString getNumberFromQString(const QString &xString)
 }
 void define_input::browse(){
 
-    QString fileName = QFileDialog::getOpenFileName(this,
+    QStringList fileNames = QFileDialog::getOpenFileNames(this,
                         tr("Select average ffile"), basePath->text(),
                         tr("wft (*.wft)"));
-    if (fileName.isEmpty())
+    if (fileNames.isEmpty())
         return;
-    QString srot = getNumberFromQString(fileName);
-    double rot = 0;
-    if (srot != "")
-        rot = srot.toDouble();
-    CounterRotationDlg dlg( fileName,rot, true);
-    if (dlg.exec()) {
-        QString b = QString().sprintf("%s,%s,%s", fileName.toStdString().c_str(),(dlg.isClockwise()) ? "CW" : "CCW",
-                                      dlg.getRotation().toStdString().c_str());
-        new QListWidgetItem(b,listDisplay);
-        rotationDef *rd = new rotationDef(fileName, (dlg.isClockwise() ? 1 : -1) * dlg.getRotation().toDouble());
-        rotationList.append(rd);
+    foreach (QString fileName, fileNames){
+        QString srot = getNumberFromQString(fileName);
+        double rot = 0;
+        if (srot != "")
+            rot = srot.toDouble();
+        CounterRotationDlg dlg( fileName,rot, true);
+        dlg.setCCW(CCWRb->isChecked());
+        if (dlg.exec()) {
+            QString b = QString().sprintf("%s,%s,%s", fileName.toStdString().c_str(),(dlg.isClockwise()) ? "CW" : "CCW",
+                                          dlg.getRotation().toStdString().c_str());
+            new QListWidgetItem(b,listDisplay);
+            rotationDef *rd = new rotationDef(fileName, (dlg.isClockwise() ? 1 : -1) * dlg.getRotation().toDouble());
+            rotationList.append(rd);
+        }
     }
 
 }

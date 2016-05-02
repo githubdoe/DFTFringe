@@ -21,17 +21,13 @@ Large wavefront does not display well.  OGL is missing.
 
 Why do I need to decrease the radius of the mask by one after unwrapping vortex.
 
-stand rotation -135 and 135 went the same direction.
-
-Central obstruction look 2x too big.
 
 So what is the difference between reducing mask and recompute? Reducing mask Did not recompute zernike.
 need to reduce the mask radius by 2 when using vortex.  But do not know why yet.
 
 simulated igram analysis leaves a fringe around the left half edge of the mirror.
 
-show null wavefront when deleting last wavefront in list.
 
-grey error limit does not work right.
+
 
 

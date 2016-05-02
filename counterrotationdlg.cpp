@@ -17,6 +17,9 @@ bool CounterRotationDlg::isClockwise(){
     return ui->CW->isChecked();
 
 }
+void CounterRotationDlg::setCCW(bool flag){
+    ui->CCW->setChecked(flag);
+}
 
 CounterRotationDlg::~CounterRotationDlg()
 {

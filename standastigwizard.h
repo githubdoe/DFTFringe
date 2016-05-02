@@ -78,6 +78,8 @@ public:
     QPushButton *pdfName;
     QLineEdit *title;
     QLineEdit *basePath;
+    QRadioButton *CWRb;
+    QRadioButton *CCWRb;
 
     //int nextId() const;
 
