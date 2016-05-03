@@ -1,9 +1,11 @@
 
+add copyright info to each file.
+
 wizards batch,
 
 check accuracy against openFringe using simulated igrams.
 
-Mirror dialog saves readable by openFringe.
+Mirror dialog saves not readable by openFringe.
 
 Check that sign of conic is same for all in the average.
 
@@ -14,13 +16,7 @@ mirror dialog does not read OPenFringe oln files correctly.
 QT saved wavefront is upside down when read by OpenFringe and DFT.
 
 
-WHen more than one wavefront is loaded program can hang when switching between them.
-
-Large wavefront does not display well.  OGL is missing.
-
-
 Why do I need to decrease the radius of the mask by one after unwrapping vortex.
-
 
 So what is the difference between reducing mask and recompute? Reducing mask Did not recompute zernike.
 need to reduce the mask radius by 2 when using vortex.  But do not know why yet.

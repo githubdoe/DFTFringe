@@ -285,4 +285,6 @@ DISTFILES += \
     ColorMaps/Sequential_YlGnBu.cmp \
     ColorMaps/Sequential_YlOrBr.cmp \
     ColorMaps/Sequential_YlOrRd.cmp \
-    ColorMaps/spring.cmp
+    ColorMaps/spring.cmp \
+    COPYING.LESSER.txt \
+    COPYING.txt

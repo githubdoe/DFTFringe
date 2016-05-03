@@ -1,3 +1,20 @@
+/******************************************************************************
+**
+**  Copyright 2016 Dale Eason
+**  This file is part of DFTFringe
+**  is free software: you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation, version 3 of the License
+
+** DFTFringe is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
+
+****************************************************************************/
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QtWidgets>
@@ -173,19 +190,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_mirrorDlg, SIGNAL(newPath(QString)),this, SLOT(newMirrorDlgPath(QString)));
     progBar = new QProgressBar(this);
     ui->statusBar->addPermanentWidget(progBar);
-//    QMessageBox::about(this, tr("About Image Viewer"),
-//            tr("<p>The <b>Image Viewer</b> example shows how to combine QLabel "
-//               "and QScrollArea to display an image. QLabel is typically used "
-//               "for displaying a text, but it can also display an image. "
-//               "QScrollArea provides a scrolling view around another widget. "
-//               "If the child widget exceeds the size of the frame, QScrollArea "
-//               "automatically provides scroll bars. </p><p>The example "
-//               "demonstrates how QLabel's ability to scale its contents "
-//               "(QLabel::scaledContents), and QScrollArea's ability to "
-//               "automatically resize its contents "
-//               "(QScrollArea::widgetResizable), can be used to implement "
-//               "zooming and scaling features. </p><p>In addition the example "
-//               "shows how to use QPainter to print an image.</p>"));
+
 
 }
 
@@ -762,7 +767,13 @@ void MainWindow::on_actionHelp_triggered()
 
 void MainWindow::on_actionAbout_triggered()
 {
-    QMessageBox::information(this, "About", QString().sprintf("DFTFringe version %s",APP_VERSION));
+
+    QMessageBox::information(this, "About", QString().sprintf("<html><body><h1>DFTFringe version %s</h1>",APP_VERSION)+
+                             "<p>This program was compiled using:<ul><li>"
+                             "Qt version 5.3 </li>"
+                             "<li> Compiled with mingw482_32</li>"
+                             "<li> OpenCV 2.4.10</li>"
+                             "<li> QWTPlot</li></ul></p></body></html>");
 }
 
 void MainWindow::on_actionVideos_triggered()
