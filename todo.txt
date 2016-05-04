@@ -1,5 +1,4 @@
 
-add copyright info to each file.
 
 wizards batch,
 
@@ -24,6 +23,6 @@ need to reduce the mask radius by 2 when using vortex.  But do not know why yet.
 simulated igram analysis leaves a fringe around the left half edge of the mirror.
 
 
-
+Use NSIS as the installer maker.
 
 

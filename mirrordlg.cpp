@@ -22,10 +22,12 @@
 #include <iostream>
 #include <fstream>
 #include <QMessageBox>
+#include <QDebug>
 QString mirrorDlg::m_projectPath = "";
 mirrorDlg *mirrorDlg::m_Instance = 0;
 mirrorDlg *mirrorDlg::get_Instance(){
     if (m_Instance == 0){
+        qDebug() << "Making mirror dialog";
         m_Instance = new mirrorDlg();
     }
     return m_Instance;
@@ -91,15 +93,18 @@ void mirrorDlg::on_saveBtn_clicked()
     }
 
     const unsigned char flag[] = {0xFF,0xFE,0xFF};
+    const unsigned char zeros[] = {0,0,0,0};
     file.write((char*)flag,3);
 
     int cnt = m_name.length();
+    qDebug() << "writing mirror name "<< m_name << "into "<<fileName;
     file.write((char*)(&cnt),1);
     const ushort *m = m_name.utf16();
     file.write((char*)m,2 * cnt);
-    file.write((char *)&doNull, 4);
+    file.write((char *)&doNull, 1); // OpenFringe size of bool was 4 bytes but modern size is 1;
+    file.write((char *)zeros, 3);  // fill out to size of 4 bytes;
+    qDebug() << "size of null "<<sizeof(doNull);
     file.write((char*)&fringeSpacing,8);
-
     file.write((char*)&diameter,8);
     file.write((char*)&lambda,8);
     file.write((char*)&mm,4);
@@ -107,6 +112,11 @@ void mirrorDlg::on_saveBtn_clicked()
     file.write((char*)&roc,8);
     file.write((char*)&cc,8);
     file.write((char*)&z8,8);
+    file.write((char*)&zeros,4); // double pass
+    file.write((char*)&zeros,4); // two colors traced
+    file.write((char*)&fliph,1); // flip lr
+    file.write((char*)zeros,3);
+    file.write((char*)zeros,4);
     file.close();
     QFileInfo info(fileName);
     settings.setValue("mirrorConfigFile",fileName);
@@ -141,6 +151,10 @@ void mirrorDlg::loadFile(QString & fileName){
         ar<<m_roc;
         ar<<m_sc;
         ar<<m_z8;
+        ar<<m_double_pass;
+        ar<<m_two_color_traced;  // int
+        ar<<m_flip_lr;
+        ar<<m_flip_vert;
 
         */
     unsigned char c = file.peek();

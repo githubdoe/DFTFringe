@@ -590,9 +590,12 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
     if (list.size() <= 1 && m_wavefronts.size() > 0) {
         QSettings settings;
         QString lastPath = settings.value("lastPath","").toString();
-        QString fileName = QFileDialog::getSaveFileName(0,
-                                                        tr("Write wave font file"), lastPath + "/" + m_wavefronts[m_currentNdx]->name,
-                                                        tr("wft (*.wft)"));
+        QString fileName = m_wavefronts[m_currentNdx]->name;
+        QFileInfo fileinfo(fileName);
+        QString file = fileinfo.baseName();
+        fileName = QFileDialog::getSaveFileName(0,
+             tr("Write wave font file"), lastPath + "/" + file,
+             tr("wft (*.wft)"));
         if (fileName.isEmpty())
             return;
         if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".wft"); }
