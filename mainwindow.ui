@@ -287,7 +287,7 @@ QPushButton:hover{rgb(85, 255, 255)}
         <item>
          <widget class="QRadioButton" name="SelectObsOutline">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selet this to edit the center hole of the mirror if present.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selet this to edit the center hole of the mirror if presen in the interferogramt.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="statusTip">
            <string>Work on center hole outline</string>
@@ -783,6 +783,9 @@ em;
    <property name="text">
     <string>Load Interferogram</string>
    </property>
+   <property name="toolTip">
+    <string>Load One or more interferograms.  If more than one then they will be processed as a batch.</string>
+   </property>
   </action>
   <action name="actionLoad_outline">
    <property name="text">
@@ -956,6 +959,11 @@ em;
   <action name="actionXxxxx_2">
    <property name="text">
     <string>xxxxx</string>
+   </property>
+  </action>
+  <action name="actionBatch_Process_Interferograms">
+   <property name="text">
+    <string>Batch Process Interferograms</string>
    </property>
   </action>
  </widget>

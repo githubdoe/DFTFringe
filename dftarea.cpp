@@ -743,6 +743,8 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
 
 // make a surface from the image using DFT and vortex transfroms.
 void DFTArea::makeSurface(){
+
+    igramArea->writeOutlines(igramArea->makeOutlineName());  // save outlines including center filter
     cv::Mat phase = vortex(igramArea->igramImage,  m_center_filter);
 
     int wx = phase.rows;
@@ -772,7 +774,7 @@ void DFTArea::makeSurface(){
     if (m_vortexDebugTool->m_showUnwrapped)
         showData("result surface", result.clone());
                    //wf was result and should be reset after debugging.
-    emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).fileName());
+    emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName()+".wft");
 
 }
 void DFTArea::newIgram(QImage){

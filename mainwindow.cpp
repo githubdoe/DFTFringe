@@ -37,6 +37,7 @@
 #include <opencv/cv.h>
 #include "simulationsview.h"
 
+
 using namespace QtConcurrent;
 vector<wavefront*> g_wavefronts;
 int g_currentsurface = 0;
@@ -45,7 +46,8 @@ QScrollArea *gscrollArea;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false)
+    ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
+    m_batchMakeSurfaceReady(false)
 {
     ui->setupUi(this);
     const QString toolButtonStyle("QToolButton {"
@@ -149,6 +151,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect( m_igramArea, SIGNAL(enableShiftButtons(bool)), this,SLOT(enableShiftButtons(bool)));
     connect(m_dftArea, SIGNAL(dftReady(QImage)), m_igramArea,SLOT(dftReady(QImage)));
+    connect(m_igramArea, SIGNAL(dftCenterFilter(double)), m_dftArea, SLOT(dftCenterFilter(double)));
     connect(m_igramArea, SIGNAL(upateColorChannels(QImage)), m_dftArea, SLOT(newIgram(QImage)));
     enableShiftButtons(true);
 
@@ -303,11 +306,20 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     QSettings settings;
     QString lastPath = settings.value("lastPath",".").toString();
     QFileDialog dialog(this, tr("Open File"),lastPath);
+    dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     dialog.setMimeTypeFilters(mimeTypeFilters);
     dialog.selectMimeTypeFilter("image/jpeg");
 
-    while (dialog.exec() == QDialog::Accepted && !loadFile(dialog.selectedFiles().first())) {}
+    if (dialog.exec()){
+        if (dialog.selectedFiles().size() == 1){
+            loadFile(dialog.selectedFiles().first());
+        }
+        else{
+            m_igramsToProcess = dialog.selectedFiles();
+            on_actionBatch_Process_Interferograms_triggered();
+        }
+    }
 
 }
 
@@ -390,7 +402,7 @@ void MainWindow::updateMetrics(wavefront& wf){
 
     double z1 = z8 * 384. * r3 * m_mirrorDlg->lambda * 1.E-6/(d4);
     BestSC = m_mirrorDlg->cc + z1;
-    metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing);
+    metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing, m_mirrorDlg->lambda);
     metrics->mCC->setText(QString().sprintf("<FONT FONT SIZE = 7>%6.3lf",BestSC));
     metrics->show();
 }
@@ -570,7 +582,11 @@ void MainWindow::on_SelectObsOutline_clicked(bool checked)
 
 void MainWindow::on_pushButton_clicked()
 {
-    m_igramArea->nextStep();
+    if (!m_inBatch)
+        m_igramArea->nextStep();
+    else {
+        m_OutlineDoneInBatch = true;
+    }
 }
 
 void MainWindow::on_showChannels_clicked(bool checked)
@@ -624,19 +640,20 @@ void MainWindow::on_actionWavefront_triggered()
             double y1 = (double)(j - (ycen )) /rad;
             rho = sqrt(x1 * x1 + y1 * y1);
 
+
             if (rho <= 1.)
             {
-                double phi = atan2(y1,x1);
-                double S1 = md->z8 * dlg.correction * .01d * Zernike(8,x1,y1) +
-                        dlg.xtilt  * Zernike(1,x1,y1) +
-                        dlg.ytilt * Zernike(2,x1,y1) +
-                        dlg.defocus * Zernike(3,x1,y1) +
-                        dlg.xastig * Zernike(4, x1, y1)+
-                        dlg.yastig * Zernike(5, x1,y1) +
-                        1. * dlg.star * cos(10.  *  phi) +
+                double theta = atan2(y1,x1);
+                double S1 = md->z8 * dlg.correction * .01 * ZernikePolar(8,rho, theta) +
+                        dlg.xtilt  * ZernikePolar(1,rho,theta) +
+                        dlg.ytilt * ZernikePolar(2,rho, theta) +
+                        dlg.defocus * ZernikePolar(3,rho, theta) +
+                        dlg.xastig * ZernikePolar(4, rho, theta )+
+                        dlg.yastig * ZernikePolar(5, rho, theta) +
+                        1. * dlg.star * cos(10.  *  theta) +
                         1. * dlg.ring * cos(10 * 2. * rho);
                 if (dlg.zernNdx > 0)
-                    S1 += (dlg.zernValue * Zernike(dlg.zernNdx, x1,y1));
+                    S1 += (dlg.zernValue * ZernikePolar(dlg.zernNdx, rho, theta));
                 result.at<double>(j,i) = S1;
             }
             else
@@ -645,9 +662,6 @@ void MainWindow::on_actionWavefront_triggered()
             }
         }
     }
-
-
-
 
     m_surfaceManager->createSurfaceFromPhaseMap(result,
                                                 CircleOutline(QPointF(xcen,ycen),rad),
@@ -773,7 +787,15 @@ void MainWindow::on_actionAbout_triggered()
                              "Qt version 5.3 </li>"
                              "<li> Compiled with mingw482_32</li>"
                              "<li> OpenCV 2.4.10</li>"
-                             "<li> QWTPlot</li></ul></p></body></html>");
+                             "<li> QWTPlot</li></ul></p>"
+                             "<h3>Credits</h3>"
+                             "<ul><li>Mike Peck for<ul><li>Researching and explaining FFT algorithm.</li>"
+                             "<li>Researching and explaining Unwrap algorithms.</li></li>"
+                             "<li>Steve Koehler for much help with Vortex implementation.</li>"
+                             "<li>Dave Rowe for starting the Interferometry group and publishig the initial program.</li>"
+                             "<li>Kieran Larken for deriving and publishing the Vortex Transform.</li>"
+                             "</ul>"
+                             "</body></html>");
 }
 
 void MainWindow::on_actionVideos_triggered()
@@ -807,3 +829,83 @@ void MainWindow::on_actionError_Margins_triggered()
 {
     QMessageBox::information(0,"info","Sorry not implemented yet.");
 }
+void MainWindow::batchMakeSurfaceReady(){
+    m_batchMakeSurfaceReady = true;
+}
+void MainWindow::batchFinished(int ret){
+    batchConnections(false);
+}
+
+void MainWindow::batchConnections(bool flag){
+    if (flag){
+        m_inBatch = true;
+        disconnect(m_dftTools, SIGNAL(makeSurface()), m_dftArea, SIGNAL(makeSurface()));
+        connect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
+    }
+    else {
+        m_inBatch = false;
+        disconnect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
+        connect(m_dftTools, SIGNAL(makeSurface()), m_dftArea, SLOT(makeSurface()));
+    }
+}
+
+void MainWindow::batchProcess(QStringList fileList){
+
+        this->setCursor(Qt::WaitCursor);
+        batchIgramWizard::goPb->setEnabled(false);
+        QApplication::processEvents();
+        QFileInfo info(m_igramsToProcess[0]);
+
+        QString lastPath = info.absolutePath();
+        QSettings settings;
+        settings.setValue("lastPath",lastPath);
+        foreach(QString fn, fileList){
+            m_OutlineDoneInBatch = false;
+            m_igramArea->openImage(fn);
+            if (batchIgramWizard::manualRb->isChecked()){
+                while (m_inBatch && !m_OutlineDoneInBatch) {
+                    QApplication::processEvents();
+                }
+            }
+            if (!m_inBatch)
+                break;
+            m_igramArea->nextStep();
+            m_batchMakeSurfaceReady = false;
+            if (batchIgramWizard::manualRb->isChecked()){
+                while (m_inBatch && !m_batchMakeSurfaceReady) {
+                    QApplication::processEvents();
+                }
+            }
+            if (!m_inBatch)
+                break;
+            m_surfaceManager->m_surface_finished = false;
+            ui->tabWidget->setCurrentIndex(2);
+            m_dftArea->makeSurface();
+            while(m_inBatch && !m_surfaceManager->m_surface_finished){qApp->processEvents();}
+            if (!m_inBatch)
+                break;
+            Sleep(1000);
+
+
+        }
+        batchIgramWizard::goPb->setEnabled(true);
+        batchWiz->close();
+        delete batchWiz;
+
+        this->setCursor(Qt::ArrowCursor);
+
+
+}
+
+void MainWindow::on_actionBatch_Process_Interferograms_triggered()
+{
+    batchWiz = new batchIgramWizard(m_igramsToProcess, this,Qt::Window);
+    connect(batchWiz,SIGNAL(swapBathConnections(bool)),this, SLOT(batchConnections(bool)));
+    batchConnections(true);
+    //connect(batchIgramWizard::goPb, &QPushButton::pressed, this, &MainWindow::batchProcess);
+    connect(batchWiz, SIGNAL(finished(int)), this, SLOT(batchFinished(int)));
+    batchWiz->show();
+
+}
+
+

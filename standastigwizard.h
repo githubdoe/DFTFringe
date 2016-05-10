@@ -43,7 +43,7 @@ class standAstigWizard : public QWizard
     Q_OBJECT
 
 public:
-    explicit standAstigWizard(SurfaceManager *sm, QWidget *parent = 0);
+    explicit standAstigWizard(SurfaceManager *sm, QWidget *parent = 0, Qt::WindowFlags flags = 0);
     static QString AstigReportTitle;
     static QString AstigReportPdfName;
     ~standAstigWizard();
@@ -97,6 +97,7 @@ public:
     QLineEdit *basePath;
     QRadioButton *CWRb;
     QRadioButton *CCWRb;
+    QPushButton *runpb;
 
     //int nextId() const;
 
@@ -114,7 +115,7 @@ private slots:
     void showContextMenu(const QPoint &pdos);
     void changeRotation();
 signals:
-    void computeStandAstig(QList<rotationDef *>);
+    void computeStandAstig(define_input *,QList<rotationDef *>);
 };
 
 

@@ -43,10 +43,14 @@ public:
     QTableView* mvalues;
     ZernTableModel * tableModel;
     void setName(QString name);
-    void setWavePerFringe(double val);
+    void setWavePerFringe(double val, double lambda);
+private:
+    bool shouldEnableAll;
 private slots:
     void on_recomputePB_clicked();
     void on_DisableAll_clicked();
+
+    void on_sphericalPb_pressed();
 
 signals:
     void recomputeZerns();

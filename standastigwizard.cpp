@@ -24,8 +24,8 @@
 #include "surfacemanager.h"
 QString AstigReportTitle = "";
 QString AstigReportPdfName = "stand.pdf";
-standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent) :
-    QWizard(parent),
+standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent,Qt::WindowFlags flags) :
+    QWizard(parent,flags),
     ui(new Ui::standAstigWizard)
 {
     ui->setupUi(this);
@@ -33,14 +33,15 @@ standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent) :
     setPage(Page_makeAverages, new makeAverages);
     setPage(Page_define_input, new define_input);
     define_input * di = dynamic_cast<define_input *>(page(Page_define_input));
-    connect(di, SIGNAL(computeStandAstig(QList<rotationDef *>)), sm, SLOT(computeStandAstig(QList<rotationDef *>)));
+    connect(di, SIGNAL(computeStandAstig(define_input *,QList<rotationDef *>)), sm, SLOT(computeStandAstig(define_input *,QList<rotationDef *>)));
 
     setStartId(Page_Intro);
-    setOption(HaveHelpButton, true);
+    //setOption(HaveHelpButton, true);
     setWindowTitle(tr("Stand Astig analysis"));
     setPixmap(QWizard::WatermarkPixmap, QPixmap(":/res/wats2.png"));
     setPixmap(QWizard::LogoPixmap, QPixmap(":/res/mirror_stand.png"));
     //AstigReportTitle = mirrorDlg::get_Instance()->m_name;
+    //resize( QSize(600, 489));
 }
 
 standAstigWizard::~standAstigWizard()
@@ -93,10 +94,9 @@ IntroPage::IntroPage(QWidget *parent)
 
 
     info->setReadOnly(true);
-    //info->setGeometry(QRect(0,0,1000,800));
 
     QVBoxLayout *layout = new QVBoxLayout;
-    layout->addWidget(info);
+    layout->addWidget(info,10);
 
     setLayout(layout);
 }
@@ -146,8 +146,10 @@ void define_input::setBasePath(){
 void define_input::deleteSelected(){
    QList<QListWidgetItem *> list =  listDisplay->selectedItems();
    for (int i=0; i<list.size(); i++) {
-        QListWidgetItem *item = listDisplay->takeItem(listDisplay->row(list[i]));
+       int row = listDisplay->row(list[i]);
+        QListWidgetItem *item = listDisplay->takeItem(row);
         delete item;
+        rotationList.removeAt(row);
    }
 }
 
@@ -161,7 +163,6 @@ void define_input::showContextMenu(const QPoint &pos)
 
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Change Rotataion", this, SLOT(changeRotation()));
     myMenu.addAction("Erase",  this, SLOT(deleteSelected()));
 
     // Show context menu at handling position
@@ -181,10 +182,8 @@ define_input::define_input(QWidget *parent)
     title = new QLineEdit(AstigReportTitle);
     pdfName = new QPushButton(AstigReportPdfName);
     connect(pdfName, SIGNAL(pressed()), this, SLOT(pdfNamesPressed()));
-    QPushButton *runpb = new QPushButton("Compute");
+    runpb = new QPushButton("Compute");
     runpb->setObjectName("Compute");
-
-
 
     this->setStyleSheet("QPushButton#Compute {"
                        " background-color: red;"
@@ -202,6 +201,7 @@ define_input::define_input(QWidget *parent)
                     "QPushButton#Compute:hover {"
                         "background-color: lightblue;"
                         " border-style: inset;}"
+                     "QPushButton#Compute:!enabled {background-color: lightgray}"
                      "QPushButton { font: 16px;"
                         "border-style: outset;"
                         "border-width: 4px;"
@@ -247,7 +247,7 @@ define_input::define_input(QWidget *parent)
     l->addWidget(title, 18,1);
     l->addWidget(new QLabel("Pdf File Name:"), 19,0);
     l->addWidget(pdfName, 19,1,1,-1);
-    l->addWidget(runpb, 20,1,Qt::AlignLeft);
+    l->addWidget(runpb, 20,0,1,7);
     setLayout(l);
 
 }
@@ -259,7 +259,9 @@ void define_input::compute(){
         return;
     }
     AstigReportTitle = title->text();
-    emit computeStandAstig( rotationList);
+    runpb->setText("Working");
+    runpb->setEnabled(false);
+    emit computeStandAstig( this, rotationList);
 }
 
 QString getNumberFromQString(const QString &xString)

@@ -59,8 +59,8 @@ public:
     {
         int dx, dy;
         int xx = m_rad - x;
-        dx = m_rad  - xx * cos(i_angle - M_PI_2);
-        dy = m_rad  - xx * sin(i_angle - M_PI_2);
+        dx = m_rad  - xx * cos(i_angle);
+        dy = m_rad  - xx * sin(i_angle);
         if (dy >= m_plane.rows || dx >= m_plane.cols || dy < 0 || dx < 0){
             //qDebug() << QString().sprintf("profile Warning index out of range %d %d", dx,dy);
             return 0.0;
@@ -152,7 +152,7 @@ intensityPlot::intensityPlot(QWidget *parent):
 
 
 void intensityPlot::angleChanged(double a){
-    i_angle = (a * PITORAD) - M_PI/4;
+    i_angle = (a * PITORAD - M_PI_2);
     replot();
 }
 

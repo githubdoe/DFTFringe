@@ -22,7 +22,7 @@
 #include "zernikeprocess.h"
 metricsDisplay *metricsDisplay::m_instance = 0;
 metricsDisplay::metricsDisplay(QWidget *parent) :
-    QDockWidget(parent),
+    QDockWidget(parent),shouldEnableAll(false),
     ui(new Ui::metricsDisplay)
 {
     ui->setupUi(this);
@@ -47,8 +47,9 @@ metricsDisplay *metricsDisplay::get_instance(QWidget *parent){
     }
     return m_instance;
 }
-void metricsDisplay::setWavePerFringe(double val){
+void metricsDisplay::setWavePerFringe(double val, double lambda){
     ui->wavesPerFringe->setText(QString().sprintf("Waves Per Fringe: %2.1lf",val));
+    ui->lambda->setText(QString().sprintf("Igram laser wavelength: %6.2lf nm",lambda));
 }
 
 void metricsDisplay::setName(QString name){
@@ -73,9 +74,30 @@ void metricsDisplay::on_recomputePB_clicked()
 
 void metricsDisplay::on_DisableAll_clicked()
 {
+    int start = 0;
+    if (shouldEnableAll)
+        start = 8;
 
-    for (unsigned int i = 0; i < zernEnables.size(); ++i)
-        zernEnables[i] = false;
+    for (unsigned int i = start; i < zernEnables.size(); ++i)
+        zernEnables[i] = shouldEnableAll;
 
+    zernEnables[4] = shouldEnableAll;
+    zernEnables[5] = shouldEnableAll;
+    shouldEnableAll = !shouldEnableAll;
+    ui->DisableAll->setText((shouldEnableAll) ? "Enable All":"Disable All");
+    emit recomputeZerns();
+}
+
+
+
+void metricsDisplay::on_sphericalPb_pressed()
+{
+    shouldEnableAll = false;
+    on_DisableAll_clicked();
+    for (int i = 0; i < Z_TERMS; ++i){
+        if (QString(zernsNames[i]).contains("Spherical")){
+            zernEnables[i] = true;
+        }
+    }
     emit recomputeZerns();
 }

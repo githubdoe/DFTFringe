@@ -25,7 +25,7 @@
 #include <QAbstractTableModel>
 #include <opencv/cv.h>
 #include <vector>
-#define Z_TERMS 34
+#define Z_TERMS 48
 
 namespace Ui {
 class zernikeDlg;

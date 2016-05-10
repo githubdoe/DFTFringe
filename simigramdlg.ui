@@ -163,7 +163,7 @@
      <item row="10" column="0">
       <widget class="QSpinBox" name="zernikeSb">
        <property name="maximum">
-        <number>34</number>
+        <number>48</number>
        </property>
       </widget>
      </item>

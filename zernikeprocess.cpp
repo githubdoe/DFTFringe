@@ -31,11 +31,7 @@ int Zw[] = {								/*  n    */
     8,8,10,10,12,12,7, // 15					3
     10,10,12,12,14,14,16,16,9,  //24			4
     12,12,14,14,16,16,18,18,20,20,11,  //35		5
-    14,14,16, // 38
-    // from here on we use only spherical terms so the number of the term is wrong
-    13, 15,17  // for terms 39 40 41 but are really the next symetrical terms
-    // the correct coefficient would be for the non symetrical terms ;
-    //16,18,18,20,20,22,22,24,24,13
+    14,14,16,16,18,18,20,20,22,22,24,24,13  // 48
 };
 
 /*
@@ -172,9 +168,172 @@ Dim big As Double, dum As Double, pivinv As Double, temp As Double
 Public Function Zernike(n As Integer, X As Double, Y As Double) As Double
 ' N is Zernike number as given by James Wyant
 */
+double ZernikePolar(int n, double rho, double theta){
+    static double lastRho = -1;
+    static double rho2 = 0;
+    static double rho3 = 0;
+    static double rho4 = 0;
+    static double rho5 = 0;
+    static double rho6 = 0;
+    static double rho8 = 0;
+    static double rho10 = 0;
+    static double costheta = 0;
+    static double sintheta = 0;
+    static double cos2theta = 0;
+    static double sin2theta = 0;
+    static double cos3theta = 0;
+    static double sin3theta = 0;
+    static double cos4theta = 0;
+    static double sin4theta = 0;
+    static double cos5theta = 0;
+    static double sin5theta = 0;
+    if (lastRho != rho){
+        lastRho = rho;
+        rho2 = rho * rho;
+        rho3 = pow(rho,3.);
+        rho4 = pow(rho,4.);
+        rho5 = pow(rho,5.);
+        rho6 = pow(rho,6.);
+        rho8 = pow(rho,8.);
+        rho10 = pow(rho,10.);
+        costheta = cos(theta);
+        sintheta = sin(theta);
+        cos2theta = cos(2. * theta);
+        sin2theta = sin(2. * theta);
+        cos3theta = cos(3. * theta);
+        sin3theta = sin(3. * theta);
+        cos4theta = cos(4. * theta);
+        sin4theta = sin(4. * theta);
+        cos5theta = cos(5. * theta);
+        sin5theta = sin(5. * theta);
+    }
+
+    switch(n){
+    case 0: return 1.;
+        break;
+    case 1: return rho * costheta;
+        break;
+    case 2: return rho * sintheta;
+        break;
+    case 3: return -1. + 2. * rho * rho;
+        break;
+    case 4: return rho2 * cos2theta;
+        break;
+    case 5: return rho2 * sin2theta;
+        break;
+    case 6: return rho * (-2. + 3. * rho * rho) * costheta;
+        break;
+    case 7: return rho * (-2. + 3. * rho * rho) * sintheta;
+        break;
+    case 8:
+    {
+        return 1. - 6. * rho2 + 6. * rho2 * rho2;
+        break;
+    }
+    case 9: return rho * rho * rho * cos3theta;
+        break;
+    case 10: return rho * rho * rho * sin3theta;
+        break;
+
+    case 11:
+
+        return rho2 * (-3 + 4 * rho2) * cos2theta;
+
+        break;
+    case 12:
+
+        return rho2 * (-3 + 4 * rho2) * sin2theta ;
+
+        break;
+
+    case 13:
+        return rho * (3. - 12. * rho2 + 10. * rho2 * rho2) * costheta;
+        break;
+    case 14:
+        return rho * (3. - 12. * rho2 + 10. * rho2 * rho2) * sintheta;
+        break;
+    case 15:
+        return -1 + 12 * rho2 - 30. * rho4 + 20. * rho6;
+        break;
+    case 16: return rho4 * cos4theta;
+        break;
+    case 17: return rho4 * sin4theta;
+        break;
+    case 18: return rho3 *( -4. + 5. * rho2) * cos3theta;
+        break;
+    case 19: return rho3 *( -4. + 5. * rho2) * sin3theta;
+        break;
+    case 20: return rho2 * (6. - 20. * rho2 + 15 * rho4)* cos2theta;
+        break;
+    case 21: return rho2 * (6. - 20. * rho2 + 15 * rho4)* sin2theta;
+        break;
+    case 22: return rho * (-4. + 30. * rho2 - 60. * rho4 + 35 * rho6)* costheta;
+        break;
+    case 23: return rho * (-4. + 30. * rho2 - 60. * rho4 + 35 * rho6)* sintheta;
+        break;
+    case 24: return 1. - 20. * rho2 + 90. *  rho4 - 140. * rho6 + 70. * rho8;
+        break;
+    case 25: return rho5 * cos5theta;
+        break;
+    case 26: return rho5 * sin5theta;
+        break;
+    case 27: return rho4 * (-5. + 6. * rho2) * cos4theta;
+        break;
+    case 28: return rho4 * (-5. + 6. * rho2) * sin4theta;
+        break;
+    case 29: return rho3 * (10. - 30. * rho2 + 21. * rho4) * cos3theta;
+        break;
+    case 30: return rho3 * (10. - 30. * rho2 + 21. * rho4) * sin3theta;
+        break;
+    case 31: return rho2 *(-10. + 60. * rho2 - 105. * rho4 + 56. * rho6) * cos2theta;
+        break;
+    case 32: return rho2 *(-10. + 60. * rho2 - 105. * rho4 + 56. * rho6) * sin2theta;
+        break;
+    case 33: return rho * (5. - 60. * rho2 + 210 * rho4 -280. * rho6 + 126. * rho8) * costheta;
+        break;
+    case 34: return rho * (5. - 60. * rho2 + 210 * rho4 -280. * rho6 + 126. * rho8) * sintheta;
+        break;
+    case 35: return -1 + 30. * rho2 -210 * rho4 + 560. * rho6 - 630 * rho8 + 252. * rho10;
+        break;
+    case 36: return rho6 * cos(6. * theta);
+        break;
+    case 37: return rho6 * sin(6. * theta);
+        break;
+    case 38: return rho5 * (-6. + 7 * rho2) * cos5theta;
+        break;
+    case 39: return rho5 * (-6. + 7 * rho2) * sin5theta;
+        break;
+    case 40: return rho4 * (15. -42. * rho2 + 28. * rho4) * cos4theta;
+        break;
+    case 41: return rho4 * (15. -42. * rho2 + 28. * rho4) * sin4theta;
+        break;
+    case 42: return rho3 * (-20 + 105. * rho2 - 168. * rho4 + 84 * rho6) * cos3theta;
+        break;
+    case 43: return rho3 * (-20. + 105. * rho2 - 168. * rho4 + 84. * rho6) * sin3theta;
+        break;
+    case 44: return rho2 * (15. - 140. * rho2 + 420. * rho4 - 504. * rho6 +  210. * rho8) * cos2theta;
+        break;
+    case 45: return rho2 * (15. - 140. * rho2 + 420. * rho4 - 504. * rho6 +  210. * rho8) * sin2theta;
+        break;
+    case 46: return rho *(-6. + 105 * rho2 - 560. * rho4 + 1260. * rho6 -1260. * rho8 +462. * rho10) * costheta;
+        break;
+    case 47: return rho *(-6. + 105 * rho2 - 560. * rho4 + 1260. * rho6 -1260. * rho8 +462. * rho10) * sintheta;
+        break;
+    case 48: return 1. - 42. * rho2 + 420. * rho4 - 1680. * rho6 + 3150. * rho8 -2772. * rho10 + 924. * pow(rho,12.);
+        break;
+
+    }
+    return 0.;
+
+
+}
 
 double Zernike(int n, double X, double Y)
 {
+    double rho = sqrt(X * X + Y * Y);
+    double theta = atan2(Y,X);
+    return ZernikePolar(n, rho, theta);
+
     static double X2 = 0., X3 = 0., X4 = 0.;
     static double Y2 = 0., Y3 = 0., Y4 = 0.;
     static double R2 = 0.;
@@ -463,6 +622,7 @@ double zernikeProcess::unwrap_to_zernikes(wavefront &wf)
             double ux = (x -wf.m_outside.m_center.x()) * delta;
             double uy = (y -wf.m_outside.m_center.y()) * delta;
             double rho = sqrt(ux * ux + uy * uy);
+            double theta = atan2(uy,ux);
 
             if (wf.workMask.at<bool>(y,x) and rho <= 1.)
             {
@@ -471,16 +631,16 @@ double zernikeProcess::unwrap_to_zernikes(wavefront &wf)
                 {
 
                     int dy = i * Z_TERMS;
+                    double t = ZernikePolar(i, rho, theta);
                     for (int j = 0; j < Z_TERMS; ++j)
                     {
                         int ndx = j + dy;
-                        Am[ndx] = Am[ndx] +
-                            Zernike(i, ux, uy) * Zernike(j, ux, uy);
+                        Am[ndx] = Am[ndx] + t * ZernikePolar(j, rho, theta);
 
                     }
 
                     // FN is the OPD at (Xn,Yn)
-                    Bm[i] = Bm[i] + surface.at<double>(y,x) * Zernike(i, ux, uy);
+                    Bm[i] = Bm[i] + surface.at<double>(y,x) * t;
 
                 }
 
@@ -535,6 +695,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 double ux = (double)(x - midx)/rad;
                 double uy = (double)(y - midy)/rad;
                 double rho = sqrt(ux * ux + uy * uy);
+                double theta = atan2(uy,ux);
                 maxrho = max(maxrho, rho);
                 if (rho >= 1.){
                     continue;
@@ -545,16 +706,16 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 if (last_term > 7)
                 {
                     if (md->doNull && enables[8])
-                        sz -= scz8 * Zernike(8,ux,uy);
+                        sz -= scz8 * ZernikePolar(8,rho, theta);
                 }
 
                 for (int z = start_term; z < last_term; ++z)
                 {
                     if ((z == 3) & doDefocus)
-                        sz -= defocus * Zernike(z,ux,uy);
+                        sz -= defocus * ZernikePolar(z,rho, theta);
 
                     if (!enables[z])
-                        sz -= zerns[z] * Zernike(z,ux,uy);
+                        sz -= zerns[z] * ZernikePolar(z,rho, theta);
                 }
                 nulled.at<double>(y,x) =sz;
 //                if (nulled.at<double>(y,x) != 0)

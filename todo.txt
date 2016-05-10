@@ -10,19 +10,15 @@ Check that sign of conic is same for all in the average.
 
 dftarea getgreyimage.  Center of center outline should be center of center circle
 
-mirror dialog does not read OPenFringe oln files correctly.
-
-QT saved wavefront is upside down when read by OpenFringe and DFT.
-
-
-Why do I need to decrease the radius of the mask by one after unwrapping vortex.
-
 So what is the difference between reducing mask and recompute? Reducing mask Did not recompute zernike.
 need to reduce the mask radius by 2 when using vortex.  But do not know why yet.
 
-simulated igram analysis leaves a fringe around the left half edge of the mirror.
+simulated igram analysis leaves a fringe around the left half edge of the mirror.  It needs the outline
+shifted right and down one pixel.  But then that shows the outline shifted offset as well.
 
+why is intensity profile jagged?
 
-Use NSIS as the installer maker.
+Fringe on zernike based display.  How can that be?  Mask has to be wrong or generator has to be wrong.
 
+Add average of stand only wavefronts to show the average stand forces.  Implemented but does not look right. Maybe not the stand terms at all.
 

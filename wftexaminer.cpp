@@ -33,15 +33,17 @@ wftExaminer::wftExaminer( wavefront *wf,QWidget *parent) :
     curve(0),maskCurve(0),ui(new Ui::wftExaminer)
 {
     ui->setupUi(this);
-    ui->spinBox->setMaximum(wf->data.cols-1);
+
     m_Pl = new QwtPlot();
     QwtPlotGrid *grid = new QwtPlotGrid();
-
+    m_Pl->enableAxis(QwtPlot::xBottom);
     grid->attach( m_Pl );
     m_y = wf->data.rows/2;
-    ui->spinBox->setValue(m_y);
     m_Pl->resize(1500,400);
     setupPlot();
+    ui->spinBox->setMaximum(wf->data.cols-1);
+    ui->spinBox->setValue(m_y);
+    m_Pl->setAxisScale(QwtPlot::yLeft, wf->min, wf->max);
 }
 
 wftExaminer::~wftExaminer()
@@ -73,7 +75,7 @@ void wftExaminer::setupPlot(){
     maskCurve = new QwtPlotCurve;
     points.clear();
     for (int x = 0; x < m.cols; ++x){
-        double v= -1.* (double)(m_wf->mask.at<uchar>(m_wf->workData.rows - 1 - m_y,x))/255.;
+        double v= m_wf->min * (double)(m_wf->mask.at<uchar>(m_wf->workData.rows - 1 - m_y,x))/255.;
         points<< QPointF(x,v);
     }
     maskCurve->setSamples(points);

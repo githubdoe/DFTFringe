@@ -95,17 +95,17 @@ public:
     void average(QList<wavefront *> wfList);
     void subtractWavefronts();
     bool m_askAboutReverse;
+    bool m_surface_finished;
 private:
     QProgressDialog *pd;
     QThread *m_generatorThread;
     QTimer *m_waveFrontTimer;
     QTimer *m_toolsEnableTimer;
     int workToDo;
-    bool m_surface_finished;
     int workProgress;
     void subtract(wavefront *wf1, wavefront *wf2);
     wftStats *m_wftStats;
-    textres Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx);
+    textres Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx, define_input *wizPage);
 
 signals:
     void currentNdxChanged(int);
@@ -144,7 +144,7 @@ public slots:
     void invert(QList<int> list);
     void wftNameChanged(int, QString);
     void showAllContours();
-    void computeStandAstig(QList<rotationDef *>);
+    void computeStandAstig(define_input *wizPage, QList<rotationDef *>);
     void ObstructionChanged();
 };
 

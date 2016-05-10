@@ -30,6 +30,33 @@ Outlining mirror in depth.
 
 New features in Depth.
 
+Using DFTFringe to inspect interferogram intensity and gamma correction effects.
+
+DFTFringe has tools to help you determine the right exposue for your interferograms.
+SO first off lets make a well exposed interferogram of a perfect mirror.
+Go to the simulations view and make an igram.
+We can look at an intensity plot across the igram.
+See that the intensity has a sinusodal variation.
+Use the compass knob to vary to change the angle of the sample diameter.
+
+We can also look at each color channel.  In this case only the red channel has any information.
+A interferogram taken with a red laser should look similar.
+
+If we turn on the DFT thumb nail display we can see the DFT used by the program to analyze the surface.
+We can see the 2 sidelobes look nice without any extra ones outside of them.
+
+Ok now lets load a real world interferogram taken with a web cam and that was over exposed.
+
+Here we see that the red channel is completly maxed out and information spills over into the
+other color channels.
+
+There are some other intersting things in this plot that I will come back
+to later when I discuss Gamma correction.
+
+Now lets look at a few other interferograms.
+
+
+
 
 
 

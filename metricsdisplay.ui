@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>164</width>
+    <width>176</width>
     <height>710</height>
    </rect>
   </property>
@@ -14,7 +14,7 @@
    <string>Metrics</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QLabel" name="wftName">
       <property name="text">
@@ -196,6 +196,13 @@ Connic:</string>
      </widget>
     </item>
     <item>
+     <widget class="QLabel" name="lambda">
+      <property name="text">
+       <string>Igram Wave Length:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -212,7 +219,7 @@ Connic:</string>
      </spacer>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
       <item>
        <widget class="QPushButton" name="recomputePB">
         <property name="minimumSize">
@@ -233,17 +240,24 @@ Connic:</string>
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Zernike Values</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QTableView" name="tableView"/>
-      </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QPushButton" name="sphericalPb">
+      <property name="text">
+       <string>Enable Spherical only</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>Zernike Values</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTableView" name="tableView"/>
     </item>
    </layout>
   </widget>

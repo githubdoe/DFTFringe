@@ -212,8 +212,8 @@ void surfaceGenerator::process(int wavefrontNdx, SurfaceManager *sm) {
 }
 cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, std::vector<double> &zerns, QVector<int> zernsToUse){
     int wy = wx;
-    double rad = (double)(wx-1)/2.d;
-    double xcen = rad,ycen = rad;
+    double rad = m_wavefronts[m_currentNdx]->m_outside.m_radius;
+    double xcen = (wx-1)/2, ycen = (wx-1)/2;
 
     cv::Mat result = cv::Mat::zeros(wx,wx, CV_64F);
 
@@ -232,18 +232,19 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, std::vector<double>
             if (rho <= 1.)
             {
                 double S1 = 0;
+                double theta = atan2(y1,x1);
                 for (int ii = 0; ii < zernsToUse.size(); ++ii) {
                     int z = zernsToUse[ii];
 
                     if ( z == 3 && m_surfaceTools->m_useDefocus){
-                        S1 -= m_surfaceTools->m_defocus * Zernike(z,x1,y1);
+                        S1 -= m_surfaceTools->m_defocus * ZernikePolar(z,rho,theta);
                     }
                     else {
                         if (en[z]){
                             if (z == 8 && md->doNull)
-                                S1 +=    md->z8 * Zernike(z,x1,y1);
+                                S1 +=    md->z8 * ZernikePolar(z,rho, theta);
 
-                            S1 += zerns[z] * Zernike(z,x1,y1);
+                            S1 += zerns[z] * ZernikePolar(z,rho, theta);
                         }
                     }
                 }
@@ -525,7 +526,9 @@ void SurfaceManager::computeMetrics(wavefront *wf){
 
     double mmin;
     double mmax;
+
     minMaxIdx(wf->workData, &mmin,&mmax);
+    qDebug() << "min max" << mmin << mmax;
     wf->min = mmin * md->lambda/550.;
     wf->max = mmax * md->lambda/550.;
 
@@ -696,7 +699,9 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
             wf->data *= -1;
             wf->dirtyZerns = true;
             wf->useGBSmoothing = false;
+            m_surface_finished = false;
             emit generateSurfacefromWavefront(m_currentNdx, this);
+            while (!m_surface_finished) {qApp->processEvents();}
         }
     }
 
@@ -1613,7 +1618,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     wf->workMask = mask.clone();
     m_wavefronts << wf;
     wf->useGBSmoothing = false;
-    wf->name = "Average";
+    wf->name = "Average.wft";
     wf->dirtyZerns = true;
     m_surfaceTools->addWaveFront(wf->name);
     m_currentNdx = m_wavefronts.size()-1;
@@ -1738,7 +1743,7 @@ void SurfaceManager::surfaceBaseChanged(bool b) {
 
 
 
-textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx ){
+textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx , define_input *wizPage){
     QTextEdit *editor = new QTextEdit;
 
     QTextDocument *doc = editor->document();
@@ -1746,7 +1751,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     results.Edit = editor;
     const int Width = 400 * .9;
     const int Height = 300 * .9;
-    QImage *contour =  new QImage(Width ,Height, QImage::Format_ARGB32 );
+    QImage contour(Width ,Height, QImage::Format_ARGB32 );
 
     QPrinter printer(QPrinter::HighResolution);
     printer.setColorMode( QPrinter::Color );
@@ -1766,6 +1771,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     QVector<double> astigMag;
     editor->resize(printer.pageRect().size());
     doc->setPageSize(printer.pageRect().size());
+    cv::Mat standavg = cv::Mat::zeros(m_wavefronts[inputs[0]]->workData.size(), CV_64F);
+    cv::Mat standavgZernMat = cv::Mat::zeros(m_wavefronts[inputs[0]]->workData.size(), CV_64F);
     for (int i = 0; i < list.size(); ++i){
 
         // rotate the average to match the input
@@ -1779,7 +1786,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         subtract(m_wavefronts[inputs[i]], m_wavefronts[ndx]);
         ++ndx;      // now ndx point to the stand only wavefront
         while(!m_surface_finished){qApp->processEvents();}
-
+        standavg += m_wavefronts[ndx]->workData;
         //create contour of astig
         double xa = standxastig.at<double>(i,0) = m_wavefronts[ndx]->InputZerns[4];
         double ya = standyastig.at<double>(i,0) = m_wavefronts[ndx]->InputZerns[5];
@@ -1791,15 +1798,23 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         for (int ii = 9; ii < Z_TERMS; ++ii)
             zernsToUse << ii;
 
-        //m_wavefronts[ndx]->InputZerns[8] = -mirrorDlg::get_Instance()->z8;
         cv::Mat m = computeWaveFrontFromZernikes(m_wavefronts[inputs[0]]->data.cols,m_wavefronts[ndx]->InputZerns, zernsToUse );
-
+        standavgZernMat += m;
         standwfs << m;
-
         xastig.at<double>(i,0) = m_wavefronts[inputs[i]]->InputZerns[4];
         yastig.at<double>(i,0) = m_wavefronts[inputs[i]]->InputZerns[5];
     }
-
+    double smin,smax;
+    cv::minMaxIdx(standavg,&smin, &smax);
+    qDebug() << "smin smax" << smin << smax;
+    standavg /= list.size();
+    cv::minMaxIdx(standavg,&smin, &smax);
+    qDebug() << "smin smax" << smin << smax;
+    cv::minMaxIdx(standavgZernMat,&smin, &smax);
+    qDebug() << "smin smax" << smin << smax;
+    standavgZernMat = standavgZernMat/list.size();
+    cv::minMaxIdx(standavgZernMat,&smin, &smax);
+    qDebug() << "smin smax" << smin << smax;
     cv::Scalar standMean,standStd;
     cv::Scalar standXMean,standXStd;
     cv::Scalar standYMean, standyStd;
@@ -1825,10 +1840,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasBackground );
     renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasFrame );
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend);
-    QPainter painter( contour );
-
-
-    double maxAstigMag = *(std::max_element(astigMag.begin(), astigMag.end()));
+    QPainter painter( &contour );
 
     QString html = "<html><head/><body><h1>Test Stand Astig Analysis</h1>"
             "<h3>Step 2. Stand induced astig at each rotation position:</h3>";
@@ -1881,23 +1893,25 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         wavefront * wf = new wavefront;
         wf = m_wavefronts[inputs[i]];
         wf->data = wf->workData = standwfs[i];
+        cv::minMaxIdx(wf->data,&smin, &smax);
+        qDebug() << "smin smax" << smin << smax;
         cv::Scalar mean,std;
         cv::meanStdDev(wf->data,mean,std);
         wf->std = std[0];
         qDebug() << "std " << std[0];
-        wf->min = -maxAstigMag * 2;
-        wf->max =  maxAstigMag * 2;
+        wf->min = smin;
+        wf->max =  smax;
         wf->name = QString().sprintf("%06.2lf",list[i]->angle);
         qDebug() << wf->name;
         cp->setSurface(wf);
         cp->resize(Width,Height);
         cp->replot();
-        contour->fill( QColor( Qt::white ).rgb() );
+        contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( cp, &painter, QRect(0,0,Width,Height) );
         QString imageName = QString().sprintf("mydata://zern%s.png",wf->name.toStdString().c_str());
         imageName.replace("-","CCW");
         qDebug() << imageName;
-        doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(*contour));
+        doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         results.res.append (imageName);
         imagesHtml.append("<td><p> <img src='" +imageName + "' /></p></td>");
         if (cnt == 2){
@@ -1907,6 +1921,45 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     }
 
     imagesHtml.append("</table>");
+    //display average of all stand zernwavefronts
+    wavefront * wf2 = new wavefront;
+    wf2 = m_wavefronts[inputs[0]];
+    wf2->data = wf2->workData = standavgZernMat ;
+    cv::Scalar mean,std;
+    cv::meanStdDev(wf2->data,mean,std);
+    wf2->std = std[0];
+    double mmin;
+    double mmax;
+
+    minMaxIdx(wf2->data, &mmin,&mmax);
+    wf2->min = mmin;
+    wf2->max = mmax;
+    //wf2->workMask = m_wavefronts[0]->workMask.clone();
+    wf2->name = QString("Average Stand zernike based");
+    ContourPlot *cp1 = new ContourPlot();
+    //cp1->m_zRangeMode = "Min/Max";
+    cp1->setSurface(wf2);
+    cp1->resize(Width, Height);
+    cp1->replot();
+    QImage contour2(Width, Height, QImage::Format_ARGB32 );
+    contour2.fill( QColor( Qt::white ).rgb() );
+    QPainter painter2( &contour2 );
+
+    renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend, false);
+    renderer.render( cp1, &painter2, QRect(0,0,Width,Height) );
+    QString imageName = "mydata://StandCotourZerns.png";
+    doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour2));
+
+    wf2->data = wf2->workData = standavg;
+    wf2->name = QString("Average Stand effects.");
+    cp1->setSurface(wf2);
+    cp1->resize(Width,Height);
+    cp1->replot();
+    contour2.fill( QColor( Qt::white ).rgb() );
+    renderer.render( cp1, &painter2, QRect(0,0,Width,Height) );
+    imageName = QString("mydata://StandCotourMat.png");
+    doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour2));
+
     pl1->setAxisScale(QwtPlot::xBottom,min(-.1,xmin),max(.1,xmax));
     pl1->setAxisScale(QwtPlot::yLeft, min(-.1, ymin), max(.1,ymax));
     pl1->insertLegend( new QwtLegend() , QwtPlot::TopLegend);
@@ -1938,18 +1991,18 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
         stdCircle << QPointF(standXMean[0]+SE * cos(rho),standYMean[0] + SE * sin(rho));
     }
-    QwtPlotCurve *curveStandStd = new QwtPlotCurve("Stand Error");
+    QwtPlotCurve *curveStandStd = new QwtPlotCurve("Standard Error");
     curveStandStd->setPen(Qt::darkYellow,3,Qt::DotLine );
     curveStandStd->setSamples(stdCircle);
     curveStandStd->attach(pl1);
     pl1->resize(300,300);
     pl1->replot();
 
-    contour->fill( QColor( Qt::white ).rgb() );
+    contour.fill( QColor( Qt::white ).rgb() );
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend, false);
     renderer.render( pl1, &painter, QRect(0,0,Width,Height) );
-    QString imageName = "mydata://plot.png";
-    doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(*contour));
+    imageName = QString("mydata://plot.png");
+    doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
     results.res.append (imageName);
     html.append("<p> <img src='" + imageName + "' /></p>");
     html.append("<p font-size:12pt> The plot above shows the astig of each input file plotted as colored squares. "
@@ -1959,9 +2012,14 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
                 "<p font-size:12pt>If the variation for the astig values is small then "
                 "The stand removal was good.  Idealy the STD (standard deviation) should be"
                 " less than .1 which means less than .1 wave pv on the surface of the mirror</p><br>"
+
+
+                "<table><tr><td><img src='mydata://StandCotourZerns.png' /></td><td><img src='mydata://StandCotourMat.png' /></td></tr></table>"
+                "<p font-size:12pt>The contours above are the average system induced forces derived from the average of all rotations.<br>"
+                "The left contour is based on the zernike values and the contour on the right is based on the wavefront.</p>"
                 "<p font-size:12pt>The contour plots below are of what is beleived to be test stand only induced errors at each rotation. "
                 "Check that they are similar at each rotation.  If not then maybe "
-                "stand induced error is not same at each rotation then the stand removal is not reliable. "
+                "stand (system) induced error is not same at each rotation then the stand removal is not reliable. "
                 "However it is unlikely that they will all look exactly the same.</p>");
 
 
@@ -1971,9 +2029,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     return results;
 }
 
-void SurfaceManager::computeStandAstig(QList<rotationDef *> list){
+void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef *> list){
     QApplication::setOverrideCursor(Qt::WaitCursor);
-
     // check for pairs
     QVector<rotationDef*> lookat = list.toVector();
     while (lookat.size()){
@@ -2075,7 +2132,7 @@ void SurfaceManager::computeStandAstig(QList<rotationDef *> list){
 
 
         // counter rotate it
-
+        wizPage->runpb->setText(QString("Counter Rotating " + list[i]->fname));
         QList<int> l;
         l.append(ndx);
         ndx = m_wavefronts.size();
@@ -2126,7 +2183,6 @@ void SurfaceManager::computeStandAstig(QList<rotationDef *> list){
     html = ("<html><head/><body><h1>Test Stand Astig Removal</h1>"
             "<h3>Step 2. Averaged surface with stand induced terms removed:</h3>");
 
-    //computeMetrics(m_wavefronts[m_currentNdx]);
 
     plot->setSurface(m_wavefronts[m_currentNdx]);
     contour = QImage(450,450, QImage::Format_ARGB32 );
@@ -2148,10 +2204,8 @@ void SurfaceManager::computeStandAstig(QList<rotationDef *> list){
     // for each input rotate the average by the input angle and subtract it from the input
     // plot the astig of each of the inputs which will be the stand only astig.
 
-
-    textres page3res = Phase2(list, inputs, avgNdx);
-
-
+    wizPage->runpb->setText("computing averages");
+    textres page3res = Phase2(list, inputs, avgNdx, wizPage);
     QTabWidget *tabw = new QTabWidget();
     tabw->setTabShape(QTabWidget::Triangular);
     tabw->addTab(editor, "Page 1 input analysis");
@@ -2165,6 +2219,10 @@ void SurfaceManager::computeStandAstig(QList<rotationDef *> list){
     foreach( QString res, page3res.res){
         pdfDoc.addResource(QTextDocument::ImageResource, res, page3res.Edit->document()->resource(QTextDocument::ImageResource,res));
     }
+    pdfDoc.addResource(QTextDocument::ImageResource, QString("mydata://StandCotourZerns.png"),
+                       page3res.Edit->document()->resource(QTextDocument::ImageResource,QString("mydata://StandCotourZerns.png") ));
+    pdfDoc.addResource(QTextDocument::ImageResource, QString("mydata://StandCotourMat.png"),
+                       page3res.Edit->document()->resource(QTextDocument::ImageResource,QString("mydata://StandCotourMat.png") ));
     foreach(QString res, doc1Res){
         pdfDoc.addResource(QTextDocument::ImageResource, res, editor->document()->resource(QTextDocument::ImageResource,res));
     }
@@ -2191,7 +2249,8 @@ void SurfaceManager::computeStandAstig(QList<rotationDef *> list){
      }
 
      deleteWaveFronts(deleteThese);
-
+    wizPage->runpb->setText("Compute");
+    wizPage->runpb->setEnabled(true);
     QApplication::restoreOverrideCursor();
 }
 

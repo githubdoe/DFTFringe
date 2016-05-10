@@ -140,6 +140,8 @@ public:
     void loadOutlineFile(QString filename);
     void undo();
     void redo();
+    void writeOutlines(QString fileName);
+    QString makeOutlineName();
 public slots:
     void gammaChanged(bool, double);
     void generateSimIgram();
@@ -157,6 +159,7 @@ signals:
     void selectDFTab();
     void upateColorChannels(QImage);
     void showTab(int);
+    void dftCenterFilter(double);
 protected:
     bool eventFilter(QObject *object, QEvent *event);
     void wheelEvent(QWheelEvent * event);

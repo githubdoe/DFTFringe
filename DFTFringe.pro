@@ -78,7 +78,9 @@ SOURCES += main.cpp\
     renamewavefrontdlg.cpp \
     subtractwavefronatsdlg.cpp \
     helpdlg.cpp \
-    settingsprofile.cpp
+    settingsprofile.cpp \
+    batchigramprocessingdlg.cpp \
+    batchigramwizard.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -138,7 +140,9 @@ HEADERS  += mainwindow.h \
     renamewavefrontdlg.h \
     subtractwavefronatsdlg.h \
     helpdlg.h \
-    settingsprofile.h
+    settingsprofile.h \
+    batchigramprocessingdlg.h \
+    batchigramwizard.h
 
 FORMS    += mainwindow.ui \
     dfttools.ui \
@@ -180,7 +184,9 @@ FORMS    += mainwindow.ui \
     renamewavefrontdlg.ui \
     subtractwavefronatsdlg.ui \
     helpdlg.ui \
-    settingsprofile.ui
+    settingsprofile.ui \
+    batchigramprocessingdlg.ui \
+    batchigramwizard.ui
 
 CONFIG( debug, debug|release ) {
     # debug
@@ -207,7 +213,7 @@ RC_FILE = DFTFringe.rc
 
 
 # The application version
-VERSION = 1.0
+VERSION = 1.2
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
@@ -287,4 +293,5 @@ DISTFILES += \
     ColorMaps/Sequential_YlOrRd.cmp \
     ColorMaps/spring.cmp \
     COPYING.LESSER.txt \
-    COPYING.txt
+    COPYING.txt \
+    RevisionHistory.html

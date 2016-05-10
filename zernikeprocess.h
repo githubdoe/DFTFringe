@@ -28,6 +28,7 @@ extern std::vector<bool> zernEnables;
 extern int Zw[];
 extern double BestSC;
 double Zernike(int n, double x, double y);
+double ZernikePolar(int n, double rho, double theta);
 void gauss_jordan(int n, double* Am, double* Bm);
 void ZernikeSmooth(Mat wf, Mat mask);
 class zernikeProcess : public QObject

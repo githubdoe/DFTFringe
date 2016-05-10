@@ -222,6 +222,7 @@ void IgramArea::doGamma(double gammaV){
 
 }
 
+
 bool IgramArea::openImage(const QString &fileName)
 
 {
@@ -248,6 +249,8 @@ bool IgramArea::openImage(const QString &fileName)
     m_centerHist.push(igramImage,m_center);
     modified = false;
     QSettings set;
+
+
     double rad = set.value("lastOutsideRad", 0).toDouble();
 
 
@@ -263,7 +266,13 @@ bool IgramArea::openImage(const QString &fileName)
     settings.setValue("lastPath",lastPath);
     resizeImage();
 
-    if (rad > 0) {
+    // check for an outline file
+    QFileInfo finfo(makeOutlineName());
+    if (finfo.exists()){
+        loadOutlineFile(finfo.absoluteFilePath());
+
+    }
+    else if (rad > 0) {
         double cx = set.value("lastOutsideCx", 0).toDouble();
         double cy = set.value("lastOutsideCy",0).toDouble();
 
@@ -284,16 +293,17 @@ bool IgramArea::openImage(const QString &fileName)
             outterPcount = 2;
             drawBoundary();
         }
-    }
-    rad = set.value("lastInsideRad", 0).toDouble();
-    if (rad) {
-        double cx = set.value("lastInsideCx", 0).toDouble();
-        double cy = set.value("lastInsideCy",0).toDouble();
-        m_center = CircleOutline(QPointF(cx,cy),rad);
-        m_innerP1 = m_center.m_p1.m_p;
-        m_innerP2 = m_center.m_p2.m_p;
-        innerPcount = 2;
-        drawBoundary();
+
+        rad = set.value("lastInsideRad", 0).toDouble();
+        if (rad) {
+            double cx = set.value("lastInsideCx", 0).toDouble();
+            double cy = set.value("lastInsideCy",0).toDouble();
+            m_center = CircleOutline(QPointF(cx,cy),rad);
+            m_innerP1 = m_center.m_p1.m_p;
+            m_innerP2 = m_center.m_p2.m_p;
+            innerPcount = 2;
+            drawBoundary();
+        }
     }
     cropTotalDx = cropTotalDy = 0;
 
@@ -675,36 +685,36 @@ void IgramArea::drawBoundary()
     QPainter painter(&tmp);
     painter.drawImage(0,0,igramImage);
 
-        CircleOutline outside(m_OutterP1,m_OutterP2);
-        CircleOutline inside(m_innerP1, m_innerP2);
-        if (!m_hideOutlines){
-            painter.setOpacity(opacity * .01);
-            if (outside.m_radius > 0){
-                painter.setPen(QPen(edgePenColor, edgePenWidth, (Qt::PenStyle)lineStyle));
-                outside.draw(painter,1.);
-            }
-            if (inside.m_radius > 0 && innerPcount > 1){
-                painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
-                inside.draw(painter,1.);
-
-            }
+    CircleOutline outside(m_OutterP1,m_OutterP2);
+    CircleOutline inside(m_innerP1, m_innerP2);
+    if (!m_hideOutlines){
+        painter.setOpacity(opacity * .01);
+        if (outside.m_radius > 0){
+            painter.setPen(QPen(edgePenColor, edgePenWidth, (Qt::PenStyle)lineStyle));
+            outside.draw(painter,1.);
         }
-        QString msg;
-        QString msg2;
-        if (outterPcount == 2)
-            msg = QString().sprintf("Outside: x=%6.1lf y=%6.1lf, Radius= %6.1lf  ",
-                                  outside.m_center.x(),outside.m_center.y(), outside.m_radius);
-            m_outside = outside;
-        if (innerPcount == 2){
-            m_center = inside;
+        if (inside.m_radius > 0 && innerPcount > 1){
+            painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
+            inside.draw(painter,1.);
 
-
-            msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
-                    inside.m_center.x(),inside.m_center.y(),inside.m_radius, scale);
         }
-        emit statusBarUpdate(msg+msg2);
+    }
+    QString msg;
+    QString msg2;
+    if (outterPcount == 2)
+        msg = QString().sprintf("Outside: x=%6.1lf y=%6.1lf, Radius= %6.1lf  ",
+                                outside.m_center.x(),outside.m_center.y(), outside.m_radius);
+    m_outside = outside;
+    if (innerPcount == 2){
+        m_center = inside;
 
-        m_outlineTimer->start(1000);
+
+        msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
+                                 inside.m_center.x(),inside.m_center.y(),inside.m_radius, scale);
+    }
+    emit statusBarUpdate(msg+msg2);
+
+    //m_outlineTimer->start(1000);
 
 
 
@@ -850,11 +860,15 @@ void IgramArea::loadOutlineFile(QString fileName){
         return;
     }
 
-
     m_outside = readCircle(file);
     CircleOutline sideLobe = readCircle(file);
+    emit dftCenterFilter(sideLobe.m_radius);
+
     if (file.gcount() < file.tellg()) {
         m_center = readCircle(file);
+        m_innerP1 = m_center.m_p1.m_p;
+        m_innerP2 = m_center.m_p2.m_p;
+        innerPcount = 2;
     }
     m_OutterP1 = m_outside.m_p1.m_p;
     m_OutterP2 = m_outside.m_p2.m_p;
@@ -874,19 +888,15 @@ void IgramArea::readOutlines(){
     loadOutlineFile(fileName);
 
 }
-
-void IgramArea::saveOutlines(){
+QString IgramArea::makeOutlineName(){
     QSettings settings;
     lastPath = settings.value("lastPath").toString();
-    QStringList list = m_filename.split("/");
-    QString name = list[list.size()-1];
-    int lastPoint = name.lastIndexOf(".");
-    QString fileNameNoExt = name.left(lastPoint);
-    QString fileName = QFileDialog::getSaveFileName(this,
-                        tr("Save outline file"), lastPath + "/" + fileNameNoExt + ".oln",
-                        tr("oln (*.oln)"));
-    if (fileName.isEmpty())
-        return;
+    QString name = QFileInfo(m_filename).completeBaseName();
+    return lastPath + "/" + name + ".oln";
+}
+
+void IgramArea::writeOutlines(QString fileName){
+
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".oln"); }
     std::ofstream file((fileName.toStdString().c_str()));
     if (!file.is_open()) {
@@ -896,13 +906,30 @@ void IgramArea::saveOutlines(){
         return;
     }
     // write oustide outline
-    writeCircle(file,m_outside);
-    // write sidelobe
-    CircleOutline side(m_outside.m_center,0.);
-    writeCircle(file, side);
-
+    CircleOutline outside = m_outside;
+    outside.translate(QPointF(cropTotalDx, cropTotalDy));
+    writeCircle(file,outside);
+    QSettings set;
+    double filterRad = set.value("DFT Center Filter",10).toDouble();
+    CircleOutline filter(QPointF(0,0), filterRad);
+    writeCircle(file, filter );
+    if (m_center.m_radius > 0){
+        CircleOutline inside = m_center;
+        inside.translate(QPointF(cropTotalDx,cropTotalDy));
+        writeCircle(file,inside);
+    }
 
     file.close();
+}
+
+void IgramArea::saveOutlines(){
+
+    QString fileName = QFileDialog::getSaveFileName(this,
+                        tr("Save outline file"), makeOutlineName(),
+                        tr("oln (*.oln)"));
+    if (fileName.isEmpty())
+        return;
+    writeOutlines(fileName);
 }
 void IgramArea::deleteOutline(){
     QSettings set;
@@ -963,6 +990,8 @@ void IgramArea::nextStep(){
                             "You must first outline the mirror outside edge.");
         return;
     }
+    // save outline as a file.
+    writeOutlines(makeOutlineName());
     if (!hasBeenCropped)
         crop();
 

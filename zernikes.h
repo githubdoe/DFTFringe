@@ -61,18 +61,16 @@ const char* const zernsNames[] =
   "36",
   "37",
   "38",
-  "5th Spherical",
-  "6th Spherical",
-  "7th Spherical",
-  "8th Spherical",
-  // thats all for now
+  "39",
+  "40",
+  "41",
   "42",
   "43",
   "44",
   "45",
   "46",
   "47",
-  "48"
+  "5th Spherical"
 };
 double computeRMS(int term, double v);
 class zern_spec

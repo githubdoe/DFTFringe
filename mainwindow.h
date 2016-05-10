@@ -44,6 +44,7 @@
 #include "vortexdebug.h"
 #include "oglview.h"
 #include "contourview.h"
+#include "batchigramwizard.h"
 namespace Ui {
 class MainWindow;
 }
@@ -72,7 +73,10 @@ public slots:
     void showMessage(QString);
     void diameterChanged(double);
     void rocChanged(double);
-
+    void batchProcess(QStringList fileList);
+    void batchMakeSurfaceReady();
+    void batchConnections(bool flag);
+    void batchFinished(int ret);
 signals:
     void load(QStringList, SurfaceManager *);
     void messageResult(int);
@@ -171,6 +175,9 @@ private slots:
 
     void on_actionError_Margins_triggered();
 
+    void on_actionBatch_Process_Interferograms_triggered();
+
+
 private:
 
     Ui::MainWindow *ui;
@@ -215,6 +222,9 @@ private:
     QAction *separatorAct;
     bool m_showChannels;
     bool m_showIntensity;
+    bool m_inBatch;
+    bool m_OutlineDoneInBatch;
+    bool m_batchMakeSurfaceReady;
 
     enum { MaxRecentFiles = 5 };
     QAction *recentFileActs[MaxRecentFiles];
@@ -224,6 +234,9 @@ private:
     ColorChannelDisplay *m_colorChannels;
     igramIntensity *m_intensityPlot;
     vortexDebug    *m_vortexDebugTool;
+    batchIgramWizard *batchWiz;
+    QStringList m_igramsToProcess;
+
 };
 
 #endif // MAINWINDOW_H
