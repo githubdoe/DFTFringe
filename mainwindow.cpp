@@ -36,6 +36,7 @@
 #include <qlayout.h>
 #include <opencv/cv.h>
 #include "simulationsview.h"
+#include "outlinehelpdocwidget.h"
 
 
 using namespace QtConcurrent;
@@ -104,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //m_vortexTools = new VortexTools(this);
     m_dftArea = new DFTArea(scrollAreaDft, m_igramArea, m_dftTools, m_vortexDebugTool);
     m_contourTools = new ContourTools(this);
-
+    m_outlineHelp = new outlineHelpDocWidget(this);
     m_surfTools = surfaceAnalysisTools::get_Instance(this);
 
     //DocWindows
@@ -365,6 +366,7 @@ void MainWindow::createDockWindows(){
     m_dftTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     metrics = metricsDisplay::get_instance(this);
     zernTablemodel = metrics->tableModel;
+    addDockWidget(Qt::LeftDockWidgetArea, m_outlineHelp);
     addDockWidget(Qt::RightDockWidgetArea, m_dftTools);
     addDockWidget(Qt::RightDockWidgetArea, m_contourTools);
     addDockWidget(Qt::RightDockWidgetArea, m_surfTools);
@@ -376,6 +378,8 @@ void MainWindow::createDockWindows(){
     ui->menuView->addAction(m_surfTools->toggleViewAction());
     ui->menuView->addAction(metrics->toggleViewAction());
     ui->menuView->addAction(m_vortexDebugTool->toggleViewAction());
+    ui->menuView->addAction(m_outlineHelp->toggleViewAction());
+    m_outlineHelp->hide();
     metrics->hide();
     m_vortexDebugTool->hide();
 }
@@ -404,6 +408,7 @@ void MainWindow::updateMetrics(wavefront& wf){
     BestSC = m_mirrorDlg->cc + z1;
     metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing, m_mirrorDlg->lambda);
     metrics->mCC->setText(QString().sprintf("<FONT FONT SIZE = 7>%6.3lf",BestSC));
+    m_outlineHelp->hide();
     metrics->show();
 }
 
@@ -908,4 +913,50 @@ void MainWindow::on_actionBatch_Process_Interferograms_triggered()
 
 }
 
+void MainWindow::on_HelpOutlinePb_pressed()
+{
+    m_outlineHelp->show();
+}
 
+void MainWindow::on_actionVersion_History_triggered()
+{
+    QString link = qApp->applicationDirPath() + "/RevisionHisitory.html";
+    QDesktopServices::openUrl(QUrl(link));
+}
+
+
+
+void MainWindow::on_actionIterate_outline_triggered()
+{
+
+    CircleOutline  saved = m_igramArea->m_outside;
+    for (int i = 0; i < 5; ++i){
+    m_igramArea->increase();
+    }
+    int delta = -5;
+    for (int i = 0; i < 11; ++i){
+        m_igramArea->decrease();
+        m_igramArea->nextStep();
+
+        m_surfaceManager->m_surface_finished = false;
+        ui->tabWidget->setCurrentIndex(2);
+        m_dftArea->makeSurface();
+        while(m_inBatch && !m_surfaceManager->m_surface_finished){qApp->processEvents();}
+        wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
+        wf->name = wf->name + QString().sprintf("_%d",delta+i);
+        m_surfTools->nameChanged(m_surfaceManager->m_currentNdx, wf->name);
+        Sleep(1000);
+    }
+
+    m_igramArea->m_outside = saved;
+    m_igramArea->increase();
+    m_igramArea->decrease();
+}
+
+
+
+void MainWindow::on_actionLatest_Version_triggered()
+{
+    QString link = "https://github.com/githubdoe/DFTFringe/releases";
+    QDesktopServices::openUrl(QUrl(link));
+}

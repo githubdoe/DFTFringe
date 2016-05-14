@@ -97,7 +97,30 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     m_gammaValue = 2.2;
     m_lastGamma = 2.2;
     needToConvertBGR = false;
+    QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Down), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftDown()));
+    shortcut = new QShortcut(QKeySequence("d"), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftDown()));
+    shortcut = new QShortcut(QKeySequence(Qt::Key_Up), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftUp()));
+    shortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftLeft()));
+    shortcut = new QShortcut(QKeySequence(Qt::Key_Right), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftRight()));
+    shortcut = new QShortcut(QKeySequence(Qt::Key_Minus), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(decrease()));
+    shortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(increase()));
+    shortcut = new QShortcut(QKeySequence("f"), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomFull()));
+    shortcut = new QShortcut(QKeySequence("h"), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(toggleHideOutline()));
+    shortcut = new QShortcut(QKeySequence::ZoomIn, this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomIn()));
+    shortcut = new QShortcut(QKeySequence::ZoomOut, this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomOut()));
 }
+
 void IgramArea::outlineTimerTimeout(){
     m_outlineTimer->stop();
 
@@ -443,6 +466,54 @@ void IgramArea::decrease(){
     }
     drawBoundary();
 }
+void IgramArea::zoomIn(){
+    QPointF p = mapFromGlobal(QCursor::pos())/scale;
+
+    qDebug() << "POINT " << p;
+    zoom(1,p);
+}
+void IgramArea::zoomOut(){
+    QPointF p = mapFromGlobal(QCursor::pos())/scale;
+
+    qDebug() << "POINT " << p;
+    zoom(-1, p);
+}
+void IgramArea::zoomFull(){
+    zoomIndex = 0;
+    zoom(0,mapFromGlobal(QCursor::pos())/scale);
+}
+void IgramArea::zoom(int del, QPointF zoompt){
+
+    qDebug()<< zoompt << del;
+    zoomIndex += del;
+    if (zoomIndex < 0) {
+        zoomIndex = 0;
+    }
+    qDebug() << "Zoom Index "<< zoomIndex;
+
+    if (zoomIndex > 0) {
+        zoomFactor = fitScale + .5 * zoomIndex;
+        scale = zoomFactor;
+        qDebug() << QString().sprintf("scale %lf",scale);
+        gscrollArea->setWidgetResizable(false);
+        resize(igramImage.size() * scale);
+
+        //gscrollArea->ensureVisible(width()/2,height()/2);
+
+        QScrollBar *bar = gscrollArea->horizontalScrollBar();
+        bar->setValue(zoompt.x() * scale - bar->pageStep()/2);
+
+        bar = gscrollArea->verticalScrollBar();
+        bar->setValue(zoompt.y() * scale - bar->pageStep()/2);
+
+
+    }
+    else {
+        scale = fitScale;
+        gscrollArea->setWidgetResizable(true);
+    }
+    drawBoundary();
+}
 
 void IgramArea::wheelEvent (QWheelEvent *e)
 {
@@ -475,36 +546,8 @@ void IgramArea::wheelEvent (QWheelEvent *e)
     QPointF pos = e->pos();
 
     zoompt = pos/scale;
+    zoom(del, zoompt);
 
-    zoomIndex += del;
-    if (zoomIndex < 0) {
-        zoomIndex = 0;
-    }
-    qDebug() << "Zoom Index "<< zoomIndex;
-
-    if (zoomIndex > 0) {
-        zoomFactor = fitScale + .5 * zoomIndex;
-        scale = zoomFactor;
-        qDebug() << QString().sprintf("scale %lf",scale);
-        gscrollArea->setWidgetResizable(false);
-        resize(igramImage.size() * scale);
-
-        //gscrollArea->ensureVisible(width()/2,height()/2);
-
-        QScrollBar *bar = gscrollArea->horizontalScrollBar();
-        bar->setValue(zoompt.x() * scale - bar->pageStep()/2);
-
-        bar = gscrollArea->verticalScrollBar();
-        bar->setValue(zoompt.y() * scale - bar->pageStep()/2);
-
-
-    }
-    else {
-        scale = fitScale;
-        gscrollArea->setWidgetResizable(true);
-    }
-
-    drawBoundary();
 }
 
 void IgramArea::mousePressEvent(QMouseEvent *event)
@@ -1024,6 +1067,11 @@ void IgramArea::save(){
     pm.save(fileName);
 
 }
+void IgramArea::toggleHideOutline(){
+    m_hideOutlines = !m_hideOutlines;
+    drawBoundary();
+}
+
 void IgramArea::hideOutline(bool checked){
     m_hideOutlines = checked;
     drawBoundary();

@@ -362,11 +362,11 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
     //vecWftRMS.push_back(histSize);
     m_hist = histox(vecWftRMS, histSize);
 }
-void wftStats::makeHistoPlot(){
+QwtPlot *wftStats::makeHistoPlot(){
     if (wftHistogram)
         delete wftHistogram;
     wftHistogram = new QwtPlot(0);
-
+    wftHistogram->setWindowTitle("Wavefront Stats histogram.");
 
     QwtPlotHistogram *histPlot = new QwtPlotHistogram("Wave Fronts RMS");
 
@@ -383,22 +383,18 @@ void wftStats::makeHistoPlot(){
     wftHistogram->setAxisTitle(QwtPlot::xBottom,"RMS");
     wftHistogram->setTitle("Wave Front RMS Histogram");
     wftHistogram->resize(640,480);
-    wftHistogram->show();
-
+    //wftHistogram->show();
+    return wftHistogram;
 }
 
-void wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx, StatsDlg *statsDlg){
+QwtPlot *wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx, StatsDlg *statsDlg){
     if (wftPlot)
         delete wftPlot;
 
-
-
     wftPlot = new QwtPlot(0);
+    wftPlot->setWindowTitle("wavefront stats");
     wftPlot->setCanvasBackground(QColor(statsDlg->m_background));
     wftPlot->enableAxis( QwtPlot::yRight );
-
-
-
     wftPlot->insertLegend( new QwtLegend() , QwtPlot::TopLegend);
     QFont label_font("Helvetica");
     label_font.setPointSize(10);
@@ -485,15 +481,16 @@ void wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx, StatsDlg *
     wftPlot->resize(800,600);
     wftPlot->replot();
     QwtScaleDiv stldiv = wftPlot->axisScaleDiv(QwtPlot::xBottom);
-    wftPlot->show();
-
+    //wftPlot->show();
+    return wftPlot;
 }
 
-void wftStats::makeZernPlot(){
+QwtPlot *wftStats::makeZernPlot(){
     if (zernPlot)
         delete zernPlot;
 
     zernPlot = new QwtPlot(0);
+    zernPlot->setWindowTitle("zernike term stats");
     QwtIntervalSymbol *bar = new QwtIntervalSymbol( QwtIntervalSymbol::Bar );
     QwtIntervalSymbol *box = new QwtIntervalSymbol( QwtIntervalSymbol::Box );
     box->setWidth(15);
@@ -557,7 +554,8 @@ void wftStats::makeZernPlot(){
     inners->attach(zernPlot);
     zernPlot->resize(800,400);
     zernPlot->replot();
-    zernPlot->show();
+    //zernPlot->show();
+    return zernPlot;
 }
 
 

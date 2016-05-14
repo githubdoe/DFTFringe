@@ -45,6 +45,7 @@
 #include "oglview.h"
 #include "contourview.h"
 #include "batchigramwizard.h"
+#include "outlinehelpdocwidget.h"
 namespace Ui {
 class MainWindow;
 }
@@ -178,6 +179,15 @@ private slots:
     void on_actionBatch_Process_Interferograms_triggered();
 
 
+    void on_HelpOutlinePb_pressed();
+
+    void on_actionVersion_History_triggered();
+
+
+    void on_actionIterate_outline_triggered();
+
+    void on_actionLatest_Version_triggered();
+
 private:
 
     Ui::MainWindow *ui;
@@ -200,6 +210,7 @@ private:
     ContourTools *m_contourTools;
     OGLControls *m_oglTools;
     surfaceAnalysisTools *m_surfTools;
+    outlineHelpDocWidget *m_outlineHelp;
     SurfaceManager *m_surfaceManager;
     QScrollArea *scrollArea;
     QScrollArea *scrollAreaDft;

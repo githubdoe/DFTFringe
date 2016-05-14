@@ -33,9 +33,6 @@ public:
     ~StatsDlg();
     QwtPlot *m_wavefrontPlot;
     QwtPlot *m_zernPlot;
-    bool doAstig;
-    bool doSA;
-    bool doComa;
     bool saveCsv;
     bool savePDF;
     bool saveJpg;

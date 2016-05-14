@@ -190,6 +190,10 @@ void surfaceAnalysisTools::on_SelectNonePB_clicked()
 {
     ui->wavefrontList->selectionModel()->reset();
 }
+void surfaceAnalysisTools::nameChanged(int ndx, QString newname){
+    ui->wavefrontList->item(ndx)->setText(newname);
+}
+
 void surfaceAnalysisTools::nameChanged(QString old, QString newname){
 
     QStringList list = old.split('/');

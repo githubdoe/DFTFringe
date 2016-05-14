@@ -32,17 +32,20 @@
 #include <opencv/cv.h>
 #include "wavefront.h"
 #include "statsdlg.h"
-class wftStats
+#include <QObject>
+
+class wftStats : public QObject
 {
+   Q_OBJECT
 public:
     wftStats(mirrorDlg *md);
     void showStats();
     void computeWftStats(    QVector<wavefront*> wavefronts, int ndx);
     void computeZernStats(int ndx);
     void computeWftRunningAvg(QVector<wavefront *> wavefronts, int ndx);
-    void makeWftPlot(QVector<wavefront *> &wavefronts, int ndx, StatsDlg *statsDlg);
-    void makeZernPlot();
-    void makeHistoPlot();
+    QwtPlot *makeWftPlot(QVector<wavefront *> &wavefronts, int ndx, StatsDlg *statsDlg);
+    QwtPlot *makeZernPlot();
+    QwtPlot *makeHistoPlot();
     void makeCsv();
 
     QList<int> outliers;
@@ -70,6 +73,9 @@ private:
     QVector<QString> zNames;
     QVector< QVector < double> > zerns;  //each row has the zerns for that sample
     QVector<int> m_hist;
+signals:
+
+public slots:
 };
 
 #endif // WFTSTATS_H

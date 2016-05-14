@@ -57,6 +57,7 @@
 #include <qwt_symbol.h>
 #include <QTabWidget>
 #include <QPrintDialog>
+#include <QSplitter>
 QMutex mutex;
 int inprocess = 0;
 class wftNameScaleDraw: public QwtScaleDraw
@@ -930,14 +931,16 @@ QVector<int> histo(const std::vector<double> data, int bins, double min, double 
     }
     return h;
 }
-
+#include "statsview.h"
 void SurfaceManager::saveAllWaveFrontStats(){
+
     if (m_wavefronts.size() == 0)
         return;
     if (!m_statsDlg->exec())
         return;
     if (m_wftStats == 0)
         m_wftStats = new wftStats((mirrorDlg::get_Instance()));
+
     if (m_statsDlg->removeAboveLimit) {
         for (int i = m_wavefronts.size(); i > 0; --i){
             if (m_wavefronts[i-1]->std > m_statsDlg->RMSLimitValue ){
@@ -946,9 +949,11 @@ void SurfaceManager::saveAllWaveFrontStats(){
             }
         }
     }
+
     m_wftStats->computeWftStats(m_wavefronts,m_currentNdx);
     m_wftStats->computeZernStats(m_currentNdx);
     m_wftStats->computeWftRunningAvg(m_wavefronts,m_currentNdx);
+
     while (m_statsDlg->removeOutliers && m_wftStats->outliers.size()){
         qSort(m_wftStats->outliers.begin(), m_wftStats->outliers.end(), qGreater<int>());
         deleteWaveFronts(m_wftStats->outliers);
@@ -957,33 +962,40 @@ void SurfaceManager::saveAllWaveFrontStats(){
         m_wftStats->computeWftRunningAvg(m_wavefronts,m_currentNdx);
     }
 
-    m_wftStats->makeWftPlot(m_wavefronts, m_currentNdx, m_statsDlg );
-    m_wftStats->makeZernPlot();
-    m_wftStats->makeHistoPlot();
-    return;
+    QwtPlot *wftStats = m_wftStats->makeWftPlot(m_wavefronts, m_currentNdx, m_statsDlg );
+    QwtPlot * zernPlot = m_wftStats->makeZernPlot();
+    QwtPlot * histPlot = m_wftStats->makeHistoPlot();
+    wftStats->setMinimumHeight(200);
+    zernPlot->setMinimumHeight(250);
+    histPlot->setMinimumHeight(200);
+    statsView * sv = new statsView(wftStats,histPlot,zernPlot);
 
+    //sv->m_splitterHorz->addWidget(wftStats);
+    //sv->m_splitterHorz->addWidget(histPlot);
+    //sv->m_splitterVert->addWidget(zernPlot);
+        sv->show();
+return;
     QSettings settings;
-    QString path = settings.value("mirrorConfigFile").toString();
+    QString path = settings.value("projectPath").toString();
     QFile fn(path);
     QFileInfo info(fn.fileName());
-    QString csvName;
+    QString csvName = path + "/stats";
     bool saveStats = false;
     if (m_statsDlg->saveCsv){
         csvName = QFileDialog::getSaveFileName(0,
-                                               tr("Save stats CSV file"), path,
+                                               tr("Save stats CSV file"), csvName,
                                                tr("csv (*.csv)"));
         if (!csvName.isEmpty())
             saveStats = true;
 
     }
-
+    if (QFileInfo(csvName).suffix().isEmpty()) { csvName.append(".csv"); }
     QString dir = info.dir().path();
     dir = dir.right(dir.size() - dir.lastIndexOf("/")-1);
     QString title = m_wavefronts[0]->name;
     title = title.left(title.lastIndexOf("/"));
     title = title.right(title.size() - title.lastIndexOf(dir));
     QString t2 = title.replace("/","_");
-    QString fName = info.dir().path() + "\\" + t2 +  QString(".csv");
     std::ofstream file;
 
     if (saveStats){
@@ -992,7 +1004,7 @@ void SurfaceManager::saveAllWaveFrontStats(){
         if (!file.is_open()) {
             QMessageBox::warning(0, tr("Save Stats csv file"),
                                  tr("Cannot write file %1: ")
-                                 .arg(fName));
+                                 .arg(csvName));
             return;
         }
     }
@@ -1050,390 +1062,10 @@ void SurfaceManager::saveAllWaveFrontStats(){
     }
     file.close();
 
-    QVector<QwtIntervalSample> zernMinMax;
-    QVector<QwtIntervalSample> zernStd;
-    QVector<QString> zNames;
-    QVector< QVector < double> > zerns;  //each row has the zerns for that sample
-    int col = 4;
-    for (int zern = 4; zern <= 35; ++zern){
-        QString zname(zernsNames[zern]);
-        bool isPair = !QString(zernsNames[zern]).contains("Spheri");
-        cv::Mat c = mZerns.col(zern);
-        QVector<double> zpoints;
-        for (int i = 0; i < c.rows; ++i){
-
-            int row = (i + m_currentNdx) % c.rows;
-            double v = c.at<double>(row);
-            if (isPair){
-                cv::Mat c2 = mZerns.col(zern+1);
-                double v2 = c2.at<double>(row);
-                double s = sqrt(v * v + v2 * v2);
-                v = s;
-                zname += " ";
-                zname += zernsNames[zern+1];
-            }
-
-            if (i == 0) {
-                zNames << zname;
-                //qDebug() << zname;
-            }
-            zpoints << v;
-        }
-        zerns << zpoints;
-        std::vector<double > zvec = zpoints.toStdVector();
-        cv::Mat aSampleOfZerns(zvec);
-        std::sort( zvec.begin(), zvec.end() ); // sort the Zvalues
-        double median;
-        int sampleCnt = zvec.size();
-        if (sampleCnt % 2==0) {
-            median = (zvec[zvec.size()/2-1]+zvec[zvec.size()/2])/2;
-        }
-        else {
-            median = zvec[(zvec.size()-1)/2];
-        }
-        double top = zvec[sampleCnt * .25];
-        double bottom = zvec[sampleCnt * .75];
-        double min;
-        double max;
-        minMaxIdx(aSampleOfZerns, &min,&max);
-
-        zernMinMax.append( QwtIntervalSample( col, min, max ) );
-        //qDebug() << "minmax " << col << " " << min << " " << max;
-
-        zernStd.append(QwtIntervalSample(col,bottom,top));
-        zernStd.append(QwtIntervalSample(col++, bottom, median));
-        if (isPair) ++zern;
-    }
-
-
-
-    // normalize the size to the most common size
-    int last = m_wavefronts.length();
-    QHash<QString,int> sizes;
-    for (int i = 0; i < last; ++i){
-        QString size;
-        size.sprintf("%d %d",m_wavefronts[i]->workData.rows, m_wavefronts[i]->workData.cols);
-        if (*sizes.find(size))
-        {
-            ++sizes[size];
-        }
-        else
-            sizes[size] = 1;
-    }
-    int max = 0;
-    QString maxkey;
-    foreach(QString v, sizes.keys()){
-        int a = sizes[v];
-        if (a > max) {
-            max = a;
-            maxkey = v;
-        }
-    }
-    int rrows, rcols;
-
-    QTextStream s(&maxkey);
-
-    s >> rrows >> rcols;
-    cv::Mat mask = m_wavefronts[0]->workMask.clone();
-    cv::resize(mask,mask,Size(rcols,rrows));
-    QVector<wavefront*> twaves = m_wavefronts;
-
-
-
-    QwtPlot *pl = new QwtPlot(0);//m_statsDlg->m_wavefrontPlot;//new QwtPlot(QwtText(info2.baseName()),0);
-    //pl->detachItems( QwtPlotItem::Rtti_PlotCurve);
-    QwtPlotCurve *curve1;
-    QwtPlotCurve* curve2 = new QwtPlotCurve();
-
-    QPolygonF wftPoints;
-
-    QPolygonF avgPoints;
-    QPolygonF outliersInner;
-    QPolygonF outliersOuter;
-
-
-
-    cv::Mat sum = cv::Mat::ones(rrows,rcols, m_wavefronts[m_currentNdx]->workData.type());
-
-    curve1 = new QwtPlotCurve(QString().sprintf("RMS Running Average"));
-
-
-    if (m_statsDlg->doComa){
-        QwtPlotCurve *curveComa = new QwtPlotCurve("Coma");
-        curveComa->setSamples(coma);
-        curveComa->setPen(QColor("SteelBlue"),2);
-        curveComa->attach(pl);
-    }
-
-
-    if (m_statsDlg->doSA){
-        QwtPlotCurve *curveSA = new QwtPlotCurve("SA");
-
-        curveSA->setSamples(spherical);
-        curveSA->setPen(Qt::magenta,2);
-        curveSA->attach(pl);
-        QwtPlotCurve *SAA = new QwtPlotCurve("SA Avg");
-        SAA->setSamples(sphericaRunningAvg);
-        SAA->setPen(Qt::magenta,1);
-        SAA->attach(pl);
-    }
-
-    int samndx[last];
-    for (int i = 0; i < last; ++i)
-        samndx[i] = i;
-    std::random_shuffle (samndx,samndx + last -1);
-
-    for (int j = 0; j < last; ++j){
-        int i = (m_currentNdx + j) % m_wavefronts.size();
-        //i = samndx[j];
-        cv::Mat resized = twaves[i]->workData.clone();
-        if (twaves[i]->workData.rows != rrows || twaves[i]->workData.cols != rcols){
-            cv::resize(twaves[i]->workData,resized, Size(rcols, rrows));
-        }
-        sum += resized;
-        cv::Mat avg = sum/(j+1);
-        cv::Scalar mean,std;
-        cv::meanStdDev(resized,mean,std,mask);
-        double stdi = std.val[0]* md->lambda/550.;
-        cv::meanStdDev(avg,mean,std,mask);
-        avgPoints << QPointF(j,std.val[0] * md->lambda/550.);
-        wftPoints << QPointF(j,stdi);
-        trueNdx << i;
-    }
-
-    QwtPlot *hp = new QwtPlot(0);
-    // create wavefront stats
-    {
-        cv::Mat wftStatsx(avgPoints.size(), 1, CV_64F);  // used to compute std and mean
-        std::vector<double> vecWftRMS;    // used to compute quartiles
-
-        for (int ndx = 0; ndx < wftPoints.size(); ++ndx){
-            wftStatsx.at<double>(ndx) = wftPoints[ndx].y();
-            vecWftRMS.push_back( wftPoints[ndx].y());
-        }
-
-        std::sort( vecWftRMS.begin(), vecWftRMS.end() ); // sort vecFromMat
-        double median;
-        int sampleCnt = vecWftRMS.size();
-        if (sampleCnt % 2==0) {
-            median = (vecWftRMS[vecWftRMS.size()/2-1]+vecWftRMS[vecWftRMS.size()/2])/2;
-        }
-        else {
-            median = vecWftRMS[(vecWftRMS.size()-1)/2];
-        }
-        double bottom = vecWftRMS[sampleCnt * .25];
-        double top = vecWftRMS[sampleCnt * .75];
-        // outlier detection http://www.itl.nist.gov/div898/handbook/prc/section1/prc16.htm
-
-        double IQ = top - bottom;
-        double lowerOuterFence = bottom - 3. * IQ;
-        double upperOuterFence = top + 3. * IQ;
-        double lowerInnerFence = bottom - 1. * IQ;
-        double upperInnerFence = top + 1.5 * IQ;
-        qDebug() << upperInnerFence;
-        QList<int> outliers;
-        for (int ndx = 0; ndx < wftPoints.size(); ++ndx){
-            double v = wftStatsx.at<double>(ndx);
-            qDebug() << trueNdx[ndx] << " " << v << " " << m_wavefronts[trueNdx[ndx]]->name;
-            if (v <= lowerOuterFence || v >= upperOuterFence){
-                outliersOuter << QPointF(2,v);
-                outliers << trueNdx[ndx];
-                qDebug() << "outer " << v;
-            }
-            else if (v <= lowerInnerFence || v >= upperInnerFence) {
-                outliersInner << QPointF(2,v);
-                outliers << trueNdx[ndx];
-                qDebug() << "inner " << v;
-            }
-        }
-        if (m_statsDlg->removeOutliers && outliers.size()){
-            qSort(outliers.begin(), outliers.end(), qGreater<int>());
-            deleteWaveFronts(outliers);
-            //saveAllWaveFrontStats();
-            return;
-        }
-        cv::Scalar mean,std;
-        cv::meanStdDev(wftStatsx,mean,std);
-        double min;
-        double maxx;
-        minMaxIdx(wftStatsx, &min,&maxx);
-        zernMinMax.append( QwtIntervalSample( 2, min, maxx ) );
-        zernStd.append(QwtIntervalSample(2,top,bottom));
-        zernStd.append(QwtIntervalSample(2, top, median));
-        int histSize = 11;
-        double fminx = .5 * min;
-        double fmaxx = (double)maxx;
-
-
-        QVector<int> hist = histo(vecWftRMS, 11, fminx,fmaxx);
-        QwtPlotHistogram *histPlot = new QwtPlotHistogram("Wave Fronts RMS");
-        //QwtPlotBarChart *histPlot = new QwtPlotBarChart("Wave Fronts RMS");
-        QVector<QwtIntervalSample> histData;
-        double interval = (fmaxx - fminx)/histSize;
-        for (int i = 0; i < hist.size(); ++i){
-            QwtInterval interv(i * interval, (i+1)*interval);
-            //qDebug() << interv.minValue() << " " << interv.maxValue() << " " << hist[i];
-            histData << QwtIntervalSample((double)hist[i],interv);
-
-        }
-
-        histPlot->setSamples(histData);
-
-        histPlot->attach(hp);
-        hp->setAxisTitle(QwtPlot::xBottom,"RMS");
-        hp->setTitle("Wave Front RMS Histogram");
-        hp->resize(640,480);
-        hp->show();
-
-    }
-    curve1->setSamples(avgPoints);
-    curve1->setRenderHint( QwtPlotItem::RenderAntialiased, true );
-    curve1->setPen(Qt::red,2);
-    curve1->attach(pl);
-    std::random_shuffle (twaves.begin(),twaves.end());
-    if (m_statsDlg->doInputs)
-        curve2->setSamples(wftPoints);
-
-
-    const char *colors[] =
-    {
-        "Green",
-        "LightSalmon",
-        "SteelBlue",
-        "Yellow",
-        "Fuchsia",
-        "PaleGreen",
-        "PaleTurquoise",
-        "Cornsilk",
-        "HotPink",
-        "Peru",
-        "Maroon"
-    };
-    // draw all zern graphs
-
-    if (m_statsDlg->doZernGroup){
-        const int zernToCombinedNx[] = {0,0,0,0,0,0,1,1,2,3,3,4,4,5,5,6,7,7,8,8,9,9,10,10,11,
-                                        12,12,13,13,14,14,15,15,16,16,17};
-
-        for (int zern = zernToCombinedNx[m_statsDlg->zernFrom]; zern <= zernToCombinedNx[m_statsDlg->zernTo]; ++zern){
-            QwtPlotCurve *zcurve = new QwtPlotCurve(QString().sprintf("%s",zNames[zern].toStdString().c_str()));
-            QPolygonF points;
-            int cnt = 0;
-            foreach(double v, zerns[zern]){
-                points << QPointF(cnt++,v);
-            }
-
-            zcurve->setSamples(points);
-            zcurve->setPen(QColor(colors[zern%10]),2);
-            zcurve->attach(pl);
-        }
-    }
-
-    pl->setCanvasBackground(QColor(Qt::black));
-    pl->enableAxis( QwtPlot::yRight );
-    curve2->setPen(Qt::red,1);
-
-
-    QwtSymbol *symbol = new QwtSymbol( QwtSymbol::Ellipse,
-                                       QBrush( Qt::red ), QPen( Qt::red, 2 ), QSize( 8, 8 ) );
-    curve2->setSymbol( symbol );
-
-    curve2->attach(pl);
-    curve2->setTitle("Input .wft's");
-
-    pl->insertLegend( new QwtLegend() , QwtPlot::TopLegend);
-    QFont label_font("Helvetica");
-    label_font.setPointSize(10);
-    pl->legend()->setFont(label_font);
-    QwtPlotGrid *grid = new QwtPlotGrid();
-    grid->setMajorPen( Qt::white, 0, Qt::DotLine );
-    grid->setMinorPen( Qt::gray, 0 , Qt::DotLine );
-    grid->attach(pl);
-    // finally, refresh the plot
-
-    pl->setTitle(title);
-
-
-
-    pl->replot();
-    QwtScaleDiv sd = pl->axisScaleDiv(QwtPlot::yLeft);
-    double up = sd.upperBound();
-    double lower = sd.lowerBound();
-
-    pl->setAxisScaleDraw(QwtPlot::yRight,new StrehlScaleDraw());
-    QwtScaleEngine * se1 = pl->axisScaleEngine(QwtPlot::yRight);
-    QwtScaleDiv sd1 = se1->divideScale(lower,up, 20,1);
-    pl->setAxisScaleDiv(QwtPlot::yRight, sd1);
-    if (m_statsDlg->showFileNames)
-        pl->setAxisScaleDraw(QwtPlot::xBottom, new wftNameScaleDraw(m_wavefronts, m_currentNdx));
-    QwtScaleEngine *se = pl->axisScaleEngine(QwtPlot::xBottom) ;
-    double x1 = 0;
-    double x2 = m_wavefronts.size()-1;
-    double step =  ceilf(x2/20);
-
-    QwtScaleDiv sd2 = se->divideScale(x1, x2, x2, 1, step);
-    pl->setAxisScaleDiv(QwtPlot::xBottom,sd2);
-    //pl->setAxisScale(QwtPlot::yRight,lower, up );
-    pl->setAxisTitle(0,"RMS");
-    pl->setAxisTitle(QwtPlot::yRight,"Strehl");
-    pl->setAxisTitle(QwtPlot::xBottom,"Wave Front");
-    pl->resize(800,600);
-    pl->replot();
-    QwtScaleDiv stldiv = pl->axisScaleDiv(QwtPlot::xBottom);
-    pl->show();
-
-
-    QwtIntervalSymbol *bar = new QwtIntervalSymbol( QwtIntervalSymbol::Bar );
-    QwtIntervalSymbol *box = new QwtIntervalSymbol( QwtIntervalSymbol::Box );
-    QwtPlot *myPlot = new QwtPlot(0);//  m_statsDlg->m_zernPlot;
-    myPlot->detachItems( QwtPlotItem::Rtti_PlotCurve);
-    QwtPlotIntervalCurve *zernMinMaxCurve = new QwtPlotIntervalCurve("minmax");
-    QwtPlotIntervalCurve *zernStdCurve = new QwtPlotIntervalCurve("std");
-    zernMinMaxCurve->setSymbol( bar );
-    zernMinMaxCurve->setSamples( zernMinMax );
-    zernMinMaxCurve->attach( myPlot );
-    zernMinMaxCurve->setStyle( QwtPlotIntervalCurve::NoCurve );
-    myPlot->setAxisTitle(QwtPlot::xBottom, "Zernike terms");
-    myPlot->setAxisTitle(QwtPlot::yLeft, "RMS");
-    myPlot->setAxisScale(QwtPlot::xBottom,0,22,1);
-    myPlot->setAxisScaleDraw( QwtPlot::xBottom, new ZernScaleDraw(zNames) );
-    zernStdCurve->setSymbol( box );
-    zernStdCurve->setSamples( zernStd );
-    zernStdCurve->attach( myPlot);
-    zernStdCurve->setStyle( QwtPlotIntervalCurve::NoCurve );
-
-    if (outliersInner.size()){
-        QwtPlotCurve *outers = new QwtPlotCurve("Outer outliers");
-
-        outers->setPen(Qt::blue,1);
-
-
-        QwtSymbol *symbol = new QwtSymbol( QwtSymbol::HLine,
-                                           QBrush( Qt::blue ), QPen( Qt::magenta, 2 ), QSize( 10, 5 ) );
-        outers->setSymbol( symbol );
-        outers->setSamples(outliersInner);
-        outers->attach(myPlot);
-    }
-    if (outliersOuter.size()){
-        QwtPlotCurve *outers = new QwtPlotCurve("Outer outliers");
-
-        outers->setPen(Qt::red,1);
-
-
-        QwtSymbol *symbol = new QwtSymbol( QwtSymbol::HLine,
-                                           QBrush( Qt::red ), QPen( Qt::red, 2 ), QSize( 10, 5 ) );
-        outers->setSymbol( symbol );
-        outers->setSamples(outliersOuter);
-        outers->attach(myPlot);
-    }
-    myPlot->resize(800,400);
-    myPlot->replot();
-    myPlot->show();
-
-    fName.replace(".csv",".pdf");
+    csvName.replace(".csv","");
     if (m_statsDlg->savePDF){
         QString fileName = QFileDialog::getSaveFileName(0,
-                                                        tr("Save stats pdf file"), fName,
+                                                        tr("Save stats pdf file"), csvName,
                                                         tr("pdf (*.pdf)"));
         if (fileName.isEmpty())
             return;
@@ -1461,18 +1093,18 @@ void SurfaceManager::saveAllWaveFrontStats(){
         QPainter painter( &printer );
 
         QwtPlotRenderer renderer;
-        renderer.render( pl, &painter, topRect );
+        renderer.render( wftStats, &painter, topRect );
 
 
         QRectF d1(10,size.height()/3+20, size.width()-20,size.height()/3-10);
-        renderer.render(myPlot, &painter, d1 );
+        renderer.render(zernPlot, &painter, d1 );
 
         QRectF d2(10,2 * size.height()/3+20, size.width()-20,size.height()/3-10);
-        renderer.render(hp, &painter, d2);
+        renderer.render(histPlot, &painter, d2);
     }
     if (m_statsDlg->saveJpg){
 
-        fName.replace(".pdf",".jpg");
+        QString name = QFileInfo(csvName).absoluteFilePath() + "/stats.png";
         const QList<QByteArray> imageFormats = QImageWriter::supportedImageFormats();
         QStringList filter;
         if ( imageFormats.size() > 0 )
@@ -1490,8 +1122,8 @@ void SurfaceManager::saveAllWaveFrontStats(){
 
             filter += imageFilter;
         }
-        fName = QFileDialog::getSaveFileName(0,
-                                             tr("Save stats plot"), fName,filter.join( ";;" ));
+        QString fName = QFileDialog::getSaveFileName(0,
+                                             tr("Save stats plot"), name,filter.join( ";;" ));
 
 
         if (fName.isEmpty())
@@ -1506,14 +1138,28 @@ void SurfaceManager::saveAllWaveFrontStats(){
 
         QPainter painter( &image );
         QwtPlotRenderer renderer;
-        renderer.render( pl, &painter, topRect );
+        renderer.render( wftStats, &painter, topRect );
         QRectF d1(0,size.height()/2+10, size.width(),size.height()/2-10);
-        renderer.render(myPlot, &painter, d1 );
+        renderer.render(zernPlot, &painter, d1 );
         painter.end();
 
         image.save( fName, QFileInfo( fName ).suffix().toLatin1() );
-
     }
+
+    QWidget *StatsW = new QWidget(0,Qt::Window);
+    QVBoxLayout *layout = new QVBoxLayout(StatsW);
+    QSplitter *sp = new QSplitter(Qt::Vertical);
+    sp->setStyleSheet("QSplitter::handle { background-color: lightgreen } background-color:lightgray;");
+    wftStats->setMinimumHeight(200);
+    sp->addWidget(wftStats);
+    layout->addWidget(sp,1);
+    zernPlot->setMinimumHeight(250);
+    sp->addWidget(zernPlot);
+    histPlot->setMinimumHeight(200);
+    sp->addWidget(histPlot);
+    StatsW->setLayout(layout);
+    StatsW->show();
+
 }
 void SurfaceManager::enableTools(){
 
@@ -1866,6 +1512,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     int cnt = 0;
     QString imagesHtml = "<table  style='ds margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;'"
                  " 'width='100%' cellspacing='2' cellpadding='0'>";
+
+    QPolygonF mirrorAstigAtEachRotation;
     for (int i = 0; i < list.size(); ++i){
         if (cnt++ == 0)
             imagesHtml.append("<tr>");
@@ -1882,7 +1530,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         curve->attach(pl1);
         QwtPlotMarker *m = new QwtPlotMarker();
         m->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(5,5)));
-
+        mirrorAstigAtEachRotation << QPointF(m_wavefronts[inputs[i]]->InputZerns[4],m_wavefronts[inputs[i]]->InputZerns[5]);
         m->setYValue(m_wavefronts[inputs[i]]->InputZerns[5]);
         m->setXValue(m_wavefronts[inputs[i]]->InputZerns[4]);
         m->attach(pl1);
@@ -1986,6 +1634,31 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     meanMark->setXValue(standXMean[0]);
     meanMark->setLabelAlignment( Qt::AlignTop );
     meanMark->attach(pl1);
+    double mirrorXastig = 0;
+    double mirrorYastig = 0;
+    int count = mirrorAstigAtEachRotation.size();
+    for (int i = 0; i < count; ++i){
+        mirrorXastig += mirrorAstigAtEachRotation[i].rx();
+        mirrorYastig += mirrorAstigAtEachRotation[i].ry();
+    }
+    mirrorXastig /= count;
+    mirrorYastig /= count;
+    double avgAstigRradius = 0;
+    for (int i = 0; i < count; ++i){
+        double x = mirrorAstigAtEachRotation[i].rx();
+        double y = mirrorAstigAtEachRotation[i].ry();
+        x -= mirrorXastig;
+        y -= mirrorYastig;
+        double rad = sqrt (x * x + y * y);
+        avgAstigRradius += rad;
+    }
+    avgAstigRradius/= count;
+
+    QwtPlotMarker *mirrorMeanMark = new QwtPlotMarker();
+    mirrorMeanMark->setValue(QPointF(mirrorXastig, mirrorYastig));
+    mirrorMeanMark->setSymbol(new QwtSymbol(QwtSymbol::Triangle,QColor(0,255,0,40), QColor(0,0,0), QSize(30,30)));
+    mirrorMeanMark->attach(pl1);
+
     QPolygonF stdCircle;
     double SE = standStd[0]/sqrt(standastig.rows);
     for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
@@ -1995,6 +1668,23 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     curveStandStd->setPen(Qt::darkYellow,3,Qt::DotLine );
     curveStandStd->setSamples(stdCircle);
     curveStandStd->attach(pl1);
+    for (int i = 0; i < count; ++i){
+        double x = mirrorXastig - mirrorAstigAtEachRotation[i].rx();
+
+        double y = mirrorYastig - mirrorAstigAtEachRotation[i].ry();
+        double rad = sqrt(x * x + y * y);
+        stdCircle.clear();
+        for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
+            stdCircle << QPointF(mirrorXastig+rad * cos(rho), mirrorYastig + rad * sin(rho));
+        }
+        curveStandStd = new QwtPlotCurve();
+        QColor color(Qt::GlobalColor( 6 + i%13 ) );
+        QPen pen(color,2);
+        curveStandStd->setPen(pen);
+        curveStandStd->setSamples(stdCircle);
+        curveStandStd->attach(pl1);
+    }
+
     pl1->resize(300,300);
     pl1->replot();
 
@@ -2005,10 +1695,15 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
     results.res.append (imageName);
     html.append("<p> <img src='" + imageName + "' /></p>");
-    html.append("<p font-size:12pt> The plot above shows the astig of each input file plotted as colored squares. "
-               "It shows the stand only astig ploted as lines. The line ends at the atig value. "
+    html.append("<p font-size:12pt> The plot above shows the astig of each input file plotted as colored squares and large circle."
+                "The center of these circles is a green triangle. The green triangle is the mean value of all the unrotated input files."""
+                " In a perfect world each circle would have the same radius and overlap. "
+                " If any circles are far different from the others look for a problem at that rotation angle.</p>"
+               "<p font-size:12pt>It shows the stand only astig ploted as lines. The line ends at the atig value. "
                "The length of the line represents the magnitude of the astig.<br>"
-               "The mean value of test stand only astig is plotted as a large star.</p>"
+               "The mean value of test stand only astig is plotted as a large star. It and the green triangle should overlap.<br>"
+                "There is a circle around the mean value that is the standard error of the mean. Its diameter represents the "
+                "variabilty of the mean.</p>"
                 "<p font-size:12pt>If the variation for the astig values is small then "
                 "The stand removal was good.  Idealy the STD (standard deviation) should be"
                 " less than .1 which means less than .1 wave pv on the surface of the mirror</p><br>"

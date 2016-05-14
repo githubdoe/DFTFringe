@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>391</width>
-    <height>419</height>
+    <width>359</width>
+    <height>325</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -47,36 +47,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="AstigCB">
-     <property name="text">
-      <string>Astig</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="SACB">
-     <property name="text">
-      <string>Spherical</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="ComaCB">
-     <property name="minimumSize">
-      <size>
-       <width>81</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Coma</string>
-     </property>
-    </widget>
    </item>
    <item>
     <widget class="QCheckBox" name="doInputsCB">

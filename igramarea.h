@@ -128,8 +128,7 @@ public:
     void nextStep();
     bool sideOutlineIsActive;
     void save();
-    void increase();
-    void decrease();
+
     void doGamma(double gammaV);
     QImage igramImage;
     QString m_filename;
@@ -152,7 +151,13 @@ public slots:
     void shiftDown();
     void shiftRight();
     void shiftLeft();
+    void zoomIn();
+    void zoomOut();
     void igramOutlineParmsChanged(int, int, QColor, QColor, double, int);
+    void increase();
+    void decrease();
+    void zoomFull();
+    void toggleHideOutline();
 signals:
     void enableShiftButtons(bool);
     void statusBarUpdate(QString);
@@ -178,6 +183,7 @@ private:
     void drawBoundary();
     void resizeImage();
     void createActions();
+    void zoom(int del, QPointF zoompt);
     bool modified;
     bool scribbling;
     int edgePenWidth;
@@ -187,8 +193,6 @@ private:
     bool needToConvertBGR;
     QColor centerPenColor;
     QColor edgePenColor;
-
-
     QImage igramDisplay;
     QPointF m_OutterP1;
     QPointF m_OutterP2;

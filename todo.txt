@@ -8,8 +8,6 @@ Mirror dialog saves not readable by openFringe.
 
 Check that sign of conic is same for all in the average.
 
-dftarea getgreyimage.  Center of center outline should be center of center circle
-
 So what is the difference between reducing mask and recompute? Reducing mask Did not recompute zernike.
 need to reduce the mask radius by 2 when using vortex.  But do not know why yet.
 
@@ -20,5 +18,6 @@ why is intensity profile jagged?
 
 Fringe on zernike based display.  How can that be?  Mask has to be wrong or generator has to be wrong.
 
-Add average of stand only wavefronts to show the average stand forces.  Implemented but does not look right. Maybe not the stand terms at all.
+Add average of stand only wavefronts to the wavefront list.
 
+smoothing drops out when recomputing because of center obstruction changes.

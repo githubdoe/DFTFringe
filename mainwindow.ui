@@ -105,6 +105,7 @@
     <addaction name="actionWave_Front_Inspector"/>
     <addaction name="actionUser_Color_Map"/>
     <addaction name="actionTest_Stand_Astig_Removal"/>
+    <addaction name="actionIterate_outline"/>
    </widget>
    <widget class="QMenu" name="menuSimulations">
     <property name="title">
@@ -120,6 +121,8 @@
     <addaction name="actionAbout"/>
     <addaction name="actionHelp"/>
     <addaction name="actionVideos"/>
+    <addaction name="actionVersion_History"/>
+    <addaction name="actionLatest_Version"/>
    </widget>
    <addaction name="menuFiles"/>
    <addaction name="menuView"/>
@@ -179,51 +182,6 @@ QPushButton:hover{rgb(85, 255, 255)}
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>40</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-           <weight>75</weight>
-           <italic>false</italic>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="cursor">
-          <cursorShape>WhatsThisCursor</cursorShape>
-         </property>
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;div style = &quot;width: 300px&quot;;&gt;1. Load an interferogram image file.&lt;/p&gt;&lt;p&gt;Left click the mouse on one edge of the mirror.&lt;/p&gt;&lt;p&gt;With the left button down drag the mouse to the other side of the mirror.&lt;/p&gt;&lt;p&gt;scroll wheel will zoom the image.&lt;/p&gt;&lt;p&gt;[Shift] drag moves the circle.&lt;/p&gt;&lt;p&gt;[control] scroll wheel enlareges/shrink the circle.&lt;/p&gt;&lt;p&gt;Use the adjust buttons to modify the outline.&lt;/p&gt;&lt;p&gt;[ctrl z] Undo&lt;/p&gt;&lt;p&gt;[ctrl y] redo&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="styleSheet">
-          <string notr="true"/>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Panel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Sunken</enum>
-         </property>
-         <property name="text">
-          <string> HELP  </string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
         <spacer name="horizontalSpacer_7">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -235,6 +193,24 @@ QPushButton:hover{rgb(85, 255, 255)}
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="HelpOutlinePb">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;div style = &quot;width: 300px&quot;;&gt;1. Load an interferogram image file.&lt;/p&gt;&lt;p&gt;Left click the mouse on one edge of the mirror.&lt;/p&gt;&lt;p&gt;With the left button down drag the mouse to the other side of the mirror.&lt;/p&gt;&lt;p&gt;scroll wheel will zoom the image.&lt;/p&gt;&lt;p&gt;[Shift] drag moves the circle.&lt;/p&gt;&lt;p&gt;[control] scroll wheel enlareges/shrink the circle.&lt;/p&gt;&lt;p&gt;Use the adjust buttons to modify the outline.&lt;/p&gt;&lt;p&gt;[ctrl z] Undo&lt;/p&gt;&lt;p&gt;[ctrl y] redo&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {border-style: outset;
+border-width: 3px; border-radius:15px; border-color: darkgray;
+font: bold 12px;
+min-width: 5em;
+padding: 6px;}
+QPushButton:hover{rgb(85, 255, 255)}</string>
+         </property>
+         <property name="text">
+          <string>Help</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -964,6 +940,29 @@ em;
   <action name="actionBatch_Process_Interferograms">
    <property name="text">
     <string>Batch Process Interferograms</string>
+   </property>
+  </action>
+  <action name="actionVersion_History">
+   <property name="text">
+    <string>Version History</string>
+   </property>
+  </action>
+  <action name="actionSpeciall_for_Dale">
+   <property name="text">
+    <string>Speciall for Dale</string>
+   </property>
+  </action>
+  <action name="actionIterate_outline">
+   <property name="text">
+    <string>Iterate outline</string>
+   </property>
+   <property name="toolTip">
+    <string>step the outline from -5 to + 5 pixels radius</string>
+   </property>
+  </action>
+  <action name="actionLatest_Version">
+   <property name="text">
+    <string>Latest Version</string>
    </property>
   </action>
  </widget>

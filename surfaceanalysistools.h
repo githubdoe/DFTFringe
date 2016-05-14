@@ -46,6 +46,7 @@ public:
     bool m_useDefocus;
     double m_defocus;
     void setBlurText(QString txt);
+    void nameChanged(int, QString);
 signals:
     void doxform(QList<int>);
     void surfaceSmoothGBValue(int);
@@ -66,6 +67,7 @@ public slots:
     void deleteWaveFront(int);
     void defocusTimerDone();
     void nameChanged(QString, QString);
+
     void enableControls(bool);
 private slots:
     void on_surfaceSmoothGausianBlurr_valueChanged(int arg1);

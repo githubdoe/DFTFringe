@@ -80,7 +80,9 @@ SOURCES += main.cpp\
     helpdlg.cpp \
     settingsprofile.cpp \
     batchigramprocessingdlg.cpp \
-    batchigramwizard.cpp
+    batchigramwizard.cpp \
+    outlinehelpdocwidget.cpp \
+    statsview.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -142,7 +144,9 @@ HEADERS  += mainwindow.h \
     helpdlg.h \
     settingsprofile.h \
     batchigramprocessingdlg.h \
-    batchigramwizard.h
+    batchigramwizard.h \
+    outlinehelpdocwidget.h \
+    statsview.h
 
 FORMS    += mainwindow.ui \
     dfttools.ui \
@@ -186,7 +190,9 @@ FORMS    += mainwindow.ui \
     helpdlg.ui \
     settingsprofile.ui \
     batchigramprocessingdlg.ui \
-    batchigramwizard.ui
+    batchigramwizard.ui \
+    outlinehelpdocwidget.ui \
+    statsview.ui
 
 CONFIG( debug, debug|release ) {
     # debug
@@ -213,7 +219,7 @@ RC_FILE = DFTFringe.rc
 
 
 # The application version
-VERSION = 1.2
+VERSION = 1.3
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

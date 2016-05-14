@@ -46,9 +46,7 @@ StatsDlg::~StatsDlg()
 
 void StatsDlg::on_buttonBox_accepted()
 {
-    doAstig = ui->AstigCB->isChecked();
-    doSA = ui->SACB->isChecked();
-    doComa = ui->ComaCB->isChecked();
+
     doInputs = ui->doInputsCB->isChecked();
     saveCsv = ui->csv->isChecked();
     savePDF = ui->pdf->isChecked();

@@ -46,7 +46,7 @@
      <item>
       <widget class="QPushButton" name="pushButton">
        <property name="text">
-        <string>SHow All Wavefronts</string>
+        <string>Show All Wavefronts</string>
        </property>
       </widget>
      </item>

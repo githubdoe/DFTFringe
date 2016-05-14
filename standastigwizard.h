@@ -48,6 +48,7 @@ public:
     static QString AstigReportPdfName;
     ~standAstigWizard();
 
+
 private:
     Ui::standAstigWizard *ui;
 };
