@@ -113,8 +113,6 @@ private slots:
 
     void on_actionDelete_wave_front_triggered();
 
-    void on_actionSave_All_WaveFront_stats_triggered();
-
     void on_actionWrite_WaveFront_triggered();
 
     void on_actionSave_Wavefront_triggered();
@@ -187,6 +185,8 @@ private slots:
     void on_actionIterate_outline_triggered();
 
     void on_actionLatest_Version_triggered();
+
+    void on_actionShow_Statistics_of_Loaded_wavefronts_triggered();
 
 private:
 

@@ -20,6 +20,7 @@
 #include "wavefront.h"
 #include "zernikedlg.h"
 #include <qwt_plot_histogram.h>
+#include <QTextStream>
 class wftNameScaleDraw: public QwtScaleDraw
 {
 public:
@@ -79,7 +80,7 @@ public:
         setTickLength( QwtScaleDiv::MinorTick, 1 );
         setTickLength( QwtScaleDiv::MediumTick, 5 );
 
-        setLabelRotation( -60.0 );
+        setLabelRotation( -30.0 );
         setLabelAlignment( Qt::AlignLeft | Qt::AlignVCenter );
 
         setSpacing( 5 );
@@ -107,7 +108,8 @@ public:
 };
 
 wftStats::wftStats(mirrorDlg *md):
-     wftPlot(0), zernPlot(0), wftHistogram(0),md(md)
+     wftPlot(new QwtPlot(0)), zernPlot(new QwtPlot(0)), wftHistogram(new QwtPlot(0)),md(md),m_showWftNames(false),
+     m_doInputs(true), m_doZernGroup(false), zernFrom(0),zernTo(5)
 {
 }
 
@@ -116,6 +118,8 @@ void wftStats::showStats(){
 }
 
 void wftStats::computeZernStats( int ndx){
+
+
     zNames.clear();
     zerns.clear();
     zernMinMax.clear();
@@ -277,7 +281,7 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
     cv::Mat mask = wavefronts[0]->workMask.clone();
     cv::resize(mask,mask,cv::Size(rcols,rrows));
     QVector<wavefront*> twaves = wavefronts;
-    cv::Mat sum = cv::Mat::ones(rrows,rcols, wavefronts[ndx]->workData.type());
+    cv::Mat sum = cv::Mat::zeros(rrows,rcols, wavefronts[ndx]->workData.type());
 
     avgPoints.clear();
     wftPoints.clear();
@@ -363,9 +367,8 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
     m_hist = histox(vecWftRMS, histSize);
 }
 QwtPlot *wftStats::makeHistoPlot(){
-    if (wftHistogram)
-        delete wftHistogram;
-    wftHistogram = new QwtPlot(0);
+
+    wftHistogram->detachItems( QwtPlotItem::Rtti_PlotItem);
     wftHistogram->setWindowTitle("Wavefront Stats histogram.");
 
     QwtPlotHistogram *histPlot = new QwtPlotHistogram("Wave Fronts RMS");
@@ -387,43 +390,42 @@ QwtPlot *wftStats::makeHistoPlot(){
     return wftHistogram;
 }
 
-QwtPlot *wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx, StatsDlg *statsDlg){
-    if (wftPlot)
-        delete wftPlot;
+QwtPlot *wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx){
 
-    wftPlot = new QwtPlot(0);
+    wftPlot->detachItems( QwtPlotItem::Rtti_PlotItem);
     wftPlot->setWindowTitle("wavefront stats");
-    wftPlot->setCanvasBackground(QColor(statsDlg->m_background));
+
     wftPlot->enableAxis( QwtPlot::yRight );
     wftPlot->insertLegend( new QwtLegend() , QwtPlot::TopLegend);
     QFont label_font("Helvetica");
     label_font.setPointSize(10);
     wftPlot->legend()->setFont(label_font);
-    if (statsDlg->showFileNames)
+    if (m_showWftNames)
         wftPlot->setAxisScaleDraw(QwtPlot::xBottom, new wftNameScaleDraw(wavefronts, ndx));
+    else
+        wftPlot->setAxisScaleDraw(QwtPlot::xBottom, new QwtScaleDraw);
 
-
-    if (statsDlg->doInputs){
+    if (m_doInputs){
         QwtPlotCurve *InputWfts = new QwtPlotCurve();
         InputWfts->setSamples(wftPoints);
-        InputWfts->setPen(Qt::red,1);
+        InputWfts->setPen(Qt::black,1);
         QwtSymbol *symbol = new QwtSymbol( QwtSymbol::Ellipse,
-                                           QBrush( Qt::red ), QPen( Qt::red, 2 ), QSize( 8, 8 ) );
+                                           QBrush( Qt::red ), QPen( Qt::black, 2 ), QSize( 8, 8 ) );
         InputWfts->setSymbol( symbol );
         InputWfts->attach(wftPlot);
         InputWfts->setTitle("Input .wft's");
     }
-    if (statsDlg->showFileNames)
+    if (m_showWftNames)
         wftPlot->setAxisScaleDraw(QwtPlot::xBottom, new wftNameScaleDraw(wavefronts, ndx));
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->setMajorPen( Qt::gray, 0, Qt::DotLine );
     grid->setMinorPen( Qt::gray, 0 , Qt::DotLine );
     grid->enableYMin(true);
     grid->attach(wftPlot);
-    QwtPlotCurve *runingavg = new QwtPlotCurve(QString().sprintf("RMS Running Average"));
+    QwtPlotCurve *runingavg = new QwtPlotCurve(QString().sprintf("RMS of Running Average of wavefronts"));
     runingavg->setSamples(avgPoints);
     runingavg->setRenderHint( QwtPlotItem::RenderAntialiased, true );
-    runingavg->setPen(Qt::red,2);
+    runingavg->setPen(Qt::blue,2);
     runingavg->attach(wftPlot);
     const char *colors[] =
     {
@@ -439,11 +441,11 @@ QwtPlot *wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx, StatsD
         "Peru",
         "Maroon"
     };
-    if (statsDlg->doZernGroup){
+    if (m_doZernGroup){
         const int zernToCombinedNx[] = {0,0,0,0,0,0,1,1,2,3,3,4,4,5,5,6,7,7,8,8,9,9,10,10,11,
                                        12,12,13,13,14,14,15,15,16,16,17};
 
-        for (int zern = zernToCombinedNx[statsDlg->zernFrom]; zern <= zernToCombinedNx[statsDlg->zernTo]; ++zern){
+        for (int zern = zernToCombinedNx[zernFrom]; zern <= zernToCombinedNx[zernTo]; ++zern){
             QwtPlotCurve *zcurve = new QwtPlotCurve(QString().sprintf("%s",zNames[zern].toStdString().c_str()));
             QPolygonF points;
             int cnt = 0;
@@ -486,15 +488,13 @@ QwtPlot *wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx, StatsD
 }
 
 QwtPlot *wftStats::makeZernPlot(){
-    if (zernPlot)
-        delete zernPlot;
+    zernPlot->detachItems( QwtPlotItem::Rtti_PlotItem);
 
-    zernPlot = new QwtPlot(0);
     zernPlot->setWindowTitle("zernike term stats");
     QwtIntervalSymbol *bar = new QwtIntervalSymbol( QwtIntervalSymbol::Bar );
     QwtIntervalSymbol *box = new QwtIntervalSymbol( QwtIntervalSymbol::Box );
     box->setWidth(15);
-    zernPlot->detachItems( QwtPlotItem::Rtti_PlotCurve);
+
     QwtPlotIntervalCurve *zernMinMaxCurve = new QwtPlotIntervalCurve("minmax");
     QwtPlotIntervalCurve *zernStdCurve = new QwtPlotIntervalCurve("std");
     zernMinMaxCurve->setSymbol( bar );

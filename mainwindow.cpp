@@ -540,10 +540,7 @@ void MainWindow::on_actionDelete_wave_front_triggered()
     m_surfaceManager->deleteCurrent();
 }
 
-void MainWindow::on_actionSave_All_WaveFront_stats_triggered()
-{
-    m_surfaceManager->saveAllWaveFrontStats();
-}
+
 
 void MainWindow::on_actionWrite_WaveFront_triggered()
 {
@@ -959,4 +956,9 @@ void MainWindow::on_actionLatest_Version_triggered()
 {
     QString link = "https://github.com/githubdoe/DFTFringe/releases";
     QDesktopServices::openUrl(QUrl(link));
+}
+
+void MainWindow::on_actionShow_Statistics_of_Loaded_wavefronts_triggered()
+{
+     m_surfaceManager->saveAllWaveFrontStats();
 }

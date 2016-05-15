@@ -43,17 +43,23 @@ public:
     void computeWftStats(    QVector<wavefront*> wavefronts, int ndx);
     void computeZernStats(int ndx);
     void computeWftRunningAvg(QVector<wavefront *> wavefronts, int ndx);
-    QwtPlot *makeWftPlot(QVector<wavefront *> &wavefronts, int ndx, StatsDlg *statsDlg);
+    QwtPlot *makeWftPlot(QVector<wavefront *> &wavefronts, int ndx);
     QwtPlot *makeZernPlot();
     QwtPlot *makeHistoPlot();
     void makeCsv();
 
     QList<int> outliers;
     double IQ;
-private:
+    bool m_showWftNames;
+    bool m_doInputs;
+    bool m_doZernGroup;
+    int zernFrom;
+    int zernTo;
     QwtPlot *wftPlot;
     QwtPlot *zernPlot;
     QwtPlot *wftHistogram;
+private:
+
     QPolygonF wftPoints;
 
     QPolygonF avgPoints;

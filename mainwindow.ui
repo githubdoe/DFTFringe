@@ -72,7 +72,6 @@
     <addaction name="separator"/>
     <addaction name="actionSave_outline"/>
     <addaction name="actionSave_Wavefront"/>
-    <addaction name="actionSave_All_WaveFront_stats"/>
     <addaction name="actionSave_screen"/>
     <addaction name="actionSave_interferogram"/>
     <addaction name="actionSave_nulled_smoothed_wavefront"/>
@@ -86,6 +85,7 @@
     <addaction name="separator"/>
     <addaction name="actionLighting_properties"/>
     <addaction name="actionError_Margins"/>
+    <addaction name="actionShow_Statistics_of_Loaded_wavefronts"/>
    </widget>
    <widget class="QMenu" name="menuConfiguration">
     <property name="title">
@@ -963,6 +963,11 @@ em;
   <action name="actionLatest_Version">
    <property name="text">
     <string>Latest Version</string>
+   </property>
+  </action>
+  <action name="actionShow_Statistics_of_Loaded_wavefronts">
+   <property name="text">
+    <string>Show Statistics of Loaded wavefronts</string>
    </property>
   </action>
  </widget>
