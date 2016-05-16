@@ -917,8 +917,8 @@ void MainWindow::on_HelpOutlinePb_pressed()
 
 void MainWindow::on_actionVersion_History_triggered()
 {
-    QString link = qApp->applicationDirPath() + "/RevisionHisitory.html";
-    QDesktopServices::openUrl(QUrl(link));
+    QString link = qApp->applicationDirPath() + "/RevisionHistory.html";
+    QDesktopServices::openUrl(QUrl::fromLocalFile(link));
 }
 
 
