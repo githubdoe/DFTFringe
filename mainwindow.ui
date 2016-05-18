@@ -954,7 +954,7 @@ em;
   </action>
   <action name="actionIterate_outline">
    <property name="text">
-    <string>Iterate outline</string>
+    <string>Outline Helper</string>
    </property>
    <property name="toolTip">
     <string>step the outline from -5 to + 5 pixels radius</string>

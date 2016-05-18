@@ -31,7 +31,6 @@
 #include "mirrordlg.h"
 #include <opencv/cv.h>
 #include "wavefront.h"
-#include "statsdlg.h"
 #include <QObject>
 
 class wftStats : public QObject

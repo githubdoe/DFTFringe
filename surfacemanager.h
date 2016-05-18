@@ -34,7 +34,6 @@
 #include "zernikedlg.h"
 #include "mirrordlg.h"
 #include "metricsdisplay.h"
-#include "statsdlg.h"
 #include <QTimer>
 #include <QProgressDialog>
 #include "wftstats.h"
@@ -85,7 +84,6 @@ public:
     mirrorDlg *m_mirrorDlg;
     int insideOffset;
     int outsideOffset;
-    StatsDlg * m_statsDlg;
     QWaitCondition pauseCond;
 
     QMutex sync;
@@ -105,7 +103,7 @@ private:
     int workProgress;
     void subtract(wavefront *wf1, wavefront *wf2);
     wftStats *m_wftStats;
-    textres Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx, define_input *wizPage);
+    textres Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx);
 
 signals:
     void currentNdxChanged(int);
@@ -146,6 +144,7 @@ public slots:
     void showAllContours();
     void computeStandAstig(define_input *wizPage, QList<rotationDef *>);
     void ObstructionChanged();
+    void showAll3D(GLWidget *);
 };
 
 

@@ -26,6 +26,7 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
+#include <QColor>
 
 class OGLView : public QWidget
 {
@@ -39,13 +40,14 @@ public:
     QSpinBox *vscale;
     QDoubleSpinBox *backWallScaleSB;
     QPushButton *orthoPb;
-
-
+    QPushButton *backgroundPb;
+    QColor m_background;
 
 signals:
-
+    void showAll3d(GLWidget *);
 public slots:
-
+    void showAll();
+    void setBackground();
 
 };
 

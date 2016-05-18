@@ -88,6 +88,7 @@ void DFTArea::setChannel(const QString& val){
 void DFTArea::dftCenterFilter(double v){
     m_center_filter = v;
     QSettings set;
+    qDebug() << "Setting center value " << v;
     set.setValue("DFT Center Filter", v);
     update();
 }

@@ -45,6 +45,8 @@ private slots:
 
     void on_replot_clicked();
 
+    void on_checkBox_4_toggled(bool checked);
+
 private:
     Ui::statsView *ui;
     bool m_removeOutliers;

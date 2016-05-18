@@ -119,7 +119,6 @@ void wftStats::showStats(){
 
 void wftStats::computeZernStats( int ndx){
 
-
     zNames.clear();
     zerns.clear();
     zernMinMax.clear();
@@ -133,10 +132,10 @@ void wftStats::computeZernStats( int ndx){
         for (int i = 0; i < c.rows; ++i){
 
             int row = (i + ndx) % c.rows;
-            double v = c.at<double>(row);
+            double v = computeRMS(ndx,c.at<double>(row)) * 550./md->lambda;
             if (isPair){
                 cv::Mat c2 = m_Zerns.col(zern+1);
-                double v2 = c2.at<double>(row);
+                double v2 = computeRMS(ndx,c2.at<double>(row)) * 550./md->lambda;
                 double s = sqrt(v * v + v2 * v2);
                 v = s;
                 zname += " ";
@@ -145,7 +144,7 @@ void wftStats::computeZernStats( int ndx){
 
             if (i == 0) {
                 zNames << zname;
-                //qDebug() << zname;
+
             }
             zpoints << v;
         }
@@ -169,7 +168,6 @@ void wftStats::computeZernStats( int ndx){
         minMaxIdx(aSampleOfZerns, &min,&max);
 
         zernMinMax.append( QwtIntervalSample( col, min, max ) );
-        //qDebug() << "minmax " << col << " " << min << " " << max;
 
         zernStd.append(QwtIntervalSample(col,bottom,top));
         zernStd.append(QwtIntervalSample(col++, bottom, median));
@@ -232,12 +230,12 @@ QVector<int> histox(const std::vector<double> data, int bins){
     QVector<int> h(bins, 0);
 
     for (unsigned int i = 0; i < data.size(); ++i){
-        qDebug() << data[i];
+
         double bound = histInterval;
         for (int j = 0; j < bins; ++j){
             if (data[i] <= bound) {
                 ++h[j];
-                qDebug() << "hist " << j << " " << data[i] << " " << bound;
+
                 break;
             }
         bound += histInterval;
@@ -309,7 +307,7 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
 
     for (int ndx = 0; ndx < wftPoints.size(); ++ndx){
         wftStatsx.at<double>(ndx) = wftPoints[ndx].y();
-        qDebug() << "wft " << wftPoints[ndx].y();
+
         vecWftRMS.push_back( wftPoints[ndx].y());
     }
 
@@ -331,20 +329,20 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
     double upperOuterFence = top + 3. * IQ;
     double lowerInnerFence = bottom - 1. * IQ;
     double upperInnerFence = top + 1.5 * IQ;
-    qDebug() << "Inner Fence " << upperInnerFence << " " << lowerInnerFence;
+
     outliers.clear();
     for (int ndx = 0; ndx < wftPoints.size(); ++ndx){
         double v = wftStatsx.at<double>(ndx);
-        qDebug() << trueNdx[ndx] << " " << v << " " << wavefronts[trueNdx[ndx]]->name;
+
         if (v <= lowerOuterFence || v >= upperOuterFence){
             outliersOuter << QPointF(2,v);
             outliers << trueNdx[ndx];
-            qDebug() << "outer " << v;
+
         }
         else if (v <= lowerInnerFence || v >= upperInnerFence) {
             outliersInner << QPointF(2,v);
             outliers << trueNdx[ndx];
-            qDebug() << "inner " << v;
+
         }
         else {
             inrange << QPointF(2,v);
@@ -377,7 +375,7 @@ QwtPlot *wftStats::makeHistoPlot(){
 
     for (int i = 0; i < m_hist.size(); ++i){
         QwtInterval interv((i) * histInterval, (i+1)*histInterval);
-        //qDebug() << interv.minValue() << " " << interv.maxValue() << " " << hist[i];
+
         histData << QwtIntervalSample((double)m_hist[i],interv);
 
     }

@@ -141,6 +141,7 @@ public:
     void redo();
     void writeOutlines(QString fileName);
     QString makeOutlineName();
+    void shiftoutline(QPointF p);
 public slots:
     void gammaChanged(bool, double);
     void generateSimIgram();
@@ -154,8 +155,8 @@ public slots:
     void zoomIn();
     void zoomOut();
     void igramOutlineParmsChanged(int, int, QColor, QColor, double, int);
-    void increase();
-    void decrease();
+    void increase( int i = 1);
+    void decrease(int i = 1);
     void zoomFull();
     void toggleHideOutline();
 signals:
@@ -179,7 +180,7 @@ protected:
     void DrawSimIgram(void);
 private:
     QPushButton *m_demo;
-    void shiftoutline(QPointF p);
+
     void drawBoundary();
     void resizeImage();
     void createActions();

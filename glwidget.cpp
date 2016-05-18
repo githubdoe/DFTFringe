@@ -44,6 +44,7 @@ GLWidget::GLWidget(QWidget *parent, ContourTools* tools, surfaceAnalysisTools* s
       m_flip_x_view(false)
 {
     QSettings set;
+    m_background = QColor(set.value("oglBackground", "black").toString());
     //====== Initial lighting params
     m_LightParam[0] = set.value("xLightParam",-2).toInt();	// X position
     m_LightParam[1] = set.value("yLightParam",200).toInt();	// Y position
@@ -94,7 +95,12 @@ GLWidget::~GLWidget()
     makeCurrent();
 }
 
-
+void GLWidget::setBackground(QColor c){
+    m_background = c;
+    QSettings set;
+    set.setValue("oglBackground",c.name());
+    initializeGL();
+}
 
 void GLWidget::setXRotation(int angle)
 {
@@ -202,13 +208,8 @@ void GLWidget::initializeGL()
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glEnable(GL_DEPTH_TEST);
-
-
     glEnable(GL_NORMALIZE);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-
-
+    glClearColor(m_background.redF(), m_background.greenF(), m_background.blueF(), 1.f);
 }
 
 void GLWidget::paintGL()

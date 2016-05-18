@@ -26,28 +26,40 @@ void writeCircle(std::ofstream& file, CircleOutline& circle){
     double y = circle.m_center.y();
     file.write((char*)&y,8);
     double rx = circle.m_radius;
-    file.write((char*)&rx,8);
-    file.write((char*)&rx,8);
+    file.write((char*)(&rx),8);
+    file.write((char*)(&rx),8);
+    qDebug() << "Write circle " << x << y << rx;
     int size = 2;
     file.write((char*)&size,4);
-    file.write((char*)&(circle.m_p1),8);
-    file.write((char*)&(circle.m_p2),8);
+    file.write((char*)&(circle.m_p1.m_p.rx()),8);
+    file.write((char*)&(circle.m_p2.m_p.ry()),8);
 }
 
-CircleOutline readCircle(std::ifstream& file){
-    char buf[32];
-    file.read(buf,8*4);
+CircleOutline readCircle(std::ifstream &file){
+    char buf[32 + 4];
+    file.read(buf,8*4 + 4);
+    for (int i = 0; i < 32;){
+            QString v;
+        for (int j = 0; j < 8; ++j){
+            v += QString().sprintf(" %02x",((unsigned char *) buf)[i++]).replace("\"","");
+        }
+        qDebug() << v;
+    }
+    unsigned char* b = (unsigned char*)buf;
+
     double *dp = (double*)buf;
     double x = *(dp++);
     double y = *(dp++);
     double rx = *(dp++);
+    qDebug() << " read rad " << rx << x << y;
 
-    file.read(buf,4);
-    int size = 0; //= *(reinterpret_cast<int *>(buf));
+    ++dp;
+    int size = *(int *)dp; //= *(reinterpret_cast<int *>(buf));
     // ignore the ellipse point section
-    std::memcpy(&size, buf, sizeof(int));
+
     for (int i = 0; i < size; ++i) {
         file.read(buf,8);
+        dp = (double*)buf;
     }
     CircleOutline c;
     c.m_center.rx() = x;

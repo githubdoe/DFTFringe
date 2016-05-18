@@ -309,7 +309,6 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     connect(this, SIGNAL(enableControls(bool)),m_surfaceTools, SLOT(enableControls(bool)));
     connect(mirrorDlg::get_Instance(),SIGNAL(recomputeZerns()), this, SLOT(computeZerns()));
     connect(mirrorDlg::get_Instance(),SIGNAL(obstructionChanged()), this, SLOT(ObstructionChanged()));
-    m_statsDlg = new StatsDlg(0);
     QSettings settings;
     m_GB_enabled = settings.value("GBlur", true).toBool();
     m_gbValue = settings.value("GBValue", 21).toInt();
@@ -1168,7 +1167,7 @@ void SurfaceManager::surfaceBaseChanged(bool b) {
 
 
 
-textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx , define_input *wizPage){
+textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx ){
     QTextEdit *editor = new QTextEdit;
 
     QTextDocument *doc = editor->document();
@@ -1679,7 +1678,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     // plot the astig of each of the inputs which will be the stand only astig.
 
     wizPage->runpb->setText("computing averages");
-    textres page3res = Phase2(list, inputs, avgNdx, wizPage);
+    textres page3res = Phase2(list, inputs, avgNdx);
     QTabWidget *tabw = new QTabWidget();
     tabw->setTabShape(QTabWidget::Triangular);
     tabw->addTab(editor, "Page 1 input analysis");
@@ -1756,6 +1755,65 @@ void SurfaceManager::saveAllContours(){
     if (fName.isEmpty())
         return;
     m_allContours.save( fName );
+}
+void SurfaceManager::showAll3D(GLWidget *gl)
+{
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    int width = 500;
+    int height = 500;
+
+    int rows =  ceil((double)m_wavefronts.size()/4.);
+    int columns = min(m_wavefronts.size(),int(ceil((double)m_wavefronts.size()/rows)));
+    const QSizeF size(columns * (width + 10), rows * (height + 10));
+    const QRect imageRect = QRect(0,0,size.width(),size.height());
+    m_allContours = QImage( imageRect.size(), QImage::Format_ARGB32 );
+    m_allContours.fill( QColor( Qt::white ).rgb() );
+    QPainter painter(&m_allContours);
+    QFont serifFont("Times", 18, QFont::Bold);
+    for (int i = 0; i < m_wavefronts.size(); ++i)
+    {
+        wavefront * wf = m_wavefronts[i];
+        gl->setSurface(wf);
+        QImage glImage = gl->grabFrameBuffer();
+        QPainter p2(&glImage);
+        p2.setFont(serifFont);
+        p2.setPen(QPen(QColor(Qt::white)));
+        QStringList l = wf->name.split("/");
+        p2.drawText(10,30,l[l.size()-1] + QString().sprintf("%6.3lf RMS",wf->std));
+
+        int y_offset =  height * (i/columns) + 40;
+        int x_offset = width * (i%columns) + 20;
+        painter.drawImage(x_offset,y_offset, glImage.scaled(width, height,Qt::KeepAspectRatio));
+    }
+
+    //image.save( "tmp.png" );
+    QWidget *w = new QWidget;
+    QVBoxLayout *layout = new QVBoxLayout;
+
+    QScrollArea *scrollArea = new QScrollArea;
+
+    QLabel *l = new QLabel();
+    l->setPixmap(QPixmap::fromImage(m_allContours));
+    l->setScaledContents( true );
+
+    l->setSizePolicy( QSizePolicy::Ignored, QSizePolicy::Ignored );
+
+    scrollArea->setWidget(l);
+    scrollArea->setBackgroundRole(QPalette::Dark);
+    scrollArea->setAutoFillBackground(true);
+    QPushButton *savePb = new QPushButton("Save as Image",w);
+
+    connect(savePb, SIGNAL(pressed()), this, SLOT(saveAllContours()));
+    layout->addWidget(savePb,0,Qt::AlignHCenter);
+    layout->addWidget(scrollArea);
+    w->setLayout(layout);
+    w->setWindowTitle("3D height map of All WaveFronts.");
+    QRect rec = QApplication::desktop()->screenGeometry();
+    height = 2 * rec.height()/3;
+    width = rec.width();
+    w->resize(width,height);
+    w->show();
+    QApplication::restoreOverrideCursor();
 }
 
 void SurfaceManager::showAllContours(){

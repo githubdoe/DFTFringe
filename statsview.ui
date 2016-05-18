@@ -50,6 +50,9 @@
         </item>
         <item>
          <widget class="QDoubleSpinBox" name="RMSLimit">
+          <property name="decimals">
+           <number>3</number>
+          </property>
           <property name="value">
            <double>0.500000000000000</double>
           </property>
@@ -81,10 +84,10 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="spinBox_2"/>
+          <widget class="QSpinBox" name="zernFromSP"/>
          </item>
          <item>
-          <widget class="QSpinBox" name="spinBox">
+          <widget class="QSpinBox" name="zernToSP">
            <property name="minimum">
             <number>3</number>
            </property>

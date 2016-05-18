@@ -135,6 +135,7 @@ MainWindow::MainWindow(QWidget *parent) :
             m_surfaceManager, SLOT(createSurfaceFromPhaseMap(cv::Mat,CircleOutline,CircleOutline,QString)));
     connect(m_surfaceManager, SIGNAL(diameterChanged(double)),this,SLOT(diameterChanged(double)));
     connect(m_surfaceManager, SIGNAL(showTab(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
+    connect(m_ogl, SIGNAL(showAll3d(GLWidget *)), m_surfaceManager, SLOT(showAll3D(GLWidget *)));
     ui->tabWidget->addTab(scrollArea, "igram");
     ui->tabWidget->addTab(m_dftArea, "Analyze");
     ui->tabWidget->addTab(review, "Results");
@@ -922,17 +923,59 @@ void MainWindow::on_actionVersion_History_triggered()
 }
 
 
-
+#include "jitteroutlinedlg.h"
 void MainWindow::on_actionIterate_outline_triggered()
 {
+    jitterOutlineDlg *dlg = jitterOutlineDlg::getInstance(this);
+    connect(dlg,SIGNAL(finished(int)),this,SLOT(stopJitter()));
+    dlg->show();
+}
+static bool stopJittering = false;
+void MainWindow::stopJitter(){
+    stopJittering = true;
+}
 
-    CircleOutline  saved = m_igramArea->m_outside;
-    for (int i = 0; i < 5; ++i){
-    m_igramArea->increase();
+void MainWindow::startJitter(){
+    if (m_igramArea->m_outside.m_radius == 0){
+        QMessageBox::warning(this, "Error", "You must first load an interferogram and outline the mirror. and press 'Done'");
+        return;
     }
-    int delta = -5;
-    for (int i = 0; i < 11; ++i){
-        m_igramArea->decrease();
+    jitterOutlineDlg *dlg = jitterOutlineDlg::getInstance(this);
+    stopJittering = false;
+    int start = dlg->getStart();
+    int end = dlg->getEnd();
+    int step = dlg->getStep();
+    int x = 0;
+    int y = 0;
+    int rad = 0;
+
+    m_igramArea->openImage(m_igramArea->m_filename);
+    CircleOutline  saved = m_igramArea->m_outside;
+    dlg->getProgressBar()->setMinimum(start);
+    dlg->getProgressBar()->setMaximum(end);
+    for (int delta = start; delta <= end; delta += step){
+        dlg->getProgressBar()->setValue(delta);
+        switch (dlg->getType()){
+        case 1:
+            x = delta;
+            break;
+        case 2:
+            y = delta;
+            break;
+        case 3:
+            rad = delta;
+            break;
+        }
+
+        if (stopJittering)
+            break;
+        m_igramArea->openImage(m_igramArea->m_filename);
+        m_igramArea->m_outside = saved;
+        m_igramArea->increase(rad);
+        m_igramArea->shiftoutline(QPointF(x,y));
+        qApp->processEvents();
+        Sleep(1000);
+
         m_igramArea->nextStep();
 
         m_surfaceManager->m_surface_finished = false;
@@ -940,17 +983,20 @@ void MainWindow::on_actionIterate_outline_triggered()
         m_dftArea->makeSurface();
         while(m_inBatch && !m_surfaceManager->m_surface_finished){qApp->processEvents();}
         wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
-        wf->name = wf->name + QString().sprintf("_%d",delta+i);
+        wf->name = QString().sprintf("x:_%d_Y:_%d_radius:_%d",x,y,rad);
+        dlg->status(wf->name);
         m_surfTools->nameChanged(m_surfaceManager->m_currentNdx, wf->name);
-        Sleep(1000);
+        qApp->processEvents();
+        Sleep(500);
     }
+    dlg->getProgressBar()->reset();
+    stopJittering = false;
 
+    m_igramArea->openImage(m_igramArea->m_filename);
     m_igramArea->m_outside = saved;
-    m_igramArea->increase();
-    m_igramArea->decrease();
+    m_igramArea->nextStep();
+    m_igramArea->openImage(m_igramArea->m_filename);
 }
-
-
 
 void MainWindow::on_actionLatest_Version_triggered()
 {

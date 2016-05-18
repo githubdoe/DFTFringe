@@ -75,8 +75,6 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
       zoomIndex(0),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false)
 {
 
-
-
     m_innerP1 = m_innerP2 = m_OutterP1 = m_OutterP2 = QPointF(0.,0.);
     setAttribute(Qt::WA_StaticContents);
     modified = false;
@@ -252,8 +250,6 @@ bool IgramArea::openImage(const QString &fileName)
     QImage loadedImage;
     if (!loadedImage.load(fileName))
         return false;
-        qDebug() << "loaded format " << loadedImage.format();
-
 
     if (Settings2::getInstance()->shouldHflipIgram())
         loadedImage = loadedImage.mirrored(true,false);
@@ -438,21 +434,21 @@ bool IgramArea::eventFilter(QObject *object, QEvent *event)
     return QObject::eventFilter( object, event );
 }
 
-void IgramArea::increase() {
+void IgramArea::increase(int i) {
 
     if (m_current_boundry == OutSideOutline) {
-        m_outside.enlarge(1);
+        m_outside.enlarge(i);
         m_OutterP1 = m_outside.m_p1.m_p;
         m_OutterP2 = m_outside.m_p2.m_p;
     }
     else {
-        m_center.enlarge(1);
+        m_center.enlarge(i);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
     }
     drawBoundary();
 }
-void IgramArea::decrease(){
+void IgramArea::decrease(int i){
 
     if (m_current_boundry == OutSideOutline) {
         m_outside.enlarge(-1);
@@ -895,7 +891,13 @@ void IgramArea::SideOutLineActive(bool checked){
 }
 
 void IgramArea::loadOutlineFile(QString fileName){
-    std::ifstream file((fileName.toStdString().c_str()));
+    std::ifstream file(fileName.toStdString().c_str());
+
+    int fsize = file.tellg();
+    file.seekg( 0, std::ios::end );
+    fsize = file.tellg() - fsize;
+    file.close();
+    file.open(fileName.toStdString().c_str());
     if (!file.is_open()) {
         QMessageBox::warning(this, tr("Read Outline"),
                              tr("Cannot read file %1: ")
@@ -904,10 +906,17 @@ void IgramArea::loadOutlineFile(QString fileName){
     }
 
     m_outside = readCircle(file);
+
     CircleOutline sideLobe = readCircle(file);
+
     emit dftCenterFilter(sideLobe.m_radius);
 
-    if (file.gcount() < file.tellg()) {
+    while ((file.tellg() > 0) && (fsize > file.tellg())) {
+        qDebug() << "reading inside outline" << file.tellg() << fsize;
+        char buf[10];
+        file.read(buf,1);
+
+        continue;
         m_center = readCircle(file);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
@@ -951,18 +960,27 @@ void IgramArea::writeOutlines(QString fileName){
     // write oustide outline
     CircleOutline outside = m_outside;
     outside.translate(QPointF(cropTotalDx, cropTotalDy));
+
     writeCircle(file,outside);
     QSettings set;
     double filterRad = set.value("DFT Center Filter",10).toDouble();
+
     CircleOutline filter(QPointF(0,0), filterRad);
     writeCircle(file, filter );
+
     if (m_center.m_radius > 0){
+        qDebug() << "Write inside circle";
         CircleOutline inside = m_center;
         inside.translate(QPointF(cropTotalDx,cropTotalDy));
         writeCircle(file,inside);
     }
-
+    file.flush();
     file.close();
+
+    std::ifstream ifile((fileName.toStdString().c_str()));
+    char buf[32];
+    ifile.read(buf,32);
+    ifile.close();
 }
 
 void IgramArea::saveOutlines(){

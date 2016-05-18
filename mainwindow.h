@@ -78,6 +78,8 @@ public slots:
     void batchMakeSurfaceReady();
     void batchConnections(bool flag);
     void batchFinished(int ret);
+    void startJitter();
+    void stopJitter();
 signals:
     void load(QStringList, SurfaceManager *);
     void messageResult(int);

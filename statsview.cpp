@@ -8,6 +8,7 @@
 #include <QPrinter>
 #include <opencv/cv.h>
 #include <QApplication>
+#include <QMessageBox>
 statsView::statsView(SurfaceManager *parent) :
     QDialog(0),
     ui(new Ui::statsView),m_removeOutliers(false), m_removeRMS(false)
@@ -95,6 +96,10 @@ void statsView::getWavefronts(){
 }
 
 void statsView::replot(){
+    if (wavefrontsToUse.size() == 0){
+        QMessageBox::warning(0,"warning", "There are no wavefronts that meet the criteria");
+        return;
+    }
     m_stats->computeWftStats(wavefrontsToUse,0);
     m_stats->computeZernStats(0);
     m_stats->computeWftRunningAvg(wavefrontsToUse,0);
@@ -325,6 +330,18 @@ void statsView::on_savePdf_clicked()
 
 void statsView::on_replot_clicked()
 {
+    getWavefronts();
+    replot();
+    sresize();
+}
+
+void statsView::on_checkBox_4_toggled(bool checked)
+{
+    m_stats->m_doZernGroup=checked;
+    if (checked){
+        m_stats->zernFrom = ui->zernFromSP->text().toInt();
+        m_stats->zernTo = ui->zernToSP->text().toInt();
+    }
     getWavefronts();
     replot();
     sresize();

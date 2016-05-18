@@ -18,6 +18,7 @@
 #include "oglview.h"
 #include <QtCore>
 #include <QLayout>
+#include <QColorDialog>
 
 OGLView::OGLView(QWidget *parent, ContourTools *m_tool,
                  surfaceAnalysisTools *surfTools) :
@@ -40,6 +41,13 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool,
     lh->addWidget(lightingPb);
     connect(lightingPb, SIGNAL(clicked()), m_gl, SLOT(openLightingDlg()));
 
+    QPushButton *showAllPb = new QPushButton("Show All");
+    backgroundPb = new QPushButton("Background");
+    QColor backg = QColor(s.value("oglBackground", "black").toString());
+    backgroundPb->setStyleSheet("  background-color: " + backg.name() +";  border-width: 2px;"
+                                "border-color: black;");
+    connect(backgroundPb, SIGNAL(clicked(bool)), this, SLOT(setBackground()));
+    connect(showAllPb, SIGNAL(clicked()), this, SLOT(showAll()));
     QLabel *lb1 = new QLabel("Vertical Scale:",this);
     lb1->setMaximumHeight(10);
     lh->addWidget(lb1);
@@ -64,9 +72,22 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool,
     QLabel *lb3 = new QLabel("Waves",this);
     lb3->setMaximumHeight(10);
     lh->addWidget(lb3);
-
+    lh->addWidget(backgroundPb);
+    lh->addWidget(showAllPb);
 
     lh->addStretch();
     lv->addWidget(m_gl);
     setLayout(lv);
+}
+void OGLView::setBackground(){
+    QColorDialog dlg(m_gl->m_background,this);
+    QColor c = dlg.getColor();
+    m_gl->setBackground(c);
+    backgroundPb->setStyleSheet("  background-color: " + c.name() +";  border-width: 2px;"
+                                "border-color: black;");
+}
+
+void OGLView::showAll(){
+    emit showAll3d( m_gl);
+
 }

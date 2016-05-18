@@ -48,7 +48,6 @@ SOURCES += main.cpp\
     zernikes.cpp \
     metricsdisplay.cpp \
     reviewwindow.cpp \
-    statsdlg.cpp \
     wavefrontloader.cpp \
     rotationdlg.cpp \
     wftstats.cpp \
@@ -82,7 +81,8 @@ SOURCES += main.cpp\
     batchigramprocessingdlg.cpp \
     batchigramwizard.cpp \
     outlinehelpdocwidget.cpp \
-    statsview.cpp
+    statsview.cpp \
+    jitteroutlinedlg.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -111,7 +111,6 @@ HEADERS  += mainwindow.h \
     metricsdisplay.h \
     reviewwindow.h \
     vortex.h \
-    statsdlg.h \
     wavefrontstats.h \
     wavefrontloader.h \
     rotationdlg.h \
@@ -146,7 +145,8 @@ HEADERS  += mainwindow.h \
     batchigramprocessingdlg.h \
     batchigramwizard.h \
     outlinehelpdocwidget.h \
-    statsview.h
+    statsview.h \
+    jitteroutlinedlg.h
 
 FORMS    += mainwindow.ui \
     dfttools.ui \
@@ -192,7 +192,8 @@ FORMS    += mainwindow.ui \
     batchigramprocessingdlg.ui \
     batchigramwizard.ui \
     outlinehelpdocwidget.ui \
-    statsview.ui
+    statsview.ui \
+    jitteroutlinedlg.ui
 
 CONFIG( debug, debug|release ) {
     # debug
@@ -219,7 +220,7 @@ RC_FILE = DFTFringe.rc
 
 
 # The application version
-VERSION = 1.3
+VERSION = 1.4
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

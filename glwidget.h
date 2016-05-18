@@ -75,6 +75,8 @@ public:
     int m_green;
     int m_blue;
     QCheckBox FillCB;
+    QColor m_background;
+    void setBackground(QColor c);
 
 public slots:
     void setXRotation(int angle);

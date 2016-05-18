@@ -27,7 +27,6 @@ QString mirrorDlg::m_projectPath = "";
 mirrorDlg *mirrorDlg::m_Instance = 0;
 mirrorDlg *mirrorDlg::get_Instance(){
     if (m_Instance == 0){
-        qDebug() << "Making mirror dialog";
         m_Instance = new mirrorDlg();
     }
     return m_Instance;
