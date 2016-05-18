@@ -301,4 +301,5 @@ DISTFILES += \
     ColorMaps/spring.cmp \
     COPYING.LESSER.txt \
     COPYING.txt \
-    RevisionHistory.html
+    RevisionHistory.html \
+    README.md
