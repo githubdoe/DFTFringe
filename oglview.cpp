@@ -19,10 +19,12 @@
 #include <QtCore>
 #include <QLayout>
 #include <QColorDialog>
+#include <QShortcut>
+#include <QMenu>
 
 OGLView::OGLView(QWidget *parent, ContourTools *m_tool,
                  surfaceAnalysisTools *surfTools) :
-    QWidget(parent)
+    QWidget(parent),zoomed(false)
 {
     QSettings s;
     m_gl = new GLWidget(this, m_tool, surfTools);
@@ -78,6 +80,33 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool,
     lh->addStretch();
     lv->addWidget(m_gl);
     setLayout(lv);
+
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(showContextMenu(QPoint)));
+    setMinimumWidth(50);
+}
+QSize OGLView::sizeHint() const{
+    return QSize(300,300);
+}
+
+void OGLView::zoom(){
+    zoomed = !zoomed;
+    emit zoomMe(zoomed);
+}
+
+void OGLView::showContextMenu(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = mapToGlobal(pos);
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    QString txt = (zoomed)? "Restore to MainWindow" : "FullScreen";
+    myMenu.addAction(txt,  this, SLOT(zoom()));
+
+    // Show context menu at handling position
+    myMenu.exec(globalPos);
 }
 void OGLView::setBackground(){
     QColorDialog dlg(m_gl->m_background,this);

@@ -31,7 +31,6 @@ SOURCES += main.cpp\
     graphicsutilities.cpp \
     dfttools.cpp \
     dftarea.cpp \
-    outlinetools.cpp \
     profileplot.cpp \
     wavefront.cpp \
     contourplot.cpp \
@@ -93,7 +92,6 @@ HEADERS  += mainwindow.h \
     graphicsutilities.h \
     dfttools.h \
     dftarea.h \
-    outlinetools.h \
     profileplot.h \
     wavefront.h \
     contourplot.h \
@@ -151,7 +149,6 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
-    outlinetools.ui \
     profilearea.ui \
     profileplot.ui \
     contourtools.ui \

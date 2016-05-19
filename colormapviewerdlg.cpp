@@ -33,7 +33,7 @@ colorMapViewerDlg::colorMapViewerDlg(QWidget *parent) :
     ui(new Ui::colorMapViewerDlg)
 {
     QSettings set;
-    gpath = set.value("colorMaps path", "./ColorMaps").toString();
+    gpath = qApp->applicationDirPath() + "/ColorMaps";
     ui->setupUi(this);
     ui->path->setText(gpath);
     ui->listWidget->setViewMode(QListWidget::IconMode);

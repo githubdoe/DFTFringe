@@ -75,6 +75,42 @@ DFTArea::DFTArea(QWidget *parent, IgramArea *ip, DFTTools * tools, vortexDebug *
     QSettings set;
     m_center_filter = set.value("DFT Center Filter", 10).toDouble();
     emit updateFilterSize(m_center_filter);
+    /*
+        srand(time(NULL));
+    for (int i = 0; i < 5; ++i){
+    QwtPlot *test = new QwtPlot();
+
+    QwtPlotGrid *grid = new QwtPlotGrid();
+    grid->attach(test);
+    QPolygonF points;
+    QPolygonF runningAvg;
+    QPolygonF noise;
+    double avg = 0;
+
+
+    for (int i = 0; i < 50; ++i){
+        double n = double((rand()%100 - 50)/100.);
+        noise << QPointF(i, n);
+        double v = 1. + n;
+        points << QPointF( i,  v );
+        avg += v;
+        runningAvg << QPointF(i, avg/(i+1));
+    }
+    QwtPlotCurve *c3 = new QwtPlotCurve("noise");
+    c3->setSamples(noise);
+    c3->setPen(QPen(Qt::green));
+    //c3->attach(test);
+    QwtPlotCurve *c1 = new QwtPlotCurve("signal");
+    c1->setSamples(points);
+    c1->attach(test);
+    QwtPlotCurve *c2 = new QwtPlotCurve("Avg");
+    c2->setSamples(runningAvg);
+    c2->setPen(QPen(QColor(Qt::blue)));
+    c2->attach(test);;
+    test->resize(800,200);
+    test->show();
+    }
+    */
 }
 
 DFTArea::~DFTArea()

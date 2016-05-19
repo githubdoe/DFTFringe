@@ -323,6 +323,12 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="2">
          <widget class="QPushButton" name="undo">
+          <property name="minimumSize">
+           <size>
+            <width>5</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Undo last outline modification&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
@@ -363,7 +369,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>70</width>
+            <width>5</width>
             <height>0</height>
            </size>
           </property>
@@ -432,6 +438,12 @@ em;
         </item>
         <item row="2" column="2">
          <widget class="QPushButton" name="minus">
+          <property name="minimumSize">
+           <size>
+            <width>5</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="toolTip">
            <string>Decrease outline radius 1 pixel</string>
           </property>
@@ -466,6 +478,12 @@ em;
           <property name="enabled">
            <bool>false</bool>
           </property>
+          <property name="minimumSize">
+           <size>
+            <width>5</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="toolTip">
            <string>move outline down one pixel</string>
           </property>
@@ -494,6 +512,12 @@ em;
         </item>
         <item row="2" column="4">
          <widget class="QPushButton" name="pluss">
+          <property name="minimumSize">
+           <size>
+            <width>5</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="toolTip">
            <string>Expand outline radius 1 pixel</string>
           </property>
@@ -562,6 +586,12 @@ em;
         </item>
         <item row="0" column="4">
          <widget class="QPushButton" name="Redo">
+          <property name="minimumSize">
+           <size>
+            <width>5</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="toolTip">
            <string>Redo last modification</string>
           </property>
@@ -968,6 +998,11 @@ em;
   <action name="actionShow_Statistics_of_Loaded_wavefronts">
    <property name="text">
     <string>Show Statistics of Loaded wavefronts</string>
+   </property>
+  </action>
+  <action name="actionFull_Screen">
+   <property name="text">
+    <string>Full Screen</string>
    </property>
   </action>
  </widget>

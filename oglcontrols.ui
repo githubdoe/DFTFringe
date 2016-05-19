@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>193</width>
+    <width>143</width>
     <height>526</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>100</width>
+    <height>200</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>3D</string>

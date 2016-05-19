@@ -80,6 +80,10 @@ public slots:
     void batchFinished(int ret);
     void startJitter();
     void stopJitter();
+    void restoreOgl();
+    void restoreContour();
+    void zoomContour(bool flag);
+    void zoomOgl(bool flag);
 signals:
     void load(QStringList, SurfaceManager *);
     void messageResult(int);
@@ -103,7 +107,6 @@ private slots:
     void on_actionPreferences_triggered();
     void mainTabChanged(int);
     void on_actionMirror_triggered();
-
 
     void on_saveOutline_clicked();
 
@@ -249,6 +252,8 @@ private:
     vortexDebug    *m_vortexDebugTool;
     batchIgramWizard *batchWiz;
     QStringList m_igramsToProcess;
+    QWidget *oglFv;
+    QWidget *contourFv;
 
 };
 

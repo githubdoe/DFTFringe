@@ -42,12 +42,16 @@ public:
     QPushButton *orthoPb;
     QPushButton *backgroundPb;
     QColor m_background;
-
+    bool zoomed;
+    QSize sizeHint() const;
 signals:
     void showAll3d(GLWidget *);
+    void zoomMe(bool);
 public slots:
     void showAll();
-    void setBackground();
+    void setBackground( );
+    void zoom();
+    void showContextMenu(const QPoint &pos);
 
 };
 

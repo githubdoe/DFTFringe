@@ -114,7 +114,9 @@ MainWindow::MainWindow(QWidget *parent) :
     userMapDlg = new userColorMapDlg();
 
     m_contourView = new contourView(this, m_contourTools);
+    connect(m_contourView, SIGNAL(zoomMe(bool)),this, SLOT(zoomContour(bool)));
     m_ogl = new OGLView(0, m_contourTools, m_surfTools);
+    connect(m_ogl,SIGNAL(zoomMe(bool)), this, SLOT(zoomOgl(bool)));
 
     connect(userMapDlg, SIGNAL(colorMapChanged(int)), m_contourView->getPlot(), SLOT(ContourMapColorChanged(int)));
     connect(userMapDlg, SIGNAL(colorMapChanged(int)),m_ogl->m_gl, SLOT(colorMapChanged(int)));
@@ -1007,4 +1009,46 @@ void MainWindow::on_actionLatest_Version_triggered()
 void MainWindow::on_actionShow_Statistics_of_Loaded_wavefronts_triggered()
 {
      m_surfaceManager->saveAllWaveFrontStats();
+}
+void MainWindow::restoreContour(){
+    m_contourView->setMinimumHeight(0);
+    review->s1->insertWidget(1,m_contourView);
+}
+
+void MainWindow::restoreOgl(){
+    //m_ogl->setMinimumHeight(50);
+    review->s1->insertWidget(0,m_ogl);
+}
+
+void MainWindow::zoomContour(bool flag){
+    if (!flag){
+        contourFv->close();
+        return;
+    }
+    contourFv = new QWidget(0);
+    contourFv->setAttribute( Qt::WA_DeleteOnClose );
+    connect(contourFv,SIGNAL(destroyed(QObject*)),this, SLOT(restoreContour()));
+    QVBoxLayout *l = new QVBoxLayout();
+    l->addWidget(m_contourView);
+    m_contourView->setMinimumHeight(300);
+    contourFv->setLayout(l);
+    contourFv->showMaximized();
+}
+
+void MainWindow::zoomOgl(bool flag)
+{
+    if (!flag){
+        oglFv->close();
+        return;
+    }
+    oglFv = new QWidget(0);
+    oglFv->setAttribute( Qt::WA_DeleteOnClose );
+    connect(oglFv,SIGNAL(destroyed(QObject*)),this, SLOT(restoreOgl()));
+    QVBoxLayout *l = new QVBoxLayout();
+    //m_ogl->setMinimumHeight(300);
+    l->addWidget(m_ogl);
+    oglFv->setLayout(l);
+    oglFv->showMaximized();
+
+
 }

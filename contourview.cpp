@@ -17,19 +17,41 @@
 ****************************************************************************/
 #include "contourview.h"
 #include "ui_contourview.h"
+#include <QMenu>
 
 contourView::contourView(QWidget *parent, ContourTools *tools) :
     QWidget(parent),
-    ui(new Ui::contourView)
+    ui(new Ui::contourView), zoomed(false)
 {
     ui->setupUi(this);
     ui->widget->setTool(tools);
     connect(ui->widget, SIGNAL(newContourRange(double)), ui->doubleSpinBox , SLOT(setValue(double)));
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(showContextMenu(QPoint)));
 }
 
 contourView::~contourView()
 {
     delete ui;
+}
+void contourView::zoom(){
+    zoomed = !zoomed;
+    emit zoomMe(zoomed);
+}
+
+void contourView::showContextMenu(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = mapToGlobal(pos);
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    QString txt = (zoomed)? "Restore to MainWindow" : "FullScreen";
+    myMenu.addAction(txt,  this, SLOT(zoom()));
+
+    // Show context menu at handling position
+    myMenu.exec(globalPos);
 }
 ContourPlot *contourView::getPlot(){
     return ui->widget;

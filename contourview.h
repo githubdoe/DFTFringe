@@ -36,13 +36,16 @@ public:
 signals:
     void lineSpacingChanged(double);
     void showAllContours();
+    void zoomMe(bool);
 private slots:
     void on_doubleSpinBox_valueChanged(double arg1);
-
+    void showContextMenu(const QPoint &pos);
     void on_pushButton_pressed();
+    void zoom();
 
 private:
     Ui::contourView *ui;
+    bool zoomed;
 };
 
 #endif // CONTOURVIEW_H
