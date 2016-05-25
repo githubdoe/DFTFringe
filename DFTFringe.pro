@@ -81,7 +81,8 @@ SOURCES += main.cpp\
     batchigramwizard.cpp \
     outlinehelpdocwidget.cpp \
     statsview.cpp \
-    jitteroutlinedlg.cpp
+    jitteroutlinedlg.cpp \
+    nullvariationdlg.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -144,7 +145,8 @@ HEADERS  += mainwindow.h \
     batchigramwizard.h \
     outlinehelpdocwidget.h \
     statsview.h \
-    jitteroutlinedlg.h
+    jitteroutlinedlg.h \
+    nullvariationdlg.h
 
 FORMS    += mainwindow.ui \
     dfttools.ui \
@@ -190,7 +192,8 @@ FORMS    += mainwindow.ui \
     batchigramwizard.ui \
     outlinehelpdocwidget.ui \
     statsview.ui \
-    jitteroutlinedlg.ui
+    jitteroutlinedlg.ui \
+    nullvariationdlg.ui
 
 CONFIG( debug, debug|release ) {
     # debug
