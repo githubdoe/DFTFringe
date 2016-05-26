@@ -838,8 +838,10 @@ void GLWidget::setZranges(){
     }
     else if (m_zRangeMode == "Auto")
     {
-        maxy = 3 * m_wf->std;
-        miny = -3 * m_wf->std;
+        maxy = 3 * m_wf->std + m_wf->mean;
+        maxy = std::max(maxy, .03);
+        miny = m_wf->mean -3 * m_wf->std;
+        miny = std::min(miny, -.03);
     }
 
     else if (m_zRangeMode == "Min/Max"){

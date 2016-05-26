@@ -33,6 +33,7 @@ public:
     explicit contourView(QWidget *parent = 0, ContourTools *tools = 0);
     ~contourView();
     ContourPlot *getPlot();
+    bool zoomed;
 signals:
     void lineSpacingChanged(double);
     void showAllContours();
@@ -45,7 +46,7 @@ private slots:
 
 private:
     Ui::contourView *ui;
-    bool zoomed;
+
 };
 
 #endif // CONTOURVIEW_H

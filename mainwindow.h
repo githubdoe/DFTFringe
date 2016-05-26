@@ -77,7 +77,7 @@ public slots:
     void batchProcess(QStringList fileList);
     void batchMakeSurfaceReady();
     void batchConnections(bool flag);
-    void batchFinished(int ret);
+    void batchFinished(int);
     void startJitter();
     void stopJitter();
     void restoreOgl();

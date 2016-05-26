@@ -28,7 +28,6 @@
 #include <QtCore>
 #include <qtconcurrentrun.h>
 #include <qtconcurrentrun.h>
-#include "outlinedlg.h"
 #include "zernikes.h"
 #include "zernikeprocess.h"
 #include "simigramdlg.h"
@@ -86,6 +85,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->removeTab(0);
     ui->tabWidget->removeTab(0);
 
+    // setup igram window
     scrollArea = new QScrollArea;
     gscrollArea = scrollArea;
     m_igramArea = new IgramArea(scrollArea, this);
@@ -95,15 +95,21 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(gammaChanged(bool,double)), m_igramArea, SLOT(gammaChanged(bool, double)));
     m_igramArea->setBackgroundRole(QPalette::Base);
     installEventFilter(m_igramArea);
-    scrollArea->setBackgroundRole(QPalette::Dark);
+    //scrollArea->setBackgroundRole(QPalette::Dark);
     scrollArea->setWidget(m_igramArea);
-
-    scrollAreaDft = new QScrollArea;
+    ui->tabWidget->addTab(scrollArea, "igram");
 
     m_dftTools = new DFTTools(this);
     m_vortexDebugTool = new vortexDebug(this);
-    //m_vortexTools = new VortexTools(this);
+
+    // setup DFT window
+    scrollAreaDft = new QScrollArea;
+    scrollAreaDft->setBackgroundRole(QPalette::Base);
     m_dftArea = new DFTArea(scrollAreaDft, m_igramArea, m_dftTools, m_vortexDebugTool);
+    scrollAreaDft->setWidget(m_dftArea);
+    scrollAreaDft->resize(800,800);
+    ui->tabWidget->addTab(scrollAreaDft, "Analyze");
+
     m_contourTools = new ContourTools(this);
     m_outlineHelp = new outlineHelpDocWidget(this);
     m_surfTools = surfaceAnalysisTools::get_Instance(this);
@@ -138,12 +144,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_surfaceManager, SIGNAL(diameterChanged(double)),this,SLOT(diameterChanged(double)));
     connect(m_surfaceManager, SIGNAL(showTab(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
     connect(m_ogl, SIGNAL(showAll3d(GLWidget *)), m_surfaceManager, SLOT(showAll3D(GLWidget *)));
-    ui->tabWidget->addTab(scrollArea, "igram");
-    ui->tabWidget->addTab(m_dftArea, "Analyze");
+
     ui->tabWidget->addTab(review, "Results");
 
     ui->tabWidget->addTab(SimulationsView::getInstance(ui->tabWidget), "Star Test, PSF, MTF");
     scrollArea->setWidgetResizable(true);
+    scrollAreaDft->setWidgetResizable(true);
     createActions();
 
     //Recent Files list
@@ -620,53 +626,20 @@ void MainWindow::newMirrorDlgPath(QString path){
 #define TSIZE 200
 void MainWindow::on_actionWavefront_triggered()
 {
-    simIgramDlg dlg;
+    simIgramDlg &dlg = *simIgramDlg::get_instance();
     dlg.setWindowTitle("Wavefront terms");
     if (!dlg.exec())
         return;
 
     int wx = dlg.size;
     int wy = wx;
-    double rad = (double)(wx-1)/2.d;
+    double rad = (double)(wx-1)/2.;
     double xcen = rad,ycen = rad;
-    rad -= 5;
-
-    cv::Mat result = cv::Mat::zeros(wx,wx, CV_64F);
-
-    double rho;
+    int border = 5;
+    rad -= border;
 
 
-    mirrorDlg *md = m_mirrorDlg;
-    for (int i = 4; i <  wx-4; ++i)
-    {
-        double x1 = (double)(i - (xcen)) / rad;
-        for (int j = 4; j < wy-4; ++j)
-        {
-            double y1 = (double)(j - (ycen )) /rad;
-            rho = sqrt(x1 * x1 + y1 * y1);
-
-
-            if (rho <= 1.)
-            {
-                double theta = atan2(y1,x1);
-                double S1 = md->z8 * dlg.correction * .01 * ZernikePolar(8,rho, theta) +
-                        dlg.xtilt  * ZernikePolar(1,rho,theta) +
-                        dlg.ytilt * ZernikePolar(2,rho, theta) +
-                        dlg.defocus * ZernikePolar(3,rho, theta) +
-                        dlg.xastig * ZernikePolar(4, rho, theta )+
-                        dlg.yastig * ZernikePolar(5, rho, theta) +
-                        1. * dlg.star * cos(10.  *  theta) +
-                        1. * dlg.ring * cos(10 * 2. * rho);
-                if (dlg.zernNdx > 0)
-                    S1 += (dlg.zernValue * ZernikePolar(dlg.zernNdx, rho, theta));
-                result.at<double>(j,i) = S1;
-            }
-            else
-            {
-                result.at<double>(j,i) = 0 ;
-            }
-        }
-    }
+    cv::Mat result = makeSurfaceFromZerns(border);
 
     m_surfaceManager->createSurfaceFromPhaseMap(result,
                                                 CircleOutline(QPointF(xcen,ycen),rad),
@@ -829,15 +802,16 @@ void MainWindow::on_checkBox_clicked(bool checked)
 {
     m_igramArea->hideOutline(checked);
 }
-
+#include "nullvariationdlg.h"
 void MainWindow::on_actionError_Margins_triggered()
 {
-    QMessageBox::information(0,"info","Sorry not implemented yet.");
+    nullVariationDlg dlg;
+    dlg.exec();
 }
 void MainWindow::batchMakeSurfaceReady(){
     m_batchMakeSurfaceReady = true;
 }
-void MainWindow::batchFinished(int ret){
+void MainWindow::batchFinished(int ){
     batchConnections(false);
 }
 
@@ -1012,11 +986,13 @@ void MainWindow::on_actionShow_Statistics_of_Loaded_wavefronts_triggered()
 }
 void MainWindow::restoreContour(){
     m_contourView->setMinimumHeight(0);
+    m_contourView->zoomed = false;
     review->s1->insertWidget(1,m_contourView);
 }
 
 void MainWindow::restoreOgl(){
     //m_ogl->setMinimumHeight(50);
+    m_ogl->zoomed = false;
     review->s1->insertWidget(0,m_ogl);
 }
 

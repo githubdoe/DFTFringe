@@ -126,70 +126,24 @@ void IgramArea::outlineTimerTimeout(){
 
 void IgramArea::generateSimIgram()
 {
-
     DrawSimIgram();
 }
 
 
 void IgramArea::DrawSimIgram(void){
 
-    simIgramDlg dlg;
+    simIgramDlg &dlg = *simIgramDlg::get_instance();
     if (!dlg.exec())
         return;
     //m_demo->hide();
     int wx = dlg.size;
-    int wy = wx;
     double xcen = (double)(wx-1)/2.;
     double ycen = (double)(wx-1)/2.;
-    double rad = xcen-2;
-    cv::Mat simgram = cv::Mat::zeros(wx,wx,CV_8UC4);
+    int border = 20;
+    double rad = xcen-border;
+    cv::Mat simgram = makeSurfaceFromZerns(border, true);
 
 
-    double rho;
-    double spacing = 1.;
-
-    mirrorDlg *md = ((MainWindow*)(m_mw))->m_mirrorDlg;
-    for (int i = 0; i <  wx-0; ++i)
-    {
-        double x1 = (double)(i - xcen) / rad;
-        for (int j = 0; j < wy-0; ++j)
-        {
-            double y1 = (double)(j - ycen ) /rad;
-            rho = sqrt(x1 * x1 + y1 * y1);
-            if (rho <= 1.)
-            {
-            double phi = atan2(y1,x1);
-
-                double S1 = md->z8 * dlg.correction * .01d * Zernike(8,x1,y1) +
-                        dlg.xtilt * Zernike(1,x1,y1) +
-                        dlg.ytilt * Zernike(2,x1,y1) +
-                        dlg.defocus * Zernike(3,x1,y1) +
-                        dlg.xastig * Zernike(4, x1, y1)+
-                        dlg.yastig * Zernike(5, x1,y1) +
-                        dlg.star * cos(10.  *  phi) +
-                        dlg.ring * cos(2 * 10.  * rho);
-                if (dlg.zernNdx > 0)
-                    S1 += (dlg.zernValue * Zernike(dlg.zernNdx, x1,y1));
-
-                int iv = cos(spacing *2 * M_PI * S1) * 100 + 120;
-
-
-                //simgram.at<Vec4f>(i,j)[0] = 0;
-                simgram.at<Vec4b>(j,i)[2] = iv;
-                simgram.at<Vec4b>(j,i)[3] = 255;
-            }
-            else
-            {
-                simgram.at<Vec4b>(j,i) = Vec4f(0.,00.,100.,0);
-            }
-        }
-    }
-    //cv::circle(simgram, cv::Point(xcen,ycen),rad, cv::Scalar(200,200,200,200),-1);
-    //simgram.convertTo(simgram,CV_8UC4);
-    //imwrite("tmp.png",simgram);
-    //openImage("tmp.png");
-
-    //cv::cvtColor(simgram,simgram, CV_BGRA2RGBA);
     igramImage = QImage((uchar*)simgram.data,
                         simgram.cols,
                         simgram.rows,
@@ -247,6 +201,7 @@ void IgramArea::doGamma(double gammaV){
 bool IgramArea::openImage(const QString &fileName)
 
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     QImage loadedImage;
     if (!loadedImage.load(fileName))
         return false;
@@ -330,7 +285,7 @@ bool IgramArea::openImage(const QString &fileName)
     if (m_outside.m_radius > 0.)
         emit upateColorChannels(igramImage);
     emit showTab(0);
-
+    QApplication::restoreOverrideCursor();
     return true;
 }
 
@@ -490,7 +445,7 @@ void IgramArea::zoom(int del, QPointF zoompt){
     if (zoomIndex > 0) {
         zoomFactor = fitScale + .5 * zoomIndex;
         scale = zoomFactor;
-        qDebug() << QString().sprintf("scale %lf",scale);
+        qDebug() << QString().sprintf("scale %lf",scale) << zoomFactor;
         gscrollArea->setWidgetResizable(false);
         resize(igramImage.size() * scale);
 

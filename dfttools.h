@@ -41,7 +41,8 @@ signals:
     void dftSizeVal(int);
     void dftCenterFilter(double);
     void makeSurface();
-
+    void enlarge(bool);
+    void gamma(double);
 
 private slots:
 
@@ -52,6 +53,7 @@ private slots:
     void on_pushButton_clicked();
 
     void on_computeDFT_pressed();
+
 
 private:
     Ui::DFTTools *ui;

@@ -31,6 +31,7 @@ class simIgramDlg : public QDialog
 public:
     explicit simIgramDlg(QWidget *parent = 0);
     ~simIgramDlg();
+    static simIgramDlg*get_instance();
     double xtilt;
     double ytilt;
     double defocus;
@@ -49,6 +50,7 @@ private slots:
 
 private:
     Ui::simIgramDlg *ui;
+    static simIgramDlg *m_instance;
 };
 
 #endif // SIMIGRAMDLG_H

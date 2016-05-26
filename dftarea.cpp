@@ -29,11 +29,11 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data){
     int width = data.cols;
     int height = data.rows;
 
-    double radm = outside.m_radius+1;  //Don't know why but +1 gives the best result match to the expected value.
+    double radm = ceil(outside.m_radius);
     double rado = center.m_radius;
     double cx = outside.m_center.x();
     double cy = outside.m_center.y();
-    cv::Mat mask = cv::Mat::zeros(height,width,CV_8UC1);
+    cv::Mat mask = cv::Mat::ones(height,width,CV_8UC1);
     for (int y = 0; y < height; ++y){
         for (int x = 0; x < width; ++x){
             double dx = (double)(x - (cx))/(radm);
@@ -57,13 +57,14 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data){
     return mask;
 }
 
-DFTArea::DFTArea(QWidget *parent, IgramArea *ip, DFTTools * tools, vortexDebug *vdbug) :
-    QWidget(parent),m_size(640), tools(tools),
+DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug *vdbug) :
+    QWidget(mparent),m_size(640), tools(tools),
     dftSizeStr("640 X 640"), m_center_filter(10.),ui(new Ui::DFTArea),igramArea(ip),m_smooth(9.),
     m_vortexDebugTool(vdbug)
 
 {
     ui->setupUi(this);
+    m_gamma = 2.5;
     connect(tools,SIGNAL(dftChannel(const QString&)), this, SLOT(setChannel(const QString&)));
     connect(tools,SIGNAL(dftSizeChanged(const QString&)), this, SLOT(dftSizeChanged(const QString&)));
     connect(tools,SIGNAL(dftSizeVal(int)), this, SLOT(dftSizeVal(int)));
@@ -155,12 +156,13 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double centerY = igramArea->m_outside.m_center.y();
     double rad = igramArea->m_outside.m_radius;
     double radpix = ceil(rad);
-    double left = centerX - radpix;
-    double top = centerY - radpix;
+    int border = 10;
+    double left = floor((centerX - radpix - border));
+    double top = floor(centerY - radpix - border);
     vector<Mat > bgr_planes;
     top = max(top,0.);
     left = max(left,0.);
-    int width = 2. * (radpix);
+    int width = ceil(2. * (radpix) + 2 * border);
     width = min(width, img.width());
 
     // new center because of crop
@@ -168,9 +170,6 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double yCenterShift = centerY - top;
 
     cv::Mat iMat(img.height(), img.width(), CV_8UC4, img.bits(), img.bytesPerLine());
-    cv::Mat tmp = iMat.clone();
-
-
     cv::Mat roi = iMat(cv::Rect((int)left,(int)top,(int)width,(int)width)).clone();
 
     double centerDx = centerX - igramArea->m_center.m_center.x();
@@ -187,7 +186,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     if (scaleFactor < 1.){
 
         cv::resize(roi,roi, cv::Size(0,0), scaleFactor, scaleFactor);
-        double roic = roi.rows/2.;
+        double roic = (roi.rows-1)/2.;
         m_outside = CircleOutline(QPointF(roic,roic),roic);
         m_center = CircleOutline(QPointF((roic - centerDx * scaleFactor), (roic - centerDy * scaleFactor)),
                                  m_center.m_radius * scaleFactor);
@@ -204,6 +203,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     // split image into three color planes
 
     split( roi, bgr_planes );
+
 
     cv::Scalar mean;
     mean =  cv::mean(roi);
@@ -224,32 +224,47 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     else if (channel == "Green") maxndx = 1;
     else if (channel == "Red") maxndx = 2;
     qDebug() << "Max channel " << maxndx;
+    Mat padded = bgr_planes[maxndx].clone();
 
-    Mat  padded;                            //expand input image to optimal size
     int m = getOptimalDFTSize( roi.rows ) - roi.rows;
     int n = getOptimalDFTSize( roi.cols ) - roi.cols; // on the border add zero values
-    m =0;
+    // disabled adding optomizing DFT boarder.
+    m = 0;
     n = 0;
     qDebug() << "pady " << m << " padx " << n;
     if (m > 0 || n > 0)
-        copyMakeBorder(bgr_planes[maxndx], padded, 0, m, 0, n, BORDER_CONSTANT, Scalar::all(0));
-    else
-        padded = bgr_planes[maxndx].clone();
+        copyMakeBorder(padded, padded, 0, m, 0, n, BORDER_CONSTANT, Scalar::all(mean[maxndx]));
+
     padded = padded - mean[maxndx];
-    // disabled adding optomizing DFT boarder.
+
     Mat planes[] = {Mat_<float>(padded), Mat::zeros(padded.size(), CV_32F)};
 
-    m_mask = makeMask(m_outside,m_center,*planes);
-    if (Settings2::showMask())
-        showData("Mask", m_mask);
+    m_mask = makeMask(m_outside,m_center, *planes);
+    if (Settings2::showMask()){
+        Mat tmp = planes[0].clone();
+        normalize(tmp, tmp,0,255,CV_MINMAX);
+        tmp.convertTo(tmp,CV_8U);
+        Mat mm;
+        Mat channels[3];
+
+        channels[1] = m_mask;
+        channels[2] = tmp;
+        channels[0] = m_mask;
+        merge(channels,3,mm);
+        for (int i = 0; i < 3; ++i){
+            //imshow(QString().number(i).toStdString().c_str(),channels[i]);
+        }
+        imshow("mm", mm);
+        waitKey(1);
+
+    }
     cv::Mat tmpMask;
 
     planes[0].copyTo(tmpMask,m_mask);    // Convert image to binary
     planes[0] = tmpMask.clone();
     mean =  cv::mean(planes[0],m_mask);
     planes[0] -= mean;
-    //matDisplay md(planes[0],mean[0]);
-    //md.exec();
+
     Mat  complexI;
     merge(planes, 2, complexI);         // Add to the expanded another plane with zeros
     return complexI;
@@ -346,26 +361,40 @@ void DFTArea::doDFT(){
     cv::Mat realImage;
     dft(complexI,realImage,DFT_INVERSE);
     split(realImage,planes);
-    //cv::imshow("Inverse", planes[0]/(planes[0].cols * planes[0].rows));
-    //cv::waitKey(1);
+
     shiftDFT(complexI);
     m_dft = complexI/complexI.size().area();
 
-    magIImage = showMag(complexI);
+    magIImage = showMag(complexI,false,"", true, m_gamma);
+    scale = 1.;
+    double h = magIImage.height();
+    qDebug() <<" dft size "<< size();
+    scale = double(parentWidget()->size().height())/h;
+    if (scale < 1.)
+        scale = 1.;
+    magIImage = magIImage.scaled(magIImage.width() * scale, magIImage.height() * scale);
+    setMinimumSize(magIImage.size());
 
     //emit selectDFTTab();
     update();
     if (Settings2::showDFT())
         emit dftReady(magIImage);     //Creates a thumbnail dft area
 }
+void DFTArea::gamma(int i){
+    double v = 1. + 5. * (double)i/99.;
+    m_gamma = v;
+    doDFT();
+}
+
 void DFTArea::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     painter.drawImage(QPoint(0,0),magIImage);
     painter.setBrush(QColor(0,0,100,50));
-    painter.drawEllipse(QPointF(magIImage.width()/2,magIImage.height()/2), m_center_filter,m_center_filter);
+    painter.drawEllipse(QPointF(magIImage.width()/2,magIImage.height()/2),
+                        scale * m_center_filter,scale * m_center_filter);
     if (m_center_filter > 0.) {
-        double val = (double)m_center_filter;
+        double val = (double)m_center_filter * scale;
         val *= val;
         int last = 0;
         for (int i = 0; i < magIImage.width()-1; ++i){
@@ -379,13 +408,7 @@ void DFTArea::paintEvent(QPaintEvent *)
         }
     }
 }
-void DFTArea::resizeIgram(){
 
-}
-
-void DFTArea::setFilter(double){
-
-}
 
 #define WRAP(x) (((x) > 0.5) ? ((x)-1.0) : (((x) <= -0.5) ? ((x)+1.0) : (x)))
 #define WRAPPI(x) (((x) > M_PI) ? ((x)-2*M_PI) : (((x) <= -M_PI) ? ((x)+2*M_PI) : (x)))
@@ -802,8 +825,8 @@ void DFTArea::makeSurface(){
            phase.size().width, phase.size().height);
 
     flip(result,result,0); // flip around x axis.
-    m_outside.m_center.ry() = wy - m_outside.m_center.y() - 1;
-    m_center.m_center.ry() = wy - m_center.m_center.y() - 1;
+    m_outside.m_center.ry() = result.rows - m_outside.m_center.y();
+    m_center.m_center.ry() = result.rows - m_center.m_center.y();
     mirrorDlg *md = mirrorDlg::get_Instance();
     if (md->fringeSpacing != 1.){
         result *= md->fringeSpacing;
@@ -832,7 +855,7 @@ void DFTArea::mouseMoveEvent(QMouseEvent *event){
     int xcenter = (magIImage.width() -1)/2;
     int ycenter = (magIImage.height()-1)/2;
     int rad = sqrt(pow(pos.x()-xcenter,2)+pow(pos.y() - ycenter,2));
-    emit updateFilterSize(rad);
+    emit updateFilterSize(rad/scale);
 }
 
 void DFTArea::mousePressEvent(QMouseEvent *event)
@@ -844,7 +867,7 @@ void DFTArea::mousePressEvent(QMouseEvent *event)
         int ycenter = (magIImage.height()-1)/2;
         int rad = sqrt(pow(Raw.x()-xcenter,2)+pow(Raw.y() - ycenter,2));
 
-        emit updateFilterSize(rad);
+        emit updateFilterSize(rad/scale);
         capture = true;
     }
 

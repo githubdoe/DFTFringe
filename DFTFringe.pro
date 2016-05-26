@@ -22,6 +22,7 @@ TARGET = DFTFringe
 TEMPLATE = app
 
 CONFIG += ``
+
 SOURCES += main.cpp\
     mainwindow.cpp \
     igramarea.cpp \
@@ -147,7 +148,6 @@ HEADERS  += mainwindow.h \
     statsview.h \
     jitteroutlinedlg.h \
     nullvariationdlg.h
-
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -205,7 +205,6 @@ CONFIG( debug, debug|release ) {
 INCLUDEPATH += C:\\qwt-6.1.2\\src
 
 
-
 INCLUDEPATH += c:\opencv\build\include
 LIBS += C:/opencv/build-mingw/bin/*.dll
 
@@ -220,7 +219,7 @@ RC_FILE = DFTFringe.rc
 
 
 # The application version
-VERSION = 1.4
+VERSION = 1.6
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

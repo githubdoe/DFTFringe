@@ -18,6 +18,7 @@
 #include "simigramdlg.h"
 #include "ui_simigramdlg.h"
 #include <QSettings>
+simIgramDlg *simIgramDlg::m_instance = 0;
 simIgramDlg::simIgramDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::simIgramDlg)
@@ -42,6 +43,12 @@ simIgramDlg::simIgramDlg(QWidget *parent) :
     ui->yTiltSb->setValue(ytilt);
     size = s.value("simSize", 601).toDouble();
     ui->sizeSB->setValue(size);
+}
+simIgramDlg *simIgramDlg::get_instance(){
+    if (m_instance == 0){
+        m_instance = new simIgramDlg;
+    }
+    return m_instance;
 }
 
 simIgramDlg::~simIgramDlg()

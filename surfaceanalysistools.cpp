@@ -287,3 +287,12 @@ void surfaceAnalysisTools::ListWidgetEditEnd(QWidget *editor, QAbstractItemDeleg
     //emit wftNameChanged(t.row(), item->text());
 }
 
+bool surfaceAnalysisTools::isSpecial(){
+    return ui->checkBox_2->isChecked();
+
+}
+
+void surfaceAnalysisTools::on_checkBox_2_clicked(bool checked)
+{
+    emit surfaceSmoothGBEnabled(false);
+}

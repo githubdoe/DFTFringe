@@ -21,6 +21,7 @@
 #include "mainwindow.h"
 #include <QDebug>
 #include "surfaceanalysistools.h"
+#include "simigramdlg.h"
 std::vector<bool> zernEnables;
 std::vector<double> zNulls;
 double BestSC = -1.;
@@ -168,27 +169,15 @@ Dim big As Double, dum As Double, pivinv As Double, temp As Double
 Public Function Zernike(n As Integer, X As Double, Y As Double) As Double
 ' N is Zernike number as given by James Wyant
 */
-double ZernikePolar(int n, double rho, double theta){
-    static double lastRho = -1;
-    static double rho2 = 0;
-    static double rho3 = 0;
-    static double rho4 = 0;
-    static double rho5 = 0;
-    static double rho6 = 0;
-    static double rho8 = 0;
-    static double rho10 = 0;
-    static double costheta = 0;
-    static double sintheta = 0;
-    static double cos2theta = 0;
-    static double sin2theta = 0;
-    static double cos3theta = 0;
-    static double sin3theta = 0;
-    static double cos4theta = 0;
-    static double sin4theta = 0;
-    static double cos5theta = 0;
-    static double sin5theta = 0;
-    if (lastRho != rho){
-        lastRho = rho;
+zernikePolar *zernikePolar::m_instance = 0;
+zernikePolar *zernikePolar::get_Instance(){
+    if (m_instance == 0){
+        m_instance = new zernikePolar;
+    }
+    return m_instance;
+}
+
+void zernikePolar::init(double rho, double theta){
         rho2 = rho * rho;
         rho3 = pow(rho,3.);
         rho4 = pow(rho,4.);
@@ -207,6 +196,8 @@ double ZernikePolar(int n, double rho, double theta){
         cos5theta = cos(5. * theta);
         sin5theta = sin(5. * theta);
     }
+
+double zernikePolar::zernike(int n, double rho, double theta){
 
     switch(n){
     case 0: return 1.;
@@ -327,12 +318,15 @@ double ZernikePolar(int n, double rho, double theta){
 
 
 }
+/*
 
 double Zernike(int n, double X, double Y)
 {
     double rho = sqrt(X * X + Y * Y);
     double theta = atan2(Y,X);
-    return ZernikePolar(n, rho, theta);
+    zernikePolar &zp = *zernikePolar::get_Instance();
+    zp.init(rho, theta);
+    return zp.zernike(n, rho, theta);
 
     static double X2 = 0., X3 = 0., X4 = 0.;
     static double Y2 = 0., Y3 = 0., Y4 = 0.;
@@ -501,7 +495,7 @@ double Zernike(int n, double X, double Y)
 
 
 }
-
+*/
 
 /*
 Public Function Wavefront(x1 As Double, y1 As Double, Order As Integer)
@@ -523,61 +517,61 @@ zernikeProcess::zernikeProcess(QObject *parent) :
     md = mirrorDlg::get_Instance();;
 }
 
-void zernikeProcess::unwrap_to_zernikes(zern_generator *zg, cv::Mat wf, cv::Mat mask){
-    // given a wavefront generate arbitrary number of zernikes from it.  Then create wavefront from the zernikies.
-    double *m = (double *)(wf.data);
+//void zernikeProcess::unwrap_to_zernikes(zern_generator *zg, cv::Mat wf, cv::Mat mask){
+//    // given a wavefront generate arbitrary number of zernikes from it.  Then create wavefront from the zernikies.
+//    double *m = (double *)(wf.data);
 
-    int size = wf.cols;
+//    int size = wf.cols;
 
-    //'calculate LSF matrix elements
-    int terms = zg->get_terms_cnt();
-    int am_size = terms* terms;
-    double* Am = new double[am_size];
-    double* Bm = new double[terms];
-    for (int  i = 0; i < am_size; ++i)
-    {
-        Am[i] = 0.;
-    }
-    for (int i = 0; i < terms; ++i)
-        Bm[i] = 0;
+//    //'calculate LSF matrix elements
+//    int terms = zg->get_terms_cnt();
+//    int am_size = terms* terms;
+//    double* Am = new double[am_size];
+//    double* Bm = new double[terms];
+//    for (int  i = 0; i < am_size; ++i)
+//    {
+//        Am[i] = 0.;
+//    }
+//    for (int i = 0; i < terms; ++i)
+//        Bm[i] = 0;
 
-    //calculate LSF right hand side
-    for(int y = 0; y < size; ++y) //for each point on the surface
-    {
-        for(int x = 0; x < size; ++x)
-        {
-             if (mask.at<bool>(x,y))
-            {
-                int sndx = x + y* size;
+//    //calculate LSF right hand side
+//    for(int y = 0; y < size; ++y) //for each point on the surface
+//    {
+//        for(int x = 0; x < size; ++x)
+//        {
+//             if (mask.at<bool>(x,y))
+//            {
+//                int sndx = x + y* size;
 
-                for (int  i = 0; i < terms; ++i)
-                {
-                    double ipoly = zg->get_zpoly(i,x,y);
-                    int dy = i * terms;
-                    for (int j = 0; j < terms; ++j)
-                    {
-                        int ndx = j + dy;
-                        Am[ndx] = Am[ndx] +
-                                ipoly * zg->get_zpoly(j, x, y);
-                    }
-                    Bm[i] = Bm[i] + m[sndx] * ipoly;
+//                for (int  i = 0; i < terms; ++i)
+//                {
+//                    double ipoly = zg->get_zpoly(i,x,y);
+//                    int dy = i * terms;
+//                    for (int j = 0; j < terms; ++j)
+//                    {
+//                        int ndx = j + dy;
+//                        Am[ndx] = Am[ndx] +
+//                                ipoly * zg->get_zpoly(j, x, y);
+//                    }
+//                    Bm[i] = Bm[i] + m[sndx] * ipoly;
 
-                }
+//                }
 
-            }
-        }
+//            }
+//        }
 
-    }
-    // compute coefficients
-    gauss_jordan (terms, Am, Bm);
-    for (int i = 0; i < terms; ++i){
-        qDebug() << i << " " << Bm[i];
-    }
-    zg->set_zcoefs(Bm);
-    delete[] Am;
-}
+//    }
+//    // compute coefficients
+//    gauss_jordan (terms, Am, Bm);
+//    for (int i = 0; i < terms; ++i){
+//        qDebug() << i << " " << Bm[i];
+//    }
+//    zg->set_zcoefs(Bm);
+//    delete[] Am;
+//}
 // compute zernikes from unwrapped surface
-#define SAMPLE_WIDTH 2
+#define SAMPLE_WIDTH 1
 double zernikeProcess::unwrap_to_zernikes(wavefront &wf)
 {
     int nx = wf.data.cols;
@@ -612,8 +606,9 @@ double zernikeProcess::unwrap_to_zernikes(wavefront &wf)
         ++step;
     }
 
+    qDebug() << "sample igram every"<< step << "pixels";
     double delta = 1./(wf.m_outside.m_radius);
-
+    zernikePolar &zpolar = *zernikePolar::get_Instance();
     for(int y = 0; y < ny; y += step) //for each point on the surface
     {
         //((MainWindow*)parent())->progBar->setValue(100 * y/ny);
@@ -623,19 +618,18 @@ double zernikeProcess::unwrap_to_zernikes(wavefront &wf)
             double uy = (y -wf.m_outside.m_center.y()) * delta;
             double rho = sqrt(ux * ux + uy * uy);
             double theta = atan2(uy,ux);
-
-            if (wf.workMask.at<bool>(y,x) and rho <= 1.)
-            {
+            zpolar.init(rho, theta);
+            if (wf.workMask.at<bool>(y,x) and rho <= 1.)           {
 
                 for ( int i = 0; i < Z_TERMS; ++i)
                 {
 
                     int dy = i * Z_TERMS;
-                    double t = ZernikePolar(i, rho, theta);
+                    double t = zpolar.zernike(i, rho, theta);
                     for (int j = 0; j < Z_TERMS; ++j)
                     {
                         int ndx = j + dy;
-                        Am[ndx] = Am[ndx] + t * ZernikePolar(j, rho, theta);
+                        Am[ndx] = Am[ndx] + t * zpolar.zernike(j, rho, theta);
 
                     }
 
@@ -679,50 +673,51 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
     double midy = wf.m_outside.m_center.ry();
     double rad = wf.m_outside.m_radius;
 
-    cv::Mat nulled(ny,nx,CV_64F,0.);
-    double maxrho = 0.;
+    cv::Mat nulled = cv::Mat::zeros(ny,nx,CV_64F);
+
     bool doDefocus = surfaceAnalysisTools::get_Instance()->m_useDefocus;
     double defocus = 0;
     if (doDefocus)
         defocus = surfaceAnalysisTools::get_Instance()->m_defocus;
+    double ux,uy,sz,nz;
+    double rho,theta;
+    zernikePolar &zpolar = *zernikePolar::get_Instance();
     for(int  y = 0; y < ny; ++y)
     {
         for(int x = 0; x < nx; ++x)
         {
-            if (wf.mask.at<bool>(y,x))
+            if(wf.mask.at<bool>(y,x))
             {
+                ux = (double)(x - midx)/rad;
+                uy = (double)(y - midy)/rad;
+                rho = sqrt(ux * ux + uy * uy);
+                theta = atan2(uy,ux);
+                zpolar.init(rho,theta);
 
-                double ux = (double)(x - midx)/rad;
-                double uy = (double)(y - midy)/rad;
-                double rho = sqrt(ux * ux + uy * uy);
-                double theta = atan2(uy,ux);
-                maxrho = max(maxrho, rho);
-                if (rho >= 1.){
+                if (rho > 1.){
                     continue;
                 }
 
-                double sz = unwrapped.at<double>(y,x);
+                sz = unwrapped.at<double>(y,x);
+                nz = 0;
 
                 if (last_term > 7)
                 {
                     if (md->doNull && enables[8])
-                        sz -= scz8 * ZernikePolar(8,rho, theta);
+                        nz -= scz8 * zpolar.zernike(8,rho, theta);
                 }
 
-                for (int z = start_term; z < last_term; ++z)
+                for (int z = start_term; z < Z_TERMS; ++z)
                 {
                     if ((z == 3) & doDefocus)
-                        sz -= defocus * ZernikePolar(z,rho, theta);
+                        nz -= defocus * zpolar.zernike(z,rho, theta);
 
                     if (!enables[z])
-                        sz -= zerns[z] * ZernikePolar(z,rho, theta);
+                        nz -= zerns[z] * zpolar.zernike(z,rho, theta);
+
                 }
-                nulled.at<double>(y,x) =sz;
-//                if (nulled.at<double>(y,x) != 0)
-//                    qDebug() << "xxx" << x << " yyy " << y << " v "<< nulled.at<double>(y,x);
+                nulled.at<double>(y,x) = sz +nz;
             }
-
-
         }
     }
 
@@ -769,7 +764,67 @@ double zernikeProcess::Wavefront(double x1, double y1, int Order)
     return(S1);
 
 }
+
+
 */
+cv::Mat makeSurfaceFromZerns(int border, bool doColor){
+    simIgramDlg &dlg = *simIgramDlg::get_instance();
+    int wx = dlg.size;
+    int wy = wx;
+    double rad = (double)(wx-1)/2.;
+    double xcen = rad,ycen = rad;
+    rad -= border;
+    cv::Mat result = cv::Mat::zeros(wx,wx, (doColor)? CV_8UC4: CV_64F);
+
+    double rho;
+    double spacing = 1.;
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    zernikePolar &zpolar = *zernikePolar::get_Instance();
+    for (int y = 0; y <  wx; ++y)
+    {
+        double uy = (double)(y - (ycen)) / rad;
+        for (int x = 0; x < wy; ++x)
+        {
+            double ux = (double)(x - (xcen )) /rad;
+            rho = sqrt(ux * ux + uy * uy);
+
+            if (rho <= 1.)
+            {
+                double theta = atan2(uy,ux);
+                zpolar.init(rho,theta);
+                double S1 = md->z8 * dlg.correction * .01 * zpolar.zernike(8,rho, theta) +
+                        dlg.xtilt  * zpolar.zernike(1,rho,theta) +
+                        dlg.ytilt * zpolar.zernike(2,rho, theta) +
+                        dlg.defocus * zpolar.zernike(3,rho, theta) +
+                        dlg.xastig * zpolar.zernike(4, rho, theta )+
+                        dlg.yastig * zpolar.zernike(5, rho, theta) +
+                        1. * dlg.star * cos(10.  *  theta) +
+                        1. * dlg.ring * cos(10 * 2. * rho);
+                if (dlg.zernNdx > 0)
+                    S1 += (dlg.zernValue * zpolar.zernike(dlg.zernNdx, rho, theta));
+
+                if (doColor){
+                    int iv = cos(spacing *2 * M_PI * S1) * 100 + 120;
+                    result.at<Vec4b>(y,x)[2] = iv;
+                    result.at<Vec4b>(y,x)[3] = 255;
+                }
+                else {
+                    result.at<double>(y,x) = S1;
+                }
+            }
+            else    // outside mirror outline
+            {
+                if (doColor){
+                    result.at<Vec4b>(y,x) = Vec4f(0.,00.,100.,0);
+                }
+                else {
+                    result.at<double>(y,x) = 0 ;
+                }
+            }
+        }
+    }
+    return result;
+}
 #define TSIZE 450	// number of points in zern generator
 void ZernikeSmooth(cv::Mat wf, cv::Mat mask)
 {

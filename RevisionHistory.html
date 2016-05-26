@@ -36,6 +36,17 @@ Look for saved outline file associated with the loading interferogram and use it
 
 
 </ul></ul>
+<ul><li>Version 1.6-beta</li>
+<ul><li>Corrected zernike calculating bug introduced in vers 1.2 Should give reliable results once again.</li>
+<li> Added software null error tolerance in view menu. </li>
+<li> Modified outline boundary slightly to eliminate fringes around mirror after DFT analysis.</li>
+<li> Added gamma (contrast) horizontal slider control to DFT tools.</li>
+<li> Corrected issues when several wavefronts are loaded and a change propigates thru all with the last one in the list
+displaying the correct metrics.Hopefully smoothing remains if enabled.</li>
+<li> Gaussian smoothing modified to not include data outise mirror outside board when calculating smoothing just inside the outline.</li>
+</ul></ul>
+
+
 <h3>Known bugs</h3>
 <p>Outline does not always appear on interferogram when processing in batch mode.  Workaround is to rotate the mouse wheel to resize it
 when in Manual mode batch.</p>

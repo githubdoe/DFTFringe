@@ -28,9 +28,9 @@ extern std::vector<bool> zernEnables;
 extern int Zw[];
 extern double BestSC;
 double Zernike(int n, double x, double y);
-double ZernikePolar(int n, double rho, double theta);
 void gauss_jordan(int n, double* Am, double* Bm);
 void ZernikeSmooth(Mat wf, Mat mask);
+cv::Mat makeSurfaceFromZerns(int border = 5, bool doColor = false);
 class zernikeProcess : public QObject
 {
     Q_OBJECT
@@ -54,5 +54,35 @@ signals:
 public slots:
 
 };
+
+class zernikePolar : public QObject
+{
+    Q_OBJECT
+public:
+    explicit zernikePolar(){};
+    static zernikePolar *get_Instance();
+    void init(double rho, double theta);
+    double zernike(int z, double rho, double theta);
+private:
+     static zernikePolar *m_instance;
+     double rho2;
+     double rho3;
+     double rho4;
+     double rho5;
+     double rho6;
+     double rho8;
+     double rho10;
+     double costheta;
+     double sintheta;
+     double cos2theta;
+     double sin2theta;
+     double cos3theta;
+     double sin3theta;
+     double cos4theta;
+     double sin4theta;
+     double cos5theta;
+     double sin5theta;
+};
+
 
 #endif // ZERNIKEPROCESS_H

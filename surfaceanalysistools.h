@@ -47,6 +47,7 @@ public:
     double m_defocus;
     void setBlurText(QString txt);
     void nameChanged(int, QString);
+    bool isSpecial();
 signals:
     void doxform(QList<int>);
     void surfaceSmoothGBValue(int);
@@ -107,6 +108,8 @@ private slots:
     void on_wavefrontList_customContextMenuRequested(const QPoint &pos);
 
     void ListWidgetEditEnd(QWidget *editor, QAbstractItemDelegate::EndEditHint);
+    void on_checkBox_2_clicked(bool checked);
+
 private:
     Ui::surfaceAnalysisTools *ui;
     int lastCurrentItem;

@@ -34,6 +34,7 @@ DFTTools::DFTTools(QWidget *parent) :
 }
 void DFTTools::connectTo(QWidget *view){
     connect(view, SIGNAL(updateFilterSize(int)),this, SLOT(setCenterFilterValue(int)));
+    connect(ui->gammaSl, SIGNAL(valueChanged(int)), view, SLOT(gamma(int)));
 }
 DFTTools::~DFTTools()
 {
@@ -67,3 +68,5 @@ void DFTTools::on_computeDFT_pressed()
 {
     emit doDFT();
 }
+
+

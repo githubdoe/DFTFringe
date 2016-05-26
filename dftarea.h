@@ -55,14 +55,13 @@ public:
                double low);
 public slots:
     void doDFT();
-    void resizeIgram();
-    void setFilter(double);
     void dftSizeChanged(const QString&);
     void dftSizeVal(int);
     void setChannel(const QString&);
     void dftCenterFilter(double v);
     void makeSurface();
     void newIgram(QImage);
+    void gamma(int);
 signals:
     void setDftSizeVal(int);
     void selectDFTTab();
@@ -76,6 +75,7 @@ private:
     bool capture;
     CircleOutline m_outside;
     CircleOutline m_center;
+    double m_gamma;
 
     IgramArea *igramArea;
     void paintEvent(QPaintEvent *);
@@ -87,6 +87,7 @@ private:
     vortexDebug    *m_vortexDebugTool;
     int m;  // x border added to dft
     int n;  //y border added to dft
+    double scale;
 };
 
 

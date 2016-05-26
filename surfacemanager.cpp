@@ -60,6 +60,34 @@
 #include <QSplitter>
 QMutex mutex;
 int inprocess = 0;
+
+void expandBorder(wavefront *wf){
+
+    double cx, cy;
+    cx = wf->m_outside.m_center.rx();
+    cy = wf->m_outside.m_center.ry();
+    double rad = wf->m_outside.m_radius;
+
+    for (int y = 0; y < wf->data.rows; ++y){
+        for (int x = 0; x < wf->data.cols; ++x){
+            int dx = x - cx;
+            int dy = y - cy;
+            double rho = sqrt(dx * dx + dy * dy);
+            if (rho/rad > 1.){
+                double rx = rad* (dx/rho) + cx;
+                double ry = rad * (dy/rho) + cy;
+                double drx = x - rx;
+                double dry = y - ry;
+                double nx = rx - drx;
+                double ny = ry - dry;
+                //qDebug() << x << y << rx << ry << nx << ny;
+                wf->nulledData.at<double>(y,x) = wf->nulledData.at<double>(ny,nx);
+            }
+
+        }
+    }
+}
+
 class wftNameScaleDraw: public QwtScaleDraw
 {
 public:
@@ -156,7 +184,6 @@ surfaceGenerator::surfaceGenerator(SurfaceManager *sm) :
 // --- DECONSTRUCTOR ---
 surfaceGenerator::~surfaceGenerator() {
     // free resources
-    qDebug() << "deleting surface Generator";
 }
 
 // --- PROCESS ---
@@ -188,23 +215,23 @@ void surfaceGenerator::process(int wavefrontNdx, SurfaceManager *sm) {
     }
     wf->workData = wf->nulledData.clone();
     if (m_sm->m_GB_enabled){
-        if (wf->useGBSmoothing != m_sm->m_GB_enabled || wf->GBSmoothingValue != m_sm->m_gbValue) {
-
+        if (wf->wasSmoothed != m_sm->m_GB_enabled || wf->GBSmoothingValue != m_sm->m_gbValue) {
+            expandBorder(wf);
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData, cv::Size( m_sm->m_gbValue, m_sm->m_gbValue ),0,0);
         }
-        wf->useGBSmoothing = true;
+        wf->wasSmoothed = true;
         wf->GBSmoothingValue = m_sm->m_gbValue;
     }
-    else if (wf->useGBSmoothing == true) {
+    else if (wf->wasSmoothed == true) {
         wf->workData = wf->nulledData.clone();
-        wf->useGBSmoothing = false;
+        wf->wasSmoothed = false;
     }
     if (sm->useZernikeBase) {
         QVector<int> zernsToUse;
         for (int i = 3; i < Z_TERMS; ++i)
             zernsToUse << i;
         wf->workData = sm->computeWaveFrontFromZernikes(wf->data.cols, wf->InputZerns, zernsToUse);
-        wf->useGBSmoothing = false;
+        wf->wasSmoothed = false;
     }
     wf->computed = true;
     QMutexLocker lock(&mutex);
@@ -222,6 +249,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, std::vector<double>
 
     std::vector<bool> &en = zernEnables;
     mirrorDlg *md = mirrorDlg::get_Instance();
+    zernikePolar &zpolar = *zernikePolar::get_Instance();
     for (int i = 0; i <  wx; ++i)
     {
         double x1 = (double)(i - (xcen)) / rad;
@@ -234,18 +262,19 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, std::vector<double>
             {
                 double S1 = 0;
                 double theta = atan2(y1,x1);
+                zpolar.init(rho,theta);
                 for (int ii = 0; ii < zernsToUse.size(); ++ii) {
                     int z = zernsToUse[ii];
 
                     if ( z == 3 && m_surfaceTools->m_useDefocus){
-                        S1 -= m_surfaceTools->m_defocus * ZernikePolar(z,rho,theta);
+                        S1 -= m_surfaceTools->m_defocus * zpolar.zernike(z,rho,theta);
                     }
                     else {
                         if (en[z]){
                             if (z == 8 && md->doNull)
-                                S1 +=    md->z8 * ZernikePolar(z,rho, theta);
+                                S1 +=    md->z8 * zpolar.zernike(z,rho, theta);
 
-                            S1 += zerns[z] * ZernikePolar(z,rho, theta);
+                            S1 += zerns[z] * zpolar.zernike(z,rho, theta);
                         }
                     }
                 }
@@ -334,7 +363,7 @@ void SurfaceManager::makeMask(int waveNdx){
     double xm,ym;
     xm = m_wavefronts[waveNdx]->m_outside.m_center.x();
     ym = m_wavefronts[waveNdx]->m_outside.m_center.y();
-    double radm = m_wavefronts[waveNdx]->m_outside.m_radius + outsideOffset;
+    double radm = m_wavefronts[waveNdx]->m_outside.m_radius + outsideOffset - 2;
     double rado = m_wavefronts[waveNdx]->m_inside.m_radius + insideOffset;
     double cx = m_wavefronts[waveNdx]->m_inside.m_center.x();
     double cy = m_wavefronts[waveNdx]->m_inside.m_center.y();
@@ -373,7 +402,7 @@ void SurfaceManager::makeMask(int waveNdx){
 }
 void SurfaceManager::wftNameChanged(int ndx, QString name){
     m_wavefronts[ndx]->name = name;
-    qDebug() << name;
+
 }
 
 void SurfaceManager::sendSurface(wavefront* wf){
@@ -403,7 +432,7 @@ void SurfaceManager::outsideMaskValue(int val){
     makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
     wf->dirtyZerns = true;
-    wf->useGBSmoothing = false;
+    wf->wasSmoothed = false;
     emit generateSurfacefromWavefront(m_currentNdx, this);
     m_waveFrontTimer->start(1000);
 
@@ -411,11 +440,12 @@ void SurfaceManager::outsideMaskValue(int val){
 void SurfaceManager::useDemoWaveFront(){
     int wx = 640;
     int wy = wx;
-    double rad = (double)(wx-1)/2.d;
+    double rad = (double)(wx-1)/2.;
     double xcen = rad,ycen = rad;
     double rho;
     mirrorDlg *md = mirrorDlg::get_Instance();
     cv::Mat result = cv::Mat::zeros(wx,wx, CV_64F);
+    zernikePolar &zpolar = *zernikePolar::get_Instance();
     for (int i = 0; i <  wx; ++i)
     {
         double x1 = (double)(i - (xcen)) / rad;
@@ -423,10 +453,12 @@ void SurfaceManager::useDemoWaveFront(){
         {
             double y1 = (double)(j - (ycen )) /rad;
             rho = sqrt(x1 * x1 + y1 * y1);
+            double theta = atan2(y1,x1);
+            zpolar.init(rho,theta);
 
             if (rho <= 1.)
             {
-                double S1 = md->z8 * -.9 * Zernike(8,x1,y1) + .02* Zernike(9, x1, y1);
+                double S1 = md->z8 * -.9 * zpolar.zernike(8,rho,theta) + .02* zpolar.zernike(9, rho,theta);
 
                 result.at<double>(j,i) = S1;
             }
@@ -456,11 +488,13 @@ void SurfaceManager::waveFrontClickedSlot(int ndx)
 void SurfaceManager::deleteWaveFronts(QList<int> list){
     if (inprocess != 0)
         return;
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     foreach(int ndx, list ){
         m_currentNdx = ndx;
-        qDebug() << "delete " << ndx;
+
         deleteCurrent();
     }
+    QApplication::restoreOverrideCursor();
 }
 
 void SurfaceManager::wavefrontDClicked(const QString & name){
@@ -528,7 +562,7 @@ void SurfaceManager::computeMetrics(wavefront *wf){
     double mmax;
 
     minMaxIdx(wf->workData, &mmin,&mmax);
-    qDebug() << "min max" << mmin << mmax;
+
     wf->min = mmin * md->lambda/550.;
     wf->max = mmax * md->lambda/550.;
 
@@ -547,7 +581,7 @@ void SurfaceManager::computeZerns()
     for (int i = 0; i < m_wavefronts.size(); ++i){
         wavefront *wf = m_wavefronts[m_currentNdx];
         wf->dirtyZerns = true;
-        wf->useGBSmoothing = false;
+        wf->wasSmoothed = false;
     }
     emit generateSurfacefromWavefront(m_currentNdx, this);
     m_waveFrontTimer->start(1000);
@@ -673,7 +707,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     wf->lambda = md->lambda;
     wf->roc = md->roc;
     wf->dirtyZerns = true;
-    wf->useGBSmoothing = false;
+    wf->wasSmoothed = false;
     m_currentNdx = m_wavefronts.size()-1;
     makeMask(m_currentNdx);
     m_surface_finished = false;
@@ -698,7 +732,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
         if (reverse){
             wf->data *= -1;
             wf->dirtyZerns = true;
-            wf->useGBSmoothing = false;
+            wf->wasSmoothed = false;
             m_surface_finished = false;
             emit generateSurfacefromWavefront(m_currentNdx, this);
             while (!m_surface_finished) {qApp->processEvents();}
@@ -840,7 +874,7 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
     wf->data= data;
     wf->roc = roc;
     wf->lambda = lambda;
-    wf->useGBSmoothing = false;
+    wf->wasSmoothed = false;
 
     makeMask(m_currentNdx);
 
@@ -879,12 +913,12 @@ void SurfaceManager::processSmoothing(){
         return;
     wavefront *wf = m_wavefronts[m_currentNdx];
     if (m_GB_enabled){
-        if (wf->useGBSmoothing != m_GB_enabled || wf->GBSmoothingValue != m_gbValue) {
+        if (wf->wasSmoothed != m_GB_enabled || wf->GBSmoothingValue != m_gbValue) {
 
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData, cv::Size( m_gbValue, m_gbValue ),0,0);
         }
     }
-    else if (wf->useGBSmoothing == true) {
+    else if (wf->wasSmoothed == true) {
         wf->workData = wf->nulledData.clone();
     }
 
@@ -912,7 +946,7 @@ void SurfaceManager::previous(){
     else
         m_currentNdx = m_wavefronts.length()-1;
 
-    sendSurface(m_wavefronts[m_currentNdx]);;
+    sendSurface(m_wavefronts[m_currentNdx]);
 }
 QVector<int> histo(const std::vector<double> data, int bins, double min, double max){
     QVector<int> h(bins, 0);
@@ -922,7 +956,6 @@ QVector<int> histo(const std::vector<double> data, int bins, double min, double 
         for (int j = 0; j <  bins; ++j){
             if (data[i] < to) {
                 ++h[j];
-                qDebug() << "hist " << j << " " << data[i];
                 break;
             }
             to += interval;
@@ -942,24 +975,24 @@ void SurfaceManager::saveAllWaveFrontStats(){
 void SurfaceManager::enableTools(){
 
     m_toolsEnableTimer->stop();
-    qDebug() <<"timer"<<inprocess;
     if (inprocess == 0){
         m_surfaceTools->setEnabled(true);
-        qDebug() << "enabling tools";
+
     }
 }
 
 void SurfaceManager::surfaceGenFinished(int ndx) {
     m_toolsEnableTimer->start(1000);
+
     if (workToDo > 0)
         emit progress(++workProgress);
-    qDebug() << inprocess <<"finnished " << ndx << m_wavefronts[ndx]->name;
+
     mutex.lock();
     --inprocess;
 
     mutex.unlock();
-    if (ndx == m_currentNdx && inprocess == 0)
-        sendSurface(m_wavefronts[ndx]);
+    if (inprocess == 0)
+        sendSurface(m_wavefronts[m_currentNdx]);
     else
         computeMetrics(m_wavefronts[ndx]);
 
@@ -973,7 +1006,6 @@ void SurfaceManager::surfaceGenFinished(int ndx) {
 void SurfaceManager::backGroundUpdate(){
     m_waveFrontTimer->stop();
     workProgress = 0;
-    qDebug() << "disabling tools";
     if (m_wavefronts.size() > 1)
         m_surfaceTools->setEnabled(false);
     workToDo = m_wavefronts.size()-1;
@@ -1041,7 +1073,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     wf->mask = mask;
     wf->workMask = mask.clone();
     m_wavefronts << wf;
-    wf->useGBSmoothing = false;
+    wf->wasSmoothed = false;
     wf->name = "Average.wft";
     wf->dirtyZerns = true;
     m_surfaceTools->addWaveFront(wf->name);
@@ -1083,7 +1115,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         wf->mask = oldWf->workMask.clone();
         wf->workMask = wf->mask.clone();
         wf->dirtyZerns = true;
-        wf->useGBSmoothing = false;
+        wf->wasSmoothed = false;
         m_surface_finished = false;
         emit generateSurfacefromWavefront(m_currentNdx,this);
         while (!m_surface_finished) {qApp->processEvents();}
@@ -1107,7 +1139,7 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2){
     resultwf->name = n1[n1.size()-1] + "-" + n2[n2.size()-1];
     m_surfaceTools->addWaveFront(resultwf->name);
     resultwf->dirtyZerns = true;
-    resultwf->useGBSmoothing = false;
+    resultwf->wasSmoothed = false;
     m_currentNdx = m_wavefronts.size() -1;
     m_surface_finished = false;
     save_restore<bool> doNull(&(mirrorDlg::get_Instance()->doNull), false);
@@ -1146,7 +1178,7 @@ void SurfaceManager::invert(QList<int> list){
     for (int i = 0; i < list.size(); ++i) {
         m_wavefronts[list[i]]->data *= -1;
         m_wavefronts[list[i]]->dirtyZerns = true;
-        m_wavefronts[list[i]]->useGBSmoothing = false;
+        m_wavefronts[list[i]]->wasSmoothed = false;
         emit generateSurfacefromWavefront(list[i],this);
     }
 }
@@ -1230,15 +1262,14 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     }
     double smin,smax;
     cv::minMaxIdx(standavg,&smin, &smax);
-    qDebug() << "smin smax" << smin << smax;
+
     standavg /= list.size();
-    cv::minMaxIdx(standavg,&smin, &smax);
-    qDebug() << "smin smax" << smin << smax;
+
     cv::minMaxIdx(standavgZernMat,&smin, &smax);
-    qDebug() << "smin smax" << smin << smax;
+
     standavgZernMat = standavgZernMat/list.size();
     cv::minMaxIdx(standavgZernMat,&smin, &smax);
-    qDebug() << "smin smax" << smin << smax;
+
     cv::Scalar standMean,standStd;
     cv::Scalar standXMean,standXStd;
     cv::Scalar standYMean, standyStd;
@@ -1320,15 +1351,15 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         wf = m_wavefronts[inputs[i]];
         wf->data = wf->workData = standwfs[i];
         cv::minMaxIdx(wf->data,&smin, &smax);
-        qDebug() << "smin smax" << smin << smax;
+
         cv::Scalar mean,std;
         cv::meanStdDev(wf->data,mean,std);
         wf->std = std[0];
-        qDebug() << "std " << std[0];
+
         wf->min = smin;
         wf->max =  smax;
         wf->name = QString().sprintf("%06.2lf",list[i]->angle);
-        qDebug() << wf->name;
+
         cp->setSurface(wf);
         cp->resize(Width,Height);
         cp->replot();
@@ -1336,7 +1367,6 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         renderer.render( cp, &painter, QRect(0,0,Width,Height) );
         QString imageName = QString().sprintf("mydata://zern%s.png",wf->name.toStdString().c_str());
         imageName.replace("-","CCW");
-        qDebug() << imageName;
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         results.res.append (imageName);
         imagesHtml.append("<td><p> <img src='" +imageName + "' /></p></td>");

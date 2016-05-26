@@ -36,7 +36,7 @@ public:
     uint lastZernEnableUpdate;
     double contourDelta;
     double gaussian_diameter;
-    bool useGBSmoothing;
+    bool wasSmoothed;
     int GBSmoothingValue;
 
     QString name;

@@ -86,7 +86,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     QVBoxLayout *v1 = new QVBoxLayout();
     showNmCB = new QCheckBox("Show in Nanometers",this);
     showSurfaceCB =  new QCheckBox("Surface error");
-    Show16 = new QRadioButton("16 diamgeters of current wavefront",this);
+    Show16 = new QRadioButton("16 diameters of current wavefront",this);
     OneOnly = new QRadioButton("one diameter of current wavefront",this);
     OneOnly->setChecked(true);
     ShowAll = new QRadioButton("All wavefronts",this);

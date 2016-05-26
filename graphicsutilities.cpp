@@ -38,20 +38,12 @@ void writeCircle(std::ofstream& file, CircleOutline& circle){
 CircleOutline readCircle(std::ifstream &file){
     char buf[32 + 4];
     file.read(buf,8*4 + 4);
-    for (int i = 0; i < 32;){
-            QString v;
-        for (int j = 0; j < 8; ++j){
-            v += QString().sprintf(" %02x",((unsigned char *) buf)[i++]).replace("\"","");
-        }
-        qDebug() << v;
-    }
     unsigned char* b = (unsigned char*)buf;
 
     double *dp = (double*)buf;
     double x = *(dp++);
     double y = *(dp++);
     double rx = *(dp++);
-    qDebug() << " read rad " << rx << x << y;
 
     ++dp;
     int size = *(int *)dp; //= *(reinterpret_cast<int *>(buf));

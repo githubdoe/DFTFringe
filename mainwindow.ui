@@ -325,7 +325,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
          <widget class="QPushButton" name="undo">
           <property name="minimumSize">
            <size>
-            <width>5</width>
+            <width>20</width>
             <height>0</height>
            </size>
           </property>
@@ -369,7 +369,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>5</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -440,7 +440,7 @@ em;
          <widget class="QPushButton" name="minus">
           <property name="minimumSize">
            <size>
-            <width>5</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -480,7 +480,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>5</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -514,7 +514,7 @@ em;
          <widget class="QPushButton" name="pluss">
           <property name="minimumSize">
            <size>
-            <width>5</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -588,7 +588,7 @@ em;
          <widget class="QPushButton" name="Redo">
           <property name="minimumSize">
            <size>
-            <width>5</width>
+            <width>44</width>
             <height>0</height>
            </size>
           </property>
@@ -954,32 +954,12 @@ em;
   </action>
   <action name="actionError_Margins">
    <property name="text">
-    <string>Error Margins</string>
-   </property>
-  </action>
-  <action name="actionXxxxx">
-   <property name="text">
-    <string>xxxxx</string>
-   </property>
-  </action>
-  <action name="actionXxxxx_2">
-   <property name="text">
-    <string>xxxxx</string>
-   </property>
-  </action>
-  <action name="actionBatch_Process_Interferograms">
-   <property name="text">
-    <string>Batch Process Interferograms</string>
+    <string>Null error margins</string>
    </property>
   </action>
   <action name="actionVersion_History">
    <property name="text">
     <string>Version History</string>
-   </property>
-  </action>
-  <action name="actionSpeciall_for_Dale">
-   <property name="text">
-    <string>Speciall for Dale</string>
    </property>
   </action>
   <action name="actionIterate_outline">
@@ -998,11 +978,6 @@ em;
   <action name="actionShow_Statistics_of_Loaded_wavefronts">
    <property name="text">
     <string>Show Statistics of Loaded wavefronts</string>
-   </property>
-  </action>
-  <action name="actionFull_Screen">
-   <property name="text">
-    <string>Full Screen</string>
    </property>
   </action>
  </widget>
