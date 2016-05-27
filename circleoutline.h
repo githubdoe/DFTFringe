@@ -23,6 +23,7 @@
 
 #include "boundary.h"
 #include "gplus.h"
+#include <QVector>
 #include <QPointF>
 
 class CircleOutline: public boundary
@@ -37,6 +38,7 @@ class CircleOutline: public boundary
         void enlarge(int del);
         void translate(QPointF del);
         void scale(double factor);
+        QVector<QPointF> makeCircleofPoints(int cnt);
         bool isValid();
         QPointF m_center;
         double m_radius;

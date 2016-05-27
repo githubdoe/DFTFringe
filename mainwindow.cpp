@@ -327,7 +327,7 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
         }
         else{
             m_igramsToProcess = dialog.selectedFiles();
-            on_actionBatch_Process_Interferograms_triggered();
+            Batch_Process_Interferograms();
         }
     }
 
@@ -684,7 +684,7 @@ void MainWindow::on_actionSave_screen_triggered()
         filter += imageFilter;
     }
     QString fName = QFileDialog::getSaveFileName(0,
-        tr("Save screen"), dd + "//surface.jpg",filter.join( ";;" ));
+        tr("Save screen"), dd + "//DFTScreen.jpg",filter.join( ";;" ));
 
 
     if (fName.isEmpty())
@@ -876,7 +876,7 @@ void MainWindow::batchProcess(QStringList fileList){
 
 }
 
-void MainWindow::on_actionBatch_Process_Interferograms_triggered()
+void MainWindow::Batch_Process_Interferograms()
 {
     batchWiz = new batchIgramWizard(m_igramsToProcess, this,Qt::Window);
     connect(batchWiz,SIGNAL(swapBathConnections(bool)),this, SLOT(batchConnections(bool)));

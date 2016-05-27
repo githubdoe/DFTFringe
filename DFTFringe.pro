@@ -219,7 +219,7 @@ RC_FILE = DFTFringe.rc
 
 
 # The application version
-VERSION = 1.6
+VERSION = 1.6A
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

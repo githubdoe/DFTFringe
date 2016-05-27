@@ -179,9 +179,6 @@ private slots:
 
     void on_actionError_Margins_triggered();
 
-    void on_actionBatch_Process_Interferograms_triggered();
-
-
     void on_HelpOutlinePb_pressed();
 
     void on_actionVersion_History_triggered();
@@ -254,7 +251,7 @@ private:
     QStringList m_igramsToProcess;
     QWidget *oglFv;
     QWidget *contourFv;
-
+    void Batch_Process_Interferograms();
 };
 
 #endif // MAINWINDOW_H

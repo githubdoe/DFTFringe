@@ -159,6 +159,7 @@ public slots:
     void decrease(int i = 1);
     void zoomFull();
     void toggleHideOutline();
+    void edgeMode();
 signals:
     void enableShiftButtons(bool);
     void statusBarUpdate(QString);
@@ -222,6 +223,7 @@ private:
     dftThumb *m_dftThumb;
     QTimer *m_outlineTimer;
     bool hasBeenCropped;
+    bool m_edgeMode;
    // m_mw(mw),QWidget(parent),scale(1.),outterPcount(0), innerPcount(0), zoomFactor(0.),m_current_boundry(OutSideOutline),
       //zoomIndex(0),dragMode(false),m_hideOutlines(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false)
 };

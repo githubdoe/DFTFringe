@@ -72,7 +72,8 @@ double distance(QPointF p1, QPointF p2)
 
 IgramArea::IgramArea(QWidget *parent, void *mw)
     : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0), zoomFactor(0.),m_current_boundry(OutSideOutline),
-      zoomIndex(0),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false)
+      zoomIndex(0),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
+      m_edgeMode(false)
 {
 
     m_innerP1 = m_innerP2 = m_OutterP1 = m_OutterP2 = QPointF(0.,0.);
@@ -117,6 +118,8 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomIn()));
     shortcut = new QShortcut(QKeySequence::ZoomOut, this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomOut()));
+    shortcut = new QShortcut(QKeySequence("1"), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(edgeMode()));
 }
 
 void IgramArea::outlineTimerTimeout(){
@@ -129,6 +132,10 @@ void IgramArea::generateSimIgram()
     DrawSimIgram();
 }
 
+void IgramArea::edgeMode(){
+    //m_edgeMode = !m_edgeMode;
+    //update();
+}
 
 void IgramArea::DrawSimIgram(void){
 
@@ -758,7 +765,23 @@ void IgramArea::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     QRect dirtyRect = event->rect();
-    painter.drawImage(dirtyRect, igramDisplay, dirtyRect);
+    if (m_edgeMode && outterPcount == 2){
+        int viewW = 100;
+        CircleOutline circle(m_OutterP1,m_OutterP2);
+
+
+        int topx = (circle.m_center.rx() - viewW) * scale;
+        int topy = (circle.m_center.ry() - circle.m_radius - viewW/2) * scale;
+
+        int dw = parentWidget()->width()/2;
+        int dh = parentWidget()->height()/2;
+        painter.drawImage(dw - viewW, 0, igramDisplay, topx, topy, viewW * 2, viewW);
+        topy = (circle.m_center.ry() + circle.m_radius - viewW) * scale;
+        painter.drawImage(dw - viewW, viewW * 2 + 20, igramDisplay, topx, topy, viewW * 2, viewW);
+    }  else {
+        painter.drawImage(dirtyRect, igramDisplay, dirtyRect);
+    }
+
 
 }
 

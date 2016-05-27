@@ -82,9 +82,9 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
             if (index.row() == 3 && surfaceAnalysisTools::get_Instance()->m_useDefocus){
                 return QString().sprintf("%6.3lf",surfaceAnalysisTools::get_Instance()->m_defocus);
             }
-            if (index.row() == 8 && mirrorDlg::get_Instance()->doNull){
-                return (QString().sprintf("%6.3lf", values[index.row()] + mirrorDlg::get_Instance()->z8));
-            }
+//            if (index.row() == 8 && mirrorDlg::get_Instance()->doNull){
+//                return (QString().sprintf("%6.3lf", values[index.row()] + mirrorDlg::get_Instance()->z8));
+//            }
             return QString().sprintf("%6.3lf",values[index.row()]);
         }
     }

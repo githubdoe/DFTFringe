@@ -137,14 +137,14 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
     cv::Mat out;
 
     int nx = surface.size().width;//pupil_size;
-    int ny = nx;
+    int ny = surface.size().height;
 
-    cv::Mat tmp[] = {cv::Mat::zeros(Size(ny,nx),CV_64F)
-                    ,cv::Mat::zeros(Size(ny,nx),CV_64F)};
+    cv::Mat tmp[] = {cv::Mat::zeros(Size(nx,ny),CV_64F)
+                    ,cv::Mat::zeros(Size(nx,ny),CV_64F)};
 
-    for (int y = 0; y < nx; ++y){
+    for (int y = 0; y < ny; ++y){
         for (int x = 0; x < nx; ++x){
-            tmp[1].at<double>(y,x) = cos(surface.at<double>(y,x));
+            tmp[1].at<double>(y,x) =  cos(surface.at<double>(y,x));
             tmp[0].at<double>(y,x) = -sin(surface.at<double>(y,x));
 
         }

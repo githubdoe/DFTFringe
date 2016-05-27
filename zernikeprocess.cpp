@@ -212,13 +212,13 @@ double zernikePolar::zernike(int n, double rho, double theta){
         break;
     case 5: return rho2 * sin2theta;
         break;
-    case 6: return rho * (-2. + 3. * rho * rho) * costheta;
+    case 6: return rho * (-2. + 3. * rho2) * costheta;
         break;
-    case 7: return rho * (-2. + 3. * rho * rho) * sintheta;
+    case 7: return rho * (-2. + 3. * rho2) * sintheta;
         break;
     case 8:
     {
-        return 1. - 6. * rho2 + 6. * rho2 * rho2;
+        return 1. + rho2 * (-6 + 6. * rho2);
         break;
     }
     case 9: return rho * rho * rho * cos3theta;
@@ -238,10 +238,10 @@ double zernikePolar::zernike(int n, double rho, double theta){
         break;
 
     case 13:
-        return rho * (3. - 12. * rho2 + 10. * rho2 * rho2) * costheta;
+        return rho * (3. - 12. * rho2 + 10. * rho4) * costheta;
         break;
     case 14:
-        return rho * (3. - 12. * rho2 + 10. * rho2 * rho2) * sintheta;
+        return rho * (3. - 12. * rho2 + 10. * rho4) * sintheta;
         break;
     case 15:
         return -1 + 12 * rho2 - 30. * rho4 + 20. * rho6;
@@ -318,15 +318,11 @@ double zernikePolar::zernike(int n, double rho, double theta){
 
 
 }
-/*
+
 
 double Zernike(int n, double X, double Y)
 {
-    double rho = sqrt(X * X + Y * Y);
-    double theta = atan2(Y,X);
-    zernikePolar &zp = *zernikePolar::get_Instance();
-    zp.init(rho, theta);
-    return zp.zernike(n, rho, theta);
+
 
     static double X2 = 0., X3 = 0., X4 = 0.;
     static double Y2 = 0., Y3 = 0., Y4 = 0.;
@@ -495,7 +491,7 @@ double Zernike(int n, double X, double Y)
 
 
 }
-*/
+
 
 /*
 Public Function Wavefront(x1 As Double, y1 As Double, Order As Integer)

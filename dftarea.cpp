@@ -29,11 +29,11 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data){
     int width = data.cols;
     int height = data.rows;
 
-    double radm = ceil(outside.m_radius);
+    double radm = ceil(outside.m_radius)+1;
     double rado = center.m_radius;
     double cx = outside.m_center.x();
     double cy = outside.m_center.y();
-    cv::Mat mask = cv::Mat::ones(height,width,CV_8UC1);
+    cv::Mat mask = cv::Mat::zeros(height,width,CV_8UC1);
     for (int y = 0; y < height; ++y){
         for (int x = 0; x < width; ++x){
             double dx = (double)(x - (cx))/(radm);
@@ -156,13 +156,12 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double centerY = igramArea->m_outside.m_center.y();
     double rad = igramArea->m_outside.m_radius;
     double radpix = ceil(rad);
-    int border = 10;
-    double left = floor((centerX - radpix - border));
-    double top = floor(centerY - radpix - border);
+    double left = centerX - radpix;
+    double top = centerY - radpix;
     vector<Mat > bgr_planes;
     top = max(top,0.);
     left = max(left,0.);
-    int width = ceil(2. * (radpix) + 2 * border);
+    int width = 2. * (radpix);
     width = min(width, img.width());
 
     // new center because of crop
@@ -170,6 +169,9 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double yCenterShift = centerY - top;
 
     cv::Mat iMat(img.height(), img.width(), CV_8UC4, img.bits(), img.bytesPerLine());
+    cv::Mat tmp = iMat.clone();
+
+
     cv::Mat roi = iMat(cv::Rect((int)left,(int)top,(int)width,(int)width)).clone();
 
     double centerDx = centerX - igramArea->m_center.m_center.x();
@@ -186,7 +188,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     if (scaleFactor < 1.){
 
         cv::resize(roi,roi, cv::Size(0,0), scaleFactor, scaleFactor);
-        double roic = (roi.rows-1)/2.;
+        double roic = roi.rows/2.;
         m_outside = CircleOutline(QPointF(roic,roic),roic);
         m_center = CircleOutline(QPointF((roic - centerDx * scaleFactor), (roic - centerDy * scaleFactor)),
                                  m_center.m_radius * scaleFactor);
@@ -203,7 +205,6 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     // split image into three color planes
 
     split( roi, bgr_planes );
-
 
     cv::Scalar mean;
     mean =  cv::mean(roi);
@@ -224,51 +225,35 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     else if (channel == "Green") maxndx = 1;
     else if (channel == "Red") maxndx = 2;
     qDebug() << "Max channel " << maxndx;
-    Mat padded = bgr_planes[maxndx].clone();
 
+    Mat  padded;                            //expand input image to optimal size
     int m = getOptimalDFTSize( roi.rows ) - roi.rows;
     int n = getOptimalDFTSize( roi.cols ) - roi.cols; // on the border add zero values
-    // disabled adding optomizing DFT boarder.
-    m = 0;
+    m =0;
     n = 0;
     qDebug() << "pady " << m << " padx " << n;
     if (m > 0 || n > 0)
-        copyMakeBorder(padded, padded, 0, m, 0, n, BORDER_CONSTANT, Scalar::all(mean[maxndx]));
-
+        copyMakeBorder(bgr_planes[maxndx], padded, 0, m, 0, n, BORDER_CONSTANT, Scalar::all(0));
+    else
+        padded = bgr_planes[maxndx].clone();
     padded = padded - mean[maxndx];
-
+    // disabled adding optomizing DFT boarder.
     Mat planes[] = {Mat_<float>(padded), Mat::zeros(padded.size(), CV_32F)};
 
-    m_mask = makeMask(m_outside,m_center, *planes);
-    if (Settings2::showMask()){
-        Mat tmp = planes[0].clone();
-        normalize(tmp, tmp,0,255,CV_MINMAX);
-        tmp.convertTo(tmp,CV_8U);
-        Mat mm;
-        Mat channels[3];
-
-        channels[1] = m_mask;
-        channels[2] = tmp;
-        channels[0] = m_mask;
-        merge(channels,3,mm);
-        for (int i = 0; i < 3; ++i){
-            //imshow(QString().number(i).toStdString().c_str(),channels[i]);
-        }
-        imshow("mm", mm);
-        waitKey(1);
-
-    }
+    m_mask = makeMask(m_outside,m_center,*planes);
+    if (Settings2::showMask())
+        showData("Mask", m_mask);
     cv::Mat tmpMask;
 
     planes[0].copyTo(tmpMask,m_mask);    // Convert image to binary
     planes[0] = tmpMask.clone();
     mean =  cv::mean(planes[0],m_mask);
     planes[0] -= mean;
-
+    //matDisplay md(planes[0],mean[0]);
+    //md.exec();
     Mat  complexI;
     merge(planes, 2, complexI);         // Add to the expanded another plane with zeros
     return complexI;
-
 }
 
 //swap quadrants

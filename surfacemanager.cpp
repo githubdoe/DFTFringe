@@ -607,15 +607,18 @@ void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulle
         }
     }
 
-    file << "outside ellipse " << wf->m_outside.m_center.x()
+    file << "outside ellipse " <<
+                   wf->m_outside.m_center.x()
          << " " << wf->m_outside.m_center.y()
          << " " << wf->m_outside.m_radius
          << " "  << wf->m_outside.m_radius << std:: endl;
 
-    file << "obstruction ellipse " << wf->m_inside.m_center.x()
+    if (wf->m_inside.m_radius > 0){
+        file << "obstruction ellipse " << wf->m_inside.m_center.x()
          << " " << wf->m_inside.m_center.y()
          << " " << wf->m_inside.m_radius
          << " " << wf->m_inside.m_radius << std:: endl;
+    }
 
     file << "DIAM " << wf->diameter << std::endl;
     file << "ROC " << wf->roc << std::endl;

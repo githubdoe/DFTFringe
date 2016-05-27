@@ -19,6 +19,7 @@
 #include "CircleOutline.h"
 #include <Qmath.h>
 #include <QDebug>
+#include "math.h"
 CircleOutline::CircleOutline(QPointF center, double rad){
     m_p1 = QPointF(center.x() - rad, center.y());
     m_p2 = QPointF(center.x()+rad, center.y());
@@ -94,7 +95,19 @@ void CircleOutline::draw(QPainter& dc, double scale){
     dc.drawLine(scale * m_center.x(), scale* (m_center.y() - m_radius), scale * m_center.x(), scale * (m_center.y() + m_radius));
 }
 
-
+QVector<QPointF> CircleOutline::makeCircleofPoints(int cnt){
+    QVector<QPointF> points;
+    double step = (M_PI * 2.)/cnt;
+    for (int i = 0; i < cnt; ++i)
+    {
+        double theta = i * step;
+        int x,y;
+        x = m_radius * cos(theta) + m_center.x();
+        y = m_radius * sin(theta) + m_center.y();
+        points << QPointF(x,y);
+    }
+    return points;
+}
 
 void CircleOutline::enlarge(int del) {
     //qDebug() << "enlarge "<<del;

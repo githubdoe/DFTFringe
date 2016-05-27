@@ -27,7 +27,7 @@ extern std::vector<double> zNulls;
 extern std::vector<bool> zernEnables;
 extern int Zw[];
 extern double BestSC;
-double Zernike(int n, double x, double y);
+double zernike(int n, double x, double y);
 void gauss_jordan(int n, double* Am, double* Bm);
 void ZernikeSmooth(Mat wf, Mat mask);
 cv::Mat makeSurfaceFromZerns(int border = 5, bool doColor = false);
