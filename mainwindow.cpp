@@ -319,10 +319,17 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     dialog.setMimeTypeFilters(mimeTypeFilters);
-    dialog.selectMimeTypeFilter("image/jpeg");
+    QSettings set;
+    QString mime = set.value("igramExt","jpeg").toString();
+    mime.replace("jpg", "jpeg");
+    dialog.selectMimeTypeFilter("image/"+mime);
 
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
+            QFileInfo a(dialog.selectedFiles().first());
+            QString ext = a.completeSuffix();
+            set.setValue("igramExt", ext);
+
             loadFile(dialog.selectedFiles().first());
         }
         else{

@@ -191,19 +191,6 @@
     <string>Line style</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="hflipCb">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>210</y>
-     <width>261</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Flip interferogram left to right upon loading.</string>
-   </property>
-  </widget>
  </widget>
  <resources/>
  <connections>

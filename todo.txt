@@ -1,19 +1,11 @@
 
-
-Check that sign of conic is same for all in the average.
-
 why is intensity profile jagged?
-
-Fringe on zernike based display.  How can that be?  Mask has to be wrong or generator has to be wrong.
 
 Add average of stand only wavefronts to the wavefront list.
 
 smoothing drops out when recomputing because of center obstruction changes.
 
-Fringe in upper left quad on simulated igrams.  Drops strehl a bunch.  Have to fix that.
 
-When changing ignore outside it cycles thru all wavefronts but stop on the second from last
-to show that instead of the last.
 
 
 

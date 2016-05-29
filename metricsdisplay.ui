@@ -13,7 +13,7 @@
   <property name="minimumSize">
    <size>
     <width>176</width>
-    <height>389</height>
+    <height>408</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -193,6 +193,13 @@ Conic:</string>
        </widget>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="desiredConicLb">
+      <property name="text">
+       <string>Desired Conic:</string>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="wavesPerFringe">

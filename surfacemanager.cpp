@@ -230,7 +230,7 @@ void surfaceGenerator::process(int wavefrontNdx, SurfaceManager *sm) {
         QVector<int> zernsToUse;
         for (int i = 3; i < Z_TERMS; ++i)
             zernsToUse << i;
-        wf->workData = sm->computeWaveFrontFromZernikes(wf->data.cols, wf->InputZerns, zernsToUse);
+        wf->workData = sm->computeWaveFrontFromZernikes(wf->data.cols, wf->data.rows, wf->InputZerns, zernsToUse);
         wf->wasSmoothed = false;
     }
     wf->computed = true;
@@ -238,12 +238,11 @@ void surfaceGenerator::process(int wavefrontNdx, SurfaceManager *sm) {
 
     emit finished( wavefrontNdx);
 }
-cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, std::vector<double> &zerns, QVector<int> zernsToUse){
-    int wy = wx;
+cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector<double> &zerns, QVector<int> zernsToUse){
     double rad = m_wavefronts[m_currentNdx]->m_outside.m_radius;
-    double xcen = (wx-1)/2, ycen = (wx-1)/2;
+    double xcen = (wx-1)/2, ycen = (wy-1)/2;
 
-    cv::Mat result = cv::Mat::zeros(wx,wx, CV_64F);
+    cv::Mat result = cv::Mat::zeros(wy,wx, CV_64F);
 
     double rho;
 
@@ -1029,9 +1028,39 @@ void SurfaceManager::average(QList<int> list){
     }
     average(wflist);
 }
+#include "ccswappeddlg.h"
 void SurfaceManager::average(QList<wavefront *> wfList){
 
-
+    // check that all the cc have the same sign
+    bool sign = wfList[0]->InputZerns[8] < 0;
+    bool someReversed = false;
+    bool needsUpdate = false;
+    foreach (wavefront *wf, wfList){
+        if ((wf->InputZerns[8] < 0) !=  sign)
+        {
+            someReversed = true;
+            break;
+        }
+    }
+    if (someReversed){
+        CCSwappedDlg dlg;
+        if (dlg.exec()){
+            foreach(wavefront *wf, wfList){
+                if ((wf->InputZerns[8] < 0 && dlg.getSelection() == NEGATIVE) ||
+                    (wf->InputZerns[8] > 0 && dlg.getSelection() == POSITIVE))
+                {
+                    wf->data *= -1;
+                    wf->dirtyZerns = true;
+                    wf->wasSmoothed = false;
+                    m_surface_finished = false;
+                    needsUpdate = true;
+                }
+            }
+        }
+        else {
+            return;
+        }
+    }
     // normalize the size to the most common size
 
     QHash<QString,int> sizes;
@@ -1081,7 +1110,11 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     wf->dirtyZerns = true;
     m_surfaceTools->addWaveFront(wf->name);
     m_currentNdx = m_wavefronts.size()-1;
+    m_surface_finished = false;
     emit generateSurfacefromWavefront(m_currentNdx, this);
+    while (!m_surface_finished) {qApp->processEvents();}
+    if (needsUpdate)
+        m_waveFrontTimer->start(1000);
 }
 
 void SurfaceManager::rotateThese(double angle, QList<int> list){
@@ -1257,7 +1290,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         for (int ii = 9; ii < Z_TERMS; ++ii)
             zernsToUse << ii;
 
-        cv::Mat m = computeWaveFrontFromZernikes(m_wavefronts[inputs[0]]->data.cols,m_wavefronts[ndx]->InputZerns, zernsToUse );
+        cv::Mat m = computeWaveFrontFromZernikes(m_wavefronts[inputs[0]]->data.cols,m_wavefronts[inputs[0]]->data.rows,
+                m_wavefronts[ndx]->InputZerns, zernsToUse );
         standavgZernMat += m;
         standwfs << m;
         xastig.at<double>(i,0) = m_wavefronts[inputs[i]]->InputZerns[4];
@@ -1946,7 +1980,9 @@ void SurfaceManager::report(){
             "<td>Fnumber: " + QString().number(md->FNumber,'f',1) + "</td></tr>"
             "<tr><td> RMS: " + QString().number(wf->std,'f',3) + " waves at 550nm</td><td>Strehl: " + metrics->mStrehl->text() +
             "</td><td>Best Fit Conic: "+metrics->mCC->text() + "</td></tr>"
-
+            "<tr><td>Desired Conic: " +QString::number(md->cc) + "</td><td>" +
+            ((md->doNull) ? QString().sprintf("SANull: %6.4lf",md->z8) : "") + "</td>"
+            "<td>Test Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
             "</table></p>";
 
     // zerenike values

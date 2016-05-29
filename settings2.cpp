@@ -71,6 +71,4 @@ void Settings2::on_listWidget_clicked(const QModelIndex &index)
 {
     ui->stackedWidget->setCurrentIndex(index.row());
 }
-bool Settings2::shouldHflipIgram(){
-    return m_igram->shouldHFlipIgram();
-}
+

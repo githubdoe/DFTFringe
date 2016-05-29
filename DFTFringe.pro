@@ -83,7 +83,8 @@ SOURCES += main.cpp\
     outlinehelpdocwidget.cpp \
     statsview.cpp \
     jitteroutlinedlg.cpp \
-    nullvariationdlg.cpp
+    nullvariationdlg.cpp \
+    ccswappeddlg.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -147,7 +148,8 @@ HEADERS  += mainwindow.h \
     outlinehelpdocwidget.h \
     statsview.h \
     jitteroutlinedlg.h \
-    nullvariationdlg.h
+    nullvariationdlg.h \
+    ccswappeddlg.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -193,7 +195,8 @@ FORMS    += mainwindow.ui \
     outlinehelpdocwidget.ui \
     statsview.ui \
     jitteroutlinedlg.ui \
-    nullvariationdlg.ui
+    nullvariationdlg.ui \
+    ccswappeddlg.ui
 
 CONFIG( debug, debug|release ) {
     # debug
@@ -219,7 +222,7 @@ RC_FILE = DFTFringe.rc
 
 
 # The application version
-VERSION = 1.6A
+VERSION = 1.7
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

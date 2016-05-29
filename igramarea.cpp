@@ -71,7 +71,7 @@ double distance(QPointF p1, QPointF p2)
 }
 
 IgramArea::IgramArea(QWidget *parent, void *mw)
-    : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0), zoomFactor(0.),m_current_boundry(OutSideOutline),
+    : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0), zoomFactor(1),m_current_boundry(OutSideOutline),
       zoomIndex(0),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
       m_edgeMode(false)
 {
@@ -133,8 +133,8 @@ void IgramArea::generateSimIgram()
 }
 
 void IgramArea::edgeMode(){
-    //m_edgeMode = !m_edgeMode;
-    //update();
+    m_edgeMode = !m_edgeMode;
+    update();
 }
 
 void IgramArea::DrawSimIgram(void){
@@ -213,7 +213,7 @@ bool IgramArea::openImage(const QString &fileName)
     if (!loadedImage.load(fileName))
         return false;
 
-    if (Settings2::getInstance()->shouldHflipIgram())
+    if (mirrorDlg::get_Instance()->shouldFlipH())
         loadedImage = loadedImage.mirrored(true,false);
     hasBeenCropped = false;
     needToConvertBGR = true;
@@ -448,10 +448,10 @@ void IgramArea::zoom(int del, QPointF zoompt){
         zoomIndex = 0;
     }
     qDebug() << "Zoom Index "<< zoomIndex;
-
+        zoomFactor = fitScale + zoomIndex;
     if (zoomIndex > 0) {
-        zoomFactor = fitScale + .5 * zoomIndex;
-        scale = zoomFactor;
+
+        //scale = zoomFactor;
         qDebug() << QString().sprintf("scale %lf",scale) << zoomFactor;
         gscrollArea->setWidgetResizable(false);
         resize(igramImage.size() * scale);
@@ -677,13 +677,12 @@ void drawCircle(QPointF& p1, QPointF& p2, QPainter& painter)
 }
 
 
-
 void IgramArea::drawBoundary()
 
 {
-    QImage tmp = igramImage.copy();
+    m_withOutlines = igramImage.copy();
 
-    QPainter painter(&tmp);
+    QPainter painter(&m_withOutlines);
     painter.drawImage(0,0,igramImage);
 
     CircleOutline outside(m_OutterP1,m_OutterP2);
@@ -721,7 +720,7 @@ void IgramArea::drawBoundary()
 
     //emit statusBarUpdate(QString().sprintf("%6.1lf,%6.1lf", m_OutterP1.x(),m_OutterP1.y()));
     QPainter p( &igramDisplay);
-    p.drawImage(QPoint(0,0), tmp.scaled(tmp.width() * scale, tmp.height() * scale));
+    p.drawImage(QPoint(0,0), m_withOutlines.scaled(m_withOutlines.width() * scale, m_withOutlines.height() * scale));
 
     modified = true;
     update();
@@ -735,12 +734,13 @@ void IgramArea::resizeImage()
     if (igramImage.isNull())
         return;
 
+    qDebug() << "resize image ";
     QSize newSize;
     if (zoomIndex > 0){
-        newSize = QSize(igramImage.width() * scale,igramImage.height()* scale);
-        gscrollArea->setWidgetResizable(false);
+        //newSize = QSize(igramImage.width() * scale,igramImage.height()* scale);
+        //gscrollArea->setWidgetResizable(false);
     }
-    else{
+    {
         newSize = gscrollArea->size();
         gscrollArea->setWidgetResizable(true);
         if (igramImage.height() > height())
@@ -757,6 +757,7 @@ void IgramArea::resizeImage()
     } catch (...) {
         QMessageBox::warning(NULL,"","Not enough memory to zoom this large");
     }
+    scale = fitScale = (double)parentWidget()->height()/(double)igramImage.height();
 }
 
 
@@ -765,19 +766,87 @@ void IgramArea::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     QRect dirtyRect = event->rect();
-    if (m_edgeMode && outterPcount == 2){
-        int viewW = 100;
-        CircleOutline circle(m_OutterP1,m_OutterP2);
-
-
-        int topx = (circle.m_center.rx() - viewW) * scale;
-        int topy = (circle.m_center.ry() - circle.m_radius - viewW/2) * scale;
-
+    if ((zoomFactor > 1) && (
+                ((m_current_boundry == OutSideOutline) && (outterPcount == 2)) ||
+                 ((m_current_boundry != OutSideOutline) && (innerPcount == 2))
+            )){
+        painter.fillRect(this->rect(), Qt::gray);
+        int viewW = 200;
+        double scale = zoomFactor;
         int dw = parentWidget()->width()/2;
-        int dh = parentWidget()->height()/2;
-        painter.drawImage(dw - viewW, 0, igramDisplay, topx, topy, viewW * 2, viewW);
-        topy = (circle.m_center.ry() + circle.m_radius - viewW) * scale;
-        painter.drawImage(dw - viewW, viewW * 2 + 20, igramDisplay, topx, topy, viewW * 2, viewW);
+        int dh = parentWidget()->height();
+
+        QImage roi(viewW * 2, viewW, igramImage.format());
+        roi.fill(QColor(0,0,0));
+
+        CircleOutline circle((m_current_boundry == OutSideOutline) ? m_OutterP1 : m_innerP1,
+                             (m_current_boundry == OutSideOutline) ? m_OutterP2 : m_innerP2);
+
+        //painter.drawImage(dirtyRect, igramDisplay, dirtyRect);
+
+        //top ************************************************************
+        int topx = circle.m_center.rx()  - viewW;
+        int topy = circle.m_center.ry() - circle.m_radius - viewW/2;
+        int shifty = 0;
+        if (topy < 0){
+            shifty = -1 * topy;
+        }
+
+        QPainter ptop(&roi);
+        ptop.drawImage(0,shifty, m_withOutlines, topx,topy + shifty,viewW * 2, viewW-shifty);
+        QImage top2 = roi.scaled(scale * roi.width(), scale * roi.height());
+        int w = top2.width();
+        int h = top2.height();
+        painter.drawImage(dw - viewW, dh/2- viewW - 20, top2, w/2 - viewW  ,   (h - viewW)/2, viewW * 2, viewW);
+
+        //bottom *************************************************************
+        roi.fill(QColor(0,0,0));
+        topy = (circle.m_center.ry() + circle.m_radius - viewW/2);
+        shifty = 0;
+        if (topy > m_withOutlines.height()){
+            shifty = topy - m_withOutlines.height();
+        }
+        ptop.drawImage(0,0-shifty, m_withOutlines, topx, topy - shifty,viewW * 2, viewW-shifty);
+        top2 = roi.scaled(scale * roi.width(), scale * roi.height());
+        w = top2.width();
+        h = top2.height();
+        painter.drawImage(dw - viewW, dh/2+ 20, top2, w/2 - viewW  , (h - viewW)/2, viewW * 2, viewW);
+
+        //Left *************************************************************
+        QImage roi2(viewW, 2 * viewW, igramImage.format());
+        roi.fill(QColor(0,0,0));
+        QPainter p2(&roi2);
+        topx = circle.m_center.rx() - circle.m_radius - viewW/2;
+        topy = circle.m_center.ry() - viewW;
+        int shiftl = 0;
+        if (topx < 0){
+            topx *= 1;
+            shiftl = topx;
+        }
+        p2.drawImage(shiftl,0,m_withOutlines, topx + shiftl,topy ,viewW - shiftl, viewW * 2);
+        top2 = roi2.scaled(scale * roi2.width(), scale * roi2.height());
+        w = top2.width();
+        h = top2.height();
+        painter.drawImage(dw - 2 * viewW - 20, dh/2 - viewW, top2, (w - viewW)/2, h/2 - viewW, viewW, 2 * viewW);
+
+
+        // right ************************************************************
+        topx = circle.m_center.rx() + circle.m_radius - viewW/2;
+        roi2.fill(QColor(0,0,0));
+
+        topx = circle.m_center.rx() + circle.m_radius - viewW/2;
+        topy = circle.m_center.ry() - viewW;
+        shiftl = 0;
+        if (topx > m_withOutlines.width()){
+            topx = topx -  m_withOutlines.width();
+            shiftl = topx;
+        }
+        p2.drawImage(shiftl,0,m_withOutlines, topx + shiftl, topy ,viewW-shiftl, viewW * 2);
+        top2 = roi2.scaled(scale * roi2.width(), scale * roi2.height());
+        w = top2.width();
+        h = top2.height();
+        painter.drawImage(dw + viewW + 20, dh/2 - viewW, top2, (w - viewW)/2, h/2 - viewW, viewW, 2 * viewW);
+
     }  else {
         painter.drawImage(dirtyRect, igramDisplay, dirtyRect);
     }
@@ -846,8 +915,10 @@ void IgramArea::crop() {
     drawBoundary();
     m_outsideHist.push(igramImage, m_outside);
     m_centerHist.push(igramImage, m_center);
-    update();
     hasBeenCropped = true;
+    scale = fitScale = (double)parentWidget()->height()/(double)igramImage.height();
+    update();
+
     emit upateColorChannels(igramImage);
 }
 void IgramArea::dftReady(QImage img){
@@ -889,12 +960,9 @@ void IgramArea::loadOutlineFile(QString fileName){
 
     emit dftCenterFilter(sideLobe.m_radius);
 
-    while ((file.tellg() > 0) && (fsize > file.tellg())) {
+    if ((file.tellg() > 0) && (fsize > file.tellg())) {
         qDebug() << "reading inside outline" << file.tellg() << fsize;
-        char buf[10];
-        file.read(buf,1);
 
-        continue;
         m_center = readCircle(file);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;

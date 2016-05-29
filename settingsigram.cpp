@@ -73,9 +73,7 @@ settingsIGram::~settingsIGram()
 {
     delete ui;
 }
-bool settingsIGram::shouldHFlipIgram(){
-    return ui->hflipCb->isChecked();
-}
+
 
 void settingsIGram::on_edgeLineColorPb_clicked()
 {
@@ -108,15 +106,6 @@ void settingsIGram::on_buttonBox_accepted()
     set.setValue("igramCenterWidth", centerWidth);
     set.setValue("igramLineOpacity", ui->opacitySB->value());
     set.setValue("igramLineStyle", ui->styleCB->currentIndex() + 1);
-    ui->hflipCb->setChecked(set.value("igramFlipH", false).toBool());
     emit igramLinesChanged(edgeWidth,centerWidth, edgeColor, centerColor, ui->opacitySB->value(),
                            ui->styleCB->currentIndex()+1);
-}
-
-
-
-void settingsIGram::on_hflipCb_clicked(bool checked)
-{
-    QSettings set;
-    set.setValue("igramFlipH", checked);
 }

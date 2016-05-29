@@ -196,6 +196,7 @@ private:
     QColor centerPenColor;
     QColor edgePenColor;
     QImage igramDisplay;
+    QImage m_withOutlines;
     QPointF m_OutterP1;
     QPointF m_OutterP2;
     QPointF m_innerP1;

@@ -31,7 +31,7 @@ class settingsIGram : public QDialog
 public:
     explicit settingsIGram(QWidget *parent = 0);
     ~settingsIGram();
-    bool shouldHFlipIgram();
+
 signals:
     void igramLinesChanged(int,int,QColor,QColor, double, int);
 private slots:
@@ -44,9 +44,6 @@ private slots:
     void on_centerLineColorPb_clicked();
 
     void on_buttonBox_accepted();
-
-
-    void on_hflipCb_clicked(bool checked);
 
 private:
     Ui::settingsIGram *ui;

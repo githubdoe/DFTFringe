@@ -50,6 +50,9 @@ metricsDisplay *metricsDisplay::get_instance(QWidget *parent){
 void metricsDisplay::setWavePerFringe(double val, double lambda){
     ui->wavesPerFringe->setText(QString().sprintf("Waves Per Fringe: %2.1lf",val));
     ui->lambda->setText(QString().sprintf("Igram laser wavelength: %6.2lf nm",lambda));
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    QString donull = (md->doNull) ? (QString().sprintf("SANull: %6.4lf",md->z8)) : "";
+    ui->desiredConicLb->setText(QString().sprintf("Desired Conic: %6.2lf ", md->cc) + donull);
 }
 
 void metricsDisplay::setName(QString name){

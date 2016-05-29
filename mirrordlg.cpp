@@ -66,10 +66,10 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
 
 mirrorDlg::~mirrorDlg()
 {
-    delete ui->flipH;
+
 }
 bool mirrorDlg::shouldFlipH(){
-    return ui->flipH;
+    return ui->flipH->isChecked();
 }
 
 void mirrorDlg::on_saveBtn_clicked()
@@ -322,7 +322,7 @@ void mirrorDlg::updateZ8(){
     z8 = (diameter * diameter * diameter * diameter * 1000000.) /
             (384. * roc * roc * roc * lambda);
     ui->z8->blockSignals(true);
-    ui->z8->setText(QString().number(z8));
+    ui->z8->setText(QString().number(z8 * -cc));
     ui->z8->blockSignals(false);
 
 }
@@ -380,6 +380,7 @@ void mirrorDlg::on_buttonBox_accepted()
     settings.setValue("config diameter",diameter);
     settings.setValue("config obstruction", obs);
     settings.setValue("config cc", cc);
+    settings.setValue("flipH", ui->flipH->isChecked());
     fringeSpacing = ui->fringeSpacingEdit->text().toDouble();
     settings.setValue("config fringe spacing", fringeSpacing);
     //settings.setValue("config unitsMM", mm);
@@ -394,6 +395,7 @@ void mirrorDlg::on_buttonBox_accepted()
 void mirrorDlg::on_cc_textChanged(const QString &arg1)
 {
    cc = arg1.toDouble();
+   updateZ8();
 }
 
 void mirrorDlg::on_fringeSpacingEdit_textChanged(const QString &arg1)

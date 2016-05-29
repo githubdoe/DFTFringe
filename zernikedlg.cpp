@@ -119,7 +119,7 @@ Qt::ItemFlags ZernTableModel::flags(const QModelIndex & index) const
     if (index.column() == 0)
         return 0;
     if (index.column() == 1)
-        return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable |  Qt::ItemIsEditable;
+        return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled;
     return 0;
 }
 

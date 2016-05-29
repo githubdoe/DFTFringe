@@ -602,7 +602,7 @@ double zernikeProcess::unwrap_to_zernikes(wavefront &wf)
         ++step;
     }
 
-    qDebug() << "sample igram every"<< step << "pixels";
+    qDebug() << "sampled wavefront every"<< step << "pixels";
     double delta = 1./(wf.m_outside.m_radius);
     zernikePolar &zpolar = *zernikePolar::get_Instance();
     for(int y = 0; y < ny; y += step) //for each point on the surface

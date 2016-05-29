@@ -55,6 +55,7 @@ public:
     static QString getProjectPath();
     bool m_obsChanged;
 
+
 private slots:
     void on_ReadBtn_clicked();
 
