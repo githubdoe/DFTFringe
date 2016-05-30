@@ -42,7 +42,7 @@ void waveFrontLoader::loadx(QStringList list, SurfaceManager *sm){
                 break;
         emit currentWavefront(list[i]);
         emit status(i+1);
-
+        qDebug() << " loading " << i;
         mirrorConfigChanged |= sm->loadWavefront(list[i]);
     }
     emit status(list.size()+1);

@@ -57,11 +57,14 @@ void DFTTools::on_filterAdjuster_valueChanged(double arg1)
 {
     emit dftCenterFilter(arg1);
 }
-
+#include <QDebug>
 // compute surface
 void DFTTools::on_pushButton_clicked()
 {
+    wasPressed = true;
+    qDebug() << "Pressed makesurface";
     emit makeSurface();
+
 }
 
 void DFTTools::on_computeDFT_pressed()

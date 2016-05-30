@@ -250,7 +250,7 @@ void ContourPlot::setSurface(wavefront * wf) {
 
 
     QwtScaleWidget *rightAxis = axisWidget( QwtPlot::yRight );
-    rightAxis->setTitle( "wavefront error" );
+    rightAxis->setTitle( "wavefront error at 550nm" );
     rightAxis->setColorBarEnabled( true );
     rightAxis->setColorBarWidth(30);
     if (!m_minimal){

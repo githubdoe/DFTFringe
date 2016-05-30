@@ -134,14 +134,14 @@
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="outlineTools">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
    <property name="minimumSize">
     <size>
-     <width>344</width>
+     <width>100</width>
      <height>867</height>
     </size>
    </property>
@@ -320,7 +320,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
        <property name="title">
         <string>Outline Adjust</string>
        </property>
-       <layout class="QGridLayout" name="gridLayout_3">
+       <layout class="QGridLayout" name="_2">
         <item row="0" column="2">
          <widget class="QPushButton" name="undo">
           <property name="minimumSize">
@@ -397,6 +397,9 @@ em;
             <height>30</height>
            </size>
           </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="1" column="2">
@@ -433,6 +436,9 @@ em;
             <width>30</width>
             <height>30</height>
            </size>
+          </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -471,6 +477,9 @@ em;
             <height>30</height>
            </size>
           </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="2" column="3">
@@ -507,6 +516,9 @@ em;
             <width>30</width>
             <height>30</height>
            </size>
+          </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -545,6 +557,9 @@ em;
             <height>30</height>
            </size>
           </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="1" column="4">
@@ -582,6 +597,9 @@ em;
             <height>30</height>
            </size>
           </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="0" column="4">
@@ -615,6 +633,13 @@ em;
             <width>30</width>
             <height>30</height>
            </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QCheckBox" name="edgeZoomCb">
+          <property name="text">
+           <string>Edge Zoom</string>
           </property>
          </widget>
         </item>

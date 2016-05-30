@@ -33,7 +33,7 @@ public:
     ~settingsIGram();
 
 signals:
-    void igramLinesChanged(int,int,QColor,QColor, double, int);
+    void igramLinesChanged(int,int,QColor,QColor, double, int, int);
 private slots:
     void on_edgeLineColorPb_clicked();
 

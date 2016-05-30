@@ -168,8 +168,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_dftTools,SIGNAL(doDFT()),m_dftArea,SLOT(doDFT()));
     settingsDlg = Settings2::getInstance();
-    connect(settingsDlg->m_igram,SIGNAL(igramLinesChanged(int,int,QColor,QColor,double,int)),
-            m_igramArea,SLOT(igramOutlineParmsChanged(int, int, QColor, QColor, double, int)));
+    connect(settingsDlg->m_igram,SIGNAL(igramLinesChanged(int,int,QColor,QColor,double,int, int)),
+            m_igramArea,SLOT(igramOutlineParmsChanged(int, int, QColor, QColor, double, int, int)));
 
     QSettings settings;
     restoreState(settings.value("MainWindow/windowState").toByteArray());
@@ -321,7 +321,7 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     dialog.setMimeTypeFilters(mimeTypeFilters);
     QSettings set;
     QString mime = set.value("igramExt","jpeg").toString();
-    mime.replace("jpg", "jpeg");
+    mime.replace("jpg", "jpeg",Qt::CaseInsensitive);
     dialog.selectMimeTypeFilter("image/"+mime);
 
     if (dialog.exec()){
@@ -329,6 +329,7 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
             QFileInfo a(dialog.selectedFiles().first());
             QString ext = a.completeSuffix();
             set.setValue("igramExt", ext);
+            qDebug() << "suffix"<<ext;
 
             loadFile(dialog.selectedFiles().first());
         }
@@ -866,13 +867,13 @@ void MainWindow::batchProcess(QStringList fileList){
                 break;
             m_surfaceManager->m_surface_finished = false;
             ui->tabWidget->setCurrentIndex(2);
+            m_dftTools->wasPressed = true;
             m_dftArea->makeSurface();
+            qDebug() << "batch make surface";
             while(m_inBatch && !m_surfaceManager->m_surface_finished){qApp->processEvents();}
             if (!m_inBatch)
                 break;
             Sleep(1000);
-
-
         }
         batchIgramWizard::goPb->setEnabled(true);
         batchWiz->close();
@@ -933,7 +934,7 @@ void MainWindow::startJitter(){
     int rad = 0;
 
     m_igramArea->openImage(m_igramArea->m_filename);
-    CircleOutline  saved = m_igramArea->m_outside;
+    CircleOutline  saved = (m_igramArea->m_current_boundry == OutSideOutline) ? m_igramArea->m_outside : m_igramArea->m_center;
     dlg->getProgressBar()->setMinimum(start);
     dlg->getProgressBar()->setMaximum(end);
     for (int delta = start; delta <= end; delta += step){
@@ -953,7 +954,11 @@ void MainWindow::startJitter(){
         if (stopJittering)
             break;
         m_igramArea->openImage(m_igramArea->m_filename);
-        m_igramArea->m_outside = saved;
+        if (m_igramArea->m_current_boundry == OutSideOutline)
+            m_igramArea->m_outside = saved;
+        else
+            m_igramArea->m_center = saved;
+
         m_igramArea->increase(rad);
         m_igramArea->shiftoutline(QPointF(x,y));
         qApp->processEvents();
@@ -963,6 +968,7 @@ void MainWindow::startJitter(){
 
         m_surfaceManager->m_surface_finished = false;
         ui->tabWidget->setCurrentIndex(2);
+        m_dftTools->wasPressed = true;
         m_dftArea->makeSurface();
         while(m_inBatch && !m_surfaceManager->m_surface_finished){qApp->processEvents();}
         wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
@@ -976,7 +982,10 @@ void MainWindow::startJitter(){
     stopJittering = false;
 
     m_igramArea->openImage(m_igramArea->m_filename);
-    m_igramArea->m_outside = saved;
+    if (m_igramArea->m_current_boundry == OutSideOutline)
+        m_igramArea->m_outside = saved;
+    else
+        m_igramArea->m_center = saved;
     m_igramArea->nextStep();
     m_igramArea->openImage(m_igramArea->m_filename);
 }
@@ -1032,6 +1041,9 @@ void MainWindow::zoomOgl(bool flag)
     l->addWidget(m_ogl);
     oglFv->setLayout(l);
     oglFv->showMaximized();
+}
 
-
+void MainWindow::on_edgeZoomCb_clicked(bool checked)
+{
+    m_igramArea->setZoomMode( (checked) ? EDGEZOOM : NORMALZOOM);
 }

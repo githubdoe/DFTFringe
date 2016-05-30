@@ -346,15 +346,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
 
 SurfaceManager::~SurfaceManager(){}
 
-void SurfaceManager::centerMaskValue(int val){
-    insideOffset = val;
-    double mmPerPixel = m_wavefronts[m_currentNdx]->diameter/(2 *( m_wavefronts[m_currentNdx]->m_outside.m_radius-1));
-    m_waveFrontTimer->start(1000);
-    m_surfaceTools->m_centerMaskLabel->setText(QString().sprintf("%6.2lf mm",mmPerPixel* val));
-    makeMask(m_currentNdx);
-    emit generateSurfacefromWavefront(m_currentNdx, this);
 
-}
 
 void SurfaceManager::makeMask(int waveNdx){
     int width = m_wavefronts[waveNdx]->data.cols;
@@ -363,7 +355,7 @@ void SurfaceManager::makeMask(int waveNdx){
     xm = m_wavefronts[waveNdx]->m_outside.m_center.x();
     ym = m_wavefronts[waveNdx]->m_outside.m_center.y();
     double radm = m_wavefronts[waveNdx]->m_outside.m_radius + outsideOffset - 2;
-    double rado = m_wavefronts[waveNdx]->m_inside.m_radius + insideOffset;
+    double rado = m_wavefronts[waveNdx]->m_inside.m_radius + insideOffset +2;
     double cx = m_wavefronts[waveNdx]->m_inside.m_center.x();
     double cy = m_wavefronts[waveNdx]->m_inside.m_center.y();
     cv::Mat mask = cv::Mat::zeros(height,width,CV_8U);
@@ -424,6 +416,19 @@ void SurfaceManager::ObstructionChanged(){
     outsideMaskValue(outsideOffset);// use this function to trigger the mask making and recomputing.
 }
 
+void SurfaceManager::centerMaskValue(int val){
+    insideOffset = val;
+    double mmPerPixel = m_wavefronts[m_currentNdx]->diameter/(2 *( m_wavefronts[m_currentNdx]->m_outside.m_radius-1));
+    m_surfaceTools->m_centerMaskLabel->setText(QString().sprintf("%6.2lf mm",mmPerPixel* val));
+    makeMask(m_currentNdx);
+    wavefront *wf = m_wavefronts[m_currentNdx];
+    wf->dirtyZerns = true;
+    wf->wasSmoothed = false;
+    //emit generateSurfacefromWavefront(m_currentNdx, this);
+    m_waveFrontTimer->start(1000);
+
+}
+
 void SurfaceManager::outsideMaskValue(int val){
     outsideOffset = val;
     double mmPerPixel = m_wavefronts[m_currentNdx]->diameter/(2 * (m_wavefronts[m_currentNdx]->m_outside.m_radius));
@@ -432,7 +437,7 @@ void SurfaceManager::outsideMaskValue(int val){
     wavefront *wf = m_wavefronts[m_currentNdx];
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
-    emit generateSurfacefromWavefront(m_currentNdx, this);
+    //emit generateSurfacefromWavefront(m_currentNdx, this);
     m_waveFrontTimer->start(1000);
 
 }
@@ -525,7 +530,7 @@ void SurfaceManager::surfaceSmoothGBValue(int value){
     m_surfaceTools->setBlurText(QString().sprintf("%6.2lf mm",m_gbValue* mmPerPixel));
     if (m_wavefronts.size() == 0)
         return;
-    emit generateSurfacefromWavefront(m_currentNdx, this);
+    //emit generateSurfacefromWavefront(m_currentNdx, this);
     m_waveFrontTimer->start(1000);
 }
 void SurfaceManager::surfaceSmoothGBEnabled(bool b){
@@ -582,7 +587,7 @@ void SurfaceManager::computeZerns()
         wf->dirtyZerns = true;
         wf->wasSmoothed = false;
     }
-    emit generateSurfacefromWavefront(m_currentNdx, this);
+    //emit generateSurfacefromWavefront(m_currentNdx, this);
     m_waveFrontTimer->start(1000);
 
 }
@@ -625,6 +630,7 @@ void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulle
 }
 
 void SurfaceManager::SaveWavefronts(bool saveNulled){
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     QList<int> list = m_surfaceTools->SelectedWaveFronts();
     if (list.size() <= 1 && m_wavefronts.size() > 0) {
         QSettings settings;
@@ -645,7 +651,7 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
     }
     else if (list.size() > 1){
         QSettings settings;
-        QString path = settings.value("mirrorConfigFile").toString();
+        QString path = settings.value("lastPath").toString();
         QFile fn(path);
         QFileInfo info(fn.fileName());
         QString dd = info.dir().absolutePath();
@@ -681,6 +687,7 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
 
         }
     }
+    QApplication::restoreOverrideCursor();
 }
 void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside, CircleOutline center, QString name){
 
@@ -695,6 +702,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     else {
         wf = new wavefront();
         m_wavefronts << wf;
+        qDebug() << "save wavefront "<< name;
 
         wf->name = name;
 
@@ -879,14 +887,9 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
     wf->wasSmoothed = false;
 
     makeMask(m_currentNdx);
-
-    //cv::Mat tt = data.clone();
-    //cv::normalize(tt,tt,0.f,1.f,CV_MINMAX);
-    //cv::imshow(" wf ", tt);
-    //cv::imshow(" mask ", wf->mask);
-    //cv::waitKey(1);
+    m_surface_finished = false;
     emit generateSurfacefromWavefront(m_currentNdx, this);
-
+    while (!m_surface_finished){qApp->processEvents();}
     return mirrorParamsChanged;
 }
 void SurfaceManager::deleteCurrent(){
@@ -988,7 +991,7 @@ void SurfaceManager::surfaceGenFinished(int ndx) {
 
     if (workToDo > 0)
         emit progress(++workProgress);
-
+    qDebug() << "finish process "<<  ndx << "Still to do" << inprocess;
     mutex.lock();
     --inprocess;
 
@@ -1013,9 +1016,10 @@ void SurfaceManager::backGroundUpdate(){
     workToDo = m_wavefronts.size()-1;
     pd->setLabelText("Updating all Surfaces");
     pd->setRange(0,workToDo);
-    for (int i = 1; i < m_wavefronts.size(); ++i){
+    for (int i = 0; i < m_wavefronts.size(); ++i){
         int ndx = (i + m_currentNdx) % m_wavefronts.size();
         m_wavefronts[ndx]->dirtyZerns = true;
+        m_wavefronts[ndx]->wasSmoothed = false;
         emit generateSurfacefromWavefront(ndx, this);
     }
 }
@@ -2052,6 +2056,15 @@ void SurfaceManager::report(){
     QString svpng("mydata://sv.png");
     doc->addResource(QTextDocument::ImageResource,  QUrl(svpng), QVariant(svImageScaled));
     contourHtml.append("<p> <img src='" +svpng + "'</p>");
+
+    // add igram to bottom of report
+    QImage igram = ((MainWindow*)(parent()))->m_igramArea->igramDisplay;
+    if (igram.width() > 0){
+        QString sigram("mydata://igram.png");
+        doc->addResource(QTextDocument::ImageResource,  QUrl(sigram),
+                         QVariant(igram.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
+        contourHtml.append("<p> <img src='" +sigram + "'</p>Typical Interferogram");
+    }
     editor->setHtml(title + html +zerns + contourHtml+ tail);
     editor->print(&printer);
     editor->show();

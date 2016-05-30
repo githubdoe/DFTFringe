@@ -28,7 +28,7 @@ void writeCircle(std::ofstream& file, CircleOutline& circle){
     double rx = circle.m_radius;
     file.write((char*)(&rx),8);
     file.write((char*)(&rx),8);
-    qDebug() << "Write circle " << x << y << rx;
+
     int size = 20;
     file.write((char*)&size,4);
     QVector<QPointF> points = circle.makeCircleofPoints(size);
@@ -36,7 +36,7 @@ void writeCircle(std::ofstream& file, CircleOutline& circle){
         double x,y;
         x = points[i].x();
         y = points[i].y();
-        qDebug() << x << y;
+
         file.write((char*)&x,8);
         file.write((char*)&y,8);
     }
@@ -55,7 +55,6 @@ CircleOutline readCircle(std::ifstream &file){
     ++dp;
     int size = *(int *)dp; //= *(reinterpret_cast<int *>(buf));
     // ignore the ellipse point section
-    qDebug() << "reading circle points";
     for (int i = 0; i < size; ++i) {
         file.read(buf,8);
         double x,y;
@@ -64,7 +63,7 @@ CircleOutline readCircle(std::ifstream &file){
         file.read(buf,8);
         y = *(double*)buf;
 
-        qDebug() << x << y;
+
     }
     CircleOutline c;
     c.m_center.rx() = x;

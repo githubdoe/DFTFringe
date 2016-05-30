@@ -31,6 +31,7 @@ class DFTTools : public QDockWidget
 public:
     explicit DFTTools(QWidget *parent = 0);
     void connectTo(QWidget *view);
+    bool wasPressed;
     ~DFTTools();
 signals:
     void doDFT();

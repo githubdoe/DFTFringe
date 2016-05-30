@@ -77,7 +77,7 @@
 
 extern QScrollArea *gscrollArea;
 enum {OutSideOutline, CenterOutline};
-
+enum zoomMode {NORMALZOOM, EDGEZOOM};
 class outlinePair{
 public:
     QImage m_image;
@@ -142,6 +142,8 @@ public:
     void writeOutlines(QString fileName);
     QString makeOutlineName();
     void shiftoutline(QPointF p);
+    void setZoomMode(zoomMode mode);
+    int m_current_boundry;
 public slots:
     void gammaChanged(bool, double);
     void generateSimIgram();
@@ -154,7 +156,7 @@ public slots:
     void shiftLeft();
     void zoomIn();
     void zoomOut();
-    void igramOutlineParmsChanged(int, int, QColor, QColor, double, int);
+    void igramOutlineParmsChanged(int, int, QColor, QColor, double, int, int zoomWidth);
     void increase( int i = 1);
     void decrease(int i = 1);
     void zoomFull();
@@ -195,7 +197,9 @@ private:
     bool needToConvertBGR;
     QColor centerPenColor;
     QColor edgePenColor;
+public:
     QImage igramDisplay;
+private:
     QImage m_withOutlines;
     QPointF m_OutterP1;
     QPointF m_OutterP2;
@@ -211,9 +215,8 @@ private:
     int outterPcount;
     int innerPcount;
     int lineStyle;
-    double zoomFactor;
 
-    int m_current_boundry;
+
     int zoomIndex;
     bool dragMode;
     QPointF dragStart;
@@ -225,6 +228,8 @@ private:
     QTimer *m_outlineTimer;
     bool hasBeenCropped;
     bool m_edgeMode;
+    int m_zoomBoxWidth;
+    zoomMode m_zoomMode;
    // m_mw(mw),QWidget(parent),scale(1.),outterPcount(0), innerPcount(0), zoomFactor(0.),m_current_boundry(OutSideOutline),
       //zoomIndex(0),dragMode(false),m_hideOutlines(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false)
 };

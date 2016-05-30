@@ -125,7 +125,6 @@ void DFTArea::setChannel(const QString& val){
 void DFTArea::dftCenterFilter(double v){
     m_center_filter = v;
     QSettings set;
-    qDebug() << "Setting center value " << v;
     set.setValue("DFT Center Filter", v);
     update();
 }
@@ -224,14 +223,13 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     if (channel == "Blue") maxndx = 0;
     else if (channel == "Green") maxndx = 1;
     else if (channel == "Red") maxndx = 2;
-    qDebug() << "Max channel " << maxndx;
 
     Mat  padded;                            //expand input image to optimal size
     int m = getOptimalDFTSize( roi.rows ) - roi.rows;
     int n = getOptimalDFTSize( roi.cols ) - roi.cols; // on the border add zero values
     m =0;
     n = 0;
-    qDebug() << "pady " << m << " padx " << n;
+
     if (m > 0 || n > 0)
         copyMakeBorder(bgr_planes[maxndx], padded, 0, m, 0, n, BORDER_CONSTANT, Scalar::all(0));
     else
@@ -353,7 +351,7 @@ void DFTArea::doDFT(){
     magIImage = showMag(complexI,false,"", true, m_gamma);
     scale = 1.;
     double h = magIImage.height();
-    qDebug() <<" dft size "<< size();
+
     scale = double(parentWidget()->size().height())/h;
     if (scale < 1.)
         scale = 1.;
@@ -788,7 +786,9 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
 
 // make a surface from the image using DFT and vortex transfroms.
 void DFTArea::makeSurface(){
-
+    if (!tools->wasPressed)
+        return;
+    tools->wasPressed = false;
     igramArea->writeOutlines(igramArea->makeOutlineName());  // save outlines including center filter
     cv::Mat phase = vortex(igramArea->igramImage,  m_center_filter);
 

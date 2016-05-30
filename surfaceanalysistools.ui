@@ -227,13 +227,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="checkBox_2">
-         <property name="text">
-          <string>special</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <widget class="QCheckBox" name="blurCB">

@@ -1,9 +1,9 @@
-
+When loading a new mirror dialog change base paths to that dir.
 why is intensity profile jagged?
 
 Add average of stand only wavefronts to the wavefront list.
 
-smoothing drops out when recomputing because of center obstruction changes.
+vortex starts making two wavefronts after awhile?
 
 
 

@@ -267,8 +267,9 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
         dy = -radn * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y();
         if (dy >= wf->data.rows || dx >= wf->data.cols || dy < 0 || dx < 0){
             points << QPointF(radx,0.0);
+
         }
-        if (wf->workMask.at<bool>(dy,dx)){
+        else if (wf->workMask.at<bool>(dy,dx)){
             points << QPointF(radx,(units * (wf->workData.at<double>((int)dy,(int)dx)) *
                                     wf->lambda/550.) +y_offset * units);
         }

@@ -190,6 +190,8 @@ private slots:
 
     void on_actionShow_Statistics_of_Loaded_wavefronts_triggered();
 
+    void on_edgeZoomCb_clicked(bool checked);
+
 private:
 
     Ui::MainWindow *ui;
@@ -202,8 +204,9 @@ private:
     QMenu* m_view_menu;
     void createActions();
     void createDockWindows();
-
+public:
     IgramArea *m_igramArea;
+private:
     DFTArea *m_dftArea;
 
     contourView *m_contourView;

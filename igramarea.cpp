@@ -71,9 +71,9 @@ double distance(QPointF p1, QPointF p2)
 }
 
 IgramArea::IgramArea(QWidget *parent, void *mw)
-    : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0), zoomFactor(1),m_current_boundry(OutSideOutline),
-      zoomIndex(0),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
-      m_edgeMode(false)
+    : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0),m_current_boundry(OutSideOutline),
+      zoomIndex(1),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
+      m_edgeMode(false), m_zoomMode(NORMALZOOM)
 {
 
     m_innerP1 = m_innerP2 = m_OutterP1 = m_OutterP2 = QPointF(0.,0.);
@@ -81,6 +81,7 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     modified = false;
     scribbling = false;
     QSettings set;
+    m_zoomBoxWidth = set.value("zoomBoxWidth", 200).toInt();
     centerPenColor = set.value("igramCenterLineColor", QColor("white").name()).toString();
     edgePenColor = set.value("igramEdgeLineColor", QColor("green").name()).toString();
     edgePenWidth = set.value("igramEdgeWidth", 3).toInt();
@@ -159,7 +160,7 @@ void IgramArea::DrawSimIgram(void){
 
     qDebug() << "sim format " << igramImage.format();
 
-    zoomIndex = 0;
+    zoomIndex = 1;
     m_outsideHist.clear();
     m_centerHist.clear();
     modified = false;
@@ -174,8 +175,7 @@ void IgramArea::DrawSimIgram(void){
     m_outsideHist.push(igramImage,m_outside);
     drawBoundary();
     fitScale = 1;
-    zoomFactor = 1;
-    zoomIndex = 0;
+    zoomIndex = 1;
     scale = fitScale;
     m_filename = "simulatedIgram";
     update();
@@ -219,7 +219,7 @@ bool IgramArea::openImage(const QString &fileName)
     needToConvertBGR = true;
     //m_demo->hide();
     m_filename = fileName;
-    zoomIndex = 0;
+    zoomIndex = 1;
     igramImage = loadedImage;
     if (m_doGamma)
         doGamma(m_gammaValue);
@@ -437,24 +437,31 @@ void IgramArea::zoomOut(){
     zoom(-1, p);
 }
 void IgramArea::zoomFull(){
-    zoomIndex = 0;
-    zoom(0,mapFromGlobal(QCursor::pos())/scale);
+    zoomIndex = 1;
+    scale = fitScale;
+    zoom(0, QPointF(0,0));
+
 }
 void IgramArea::zoom(int del, QPointF zoompt){
 
     qDebug()<< zoompt << del;
     zoomIndex += del;
-    if (zoomIndex < 0) {
-        zoomIndex = 0;
+    if (zoomIndex < 1) {
+        zoomIndex = 1;
     }
-    qDebug() << "Zoom Index "<< zoomIndex;
-        zoomFactor = fitScale + zoomIndex;
-    if (zoomIndex > 0) {
+    if (m_zoomMode == NORMALZOOM && zoomIndex > 8) {
+        zoomIndex = 8;
+        update();
+        return;
 
-        //scale = zoomFactor;
-        qDebug() << QString().sprintf("scale %lf",scale) << zoomFactor;
+    }
+
+    qDebug() << "Zoom Index "<< zoomIndex;
+
+    if (zoomIndex > 1) {
+
         gscrollArea->setWidgetResizable(false);
-        resize(igramImage.size() * scale);
+        resize(igramImage.size() * fitScale * zoomIndex);
 
         //gscrollArea->ensureVisible(width()/2,height()/2);
 
@@ -734,17 +741,18 @@ void IgramArea::resizeImage()
     if (igramImage.isNull())
         return;
 
-    qDebug() << "resize image ";
+
     QSize newSize;
-    if (zoomIndex > 0){
-        //newSize = QSize(igramImage.width() * scale,igramImage.height()* scale);
-        //gscrollArea->setWidgetResizable(false);
+    if (zoomIndex > 1 && m_zoomMode == NORMALZOOM){
+        scale = fitScale * zoomIndex;
+        newSize = QSize(igramImage.width() * scale,igramImage.height()* scale);
+        gscrollArea->setWidgetResizable(false);
     }
+    else
     {
         newSize = gscrollArea->size();
         gscrollArea->setWidgetResizable(true);
-        if (igramImage.height() > height())
-                scale = (double)parentWidget()->height()/(double)igramImage.height();
+        scale = (double)parentWidget()->height()/(double)igramImage.height();
     }
     try {
         QImage newImage(newSize, QImage::Format_RGB32);
@@ -754,10 +762,11 @@ void IgramArea::resizeImage()
         QPainter painter(&newImage);
         igramDisplay = igramImage.scaled(igramImage.width() * scale, igramImage.height() * scale);
         painter.drawImage(QPoint(0, 0), igramDisplay);
+        //scale = fitScale = (double)parentWidget()->height()/(double)igramImage.height();
     } catch (...) {
         QMessageBox::warning(NULL,"","Not enough memory to zoom this large");
     }
-    scale = fitScale = (double)parentWidget()->height()/(double)igramImage.height();
+
 }
 
 
@@ -766,13 +775,13 @@ void IgramArea::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     QRect dirtyRect = event->rect();
-    if ((zoomFactor > 1) && (
+    if ((zoomIndex > 1 && m_zoomMode == EDGEZOOM) && (
                 ((m_current_boundry == OutSideOutline) && (outterPcount == 2)) ||
                  ((m_current_boundry != OutSideOutline) && (innerPcount == 2))
             )){
         painter.fillRect(this->rect(), Qt::gray);
-        int viewW = 200;
-        double scale = zoomFactor;
+        int viewW = m_zoomBoxWidth;
+        double scale = zoomIndex;
         int dw = parentWidget()->width()/2;
         int dh = parentWidget()->height();
 
@@ -937,6 +946,7 @@ void IgramArea::SideOutLineActive(bool checked){
        m_current_boundry = OutSideOutline;
     else
        m_current_boundry = CenterOutline;
+    update();
 }
 
 void IgramArea::loadOutlineFile(QString fileName){
@@ -1140,13 +1150,16 @@ void IgramArea::hideOutline(bool checked){
     m_hideOutlines = checked;
     drawBoundary();
 }
-void IgramArea::igramOutlineParmsChanged(int edgeW, int centerW, QColor edgeC, QColor centerC, double op, int style){
+void IgramArea::igramOutlineParmsChanged(int edgeW, int centerW, QColor edgeC, QColor centerC, double op, int style, int zoomWidth){
     edgePenWidth = edgeW;
     centerPenWidth = centerW;
     edgePenColor = edgeC;
     centerPenColor = centerC;
     opacity = op;
     lineStyle = style;
+    m_zoomBoxWidth = zoomWidth;
+    QSettings set;
+    set.setValue("zoomBoxWidth", zoomWidth);
     drawBoundary();
 
 }
@@ -1168,4 +1181,15 @@ void IgramArea::gammaChanged(bool checked, double value){
     if (m_outside.m_radius > 0.)
         emit upateColorChannels(igramImage);
     update();
+}
+void IgramArea::setZoomMode(zoomMode mode){
+    m_zoomMode = mode;
+    if (mode == EDGEZOOM){
+        zoomIndex = 2;
+        zoom(0,QPointF(0,0));
+        return;
+    }
+    else
+        zoomIndex = 1;
+    zoomFull();
 }

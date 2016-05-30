@@ -107,5 +107,5 @@ void settingsIGram::on_buttonBox_accepted()
     set.setValue("igramLineOpacity", ui->opacitySB->value());
     set.setValue("igramLineStyle", ui->styleCB->currentIndex() + 1);
     emit igramLinesChanged(edgeWidth,centerWidth, edgeColor, centerColor, ui->opacitySB->value(),
-                           ui->styleCB->currentIndex()+1);
+                           ui->styleCB->currentIndex()+1, ui->zoomBoxWidthSb->value());
 }

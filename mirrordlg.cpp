@@ -138,6 +138,7 @@ void mirrorDlg::loadFile(QString & fileName){
     m_projectPath = info.absolutePath();
     settings.setValue("mirrorConfigFile",fileName);
     settings.setValue("projectPath", info.absolutePath());
+    settings.setValue("lastPath",info.absolutePath());
     m_projectPath = info.absolutePath();
     char buf[125];
     /*		ar<<m_name;
