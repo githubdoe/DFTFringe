@@ -45,6 +45,7 @@ settingsIGram::settingsIGram(QWidget *parent) :
     centerWidth = set.value("igramCenterWidth",3).toInt();
     ui->spinBox->setValue(edgeWidth);
     ui->centerSpinBox->setValue(centerWidth);
+    ui->zoomBoxWidthSb->setValue(set.value("igramZoomBoxWidth", 200).toDouble());
 
     connect(ui->buttonBox->button(QDialogButtonBox::Apply), SIGNAL(clicked()), SLOT(on_buttonBox_accepted()));
     ui->styleCB->setEditable(false);
@@ -106,6 +107,7 @@ void settingsIGram::on_buttonBox_accepted()
     set.setValue("igramCenterWidth", centerWidth);
     set.setValue("igramLineOpacity", ui->opacitySB->value());
     set.setValue("igramLineStyle", ui->styleCB->currentIndex() + 1);
+    set.setValue("igramZoomBoxWidth", ui->zoomBoxWidthSb->value());
     emit igramLinesChanged(edgeWidth,centerWidth, edgeColor, centerColor, ui->opacitySB->value(),
                            ui->styleCB->currentIndex()+1, ui->zoomBoxWidthSb->value());
 }

@@ -26,7 +26,7 @@
     <enum>Qt::Horizontal</enum>
    </property>
    <property name="standardButtons">
-    <set>QDialogButtonBox::Ok</set>
+    <set>QDialogButtonBox::Apply</set>
    </property>
   </widget>
   <widget class="QCheckBox" name="ShowDFTTHumbCB">

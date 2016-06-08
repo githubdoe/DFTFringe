@@ -58,6 +58,7 @@
 #include <QTabWidget>
 #include <QPrintDialog>
 #include <QSplitter>
+#include "settingsgeneral.h"
 QMutex mutex;
 int inprocess = 0;
 
@@ -425,7 +426,7 @@ void SurfaceManager::centerMaskValue(int val){
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
-    m_waveFrontTimer->start(1000);
+    m_waveFrontTimer->start(500);
 
 }
 
@@ -438,7 +439,7 @@ void SurfaceManager::outsideMaskValue(int val){
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
-    m_waveFrontTimer->start(1000);
+    m_waveFrontTimer->start(500);
 
 }
 void SurfaceManager::useDemoWaveFront(){
@@ -531,7 +532,7 @@ void SurfaceManager::surfaceSmoothGBValue(int value){
     if (m_wavefronts.size() == 0)
         return;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
-    m_waveFrontTimer->start(1000);
+    m_waveFrontTimer->start(500);
 }
 void SurfaceManager::surfaceSmoothGBEnabled(bool b){
     if (inprocess != 0)
@@ -550,8 +551,8 @@ void SurfaceManager::surfaceSmoothGBEnabled(bool b){
     m_surfaceTools->setBlurText(QString().sprintf("%6.2lf mm",m_gbValue* mmPerPixel));
     if (m_wavefronts.size() == 0)
         return;
-    emit generateSurfacefromWavefront(m_currentNdx, this);
-    m_waveFrontTimer->start(1000);
+    //emit generateSurfacefromWavefront(m_currentNdx, this);
+    m_waveFrontTimer->start(500);
 }
 
 void SurfaceManager::computeMetrics(wavefront *wf){
@@ -580,16 +581,7 @@ void SurfaceManager::computeMetrics(wavefront *wf){
 
 void SurfaceManager::computeZerns()
 {
-    if (m_wavefronts.size() == 0)
-        return;
-    for (int i = 0; i < m_wavefronts.size(); ++i){
-        wavefront *wf = m_wavefronts[m_currentNdx];
-        wf->dirtyZerns = true;
-        wf->wasSmoothed = false;
-    }
-    //emit generateSurfacefromWavefront(m_currentNdx, this);
-    m_waveFrontTimer->start(1000);
-
+    m_waveFrontTimer->start(500);
 }
 
 void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulled){
@@ -748,7 +740,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
             while (!m_surface_finished) {qApp->processEvents();}
         }
     }
-
+    m_surfaceTools->select(m_currentNdx);
     emit showTab(2);
 
 }
@@ -837,6 +829,24 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
 
     wf->diameter = diam;
 
+    if (lambda != md->lambda){
+        QString message("The interferogram wavelength (");
+        message += QString().sprintf("%6.3lf", lambda) +
+                ") Of the wavefront does not match the config value of " + QString().sprintf("%6.3lf\n",md->lambda) +
+                "Do you want to make the config match?";
+
+        sync.lock();
+        emit showMessage(message);
+        pauseCond.wait(&sync);
+        sync.unlock();
+        if (messageResult == QMessageBox::Yes){
+            md->newLambda(QString::number(lambda));
+        }
+        else {
+            lambda = md->diameter;
+            mirrorParamsChanged = true;
+        }
+    }
 
     if (roundl(diam * 10) != roundl(md->diameter* 10))
     {
@@ -890,6 +900,7 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
     m_surface_finished = false;
     emit generateSurfacefromWavefront(m_currentNdx, this);
     while (!m_surface_finished){qApp->processEvents();}
+    m_surfaceTools->select(m_currentNdx);
     return mirrorParamsChanged;
 }
 void SurfaceManager::deleteCurrent(){
@@ -1011,16 +1022,15 @@ void SurfaceManager::surfaceGenFinished(int ndx) {
 void SurfaceManager::backGroundUpdate(){
     m_waveFrontTimer->stop();
     workProgress = 0;
-    if (m_wavefronts.size() > 1)
-        m_surfaceTools->setEnabled(false);
-    workToDo = m_wavefronts.size()-1;
-    pd->setLabelText("Updating all Surfaces");
-    pd->setRange(0,workToDo);
-    for (int i = 0; i < m_wavefronts.size(); ++i){
-        int ndx = (i + m_currentNdx) % m_wavefronts.size();
-        m_wavefronts[ndx]->dirtyZerns = true;
-        m_wavefronts[ndx]->wasSmoothed = false;
-        emit generateSurfacefromWavefront(ndx, this);
+    m_surfaceTools->setEnabled(false);
+    QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
+    workToDo = doThese.size();
+    pd->setLabelText("Updating Selected Surfaces");
+    pd->setRange(0,doThese.size());
+    foreach (int i, doThese){
+        m_wavefronts[i]->dirtyZerns = true;
+        m_wavefronts[i]->wasSmoothed = false;
+        emit generateSurfacefromWavefront(i, this);
     }
 }
 
@@ -1147,12 +1157,17 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         cv::warpAffine(tmp, wf->data , M, tmp.size(), cv::INTER_CUBIC);
         wf->m_inside = oldWf->m_inside;
         wf->m_outside = oldWf->m_outside;
+        double rad = -angle * M_PI/180.;
+        double sina = sin(rad);
+        double cosa = cos(rad);
+        double sx = wf->m_inside.m_center.x() - wf->m_outside.m_center.x();
+        double sy = wf->m_inside.m_center.y() - wf->m_outside.m_center.y();
+
+        wf->m_inside.m_center.rx() = sx * cosa - sy * sina + wf->m_outside.m_center.x();
+        wf->m_inside.m_center.ry() = sx * sina + sy * cosa + wf->m_outside.m_center.y();
 
 
-        // rotate mask too
-        cv::Mat tmpMask;
-        cv::warpAffine(oldWf->workMask, wf->workMask, M, oldWf->workMask.size(), cv::INTER_CUBIC);
-        wf->mask = oldWf->workMask.clone();
+        makeMask(m_currentNdx);
         wf->workMask = wf->mask.clone();
         wf->dirtyZerns = true;
         wf->wasSmoothed = false;
@@ -1229,12 +1244,14 @@ void SurfaceManager::inspectWavefront(){
     wex = new wftExaminer(m_wavefronts[m_currentNdx]);
     wex->show();
 }
+
 void SurfaceManager::surfaceBaseChanged(bool b) {
 
     useZernikeBase = b;
-    emit generateSurfacefromWavefront(m_currentNdx, this);
-    m_waveFrontTimer->start(1000);
+    //emit generateSurfacefromWavefront(m_currentNdx, this);
+    m_waveFrontTimer->start(500);
 }
+
 #include <sstream>
 
 
@@ -1990,8 +2007,8 @@ void SurfaceManager::report(){
             "</table></p>";
 
     // zerenike values
-    QString zerns = "<p>Zernike Values RMS:<br><table width='100%'><tr><td><table  border='1' width='40%'>";
-
+    QString zerns = "<p>Zernike Values :<br><table width='100%'><tr><td><table  border='1' width='40%'>";
+    zerns.append("<tr><td>Term</td><td><table width = '100%'><tr><td>Wyant</td><td>RMS</td></tr></table></tr>");
     int half = Z_TERMS/2 +2;
     for (int i = 3; i < half; ++i){
         double val = wf->InputZerns[i];
@@ -2003,15 +2020,20 @@ void SurfaceManager::report(){
         if ( i == 8 && md->doNull){
             val += md->z8;
         }
-        zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td>" + QString().number(val,'f',3) + "</td><td>" +
+
+        zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf </td><td>%6.3lf</td></tr></table>",
+                                                                                                          val, computeRMS(i,val)) + "</td><td>" +
                      QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
     }
 
 
     zerns.append("</table></td><td><table border='1' width = '50%'>");
+    zerns.append("<tr><td>Term</td><td><table width = '100%'><tr><td>Wyant</td><td>RMS</td></tr></table></tr>");
 
     for (int i = half; i < Z_TERMS; ++i){
-        zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td>" + QString().number(computeRMS(i,wf->InputZerns[i]),'f',3) + "</td><td>" +
+        double val = wf->InputZerns[i];
+        zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf</td><td>%6.3lf</td></tr></table>"
+                                                                                                          ,val, computeRMS(i,val)) + "</td><td>" +
                      QString((zernEnables[i]) ? QString("") : QString("Disabled")) + "</td></tr>");
     }
     zerns.append("</table></td></tr></table></p>");

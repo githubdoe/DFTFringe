@@ -36,7 +36,7 @@ class ZernTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    ZernTableModel(QObject *parent);
+    ZernTableModel(QObject *parent, bool editEnable = false);
     int rowCount(const QModelIndex &parent = QModelIndex()) const ;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
@@ -48,6 +48,8 @@ public:
 
 signals:
     void zernChanged();
+private:
+    bool canEdit;
 };
 
 

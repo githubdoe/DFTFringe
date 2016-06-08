@@ -47,6 +47,7 @@ public:
     double m_defocus;
     void setBlurText(QString txt);
     void nameChanged(int, QString);
+    void select(int item);
 
 signals:
     void doxform(QList<int>);
@@ -62,6 +63,8 @@ signals:
     void defocusChanged();
     void invert(QList<int>);
     void wftNameChanged(int, QString);
+    void updateSelected();
+
 
 public slots:
     void currentNdxChanged(int);
@@ -109,6 +112,8 @@ private slots:
 
     void ListWidgetEditEnd(QWidget *editor, QAbstractItemDelegate::EndEditHint);
 
+
+    void on_pushButton_clicked();
 
 private:
     Ui::surfaceAnalysisTools *ui;

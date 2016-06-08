@@ -36,6 +36,7 @@
 #include <opencv/cv.h>
 #include "simulationsview.h"
 #include "outlinehelpdocwidget.h"
+#include "bathastigdlg.h"
 
 
 using namespace QtConcurrent;
@@ -143,11 +144,13 @@ MainWindow::MainWindow(QWidget *parent) :
             m_surfaceManager, SLOT(createSurfaceFromPhaseMap(cv::Mat,CircleOutline,CircleOutline,QString)));
     connect(m_surfaceManager, SIGNAL(diameterChanged(double)),this,SLOT(diameterChanged(double)));
     connect(m_surfaceManager, SIGNAL(showTab(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
+    connect(m_surfTools, SIGNAL(updateSelected()), m_surfaceManager, SLOT(backGroundUpdate()));
     connect(m_ogl, SIGNAL(showAll3d(GLWidget *)), m_surfaceManager, SLOT(showAll3D(GLWidget *)));
 
     ui->tabWidget->addTab(review, "Results");
 
     ui->tabWidget->addTab(SimulationsView::getInstance(ui->tabWidget), "Star Test, PSF, MTF");
+    ui->tabWidget->addTab(new foucaultView(0,m_surfaceManager), "Ronchi & Foucault");
     scrollArea->setWidgetResizable(true);
     scrollAreaDft->setWidgetResizable(true);
     createActions();
@@ -574,9 +577,8 @@ void MainWindow::showMessage(QString msg){
     int ok = QMessageBox(QMessageBox::Information,msg, "",QMessageBox::Yes|QMessageBox::No).exec();
     m_surfaceManager->messageResult = ok;
     m_surfaceManager->pauseCond.wakeAll();
-
-
 }
+
 void MainWindow::diameterChanged(double v){
     m_mirrorDlg->on_diameter_Changed(v);
 }
@@ -1046,4 +1048,16 @@ void MainWindow::zoomOgl(bool flag)
 void MainWindow::on_edgeZoomCb_clicked(bool checked)
 {
     m_igramArea->setZoomMode( (checked) ? EDGEZOOM : NORMALZOOM);
+}
+
+void MainWindow::on_actionBath_Astig_Calculator_triggered()
+{
+    bathAstigDlg dlg;
+    dlg.exec();
+}
+#include "zernikeeditdlg.h"
+void MainWindow::on_actionEdit_Zernike_values_triggered()
+{
+    zernikeEditDlg dlg(m_surfaceManager, this);
+    dlg.exec();
 }

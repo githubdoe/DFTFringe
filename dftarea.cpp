@@ -304,7 +304,7 @@ QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, doub
     double mmax;
     minMaxIdx(magI, &mmin,&mmax);
     magI-= mmin;
-    qDebug() << mmin << "," << mmax;
+
     if (doLog)
         log((magI+0.1), magI);
 
@@ -313,7 +313,7 @@ QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, doub
     }
     normalize(magI, magI,0,255,CV_MINMAX, CV_8U);
     minMaxIdx(magI, &mmin,&mmax);
-    qDebug() << mmin << "," << mmax;
+
     cv::Mat tmp = magI.clone();
     cv::waitKey(1);
     cvtColor(magI,magI, CV_GRAY2RGB);

@@ -25,8 +25,11 @@
      </item>
      <item>
       <widget class="QDoubleSpinBox" name="doubleSpinBox">
+       <property name="decimals">
+        <number>3</number>
+       </property>
        <property name="minimum">
-        <double>0.020000000000000</double>
+        <double>0.002000000000000</double>
        </property>
        <property name="singleStep">
         <double>0.025000000000000</double>

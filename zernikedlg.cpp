@@ -24,11 +24,12 @@
 #include "mainwindow.h"
 #include "zernikeprocess.h"
 #include "surfaceanalysistools.h"
+#include "settings2.h"
 /////////////////////////////////////////////////////////////////////////////
 // Zernike_terms message handlers
 
-ZernTableModel::ZernTableModel(QObject *parent)
-    :QAbstractTableModel(parent)
+ZernTableModel::ZernTableModel(QObject *parent, bool editEnable)
+    :QAbstractTableModel(parent), canEdit(editEnable)
 {
     values = std::vector<double>(Z_TERMS, 0.);
 }
@@ -64,7 +65,7 @@ QVariant ZernTableModel::headerData(int section, Qt::Orientation orientation, in
             case 0:
                 return QString("Zernike Term");
             case 1:
-                return QString("Value");
+                return QString("Wyant     RMS ");
             case 2:
                 return QString("third");
             }
@@ -85,7 +86,7 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
 //            if (index.row() == 8 && mirrorDlg::get_Instance()->doNull){
 //                return (QString().sprintf("%6.3lf", values[index.row()] + mirrorDlg::get_Instance()->z8));
 //            }
-            return QString().sprintf("%6.3lf",values[index.row()]);
+            return QString().sprintf("%6.3lf  %6.3lf",values[index.row()], computeRMS(index.row(), values[index.row()]));
         }
     }
     if (role == Qt::CheckStateRole){
@@ -118,8 +119,12 @@ Qt::ItemFlags ZernTableModel::flags(const QModelIndex & index) const
 {
     if (index.column() == 0)
         return 0;
-    if (index.column() == 1)
-        return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled;
+    if (index.column() == 1){
+        if (canEdit)
+            return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable |  Qt::ItemIsEditable;
+        else
+            return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled;
+    }
     return 0;
 }
 

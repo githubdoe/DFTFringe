@@ -74,7 +74,10 @@ SimulationsView::SimulationsView(QWidget *parent) :
 
     ui->MakePB->setEnabled(false);
     QSettings set;
+    ui->FFTSizeSB->blockSignals(true);
     ui->FFTSizeSB->setValue(set.value("FFTSize", 1000).toInt());
+    ui->FFTSizeSB->blockSignals(false);
+    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_MakePB_clicked()));
 }
 
 SimulationsView::~SimulationsView()
@@ -108,7 +111,7 @@ SimulationsView *SimulationsView::getInstance(QWidget *parent){
 cv::Mat SimulationsView::nulledSurface(double defocus){
     cv::Mat out;
 
-
+qDebug() << "defocus" << defocus;
     mirrorDlg *md = mirrorDlg::get_Instance();
 
 
@@ -132,7 +135,7 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
 }
 
 // create star test using pupil_size which is usually smaller than the wavefront being sampled.
-cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double pad ){
+cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double pad , bool returnComplex){
     alias = false;
     cv::Mat out;
 
@@ -156,15 +159,15 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
     tmp[0] = tmp2.clone();
     tmp[1].copyTo(tmp2, m_wf->workMask);
     tmp[1] = tmp2.clone();
-    pupil_size += 1;
+    //pupil_size += 1;
     // now reduce the wavefront with pad to fit into the fft size;
     // new padSize is fft_size/pad;
 
     int padSize = pupil_size/pad;
-    if (padSize < tmp[0].cols) {
-        cv::resize(tmp[0],tmp[0],cv::Size(padSize,padSize),cv::INTER_AREA);
-        cv::resize(tmp[1],tmp[1],cv::Size(padSize,padSize),cv::INTER_AREA);
-    }
+
+    cv::resize(tmp[0],tmp[0],cv::Size(padSize,padSize),cv::INTER_AREA);
+    cv::resize(tmp[1],tmp[1],cv::Size(padSize,padSize),cv::INTER_AREA);
+
     cv::Mat in[] = {cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64F)
                     ,cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64F)};
 
@@ -213,7 +216,8 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
         */
     }
 
-
+    if (returnComplex)
+        return out;
     return (planes[0]);
 
 }
@@ -296,6 +300,7 @@ void SimulationsView::mtf(cv::Mat star, QString txt, QColor color){
 
 void SimulationsView::on_MakePB_clicked()
 {
+    m_guiTimer.stop();
     if (m_wf == 0)
         return;
     bool wasAliased = false;
@@ -389,17 +394,18 @@ void SimulationsView::on_MakePB_clicked()
 }
 
 void SimulationsView::on_defocusSB_valueChanged(double){
-    on_MakePB_clicked();
+    m_guiTimer.start(500);
+
 }
 
 void SimulationsView::on_gammaSB_valueChanged(double)
 {
-    on_MakePB_clicked();
+    m_guiTimer.start(500);
 }
 
 void SimulationsView::on_centerMagnifySB_valueChanged(double)
 {
-    on_MakePB_clicked();
+    m_guiTimer.start(500);
 }
 
 void SimulationsView::on_FFTSizeSB_valueChanged(int val)
@@ -407,7 +413,7 @@ void SimulationsView::on_FFTSizeSB_valueChanged(int val)
    QSettings set;
    set.setValue("FFTSize", val);
 
-   on_MakePB_clicked();
+    m_guiTimer.start(500);
 }
 
 

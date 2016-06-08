@@ -46,6 +46,7 @@
 #include "contourview.h"
 #include "batchigramwizard.h"
 #include "outlinehelpdocwidget.h"
+#include "foucaultview.h"
 namespace Ui {
 class MainWindow;
 }
@@ -191,6 +192,10 @@ private slots:
     void on_actionShow_Statistics_of_Loaded_wavefronts_triggered();
 
     void on_edgeZoomCb_clicked(bool checked);
+
+    void on_actionBath_Astig_Calculator_triggered();
+
+    void on_actionEdit_Zernike_values_triggered();
 
 private:
 

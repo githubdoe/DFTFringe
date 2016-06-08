@@ -45,7 +45,9 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     roc = settings.value("config roc", 2000.).toDouble();
     ui->roc->setText(QString().sprintf("%6.2lf",roc));
     lambda = settings.value("config lambda", 640).toDouble();
+    ui->lambda->blockSignals(true);
     ui->lambda->setText(QString().sprintf("%6.1lf",lambda));
+    ui->lambda->blockSignals(false);
     obs = settings.value("config obstruction", 0.).toDouble();
     ui->obs->setText(QString().sprintf("%6.2lf",obs));
     cc = settings.value("config cc", -1.).toDouble();

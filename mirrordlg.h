@@ -54,7 +54,7 @@ public:
     bool shouldFlipH();
     static QString getProjectPath();
     bool m_obsChanged;
-
+    void newLambda(QString v){ on_lambda_textChanged( v);}
 
 private slots:
     void on_ReadBtn_clicked();

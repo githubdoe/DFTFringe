@@ -180,6 +180,10 @@ void surfaceAnalysisTools::on_averagePB_clicked()
 {
     emit average(SelectedWaveFronts());
 }
+void surfaceAnalysisTools::select(int item){
+    ui->wavefrontList->selectionModel()->reset();
+    ui->wavefrontList->item(item)->setSelected(true);
+}
 
 void surfaceAnalysisTools::on_SelectAllPB_clicked()
 {
@@ -287,5 +291,7 @@ void surfaceAnalysisTools::ListWidgetEditEnd(QWidget *editor, QAbstractItemDeleg
     //emit wftNameChanged(t.row(), item->text());
 }
 
-
-
+void surfaceAnalysisTools::on_pushButton_clicked()
+{
+    emit updateSelected();
+}

@@ -20,6 +20,7 @@
 #include <vector>
 #include "mainwindow.h"
 #include "zernikeprocess.h"
+
 metricsDisplay *metricsDisplay::m_instance = 0;
 metricsDisplay::metricsDisplay(QWidget *parent) :
     QDockWidget(parent),shouldEnableAll(false),

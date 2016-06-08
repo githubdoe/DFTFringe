@@ -21,6 +21,7 @@
 #include <QWidget>
 #include "wavefront.h"
 #include <opencv/cv.h>
+#include <QTimer>
 namespace Ui {
 class SimulationsView;
 }
@@ -34,13 +35,14 @@ public:
     ~SimulationsView();
     static SimulationsView *getInstance(QWidget *parent);
     void setSurface(wavefront *wf);
-    cv::Mat  computeStarTest(cv::Mat surface, int pupil_size, double pad);
+    cv::Mat  computeStarTest(cv::Mat surface, int pupil_size, double pad, bool returnComplex = false);
     void computeMPF();
     void compute();
     bool needs_drawing;
     cv::Mat nulledSurface(double defocus);
 private:
     bool alias;
+    QTimer m_guiTimer;
 
     void mtf(cv::Mat star, QString txt, QColor color);
 public slots:

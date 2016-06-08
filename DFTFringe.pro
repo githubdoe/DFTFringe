@@ -84,7 +84,12 @@ SOURCES += main.cpp\
     statsview.cpp \
     jitteroutlinedlg.cpp \
     nullvariationdlg.cpp \
-    ccswappeddlg.cpp
+    ccswappeddlg.cpp \
+    foucaultview.cpp \
+    settingsgeneral.cpp \
+    squareimage.cpp \
+    bathastigdlg.cpp \
+    zernikeeditdlg.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -149,7 +154,12 @@ HEADERS  += mainwindow.h \
     statsview.h \
     jitteroutlinedlg.h \
     nullvariationdlg.h \
-    ccswappeddlg.h
+    ccswappeddlg.h \
+    foucaultview.h \
+    settingsgeneral.h \
+    squareimage.h \
+    bathastigdlg.h \
+    zernikeeditdlg.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -196,7 +206,11 @@ FORMS    += mainwindow.ui \
     statsview.ui \
     jitteroutlinedlg.ui \
     nullvariationdlg.ui \
-    ccswappeddlg.ui
+    ccswappeddlg.ui \
+    foucaultview.ui \
+    settingsgeneral.ui \
+    bathastigdlg.ui \
+    zernikeeditdlg.ui
 
 CONFIG( debug, debug|release ) {
     # debug

@@ -787,7 +787,7 @@ cv::Mat makeSurfaceFromZerns(int border, bool doColor){
             {
                 double theta = atan2(uy,ux);
                 zpolar.init(rho,theta);
-                double S1 = md->z8 * dlg.correction * .01 * zpolar.zernike(8,rho, theta) +
+                double S1 = md->z8 * dlg.correction * .01 * -zpolar.zernike(8,rho, theta) +
                         dlg.xtilt  * zpolar.zernike(1,rho,theta) +
                         dlg.ytilt * zpolar.zernike(2,rho, theta) +
                         dlg.defocus * zpolar.zernike(3,rho, theta) +
