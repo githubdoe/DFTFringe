@@ -7,173 +7,57 @@
 #include <QVector>
 #include <QMenu>
 #include "zernikeprocess.h"
+foucaultView *foucaultView::m_instance = 0;
+
 foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     QWidget(parent),m_sm(sm),
     ui(new Ui::foucaultView), heightMultiply(1)
 {
+    m_wf = 0;
+    needsDrawing = false;
     ui->setupUi(this);
+    QSettings set;
+    ui->lpiSb->setValue(set.value("ronchiLPI", 100).toDouble());
     connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_makePb_clicked()));
     ui->rocOffsetSb->setSuffix(" inch");
 
+}
+foucaultView *foucaultView::get_Instance(SurfaceManager *sm){
+    if (m_instance == 0){
+        m_instance = new foucaultView(0,sm);
+    }
+    return m_instance;
 }
 
 foucaultView::~foucaultView()
 {
     delete ui;
 }
-/*
-cv::Mat foucaultView::compute_star_test(int pupil_size, double defocus, double pad, bool use_OPD)
-{
-
-    int nx = pupil_size;
-    int ny = nx;
-
-    cv::Mat in = cv::Mat::zeros(nx,ny,CV_64F);
-    double hx = (double)(nx-1)/2.;
-    double hy = (double)(ny-1)/2.;
-    int pupil_rad = (pupil_size/2.)/pad;
-    mirrorDlg &md = *mirrorDlg::get_Instance();
-    double obs_radius = md.obs / md.diameter;
-    double F_number = md.FNumber;
-    // defocus is in mm on input
-    wavefront *wf = m_sm->m_wavefronts[m_sm->m_currentNdx];
-    std::vector<double> newZerns = wf->InputZerns;
-    if (!use_OPD){
-        newZerns[3] = -(defocus + newZerns[3]);
-        //UseZernikesPtr->z[3] = true;
-        // if use wavefront then apply defocus to wavefront.
-
-        {
-        zernikeProcess zp;
-           cv::Mat nulled =  nulled_surface = zp.null_unwrapped( wf, newZerns,zernEnables);
-
-
-    }
-    igram_wavelength = mirrorDlg.m_Ilambda * 1e-6;
-
-
-    int mask_holes = 1;
-
-    for (int y = 0; y < nx; ++y)
-    {
-
-        double ry = (double)(y - hy)/(double)pupil_rad;
-
-        for (int x = 0; x < nx; ++x)
-        {
-
-            double rx = (double)(x - hx)/(double)pupil_rad;
-
-            double r = sqrt(rx * rx + ry * ry);
-            int b = mask_holes * r;
-            bool block = true;
-
-
-
-
-            {
-                double phase;
-
-                    phase = nulled.at<double>(y,x);
-
-
-
-
-
-                in[ndx][1] = cos(phase);
-                in[ndx][0] = -sin(phase);
-
-                if ((x+y) & 0x1)
-                {
-                    in[ndx][1] = -in[ndx][1];
-                    in[ndx][0] = -in[ndx][0];
-                }
-
-            }
-            else
-            {
-                in[ndx][0] = 0;
-                in[ndx][1] = 0;
-            }
-
-        }
-    }
-
-
-    // debug image of real portion
-//	double* mtmp = new double [nx * nx];
-//	mtmp = Mod(in,nx,nx, true);
-//	generate_image_from_doubles(mtmp,nx,nx,CString(L"in"),true);
-    //return COMPLEX_MATRIX(out, nx);
-
-
-    out = (double (*)[2])fftw_malloc(sizeof(fftw_complex) * nx * ny);
-    p = fftw_plan_dft_2d(nx, ny, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-
-    fftw_execute(p);
-    fftw_free(in);
-    fftw_destroy_plan(p);
-    double* mtmp = Mod(out,nx,ny,false);
-
-    // check for aliasing
-    // compute edge
-    double edge_avg = 0.;
-    double center_avg = 0.;
-    int half = nx * (ny/2);
-    int last = nx * .03;
-    for (int i = 0; i < last; ++i)
-    {
-        edge_avg += mtmp[half + i];
-        center_avg += mtmp[half + i + nx /2];
-    }
-
-    double ddd = center_avg/edge_avg;
-    f_fft_alias= false;
-
-
-    if (ddd < 2)
-    {
-        f_fft_alias = true;
-
-        AfxMessageBox(L"Warning, computed PSF was too large for the selected size of the simulation.\n"
-                        L"Select larger simulation size from the Configuration Menu\n"
-                        L"and try again.\n\n"
-                        L"Note: PSF is also used to compute Foucault, Ronchi, and MTF\n"
-                        L" Computeing MTF may cause this message 3 times\n"
-                        L"Sometime this message is caused by the errors on the surface and so the simulatin may still be usable.\n"
-                        L"The error usually shows up as a series of light and dark horizontal bands.");
-
-        //throw FFT_ERROR();
-    }
-
-    if (saved_wavefront)
-    {
-        delete[] m_current_wavefront.mat;
-        m_current_wavefront.mat = saved_wavefront;
-        m_dirty_zerns = true;
-        m_dirty_surface = true;
-    }
-    delete[] mtmp;
-    //return COMPLEX_MATRIX(out, nx);
-    return (COMPLEX_MATRIX(out, nx));
+void foucaultView::setSurface(wavefront *wf){
+    m_wf = wf;
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    double rad = md->diameter/2.;
+    double FL = md->roc/2.;
+    double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
+    m_sag = mul * (rad * rad) /( 4 * FL);
+    on_autoStepSize_clicked(ui->autoStepSize->isChecked());
+    needsDrawing = true;
 }
-*/
-
 
 void foucaultView::on_makePb_clicked()
 {
     m_guiTimer.stop();
-    if (m_sm->m_wavefronts.size() == 0)
+    if (m_wf == 0 ||( m_wf->data.cols == 0))
         return;
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    wavefront *wf = m_sm->m_wavefronts[m_sm->m_currentNdx];
 
     double pad = 1.1;
-    int size = wf->data.cols * pad;
+    int size = m_wf->data.cols * pad;
     size = size/2;
     size *= 2;
 
-    pad = (double)size/wf->data.cols;
+    pad = (double)size/m_wf->data.cols;
     double moving_constant = (ui->movingSourceRb->isChecked()) ? 1. : 2.;
 
     double gamma =     ui->gammaSb->value();
@@ -187,10 +71,16 @@ void foucaultView::on_makePb_clicked()
         unitMultiplyer = 25.4;
     }
 
+
+
+
+
+
+
+
     double coc_offset_mm = ui->rocOffsetSb->value() * unitMultiplyer;
 
-    // subtract the 70% offset needed to put it at ROC with zero offset.
-    double cc_adjust =  .707 * .707 * Radius * Radius/(moving_constant* md->roc);
+
 
 
     double b = (fl * 2) + coc_offset_mm;
@@ -198,26 +88,29 @@ void foucaultView::on_makePb_clicked()
          - (sqrt(r2+ b * b) - coc_offset_mm) )/ (550 * 1.E-6);
 
 
-    std::vector<double> zerns = wf->InputZerns;
+
+    std::vector<double> zerns = m_wf->InputZerns;
     std::vector<double> newZerns = zerns;
     double z3 = pv / ( moving_constant);
 
-    newZerns[3] =  zerns[8] = md->z8;//3. * zerns[8];
-qDebug() << "Z3" << z3 << "z{3]" << newZerns[3] << "pv" << pv << "coc_Offset_mm" << coc_offset_mm;
+
+//qDebug() << "Z3" << z3 << "z{3]" << newZerns[3] << "pv" << pv << "coc_Offset_mm" << coc_offset_mm;
     bool oldDoNull = md->doNull;
     md->doNull = false;
 
     cv::Mat surf_fft;
     SimulationsView *sv = SimulationsView::getInstance(0);
-    wf->InputZerns = newZerns;
-    sv->setSurface(wf);
-qDebug() << "size "<< size << "pad" << pad;
+    newZerns[3] = newZerns[3] - 3 * newZerns[8];
+    m_wf->InputZerns = newZerns;
+    sv->setSurface(m_wf);
+//qDebug() << "size "<< size << "pad" << pad;
+
     surf_fft = sv->computeStarTest(heightMultiply * sv->nulledSurface(z3), size, pad ,true);
     //showMag(surf_fft, true, "star ", true, gamma);
     size = surf_fft.cols;
 
     int hx = (size -1)/2;
-    wf->InputZerns = zerns;
+    m_wf->InputZerns = zerns;
 
     md->doNull = oldDoNull;
 
@@ -235,9 +128,8 @@ qDebug() << "size "<< size << "pad" << pad;
 
     cv::Mat ronchiSlit[] = {cv::Mat::zeros(size,size,CV_64F)
                    ,cv::Mat::zeros(Size(size,size),CV_64F)};
-    // compute real world pixel width.
 
-    double airyDisk = 2.43932 * 550.E-6 * Fnumber;
+    // compute real world pixel width.
     double pixwidth =  550.E-6* Fnumber * 2./(25.4 * pad);
     /*
      *   fl = roc/2      fnumber = fl/diameter = roc/(2 * diameter)
@@ -250,14 +142,14 @@ qDebug() << "size "<< size << "pad" << pad;
     int ppl = linewidth/pixwidth;       // pixels per line
     if (ppl <= 0)
         ppl = 1;
-
-    int start = ((double)(size-1)/2.) -(double)ppl/2.;
+qDebug() << "ppl" << ppl;
+    int start = ((double)(size)/2.) -(double)ppl/2.;
     bool even = ((start / ppl) % 2) == 0;
 
     if (ui->clearCenterCb->isChecked())
         even = !even;
 
-    start = ppl - start % (ppl) + ui->lateralKnifeSb->value() * unitMultiplyer;
+    start = ppl - start % (ppl);// + ui->lateralKnifeSb->value() * unitMultiplyer;
 
     double pixels_per_thou = .001 / pixwidth;
     double slitWidthHalf = pixels_per_thou * ui->slitWidthSb->value() * 1000 * ((ui->useMM->isChecked()) ? 1./25.4 : 1.);
@@ -278,15 +170,15 @@ qDebug() << "size "<< size << "pad" << pad;
                     //slit width is in inches convert to 1/1000 s.
                     if ((x > hx -slitWidthHalf)  && (x < hx + slitWidthHalf))
                     {
-                        slit[0].at<double>(y,x) = 255;
+                        slit[0].at<double>(y,x) = 255.;
                     }
                 }
+
                 int knife_side = x;
                 if (ui->knifeOnLeftCb->isChecked())
                     knife_side = size - x;
 
-                if (knife_side > hx + ui->lateralKnifeSb->value()* 1000 *
-                    ((ui->useMM->isChecked()) ? 1./25.4 : 1.) * pixels_per_thou)
+                if (knife_side > hx )
                 {
                     vknife[0].at<double>(y,x) = 255.;
                 }
@@ -295,7 +187,7 @@ qDebug() << "size "<< size << "pad" << pad;
                 // ronchi setup
                 if ((even && (line_no%2 == 0)) || (!even && (line_no%2 != 0)))
                 {
-                    ronchiGrid[0].at<double>(y,x) = 255.;
+                    ronchiGrid[0].at<double>(y,x) = 1;
                 }
                 if(++roffset >= ppl)
                 {
@@ -306,7 +198,7 @@ qDebug() << "size "<< size << "pad" << pad;
 
                 if (x> hx - ppl/2. && x < hx + ppl/2.)
                 {
-                    ronchiSlit[0].at<double>(y,x) = 255;
+                    ronchiSlit[0].at<double>(y,x) = 1;
                 }
 
             }
@@ -325,18 +217,22 @@ qDebug() << "size "<< size << "pad" << pad;
 
 
     dft(complexIn, FFT1, DFT_REAL_OUTPUT);
+    shiftDFT(FFT1);
     dft(complexIn2, FFT2, DFT_REAL_OUTPUT);
+    shiftDFT(FFT2);
     cv::Mat knifeSlit;
     mulSpectrums(FFT1, FFT2, knifeSlit, 0, true);
     idft(knifeSlit, knifeSlit, DFT_SCALE); // gives us the correlation result...
+    shiftDFT(knifeSlit);
     cv::Mat knifeSurf;
 
     mulSpectrums(knifeSlit, surf_fft, knifeSurf,0,true);
     idft(knifeSurf, knifeSurf, DFT_SCALE);
+    shiftDFT(knifeSurf);
 
     QImage ronchi = showMag(knifeSurf, false,"", false, gamma);
-    int startx = size - wf->data.cols;
-    ronchi = ronchi.copy(startx,startx,wf->data.cols, wf->data.cols);
+    int startx = size - m_wf->data.cols;
+    ronchi = ronchi.copy(startx,startx,m_wf->data.cols, m_wf->data.cols);
 
     ronchi = ronchi.mirrored(true,false);
     QSize s = ui->ronchiViewLb->size();
@@ -357,8 +253,8 @@ qDebug() << "size "<< size << "pad" << pad;
     idft(knifeSurf, knifeSurf, DFT_SCALE);
 
     QImage foucault = showMag(knifeSurf, false,"", false, gamma);
-    startx = size - wf->data.cols;
-    foucault = foucault.copy(startx,startx,wf->data.cols, wf->data.cols);
+    startx = size - m_wf->data.cols;
+    foucault = foucault.copy(startx,startx,m_wf->data.cols, m_wf->data.cols);
 
 
 
@@ -378,6 +274,8 @@ void foucaultView::on_gammaSb_valueChanged(double arg1)
 
 void foucaultView::on_lpiSb_valueChanged(double arg1)
 {
+    QSettings set;
+    set.setValue("ronchiLPI", (ui->useMM->isChecked()) ? arg1 * 25.4: arg1);
       //m_guiTimer.start(500);
 }
 
@@ -403,6 +301,14 @@ void foucaultView::on_lpiSb_editingFinished()
 
 void foucaultView::on_rocOffsetSb_editingFinished()
 {
+    double val = ui->rocOffsetSb->value();
+    double step = m_sag/20;
+
+    int pos = val / step;
+    ui->rocOffsetSlider->blockSignals(true);
+    ui->rocOffsetSlider->setValue(pos);
+    ui->rocOffsetSlider->blockSignals(false);
+
     m_guiTimer.start(500);
 }
 
@@ -426,21 +332,27 @@ void foucaultView::on_useMM_clicked(bool checked)
     QString suffix = (checked) ? " mm" : " in";
     ui->rocOffsetSb->setValue( ui->rocOffsetSb->value() * mul);
     ui->rocOffsetSb->setSuffix(suffix);
-    ui->lateralKnifeSb->setValue(ui->lateralKnifeSb->value() * mul);
-    ui->lateralKnifeSb->setSuffix(suffix);
     ui->slitWidthSb->setValue(ui->slitWidthSb->value() * mul);
     ui->slitWidthSb->setSuffix(suffix);
     ui->lpiSb->setValue(ui->lpiSb->value() / mul);
     ui->gridGroupBox->setTitle((checked) ? "Ronchi LPmm ": "Ronchi LPI ");
+    ui->rocStepSize->setValue( (checked) ? 25.4 * ui->rocStepSize->value(): ui->rocStepSize->value()/25.4);
+    on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     m_guiTimer.start(500);
 }
 
 void foucaultView::on_scanPb_clicked()
 {
-    for (double roc = -.5; roc < .5; roc += .01){
-        ui->rocOffsetSb->setValue(roc);
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    double rad = md->diameter/2.;
+    double FL = md->roc/2.;
+    double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
+    double sag = mul * (rad * rad) /( 4 * FL);
+    double step = sag/10.;
+    for (int i = -10; i <= 10; ++i){
+        double offset = i * step;
 
-        qDebug() << roc;
+        ui->rocOffsetSb->setValue(offset);
         on_makePb_clicked();
 
         qApp->processEvents();
@@ -464,4 +376,42 @@ void foucaultView::on_h4x_clicked()
 {
     heightMultiply = 4;
     m_guiTimer.start(500);
+}
+
+
+
+void foucaultView::on_rocOffsetSlider_valueChanged(int value)
+{
+    double step = getStep();
+    double offset = value * step;
+
+    ui->rocOffsetSb->setValue(offset);
+    m_guiTimer.start(1000);
+
+}
+inline double foucaultView::getStep(){
+    return (ui->autoStepSize->isChecked())? round(100. * ((ui->useMM->isChecked()) ? 25.4 * m_sag/40. : m_sag/40.))/100. : ui->rocStepSize->value();
+}
+
+void foucaultView::on_clearCenterCb_clicked()
+{
+        m_guiTimer.start(100);
+}
+
+void foucaultView::on_autoStepSize_clicked(bool checked)
+{
+
+    ui->rocStepSize->setEnabled(!checked);
+
+    double step = getStep();
+    for (int i = 0; i< 17; ++i){
+        double val = (i - 8) * step * 5;
+        findChild<QLabel *>(QString().sprintf("l%d",i))->setText(QString::number(val));
+    }
+}
+
+void foucaultView::on_rocStepSize_editingFinished()
+{
+    on_autoStepSize_clicked(ui->autoStepSize->isChecked());
+    m_guiTimer.start(100);
 }

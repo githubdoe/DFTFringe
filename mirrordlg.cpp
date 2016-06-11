@@ -335,7 +335,7 @@ void mirrorDlg::on_FNumber_textChanged(const QString &arg1)
     FNumber = arg1.toDouble();
     roc = FNumber *(2 * diameter);
     ui->roc->blockSignals(true);
-    ui->roc->setText(QString().number(roc));
+    ui->roc->setText(QString().number(roc * ((mm) ? 1.: 1./25.4)));
     ui->roc->blockSignals(false);
     updateZ8();
 }

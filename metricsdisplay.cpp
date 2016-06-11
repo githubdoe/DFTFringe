@@ -33,7 +33,7 @@ metricsDisplay::metricsDisplay(QWidget *parent) :
     mStrehl = ui->metStrehl;
     mvalues = ui->tableView;
     mCC = ui->metConic;
-    tableModel = new ZernTableModel(parent);
+    tableModel = new ZernTableModel(parent, &zernEnables);
     std::vector<double> val(Z_TERMS,0.);
     ui->tableView->setModel(tableModel);
 }
@@ -82,11 +82,11 @@ void metricsDisplay::on_DisableAll_clicked()
     if (shouldEnableAll)
         start = 8;
 
-    for (unsigned int i = start; i < zernEnables.size(); ++i)
-        zernEnables[i] = shouldEnableAll;
+    for (unsigned int i = start; i < tableModel->m_enables->size(); ++i)
+        tableModel->m_enables->at(i) = shouldEnableAll;
 
-    zernEnables[4] = shouldEnableAll;
-    zernEnables[5] = shouldEnableAll;
+    tableModel->m_enables->at(4) = shouldEnableAll;
+    tableModel->m_enables->at(5) = shouldEnableAll;
     shouldEnableAll = !shouldEnableAll;
     ui->DisableAll->setText((shouldEnableAll) ? "Enable All":"Disable All");
     emit recomputeZerns();
@@ -100,7 +100,7 @@ void metricsDisplay::on_sphericalPb_pressed()
     on_DisableAll_clicked();
     for (int i = 0; i < Z_TERMS; ++i){
         if (QString(zernsNames[i]).contains("Spherical")){
-            zernEnables[i] = true;
+            tableModel->m_enables->at(i) = true;
         }
     }
     emit recomputeZerns();

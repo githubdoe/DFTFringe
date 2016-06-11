@@ -57,7 +57,7 @@
      <item>
       <widget class="QPushButton" name="createSurface">
        <property name="text">
-        <string>Create Surface</string>
+        <string>Create Wavefront</string>
        </property>
       </widget>
      </item>

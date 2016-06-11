@@ -111,7 +111,6 @@ SimulationsView *SimulationsView::getInstance(QWidget *parent){
 cv::Mat SimulationsView::nulledSurface(double defocus){
     cv::Mat out;
 
-qDebug() << "defocus" << defocus;
     mirrorDlg *md = mirrorDlg::get_Instance();
 
 

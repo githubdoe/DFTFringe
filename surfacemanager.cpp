@@ -59,6 +59,7 @@
 #include <QPrintDialog>
 #include <QSplitter>
 #include "settingsgeneral.h"
+#include "foucaultview.h"
 QMutex mutex;
 int inprocess = 0;
 
@@ -405,7 +406,7 @@ void SurfaceManager::sendSurface(wavefront* wf){
     m_profilePlot->setSurface(wf);
     m_oglPlot->setSurface(wf);
     m_simView->setSurface(wf);
-
+    foucaultView::get_Instance()->setSurface(wf);
 
     QFile fn(wf->name);
     QFileInfo fileInfo(fn.fileName());

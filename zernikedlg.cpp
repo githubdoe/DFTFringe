@@ -25,11 +25,12 @@
 #include "zernikeprocess.h"
 #include "surfaceanalysistools.h"
 #include "settings2.h"
+#include <vector>
 /////////////////////////////////////////////////////////////////////////////
 // Zernike_terms message handlers
 
-ZernTableModel::ZernTableModel(QObject *parent, bool editEnable)
-    :QAbstractTableModel(parent), canEdit(editEnable)
+ZernTableModel::ZernTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
+    :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable)
 {
     values = std::vector<double>(Z_TERMS, 0.);
 }
@@ -45,6 +46,11 @@ void ZernTableModel::setValues(std::vector<double> vals){
     emit dataChanged(topLeft, bottomRight);
 }
 
+void ZernTableModel::update(){
+    QModelIndex topLeft = index(0, 0);
+    QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
+    emit dataChanged(topLeft, bottomRight);
+}
 
 int ZernTableModel::rowCount(const QModelIndex & /*parent*/) const
 {
@@ -94,7 +100,7 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
             if (index.row() == 3 && surfaceAnalysisTools::get_Instance()->m_useDefocus){
                 return true;
             }
-            return (zernEnables[index.row()]) ? Qt::Checked : Qt::Unchecked;
+            return m_enables->at(index.row()) ? Qt::Checked : Qt::Unchecked;
         }
     }
     return QVariant();
@@ -107,10 +113,10 @@ bool ZernTableModel::setData(const QModelIndex & index, const QVariant & value, 
         if (index.column() == 1)
             values[index.row()]  = value.toDouble();
         if (index.column() == 0)
-            zernEnables[index.row()] = value.toBool();
+            m_enables->at(index.row()) = value.toBool();
     }
     if (role == Qt::CheckStateRole){
-        zernEnables[index.row()] = value.toBool();
+        m_enables->at(index.row()) = value.toBool();
     }
     return true;
 }

@@ -23,7 +23,7 @@
 #include "zernikedlg.h"
 #include "mirrordlg.h"
 #include "mainwindow.h"
-extern std::vector<double> zNulls;
+
 extern std::vector<bool> zernEnables;
 extern int Zw[];
 extern double BestSC;

@@ -150,7 +150,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->addTab(review, "Results");
 
     ui->tabWidget->addTab(SimulationsView::getInstance(ui->tabWidget), "Star Test, PSF, MTF");
-    ui->tabWidget->addTab(new foucaultView(0,m_surfaceManager), "Ronchi & Foucault");
+    ui->tabWidget->addTab(foucaultView::get_Instance(m_surfaceManager), "Ronchi & Foucault");
     scrollArea->setWidgetResizable(true);
     scrollAreaDft->setWidgetResizable(true);
     createActions();
@@ -242,14 +242,23 @@ void MainWindow::mainTabChanged(int ndx){
         m_surfTools->raise();
         break;
     case 3:
+    {
         SimulationsView *sv = SimulationsView::getInstance(0);
         if (sv->needs_drawing){
-
             sv->on_MakePB_clicked();
-            QApplication::restoreOverrideCursor();
+            //QApplication::restoreOverrideCursor();
+        }
+        break;
+    }
+    case 4:
+    {
+        foucaultView *fv = foucaultView::get_Instance();
+        if (fv->needsDrawing) {
+            fv->on_makePb_clicked();
 
         }
-
+    }
+        break;
     }
 }
 
@@ -1058,6 +1067,7 @@ void MainWindow::on_actionBath_Astig_Calculator_triggered()
 #include "zernikeeditdlg.h"
 void MainWindow::on_actionEdit_Zernike_values_triggered()
 {
-    zernikeEditDlg dlg(m_surfaceManager, this);
-    dlg.exec();
+    zernikeEditDlg *dlg = new zernikeEditDlg(m_surfaceManager, this);
+    dlg->setWindowFlags(Qt::Tool);
+    dlg->show();
 }

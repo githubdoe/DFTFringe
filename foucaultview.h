@@ -13,11 +13,15 @@ class foucaultView : public QWidget
     Q_OBJECT
 
 public:
-    explicit foucaultView(QWidget *parent, SurfaceManager *sm);
+    static foucaultView *get_Instance(SurfaceManager *sm = 0);
+    static foucaultView *m_instance;
+    explicit foucaultView(QWidget *parent = 0, SurfaceManager *sm = 0);
     ~foucaultView();
-
-private slots:
+    void setSurface(wavefront * wf);
+    bool needsDrawing;
+public slots:
     void on_makePb_clicked();
+private slots:
 
     void on_gammaSb_valueChanged(double arg1);
 
@@ -47,12 +51,23 @@ private slots:
 
     void on_h4x_clicked();
 
+    void on_rocOffsetSlider_valueChanged(int value);
+
+    void on_clearCenterCb_clicked();
+
+    void on_autoStepSize_clicked(bool checked);
+
+    void on_rocStepSize_editingFinished();
+
 private:
     Ui::foucaultView *ui;
     SurfaceManager *m_sm;
     QTimer m_guiTimer;
     cv::Mat compute_star_test(int pupil_size, double defocus, double pad, bool use_OPD);
+    double getStep();
     int heightMultiply;
+    double m_sag;
+    wavefront *m_wf;
 };
 
 #endif // FOUCAULTVIEW_H
