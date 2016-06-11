@@ -74,7 +74,6 @@ public slots:
 
     void enableControls(bool);
 private slots:
-    void on_surfaceSmoothGausianBlurr_valueChanged(int arg1);
 
     void on_wavefrontList_itemDoubleClicked(QListWidgetItem *item);
 
@@ -114,6 +113,8 @@ private slots:
 
 
     void on_pushButton_clicked();
+
+    void on_surfaceSmoothGausianBlurr_editingFinished();
 
 private:
     Ui::surfaceAnalysisTools *ui;

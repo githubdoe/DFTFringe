@@ -83,9 +83,10 @@ surfaceAnalysisTools::~surfaceAnalysisTools()
     delete ui;
 }
 
-void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_valueChanged(int arg1)
+
+void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_editingFinished()
 {
-    emit surfaceSmoothGBValue(arg1);
+    emit surfaceSmoothGBValue(ui->surfaceSmoothGausianBlurr->value());
 }
 
 void surfaceAnalysisTools::on_blurCB_clicked(bool checked)
@@ -295,3 +296,5 @@ void surfaceAnalysisTools::on_pushButton_clicked()
 {
     emit updateSelected();
 }
+
+

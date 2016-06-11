@@ -3,20 +3,13 @@ why is intensity profile jagged?
 
 Add average of stand only wavefronts to the wavefront list.
 
-vortex starts making two wavefronts after awhile?
-
 MTF does not match OpenFringe.
-
-add bath astig dialog
 
 check left right and up down displays correctly
 
 Add mirror flip to output.
 
-Add foucault into full screen.
 
 Report options? Enable what goes into it?
 
-Don't think startest uses pupile size and pad correctly.
-   resize surface to pupile size / pad;  Then place surface into pupile.
-   Does it need to be centered or can it have the pad on just two sides?
+

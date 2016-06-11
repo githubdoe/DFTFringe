@@ -131,10 +131,6 @@ void foucaultView::on_makePb_clicked()
 
     // compute real world pixel width.
     double pixwidth =  550.E-6* Fnumber * 2./(25.4 * pad);
-    /*
-     *   fl = roc/2      fnumber = fl/diameter = roc/(2 * diameter)
-     * */
-
 
     double lpi = ui->lpiSb->value()  * ((ui->useMM->isChecked()) ? 25.4 : 1.);
 
@@ -142,7 +138,7 @@ void foucaultView::on_makePb_clicked()
     int ppl = linewidth/pixwidth;       // pixels per line
     if (ppl <= 0)
         ppl = 1;
-qDebug() << "ppl" << ppl;
+
     int start = ((double)(size)/2.) -(double)ppl/2.;
     bool even = ((start / ppl) % 2) == 0;
 
@@ -302,7 +298,7 @@ void foucaultView::on_lpiSb_editingFinished()
 void foucaultView::on_rocOffsetSb_editingFinished()
 {
     double val = ui->rocOffsetSb->value();
-    double step = m_sag/20;
+    double step = m_sag/40;
 
     int pos = val / step;
     ui->rocOffsetSlider->blockSignals(true);
@@ -313,11 +309,6 @@ void foucaultView::on_rocOffsetSb_editingFinished()
 }
 
 void foucaultView::on_slitWidthSb_editingFinished()
-{
-    m_guiTimer.start(500);
-}
-
-void foucaultView::on_lateralKnifeSb_editingFinished()
 {
     m_guiTimer.start(500);
 }
@@ -337,22 +328,28 @@ void foucaultView::on_useMM_clicked(bool checked)
     ui->lpiSb->setValue(ui->lpiSb->value() / mul);
     ui->gridGroupBox->setTitle((checked) ? "Ronchi LPmm ": "Ronchi LPI ");
     ui->rocStepSize->setValue( (checked) ? 25.4 * ui->rocStepSize->value(): ui->rocStepSize->value()/25.4);
+    ui->scanEndOffset->setValue ((checked) ? 25.4 * ui->scanEndOffset->value() : ui->scanEndOffset->value() /25.4);
+    ui->scanStart->setValue((checked) ? 25.4 * ui->scanStart->value() : ui->scanStart->value()/25.4);
     on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     m_guiTimer.start(500);
 }
 
 void foucaultView::on_scanPb_clicked()
 {
-    mirrorDlg *md = mirrorDlg::get_Instance();
-    double rad = md->diameter/2.;
-    double FL = md->roc/2.;
-    double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
-    double sag = mul * (rad * rad) /( 4 * FL);
-    double step = sag/10.;
-    for (int i = -10; i <= 10; ++i){
-        double offset = i * step;
 
-        ui->rocOffsetSb->setValue(offset);
+    double steps = ui->scanSteps->value();
+    double start = ui->scanStart->value();
+    double end = ui->scanEndOffset->value();
+    double step = (end - start)/steps;
+    for (double v = start; v <= end ; v += step){
+
+        ui->rocOffsetSb->setValue(v);
+        double st = (ui->useMM->isChecked()) ? 24.5 * m_sag/40 : m_sag/40;
+
+        int pos = v / st;
+        ui->rocOffsetSlider->blockSignals(true);
+        ui->rocOffsetSlider->setValue(pos);
+        ui->rocOffsetSlider->blockSignals(false);
         on_makePb_clicked();
 
         qApp->processEvents();

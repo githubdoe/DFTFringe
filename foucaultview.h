@@ -39,8 +39,6 @@ private slots:
 
     void on_slitWidthSb_editingFinished();
 
-    void on_lateralKnifeSb_editingFinished();
-
     void on_useMM_clicked(bool checked);
 
     void on_scanPb_clicked();

@@ -38,7 +38,7 @@ void zernikeEditDlg::on_disable_clicked()
 
 void zernikeEditDlg::on_createSurface_clicked()
 {
-    int size = 601;
+    int size = ui->sizeSb->value();
     cv::Mat result = cv::Mat::zeros(size,size, CV_64F);
 
     double rho;
@@ -140,6 +140,7 @@ void zernikeEditDlg::on_useCurrent_clicked()
     m_zernEnables = zernEnables;
     tableModel->blockSignals(true);
     tableModel->setValues(m_sm->m_wavefronts[m_sm->m_currentNdx]->InputZerns);
+    ui->sizeSb->setValue(m_sm->m_wavefronts[m_sm->m_currentNdx]->data.cols);
     tableModel->blockSignals(false);
     tableModel->update();
 }

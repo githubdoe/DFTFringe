@@ -791,6 +791,7 @@ void MainWindow::on_actionAbout_triggered()
                              "<li>Steve Koehler for much help with Vortex implementation.</li>"
                              "<li>Dave Rowe for starting the Interferometry group and publishig the initial program.</li>"
                              "<li>Kieran Larken for deriving and publishing the Vortex Transform.</li>"
+                             "<li>Jim Burrows for developing the original diffract program which used FFT for Foucault Simulation."
                              "</ul>"
                              "</body></html>");
 }
