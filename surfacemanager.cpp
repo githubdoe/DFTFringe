@@ -1177,7 +1177,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         while (!m_surface_finished) {qApp->processEvents();}
     }
 }
-void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2){
+void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
 
     int size1 = wf1->data.rows * wf1->data.cols;
     int size2 = wf2->data.rows * wf2->data.cols;
@@ -1198,7 +1198,8 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2){
     resultwf->wasSmoothed = false;
     m_currentNdx = m_wavefronts.size() -1;
     m_surface_finished = false;
-    save_restore<bool> doNull(&(mirrorDlg::get_Instance()->doNull), false);
+    if (!use_null)
+        save_restore<bool> doNull(&(mirrorDlg::get_Instance()->doNull), false);
     emit generateSurfacefromWavefront(m_currentNdx,this);
     while (!m_surface_finished){qApp->processEvents();}
 
@@ -1214,7 +1215,7 @@ void SurfaceManager::subtractWavefronts(){
         int ndx2 = dlg.getSelected();
         wavefront *wf1 = m_wavefronts[m_currentNdx];
         wavefront *wf2 = m_wavefronts[ndx2];
-        subtract(wf1,wf2);
+        subtract(wf1,wf2, dlg.use_null);
     }
 
 
@@ -1297,7 +1298,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         rotateThese(-list[i]->angle,toRotate);
         while(!m_surface_finished){qApp->processEvents();}
         m_surface_finished = false;
-        subtract(m_wavefronts[inputs[i]], m_wavefronts[ndx]);
+        subtract(m_wavefronts[inputs[i]], m_wavefronts[ndx],false);
         ++ndx;      // now ndx point to the stand only wavefront
         while(!m_surface_finished){qApp->processEvents();}
         standavg += m_wavefronts[ndx]->workData;

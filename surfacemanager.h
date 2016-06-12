@@ -101,7 +101,7 @@ private:
     QTimer *m_toolsEnableTimer;
     int workToDo;
     int workProgress;
-    void subtract(wavefront *wf1, wavefront *wf2);
+    void subtract(wavefront *wf1, wavefront *wf2, bool use_null = true);
     wftStats *m_wftStats;
     textres Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx);
 

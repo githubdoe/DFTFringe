@@ -654,7 +654,7 @@ void MainWindow::on_actionWavefront_triggered()
     int wy = wx;
     double rad = (double)(wx-1)/2.;
     double xcen = rad,ycen = rad;
-    int border = 5;
+    int border = 1;
     rad -= border;
 
 

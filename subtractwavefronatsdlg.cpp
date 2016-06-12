@@ -22,6 +22,7 @@ subtractWavefronatsDlg::subtractWavefronatsDlg(QList<QString> list, QWidget *par
     QDialog(parent),
     ui(new Ui::subtractWavefronatsDlg)
 {
+    use_null = true;
     ui->setupUi(this);
     ui->listWidget->addItems(list);
 }
@@ -36,4 +37,9 @@ int subtractWavefronatsDlg::getSelected(){
         return ui->listWidget->row(l[0]);
     return -1;
 
+}
+
+void subtractWavefronatsDlg::on_useNullCb_clicked(bool checked)
+{
+    use_null = checked;
 }

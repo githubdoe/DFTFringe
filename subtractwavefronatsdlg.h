@@ -32,6 +32,9 @@ public:
     explicit subtractWavefronatsDlg(QList<QString> list, QWidget *parent = 0);
     ~subtractWavefronatsDlg();
     int getSelected();
+    bool use_null;
+private slots:
+    void on_useNullCb_clicked(bool checked);
 
 private:
     Ui::subtractWavefronatsDlg *ui;
