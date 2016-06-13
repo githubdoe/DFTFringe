@@ -18,7 +18,7 @@
 #include "wavefront.h"
 
 wavefront::wavefront():
-    contourDelta(0.),gaussian_diameter(0.),dirtyZerns(true),computed(false)
+    gaussian_diameter(0.),dirtyZerns(true),useSANull(true)
 {
 }
 
@@ -26,3 +26,25 @@ wavefront::~wavefront()
 {
 
 }
+wavefront::wavefront(const wavefront &wf): data(wf.data.clone()),
+                                           mask(wf.mask.clone()),
+                                                workData(wf.workData.clone()),
+                                                InputZerns(wf.InputZerns),
+    nulledData(wf.nulledData.clone()),
+    workMask(wf.workMask.clone()),
+    gaussian_diameter(wf.gaussian_diameter),
+    wasSmoothed(wf.wasSmoothed),
+    useSANull(wf.useSANull),
+    GBSmoothingValue(wf.GBSmoothingValue),
+    lambda(wf.lambda),
+    m_outside(wf.m_outside),
+    m_inside(wf.m_inside),
+    diameter(wf.diameter),
+    roc(wf.roc),
+    min(wf.min),
+    max(wf.max),
+    std(wf.std),
+    mean(wf.mean),
+    dirtyZerns(wf.dirtyZerns)
+{}
+

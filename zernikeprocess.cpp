@@ -662,8 +662,9 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
 
     double scz8 = md->z8 * md->cc;
-    if (!md->doNull)
+    if (!md->doNull || !wf.useSANull){
         scz8 = 0.;
+    }
     double midx = wf.m_outside.m_center.rx();
     double midy = wf.m_outside.m_center.ry();
     double rad = wf.m_outside.m_radius;

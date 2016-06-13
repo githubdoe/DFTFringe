@@ -13,5 +13,4 @@ Add mirror flip to output.
 Report options? Enable what goes into it?
 
 
-Subtract of simulated wf and zernike edit generated wavefront is not zero.
-  but subtract of same wavefront does create 0.
+

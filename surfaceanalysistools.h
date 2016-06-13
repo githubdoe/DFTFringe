@@ -59,7 +59,6 @@ signals:
     void centerMaskValue(int);
     void deleteTheseWaveFronts(QList<int>);
     void average(QList<int>);
-    void surfaceBaseChanged(bool);
     void defocusChanged();
     void invert(QList<int>);
     void wftNameChanged(int, QString);
@@ -95,10 +94,6 @@ private slots:
 
     void on_SelectNonePB_clicked();
 
-    void on_wavefrontBased_clicked(bool);
-
-    void on_zernikeBased_clicked(bool);
-
     void on_defocusDial_valueChanged(int value);
 
     void on_checkBox_clicked(bool checked);
@@ -111,10 +106,9 @@ private slots:
 
     void ListWidgetEditEnd(QWidget *editor, QAbstractItemDelegate::EndEditHint);
 
-
     void on_pushButton_clicked();
 
-    void on_surfaceSmoothGausianBlurr_editingFinished();
+    void on_surfaceSmoothGausianBlurr_valueChanged(int arg1);
 
 private:
     Ui::surfaceAnalysisTools *ui;

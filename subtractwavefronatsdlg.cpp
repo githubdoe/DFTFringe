@@ -22,7 +22,7 @@ subtractWavefronatsDlg::subtractWavefronatsDlg(QList<QString> list, QWidget *par
     QDialog(parent),
     ui(new Ui::subtractWavefronatsDlg)
 {
-    use_null = true;
+    use_null = false;
     ui->setupUi(this);
     ui->listWidget->addItems(list);
 }

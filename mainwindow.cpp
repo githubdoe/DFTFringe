@@ -430,8 +430,9 @@ void MainWindow::updateMetrics(wavefront& wf){
     double r3 = roc * roc * roc;
     double d4 = diam * diam * diam * diam;
     double z8 = zernTablemodel->values[8];
-    if (m_mirrorDlg->doNull)
+    if (m_mirrorDlg->doNull && wf.useSANull){
         z8 = z8 - m_mirrorDlg->cc * m_mirrorDlg->z8;
+    }
 
     double z1 = z8 * 384. * r3 * m_mirrorDlg->lambda * 1.E-6/(d4);
     BestSC = m_mirrorDlg->cc + z1;

@@ -235,6 +235,7 @@ void ContourPlot::setSurface(wavefront * wf) {
     m_wf = wf;
     if (wf == 0)
         return;
+
     initPlot();
 
     m_tools->enablTools(true);
@@ -265,11 +266,12 @@ void ContourPlot::setSurface(wavefront * wf) {
     QStringList path = wf->name.split("/");
     QString name;
     int l = path.length();
-    if (l >= 3){
-        name = path[l-3] + "/" + path[l-2] + "/" + path[l-1];
+    if (l >= 2){
+        name = path[l-2] + "/" + path[l-1];
     }
     else
         name = wf->name;
+
 
     setFooter(name + QString().sprintf(" %6.3lfrms",wf->std));
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode, false );

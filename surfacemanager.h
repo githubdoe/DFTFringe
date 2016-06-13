@@ -89,7 +89,7 @@ public:
     QMutex sync;
     int messageResult;
     void inspectWavefront();
-    bool useZernikeBase;
+
     void average(QList<wavefront *> wfList);
     void subtractWavefronts();
     bool m_askAboutReverse;
@@ -138,7 +138,6 @@ public slots:
     void rotateThese(double angle, QList<int> list);
     void createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
                                    CircleOutline center, QString name);
-    void surfaceBaseChanged(bool b);
     void invert(QList<int> list);
     void wftNameChanged(int, QString);
     void showAllContours();

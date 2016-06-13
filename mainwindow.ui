@@ -143,8 +143,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>344</width>
-     <height>867</height>
+     <width>100</width>
+     <height>0</height>
     </size>
    </property>
    <property name="whatsThis">
@@ -160,348 +160,87 @@
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QGridLayout" name="gridLayout_2">
-     <item row="3" column="0" colspan="2">
-      <widget class="QGroupBox" name="groupBox_2">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>200</height>
-        </size>
-       </property>
-       <property name="sizeIncrement">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="title">
-        <string>Outline Adjust</string>
-       </property>
-       <layout class="QGridLayout" name="_2">
-        <item row="0" column="2">
-         <widget class="QPushButton" name="undo">
-          <property name="minimumSize">
-           <size>
-            <width>20</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Undo last outline modification&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="statusTip">
-           <string>Undo last modification</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true"> border-style: outset;
- border-width: 3px;
- border-radius:7px;
- border-color: darkgray;
- min-width: 2
-em;
- padding: 6px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="DFTResources.qrc">
-            <normaloff>:/icons/res/1461975017_undo.png</normaloff>:/icons/res/1461975017_undo.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>30</width>
-            <height>30</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QPushButton" name="ShiftUp">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>70</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Move outline up one pixel</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true"> border-style: outset;
- border-width: 3px;
- border-radius:7px;
- border-color: darkgray;
- min-width: 4em;
- padding: 6px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="DFTResources.qrc">
-            <normaloff>:/icons/res/1461974262_f-top_256.png</normaloff>:/icons/res/1461974262_f-top_256.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>30</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="autoRepeat">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="shiftLeft">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>70</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>move outline left one pixel</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true"> border-style: outset;
- border-width: 3px;
- border-radius:7px;
- border-color: darkgray;
- min-width: 4em;
- padding: 6px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="DFTResources.qrc">
-            <normaloff>:/icons/res/1461974250_f-left_256.png</normaloff>:/icons/res/1461974250_f-left_256.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>30</width>
-            <height>30</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QPushButton" name="minus">
-          <property name="minimumSize">
-           <size>
-            <width>70</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Decrease outline radius 1 pixel</string>
-          </property>
-          <property name="whatsThis">
-           <string>Decrease outline radius 1 pixel</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true"> border-style: outset;
- border-width: 3px;
- border-radius:7px;
- border-color: darkgray;
- min-width: 4em;
- padding: 6px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="DFTResources.qrc">
-            <normaloff>:/icons/res/1461975092_minimize.png</normaloff>:/icons/res/1461975092_minimize.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>30</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="autoRepeat">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="3">
-         <widget class="QPushButton" name="shiftDown">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>70</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>move outline down one pixel</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true"> border-style: outset;
- border-width: 3px;
- border-radius:7px;
- border-color: darkgray;
- min-width: 4em;
- padding: 6px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="DFTResources.qrc">
-            <normaloff>:/icons/res/1461974268_f-bottom_256.png</normaloff>:/icons/res/1461974268_f-bottom_256.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>30</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="autoRepeat">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="4">
-         <widget class="QPushButton" name="pluss">
-          <property name="minimumSize">
-           <size>
-            <width>70</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Expand outline radius 1 pixel</string>
-          </property>
-          <property name="statusTip">
-           <string>Expand outline radius 1 pixel</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true"> border-style: outset;
- border-width: 3px;
- border-radius:7px;
- border-color: darkgray;
- min-width: 4em;
- padding: 6px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="DFTResources.qrc">
-            <normaloff>:/icons/res/1461975084_maximize.png</normaloff>:/icons/res/1461975084_maximize.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>30</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="autoRepeat">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="4">
-         <widget class="QPushButton" name="shiftRight">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>70</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>move outline right one pixel</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true"> border-style: outset;
- border-width: 3px;
- border-radius:7px;
- border-color: darkgray;
- min-width: 4em;
- padding: 6px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="DFTResources.qrc">
-            <normaloff>:/icons/res/1461974256_f-right_256.png</normaloff>:/icons/res/1461974256_f-right_256.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>30</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="autoRepeat">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <widget class="QPushButton" name="Redo">
-          <property name="minimumSize">
-           <size>
-            <width>44</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Redo last modification</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true"> border-style: outset;
- border-width: 3px;
- border-radius:7px;
- border-color: darkgray;
- min-width: 2em;
- padding: 6px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="DFTResources.qrc">
-            <normaloff>:/icons/res/redo.png</normaloff>:/icons/res/redo.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>30</width>
-            <height>30</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QCheckBox" name="edgeZoomCb">
-          <property name="text">
-           <string>Edge Zoom</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QPushButton" name="pushButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Crop to within 20 pixels of mirror outline and go to DFT analysis </string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {border-style: outset;
+border-width: 3px; border-radius:15px; border-color: darkgray;
+font: bold 12px;
+min-width: 5em;
+padding: 6px;}
+QPushButton:hover{rgb(85, 255, 255)}
+
+</string>
+         </property>
+         <property name="text">
+          <string>Done</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="HelpOutlinePb">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;div style = &quot;width: 300px&quot;;&gt;1. Load an interferogram image file.&lt;/p&gt;&lt;p&gt;Left click the mouse on one edge of the mirror.&lt;/p&gt;&lt;p&gt;With the left button down drag the mouse to the other side of the mirror.&lt;/p&gt;&lt;p&gt;scroll wheel will zoom the image.&lt;/p&gt;&lt;p&gt;[Shift] drag moves the circle.&lt;/p&gt;&lt;p&gt;[control] scroll wheel enlareges/shrink the circle.&lt;/p&gt;&lt;p&gt;Use the adjust buttons to modify the outline.&lt;/p&gt;&lt;p&gt;[ctrl z] Undo&lt;/p&gt;&lt;p&gt;[ctrl y] redo&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {border-style: outset;
+border-width: 3px; border-radius:15px; border-color: darkgray;
+font: bold 12px;
+min-width: 5em;
+padding: 6px;}
+QPushButton:hover{rgb(85, 255, 255)}</string>
+         </property>
+         <property name="text">
+          <string>Help</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
-     <item row="1" column="0">
+     <item>
       <widget class="QGroupBox" name="groupBox">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -563,20 +302,16 @@ em;
        </layout>
       </widget>
      </item>
-     <item row="6" column="1">
-      <widget class="QCheckBox" name="showChannels">
-       <property name="whatsThis">
-        <string>Show each of the color channels of interferogram</string>
-       </property>
-       <property name="text">
-        <string>Show color Channels</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
+     <item>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
         <widget class="QPushButton" name="pushButton_7">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Read outline from a file.</string>
          </property>
@@ -590,6 +325,12 @@ em;
        </item>
        <item>
         <widget class="QPushButton" name="saveOutline">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Save outline to a file.</string>
          </property>
@@ -600,15 +341,442 @@ em;
        </item>
       </layout>
      </item>
-     <item row="4" column="0" colspan="2">
+     <item>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>200</height>
+        </size>
+       </property>
+       <property name="sizeIncrement">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="title">
+        <string>Outline Adjust</string>
+       </property>
+       <layout class="QGridLayout" name="_2">
+        <item row="0" column="2">
+         <widget class="QPushButton" name="undo">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Undo last outline modification&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="statusTip">
+           <string>Undo last modification</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 2
+em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461975017_undo.png</normaloff>:/icons/res/1461975017_undo.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QPushButton" name="ShiftUp">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Move outline up one pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461974262_f-top_256.png</normaloff>:/icons/res/1461974262_f-top_256.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="shiftLeft">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>move outline left one pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461974250_f-left_256.png</normaloff>:/icons/res/1461974250_f-left_256.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QPushButton" name="minus">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Decrease outline radius 1 pixel</string>
+          </property>
+          <property name="whatsThis">
+           <string>Decrease outline radius 1 pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461975092_minimize.png</normaloff>:/icons/res/1461975092_minimize.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QPushButton" name="shiftDown">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>move outline down one pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461974268_f-bottom_256.png</normaloff>:/icons/res/1461974268_f-bottom_256.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="4">
+         <widget class="QPushButton" name="pluss">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Expand outline radius 1 pixel</string>
+          </property>
+          <property name="statusTip">
+           <string>Expand outline radius 1 pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461975084_maximize.png</normaloff>:/icons/res/1461975084_maximize.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <widget class="QPushButton" name="shiftRight">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>move outline right one pixel</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/1461974256_f-right_256.png</normaloff>:/icons/res/1461974256_f-right_256.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QPushButton" name="Redo">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Redo last modification</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 2em;
+ padding: 6px;</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="DFTResources.qrc">
+            <normaloff>:/icons/res/redo.png</normaloff>:/icons/res/redo.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>30</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QCheckBox" name="edgeZoomCb">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Edge Zoom</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
       <layout class="QHBoxLayout" name="horizontalLayout_5">
        <item>
-        <widget class="QCheckBox" name="checkBox">
+        <widget class="QPushButton" name="pushButton_8">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Delete Outline</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_5">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Crop image to within 20 pixels of outline.</string>
+         </property>
+         <property name="text">
+          <string>Crop</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QCheckBox" name="checkBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
          </property>
          <property name="styleSheet">
           <string notr="true"> border-style: outset;
@@ -627,43 +795,37 @@ em;
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_8">
-         <property name="text">
-          <string>Delete Outline</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButton_5">
-         <property name="toolTip">
-          <string>Crop image to within 20 pixels of outline.</string>
-         </property>
-         <property name="text">
-          <string>Crop</string>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QCheckBox" name="showChannels">
+           <property name="whatsThis">
+            <string>Show each of the color channels of interferogram</string>
+           </property>
+           <property name="text">
+            <string>Show color Channels</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showIntensity">
+           <property name="whatsThis">
+            <string>Show intensity graph of cross section of interferogram</string>
+           </property>
+           <property name="text">
+            <string>Show intensity Graph</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="dftThumb">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>240</height>
-        </size>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0" colspan="2">
+     <item>
       <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
         <widget class="QCheckBox" name="reverseGammaCB">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -679,7 +841,7 @@ em;
        <item>
         <widget class="QLineEdit" name="gammaValue">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -694,7 +856,7 @@ em;
        </item>
       </layout>
      </item>
-     <item row="8" column="1">
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -707,72 +869,13 @@ em;
        </property>
       </spacer>
      </item>
-     <item row="0" column="0" colspan="2">
-      <layout class="QHBoxLayout" name="horizontalLayout_6">
-       <item>
-        <widget class="QPushButton" name="pushButton">
-         <property name="toolTip">
-          <string>Crop to within 20 pixels of mirror outline and go to DFT analysis </string>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QPushButton {border-style: outset;
-border-width: 3px; border-radius:15px; border-color: darkgray;
-font: bold 12px;
-min-width: 5em;
-padding: 6px;}
-QPushButton:hover{rgb(85, 255, 255)}
-
-</string>
-         </property>
-         <property name="text">
-          <string>Done</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_7">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="HelpOutlinePb">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;div style = &quot;width: 300px&quot;;&gt;1. Load an interferogram image file.&lt;/p&gt;&lt;p&gt;Left click the mouse on one edge of the mirror.&lt;/p&gt;&lt;p&gt;With the left button down drag the mouse to the other side of the mirror.&lt;/p&gt;&lt;p&gt;scroll wheel will zoom the image.&lt;/p&gt;&lt;p&gt;[Shift] drag moves the circle.&lt;/p&gt;&lt;p&gt;[control] scroll wheel enlareges/shrink the circle.&lt;/p&gt;&lt;p&gt;Use the adjust buttons to modify the outline.&lt;/p&gt;&lt;p&gt;[ctrl z] Undo&lt;/p&gt;&lt;p&gt;[ctrl y] redo&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QPushButton {border-style: outset;
-border-width: 3px; border-radius:15px; border-color: darkgray;
-font: bold 12px;
-min-width: 5em;
-padding: 6px;}
-QPushButton:hover{rgb(85, 255, 255)}</string>
-         </property>
-         <property name="text">
-          <string>Help</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="6" column="0">
-      <widget class="QCheckBox" name="showIntensity">
-       <property name="whatsThis">
-        <string>Show intensity graph of cross section of interferogram</string>
-       </property>
-       <property name="text">
-        <string>Show intensity Graph</string>
-       </property>
-      </widget>
-     </item>
     </layout>
+    <zorder>groupBox_2</zorder>
+    <zorder>groupBox</zorder>
+    <zorder>showIntensity</zorder>
+    <zorder>showChannels</zorder>
+    <zorder>checkBox</zorder>
+    <zorder>checkBox</zorder>
    </widget>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -826,6 +929,9 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
    <property name="text">
     <string>Save WaveFront</string>
    </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save Selected Wavefront or Wavefronts&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
   </action>
   <action name="actionWrite_WaveFront">
    <property name="text">
@@ -859,7 +965,10 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
   </action>
   <action name="actionRead_WaveFront">
    <property name="text">
-    <string>Read Wavefront</string>
+    <string>Read Wavefront/s</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Read one or more wavefronts&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
   <action name="actionNext_Wave_Front">
@@ -910,7 +1019,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
   </action>
   <action name="actionSave_Wavefront">
    <property name="text">
-    <string>Save Wavefront</string>
+    <string>Save Wavefront/s</string>
    </property>
   </action>
   <action name="actionLighting_properties">

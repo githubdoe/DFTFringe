@@ -84,11 +84,12 @@ surfaceAnalysisTools::~surfaceAnalysisTools()
 }
 
 
-void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_editingFinished()
+
+void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_valueChanged(int arg1)
 {
+    qDebug() << "smooth finished";
     emit surfaceSmoothGBValue(ui->surfaceSmoothGausianBlurr->value());
 }
-
 void surfaceAnalysisTools::on_blurCB_clicked(bool checked)
 {
     ui->surfaceSmoothGausianBlurr->setEnabled(checked);
@@ -217,20 +218,6 @@ void surfaceAnalysisTools::nameChanged(QString old, QString newname){
             shorter = list[list.size()-2] + "/" + list[list.size()-1];
         ql[0]->setText(shorter);
     }
-
-
-}
-
-
-
-void surfaceAnalysisTools::on_wavefrontBased_clicked(bool)
-{
-    surfaceBaseChanged(false);
-}
-
-void surfaceAnalysisTools::on_zernikeBased_clicked(bool)
-{
-    surfaceBaseChanged(true);
 }
 
 void surfaceAnalysisTools::on_defocusDial_valueChanged(int value)
@@ -246,6 +233,7 @@ void surfaceAnalysisTools::on_defocusDial_valueChanged(int value)
     m_defocus = waves;
     m_defocusTimer.start(500);
 }
+
 void surfaceAnalysisTools::defocusTimerDone(){
     m_defocusTimer.stop();
     emit defocusChanged();
@@ -296,5 +284,7 @@ void surfaceAnalysisTools::on_pushButton_clicked()
 {
     emit updateSelected();
 }
+
+
 
 
