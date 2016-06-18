@@ -34,7 +34,7 @@ mirrorDlg *mirrorDlg::get_Instance(){
 
 mirrorDlg::mirrorDlg(QWidget *parent) :
     QDialog(parent),
-    mm(true),m_obsChanged(false),ui(new Ui::mirrorDlg)
+    mm(true),m_obsChanged(false),ui(new Ui::mirrorDlg), m_isEllipse(false)
 {
     ui->setupUi(this);
     QSettings settings;
@@ -63,7 +63,16 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->flipH->setChecked((settings.value( "flipH", false).toBool()));
     m_projectPath = settings.value("projectPath", "").toString();
     fringeSpacing = settings.value("config fringe spacing", 1.).toDouble();
+    ui->fringeSpacingEdit->blockSignals(true);
     ui->fringeSpacingEdit->setText(QString().sprintf("%3.2lf",fringeSpacing));
+    ui->fringeSpacingEdit->blockSignals(false);
+    m_isEllipse = settings.value("isEllipse", false).toBool();
+    ui->enableEllipseCb->setChecked(m_isEllipse);
+    ui->minorAxisEdit->setEnabled(m_isEllipse);
+    ui->minorAxisEdit->setText(QString::number(settings.value("ellipseMinorAxis", 50.).toDouble()));
+    connect(&spacingChangeTimer, SIGNAL(timeout()), this, SLOT(spacingChangeTimeout()));
+    m_majorHorizontal = settings.value("ellispeMajorHorizontal", true).toBool();
+    ui->majorHorizontalCb->setChecked(m_majorHorizontal);
 }
 
 mirrorDlg::~mirrorDlg()
@@ -72,6 +81,9 @@ mirrorDlg::~mirrorDlg()
 }
 bool mirrorDlg::shouldFlipH(){
     return ui->flipH->isChecked();
+}
+double mirrorDlg::getMinorAxis(){
+    return ui->minorAxisEdit->text().toDouble();
 }
 
 void mirrorDlg::on_saveBtn_clicked()
@@ -116,8 +128,13 @@ void mirrorDlg::on_saveBtn_clicked()
     file.write((char*)&zeros,4); // double pass
     file.write((char*)&zeros,4); // two colors traced
     file.write((char*)&fliph,1); // flip lr
-    file.write((char*)zeros,3);
-    file.write((char*)zeros,4);
+    file.write((char*)&zeros,3); // remainder of flip
+    file.write((char*)&flipv,1);
+    file.write((char*)&zeros,3); // remainder vr
+    file.write((char*)&m_isEllipse,1);  // use ellipse
+    file.write((char*)&zeros,3);
+    file.write((char*)&m_minorAxis,8);  // minor axis
+    file.write((char*)&m_majorHorizontal,1);
     file.close();
     QFileInfo info(fileName);
     settings.setValue("mirrorConfigFile",fileName);
@@ -184,8 +201,9 @@ void mirrorDlg::loadFile(QString & fileName){
         file.read(buf,8);
         double *dp = (double*)buf;
         fringeSpacing = *dp;
+        ui->fringeSpacingEdit->blockSignals(true);
         ui->fringeSpacingEdit->setText(QString().sprintf("%3.1lf",*dp));
-
+        ui->fringeSpacingEdit->blockSignals(false);
 
         //read diameter
         file.read(buf,8);
@@ -229,6 +247,7 @@ void mirrorDlg::loadFile(QString & fileName){
         z8 = *(dp++);
         ui->z8->setText(QString().number(z8));
         file.read(buf,4);
+
         /*
         ar<<m_double_pass;
         ar<<m_two_color_traced;
@@ -236,18 +255,41 @@ void mirrorDlg::loadFile(QString & fileName){
         ar<<m_flip_vert;
         */
 
+
         //flips
-        file.read(buf,4);
         if (!file.eof()){
-            file.read(buf,4);
+            file.read(buf,4);   // 1234 read right here
             fliph = *(bool*)buf;
             file.read(buf,4);
             flipv = *(bool*)buf;
         }
+
+        // ellipse
+        if (file.tellg() > 0){
+            // read ellipse mode flag
+            file.read(buf,4);
+            m_isEllipse = *(bool*)buf;
+            ui->enableEllipseCb->setChecked(m_isEllipse);
+        }
+        // minor axis
+        if (file.tellg() > 0){
+            file.read(buf,8);
+            m_minorAxis = *(double*)buf;
+            ui->minorAxisEdit->setText(QString::number(m_minorAxis));
+        }
+        // major is horizontal
+        if (file.tellg() > 0){
+            file.read(buf,1);
+            m_majorHorizontal = *(bool*)buf;
+            ui->majorHorizontalCb->setChecked(m_majorHorizontal);
+        }
+
+
         FNumber = roc/(2. * diameter);
         ui->FNumber->blockSignals(true);
         ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
         ui->FNumber->blockSignals(false);
+
         file.close();
         blockSignals(false);
         return;
@@ -370,7 +412,8 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
      ui->obs->setText(QString().number(obs/div));
      ui->diameter->blockSignals(false);
      ui->roc->blockSignals(false);
-
+     ui->minorAxisEdit->blockSignals(true);
+     ui->minorAxisEdit->setText(QString().sprintf(("%6.2lf"),m_minorAxis/div));
 }
 
 void mirrorDlg::on_buttonBox_accepted()
@@ -401,10 +444,48 @@ void mirrorDlg::on_cc_textChanged(const QString &arg1)
    updateZ8();
 }
 
-void mirrorDlg::on_fringeSpacingEdit_textChanged(const QString &arg1)
-{
-    if (arg1.toDouble() != fringeSpacing){
+void mirrorDlg::spacingChangeTimeout(){
+    spacingChangeTimer.stop();
+    double v = ui->fringeSpacingEdit->text().toDouble();
+    if ( v != fringeSpacing){
         QMessageBox::information(0,"Fringe Spacing Changed",  "This change will only be used when Interferograms are analyzed. "
                     "It will not be applied to any existing wavefronts already loaded.");
     }
+    fringeSpacing = v;
+    QSettings set;
+    set.setValue("config fringe spacing", fringeSpacing);
+}
+
+void mirrorDlg::on_fringeSpacingEdit_textChanged(const QString &arg1)
+{
+    spacingChangeTimer.start(1000);
+}
+
+void mirrorDlg::on_name_editingFinished()
+{
+    m_name = ui->name->text();
+    QSettings set;
+    set.setValue("config mirror name", ui->name->text());
+}
+
+void mirrorDlg::on_enableEllipseCb_clicked(bool checked)
+{
+    m_isEllipse = checked;
+    QSettings set;
+    set.setValue("isEllipse", checked);
+    ui->minorAxisEdit->setEnabled(checked);
+}
+
+void mirrorDlg::on_minorAxisEdit_textChanged(const QString &arg1)
+{
+    QSettings set;
+    set.setValue("ellipseMinorAxis", arg1.toDouble());
+    m_minorAxis = arg1.toDouble();
+}
+
+void mirrorDlg::on_majorHorizontalCb_clicked(bool checked)
+{
+    m_majorHorizontal = checked;
+    QSettings set;
+    set.setValue("ellispeMajorHorizontal", checked);
 }

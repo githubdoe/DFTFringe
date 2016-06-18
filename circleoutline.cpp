@@ -20,6 +20,7 @@
 #include <Qmath.h>
 #include <QDebug>
 #include "math.h"
+
 CircleOutline::CircleOutline(QPointF center, double rad){
     m_p1 = QPointF(center.x() - rad, center.y());
     m_p2 = QPointF(center.x()+rad, center.y());
@@ -83,13 +84,15 @@ void CircleOutline::scale(double factor){
 bool CircleOutline::isValid(){
     return m_radius > 0;
 }
-void CircleOutline::draw(QPainter& dc, double scale){
+void CircleOutline::draw(QPainter& dc, double scale, double scale2){
     if (m_radius == 0)
         return;
     //m_p1.draw(dc, scale);
     //m_p2.draw(dc, scale);
+    if (scale2 < 0)
+        scale2 = scale;
 
-    dc.drawEllipse(m_center * scale,m_radius * scale,m_radius* scale);
+    dc.drawEllipse(m_center * scale,m_radius * scale,m_radius* scale2);
     dc.drawLine((m_center.x() -m_radius)* scale, m_center.y()* scale,scale *( m_center.x() + m_radius),
             scale * m_center.y());
     dc.drawLine(scale * m_center.x(), scale* (m_center.y() - m_radius), scale * m_center.x(), scale * (m_center.y() + m_radius));

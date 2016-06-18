@@ -342,7 +342,7 @@ void SurfaceManager::makeMask(int waveNdx){
     xm = m_wavefronts[waveNdx]->m_outside.m_center.x();
     ym = m_wavefronts[waveNdx]->m_outside.m_center.y();
     double radm = m_wavefronts[waveNdx]->m_outside.m_radius + outsideOffset - 2;
-    double rado = m_wavefronts[waveNdx]->m_inside.m_radius + insideOffset +2;
+    double rado = m_wavefronts[waveNdx]->m_inside.m_radius;
     double cx = m_wavefronts[waveNdx]->m_inside.m_center.x();
     double cy = m_wavefronts[waveNdx]->m_inside.m_center.y();
     cv::Mat mask = cv::Mat::zeros(height,width,CV_8U);
@@ -356,6 +356,7 @@ void SurfaceManager::makeMask(int waveNdx){
     }
 
     if (rado > 0) {
+        rado += insideOffset + 2;
         for (int y = 0; y < height; ++y){
             for (int x = 0; x < width; ++x){
                 double dx = (double)(x - (cx))/(rado);
@@ -586,8 +587,10 @@ void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulle
         for (int col = 0; col < wf->data.cols ; ++col){
             if (saveNulled)
                 file << wf->workData.at<double>(row,col) << std::endl;
-            else
+            else {
                 file << wf->data.at<double>(row,col) << std::endl;
+
+            }
         }
     }
 
@@ -649,7 +652,7 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
         progress.setValue(0);
         for (int i = 0; i < list.size(); ++i){
             progress.setValue(i+1);
-            qApp->processEvents();
+
             wavefront *wf = m_wavefronts[list[i]];
             progress.setLabelText(wf->name);
 
@@ -657,15 +660,20 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
             QStringList fnparts = fname.split("/");
             if (fnparts.size() > 1)
                 fname = fnparts[fnparts.size()-1];
-            QString fullPath = dir + QDir::separator() + fname + ".wft";
+            if (QFileInfo(fname).suffix().isEmpty()) { fname.append(".wft");}
+            QString fullPath = dir + QDir::separator() + fname;
             QFileInfo info;
             // check if file exists and if yes: Is it really a file and no directory?
             int cnt = 1;
-            while (info.exists(fullPath)) {
-                fullPath = dir + QDir::separator() + fname + QString().sprintf("_%d.wft", cnt++);;
+            if (info.exists(fullPath)) {
+                if (QMessageBox::question(0,"file alread exists", fullPath +" already exists. Do you want to overwrite it?") ==
+                        QMessageBox::No)
+                    continue;
+
             }
+            qApp->processEvents();
             writeWavefront(fullPath, wf, saveNulled);
-            qDebug() << fullPath;
+
 
         }
     }

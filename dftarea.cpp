@@ -819,7 +819,7 @@ void DFTArea::makeSurface(){
     if (m_vortexDebugTool->m_showUnwrapped)
         showData("result surface", result.clone());
                    //wf was result and should be reset after debugging.
-    emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName()+".wft");
+    emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName());
 
 }
 void DFTArea::newIgram(QImage){

@@ -121,6 +121,9 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomOut()));
     shortcut = new QShortcut(QKeySequence("1"), this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(edgeMode()));
+    shortcut = new QShortcut(QKeySequence("c"), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(widen()));
+
 }
 
 void IgramArea::outlineTimerTimeout(){
@@ -182,6 +185,37 @@ void IgramArea::DrawSimIgram(void){
     emit showTab(0);
     emit upateColorChannels(igramImage);
 }
+
+// circularize the ellipse by expanding the image minor axis to match the major axis.
+void ::IgramArea::widen(){
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    if (!md.isEllipse())
+        return;
+    int width = igramImage.width();
+    int height = igramImage.height();
+
+    if (!m_ellipse_widened){
+        double m = md.getMinorAxis();
+        double scale = md.diameter/md.getMinorAxis();
+        if (md.m_majorHorizontal){
+            height *= scale;
+            shiftoutline(QPointF(0,height - igramImage.height())/2);
+        }
+        else {
+            width = igramImage.width() * scale;
+            shiftoutline(QPointF((width - igramImage.width())/2,0));
+        }
+        m_ellipse_widened = true;
+    }
+
+
+    igramImage = igramImage.scaled(width, height,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+    igramDisplay = igramImage.copy();
+    zoomIndex = 1;
+    resizeImage();
+    drawBoundary();
+}
+
 void IgramArea::doGamma(double gammaV){
 
         cv::Mat mm(igramImage.height(), igramImage.width(), CV_8UC4, igramImage.bits(), igramImage.bytesPerLine());
@@ -201,6 +235,7 @@ void IgramArea::doGamma(double gammaV){
 
         QImage img((uchar*)mm.data, mm.cols, mm.rows,mm.step1() ,QImage::Format_RGB32);
         igramImage = img.copy();
+        update();
 
 }
 
@@ -212,7 +247,7 @@ bool IgramArea::openImage(const QString &fileName)
     QImage loadedImage;
     if (!loadedImage.load(fileName))
         return false;
-
+    m_ellipse_widened = false;
     if (mirrorDlg::get_Instance()->shouldFlipH())
         loadedImage = loadedImage.mirrored(true,false);
     hasBeenCropped = false;
@@ -698,7 +733,18 @@ void IgramArea::drawBoundary()
         painter.setOpacity(opacity * .01);
         if (outside.m_radius > 0){
             painter.setPen(QPen(edgePenColor, edgePenWidth, (Qt::PenStyle)lineStyle));
-            outside.draw(painter,1.);
+            double s1 = 1.;
+            double s2 = 1.;
+            mirrorDlg &md = *mirrorDlg::get_Instance();
+            if (md.m_isEllipse && !m_ellipse_widened){
+                if (md.m_majorHorizontal){
+                    s2 = md.m_minorAxis / md.diameter;
+                }
+                else {
+                    s1 = md.m_minorAxis/ md.diameter;
+                }
+            }
+            outside.draw(painter,s1,s2);
         }
         if (inside.m_radius > 0 && innerPcount > 1){
             painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
@@ -749,10 +795,11 @@ void IgramArea::resizeImage()
         gscrollArea->setWidgetResizable(false);
     }
     else
-    {
+    {   double scaleh = (double)parentWidget()->height()/(double)igramImage.height();
+        double scalew = (double)parentWidget()->width()/(double)igramImage.width();
         newSize = gscrollArea->size();
         gscrollArea->setWidgetResizable(true);
-        scale = (double)parentWidget()->height()/(double)igramImage.height();
+        scale = min(scaleh,scalew);
     }
     try {
         QImage newImage(newSize, QImage::Format_RGB32);
@@ -1107,8 +1154,10 @@ void IgramArea::nextStep(){
                             "You must first outline the mirror outside edge.");
         return;
     }
-    // save outline as a file.
-    writeOutlines(makeOutlineName());
+    if (!mirrorDlg::get_Instance()->isEllipse()){
+        // save outline as a file.
+        writeOutlines(makeOutlineName());
+    }
     if (!hasBeenCropped)
         crop();
 

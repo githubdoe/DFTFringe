@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>462</width>
-    <height>330</height>
+    <height>372</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -52,7 +52,11 @@
        </widget>
       </item>
       <item row="6" column="4">
-       <widget class="QLineEdit" name="cc"/>
+       <widget class="QLineEdit" name="cc">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set to 0 if testing a flat or a sphere.&lt;/p&gt;&lt;p&gt;Set to -1 if testing a parabaloid.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
       </item>
       <item row="1" column="2">
        <widget class="QLabel" name="label_2">
@@ -75,10 +79,18 @@
        <widget class="QLineEdit" name="FNumber"/>
       </item>
       <item row="1" column="3" colspan="2">
-       <widget class="QLineEdit" name="diameter"/>
+       <widget class="QLineEdit" name="diameter">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Daimeter of mirror or Major Axis of Ellipse&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
       </item>
       <item row="2" column="3" colspan="2">
-       <widget class="QLineEdit" name="roc"/>
+       <widget class="QLineEdit" name="roc">
+        <property name="toolTip">
+         <string>Radius of curvature of mirror or 0 if testing a flat</string>
+        </property>
+       </widget>
       </item>
       <item row="3" column="2">
        <widget class="QLabel" name="label_4">
@@ -166,9 +178,54 @@ Wave Length nm</string>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="fringeSpacingEdit"/>
+      <widget class="QLineEdit" name="fringeSpacingEdit">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set to 1 if using a Bath interferometer or similar.  Set to .5 if testing in autocollimation with same.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
      </item>
     </layout>
+   </item>
+   <item row="6" column="1" colspan="3">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Elliptical outline</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="enableEllipseCb">
+        <property name="text">
+         <string>Enable</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="majorHorizontalCb">
+        <property name="text">
+         <string>Major axis is horizontal</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>Minor Axis</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="minorAxisEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>

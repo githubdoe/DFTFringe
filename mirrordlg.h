@@ -19,6 +19,7 @@
 #define MIRRORDLG_H
 
 #include <QDialog>
+#include <QTimer>
 
 namespace Ui {
 class mirrorDlg;
@@ -55,6 +56,11 @@ public:
     static QString getProjectPath();
     bool m_obsChanged;
     void newLambda(QString v){ on_lambda_textChanged( v);}
+    bool isEllipse(){return m_isEllipse;}
+    double getMinorAxis();
+    bool m_majorHorizontal;
+    bool m_isEllipse;
+    double m_minorAxis;
 
 private slots:
     void on_ReadBtn_clicked();
@@ -82,6 +88,15 @@ private slots:
 
     void on_fringeSpacingEdit_textChanged(const QString &arg1);
 
+    void on_name_editingFinished();
+
+    void on_enableEllipseCb_clicked(bool checked);
+
+    void on_minorAxisEdit_textChanged(const QString &arg1);
+    void spacingChangeTimeout();
+
+    void on_majorHorizontalCb_clicked(bool checked);
+
 signals:
     void diameterChanged(double);
     void rocChanged(double);
@@ -95,6 +110,9 @@ signals:
 private:
     Ui::mirrorDlg *ui;
     static mirrorDlg *m_Instance;
+
+    QTimer spacingChangeTimer;
+
 };
 
 #endif // MIRRORDLG_H

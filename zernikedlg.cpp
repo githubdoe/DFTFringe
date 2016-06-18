@@ -92,6 +92,10 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
 //            if (index.row() == 8 && mirrorDlg::get_Instance()->doNull){
 //                return (QString().sprintf("%6.3lf", values[index.row()] + mirrorDlg::get_Instance()->z8));
 //            }
+            if (index.row() == 8 && mirrorDlg::get_Instance()->doNull){
+                double val = values[8] - mirrorDlg::get_Instance()->z8;
+                return QString().sprintf("%6.3lf  %6.3lf",val, computeRMS(8, val));
+            }
             return QString().sprintf("%6.3lf  %6.3lf",values[index.row()], computeRMS(index.row(), values[index.row()]));
         }
     }

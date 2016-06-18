@@ -33,7 +33,7 @@ class CircleOutline: public boundary
         CircleOutline(QPointF center, double rad);
         CircleOutline(QPointF p1, QPointF p2);
         virtual ~CircleOutline();
-        void draw(QPainter& painter, double scale);
+        void draw(QPainter& painter, double scale, double scale2 = -1.);
         bool isInside(QPointF& p , int offset = 0);
         void enlarge(int del);
         void translate(QPointF del);

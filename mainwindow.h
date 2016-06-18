@@ -197,6 +197,7 @@ private slots:
 
     void on_actionEdit_Zernike_values_triggered();
 
+
 private:
 
     Ui::MainWindow *ui;

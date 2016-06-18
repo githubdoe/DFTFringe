@@ -1,7 +1,7 @@
 #include "bathastigdlg.h"
 #include "ui_bathastigdlg.h"
 #include "mirrordlg.h"
-
+#include "math.h"
 bathAstigDlg::bathAstigDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::bathAstigDlg)
@@ -20,11 +20,11 @@ bathAstigDlg::~bathAstigDlg()
     delete ui;
 }
 
-
 void bathAstigDlg::compute(){
+    mirrorDlg &md = *mirrorDlg::get_Instance();
     double val = ui->diamSb->value() * ui->diamSb->value() * ui->sepSb->value() * ui->sepSb->value() /
-            (16. * ui->rocsb->value() * ui->rocsb->value() * ui->rocsb->value());
-    ui->pvAstig->setText( QString::number(val));
+            (32. * ui->rocsb->value() * ui->rocsb->value() * ui->rocsb->value());
+    ui->pvAstig->setText( QString::number(round(1e9 * val/md.lambda)/1000.));
 }
 
 void bathAstigDlg::on_diamSb_valueChanged(double)
