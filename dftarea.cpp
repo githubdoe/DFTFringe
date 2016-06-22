@@ -34,12 +34,27 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data){
     double cx = outside.m_center.x();
     double cy = outside.m_center.y();
     cv::Mat mask = cv::Mat::zeros(height,width,CV_8UC1);
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    double rx = outside.m_radius;
+    double rx2 = rx * rx;
+    double ry = rx * md.m_minorAxis/md.diameter;
+    double ry2 = ry * ry;
     for (int y = 0; y < height; ++y){
         for (int x = 0; x < width; ++x){
-            double dx = (double)(x - (cx))/(radm);
-            double dy = (double)(y - (cy))/(radm);
-            if (sqrt(dx * dx + dy * dy) <= 1.)
-                mask.at<uchar>(y,x) = 255;
+            if (!md.isEllipse()){
+                double dx = (double)(x - cx)/(radm);
+                double dy = (double)(y - cy)/(radm);
+                if (sqrt(dx * dx + dy * dy) <= 1.)
+                    mask.at<uchar>(y,x) = 255;
+            }
+            else {
+                if (fabs(x -cx) > rx || fabs(y -cy) > ry)
+                    continue;
+                double v = pow(x - cx, 2)/rx2 + pow(y - cy, 2)/ry2;
+                if (v <= 1)
+                    mask.at<uchar>(y,x) = 255;
+            }
+
         }
     }
     cx = center.m_center.x();
@@ -161,7 +176,9 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     top = max(top,0.);
     left = max(left,0.);
     int width = 2. * (radpix);
+    int height = width;
     width = min(width, img.width());
+    height = min(height, img.height());
 
     // new center because of crop
     double xCenterShift = centerX - left;
@@ -171,7 +188,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     cv::Mat tmp = iMat.clone();
 
 
-    cv::Mat roi = iMat(cv::Rect((int)left,(int)top,(int)width,(int)width)).clone();
+    cv::Mat roi = iMat(cv::Rect((int)left,(int)top,(int)width,(int)height)).clone();
 
     double centerDx = centerX - igramArea->m_center.m_center.x();
     double centerDy = centerY - igramArea->m_center.m_center.y();
@@ -179,17 +196,18 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     roi.convertTo(roi,CV_32FC3);
 
     int dftSize = Settings2::dftSize();
-    double scaleFactor = (double)dftSize/roi.rows;
+    double scaleFactor = (double)dftSize/roi.cols;
     m_outside = CircleOutline(QPointF(xCenterShift,yCenterShift), rad);
     m_center = CircleOutline(QPointF(xCenterShift - centerDx, yCenterShift - centerDy),
                              igramArea->m_center.m_radius);
-
+    //scaleFactor = 1;
     if (scaleFactor < 1.){
 
         cv::resize(roi,roi, cv::Size(0,0), scaleFactor, scaleFactor);
-        double roic = roi.rows/2.;
-        m_outside = CircleOutline(QPointF(roic,roic),roic);
-        m_center = CircleOutline(QPointF((roic - centerDx * scaleFactor), (roic - centerDy * scaleFactor)),
+        double roicx = (roi.cols-1)/2.;
+        double roicy = (roi.rows-1)/2.;
+        m_outside = CircleOutline(QPointF(roicx,roicy),roicx);
+        m_center = CircleOutline(QPointF((roicx - centerDx * scaleFactor), (roicy - centerDy * scaleFactor)),
                                  m_center.m_radius * scaleFactor);
     }
     else {
@@ -470,7 +488,7 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
 
 
     int xsize = image.cols;
-    int ysize = xsize;
+    int ysize = image.rows;
     int nx = xsize, ny = ysize;
     int size = xsize*ysize;
     double smooth = .01 * m_vortexDebugTool->m_smooth * xsize/2.;
@@ -542,8 +560,8 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     }
 
     // Take the Fourier transform.
-    cv::Mat imPlanes[2] = {cv::Mat(Size(ny,nx), CV_64F, imRe),
-                           cv::Mat::zeros(Size(ny,nx),CV_64F)};
+    cv::Mat imPlanes[2] = {cv::Mat(Size(nx,ny), CV_64F, imRe),
+                           cv::Mat::zeros(Size(nx,ny),CV_64F)};
 
     cv::Mat imMat;
     cv::Mat fdomMat;
@@ -580,6 +598,8 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     //fftw_execute (p);
     dft(fdomMat, imMat, DFT_INVERSE);
     split(imMat,imPlanes);
+    qDebug() << "imPlanes" << imPlanes[0].size().width  << imPlanes[0].size().height << m_mask.cols <<
+                m_mask.rows;
     imPlanes[0]/= size;
     cv::Mat tmp;
     imPlanes[0].copyTo(tmp, m_mask);
@@ -667,7 +687,7 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
 
 
     cv::Mat rMat;
-    cv::Mat rPlanes[2] = {cv::Mat::zeros(Size(ysize,xsize),CV_64F), cv::Mat::zeros(Size(ysize,xsize),CV_64F)};
+    cv::Mat rPlanes[2] = {cv::Mat::zeros(Size(xsize,ysize),CV_64F), cv::Mat::zeros(Size(xsize,ysize),CV_64F)};
     cv::Mat d1Planes[2];
     cv::Mat d2Planes[2];
     split(d1Mat,d1Planes);
@@ -726,12 +746,12 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     }
 
     // Unwrap the orientation to get the direction.
-    qg_path_follower_vortex (Size(ysize,xsize), orient, qmap, dir, path);
+    qg_path_follower_vortex (Size(xsize,ysize), orient, qmap, dir, path);
     for (int i=0; i<size; ++i)
      dir[i] = WRAPPI(dir[i]*M_PI);
 
     // Calculate the quadrature.
-    imPlanes[1] = cv::Mat::zeros(Size(ysize,xsize), CV_64F);
+    imPlanes[1] = cv::Mat::zeros(Size(xsize,ysize), CV_64F);
     double *imIm = (double *)(imPlanes[1].data);
     for (int i=0; i<size; ++i)
       imIm[i] = d1Re[i]*cos(-dir[i]) - d1Im[i]*sin(-dir[i]);
@@ -745,7 +765,7 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     if (m_vortexDebugTool->m_showFdom3){
         showMag(fdomMat, true, "fdom3");
     }
-    cv::Mat phase(Size(ysize,xsize), CV_64F);
+    cv::Mat phase(Size(xsize,ysize), CV_64F);
     double *p = (double *)(phase.data);
     for (int i=0; i<size; ++i) {
        p[i] = atan2 (imIm[i], imRe[i]);
@@ -773,16 +793,37 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     delete[] path;
     return phase;
 }
-#include "simigramdlg.h"
-#include <qwt_plot.h>
-#include <qwt_plot_curve.h>
-#include <qwt_plot_grid.h>
-#include <qwt_symbol.h>
-#include <qwt_legend.h>
-#include <qwt_text.h>
-#include <qwt_plot_renderer.h>
-#include <qwt_interval_symbol.h>
-#include <qwt_plot_intervalcurve.h>
+cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask){
+    cv::Mat_<double> coeff(3,1);
+    cv::Mat_<double> X(phase.rows * phase.cols,3);
+    cv::Mat_<double> Z(phase.rows * phase.cols,1);
+    int ndx = 0;
+    for (int y = 0; y < phase.rows; ++y){
+        for (int x = 0; x < phase.cols; ++x){
+            if (mask(y,x) == 255){
+            Z(ndx) =  phase(y,x);
+            X(ndx,0) = x;
+            X(ndx,1) = y;
+            X(ndx++,2) = 1.;
+            }
+        }
+    }
+    cv::solve(X,Z,coeff,CV_SVD);
+    // plane generation, Z = Ax + By + C
+    // distance calculation d = Ax + By - z + C / sqrt(A^2 + B^2 + C^2)
+qDebug() << coeff(0) << coeff(1) << coeff(2);
+    cv::Mat_<double> newPhase(phase.size());
+    for (int y = 0; y < phase.rows; ++y){
+        for (int x = 0; x  < phase.cols; ++x){
+            if (mask(y,x)!= 255)
+                continue;
+            double val = x * coeff(0) + y * coeff(1) + coeff(2) - phase(y,x);
+            double z = val/sqrt(coeff(0) * coeff(0) + coeff(1) * coeff(1) + 1);
+            newPhase(y,x) = z;
+        }
+    }
+    return newPhase;
+}
 
 // make a surface from the image using DFT and vortex transfroms.
 void DFTArea::makeSurface(){
@@ -816,9 +857,12 @@ void DFTArea::makeSurface(){
     if (md->fringeSpacing != 1.){
         result *= md->fringeSpacing;
     }
+    if (md->isEllipse())
+        result = subtractPlane(result, m_mask);
+
     if (m_vortexDebugTool->m_showUnwrapped)
         showData("result surface", result.clone());
-                   //wf was result and should be reset after debugging.
+
     emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName());
 
 }

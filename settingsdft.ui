@@ -65,7 +65,7 @@
     </rect>
    </property>
    <property name="toolTip">
-    <string>Width and Height of DFT in Pixels</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Width and Height of DFT in Pixels&lt;/p&gt;&lt;p&gt;This determines the final size of the wavefront.&lt;/p&gt;&lt;p&gt;It will be this size or smaller if the interferogram is&lt;/p&gt;&lt;p&gt;smaller.  If the interferogram is larger it will be reduced to this size.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="statusTip">
     <string/>

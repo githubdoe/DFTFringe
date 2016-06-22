@@ -24,7 +24,7 @@
 namespace Ui {
 class mirrorDlg;
 }
-
+enum outlineShape {CIRCLE,ELLIPSE,RECTANGLE};
 class mirrorDlg : public QDialog
 {
     Q_OBJECT
@@ -55,12 +55,12 @@ public:
     bool shouldFlipH();
     static QString getProjectPath();
     bool m_obsChanged;
-    void newLambda(QString v){ on_lambda_textChanged( v);}
-    bool isEllipse(){return m_isEllipse;}
+    void newLambda(QString v);
     double getMinorAxis();
     bool m_majorHorizontal;
-    bool m_isEllipse;
     double m_minorAxis;
+    outlineShape m_outlineShape;
+    bool isEllipse();
 
 private slots:
     void on_ReadBtn_clicked();
@@ -90,12 +90,14 @@ private slots:
 
     void on_name_editingFinished();
 
-    void on_enableEllipseCb_clicked(bool checked);
-
     void on_minorAxisEdit_textChanged(const QString &arg1);
     void spacingChangeTimeout();
 
     void on_majorHorizontalCb_clicked(bool checked);
+
+    void on_ellipseShape_clicked(bool checked);
+
+
 
 signals:
     void diameterChanged(double);

@@ -83,7 +83,7 @@ void expandBorder(wavefront *wf){
                 double nx = rx - drx;
                 double ny = ry - dry;
                 //qDebug() << x << y << rx << ry << nx << ny;
-                wf->nulledData.at<double>(y,x) = wf->nulledData.at<double>(ny,nx);
+                wf->nulledData(y,x) = wf->nulledData(ny,nx);
             }
 
         }
@@ -193,16 +193,32 @@ surfaceGenerator::~surfaceGenerator() {
 void surfaceGenerator::process(int wavefrontNdx, SurfaceManager *sm) {
     // allocate resources using new here
     m_sm = sm;
-qDebug() << "process"<<wavefrontNdx;
     mutex.lock();
     ++inprocess;
     mutex.unlock();
     wavefront *wf = m_sm->m_wavefronts[wavefrontNdx];
 
 
-    //compute zernike values
-    if (wf->dirtyZerns){
 
+    if (wf->dirtyZerns){
+        if (mirrorDlg::get_Instance()->isEllipse()){
+            wf->nulledData = wf->data.clone();
+            if (m_sm->m_GB_enabled){
+
+                    //expandBorder(wf);
+                    cv::GaussianBlur( wf->nulledData.clone(), wf->workData, cv::Size( m_sm->m_gbValue, m_sm->m_gbValue ),0,0);
+            }
+            else {
+                wf->workData = wf->data.clone();
+            }
+            wf->InputZerns = std::vector<double>(Z_TERMS, 0);
+            wf->dirtyZerns = false;
+            emit finished( wavefrontNdx);
+
+            return;
+        }
+
+        //compute zernike values
         zernikeProcess &zp = *zernikeProcess::get_Instance();
 
         zp.unwrap_to_zernikes(*wf);
@@ -346,12 +362,26 @@ void SurfaceManager::makeMask(int waveNdx){
     double cx = m_wavefronts[waveNdx]->m_inside.m_center.x();
     double cy = m_wavefronts[waveNdx]->m_inside.m_center.y();
     cv::Mat mask = cv::Mat::zeros(height,width,CV_8U);
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    double rx = radm;
+    double rx2 = rx * rx;
+    double ry = rx * md.m_minorAxis/md.diameter;
+    double ry2 = ry * ry;
     for (int y = 0; y < height; ++y){
         for (int x = 0; x < width; ++x){
-            double dx = (double)(x - xm)/(radm);
-            double dy = (double)(y - ym)/(radm);
-            if (sqrt(dx * dx + dy * dy) <= 1.)
-                mask.at<uchar>(y,x) = 255;
+            if (!mirrorDlg::get_Instance()->isEllipse()){
+                double dx = (double)(x - xm)/(radm);
+                double dy = (double)(y - ym)/(radm);
+                if (sqrt(dx * dx + dy * dy) <= 1.)
+                    mask.at<uchar>(y,x) = 255;
+            }
+            else {
+                if (fabs(x -xm) > rx || fabs(y -ym) > ry)
+                    continue;
+                double v = pow(x - xm, 2)/rx2 + pow(y - ym, 2)/ry2;
+                if (v <= 1)
+                    mask.at<uchar>(y,x) = 255;
+            }
         }
     }
 
@@ -371,8 +401,8 @@ void SurfaceManager::makeMask(int waveNdx){
     m_wavefronts[waveNdx]->workMask = mask.clone();
 
         // add central obstruction
-        mirrorDlg *md = mirrorDlg::get_Instance();
-        double r = md->obs * (2. * radm)/md->diameter;
+
+        double r = md.obs * (2. * radm)/md.diameter;
         r/= 2.;
         if (r > 0){
             cv::Mat m = m_wavefronts[waveNdx]->workMask;
@@ -570,6 +600,16 @@ void SurfaceManager::computeMetrics(wavefront *wf){
 
 void SurfaceManager::computeZerns()
 {
+    QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
+    workToDo = doThese.size();
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    foreach(int ndx , doThese){
+        wavefront &wf = *m_wavefronts[ndx];
+        wf.diameter = md.diameter;
+        wf.roc = md.roc;
+        wf.lambda = md.lambda;
+    }
+
     m_waveFrontTimer->start(500);
 }
 
@@ -586,9 +626,9 @@ void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulle
     for (int row = wf->data.rows - 1; row >=0; --row){
         for (int col = 0; col < wf->data.cols ; ++col){
             if (saveNulled)
-                file << wf->workData.at<double>(row,col) << std::endl;
+                file << wf->workData(row,col) << std::endl;
             else {
-                file << wf->data.at<double>(row,col) << std::endl;
+                file << wf->data(row,col) << std::endl;
 
             }
         }
@@ -1237,14 +1277,14 @@ void SurfaceManager::transfrom(QList<int> list){
 void SurfaceManager::invert(QList<int> list){
     workToDo = list.size();
     workProgress = 0;
-    pd->setLabelText("Rotating Wavefronts");
+    pd->setLabelText("Inverting Wavefronts");
     pd->setRange(0, list.size());
     for (int i = 0; i < list.size(); ++i) {
         m_wavefronts[list[i]]->data *= -1;
         m_wavefronts[list[i]]->dirtyZerns = true;
         m_wavefronts[list[i]]->wasSmoothed = false;
-        emit generateSurfacefromWavefront(list[i],this);
     }
+    m_waveFrontTimer->start(1000);
 }
 
 #include "wftexaminer.h"
@@ -2107,3 +2147,5 @@ void SurfaceManager::report(){
     editor->print(&printer);
     editor->show();
 }
+
+

@@ -81,7 +81,6 @@ public:
     bool m_GB_enabled;
     int m_currentNdx;
     wavefront* m_wf;
-    mirrorDlg *m_mirrorDlg;
     int insideOffset;
     int outsideOffset;
     QWaitCondition pauseCond;
@@ -89,6 +88,8 @@ public:
     QMutex sync;
     int messageResult;
     void inspectWavefront();
+
+    cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask);
 
     void average(QList<wavefront *> wfList);
     void subtractWavefronts();

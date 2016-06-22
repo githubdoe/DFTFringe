@@ -221,14 +221,14 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
 
 }
 
-int ee95percent(cv::Mat data){
+int ee95percent(cv::Mat_<double> data){
 
     int center = (data.cols-1)/2;
     double sum = 0;
     vector<double> sums;
     for (int i = 1; i < center; ++i) {
-        sum += data.at<double>(center,i+center -1);
-        sum += data.at<double>(center,center-i);
+        sum += data(center,i+center -1);
+        sum += data(center,center-i);
         sums.push_back(sum);
 
     }

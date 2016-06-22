@@ -16,3 +16,5 @@ Report options? Enable what goes into it?
 Why does average have non zero values outside of mask area?
 
 
+Ellipse gaussian blure creates fringes.
+Ellipse reading saved wavefront causes fringes.

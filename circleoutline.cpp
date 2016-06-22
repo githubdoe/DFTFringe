@@ -122,8 +122,6 @@ void CircleOutline::enlarge(int del) {
     }
     m_p1.m_p.rx()-= del;
     m_p2.m_p.rx()+= del;
-
-
 }
 
 

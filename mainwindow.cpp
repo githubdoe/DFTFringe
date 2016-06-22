@@ -438,6 +438,10 @@ void MainWindow::updateMetrics(wavefront& wf){
     BestSC = m_mirrorDlg->cc + z1;
     metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing, m_mirrorDlg->lambda);
     metrics->mCC->setText(QString().sprintf("<FONT FONT SIZE = 7>%6.3lf",BestSC));
+    if (m_mirrorDlg->isEllipse()){
+        metrics->mCC->setText("NA");
+        metrics->mROC->setText("NA");
+    }
     m_outlineHelp->hide();
     metrics->show();
 }

@@ -26,11 +26,11 @@ public:
     wavefront();
     ~wavefront();
     wavefront(const wavefront &wf);
-    cv::Mat data;
-    cv::Mat nulledData;
-    cv::Mat mask;
-    cv::Mat workData;
-    cv::Mat workMask;
+    cv::Mat_<double> data;
+    cv::Mat_<double> nulledData;
+    cv::Mat_<bool> mask;
+    cv::Mat_<double> workData;
+    cv::Mat_<bool> workMask;
     std::vector<double> InputZerns;
     double gaussian_diameter;
     bool wasSmoothed;

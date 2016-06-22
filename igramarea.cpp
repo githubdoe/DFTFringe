@@ -189,13 +189,12 @@ void IgramArea::DrawSimIgram(void){
 // circularize the ellipse by expanding the image minor axis to match the major axis.
 void ::IgramArea::widen(){
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    if (!md.isEllipse())
+    if (md.m_outlineShape != ELLIPSE)
         return;
     int width = igramImage.width();
     int height = igramImage.height();
 
     if (!m_ellipse_widened){
-        double m = md.getMinorAxis();
         double scale = md.diameter/md.getMinorAxis();
         if (md.m_majorHorizontal){
             height *= scale;
@@ -736,7 +735,7 @@ void IgramArea::drawBoundary()
             double s1 = 1.;
             double s2 = 1.;
             mirrorDlg &md = *mirrorDlg::get_Instance();
-            if (md.m_isEllipse && !m_ellipse_widened){
+            if ((md.m_outlineShape == ELLIPSE) && !m_ellipse_widened){
                 if (md.m_majorHorizontal){
                     s2 = md.m_minorAxis / md.diameter;
                 }
@@ -839,10 +838,14 @@ void IgramArea::paintEvent(QPaintEvent *event)
                              (m_current_boundry == OutSideOutline) ? m_OutterP2 : m_innerP2);
 
         //painter.drawImage(dirtyRect, igramDisplay, dirtyRect);
-
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        double e = 1.;
+        if (md.isEllipse()){
+            e = md.m_minorAxis/md.diameter;
+        }
         //top ************************************************************
         int topx = circle.m_center.rx()  - viewW;
-        int topy = circle.m_center.ry() - circle.m_radius - viewW/2;
+        int topy = circle.m_center.ry() - circle.m_radius * e - viewW/2;
         int shifty = 0;
         if (topy < 0){
             shifty = -1 * topy;
@@ -857,7 +860,7 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
         //bottom *************************************************************
         roi.fill(QColor(0,0,0));
-        topy = (circle.m_center.ry() + circle.m_radius - viewW/2);
+        topy = (circle.m_center.ry() + circle.m_radius * e - viewW/2);
         shifty = 0;
         if (topy > m_withOutlines.height()){
             shifty = topy - m_withOutlines.height();
@@ -924,27 +927,39 @@ void IgramArea::createActions()
 
 void IgramArea::crop() {
     // add current bounds to crop history.
-    double rad = m_outside.m_radius;
+    double radx = m_outside.m_radius;
+    double rady = radx;
     double cx = m_outside.m_center.x();
     double cy = m_outside.m_center.y();
     QSettings set;
-    set.setValue("lastOutsideRad", rad);
+    set.setValue("lastOutsideRad", radx);
 
     set.setValue("lastinsideRad", m_center.m_radius);
     set.setValue("lastinsideCx", m_center.m_center.x());
     set.setValue("lastInsideCy", m_center.m_center.y());
     int width = igramImage.width();
-    int right = width - (rad + cx);
-    int left = fmax(0, cx - rad);
-    int top = fmax(0, cy - rad);
-    int bottom = igramImage.height() - (rad + cy);
+    int height = igramImage.height();
+    int right = width - (radx + cx);
+    int left = fmax(0, cx - radx);
+    int top,bottom;
 
+    top = fmax(0, cy - radx);
+    bottom = igramImage.height() - (radx + cy);
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+
+    if (md.isEllipse()){
+        double e = md.m_minorAxis/md.diameter;
+        rady =  radx * e;
+        top = fmax(0,cy - rady);
+        bottom = igramImage.height() - (rady + cy);
+    }
     int border = fmin(left,fmin(right,fmin(bottom,fmin(top,20))));
-    int x = cx - rad - border;
-    int y = cy - rad - border;
-    width = 2 * (rad + border);
+    int x = cx - radx - border;
+    int y = cy - rady - border;
+    width = 2 * (radx + border);
+    height = 2 * (rady + border);
 
-    igramImage = igramImage.copy(QRect(x, y, width, width));
+    igramImage = igramImage.copy(QRect(x, y, width, height));
 
     crop_dx = x;
     crop_dy = y;
@@ -962,7 +977,7 @@ void IgramArea::crop() {
     set.setValue("lastOutsideCy",cy);
     m_center.translate(QPointF(-crop_dx,-crop_dy));
     // need to rescale p1 and p2 because of the crop
-    scale = (double)height()/y;
+    scale = (double)(this->height())/y;
     m_OutterP1 = m_outside.m_p1.m_p;
     m_OutterP2 = m_outside.m_p2.m_p;
     m_innerP1 = m_center.m_p1.m_p;

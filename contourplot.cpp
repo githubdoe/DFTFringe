@@ -70,6 +70,7 @@ void SpectrogramData::setSurface(wavefront *surface) {
     m_wf = surface;
     setInterval( Qt::XAxis, QwtInterval(0, m_wf->workData.cols));
     setInterval( Qt::YAxis, QwtInterval(0, m_wf->workData.rows));
+qDebug() << "spectrogram "<< m_wf->workData.cols << m_wf->workData.cols;
 
 }
 
@@ -88,8 +89,7 @@ double SpectrogramData::value( double x, double y ) const
     if ((m_wf->workMask.at<uint8_t>((int)y,(int)x)) != 255){
         return -10;
     }
-    //qDebug() << m_wf->workData.at<double>(y,x);
-    return  (m_wf->workData.at<double>(y,x)* m_wf->lambda/550.) -zOffset;
+    return  (m_wf->workData(y,x)* m_wf->lambda/550.) -zOffset;
 
 }
 

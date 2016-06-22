@@ -270,7 +270,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
 
         }
         else if (wf->workMask.at<bool>(dy,dx)){
-            points << QPointF(radx,(units * (wf->workData.at<double>((int)dy,(int)dx)) *
+            points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx)) *
                                     wf->lambda/550.) +y_offset * units);
         }
         else

@@ -534,66 +534,6 @@ void GLWidget::DrawScene()
     glLineWidth(1.0);
 
 
-    /*
-    if ((m_surface_type == S3D) && m_draw_grid_overlay && m_FillMode != GL_LINE)
-    {
-        glEnable(GL_POLYGON_OFFSET_LINE);
-        glPolygonOffset(-1,-1);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glBegin (GL_QUADS);
-        // make the grid overlay
-        glColor3f(.5,.5,.5);
-        for (  n = 0; n < m_grids.size(); ++n)
-        {
-            //====== Turn on the primitive connection mode (connected)
-            //====== The strip of connected quads begins here
-            double
-                xi = m_grids[n].m_p1.x,
-                yi = ScaleDlg->m_scale * m_grids[n].m_p1.y,
-                zi = m_grids[n].m_p1.z,
-
-                xj = m_grids[n].m_p2.x,
-                yj = ScaleDlg->m_scale *m_grids[n].m_p2.y,
-                zj = m_grids[n].m_p2.z,
-
-                xk = m_grids[n].m_p3.x,
-                yk = ScaleDlg->m_scale *m_grids[n].m_p3.y,
-                zk = m_grids[n].m_p3.z,
-
-                xn = m_grids[n].m_p4.x,
-                yn = ScaleDlg->m_scale *m_grids[n].m_p4.y,
-                zn = m_grids[n].m_p4.z;
-
-                if (m_flip_y_view)
-                {
-                    zi = -zi;
-                    zj = -zj;
-                    zk = - zk;
-                    zn = -zn;
-                }
-                if (m_flip_x_view)
-                {
-                    xi = -xi;
-                    xj = - xj;
-                    xk = -xk;
-                    xn = -xn;
-                }
-
-
-                //====== Vertices are given in counter clockwise direction order
-
-                glVertex3f (xi, yi, zi);
-                glVertex3f (xj, yj, zj);
-                glVertex3f (xk, yk, zk);
-                glVertex3f (xn, yn, zn);
-            }
-
-        glEnd();
-        glDisable(GL_POLYGON_OFFSET_LINE);
-
-    }
-    */
-
     glColor3f(.4f, .4f, .8f);
     glBegin(GL_LINES);
     glVertex3f(left, bottom, RADIUS);
@@ -697,21 +637,6 @@ void GLWidget::DrawScene()
         glEnd();
     }
 
-    //filled left back wall
-    /*
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glColor4f(.7f, .9f, .7f,.5f);
-    glBegin (GL_QUADS);
-    glVertex3f(left-1,2 * bottom, -RADIUS);
-    glVertex3f(left-1,2 * top, -RADIUS);
-    glVertex3f(left-1,2 * top,RADIUS);
-    glVertex3f(left-1,2 * bottom,RADIUS);
-    glDisable(GL_BLEND);
-
-    glEnd();*/
 
 
     glPopMatrix();
@@ -753,19 +678,20 @@ void GLWidget::make_surface_from_doubles()
 
     int h = resized.rows;
     int w = resized.cols;
-    double xy_scale = 2.d * RADIUS/h;
+    double xy_scale = 2.d * RADIUS/w;
 
 
     // make the quads
-    double dhalf = ((double)h-1)/2.;
+    double dhalfx = ((double)w-1)/2.;
+    double dhalfy = (double)(h-1)/2.;
     for (int x = 0; x < w-step; x+=step)
     {
         for (int y = 0; y < h-step; y+=step)
         {
 
-            int nx = x  - dhalf;
-            int ny = y - dhalf;
-            double rho = sqrt(nx * nx + ny * ny)/dhalf;
+            int nx = x  - dhalfx;
+            int ny = y - dhalfy;
+            double rho = sqrt(nx * nx + ny * ny)/dhalfx;
             // ignore masked values.
             if (rho > 1.0 || rMask.at<uint8_t>(y,x) != 255  ||
                     rMask.at<uint8_t>(y+step,x) != 255 ||
@@ -790,9 +716,8 @@ void GLWidget::make_surface_from_doubles()
         int half = w/2;
         double edge = -1.25 * RADIUS;
         for (int y = 0 ; y < h-step; y += step)
-
         {
-            int ny = y - half;
+            int ny = y - h/2;
 
             if (rMask.at<uint8_t>(w/2,y) != 255)
                 continue;
@@ -800,10 +725,10 @@ void GLWidget::make_surface_from_doubles()
             QVector3D p1(edge, ny * xy_scale, resized.at<double>(h - 1 -y,half));
 
             m_vert_profile.push_back(p1);
-
-            p1.setY(edge);
-            p1.setX(ny * xy_scale);
-            p1.setZ(resized.at<double>(half,y));
+        }
+        for (int x = 0; x < w - step; x += step){
+            int nx = x - half;
+            QVector3D p1( nx * xy_scale,edge, resized.at<double>(half, x));
             m_horz_profile.push_back(p1);
 
         }
@@ -907,211 +832,6 @@ void GLWidget::ogheightMagValue(int val){
     updateGL();
 }
 
-/*
-void GLWidget::make_surface_fromZerns(void)
-{
-
-
-    int shift = - STEPS/2;
-    m_quads.clear();
-
-
-    int steps = STEPS;
-    if (m_FillMode ==GL_LINE)
-        steps = 50;
-
-    double ang_step = M_2_PI/steps;
-
-    double obs =  m_wf->m_inside.m_radius * 2;
-    ellipse igram_obs;
-    if (z_table.size())
-    {
-        igram_obs = z_table[m_current_zernike_surface].obs;
-        if (igram_obs.xrad)
-            igram_obs.normalize_to(z_table[m_current_zernike_surface].outside);
-    }
-
-    int rho_start = steps * obs;
-    int phi_end = steps;
-    for (int phi = 0; phi < phi_end; ++phi)
-    {
-        double ang = MPI + phi * ang_step;
-        double ang2 = MPI+( phi + 1) * ang_step;
-        double sin_of_phi1 =sin(ang);
-        double cos_of_phi1 = cos(ang);
-        double sin_of_phi2 = sin(ang2);
-        double cos_of_phi2 = cos(ang2);
-
-        for (int rho=rho_start ; rho < steps; ++rho)
-
-        {
-            double r1 = (double)rho/(double)steps;
-            double r2 = (double)(rho+1)/(double)(steps);
-            double x1 = cos_of_phi1 * r1;
-            double y1 = sin_of_phi1 * r1;
-
-            double x2 = cos_of_phi1 * r2;
-            double y2 = sin_of_phi1 * r2;
-
-            double x3 = cos_of_phi2 * r2;
-            double y3 = sin_of_phi2 * r2;
-
-            double x4 = cos_of_phi2 * r1;
-            double y4 = sin_of_phi2 * r1;
-
-            if ((igram_obs.xrad > 0.) &&
-                 (igram_obs.is_inside(x1,y1,0) ||
-                  igram_obs.is_inside(x2,y2,0) ||
-                  igram_obs.is_inside(x3,y3,0) ||
-                  igram_obs.is_inside(x4,y4,0)) ||
-                  r1 > m_edge_mask_percent || r2 > m_edge_mask_percent)
-                  continue;
-
-            CPoint3D p1;
-            p1.x = x1 * RADIUS;
-            p1.z = y1 * RADIUS;
-            p1.y = Wavefront(x1, -y1, Z_TERMS);;
-
-
-            CPoint3D p2;
-            p2.x = x2 * RADIUS;
-            p2.z = y2 * RADIUS;
-            p2.y = Wavefront(x2,-y2, Z_TERMS);;
-
-
-            CPoint3D p3;
-            p3.x = x3 * RADIUS;
-            p3.z = y3 * RADIUS;
-            p3.y = Wavefront(x3, -y3, Z_TERMS);;
-
-
-            CPoint3D p4;
-            p4.x = x4 * RADIUS;
-            p4.z = y4 * RADIUS;
-            p4.y = Wavefront(x4, -y4, Z_TERMS);
-
-
-
-            m_quads.push_back(CQuad(p4,p3,p2,p1));
-
-        }
-    }
-    if (m_draw_profiles_on_3d)
-    {
-        m_vert_profile.clear();
-        m_horz_profile.clear();
-
-        rho_start = steps * obs;
-        for (int rho = -steps ; rho < steps; ++rho)
-
-        {
-            double r1 = (double)rho/(double)steps;
-            double x1 = 0;
-            double y1 = r1;
-            double x2 = r1;
-            double y2 = 0;
-
-
-            if ((igram_obs.xrad > 0.) &&
-                 (igram_obs.is_inside(x1,y1,0) ||
-                  r1 > m_edge_mask_percent))
-              continue;
-            CPoint3D p1;
-            p1.x = -1.25 * RADIUS;
-            p1.z = y1 * RADIUS;
-            p1.y = Wavefront(x1, -y1, Z_TERMS) * m_lambda_adjust;
-            m_vert_profile.push_back(p1 );
-
-
-            p1.x = r1 * RADIUS;
-            p1.z = -1.25 * RADIUS;
-            p1.y = Wavefront(r1, 0, Z_TERMS) * m_lambda_adjust;
-
-            m_horz_profile.push_back(p1);
-        }
-
-    }
-    if (m_draw_grid_overlay)
-    {
-        steps = 30;
-        m_grids.clear();
-        ang_step = M2PI/steps;
-        phi_end = 30;
-
-        rho_start = steps * obs;
-        for ( phi = 0; phi < phi_end; ++phi)
-        {
-            double ang = MPI + phi * ang_step;
-            double ang2 = MPI+( phi + 1) * ang_step;
-            double sin_of_phi1 =sin(ang);
-            double cos_of_phi1 = cos(ang);
-            double sin_of_phi2 = sin(ang2);
-            double cos_of_phi2 = cos(ang2);
-
-            for (int rho=rho_start ; rho < steps; ++rho)
-
-            {
-                double r1 = (double)rho/(double)steps;
-                double r2 = (double)(rho+1)/(double)(steps);
-                double x1 = cos_of_phi1 * r1;
-                double y1 = sin_of_phi1 * r1;
-
-                double x2 = cos_of_phi1 * r2;
-                double y2 = sin_of_phi1 * r2;
-
-                double x3 = cos_of_phi2 * r2;
-                double y3 = sin_of_phi2 * r2;
-
-                double x4 = cos_of_phi2 * r1;
-                double y4 = sin_of_phi2 * r1;
-
-                if ((igram_obs.xrad > 0.) &&
-                     (igram_obs.is_inside(x1,y1,0) ||
-                      igram_obs.is_inside(x2,y2,0) ||
-                      igram_obs.is_inside(x3,y3,0) ||
-                      igram_obs.is_inside(x4,y4,0)) ||
-                      r1 > m_edge_mask_percent || r2 > m_edge_mask_percent)
-                      continue;
-
-                CPoint3D p1;
-                p1.x = x1 * RADIUS;
-                p1.z = y1 * RADIUS;
-                p1.y = Wavefront(x1, -y1, Z_TERMS);;
-
-
-                CPoint3D p2;
-                p2.x = x2 * RADIUS;
-                p2.z = y2 * RADIUS;
-                p2.y = Wavefront(x2,-y2, Z_TERMS);;
-
-
-                CPoint3D p3;
-                p3.x = x3 * RADIUS;
-                p3.z = y3 * RADIUS;
-                p3.y = Wavefront(x3, -y3, Z_TERMS);;
-
-
-                CPoint3D p4;
-                p4.x = x4 * RADIUS;
-                p4.z = y4 * RADIUS;
-                p4.y = Wavefront(x4, -y4, Z_TERMS);
-
-
-
-                m_grids.push_back(CQuad(p4,p3,p2,p1));
-
-            }
-        }
-    }
-
-
-
-
-return;
-
-
-}
-*/
 void GLWidget::xlightChanged(int value){
     m_LightParam[0] = value;
     QSettings set;

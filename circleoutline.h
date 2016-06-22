@@ -18,8 +18,6 @@
 #ifndef CIRCLEOUTLINE_H
 #define CIRCLEOUTLINE_H
 
-#ifndef CIRCLE_H
-#define CIRCLE_H
 
 #include "boundary.h"
 #include "gplus.h"
@@ -49,7 +47,49 @@ class CircleOutline: public boundary
     private:
 };
 
-#endif // CIRCLE_H
+class ellipseOutline: public boundary
+{
+public:
+    ellipseOutline();
+    ellipseOutline(QPointF center, double minorAxis, double majorAxis);
+    ellipseOutline(QPointF left, QPointF right, double ecc);
+    void draw(QPainter& painter, double scale);
+    bool isInside(QPointF& p , int offset = 0);
+    void enlarge(int del);
+    void translate(QPointF del);
+    void scale(double factor);
+
+
+    bool isValid();
+    QPointF m_center;
+    double m_minor;
+    double m_major;
+    double m_left;
+    double m_right;
+    double e;
+    gPlus m_p1;
+    gPlus m_p2;
+};
+
+class rectangleOutline: public boundary
+{
+public:
+    rectangleOutline();
+    rectangleOutline(QPointF upperLeft, QPointF lowerRight);
+    void draw(QPainter& painter, double scale);
+    bool isInside(QPointF& p , int offset = 0);
+    void enlarge(int del);
+    void translate(QPointF del);
+    void scale(double factor);
+    bool isValid();
+    QPointF m_upperLeft;
+    QPointF m_lowerRight;
+    gPlus m_p1;
+    gPlus m_p2;
+};
+QDataStream & operator<<(QDataStream & stream, const ellipseOutline &outline);
+QDataStream & operator<<(QDataStream & stream, const CircleOutline &outline);
+QDataStream & operator<<(QDataStream & stream, const rectangleOutline &outline);
 
 
 #endif // CIRCLEOUTLINE_H
