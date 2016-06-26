@@ -41,19 +41,8 @@ CircleOutline::CircleOutline(QPointF p1, QPointF p2)
     m_center.rx() = (double)(p1.x()+p2.x())/2.d;
     m_center.ry() = (double)(p1.y()+p2.y())/2.d;
 
-    QPointF start = p1;
-    QPointF endpos = p2;
-    if (start.x() > p2.x()) {
-        int t = p2.x();
-        endpos.rx() = start.x();
-        start.rx() = t;
-    }
-    if (p2.y() < p1.y()){
-        int t = p2.y();
-        endpos.ry() = p1.y();
-        start.ry() = t;
-    }
-    m_radius = (double)(endpos.x()- start.x())/2.d;
+
+    m_radius = abs(p1.x() - p2.x())/2.;
 }
 CircleOutline::CircleOutline()
 {   m_center = QPointF(-1,-1);
@@ -93,9 +82,8 @@ void CircleOutline::draw(QPainter& dc, double scale, double scale2){
         scale2 = scale;
 
     dc.drawEllipse(m_center * scale,m_radius * scale,m_radius* scale2);
-    dc.drawLine((m_center.x() -m_radius)* scale, m_center.y()* scale,scale *( m_center.x() + m_radius),
-            scale * m_center.y());
-    dc.drawLine(scale * m_center.x(), scale* (m_center.y() - m_radius), scale * m_center.x(), scale * (m_center.y() + m_radius));
+    dc.drawLine((m_center.x() -m_radius - 5)* scale, m_center.y()* scale, scale *( m_center.x() + m_radius + 5), scale * m_center.y());
+    dc.drawLine(scale * m_center.x(), m_center.y() - m_radius * scale2 - 5, scale * m_center.x(), m_center.y() + m_radius * scale2 + 5);
 }
 
 QVector<QPointF> CircleOutline::makeCircleofPoints(int cnt){

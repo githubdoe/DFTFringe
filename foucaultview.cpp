@@ -49,7 +49,10 @@ void foucaultView::on_makePb_clicked()
     m_guiTimer.stop();
     if (m_wf == 0 ||( m_wf->data.cols == 0))
         return;
-
+    if (mirrorDlg::get_Instance()->isEllipse()){
+        QMessageBox::warning(0,"warning","Foucaualt is not suppported for flat surfaces");
+        return;
+    }
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
     double pad = 1.1;
@@ -72,22 +75,11 @@ void foucaultView::on_makePb_clicked()
     }
 
 
-
-
-
-
-
-
     double coc_offset_mm = ui->rocOffsetSb->value() * unitMultiplyer;
-
-
-
 
     double b = (fl * 2) + coc_offset_mm;
     double pv =   ( sqrt((r2)+(fl * fl * 4.))
          - (sqrt(r2+ b * b) - coc_offset_mm) )/ (550 * 1.E-6);
-
-
 
     std::vector<double> zerns = m_wf->InputZerns;
     std::vector<double> newZerns = zerns;

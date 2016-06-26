@@ -236,7 +236,7 @@ RC_FILE = DFTFringe.rc
 
 
 # The application version
-VERSION = 1.8
+VERSION = 1.9
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
@@ -319,3 +319,5 @@ DISTFILES += \
     COPYING.txt \
     RevisionHistory.html \
     README.md
+
+    TRANSLATIONS    = dftfringe_fr.ts

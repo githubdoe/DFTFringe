@@ -42,6 +42,7 @@
 #include <qwt_scale_draw.h>
 #include <qlayout.h>
 #include "settings2.h"
+#include "mirrordlg.h"
 
 #define PITORAD  M_PI/180.;
 double g_angle = 270. * PITORAD; //start at 90 deg (pointing east)
@@ -263,8 +264,13 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
         double radx = rad * wf->diameter/2.;
+        double e = 1.;
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        if (md.isEllipse()){
+            e = md.m_verticalAxis/md.diameter;
+        }
         dx = radn * cos(g_angle + M_PI_2) + wf->m_outside.m_center.x();
-        dy = -radn * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y();
+        dy = -radn * e * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y();
         if (dy >= wf->data.rows || dx >= wf->data.cols || dy < 0 || dx < 0){
             points << QPointF(radx,0.0);
 

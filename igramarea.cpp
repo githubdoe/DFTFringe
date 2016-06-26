@@ -80,6 +80,7 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     setAttribute(Qt::WA_StaticContents);
     modified = false;
     scribbling = false;
+    verticalTracking = false;
     QSettings set;
     m_zoomBoxWidth = set.value("zoomBoxWidth", 200).toInt();
     centerPenColor = set.value("igramCenterLineColor", QColor("white").name()).toString();
@@ -121,8 +122,7 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomOut()));
     shortcut = new QShortcut(QKeySequence("1"), this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(edgeMode()));
-    shortcut = new QShortcut(QKeySequence("c"), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(widen()));
+
 
 }
 
@@ -177,7 +177,7 @@ void IgramArea::DrawSimIgram(void){
     outterPcount = 2;
     m_outsideHist.push(igramImage,m_outside);
     drawBoundary();
-    fitScale = 1;
+    fitScale = (double)parentWidget()->height()/(double)igramImage.height();
     zoomIndex = 1;
     scale = fitScale;
     m_filename = "simulatedIgram";
@@ -186,34 +186,6 @@ void IgramArea::DrawSimIgram(void){
     emit upateColorChannels(igramImage);
 }
 
-// circularize the ellipse by expanding the image minor axis to match the major axis.
-void ::IgramArea::widen(){
-    mirrorDlg &md = *mirrorDlg::get_Instance();
-    if (md.m_outlineShape != ELLIPSE)
-        return;
-    int width = igramImage.width();
-    int height = igramImage.height();
-
-    if (!m_ellipse_widened){
-        double scale = md.diameter/md.getMinorAxis();
-        if (md.m_majorHorizontal){
-            height *= scale;
-            shiftoutline(QPointF(0,height - igramImage.height())/2);
-        }
-        else {
-            width = igramImage.width() * scale;
-            shiftoutline(QPointF((width - igramImage.width())/2,0));
-        }
-        m_ellipse_widened = true;
-    }
-
-
-    igramImage = igramImage.scaled(width, height,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-    igramDisplay = igramImage.copy();
-    zoomIndex = 1;
-    resizeImage();
-    drawBoundary();
-}
 
 void IgramArea::doGamma(double gammaV){
 
@@ -246,7 +218,6 @@ bool IgramArea::openImage(const QString &fileName)
     QImage loadedImage;
     if (!loadedImage.load(fileName))
         return false;
-    m_ellipse_widened = false;
     if (mirrorDlg::get_Instance()->shouldFlipH())
         loadedImage = loadedImage.mirrored(true,false);
     hasBeenCropped = false;
@@ -460,14 +431,10 @@ void IgramArea::decrease(int i){
 }
 void IgramArea::zoomIn(){
     QPointF p = mapFromGlobal(QCursor::pos())/scale;
-
-    qDebug() << "POINT " << p;
     zoom(1,p);
 }
 void IgramArea::zoomOut(){
     QPointF p = mapFromGlobal(QCursor::pos())/scale;
-
-    qDebug() << "POINT " << p;
     zoom(-1, p);
 }
 void IgramArea::zoomFull(){
@@ -478,7 +445,6 @@ void IgramArea::zoomFull(){
 }
 void IgramArea::zoom(int del, QPointF zoompt){
 
-    qDebug()<< zoompt << del;
     zoomIndex += del;
     if (zoomIndex < 1) {
         zoomIndex = 1;
@@ -489,8 +455,6 @@ void IgramArea::zoom(int del, QPointF zoompt){
         return;
 
     }
-
-    qDebug() << "Zoom Index "<< zoomIndex;
 
     if (zoomIndex > 1) {
 
@@ -518,7 +482,6 @@ void IgramArea::wheelEvent (QWheelEvent *e)
 {
     if (igramImage.isNull())
         return;
-    qDebug() << "Scroll wheel " << e->delta();
 
     QString result;
     if (e->delta() == 0)
@@ -561,7 +524,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         if (event->modifiers() & Qt::ShiftModifier){
             setCursor(Qt::OpenHandCursor);
             dragMode = true;
-            lastPoint = Raw;
+            lastPoint = Raw/scale;
             drawBoundary();
             return;
         }
@@ -581,13 +544,19 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         else {
             Pcount = &innerPcount;
         }
-
+        // if doing ellipse and on the center line
+        if (*Pcount == 2 && mirrorDlg::get_Instance()->isEllipse()){
+            int middle = (m_OutterP1.x() + m_OutterP2.x())/2;
+            if (abs(middle-pos.x())< 50){
+                verticalTracking = true;
+                return;
+            }
+        }
         // if within 50 pixels of the old p1 then replace the old one with this one
         if (*Pcount > 0){    // if count is > 0 then there must be two points.
             int del = distance(pos,m_OutterP1);
             int del2 = distance(pos,m_OutterP2);
-
-            if (del < 200) {
+            if (del < 50) {
                 if (*Pcount > 1){
                     if (m_current_boundry == OutSideOutline) {
                         m_OutterP1= m_OutterP2;
@@ -599,7 +568,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
                     }
                 }
             }
-            else if (del2< 300){
+            else if (del2< 50){
                 if (m_current_boundry == OutSideOutline){
                     m_OutterP2 = pos;
                 }
@@ -637,27 +606,37 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
 
     QPointF pos = event->pos();
     QPointF scaledPos = pos/scale;
+
+    // truncat point to int.
     scaledPos.setX((int)scaledPos.x());
     scaledPos.setY((int)scaledPos.y());
+    if ((event->buttons() & Qt::LeftButton) && verticalTracking) {
 
+        int minorRad = abs(m_OutterP2.y() - scaledPos.y());
+        int majorRad = fabs((m_OutterP2.x() - m_OutterP1.x()))/2.;
+        double e = (double)minorRad/majorRad;
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        md.m_verticalAxis = md.diameter * e;
+        drawBoundary();
+        return;
+    }
     if ((event->buttons() & Qt::LeftButton) && scribbling) {
         if (m_current_boundry == OutSideOutline){
             outterPcount = 2;
             m_OutterP2 = scaledPos;
-            m_OutterP1.ry() = m_OutterP2.y();
-            m_OutterP2.ry() = m_OutterP1.y();
+            m_OutterP1.ry() = scaledPos.y();
+
         }
         else {
             innerPcount = 2;
             m_innerP2 = scaledPos;
-            m_innerP1.ry() = m_innerP2.y();
-            m_innerP2.ry() = m_innerP1.y();
+
         }
         drawBoundary();
     }
     else if ((event->buttons() & Qt::LeftButton) & dragMode){
         if( outterPcount == 2) {
-            QPointF del = pos - lastPoint;
+            QPointF del = scaledPos - lastPoint;
             if (m_current_boundry == OutSideOutline) {
                 m_outside.translate(del);
                 m_OutterP1 += del;
@@ -670,7 +649,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
             }
 
             drawBoundary();
-            lastPoint = pos;
+            lastPoint = scaledPos;
 
         }
     }
@@ -681,6 +660,12 @@ void IgramArea::mouseReleaseEvent(QMouseEvent *event)
     if (igramImage.isNull())
         return;
     setCursor(Qt::ArrowCursor);
+    if (event->button() == Qt::LeftButton && verticalTracking) {
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        double e = md.m_verticalAxis/ md.diameter;
+        md.setMinorAxis( e * md.diameter);
+    }
+
 
     if (event->button() == Qt::LeftButton && (scribbling || dragMode)) {
         if (m_current_boundry == OutSideOutline){
@@ -696,6 +681,7 @@ void IgramArea::mouseReleaseEvent(QMouseEvent *event)
 
     drawBoundary();
     scribbling = false;
+    verticalTracking = false;
     dragMode = false;
 }
 
@@ -728,22 +714,17 @@ void IgramArea::drawBoundary()
 
     CircleOutline outside(m_OutterP1,m_OutterP2);
     CircleOutline inside(m_innerP1, m_innerP2);
+    double s2 = 1.;
     if (!m_hideOutlines){
         painter.setOpacity(opacity * .01);
         if (outside.m_radius > 0){
             painter.setPen(QPen(edgePenColor, edgePenWidth, (Qt::PenStyle)lineStyle));
-            double s1 = 1.;
-            double s2 = 1.;
+
             mirrorDlg &md = *mirrorDlg::get_Instance();
-            if ((md.m_outlineShape == ELLIPSE) && !m_ellipse_widened){
-                if (md.m_majorHorizontal){
-                    s2 = md.m_minorAxis / md.diameter;
-                }
-                else {
-                    s1 = md.m_minorAxis/ md.diameter;
-                }
-            }
-            outside.draw(painter,s1,s2);
+            if ((md.isEllipse())){
+                s2 = md.m_verticalAxis/ md.diameter;
+                           }
+            outside.draw(painter,1.,s2);
         }
         if (inside.m_radius > 0 && innerPcount > 1){
             painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
@@ -753,9 +734,15 @@ void IgramArea::drawBoundary()
     }
     QString msg;
     QString msg2;
-    if (outterPcount == 2)
-        msg = QString().sprintf("Outside: x=%6.1lf y=%6.1lf, Radius= %6.1lf  ",
-                                outside.m_center.x(),outside.m_center.y(), outside.m_radius);
+    if (outterPcount == 2){
+        QString vert = "";
+        if (mirrorDlg::get_Instance()->isEllipse()){
+            vert = QString().sprintf("Vertical Axis: %6.1f", outside.m_radius * s2);
+        }
+        msg = QString().sprintf("Outside: x=%6.1lf y=%6.1lf, Radius= %6.1lf  %s",
+                                outside.m_center.x(),outside.m_center.y(), outside.m_radius,vert.toStdString().c_str());
+
+    }
     m_outside = outside;
     if (innerPcount == 2){
         m_center = inside;
@@ -802,7 +789,6 @@ void IgramArea::resizeImage()
     }
     try {
         QImage newImage(newSize, QImage::Format_RGB32);
-        qDebug()<< QString().sprintf("%d",newImage.width());
         if (igramImage.isNull())
             return;
         QPainter painter(&newImage);
@@ -841,7 +827,7 @@ void IgramArea::paintEvent(QPaintEvent *event)
         mirrorDlg &md = *mirrorDlg::get_Instance();
         double e = 1.;
         if (md.isEllipse()){
-            e = md.m_minorAxis/md.diameter;
+            e = md.m_verticalAxis/md.diameter;
         }
         //top ************************************************************
         int topx = circle.m_center.rx()  - viewW;
@@ -948,7 +934,7 @@ void IgramArea::crop() {
     mirrorDlg &md = *mirrorDlg::get_Instance();
 
     if (md.isEllipse()){
-        double e = md.m_minorAxis/md.diameter;
+        double e = md.m_verticalAxis/md.diameter;
         rady =  radx * e;
         top = fmax(0,cy - rady);
         bottom = igramImage.height() - (rady + cy);

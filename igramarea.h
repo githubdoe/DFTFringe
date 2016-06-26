@@ -162,7 +162,6 @@ public slots:
     void zoomFull();
     void toggleHideOutline();
     void edgeMode();
-    void widen();
 signals:
     void enableShiftButtons(bool);
     void statusBarUpdate(QString);
@@ -191,6 +190,7 @@ private:
     void zoom(int del, QPointF zoompt);
     bool modified;
     bool scribbling;
+    bool verticalTracking;
     int edgePenWidth;
     int centerPenWidth;
     double opacity;
@@ -198,7 +198,6 @@ private:
     bool needToConvertBGR;
     QColor centerPenColor;
     QColor edgePenColor;
-    bool m_ellipse_widened;
 public:
     QImage igramDisplay;
 private:

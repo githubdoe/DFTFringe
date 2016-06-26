@@ -365,7 +365,7 @@ void SurfaceManager::makeMask(int waveNdx){
     mirrorDlg &md = *mirrorDlg::get_Instance();
     double rx = radm;
     double rx2 = rx * rx;
-    double ry = rx * md.m_minorAxis/md.diameter;
+    double ry = rx * md.m_verticalAxis/md.diameter;
     double ry2 = ry * ry;
     for (int y = 0; y < height; ++y){
         for (int x = 0; x < width; ++x){
@@ -2058,8 +2058,8 @@ void SurfaceManager::report(){
             "<tr><td> RMS: " + QString().number(wf->std,'f',3) + " waves at 550nm</td><td>Strehl: " + metrics->mStrehl->text() +
             "</td><td>Best Fit Conic: "+metrics->mCC->text() + "</td></tr>"
             "<tr><td>Desired Conic: " +QString::number(md->cc) + "</td><td>" +
-            ((md->doNull) ? QString().sprintf("SANull: %6.4lf",md->z8) : "") + "</td>"
-            "<td>Test Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
+            ((md->doNull) ? QString().sprintf("SANull: %6.4lf",md->z8) : "No software Null") + "</td>"
+            "<td>Waves per fringe: " + QString::number(md->fringeSpacing) + "<br>Test Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
             "</table></p>";
 
     // zerenike values

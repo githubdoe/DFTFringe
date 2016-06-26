@@ -47,7 +47,7 @@ void contourView::showContextMenu(const QPoint &pos)
 
     // Create menu and insert some actions
     QMenu myMenu;
-    QString txt = (zoomed)? "Restore to MainWindow" : "FullScreen";
+    QString txt = (zoomed)? tr("Restore to MainWindow") : tr("FullScreen");
     myMenu.addAction(txt,  this, SLOT(zoom()));
 
     // Show context menu at handling position

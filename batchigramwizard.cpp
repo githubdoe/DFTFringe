@@ -108,14 +108,14 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
 
     connect(this, SIGNAL(processBatchList(QStringList)), qobject_cast<MainWindow *>(manager), SLOT(batchProcess(QStringList)));
 
-    QPushButton *addFiles = new QPushButton("Add Files");
+    QPushButton *addFiles = new QPushButton(tr("Add Files"));
     connect( addFiles, SIGNAL(pressed()), this, SLOT(addFiles()));
-    batchIgramWizard::autoRb = new QRadioButton("Auto",this);
-    batchIgramWizard::manualRb = new QRadioButton("manual",this);
+    batchIgramWizard::autoRb = new QRadioButton(tr("Auto"),this);
+    batchIgramWizard::manualRb = new QRadioButton(tr("manual"),this);
     batchIgramWizard::manualRb->setChecked(true);
 
     QHBoxLayout  *hlayout = new QHBoxLayout();
-    batchIgramWizard::goPb = new QPushButton("Process Igrams",this);
+    batchIgramWizard::goPb = new QPushButton(tr("Process Igrams"),this);
     connect(batchIgramWizard::goPb, SIGNAL(pressed()), this, SLOT(processBatch()));
     batchIgramWizard::goPb->setStyleSheet("QPushButton{"
                        " background-color: red;"

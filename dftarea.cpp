@@ -29,32 +29,26 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data){
     int width = data.cols;
     int height = data.rows;
 
-    double radm = ceil(outside.m_radius)+1;
+    double radm = ceil(outside.m_radius) + 1;
+    double rady = radm;
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    if (md.isEllipse())
+        rady = radm * md.m_verticalAxis/md.diameter;
     double rado = center.m_radius;
     double cx = outside.m_center.x();
     double cy = outside.m_center.y();
     cv::Mat mask = cv::Mat::zeros(height,width,CV_8UC1);
-    mirrorDlg &md = *mirrorDlg::get_Instance();
-    double rx = outside.m_radius;
+
+    double rx = outside.m_radius-1;
     double rx2 = rx * rx;
-    double ry = rx * md.m_minorAxis/md.diameter;
+    double ry = rx * md.m_verticalAxis/md.diameter;
     double ry2 = ry * ry;
     for (int y = 0; y < height; ++y){
         for (int x = 0; x < width; ++x){
-            if (!md.isEllipse()){
-                double dx = (double)(x - cx)/(radm);
-                double dy = (double)(y - cy)/(radm);
-                if (sqrt(dx * dx + dy * dy) <= 1.)
-                    mask.at<uchar>(y,x) = 255;
-            }
-            else {
-                if (fabs(x -cx) > rx || fabs(y -cy) > ry)
-                    continue;
-                double v = pow(x - cx, 2)/rx2 + pow(y - cy, 2)/ry2;
-                if (v <= 1)
-                    mask.at<uchar>(y,x) = 255;
-            }
-
+            double dx = (double)(x - cx)/(radm);
+            double dy = (double)(y - cy)/(rady);
+            if (sqrt(dx * dx + dy * dy) <= 1.)
+                mask.at<uchar>(y,x) = 255;
         }
     }
     cx = center.m_center.x();
@@ -91,42 +85,36 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     QSettings set;
     m_center_filter = set.value("DFT Center Filter", 10).toDouble();
     emit updateFilterSize(m_center_filter);
+
+
     /*
-        srand(time(NULL));
-    for (int i = 0; i < 5; ++i){
     QwtPlot *test = new QwtPlot();
 
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->attach(test);
     QPolygonF points;
-    QPolygonF runningAvg;
-    QPolygonF noise;
-    double avg = 0;
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    double roc = md.roc;
+    double diam = md.diameter;
+    double r3 = roc * roc * roc;
+    double d4 = diam * diam * diam * diam;
 
 
-    for (int i = 0; i < 50; ++i){
-        double n = double((rand()%100 - 50)/100.);
-        noise << QPointF(i, n);
-        double v = 1. + n;
-        points << QPointF( i,  v );
-        avg += v;
-        runningAvg << QPointF(i, avg/(i+1));
+    for (double i = 0; i < .03; i += .0001){
+    double z1 = -i * 384. * r3 * md.lambda * 1.E-6/(d4);
+
+        points << QPointF( -i,  z1 );
+
     }
-    QwtPlotCurve *c3 = new QwtPlotCurve("noise");
-    c3->setSamples(noise);
-    c3->setPen(QPen(Qt::green));
-    //c3->attach(test);
-    QwtPlotCurve *c1 = new QwtPlotCurve("signal");
-    c1->setSamples(points);
-    c1->attach(test);
-    QwtPlotCurve *c2 = new QwtPlotCurve("Avg");
-    c2->setSamples(runningAvg);
-    c2->setPen(QPen(QColor(Qt::blue)));
-    c2->attach(test);;
-    test->resize(800,200);
+    test->setAxisTitle( test->xBottom, "Z8" );
+    test->setAxisTitle( test->yLeft, "Best conic" );
+    QwtPlotCurve *c3 = new QwtPlotCurve("Best fit Conic");
+    c3->setSamples(points);
+    c3->attach(test);
+    test->resize(800,800);
     test->show();
-    }
     */
+
 }
 
 DFTArea::~DFTArea()
@@ -169,14 +157,19 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double centerX = igramArea->m_outside.m_center.x();
     double centerY = igramArea->m_outside.m_center.y();
     double rad = igramArea->m_outside.m_radius;
+    double rady = rad;
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    if (md.isEllipse()){
+        rady = rady * md.m_verticalAxis/ md.diameter;
+    }
     double radpix = ceil(rad);
     double left = centerX - radpix;
-    double top = centerY - radpix;
+    double top = centerY - rady;
     vector<Mat > bgr_planes;
     top = max(top,0.);
     left = max(left,0.);
     int width = 2. * (radpix);
-    int height = width;
+    int height = 2. * rady;
     width = min(width, img.width());
     height = min(height, img.height());
 
@@ -812,6 +805,7 @@ cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask){
     // plane generation, Z = Ax + By + C
     // distance calculation d = Ax + By - z + C / sqrt(A^2 + B^2 + C^2)
 qDebug() << coeff(0) << coeff(1) << coeff(2);
+
     cv::Mat_<double> newPhase(phase.size());
     for (int y = 0; y < phase.rows; ++y){
         for (int x = 0; x  < phase.cols; ++x){
@@ -857,11 +851,19 @@ void DFTArea::makeSurface(){
     if (md->fringeSpacing != 1.){
         result *= md->fringeSpacing;
     }
-    if (md->isEllipse())
-        result = subtractPlane(result, m_mask);
 
-    if (m_vortexDebugTool->m_showUnwrapped)
+    if (md->isEllipse()) {
+        CircleOutline t = m_outside;
+        t.enlarge(-2);
+
+        m_mask = makeMask(t,m_center, result);
+        result = subtractPlane(result, m_mask);
+    }
+
+    if (m_vortexDebugTool->m_showUnwrapped){
+
         showData("result surface", result.clone());
+    }
 
     emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName());
 

@@ -67,7 +67,7 @@
       <item row="2" column="3" colspan="2">
        <widget class="QLineEdit" name="diameter">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Daimeter of mirror or Major Axis of Ellipse&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Daimeter of mirror or Horizontal axis of ellipse.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
@@ -192,22 +192,22 @@ Wave Length nm</string>
       <string>Elliptical outline</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="1">
-       <widget class="QCheckBox" name="majorHorizontalCb">
-        <property name="text">
-         <string>Major axis is horizontal</string>
-        </property>
-        <property name="checked">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="ellipseShape">
+        <property name="enabled">
          <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>Elliptical FLat or Nulled Optics</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
+      <item row="2" column="0" colspan="2">
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
          <widget class="QLabel" name="label_9">
           <property name="text">
-           <string>Minor Axis</string>
+           <string>Vertical Axis</string>
           </property>
          </widget>
         </item>
@@ -219,16 +219,6 @@ Wave Length nm</string>
          </widget>
         </item>
        </layout>
-      </item>
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="ellipseShape">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>Ellipse</string>
-        </property>
-       </widget>
       </item>
      </layout>
     </widget>

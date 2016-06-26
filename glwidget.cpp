@@ -678,7 +678,7 @@ void GLWidget::make_surface_from_doubles()
 
     int h = resized.rows;
     int w = resized.cols;
-    double xy_scale = 2.d * RADIUS/w;
+    double xy_scale = 2.d * RADIUS/std::max(h,w);
 
 
     // make the quads
@@ -693,7 +693,7 @@ void GLWidget::make_surface_from_doubles()
             int ny = y - dhalfy;
             double rho = sqrt(nx * nx + ny * ny)/dhalfx;
             // ignore masked values.
-            if (rho > 1.0 || rMask.at<uint8_t>(y,x) != 255  ||
+            if (rMask.at<uint8_t>(y,x) != 255  ||
                     rMask.at<uint8_t>(y+step,x) != 255 ||
                     rMask.at<uint8_t>(y+step,x+step) != 255 ||
                     rMask.at<uint8_t>(y, x+step) != 255 )
@@ -719,17 +719,20 @@ void GLWidget::make_surface_from_doubles()
         {
             int ny = y - h/2;
 
-            if (rMask.at<uint8_t>(w/2,y) != 255)
+            if (rMask.at<uint8_t>(y, half) != 255)
                 continue;
 
             QVector3D p1(edge, ny * xy_scale, resized.at<double>(h - 1 -y,half));
 
             m_vert_profile.push_back(p1);
         }
+        half = h/2;
         for (int x = 0; x < w - step; x += step){
-            int nx = x - half;
-            QVector3D p1( nx * xy_scale,edge, resized.at<double>(half, x));
-            m_horz_profile.push_back(p1);
+            int nx = x - w/2;
+            if (rMask.at<uint8_t>(half,x) == 255){
+                QVector3D p1( nx * xy_scale,edge, resized.at<double>(half, x));
+                m_horz_profile.push_back(p1);
+            }
 
         }
 

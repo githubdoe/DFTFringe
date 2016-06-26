@@ -70,8 +70,8 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->minorAxisEdit->setEnabled(m_outlineShape == ELLIPSE);
     ui->minorAxisEdit->setText(QString::number(settings.value("ellipseMinorAxis", 50.).toDouble()));
     connect(&spacingChangeTimer, SIGNAL(timeout()), this, SLOT(spacingChangeTimeout()));
-    m_majorHorizontal = settings.value("ellispeMajorHorizontal", true).toBool();
-    ui->majorHorizontalCb->setChecked(m_majorHorizontal);
+
+    ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
 
 }
 
@@ -136,8 +136,7 @@ void mirrorDlg::on_saveBtn_clicked()
     file.write((char*)&flipv,1);
     file.write((char*)&zeros,3); // remainder vr
     file.write((char*)&m_outlineShape,4);  // use ellipse
-    file.write((char*)&m_minorAxis,8);  // minor axis
-    file.write((char*)&m_majorHorizontal,1);
+    file.write((char*)&m_verticalAxis,8);  // minor axis
 
     file.close();
     QFileInfo info(fileName);
@@ -155,6 +154,10 @@ void mirrorDlg::loadFile(QString & fileName){
         return;
     }
     QSettings settings;
+
+    // clear ellipse in case this is an old config that does not have it.
+    ui->ellipseShape->setChecked(false);
+    m_outlineShape = CIRCLE;
     QFileInfo info(fileName);
 
     emit newPath(info.absolutePath());
@@ -274,21 +277,14 @@ void mirrorDlg::loadFile(QString & fileName){
             file.read(buf,4);
             m_outlineShape = *(outlineShape*)buf;
             ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
+            ui->minorAxisEdit->setEnabled(m_outlineShape == ELLIPSE);
         }
-        // minor axis
+        // vertical axis
         if (file.tellg() > 0){
             file.read(buf,8);
-            m_minorAxis = *(double*)buf;
-            ui->minorAxisEdit->setText(QString::number(m_minorAxis));
+            m_verticalAxis = *(double*)buf;
+            ui->minorAxisEdit->setText(QString::number(m_verticalAxis));
         }
-        // major is horizontal
-        if (file.tellg() > 0){
-            file.read(buf,1);
-            m_majorHorizontal = *(bool*)buf;
-            file.read(buf,3);
-            ui->majorHorizontalCb->setChecked(m_majorHorizontal);
-        }
-
 
         FNumber = roc/(2. * diameter);
         ui->FNumber->blockSignals(true);
@@ -421,7 +417,7 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
      ui->diameter->blockSignals(false);
      ui->roc->blockSignals(false);
      ui->minorAxisEdit->blockSignals(true);
-     ui->minorAxisEdit->setText(QString().sprintf(("%6.2lf"),m_minorAxis/div));
+     ui->minorAxisEdit->setText(QString().sprintf(("%6.2lf"),m_verticalAxis/div));
 }
 
 void mirrorDlg::on_buttonBox_accepted()
@@ -439,6 +435,7 @@ void mirrorDlg::on_buttonBox_accepted()
     settings.setValue("config fringe spacing", fringeSpacing);
     //settings.setValue("config unitsMM", mm);
     settings.setValue("config doNull",doNull);
+    settings.setValue("outlineShape",(int)m_outlineShape);
     if (m_obsChanged)
         emit obstructionChanged();
     emit recomputeZerns();
@@ -481,17 +478,14 @@ void mirrorDlg::on_minorAxisEdit_textChanged(const QString &arg1)
 {
     QSettings set;
     set.setValue("ellipseMinorAxis", arg1.toDouble());
-    m_minorAxis = arg1.toDouble();
+    m_verticalAxis = arg1.toDouble();
 }
 
-void mirrorDlg::on_majorHorizontalCb_clicked(bool checked)
-{
-    m_majorHorizontal = checked;
-    QSettings set;
-    set.setValue("ellispeMajorHorizontal", checked);
+void mirrorDlg::setMinorAxis(double val){
+    m_verticalAxis = val;
+    ui->minorAxisEdit->setText(QString::number(val));
+    //on_minorAxisEdit_textChanged( QString::number(val));
 }
-
-
 
 void mirrorDlg::on_ellipseShape_clicked(bool checked)
 {

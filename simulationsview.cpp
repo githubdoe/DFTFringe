@@ -87,10 +87,12 @@ SimulationsView::~SimulationsView()
 
 void SimulationsView::setSurface(wavefront *wf){
     m_wf = wf;
-    if (wf == 0){
+
+    if (wf == 0 ){
         needs_drawing = false;
         return;
     }
+
     ui->MakePB->setEnabled((wf != 0));
     needs_drawing = true;
 
@@ -300,8 +302,13 @@ void SimulationsView::mtf(cv::Mat star, QString txt, QColor color){
 void SimulationsView::on_MakePB_clicked()
 {
     m_guiTimer.stop();
+
     if (m_wf == 0)
         return;
+    if (mirrorDlg::get_Instance()->isEllipse()){
+        QMessageBox::warning(0,"warning","Star test simulation is not suppported for flat surfaces");
+        return;
+    }
     bool wasAliased = false;
 
     QApplication::setOverrideCursor(Qt::WaitCursor);

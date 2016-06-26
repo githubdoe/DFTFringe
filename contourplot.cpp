@@ -70,8 +70,6 @@ void SpectrogramData::setSurface(wavefront *surface) {
     m_wf = surface;
     setInterval( Qt::XAxis, QwtInterval(0, m_wf->workData.cols));
     setInterval( Qt::YAxis, QwtInterval(0, m_wf->workData.rows));
-qDebug() << "spectrogram "<< m_wf->workData.cols << m_wf->workData.cols;
-
 }
 
 double SpectrogramData::value( double x, double y ) const
@@ -81,9 +79,6 @@ double SpectrogramData::value( double x, double y ) const
         return sqrt(x * x + y * y) -.1;
 
     if (y >= m_wf->workData.rows || x >= m_wf->workData.cols || y < 0 || x < 0){
-        //qDebug() << QString().sprintf("Warning contour index out of range %d %d %lf %lf %lf %d %d ",
-        //                              dx,dy,x,y,m_sf, m_wf->workData.cols, m_wf->workData.rows);
-
         return -10.0;
     }
     if ((m_wf->workMask.at<uint8_t>((int)y,(int)x)) != 255){
@@ -251,7 +246,7 @@ void ContourPlot::setSurface(wavefront * wf) {
 
 
     QwtScaleWidget *rightAxis = axisWidget( QwtPlot::yRight );
-    rightAxis->setTitle( "wavefront error at 550nm" );
+    rightAxis->setTitle(tr( "wavefront error at 550nm") );
     rightAxis->setColorBarEnabled( true );
     rightAxis->setColorBarWidth(30);
     if (!m_minimal){
@@ -275,16 +270,7 @@ void ContourPlot::setSurface(wavefront * wf) {
 
     setFooter(name + QString().sprintf(" %6.3lfrms",wf->std));
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode, false );
-//    QwtPlotRescaler *d_rescaler = new QwtPlotRescaler(canvas());
-//    d_rescaler->setRescalePolicy(QwtPlotRescaler::Fitting);
-//    d_rescaler->setReferenceAxis(QwtPlot::yLeft);
-//    d_rescaler->setAspectRatio(QwtPlot::xBottom, 1.0);
-//    d_rescaler->setAspectRatio(QwtPlot::yRight, 0.0);
 
-//    d_rescaler->setIntervalHint(Qt::XAxis, d_spectrogram->data()->interval( Qt::XAxis ));
-//    d_rescaler->setIntervalHint(Qt::YAxis, d_spectrogram->data()->interval( Qt::YAxis ));
-//    for ( int axis = 0; axis < QwtPlot::axisCnt; axis++ )
-//        setAxisAutoScale(axis);
     plotLayout()->setAlignCanvasToScales(true);
     showContoursChanged(contourRange);
 
@@ -309,30 +295,6 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
 
     plotLayout()->setAlignCanvasToScales( true );
     initPlot();
-
-    // LeftButton for the zooming
-    // MidButton for the panning
-    // RightButton: zoom out by 1
-    // Ctrl+RighButton: zoom out to full size
-/*
-    QwtPlotZoomer* zoomer = new MyZoomer( canvas() );
-    zoomer->setMousePattern( QwtEventPattern::MouseSelect2,
-                             Qt::RightButton, Qt::ControlModifier );
-    zoomer->setMousePattern( QwtEventPattern::MouseSelect3,
-                             Qt::RightButton );
-
-    QwtPlotPanner *panner = new QwtPlotPanner( canvas() );
-    panner->setAxisEnabled( QwtPlot::yRight, false );
-    panner->setMouseButton( Qt::MidButton );
-*/
-    // Avoid jumping when labels with more/less digits
-    // appear/disappear when scrolling vertically
-
-
-
-    //const QColor c( Qt::darkBlue );
-    //zoomer->setRubberBandPen( c );
-    //zoomer->setTrackerPen( c );
 
 }
 void ContourPlot::initPlot(){

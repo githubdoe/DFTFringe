@@ -27,17 +27,17 @@ ContourTools::ContourTools(QWidget *parent) :
     ui(new Ui::ContourTools)
 {
     ui->setupUi(this);
-    ui->ColorMapCB->addItem("Hot cold");
-    ui->ColorMapCB->addItem("Tropical");
-    ui->ColorMapCB->addItem("Vibrant");
-    ui->ColorMapCB->addItem("Gray");
-    ui->ColorMapCB->addItem(" > Error limits");
-    ui->ColorMapCB->addItem("user map");
-    ui->ColorMapCB->addItem("OpenFringe");
+    ui->ColorMapCB->addItem(tr("Hot cold"));
+    ui->ColorMapCB->addItem(tr("Tropical"));
+    ui->ColorMapCB->addItem(tr("Vibrant"));
+    ui->ColorMapCB->addItem(tr("Gray"));
+    ui->ColorMapCB->addItem(tr(" > Error limits"));
+    ui->ColorMapCB->addItem(tr("user map"));
+    ui->ColorMapCB->addItem(tr("OpenFringe"));
 
-    ui->colorRangeCB->addItem("Auto");
-    ui->colorRangeCB->addItem("Min/Max");
-    ui->colorRangeCB->addItem("Fractions of Wave");
+    ui->colorRangeCB->addItem(tr("Auto"));
+    ui->colorRangeCB->addItem(tr("Min/Max"));
+    ui->colorRangeCB->addItem(tr("Fractions of Wave"));
 
     QSettings s;
     int ndx = s.value("colorMap ndx", 1).toInt();
@@ -45,8 +45,8 @@ ContourTools::ContourTools(QWidget *parent) :
     double v = s.value("contourSteps", .1).toDouble();
     ui->contoursteps->setValue(v);
 
-    ui->zeroOffsetCB->addItem("Middle");
-    ui->zeroOffsetCB->addItem("Minimum");
+    ui->zeroOffsetCB->addItem(tr("Middle"));
+    ui->zeroOffsetCB->addItem(tr("Minimum"));
     ui->contoursteps->setSingleStep(.01);
     ui->contoursteps->setMinimum(.01);
     ui->contoursteps->setDecimals(3);

@@ -58,9 +58,10 @@ public:
     void newLambda(QString v);
     double getMinorAxis();
     bool m_majorHorizontal;
-    double m_minorAxis;
+    double m_verticalAxis;
     outlineShape m_outlineShape;
     bool isEllipse();
+    void setMinorAxis(double val);
 
 private slots:
     void on_ReadBtn_clicked();
@@ -92,8 +93,6 @@ private slots:
 
     void on_minorAxisEdit_textChanged(const QString &arg1);
     void spacingChangeTimeout();
-
-    void on_majorHorizontalCb_clicked(bool checked);
 
     void on_ellipseShape_clicked(bool checked);
 

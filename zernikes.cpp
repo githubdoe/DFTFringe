@@ -40,9 +40,7 @@ void dump_matrix (double *a, int nrows, int ncols, char *desc)
 
 extern int Zw[];
 double computeRMS(int term,  double val){
-    double Sigma = (val * val) / Zw[term];
-    Sigma = sqrt(Sigma);
-    return Sigma;
+    return val /sqrt( Zw[term]);
 }
 
 zern_spec::zern_spec(int order)

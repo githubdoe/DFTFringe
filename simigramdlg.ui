@@ -18,6 +18,12 @@
     <layout class="QFormLayout" name="formLayout">
      <item row="4" column="1">
       <widget class="QDoubleSpinBox" name="correctionSB">
+       <property name="toolTip">
+        <string>IF desirec conic constant in mirror configuration is 0 then this is the value of the Z8 term.  Otherwise it is the percent of correction.</string>
+       </property>
+       <property name="decimals">
+        <number>4</number>
+       </property>
        <property name="minimum">
         <double>-200.000000000000000</double>
        </property>

@@ -41,8 +41,6 @@ DFTTools::~DFTTools()
     delete ui;
 }
 
-
-
 void DFTTools::on_colorChannelCB_activated(const QString &arg1)
 {
     emit dftChannel(arg1);

@@ -54,6 +54,9 @@ void metricsDisplay::setWavePerFringe(double val, double lambda){
     mirrorDlg *md = mirrorDlg::get_Instance();
     QString donull = (md->doNull) ? (QString().sprintf("SANull: %6.4lf",md->z8)) : "";
     ui->desiredConicLb->setText(QString().sprintf("Desired Conic: %6.2lf ", md->cc) + donull);
+    if (md->isEllipse()){
+        ui->desiredConicLb->setText("");
+    }
 }
 
 void metricsDisplay::setName(QString name){
