@@ -793,24 +793,27 @@ cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask){
     int ndx = 0;
     for (int y = 0; y < phase.rows; ++y){
         for (int x = 0; x < phase.cols; ++x){
-            if (mask(y,x) == 255){
-            Z(ndx) =  phase(y,x);
-            X(ndx,0) = x;
-            X(ndx,1) = y;
-            X(ndx++,2) = 1.;
+            if (mask(y,x)){
+                Z(ndx) =  phase(y,x);
+                X(ndx,0) = x;
+                X(ndx,1) = y;
+                X(ndx++,2) = 1.;
             }
         }
     }
     cv::solve(X,Z,coeff,CV_SVD);
     // plane generation, Z = Ax + By + C
     // distance calculation d = Ax + By - z + C / sqrt(A^2 + B^2 + C^2)
-qDebug() << coeff(0) << coeff(1) << coeff(2);
+qDebug() << "plane coeffs" << coeff(0) << coeff(1) << coeff(2);
 
     cv::Mat_<double> newPhase(phase.size());
     for (int y = 0; y < phase.rows; ++y){
         for (int x = 0; x  < phase.cols; ++x){
-            if (mask(y,x)!= 255)
+            int b = (int)mask(y,x);
+            if (b == 0 ){
                 continue;
+            }
+
             double val = x * coeff(0) + y * coeff(1) + coeff(2) - phase(y,x);
             double z = val/sqrt(coeff(0) * coeff(0) + coeff(1) * coeff(1) + 1);
             newPhase(y,x) = z;
@@ -840,7 +843,6 @@ void DFTArea::makeSurface(){
 
     cv::Mat mask = m_mask.clone();
     mask = (255 - m_mask)/255;
-
     unwrap((double *)(phase.data), (double *)(result.data), (char *)(mask.data),
            phase.size().width, phase.size().height);
 
@@ -848,6 +850,7 @@ void DFTArea::makeSurface(){
     m_outside.m_center.ry() = result.rows - m_outside.m_center.y();
     m_center.m_center.ry() = result.rows - m_center.m_center.y();
     mirrorDlg *md = mirrorDlg::get_Instance();
+
     if (md->fringeSpacing != 1.){
         result *= md->fringeSpacing;
     }

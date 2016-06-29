@@ -18,37 +18,151 @@
 #include "simigramdlg.h"
 #include "ui_simigramdlg.h"
 #include <QSettings>
+#include "mirrordlg.h"
+#include <QDebug>
+#include <QAbstractTableModel>
+#include "surfacemanager.h"
+
+
+zTableModel::zTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
+    :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable)
+{
+    values = new std::vector<double>(Z_TERMS, 0.);
+}
+
+
+
+void zTableModel::setValues(std::vector<double> *vals){
+
+    values = vals;
+    QModelIndex topLeft = index(0, 0);
+    QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
+
+    emit dataChanged(topLeft, bottomRight);
+}
+
+void zTableModel::update(){
+    QModelIndex topLeft = index(0, 0);
+    QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
+    emit dataChanged(topLeft, bottomRight);
+}
+
+int zTableModel::rowCount(const QModelIndex & /*parent*/) const
+{
+   return values->size();
+}
+
+int zTableModel::columnCount(const QModelIndex & /*parent*/) const
+{
+    return 2;
+}
+QVariant zTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (role == Qt::DisplayRole)
+    {
+        if (orientation == Qt::Horizontal) {
+            switch (section)
+            {
+            case 0:
+                return QString("Zernike Term");
+            case 1:
+                return QString("Wyant     RMS ");
+            case 2:
+                return QString("third");
+            }
+        }
+    }
+    return QVariant();
+}
+QVariant zTableModel::data(const QModelIndex &index, int role) const
+{
+    if (role == Qt::DisplayRole)
+    {
+        if (index.column() == 0)
+            return zernsNames[index.row()];
+        if (index.column() == 1){
+            return QString().sprintf("%6.3lf",values->at(index.row()));
+        }
+    }
+
+    return QVariant();
+}
+bool zTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
+{
+    if (role == Qt::EditRole)
+    {
+        //save value from editor
+        if (index.column() == 1)
+            values->at(index.row())  = value.toDouble();
+
+    }
+
+    return true;
+}
+
+Qt::ItemFlags zTableModel::flags(const QModelIndex & index) const
+{
+    if (index.column() == 0)
+        return 0;
+    if (index.column() == 1){
+        if (canEdit)
+            return Qt::ItemIsEnabled | Qt::ItemIsSelectable |  Qt::ItemIsEditable;
+        else
+            return  Qt::ItemIsEnabled;
+    }
+    return 0;
+}
+
+
+
 simIgramDlg *simIgramDlg::m_instance = 0;
 simIgramDlg::simIgramDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::simIgramDlg)
 {
     ui->setupUi(this);
+    zernikes = std::vector<double>(Z_TERMS,0);
+    enables = std::vector<bool>(Z_TERMS);
     QSettings s;
     xtilt = s.value("simxtilt", 30).toDouble();
-    ui->xTiltSb->setValue(xtilt);
+    zernikes[1] = xtilt;
     correction = s.value("simCorrection", 98.).toDouble();
-    ui->correctionSB->setValue(correction);
+
     star = s.value("simStar", 0.).toDouble();
     ui->starPatternSb->setValue(star);
     ring = s.value("simRing",0.).toDouble();
     ui->ringPatterSb->setValue(ring);
     xastig = s.value("simXastig", 0.).toDouble();
-    ui->xAstigSb->setValue(xastig);
+    zernikes[4] = xastig;
     yastig = s.value("simYastig",0.).toDouble();
-    ui->yAstigSb->setValue(yastig);
+    zernikes[5] = yastig;
     defocus = s.value("simDefocus", 3.5).toDouble();
-    ui->defocusSb->setValue(defocus);
+    zernikes[3] = defocus;
     ytilt = s.value("simYtilt", 0).toDouble();
-    ui->yTiltSb->setValue(ytilt);
+    zernikes[2] = ytilt;
     size = s.value("simSize", 601).toDouble();
     ui->sizeSB->setValue(size);
+    QString z8 = "Correction %";
+    if (mirrorDlg::get_Instance()->cc == 0.){
+        ui->correctionPb->setChecked(false);
+    }
+
+    doCorrection = true;
+    tableModel = new zTableModel(this, &enables, true);
+    tableModel->setValues(&zernikes);
+    ui->tableView->setModel(tableModel);
+
 }
 simIgramDlg *simIgramDlg::get_instance(){
     if (m_instance == 0){
         m_instance = new simIgramDlg;
     }
     return m_instance;
+}
+void simIgramDlg::showEvent(QShowEvent *){
+    QString z8 = "Correction %";
+
+
 }
 
 simIgramDlg::~simIgramDlg()
@@ -59,26 +173,49 @@ simIgramDlg::~simIgramDlg()
 void simIgramDlg::on_buttonBox_accepted()
 {
     QSettings s;
-    xtilt = ui->xTiltSb->value();
+    xtilt = zernikes[1];
     s.setValue("simxtilt", xtilt);
-    ytilt = ui->yTiltSb->value();
+    ytilt = zernikes[2];
     s.setValue("simYtilt",ytilt);
-    defocus = ui->defocusSb->value();
-    correction = ui->correctionSB->value();
+    defocus = zernikes[3];
+    correction = zernikes[8];
     s.setValue("simCorrection",correction);
-    xastig = ui->xAstigSb->value();
+    xastig = zernikes[4];
     s.setValue("simXastig", xastig);
-    yastig = ui->yAstigSb->value();
+    yastig = zernikes[5];
     s.setValue("simYastig",yastig);
     star = ui->starPatternSb->value();
     s.setValue("simStar", star);
     ring = ui->ringPatterSb->value();
     s.setValue("simRing",ring);
     s.setValue("simDefocus",defocus);
-    zernNdx = ui->zernikeSb->value();
-    zernValue = ui->zernValue->value();
-
-    noise = ui->noiseSb->value();
     size = ui->sizeSB->value();
     s.setValue("simSize", size);
+}
+
+
+void simIgramDlg::on_importPb_clicked()
+{
+    SurfaceManager &sm = *SurfaceManager::get_instance();
+    if (sm.m_wavefronts.size() == 0)
+        return;
+    zernikes = sm.getCurrent()->InputZerns;
+    zernikes[1] = xtilt;
+    zernikes[2] = ytilt;
+    zernikes[3] = defocus;
+    tableModel->setValues(&zernikes);
+    ui->correctionPb->setChecked(false);
+    ui->Z8Pb->setChecked(true);
+    doCorrection = false;
+    update();
+}
+
+void simIgramDlg::on_correctionPb_clicked(bool checked)
+{
+    doCorrection = checked;
+}
+
+void simIgramDlg::on_Z8Pb_clicked(bool checked)
+{
+    doCorrection = !checked;
 }

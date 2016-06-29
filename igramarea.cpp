@@ -154,7 +154,7 @@ void IgramArea::DrawSimIgram(void){
     double rad = xcen-border;
     cv::Mat simgram = makeSurfaceFromZerns(border, true);
 
-
+    cv::flip(simgram,simgram,1);
     igramImage = QImage((uchar*)simgram.data,
                         simgram.cols,
                         simgram.rows,

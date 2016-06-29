@@ -29,12 +29,14 @@ private slots:
 
     void on_useCurrent_clicked();
 
+
 private:
     Ui::zernikeEditDlg *ui;
     SurfaceManager *m_sm;
     ZernTableModel * tableModel;
     bool shouldEnableAll;
     std::vector<bool> m_zernEnables;
+    std::vector<double> zerns;
 };
 
 #endif // ZERNIKEEDITDLG_H

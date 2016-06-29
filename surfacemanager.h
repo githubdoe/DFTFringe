@@ -54,6 +54,10 @@ public:
     explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
                    ContourPlot *contourPlo = 0, GLWidget *glPlot = 0, metricsDisplay *mets = 0);
     ~SurfaceManager();
+    static SurfaceManager *get_instance(QObject *parent = 0, surfaceAnalysisTools *tools = 0,
+                                        ProfilePlot *profilePlot = 0, ContourPlot *contourPlot = 0,
+                                        GLWidget *glPlot = 0, metricsDisplay *mets = 0);
+    static SurfaceManager *m_instance;
     bool loadWavefront(const QString &fileName);
     void sendSurface(wavefront* wf);
     void computeMetrics(wavefront *wf);
@@ -66,6 +70,7 @@ public:
     void SaveWavefronts(bool saveNulled);
     void writeWavefront(QString fname, wavefront *wf, bool saveNulled);
     void useDemoWaveFront();
+    inline wavefront *getCurrent();
     cv::Mat computeWaveFrontFromZernikes(int wx,int wy, std::vector<double> &zerns, QVector<int> zernsToUse);
     void report();
     void computeTestStandAstig();

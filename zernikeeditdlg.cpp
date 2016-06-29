@@ -144,3 +144,5 @@ void zernikeEditDlg::on_useCurrent_clicked()
     tableModel->blockSignals(false);
     tableModel->update();
 }
+
+

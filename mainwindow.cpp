@@ -135,7 +135,7 @@ MainWindow::MainWindow(QWidget *parent) :
     review->s2->addWidget(m_profilePlot);
     review->s1->addWidget(m_contourView);
     //Surface Manager
-    m_surfaceManager = new SurfaceManager(this,m_surfTools, m_profilePlot, m_contourView->getPlot(),
+    m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView->getPlot(),
                                           m_ogl->m_gl, metrics);
     connect(m_surfaceManager, SIGNAL(load(QStringList,SurfaceManager*)), m_waveFrontLoader, SLOT(loadx(QStringList,SurfaceManager*)));
     connect(m_surfaceManager, SIGNAL(showMessage(QString)), this, SLOT(showMessage(QString)));

@@ -243,7 +243,7 @@ void surfaceGenerator::process(int wavefrontNdx, SurfaceManager *sm) {
     emit finished( wavefrontNdx);
 }
 cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector<double> &zerns, QVector<int> zernsToUse){
-    double rad = m_wavefronts[m_currentNdx]->m_outside.m_radius;
+    double rad = getCurrent()->m_outside.m_radius;
     double xcen = (wx-1)/2, ycen = (wy-1)/2;
 
     cv::Mat result = cv::Mat::zeros(wy,wx, CV_64F);
@@ -292,6 +292,15 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
     //cv::imshow("zernbased", result);
     //cv::waitKey(1);
     return result;
+}
+SurfaceManager *SurfaceManager::m_instance = 0;
+SurfaceManager *SurfaceManager::get_instance(QObject *parent, surfaceAnalysisTools *tools,
+                                             ProfilePlot *profilePlot, ContourPlot *contourPlot,
+                                             GLWidget *glPlot, metricsDisplay *mets){
+    if (m_instance == 0){
+        m_instance = new SurfaceManager(parent, tools, profilePlot, contourPlot, glPlot, mets);
+    }
+    return m_instance;
 }
 
 SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
@@ -436,7 +445,7 @@ void SurfaceManager::ObstructionChanged(){
 
 void SurfaceManager::centerMaskValue(int val){
     insideOffset = val;
-    double mmPerPixel = m_wavefronts[m_currentNdx]->diameter/(2 *( m_wavefronts[m_currentNdx]->m_outside.m_radius-1));
+    double mmPerPixel = getCurrent()->diameter/(2 *( m_wavefronts[m_currentNdx]->m_outside.m_radius-1));
     m_surfaceTools->m_centerMaskLabel->setText(QString().sprintf("%6.2lf mm",mmPerPixel* val));
     makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
@@ -650,6 +659,10 @@ void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulle
     file << "DIAM " << wf->diameter << std::endl;
     file << "ROC " << wf->roc << std::endl;
     file << "Lambda " << wf->lambda << std::endl;
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    if (md.isEllipse()){
+        file << "ellipse_vertical_axis " << md.m_verticalAxis;
+    }
 }
 
 void SurfaceManager::SaveWavefronts(bool saveNulled){
@@ -824,7 +837,11 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
     QString l;
     mirrorDlg *md = mirrorDlg::get_Instance();
 
-    double xm = width/2.,ym = (height)/2.,radm = min(xm,ym)-2 , roc = md->roc, lambda = md->lambda, diam = md->diameter;
+    double xm = width/2.,ym = (height)/2.,
+            radm = min(xm,ym)-2 ,
+            roc = md->roc,
+            lambda = md->lambda,
+            diam = md->diameter;
     double xo = width/2., yo = height/2., rado = 0;
 
     string dummy;
@@ -855,12 +872,19 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
             iss >> dummy >> dummy >> xo >> yo >> rado;
             continue;
         }
+        if (l.startsWith("ellipse_vertical_axis")){
+            md->m_outlineShape = ELLIPSE;
+            iss >> dummy >> md->m_verticalAxis;
+        }
     }
 
     wf->m_outside = CircleOutline(QPointF(xm,height - ym), radm);
     if (rado == 0){
         xo = xm;
         yo = ym;
+    }
+    if (md->isEllipse()){
+        wf->m_outside = CircleOutline(QPointF(xm,height - ym), xm -2);
     }
     wf->m_inside = CircleOutline(QPoint(xo,yo), rado);
 
@@ -2051,49 +2075,55 @@ void SurfaceManager::report(){
                   + QDate::currentDate().toString() +
                   " " +QTime::currentTime().toString()+"</td></tr></table>");
 
+    QString Diameter = (md->isEllipse()) ? " Horizontal Axis: " : " Diameter: " +QString().number(md->diameter,'f',1) ;
+    QString ROC = (md->isEllipse()) ? "Vertical Axis: " + QString().number(md->m_verticalAxis) : "ROC: " +  QString().number(md->roc,'f',1);
+    QString FNumber = (md->isEllipse()) ? "" : "Fnumber: " + QString().number(md->FNumber,'f',1);
+    QString BFC = (md->isEllipse()) ? " Flat" : metrics->mCC->text();
     QString html = "<p style=\'font-size:15px'>"
-            "<table border='1' width = '100%'><tr><td>Diameter: " + QString().number(md->diameter,'f',1) + " mm</td><td>"
-            "ROC: " +  QString().number(md->roc,'f',1) + " mm</td>"
-            "<td>Fnumber: " + QString().number(md->FNumber,'f',1) + "</td></tr>"
+            "<table border='1' width = '100%'><tr><td>" + Diameter + " mm</td><td>" + ROC + " mm</td>"
+            "<td>" +FNumber+ "</td></tr>"
             "<tr><td> RMS: " + QString().number(wf->std,'f',3) + " waves at 550nm</td><td>Strehl: " + metrics->mStrehl->text() +
-            "</td><td>Best Fit Conic: "+metrics->mCC->text() + "</td></tr>"
-            "<tr><td>Desired Conic: " +QString::number(md->cc) + "</td><td>" +
+            "</td><td>" + BFC + "</td></tr>"
+            "<tr><td>" + ((md->isEllipse()) ? "":"Desired Conic: " + QString::number(md->cc)) + "</td><td>" +
             ((md->doNull) ? QString().sprintf("SANull: %6.4lf",md->z8) : "No software Null") + "</td>"
             "<td>Waves per fringe: " + QString::number(md->fringeSpacing) + "<br>Test Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
             "</table></p>";
 
     // zerenike values
-    QString zerns = "<p>Zernike Values :<br><table width='100%'><tr><td><table  border='1' width='40%'>";
-    zerns.append("<tr><td>Term</td><td><table width = '100%'><tr><td>Wyant</td><td>RMS</td></tr></table></tr>");
-    int half = Z_TERMS/2 +2;
-    for (int i = 3; i < half; ++i){
-        double val = wf->InputZerns[i];
-        bool enabled = zernEnables[i];
-        if ( i == 3 && m_surfaceTools->m_useDefocus){
-           val = m_surfaceTools->m_defocus;
-           enabled = true;
+    QString zerns("<p>This is a flat so no zernike values are computed.</p>");
+    if (!md->isEllipse()){
+        zerns = "<p>Zernike Values :<br><table width='100%'><tr><td><table  border='1' width='40%'>";
+        zerns.append("<tr><td>Term</td><td><table width = '100%'><tr><td>Wyant</td><td>RMS</td></tr></table></tr>");
+        int half = Z_TERMS/2 +2;
+        for (int i = 3; i < half; ++i){
+            double val = wf->InputZerns[i];
+            bool enabled = zernEnables[i];
+            if ( i == 3 && m_surfaceTools->m_useDefocus){
+                val = m_surfaceTools->m_defocus;
+                enabled = true;
+            }
+            if ( i == 8 && md->doNull){
+                val += md->z8;
+            }
+
+            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf </td><td>%6.3lf</td></tr></table>",
+                                                                                                                             val, computeRMS(i,val)) + "</td><td>" +
+                         QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
         }
-        if ( i == 8 && md->doNull){
-            val += md->z8;
+
+
+        zerns.append("</table></td><td><table border='1' width = '50%'>");
+        zerns.append("<tr><td>Term</td><td><table width = '100%'><tr><td>Wyant</td><td>RMS</td></tr></table></tr>");
+
+        for (int i = half; i < Z_TERMS; ++i){
+            double val = wf->InputZerns[i];
+            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf</td><td>%6.3lf</td></tr></table>"
+                                                                                                                             ,val, computeRMS(i,val)) + "</td><td>" +
+                         QString((zernEnables[i]) ? QString("") : QString("Disabled")) + "</td></tr>");
         }
-
-        zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf </td><td>%6.3lf</td></tr></table>",
-                                                                                                          val, computeRMS(i,val)) + "</td><td>" +
-                     QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
-    }
-
-
-    zerns.append("</table></td><td><table border='1' width = '50%'>");
-    zerns.append("<tr><td>Term</td><td><table width = '100%'><tr><td>Wyant</td><td>RMS</td></tr></table></tr>");
-
-    for (int i = half; i < Z_TERMS; ++i){
-        double val = wf->InputZerns[i];
-        zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf</td><td>%6.3lf</td></tr></table>"
-                                                                                                          ,val, computeRMS(i,val)) + "</td><td>" +
-                     QString((zernEnables[i]) ? QString("") : QString("Disabled")) + "</td></tr>");
-    }
-    zerns.append("</table></td></tr></table></p>");
+        zerns.append("</table></td></tr></table></p>");
         //qDebug() << zerns;
+    }
     QString tail = "</body></html>";
 
     QImage image = QImage(600,500, QImage::Format_ARGB32 );
@@ -2122,19 +2152,19 @@ void SurfaceManager::report(){
     QString profile("mydata://profile.png");
     doc->addResource(QTextDocument::ImageResource,  QUrl(profile), QVariant(i2Scaled));
     contourHtml.append("<p> <img src='" +profile + "'</p>");
-
-    SimulationsView *sv = SimulationsView::getInstance(0);
-    if (sv->needs_drawing){
-        sv->on_MakePB_clicked();
+    if (!md->isEllipse()){
+        SimulationsView *sv = SimulationsView::getInstance(0);
+        if (sv->needs_drawing){
+            sv->on_MakePB_clicked();
+        }
+        QImage svImage = QImage(sv->size(),QImage::Format_ARGB32 );
+        QPainter p3(&svImage);
+        sv->render(&p3);
+        QImage svImageScaled = svImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+        QString svpng("mydata://sv.png");
+        doc->addResource(QTextDocument::ImageResource,  QUrl(svpng), QVariant(svImageScaled));
+        contourHtml.append("<p> <img src='" +svpng + "'</p>");
     }
-    QImage svImage = QImage(sv->size(),QImage::Format_ARGB32 );
-    QPainter p3(&svImage);
-    sv->render(&p3);
-    QImage svImageScaled = svImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-    QString svpng("mydata://sv.png");
-    doc->addResource(QTextDocument::ImageResource,  QUrl(svpng), QVariant(svImageScaled));
-    contourHtml.append("<p> <img src='" +svpng + "'</p>");
-
     // add igram to bottom of report
     QImage igram = ((MainWindow*)(parent()))->m_igramArea->igramDisplay;
     if (igram.width() > 0){
@@ -2147,5 +2177,9 @@ void SurfaceManager::report(){
     editor->print(&printer);
     editor->show();
 }
-
+inline wavefront *SurfaceManager::getCurrent(){
+    if (m_wavefronts.size() == 0)
+        return 0;
+    return m_wavefronts[m_currentNdx];
+}
 

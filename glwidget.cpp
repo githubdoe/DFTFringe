@@ -658,7 +658,7 @@ void GLWidget::make_surface_from_doubles()
 {
     if (!m_dirty_surface)
         return;
-    cv::Mat rMask;
+    cv::Mat_<bool> rMask;
     cv::Mat resized;
     double fc = (double)m_resolutionPercent/100.;
 
@@ -691,20 +691,19 @@ void GLWidget::make_surface_from_doubles()
 
             int nx = x  - dhalfx;
             int ny = y - dhalfy;
-            double rho = sqrt(nx * nx + ny * ny)/dhalfx;
-            // ignore masked values.
-            if (rMask.at<uint8_t>(y,x) != 255  ||
-                    rMask.at<uint8_t>(y+step,x) != 255 ||
-                    rMask.at<uint8_t>(y+step,x+step) != 255 ||
-                    rMask.at<uint8_t>(y, x+step) != 255 )
 
-                continue;
-            int yy = y;
-            QVector3D p1(nx * xy_scale, ny * xy_scale,resized.at<double>(yy,x));
-            QVector3D p2(nx * xy_scale, (ny+step) * xy_scale, resized.at<double>(yy+step,x));
-            QVector3D p3((nx+step)*xy_scale, (ny+step)*xy_scale, resized.at<double>(yy+step,x+step));
-            QVector3D p4((nx+step)*xy_scale, ny * xy_scale, resized.at<double>(yy,x+step));
-            m_quads.push_back(CQuad(p1,p2,p3,p4));
+            // ignore masked values.
+            int b = (int)rMask(y,x) & (int)rMask(y+step,x) & (int)rMask(y+step,x+step) &
+                    rMask(y,x+step);
+
+            if (b != 0){
+                int yy = y;
+                QVector3D p1(nx * xy_scale, ny * xy_scale,resized.at<double>(yy,x));
+                QVector3D p2(nx * xy_scale, (ny+step) * xy_scale, resized.at<double>(yy+step,x));
+                QVector3D p3((nx+step)*xy_scale, (ny+step)*xy_scale, resized.at<double>(yy+step,x+step));
+                QVector3D p4((nx+step)*xy_scale, ny * xy_scale, resized.at<double>(yy,x+step));
+                m_quads.push_back(CQuad(p1,p2,p3,p4));
+            }
         }
     }
 
