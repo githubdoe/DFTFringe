@@ -2177,9 +2177,5 @@ void SurfaceManager::report(){
     editor->print(&printer);
     editor->show();
 }
-inline wavefront *SurfaceManager::getCurrent(){
-    if (m_wavefronts.size() == 0)
-        return 0;
-    return m_wavefronts[m_currentNdx];
-}
+
 

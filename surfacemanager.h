@@ -70,7 +70,11 @@ public:
     void SaveWavefronts(bool saveNulled);
     void writeWavefront(QString fname, wavefront *wf, bool saveNulled);
     void useDemoWaveFront();
-    inline wavefront *getCurrent();
+    inline wavefront *getCurrent(){
+        if (m_wavefronts.size() == 0)
+            return 0;
+        return m_wavefronts[m_currentNdx];
+    }
     cv::Mat computeWaveFrontFromZernikes(int wx,int wy, std::vector<double> &zerns, QVector<int> zernsToUse);
     void report();
     void computeTestStandAstig();
