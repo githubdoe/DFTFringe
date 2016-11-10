@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+
+  <meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+
+  <title>Fringe Control</title>
+</head>
+
+
+<body vlink="blue">
+
+<h2> Using the Fringe Control and tracing fringes</h2>
+ 
+
+<p>You can select points on a fringe using the left mouse button.  The right mouse button will delete a point it is close to.   If you drag the mouse with the left button down then it will place points along the path.  If you drag the mouse with the right button down then it will erase points along the path.
+<table>
+  <tbody>
+    <tr>
+
+      <td valign="top"><img src="fringecontrol.bmp"></td>
+
+      <td valign="top"> 
+      <dl>
+
+        <dt>XXX Filter</dt>
+        <dd>Use the Selected filter on the image</dd>
+
+        <dt>Delete All Fringes</dt>
+        <dd>Deletes all the fringes</dd>
+
+        <dt>Fringe count /RMS Fringe Fit</dt><dd>
+Displays the fringe count and after a <i>Calculate Zernikes</i> displays the RMS error of the fringe fit in waves.  It usually possible to get an RMS of the fringe fit of .03 or less.  If not recheck the fringe points on each fringe.  You can use the <a href = viewmenu.htm>outlier</a> command to see points that may be causing the problem.</dd>
+        <dt>Increment</dt>
+        <dd>Select the next fringe.</dd>
+
+        <dt>Auto Trace/Optimize</dt>
+        <dd>If only one point on fringe will trace the fringe. If two
+or more points are on fringe then it will adjust points to the center
+backbone of the fringe.</dd>
+
+        <dt>Decrement</dt>
+        <dd>Select the previous fringe.</dd>
+
+
+        <dt>Erase Fringe</dt>
+        <dd>Erase all the points on the selected fringe.</dd>
+
+      </dl>
+
+      <table border="1">
+        <tbody>
+          <tr>
+            <td>
+            <ul>
+              <li>Dark</li>
+              <li>Light</li>
+              <li>Both</li>
+            </ul>
+            </td>
+            <td valign="top">Look for dark, light or both fringes when optimizing or auto tracing.</td>
+          </tr>
+        </tbody>
+      </table>
+      <dl ="">
+        <dt>Search For Fringes</dt>
+        <dd>When only two points have been entered on the very first
+fringe then search from the first point to the second point for all the
+fringes and trace them automatically.</dd>
+
+        <dt>Delete Fringe</dt>
+        <dd>Delete the selected fringe</dd>
+
+        <dt>Calculate Zernikies</dt>
+        <dd>Do the analysis and show the 3D view of the surface error.</dd>
+
+        <dt>Edit Ellipse</dt>
+        <dd>Go back to edit the ellipse</dd>
+
+      </dl>
+      </td>
+
+    </tr>
+  </tbody>
+</table>
+
+ You can also use 
+<a href="keys.htm">Short cut keys</a> to help speed up fringe tracing.
+</p>
+<p><b> The <i>f</i> key:</b>
+
+<br>
+ The <i><b>f</b></i> keyboard key is especially useful. Pressing when
+there is only one point on the fringe it will auto trace the whole
+fringe. Sometimes you may have to select the dark or light radio button
+on the fringe before you press the <i>f</i> key.
+
+</p>
+<p>Pressing it when there are multiple points on the fringe will adjust
+all the points to the center of the fringe. This is called optomizing a
+fringe.
+</p>
+<h3> Auto fringe finding of all fringes.</h3>
+
+To Search for all fringes at once: <br>
+Note:  works only when no fringes have been defined.  If there are fringes press the delete all fringes before trying using the <i>auto select all fringes technique</i>.
+<ol>
+
+  <li>  Select point on first fringe</li>
+
+  <li>
+  Select second point so that blue line is across the whole interferogram and perpendicular to the middle
+  of the fringes.</li>
+
+  <li>Select find all fringe buttons.</li>
+
+</ol>
+
+<p> It is not always perfect and you may have some editing to do. But
+it does speed up the process a lot. You can select light, dark or both
+fringes for this. </p>
+<h3>Inserting fringes between two other fringes</h3>
+
+Use the <i>v key</i> or the <i>e</i> key to change the selected
+fringe (highlighted in blue.) Insert will add a new fringe in front of
+the currently selected fringe. It will add only one point (a blue '+'.)
+You can then either press the <i>f</i> key to have the computer find the rest of the fringe or you can trace it yourself with the left mouse button.
+<h3>Append to current fringe</h3>
+
+  To append to current fringe hold down left shift key when left clicking to add a point.
+  It will try to find a fringe segment and add it to the current fringe.
+  After this operation type the <i>f</i> key or click on auto trace/optomize
+
+
+</body>
+</html>

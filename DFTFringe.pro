@@ -356,6 +356,17 @@ DISTFILES += \
     res/Help/mirrorConfig.html \
     res/Help/smoothing.htm \
     res/Help/Gaussian10.png \
-    res/Help/oneIgramanalysis.png
+    res/Help/oneIgramanalysis.png \
+    res/Help/BathInterferometry.odt \
+    res/Help/analysis.png \
+    res/Help/dft.png \
+    res/Help/igramSettingsLens.png \
+    res/Help/lineGrid.png \
+    res/Help/artificialNull.htm \
+    res/Help/fringecontrol.htm \
+    res/Help/lensDistort.html \
+    res/Help/unwrap_errors.html \
+    res/Help/chessGrid.png \
+    res/Help/circles.png
 
     TRANSLATIONS    = dftfringe_fr.ts

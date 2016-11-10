@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+
+  <meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+
+  <title>Artificial Null</title>
+</head>
+
+
+<body vlink="blue">
+
+<h2>Artificial Null</h2>
+
+The following was excerpted from <a href="http://www.starryridge.com/interferometry/RTMC04.ppt">Dave Rowe's RTMC 2004 presentation</a> with permission.
+<p>
+</p>
+<ul>
+
+  <li>
+When a paraboloidal mirror is tested at its center of curvature, the measured wavefront will have a non-zero Z<sub>8</sub> component (principle spherical aberration):
+    <dl>
+      <dt></dt>
+      <dd>
+        <i>
+Z<sub>8</sub> = D<sup>4 </sup>/ (384 * Lambda * R<sup>3</sup>)  </i></dd>
+
+      <dt>where</dt>
+      <dd> D = diameter, R = radius of curvature, Lambda = wavelength</dd>
+
+    </dl>
+  </li>
+  <p>
+  </p>
+  <li>OpenFringe uses this information to remove the desired correction from the data</li>
+
+  <li>Notice the strong dependence on the diameter - a small error in defining the pupil can make a significant error in accuracy<br>
+    <dl>
+      <dt></dt>
+      <dd>
+Example:  300 mm f/5 mirror, if  D<sub>err</sub>/D = 1% then  Z<sub>8 err</sub> = 1/20 lambda</dd>
+    </dl>
+  </li>
+
+	
+  <li>Artificial nulling has accuracy issues for large, fast mirrors</li>
+
+</ul>
+
+
+
+</body>
+</html>

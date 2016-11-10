@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<Title>Unwrap_errors.html</Title>
+</HEAD>
+<style> 
+p
+{
+    width:800px; 
+    word-wrap:break-word;
+}
+p.ex
+{
+    width:500px; 
+    word-wrap:break-word;
+}
+td {
+
+    vertical-align: top;
+}
+</style>
+<BODY>
+<h2>Phase unwrapping</h2>
+<p>
+Phase unwrapping is the step required in Fourier transform and phase 
+shifting interferogram analysis to turn a wrapped phase map (one where
+the phase angles have been collapsed into the range -pi..pi) into an
+unwrapped phase map used to derive the wavefront map. Before
+unwrapping, the phase map has jagged ridges and valleys, somewhat like
+the surface of a Fresnel lens. Phase unwrapping effectively lifts and
+lowers regions of the map to remove the discontinuities.
+Unfortunately, many phase maps include spiral discontinuities that are
+impossible to unwrap unambiguously. The best you can do is to unwrap
+the clean portions of the phase map in a consistent way, and leave the
+messy parts with ugly discontinuities.</p>
+<p>
+Phase unwrapping is used in many disciplines, most notably medical
+imaging and synthetic aperture radar. In the application of medical
+imaging, for example, it may be good enough to get a clear picture of
+the less messy portions of the image. In optical interferometry,
+large phase discontinuities probably invalidate the results. These
+discontinuities are (by definition) a sudden multiple of 1 wavelength jump in height.
+Defects this large will tend to swamp the analysis results. Small,
+isolated discontinuities can probably be ignored. Long
+discontinuities cannot.
+<p>
+<h2>Unwrap Errors</h2>
+
+
+
+<p> You always need to assess whether your analysis results have
+unwrap errors, and whether they are severe enough to invalidate the
+results. Remember that each discontinuity is at least one wavelength
+in height. Long discontinuities almost certainly invalidate your
+results.</p>
+
+<p>You can usually see the effect of unwrap errors in the contour and 3D plots.  You can see a detailed
+view and count of the errors by using the View/show unwrap errors command.</p>
+
+
+<p>If the errors enclose very small regions and are very hard w are not long  see on the view then you may be OK.  Many times you can never get them to zero but under few hundred may be OK.  Some are caused where the mirror is obscured for example, a center collimation target, bright reflections, or mirror stand safety latches. The ones that caues the most</p>
+
+<p>On the other hand if there are long white lines or there are large circular regions then this could cause analysis errors.</p>
+
+<p>One step you can try in DFTFringe is to
+increase the size of the DC filter (the blue circle) used to clean the
+background in vortex analysis. A larger circle filters more of the
+background, and it may clean the phase map enough to proceed.</p>
+
+<p> Failing the above step, all you can do is to try to take cleaner
+interferograms. The fringes should be clean (not blurry), and
+contrast should be good over the full interferogram. If possible
+flares that obscure one or more fringes should be eliminated. In
+general, the analysis works better with straighter
+fringes.
+
+
+</BODY>
+</HTML>
