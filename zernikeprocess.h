@@ -39,7 +39,7 @@ private:
 public:
     explicit zernikeProcess(QObject *parent = 0);
     static zernikeProcess *get_Instance();
-    double unwrap_to_zernikes(wavefront &wf);
+    void unwrap_to_zernikes(wavefront &wf);
     cv::Mat null_unwrapped(wavefront&wf,  std::vector<double> zerns, std::vector<bool> enables,int start_term =0, int last_term = Z_TERMS);
     //double Wavefront(double x1, double y1, int Order);
     void unwrap_to_zernikes(zern_generator *zg, cv::Mat wf, cv::Mat mask);
@@ -50,7 +50,7 @@ public:
     MainWindow *mw;
 
 signals:
-
+void statusBarUpdate(QString);
 public slots:
 
 };

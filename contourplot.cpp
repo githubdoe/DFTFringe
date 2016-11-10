@@ -290,9 +290,6 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     m_contourPen = QColor(settings.value("ContourLineColor", "white").toString());
 
 
-
-
-
     plotLayout()->setAlignCanvasToScales( true );
     initPlot();
 

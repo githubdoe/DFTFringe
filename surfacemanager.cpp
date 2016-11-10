@@ -58,7 +58,7 @@
 #include <QTabWidget>
 #include <QPrintDialog>
 #include <QSplitter>
-#include "settingsgeneral.h"
+#include "settingsgeneral2.h"
 #include "foucaultview.h"
 QMutex mutex;
 int inprocess = 0;
@@ -167,8 +167,8 @@ public:
             return QString("");
         if (value > m_names.size() +3)
             return QString("");
-
-        QwtText t(QString(m_names[int(value-4)]));
+        QString str = m_names[int(value-4)];
+        QwtText t(str);
         if (value == 6.)
             t.setColor(Qt::red);
         return t;
@@ -223,7 +223,7 @@ void surfaceGenerator::process(int wavefrontNdx, SurfaceManager *sm) {
 
         zp.unwrap_to_zernikes(*wf);
 
-        ((MainWindow*)m_sm->parent())-> zernTablemodel->setValues(wf->InputZerns);
+        ((MainWindow*)m_sm->parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
 
         // null out desired terms.
         wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables,0,Z_TERMS   );
@@ -600,7 +600,7 @@ void SurfaceManager::computeMetrics(wavefront *wf){
     wf->max = mmax * md->lambda/550.;
 
 
-    ((MainWindow*)(parent()))->zernTablemodel->setValues(wf->InputZerns);
+    ((MainWindow*)(parent()))->zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
 
     ((MainWindow*)(parent()))->updateMetrics(*wf);
 
@@ -794,7 +794,8 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     emit showTab(2);
 
 }
-
+#include <iterator>
+#include <random>
 bool SurfaceManager::loadWavefront(const QString &fileName){
     emit enableControls(false);
     bool mirrorParamsChanged = false;
@@ -826,10 +827,16 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
     file >> height;
 
     cv::Mat data(height,width, CV_64F,0.);
+    const double mean = 0.0;
+    const double stddev = 1.;
+    std::default_random_engine generator;
+    std::normal_distribution<double> dist(mean, stddev);
+
 
     for( size_t y = 0; y < height; y++ ) {
         for( size_t x = 0; x < width; x++ ) {
             file >> data.at<double>(height - y-1,x);
+            //data.at<double>(height - y - 1, x) += dist(generator);
         }
     }
 
@@ -875,6 +882,9 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         if (l.startsWith("ellipse_vertical_axis")){
             md->m_outlineShape = ELLIPSE;
             iss >> dummy >> md->m_verticalAxis;
+        }
+        if (l.startsWith("nulled")){
+            wf->useSANull = false;
         }
     }
 
@@ -2067,9 +2077,6 @@ void SurfaceManager::report(){
     wavefront *wf = m_wavefronts[m_currentNdx];
 
     metricsDisplay *metrics = metricsDisplay::get_instance();
-
-
-
     QString title("<html><body><table width = '100%'><tr><td></td><td><h1><center>Interferometry Report for " +
                   md->m_name + "</center></td><td>"
                   + QDate::currentDate().toString() +
@@ -2078,14 +2085,14 @@ void SurfaceManager::report(){
     QString Diameter = (md->isEllipse()) ? " Horizontal Axis: " : " Diameter: " +QString().number(md->diameter,'f',1) ;
     QString ROC = (md->isEllipse()) ? "Vertical Axis: " + QString().number(md->m_verticalAxis) : "ROC: " +  QString().number(md->roc,'f',1);
     QString FNumber = (md->isEllipse()) ? "" : "Fnumber: " + QString().number(md->FNumber,'f',1);
-    QString BFC = (md->isEllipse()) ? " Flat" : metrics->mCC->text();
+    QString BFC = (md->isEllipse()) ? " Flat" : "Best Fit CC: " +metrics->mCC->text();
     QString html = "<p style=\'font-size:15px'>"
             "<table border='1' width = '100%'><tr><td>" + Diameter + " mm</td><td>" + ROC + " mm</td>"
             "<td>" +FNumber+ "</td></tr>"
             "<tr><td> RMS: " + QString().number(wf->std,'f',3) + " waves at 550nm</td><td>Strehl: " + metrics->mStrehl->text() +
             "</td><td>" + BFC + "</td></tr>"
             "<tr><td>" + ((md->isEllipse()) ? "":"Desired Conic: " + QString::number(md->cc)) + "</td><td>" +
-            ((md->doNull) ? QString().sprintf("SANull: %6.4lf",md->z8) : "No software Null") + "</td>"
+            ((md->doNull) ? QString().sprintf("SANull: %6.4lf",md->z8 * md->cc) : "No software Null") + "</td>"
             "<td>Waves per fringe: " + QString::number(md->fringeSpacing) + "<br>Test Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
             "</table></p>";
 
@@ -2103,7 +2110,7 @@ void SurfaceManager::report(){
                 enabled = true;
             }
             if ( i == 8 && md->doNull){
-                val += md->z8;
+                val -= md->z8 * md->cc;
             }
 
             zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf </td><td>%6.3lf</td></tr></table>",
@@ -2177,5 +2184,10 @@ void SurfaceManager::report(){
     editor->print(&printer);
     editor->show();
 }
-
-
+#include "unwraperrorsview.h"
+void SurfaceManager::showUnwrap(){
+    if (m_wavefronts.size() >0){
+        unwrapErrorsView dlg(*m_wavefronts[m_currentNdx]);
+        dlg.exec();
+    }
+}

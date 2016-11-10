@@ -112,7 +112,7 @@ void zernikeEditDlg::on_read_clicked()
     for (int i = z.size(); i < Z_TERMS; ++i){
         z.push_back(0.);
     }
-    tableModel->setValues(z);
+    tableModel->setValues(z, FALSE);
     tableModel->update();
 
 }
@@ -139,7 +139,7 @@ void zernikeEditDlg::on_useCurrent_clicked()
 {
     m_zernEnables = zernEnables;
     tableModel->blockSignals(true);
-    tableModel->setValues(m_sm->m_wavefronts[m_sm->m_currentNdx]->InputZerns);
+    tableModel->setValues(m_sm->m_wavefronts[m_sm->m_currentNdx]->InputZerns,m_sm->m_wavefronts[m_sm->m_currentNdx]->useSANull );
     ui->sizeSb->setValue(m_sm->m_wavefronts[m_sm->m_currentNdx]->data.cols);
     tableModel->blockSignals(false);
     tableModel->update();

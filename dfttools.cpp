@@ -60,7 +60,6 @@ void DFTTools::on_filterAdjuster_valueChanged(double arg1)
 void DFTTools::on_pushButton_clicked()
 {
     wasPressed = true;
-    qDebug() << "Pressed makesurface";
     emit makeSurface();
 
 }

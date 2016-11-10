@@ -98,6 +98,8 @@ private slots:
 
 
 
+    void on_buttonBox_helpRequested();
+
 signals:
     void diameterChanged(double);
     void rocChanged(double);

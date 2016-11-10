@@ -17,15 +17,36 @@
 ****************************************************************************/
 #include "mainwindow.h"
 #include <QApplication>
+#include "singleapplication.h"
+#include "messagereceiver.h"
 
 int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    a.setOrganizationName("DFTFringe");
-    a.setApplicationName("DFTFringe");
-    MainWindow w;
+{    // Allow secondary instances
+    SingleApplication app( argc, argv, true );
 
-    w.show();
+    MessageReceiver msgReceiver;
 
-    return a.exec();
+    // If this is a secondary instance
+    if( app.isSecondary() ) {
+        app.sendMessage( app.arguments().join('\'').toUtf8() );
+        return 0;
+    } else {
+        QObject::connect(
+            &app,
+            &SingleApplication::receivedMessage,
+            &msgReceiver,
+            &MessageReceiver::receivedMessage
+        );
+    }
+
+
+
+    app.setOrganizationName("DFTFringe");
+    app.setApplicationName("DFTFringe");
+    MainWindow *w = new MainWindow;
+    msgReceiver.m_mainWindow = w;
+
+    w->show();
+
+    return app.exec();
 }

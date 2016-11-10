@@ -567,8 +567,6 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     //p = fftw_plan_dft_2d (ysize, xsize, im, fdom, FFTW_FORWARD, FFTW_ESTIMATE);
     //fftw_execute (p);
 
-
-
     // High-pass filter the Fourier domain to remove the background.
     double *planes[2] = {fdomPlanes[0].ptr<double>(0), fdomPlanes[1].ptr<double>(0)};
     if (low > 0)
@@ -591,8 +589,7 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     //fftw_execute (p);
     dft(fdomMat, imMat, DFT_INVERSE);
     split(imMat,imPlanes);
-    qDebug() << "imPlanes" << imPlanes[0].size().width  << imPlanes[0].size().height << m_mask.cols <<
-                m_mask.rows;
+
     imPlanes[0]/= size;
     cv::Mat tmp;
     imPlanes[0].copyTo(tmp, m_mask);
@@ -616,11 +613,9 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
             if (q[i] != 0.0)
             ++count;
         }
-
     }
     double m2 = sum/count;
     imPlanes[0] -= m2;
-
 
     imPlanes[1] *= 0.;
 
@@ -653,8 +648,6 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     //fftw_execute (p);
     d1Mat/= size;
 
-
-
     if (0){ //(0 == strcmp (what, "d1")) {
         showMag(d1Mat.clone(), true, "D1");
     }
@@ -673,11 +666,9 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     //fftw_execute (p);
     d2Mat/= size;
 
-
     if (0){//(0 == strcmp (what, "d2")) {
         showMag(d2Mat.clone(),true, "D2");
     }
-
 
     cv::Mat rMat;
     cv::Mat rPlanes[2] = {cv::Mat::zeros(Size(xsize,ysize),CV_64F), cv::Mat::zeros(Size(xsize,ysize),CV_64F)};
@@ -826,6 +817,10 @@ qDebug() << "plane coeffs" << coeff(0) << coeff(1) << coeff(2);
 void DFTArea::makeSurface(){
     if (!tools->wasPressed)
         return;
+    if (igramArea->igramImage.isNull()){
+        QMessageBox::warning(0,"warning","First load an interferogram and circle the mirror.");
+        return;
+    }
     tools->wasPressed = false;
     igramArea->writeOutlines(igramArea->makeOutlineName());  // save outlines including center filter
     cv::Mat phase = vortex(igramArea->igramImage,  m_center_filter);
@@ -876,9 +871,7 @@ void DFTArea::newIgram(QImage){
 }
 void DFTArea::mouseReleaseEvent(QMouseEvent *)
 {
-
     setCursor(Qt::ArrowCursor);
-
     capture = false;
 }
 
@@ -894,7 +887,6 @@ void DFTArea::mouseMoveEvent(QMouseEvent *event){
 
 void DFTArea::mousePressEvent(QMouseEvent *event)
 {
-
     if (event->button() == Qt::LeftButton) {
         QPointF Raw = event->pos();
         int xcenter = (magIImage.width() -1)/2;
@@ -904,7 +896,4 @@ void DFTArea::mousePressEvent(QMouseEvent *event)
         emit updateFilterSize(rad/scale);
         capture = true;
     }
-
-
-
 }

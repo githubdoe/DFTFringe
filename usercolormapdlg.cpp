@@ -30,6 +30,7 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include "colormapviewerdlg.h"
+#include "plotcolor.h"
 /*
 m_listeWidget->setViewMode(QListWidget::IconMode);
 
@@ -56,27 +57,13 @@ userColorMapDlg::userColorMapDlg(QWidget *parent) :
     QSettings set;
 
     stops.clear();
-    const char *colors[] =
-    {
-        "Green",
-        "LightSalmon",
-        "SteelBlue",
-        "Yellow",
-        "Fuchsia",
-        "PaleGreen",
-        "PaleTurquoise",
-        "Cornsilk",
-        "HotPink",
-        "Peru",
-        "Maroon",
-        "White"
-    };
+
     QString sx = QString().sprintf("userColorStopColor%02d",10);
     for (int i = 0; i < 13; ++i){
         double pos = set.value(QString().sprintf("userColorStopPos%02d", i), (double)i * .1).toDouble();
         if (pos == 1.)
             pos = .99;
-        QColor c = QColor(set.value(QString().sprintf("userColorStopColor%02d", i), colors[i%10]).toString());
+        QColor c = QColor(set.value(QString().sprintf("userColorStopColor%02d", i), plotColors[i%10]).toString());
 
         stops << colorStop(pos,c);
 

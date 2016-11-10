@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>cameraCalibWizard</class>
+ <widget class="QWizard" name="cameraCalibWizard">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>300</width>
+    <height>155</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Camera Lens calibration</string>
+  </property>
+  <property name="wizardStyle">
+   <enum>QWizard::ClassicStyle</enum>
+  </property>
+  <property name="options">
+   <set>QWizard::CancelButtonOnLeft|QWizard::HaveHelpButton|QWizard::HelpButtonOnRight</set>
+  </property>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

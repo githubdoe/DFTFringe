@@ -66,7 +66,7 @@ QVariant zTableModel::headerData(int section, Qt::Orientation orientation, int r
             case 0:
                 return QString("Zernike Term");
             case 1:
-                return QString("Wyant     RMS ");
+                return QString("Wyant");
             case 2:
                 return QString("third");
             }

@@ -86,16 +86,26 @@ SOURCES += main.cpp\
     nullvariationdlg.cpp \
     ccswappeddlg.cpp \
     foucaultview.cpp \
-    settingsgeneral.cpp \
     squareimage.cpp \
     bathastigdlg.cpp \
-    zernikeeditdlg.cpp
+    zernikeeditdlg.cpp \
+    settingsgeneral2.cpp \
+    nullmarginhelpdlg.cpp \
+    plotcolor.cpp \
+    cameracalibwizard.cpp \
+    camwizardpage1.cpp \
+    camcalibrationreviewdlg.cpp \
+    generatetargetdlg.cpp \
+    lensetablemodel.cpp \
+    unwraperrorsview.cpp \
+    lensdialog.cpp \
+    singleapplication.cpp \
+    messagereceiver.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
     igramarea.h \
     circleoutline.h \
-    Boundary.h \
     gplus.h \
     graphicsutilities.h \
     dfttools.h \
@@ -156,10 +166,23 @@ HEADERS  += mainwindow.h \
     nullvariationdlg.h \
     ccswappeddlg.h \
     foucaultview.h \
-    settingsgeneral.h \
     squareimage.h \
     bathastigdlg.h \
-    zernikeeditdlg.h
+    zernikeeditdlg.h \
+    settingsgeneral2.h \
+    nullmarginhelpdlg.h \
+    plotcolor.h \
+    cameracalibwizard.h \
+    camwizardpage1.h \
+    camcalibrationreviewdlg.h \
+    generatetargetdlg.h \
+    lensetablemodel.h \
+    unwraperrorsview.h \
+    lensdialog.h \
+    singleapplication.h \
+    singleapplication_p.h \
+    messagereceiver.h \
+    boundary.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -177,7 +200,6 @@ FORMS    += mainwindow.ui \
     statsdlg.ui \
     rotationdlg.ui \
     surfacepropertiesdlg.ui \
-    vortextools.ui \
     colorchanneldisplay.ui \
     igramintensity.ui \
     dftthumb.ui \
@@ -208,9 +230,16 @@ FORMS    += mainwindow.ui \
     nullvariationdlg.ui \
     ccswappeddlg.ui \
     foucaultview.ui \
-    settingsgeneral.ui \
     bathastigdlg.ui \
-    zernikeeditdlg.ui
+    zernikeeditdlg.ui \
+    settingsgeneral2.ui \
+    nullmarginhelpdlg.ui \
+    cameracalibwizard.ui \
+    camwizardpage1.ui \
+    camcalibrationreviewdlg.ui \
+    generatetargetdlg.ui \
+    unwraperrorsview.ui \
+    lensdialog.ui
 
 CONFIG( debug, debug|release ) {
     # debug
@@ -233,10 +262,10 @@ OTHER_FILES += \
 RESOURCES += \
     DFTResources.qrc
 RC_FILE = DFTFringe.rc
-
+QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 1.9
+VERSION = 1.10
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
@@ -318,6 +347,15 @@ DISTFILES += \
     COPYING.LESSER.txt \
     COPYING.txt \
     RevisionHistory.html \
-    README.md
+    README.md \
+    res/Help/igram.png \
+    res/Help/igramScreen.png \
+    res/Help/manyrotations.png \
+    res/Help/MirrorConfig.png \
+    res/Help/help.html \
+    res/Help/mirrorConfig.html \
+    res/Help/smoothing.htm \
+    res/Help/Gaussian10.png \
+    res/Help/oneIgramanalysis.png
 
     TRANSLATIONS    = dftfringe_fr.ts

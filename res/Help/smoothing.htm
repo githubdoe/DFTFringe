@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<style type="text/css">
+div.img
+{
+  margin: 2px;
+
+  height: auto;
+  width: auto;
+
+  text-align: left;
+}	
+
+div.img a:hover img { border: 1px solid #0000ff; } 
+
+div.desc
+{
+  text-align: Left;
+  font-weight: normal;
+  width: 320px;
+  margin: 2px;
+}
+p.ex
+{
+    width:600px; 
+    word-wrap:break-word;
+}
+</style>
+
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<Title>Examples of Wavefront Smoothing</Title>
+</HEAD>
+<BODY>
+<h3>Smoothing the analysis</h3>
+
+<p class = ex>FFT analysis can pick up a lot of noise from the interferometer system.  That noise produces spurious spikes and dips in the surface.  These need to be smoothed out.  To start with it is best to take several images at several tilt settings.  Then rotate the mirror 45 deg and do the same all over again.  After analysis each wavemap from each rotation can be averaged and then counter rotated using the Rotate button on the surface analysis controls. Then average all the counter rotated averages.  There will still be some bumps left over and at that point you will need to use the Gaussian Blur function on the surface filter. 
+
+</p>
+<h3>Test Stand astig removal</h3>
+<p class = ex>
+DFTFringe provides a feature to help automate the analysis and counter rotation of mirrors rotated in interferograms.
+That feature also removes both test stand induced astig and bath beam seperation astig from the analysis while leaving the true mirror astig.  It can be accessed from the Tools menu.
+The user should take interferograms at pairs of rotation angles that are 90 degrees apart.  For example rotate the mirror (0,90) and (45,135) degrees. Take several interferograms at each rotation.  Then use the test stand astig removal tool to complete the analysis.
+</p>
+<h3><p class = ex>Examples of wavefront smoothing for a mirror with a clam shell fracture at the top edge and a complex scratch extending from the center toward 6 o'clock.</h3></p>
+<p>
+<div class="img">
+ <a href=oneIgramanalysis.png><img src=oneIgramanalysis.png width="600" ></a>
+ <div class="desc">Raw Wavefront with no smoothing</div>
+</div>
+
+</p>
+
+<p>
+<div class="img">
+<a href = manyrotations.png><img src=manyrotations.png width = 600></a>
+
+<div class="desc">
+Rotation mirror several times and averaging counter rotations together.
+</div>
+</div>
+</p>
+
+<p>
+<div class="img">
+<a href = Gaussian10.png><img src=Gaussian10.png width = 600></a>
+<div class="desc">
+Combined rotation and  10 gaussian smoothing.</div>
+</div>
+</p>
+
+
+
+
+
+</BODY>
+</HTML>

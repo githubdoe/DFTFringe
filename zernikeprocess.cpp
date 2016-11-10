@@ -22,6 +22,7 @@
 #include <QDebug>
 #include "surfaceanalysistools.h"
 #include "simigramdlg.h"
+#include "settings2.h"
 std::vector<bool> zernEnables;
 std::vector<double> zNulls;
 double BestSC = -1.;
@@ -568,31 +569,45 @@ zernikeProcess::zernikeProcess(QObject *parent) :
 //}
 // compute zernikes from unwrapped surface
 #define SAMPLE_WIDTH 1
-double zernikeProcess::unwrap_to_zernikes(wavefront &wf)
+void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
 {
     int nx = wf.data.cols;
     int ny = wf.data.rows;
 
     cv::Mat surface = wf.data;
 
-    static double RMS = 0.;
     if (!m_dirty_zerns)
-        return RMS;
+        return;
 
     Z = cv::Mat(Z_TERMS,1,CV_64F, 0.);
 
 /*
 'calculate LSF matrix elements
 */
-    int am_size = Z_TERMS * Z_TERMS;
-    double* Am = new double[am_size];
-    double* Bm = new double[Z_TERMS];
-    for (int i = 0; i < am_size; ++i)
-    {
-        Am[i] = 0.;
+
+    Settings2 &settings = *Settings2::getInstance();
+    bool useSvd = false;
+    if (settings.m_general->useSVD()){
+        useSvd = true;
     }
-    for (int i = 0; i < Z_TERMS; ++i)
-        Bm[i] = 0;
+
+
+    int am_size = Z_TERMS * Z_TERMS;
+    cv::Mat_<double> A;//(count,Z_TERMS);
+    cv::Mat_<double> B;//(count,1);
+    cv::Mat_<double> X(Z_TERMS,1);
+    int count = 0;
+    if (useSvd){
+        count = cv::countNonZero(wf.workMask);
+        A = cv::Mat_<double>::zeros(count,Z_TERMS);
+        B = cv::Mat_<double>::zeros(count,1);
+    }
+    else {
+        A = cv::Mat_<double>::zeros(Z_TERMS,Z_TERMS);
+        B = cv::Mat_<double>::zeros(Z_TERMS,1);
+    }
+
+
 
     //calculate LSF right hand side
     int step = SAMPLE_WIDTH;
@@ -604,6 +619,7 @@ double zernikeProcess::unwrap_to_zernikes(wavefront &wf)
 
     double delta = 1./(wf.m_outside.m_radius);
     zernikePolar &zpolar = *zernikePolar::get_Instance();
+    int sampleCnt = 0;
     for(int y = 0; y < ny; y += step) //for each point on the surface
     {
         //((MainWindow*)parent())->progBar->setValue(100 * y/ny);
@@ -614,41 +630,55 @@ double zernikeProcess::unwrap_to_zernikes(wavefront &wf)
             double rho = sqrt(ux * ux + uy * uy);
             double theta = atan2(uy,ux);
             zpolar.init(rho, theta);
-            if (wf.workMask.at<bool>(y,x) and rho <= 1.)           {
+            if (wf.workMask.at<bool>(y,x) != 0){
 
                 for ( int i = 0; i < Z_TERMS; ++i)
                 {
 
-                    int dy = i * Z_TERMS;
-                    double t = zpolar.zernike(i, rho, theta);
-                    for (int j = 0; j < Z_TERMS; ++j)
-                    {
-                        int ndx = j + dy;
-                        Am[ndx] = Am[ndx] + t * zpolar.zernike(j, rho, theta);
-
+                    if (useSvd){
+                        double t = zpolar.zernike(i, rho, theta);
+                        A(sampleCnt,i) = t;
+                    }
+                    else {
+                        int dy = i * Z_TERMS;
+                        double t = zpolar.zernike(i, rho, theta);
+                        for (int j = 0; j < Z_TERMS; ++j)
+                        {
+                            int ndx = j + dy;
+                            //Am[ndx] = Am[ndx] + t * zpolar.zernike(j, rho, theta);
+                            A(i,j) +=  t * zpolar.zernike(j, rho, theta);
+                        }
+                        // FN is the OPD at (Xn,Yn)
+                        //Bm[i] = Bm[i] + surface.at<double>(y,x) * t;
+                        B(i) += surface.at<double>(y,x) * t;
                     }
 
-                    // FN is the OPD at (Xn,Yn)
-                    Bm[i] = Bm[i] + surface.at<double>(y,x) * t;
-
                 }
-
+                if (useSvd){
+                    B(sampleCnt++) = surface.at<double>(y,x);
+                    if (sampleCnt > count){
+                        QMessageBox::warning(0,"Critical Error", QString().sprintf("Zernike computation sampleCnt > count %d %d",sampleCnt,count));
+                        return ;
+                    }
+                }
             }
         }
     }
 
-    // compute coefficients
-    gauss_jordan (Z_TERMS, Am, Bm);
+    cv::solve(A,B,X,(useSvd)? DECOMP_SVD : DECOMP_LU);
+    if (settings.m_general->showConditionNumbers()){
+        cv::Mat Ai;
+
+        double conditionNumber = 1./cv::invert(A,Ai,DECOMP_SVD);
+        double c2 = cv::norm(A,NORM_L2) * cv::norm(Ai,NORM_L2);
+        emit statusBarUpdate(QString().sprintf(" Zernike LSF matrix Condition Numbers %6.3lf %6.3lf", conditionNumber, c2));
+    }
+    wf.InputZerns = std::vector<double>(Z_TERMS,0);
+    for (int z = 0; z < X.rows; ++z){
+        wf.InputZerns[z] = X(z);
+    }
 
 
-    wf.InputZerns.assign(Bm, Bm+Z_TERMS);
-
-
-    //m_fringe_rms = RMS;
-    delete[] Am;
-    delete[] Bm;
-
-    return RMS;
 }
 
 cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, std::vector<bool> enables,
@@ -795,9 +825,9 @@ cv::Mat makeSurfaceFromZerns(int border, bool doColor){
                 for (int z = 0; z < dlg.zernikes.size(); ++z){
                     double val = dlg.zernikes[z];
                     if (z == 8){
-                       val = (dlg.doCorrection) ? md->z8 * val * .01 : val;
+                       val = (dlg.doCorrection) ? md->cc * md->z8 * val * .01 : val;
                     }
-                    S1 += val * zpolar.zernike(z,rho,theta);
+                    S1 +=  val * zpolar.zernike(z,rho,theta);
                 }
 
                 if (doColor){

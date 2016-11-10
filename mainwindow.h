@@ -38,7 +38,6 @@
 #include "reviewwindow.h"
 #include "settings2.h"
 #include "wavefrontloader.h"
-#include "vortextools.h"
 #include "colorchanneldisplay.h"
 #include "igramintensity.h"
 #include "vortexdebug.h"
@@ -70,6 +69,7 @@ public:
     reviewWindow *review;
     Settings2 *settingsDlg;
     wavefront *getCurrentWavefront();
+    void openWaveFrontonInit(QStringList args);
 public slots:
     void enableShiftButtons(bool enable);
     void showMessage(QString);
@@ -86,7 +86,8 @@ public slots:
     void zoomContour(bool flag);
     void zoomOgl(bool flag);
 signals:
-    void load(QStringList, SurfaceManager *);
+    void load(SurfaceManager *);
+    //void load(QStringList, SurfaceManager *);
     void messageResult(int);
     void gammaChanged(bool, double);
 private slots:
@@ -198,6 +199,10 @@ private slots:
     void on_actionEdit_Zernike_values_triggered();
 
 
+    void on_actionCamera_Calibration_triggered();
+
+    void on_actionShow_unwrap_errors_triggered();
+
 private:
 
     Ui::MainWindow *ui;
@@ -212,12 +217,12 @@ private:
     void createDockWindows();
 public:
     IgramArea *m_igramArea;
+
 private:
     DFTArea *m_dftArea;
 
     contourView *m_contourView;
     DFTTools *m_dftTools;
-    VortexTools *m_vortexTools;
     ContourTools *m_contourTools;
     OGLControls *m_oglTools;
     surfaceAnalysisTools *m_surfTools;

@@ -38,7 +38,7 @@
 #include "outlinehelpdocwidget.h"
 #include "bathastigdlg.h"
 
-
+#include "cameracalibwizard.h"
 using namespace QtConcurrent;
 vector<wavefront*> g_wavefronts;
 int g_currentsurface = 0;
@@ -78,7 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_waveFrontLoader = new waveFrontLoader();
     m_waveFrontLoader->moveToThread(m_loaderThread);
     m_colorChannels = new ColorChannelDisplay();
-    connect(this, SIGNAL(load(QStringList,SurfaceManager*)), m_waveFrontLoader, SLOT(loadx(QStringList,SurfaceManager*)));
+    connect(this, SIGNAL(load(SurfaceManager*)), m_waveFrontLoader, SLOT(loadx(SurfaceManager*)));
     m_intensityPlot = new igramIntensity(0);
 
 
@@ -91,6 +91,7 @@ MainWindow::MainWindow(QWidget *parent) :
     gscrollArea = scrollArea;
     m_igramArea = new IgramArea(scrollArea, this);
     connect(m_igramArea, SIGNAL(statusBarUpdate(QString)), statusBar(), SLOT(showMessage(QString)));
+    connect(zernikeProcess::get_Instance(), SIGNAL(statusBarUpdate(QString)), statusBar(),SLOT(showMessage(QString)));
     connect(m_igramArea, SIGNAL(upateColorChannels(QImage)), this, SLOT(updateChannels(QImage)));
     connect(m_igramArea, SIGNAL(showTab(int)),  ui->tabWidget, SLOT(setCurrentIndex(int)));
     connect(this, SIGNAL(gammaChanged(bool,double)), m_igramArea, SLOT(gammaChanged(bool, double)));
@@ -137,7 +138,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //Surface Manager
     m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView->getPlot(),
                                           m_ogl->m_gl, metrics);
-    connect(m_surfaceManager, SIGNAL(load(QStringList,SurfaceManager*)), m_waveFrontLoader, SLOT(loadx(QStringList,SurfaceManager*)));
+    connect(m_surfaceManager, SIGNAL(load(QStringList, SurfaceManager*)), m_waveFrontLoader, SLOT(loadx(QStringList, SurfaceManager*)));
+    connect(m_surfaceManager, SIGNAL(load(SurfaceManager*)), m_waveFrontLoader, SLOT(loadx(SurfaceManager*)));
     connect(m_surfaceManager, SIGNAL(showMessage(QString)), this, SLOT(showMessage(QString)));
     connect(m_contourView, SIGNAL(showAllContours()), m_surfaceManager, SLOT(showAllContours()));
     connect(m_dftArea, SIGNAL(newWavefront(cv::Mat,CircleOutline,CircleOutline,QString)),
@@ -207,7 +209,24 @@ MainWindow::MainWindow(QWidget *parent) :
     progBar = new QProgressBar(this);
     ui->statusBar->addPermanentWidget(progBar);
 
+    QStringList args = QCoreApplication::arguments();
+    openWaveFrontonInit(args);
 
+}
+
+void MainWindow::openWaveFrontonInit(QStringList args){
+    qDebug()<< "args" << args;
+    bool worktodo = false;
+    foreach( QString arg, args){
+        if (arg.toUpper().endsWith(".WFT")){
+            m_waveFrontLoader->addWavefront(arg);
+            worktodo = true;
+        }
+    }
+    if (worktodo && m_waveFrontLoader->done){
+        ui->tabWidget->setCurrentIndex(2);
+        emit load(m_surfaceManager);
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -431,11 +450,12 @@ void MainWindow::updateMetrics(wavefront& wf){
     double d4 = diam * diam * diam * diam;
     double z8 = zernTablemodel->values[8];
     if (m_mirrorDlg->doNull && wf.useSANull){
-        z8 = z8 - m_mirrorDlg->cc * m_mirrorDlg->z8;
+        BestSC = z8/m_mirrorDlg->z8;
     }
+    else
+     BestSC = m_mirrorDlg->cc +z8/m_mirrorDlg->z8;
 
-    double z1 = z8 * 384. * r3 * m_mirrorDlg->lambda * 1.E-6/(d4);
-    BestSC = m_mirrorDlg->cc + z1;
+
     metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing, m_mirrorDlg->lambda);
     metrics->mCC->setText(QString().sprintf("<FONT FONT SIZE = 7>%6.3lf",BestSC));
     if (m_mirrorDlg->isEllipse()){
@@ -505,7 +525,7 @@ void MainWindow::on_actionRead_WaveFront_triggered()
         lastPath = info.absolutePath();
         QSettings settings;
         settings.setValue("lastPath",lastPath);
-        emit load(fileNames, m_surfaceManager);
+        openWaveFrontonInit(fileNames);
         this->setCursor(Qt::ArrowCursor);
         ui->tabWidget->setCurrentIndex(2);
     }
@@ -658,13 +678,12 @@ void MainWindow::on_actionWavefront_triggered()
     int wx = dlg.size;
     int wy = wx;
     double rad = (double)(wx-1)/2.;
-    double xcen = rad,ycen = rad;
+    int xcen = rad;
+    int ycen = rad;
     int border = 1;
+
     rad -= border;
-
-
     cv::Mat result = makeSurfaceFromZerns(border);
-
     m_surfaceManager->createSurfaceFromPhaseMap(result,
                                                 CircleOutline(QPointF(xcen,ycen),rad),
                                                 CircleOutline(QPointF(0,0),0),
@@ -778,7 +797,9 @@ void MainWindow::on_actionSave_PDF_report_triggered()
 
 void MainWindow::on_actionHelp_triggered()
 {
-    QMessageBox::information(this, "Help", "Sorry no help other than videos yet.");
+    QString link = qApp->applicationDirPath() + "/res/Help/help.html";
+    QDesktopServices::openUrl(QUrl(link));
+
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -1076,4 +1097,16 @@ void MainWindow::on_actionEdit_Zernike_values_triggered()
     zernikeEditDlg *dlg = new zernikeEditDlg(m_surfaceManager, this);
     dlg->setWindowFlags(Qt::Tool);
     dlg->show();
+}
+
+void MainWindow::on_actionCamera_Calibration_triggered()
+{
+    cameraCalibWizard *camWiz = new cameraCalibWizard;
+    camWiz->show();
+
+}
+#include "unwraperrorsview.h"
+void MainWindow::on_actionShow_unwrap_errors_triggered()
+{
+    m_surfaceManager->showUnwrap();
 }

@@ -21,10 +21,10 @@ bathAstigDlg::~bathAstigDlg()
 }
 
 void bathAstigDlg::compute(){
-    mirrorDlg &md = *mirrorDlg::get_Instance();
+
     double val = ui->diamSb->value() * ui->diamSb->value() * ui->sepSb->value() * ui->sepSb->value() /
             (32. * ui->rocsb->value() * ui->rocsb->value() * ui->rocsb->value());
-    ui->pvAstig->setText( QString::number(round(1e9 * val/md.lambda)/1000.));
+    ui->pvAstig->setText( QString::number(round(1e9 * val/ui->lambdaSb->value())/1000.));
 }
 
 void bathAstigDlg::on_diamSb_valueChanged(double)

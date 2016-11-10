@@ -70,6 +70,7 @@ public:
     void SaveWavefronts(bool saveNulled);
     void writeWavefront(QString fname, wavefront *wf, bool saveNulled);
     void useDemoWaveFront();
+    void showUnwrap();
     inline wavefront *getCurrent(){
         if (m_wavefronts.size() == 0)
             return 0;
@@ -127,6 +128,7 @@ signals:
     void rocChanged(double);
     void nameChanged(QString, QString);
     void showTab(int);
+    void load(SurfaceManager *);
     void load(QStringList, SurfaceManager *);
     void enableControls(bool);
 private slots:

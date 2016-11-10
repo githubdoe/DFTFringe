@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<h1> DFTFringe Fourier Analysis </h1>
+<style> 
+p
+{
+    width:800px; 
+    word-wrap:break-word;
+}
+p.ex
+{
+    width:500px; 
+    word-wrap:break-word;
+}
+td {
+
+    vertical-align: top;
+}
+</style>
+<p>Fourier Analysis is a technique to analyze interferograms that have their fringes much closer together than standard fringe tracing analysis.  It can extract higher resolution detail about the surface.  It also can add more noise to the analysis giving false bumps and dips, but if combined with many igrams taken at many mirror orientations it can give very good results.  It is usually quicker and more accurate to use FFT analysis as opposed to Fringe tracing analysis.</p>
+
+<H1>DFTFringe Help Step by Step</H1>
+</HEAD>
+<BODY vlink = blue>
+
+<dl><dt><h2>Step 1.</h2></dt><dd>
+<p class = "ex"> 
+Make an igram with as much tilt as you can get before the fringes blur out.
+First focus the camera on a target placed at the surface of the mirror. That will insure a well defined edge of the mirror in the interferogram.</p></dd>
+<br><br><a href =  igram.png><img src = igram.png width = 500 border = "3"></a></p>
+
+<dt><h2>Step 2.<h2></dt><dd><p class = "ex"> 
+Enter your mirror parameters and laser wavelength into the <a href = mirrorConfig.html> the mirror configuartion dialog.</p></a></dd>
+<img src=mirrorconfig.png width="600" >
+
+<br><br>
+<dt><h2>Step 3.</h2></dt><dd>Load an interferogram and circle the mirror then press "Done"
+<dt></dt><dd><a href = igramScreen.png><img src=igramScreen.png width="300" ></a></dd>
+
+<br><br>
+<dt><h2>Step 4.</h2></dt><dd>Adjust the blue center sfilter and press "compute surface"</dd>
+<dd><a href = dft.png><img src=dft.png width="300" ></a></dd>
+
+<br><br>
+<dt><h2>Step 5.</h2></dt><dd>View results</dd>
+<dd><a href = analysis.png> <img src=analysis.png width = 300 ></a></dd>
+<p>Inspect the analysis and check the <a href = unwrap_errors.html>unwrap errors.</p>
+<dt><h2>Step 6.</h2><dt><dd><a href = smoothing.htm>Improve the accuracy</a>. Take several interferograms at several mirror rotations, counter rotate the results and average all together.</dd>
+</dl>
+</BODY>
+</HTML>

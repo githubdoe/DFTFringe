@@ -30,6 +30,7 @@
 #include "mirrordlg.h"
 #include <qwt_scale_draw.h>
 #include <QSettings>
+#include "settings2.h"
 double M2PI = M_PI * 2.;
 SimulationsView *SimulationsView::m_Instance = 0;
 class arcSecScaleDraw: public QwtScaleDraw
@@ -77,6 +78,8 @@ SimulationsView::SimulationsView(QWidget *parent) :
     ui->FFTSizeSB->blockSignals(true);
     ui->FFTSizeSB->setValue(set.value("FFTSize", 1000).toInt());
     ui->FFTSizeSB->blockSignals(false);
+    ui->centerMagnifySB->setValue(set.value("StarTestMagnify", 4).toDouble());
+    ui->gammaSB->setValue(set.value("StarTestGamma", 2.).toDouble());
     connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_MakePB_clicked()));
 }
 
@@ -116,7 +119,7 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
     mirrorDlg *md = mirrorDlg::get_Instance();
 
 
-    // defocus is in mm on input
+    // defocus is in waves on input
 
     std::vector<double> newZerns = m_Instance->m_wf->InputZerns;
     zernikeProcess &zp = *zernikeProcess::get_Instance();
@@ -319,7 +322,7 @@ void SimulationsView::on_MakePB_clicked()
     //inside focus star test
     cv::Mat inside = computeStarTest(nulledSurface(-defocus), ui->FFTSizeSB->value(), ui->centerMagnifySB->value());
     cv::Mat t = fitStarTest(inside,500,gamma);
-    cv::putText(t,QString().sprintf("-%5.1lfmm inside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
+    cv::putText(t,QString().sprintf("-%5.1lf waves inside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
     wasAliased |= alias;
     if (alias)
     {
@@ -336,7 +339,7 @@ void SimulationsView::on_MakePB_clicked()
     // outside focus star test
     cv::Mat outside = computeStarTest(nulledSurface(defocus),ui->FFTSizeSB->value(),ui->centerMagnifySB->value());
     t = fitStarTest(outside,500,gamma);
-    cv::putText(t,QString().sprintf("%5.1lfmm outside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
+    cv::putText(t,QString().sprintf("%5.1lfwaves outside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
     wasAliased |= alias;
     if (alias)
     {
@@ -400,26 +403,33 @@ void SimulationsView::on_MakePB_clicked()
 }
 
 void SimulationsView::on_defocusSB_valueChanged(double){
-    m_guiTimer.start(500);
+    if (!Settings2::getInstance()->m_general->useStarTestMake())
+        m_guiTimer.start(1000);
 
 }
 
-void SimulationsView::on_gammaSB_valueChanged(double)
+void SimulationsView::on_gammaSB_valueChanged(double value)
 {
-    m_guiTimer.start(500);
+    QSettings set;
+    set.setValue("StarTestGamma", value);
+    if (!Settings2::getInstance()->m_general->useStarTestMake())
+        m_guiTimer.start(1000);
 }
 
-void SimulationsView::on_centerMagnifySB_valueChanged(double)
+void SimulationsView::on_centerMagnifySB_valueChanged(double value)
 {
-    m_guiTimer.start(500);
+    QSettings set;
+    set.setValue("StarTestMagnify", value );
+    if (!Settings2::getInstance()->m_general->useStarTestMake())
+        m_guiTimer.start(1000);
 }
 
 void SimulationsView::on_FFTSizeSB_valueChanged(int val)
 {
    QSettings set;
    set.setValue("FFTSize", val);
-
-    m_guiTimer.start(500);
+    if (!Settings2::getInstance()->m_general->useStarTestMake())
+        m_guiTimer.start(1000);
 }
 
 

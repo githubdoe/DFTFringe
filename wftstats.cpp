@@ -21,6 +21,7 @@
 #include "zernikedlg.h"
 #include <qwt_plot_histogram.h>
 #include <QTextStream>
+#include "plotcolor.h"
 class wftNameScaleDraw: public QwtScaleDraw
 {
 public:
@@ -98,8 +99,8 @@ public:
             return QString("");
         if (value > m_names.size() +3)
             return QString("");
-
-        QwtText t(QString(m_names[int(value-4)]));
+        QString str(m_names[int(value-4)]);
+        QwtText t(str);
         if (value == 6.)
             t.setColor(Qt::red);
         return t;
@@ -425,20 +426,7 @@ QwtPlot *wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx){
     runingavg->setRenderHint( QwtPlotItem::RenderAntialiased, true );
     runingavg->setPen(Qt::blue,2);
     runingavg->attach(wftPlot);
-    const char *colors[] =
-    {
-        "Green",
-        "LightSalmon",
-        "SteelBlue",
-        "Yellow",
-        "Fuchsia",
-        "PaleGreen",
-        "PaleTurquoise",
-        "Cornsilk",
-        "HotPink",
-        "Peru",
-        "Maroon"
-    };
+
     if (m_doZernGroup){
         const int zernToCombinedNx[] = {0,0,0,0,0,0,1,1,2,3,3,4,4,5,5,6,7,7,8,8,9,9,10,10,11,
                                        12,12,13,13,14,14,15,15,16,16,17};
@@ -452,7 +440,7 @@ QwtPlot *wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx){
             }
 
             zcurve->setSamples(points);
-            zcurve->setPen(QColor(colors[zern%10]),2);
+            zcurve->setPen(QColor(plotColors[zern%10]),2);
             zcurve->attach(wftPlot);
         }
     }

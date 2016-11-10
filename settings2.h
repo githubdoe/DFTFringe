@@ -23,7 +23,7 @@
 #include "settingsdft.h"
 #include "settingsdebug.h"
 #include "settingsprofile.h"
-#include "settingsGeneral.h"
+#include "settingsGeneral2.h"
 namespace Ui {
 class Settings2;
 }
@@ -40,7 +40,7 @@ public:
     static settingsDFT *m_dft;
     static settingsDebug *m_debug;
     static settingsProfile *m_profile;
-    static settingsGeneral *m_general;
+    static SettingsGeneral2 *m_general;
     static bool showDFT();
     static int dftSize();
     static bool showMask();

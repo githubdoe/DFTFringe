@@ -23,6 +23,7 @@
         <file>res/1461975017_undo.png</file>
         <file>res/redo.png</file>
         <file>res/1461975134_Help_mark_query_question_support_talk.png</file>
+        <file>camera-icon-60.png</file>
     </qresource>
     <qresource prefix="/">
         <file>res/wats2.png</file>

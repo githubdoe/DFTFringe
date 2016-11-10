@@ -30,19 +30,18 @@
 // Zernike_terms message handlers
 
 ZernTableModel::ZernTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
-    :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable)
+    :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable), m_nulled(false)
 {
     values = std::vector<double>(Z_TERMS, 0.);
 }
 
 
 
-void ZernTableModel::setValues(std::vector<double> vals){
-
+void ZernTableModel::setValues(std::vector<double> vals, bool nulled){
+    m_nulled = nulled;
     values = vals;
     QModelIndex topLeft = index(0, 0);
     QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
-
     emit dataChanged(topLeft, bottomRight);
 }
 
@@ -91,7 +90,7 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
             }
 
             mirrorDlg &md = *mirrorDlg::get_Instance();
-            if (index.row() == 8 && md.doNull){
+            if (index.row() == 8 && md.doNull && !m_nulled){
                 double val = values[8] - md.z8 * md.cc;
                 return QString().sprintf("%6.3lf  %6.3lf",val, computeRMS(8, val));
             }

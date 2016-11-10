@@ -51,9 +51,9 @@ private slots:
 
     void on_defocusSB_valueChanged(double);
 
-    void on_gammaSB_valueChanged(double);
+    void on_gammaSB_valueChanged(double value);
 
-    void on_centerMagnifySB_valueChanged(double);
+    void on_centerMagnifySB_valueChanged(double value);
 
     void on_FFTSizeSB_valueChanged(int val);
 

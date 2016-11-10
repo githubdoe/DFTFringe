@@ -18,7 +18,7 @@
 #include "wavefrontloader.h"
 
 waveFrontLoader::waveFrontLoader(QObject *parent) :
-    QObject(parent), shouldCancel(false)
+    QObject(parent),  done(true),shouldCancel(false)
 {
 
     pd = new QProgressDialog("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
@@ -27,25 +27,54 @@ waveFrontLoader::waveFrontLoader(QObject *parent) :
     connect(this, SIGNAL(progressRange(int,int)), pd, SLOT(setRange(int,int)));
     connect(this, SIGNAL(currentWavefront(QString)), pd, SLOT(setLabelText(QString)));
 }
+
+void waveFrontLoader::addWavefront(QString filename){
+    mutex.lock();
+    m_list << filename;
+    mutex.unlock();
+}
+
 void waveFrontLoader::cancel(){
     shouldCancel = true;
     qDebug() << "trying to cancel";
 }
 
 void waveFrontLoader::loadx(QStringList list, SurfaceManager *sm){
+    m_list = list;
+    loadx(sm);
+}
+
+void waveFrontLoader::loadx( SurfaceManager *sm){
+
     shouldCancel = false;
-    emit progressRange(0,list.size()+1);
+    int prog = 0;
+    int size = m_list.size();
+
     emit status(0);
     bool mirrorConfigChanged = false;
-    for (int i = 0; i < list.size(); ++i){
+    done = false;
+    emit progressRange(0, size);
+
+    while (m_list.size() > 0){
+        mutex.lock();
+        QString file = m_list.front();
+        m_list.removeAt(0);
+        mutex.unlock();
+
         if (pd->wasCanceled())
                 break;
-        emit currentWavefront(list[i]);
-        emit status(i+1);
-        qDebug() << " loading " << i;
-        mirrorConfigChanged |= sm->loadWavefront(list[i]);
+
+        emit currentWavefront(file);
+
+        emit status(++prog);
+        qDebug() << " loading " << file;
+        mirrorConfigChanged |= sm->loadWavefront(file);
     }
-    emit status(list.size()+1);
+
+    done = true;
+    emit progressRange(0, 1);
+    emit status(0);
+    emit status(1);
 
 }
 

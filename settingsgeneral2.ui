@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SettingsGeneral2</class>
+ <widget class="QDialog" name="SettingsGeneral2">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QCheckBox" name="checkBox">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>110</y>
+     <width>241</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Use SVD Least Square Fit to calculate Zernikes. Slower but may be more robust.
+Try it and if you find no difference in wavefront values then you do not need to use it.</string>
+   </property>
+   <property name="text">
+    <string>Use SVD for Zernike fitting</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="showConditionNumbersCb">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>140</y>
+     <width>231</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Show Zernike LSF matrix condition number</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="starTestMakeCb">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>180</y>
+     <width>241</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Make start test only when Make is pressed.</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

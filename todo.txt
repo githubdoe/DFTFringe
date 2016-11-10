@@ -17,3 +17,7 @@ Why does average have non zero values outside of mask area?
 
 
 why have to decrease radius -2 when masking vortexed version of ellipse?
+
+Why is simulated igram reversed from real one after import from wavefront?
+
+Smoothing does not finish sometimes.

@@ -42,7 +42,7 @@
      <item>
       <widget class="QDoubleSpinBox" name="defocusSB">
        <property name="toolTip">
-        <string>Eyepiece defocus in milimeters</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Eyepiece defocus in waves&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="minimum">
         <double>-50.000000000000000</double>

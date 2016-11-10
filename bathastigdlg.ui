@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;PV Astig = Diameter &lt;span style=&quot; vertical-align:super;&quot;&gt;2 &lt;/span&gt;X (Beam Seperation)&lt;span style=&quot; vertical-align:super;&quot;&gt;2 &lt;/span&gt;/ (32 X ROC&lt;span style=&quot; vertical-align:super;&quot;&gt;3&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Astig = Diameter &lt;span style=&quot; vertical-align:super;&quot;&gt;2 &lt;/span&gt;X (Beam Seperation)&lt;span style=&quot; vertical-align:super;&quot;&gt;2 &lt;/span&gt;/ (32 X ROC&lt;span style=&quot; vertical-align:super;&quot;&gt;3&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QWidget" name="layoutWidget">
@@ -148,7 +148,7 @@
     <item>
      <widget class="QLabel" name="label_6">
       <property name="text">
-       <string>PV astig:</string>
+       <string>astig:</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

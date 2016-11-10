@@ -19,6 +19,8 @@
 #define SETTINGSIGRAM_H
 
 #include <QDialog>
+#include "lensetablemodel.h"
+#include <QItemSelectionModel>
 
 namespace Ui {
 class settingsIGram;
@@ -31,7 +33,9 @@ class settingsIGram : public QDialog
 public:
     explicit settingsIGram(QWidget *parent = 0);
     ~settingsIGram();
-
+    bool m_removeDistortion;
+    QStringList m_lenseParms;
+    void updateLenses(QString str);
 signals:
     void igramLinesChanged(int,int,QColor,QColor, double, int, int);
 private slots:
@@ -45,12 +49,28 @@ private slots:
 
     void on_buttonBox_accepted();
 
+
+    void on_removeDistortion_clicked(bool checked);
+
+    void eraseItem();
+
+    void showContextMenu(const QPoint &pos);
+
+
+    void on_lenseTableView_clicked(const QModelIndex &index);
+
 private:
+
     Ui::settingsIGram *ui;
     QColor edgeColor;
     QColor centerColor;
     int edgeWidth;
     int centerWidth;
+    LenseTableModel *lensesModel;
+    QVector<QStringList> m_lensData;
+    QModelIndex currentNdx;
+    void saveLensData();
+    QItemSelectionModel *selectionModel;
 };
 
 #endif // SETTINGSIGRAM_H

@@ -22,14 +22,15 @@
 #include <QtWidgets>
 #include <QtCore>
 #include "surfacemanager.h"
-
+#include <QMutex>
 
 class waveFrontLoader : public QObject
 {
     Q_OBJECT
 public:
     explicit waveFrontLoader(QObject *parent = 0);
-
+    void addWavefront(QString filename);
+    bool done;
 signals:
     void status(int);
 
@@ -39,6 +40,7 @@ signals:
     void diameterChangedSig(double);
 
 public slots:
+    void loadx(SurfaceManager *sm);
     void loadx(QStringList list, SurfaceManager *sm);
     void cancel();
 
@@ -51,6 +53,8 @@ private:
     QWaitCondition pauseCond;
     bool pause;
     int messageResp;
+    QMutex mutex;
+    QStringList m_list;
 };
 
 #endif // WAVEFRONTLOADER_H

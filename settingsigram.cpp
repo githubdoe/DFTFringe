@@ -21,6 +21,7 @@
 #include <QColorDialog>
 #include <QPen>
 #include <QPainter>
+#include <QMenu>
 static inline QString colorButtonStyleSheet(const QColor &bgColor)
 {
     if (bgColor.isValid()) {
@@ -68,6 +69,41 @@ settingsIGram::settingsIGram(QWidget *parent) :
     }
     int style = set.value("igramLineStyle", 1).toInt();
     ui->styleCB->setCurrentIndex(style-1);
+    m_removeDistortion = set.value("removeLensDistortion", false).toBool();
+    ui->removeDistortion->setChecked(m_removeDistortion);
+    lensesModel = new LenseTableModel(this);
+    QStringList lenses = set.value("Lenses", "").toString().split("\n");
+    m_lenseParms = set.value("currentLense","").toString().split(",");
+
+    int currentLensNdx = -1;
+    m_lensData.clear();
+    int ndx = 0;
+    foreach(QString l, lenses){
+        if (l == "")
+            continue;
+        m_lensData.push_back(l.split(","));
+        if (m_lensData.back()[0] == m_lenseParms[0])
+            currentLensNdx = ndx;
+        ++ndx;
+    }
+    lensesModel->setLensData(&m_lensData);
+    ui->lenseTableView->setModel(lensesModel);
+    m_lenseParms = set.value("currentLense","").toString().split(",");
+    if (!m_removeDistortion)
+        ui->lenseTableView->hide();
+    else {
+        ui->currentlense->setText(m_lenseParms[0]);
+    }
+    ui->lenseTableView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->lenseTableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
+    ui->lenseTableView->selectRow(currentLensNdx);
+    ui->lenseTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    selectionModel = ui->lenseTableView->selectionModel();
+
+    QPalette* palette = new QPalette();
+    palette->setColor(QPalette::Highlight,"lightCyan");
+    palette->setColor(QPalette::HighlightedText,"black");
+    ui->lenseTableView->setPalette(*palette);
 }
 
 settingsIGram::~settingsIGram()
@@ -111,3 +147,70 @@ void settingsIGram::on_buttonBox_accepted()
     emit igramLinesChanged(edgeWidth,centerWidth, edgeColor, centerColor, ui->opacitySB->value(),
                            ui->styleCB->currentIndex()+1, ui->zoomBoxWidthSb->value());
 }
+
+void settingsIGram::on_removeDistortion_clicked(bool checked)
+{
+    m_removeDistortion = checked;
+    QSettings set;
+    set.setValue("removeLensDistortion", checked);
+    if (checked){
+        ui->lenseTableView->show();
+        QSettings set;
+
+    }
+    else {
+        ui->lenseTableView->hide();
+    }
+}
+
+
+#include <QDebug>
+
+void settingsIGram::eraseItem()
+{
+    qDebug() << "erasing" << currentNdx;
+    lensesModel->removeRow(currentNdx.row());
+    saveLensData();
+}
+void settingsIGram::showContextMenu(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = ui->lenseTableView->mapToGlobal(pos);
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    myMenu.addAction("Erase",  this, SLOT(eraseItem()));
+
+    // Show context menu at handling position
+    myMenu.exec(globalPos);
+}
+void settingsIGram::saveLensData(){
+    QSettings set;
+    QStringList v;
+    foreach(QStringList l, m_lensData){
+        v.push_back(l.join(","));
+    }
+    set.setValue("Lenses", v.join("\n"));
+}
+
+void settingsIGram::updateLenses(QString str){
+    m_lensData.push_back(str.split(","));
+    saveLensData();
+    lensesModel->insertRow(m_lensData.size() -2);
+
+}
+
+void settingsIGram::on_lenseTableView_clicked(const QModelIndex &index)
+{
+    currentNdx = index;
+    const QAbstractItemModel * model = index.model();
+    ui->currentlense->setText(model->data(model->index(index.row(), 0, index.parent()), Qt::DisplayRole).toString());
+    m_lenseParms = m_lensData[index.row()];
+    lensesModel->setCurrentRow(index.row());
+
+    ui->lenseTableView->selectionModel()->select( index,
+                      QItemSelectionModel::ClearAndSelect|QItemSelectionModel::Rows);
+    QSettings set;
+    set.setValue("currentLense", m_lensData[index.row()].join(","));
+}
+

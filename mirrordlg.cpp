@@ -40,10 +40,27 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     QSettings settings;
     m_name = settings.value("config mirror name", "default").toString();
     ui->name->setText(m_name);
+    doNull = settings.value("config doNull", true).toBool();
+    ui->nullCB->setChecked(doNull);
     diameter = settings.value("config diameter", 200.).toDouble();
     ui->diameter->setText(QString().sprintf("%6.2lf",diameter));
     roc = settings.value("config roc", 2000.).toDouble();
-    ui->roc->setText(QString().sprintf("%6.2lf",roc));
+    FNumber = roc/(2. * diameter);
+    ui->FNumber->blockSignals(true);
+    if (!doNull){
+        ui->roc->hide();
+        ui->rocLab->hide();
+        ui->FNumber->hide();
+        ui->fnumberLab->hide();
+    }
+    else
+    {   ui->roc->show();
+        ui->rocLab->show();
+        ui->fnumberLab->show();
+        ui->FNumber->show();
+        ui->roc->setText(QString().sprintf("%6.2lf",roc));
+        ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
+    }
     lambda = settings.value("config lambda", 640).toDouble();
     ui->lambda->blockSignals(true);
     ui->lambda->setText(QString().sprintf("%6.1lf",lambda));
@@ -54,11 +71,9 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->cc->setText(QString().sprintf("%6.2lf",cc));
 
     ui->unitsCB->setChecked(mm);
-    doNull = settings.value("config doNull", true).toBool();
-    ui->nullCB->setChecked(doNull);
-    FNumber = roc/(2. * diameter);
-    ui->FNumber->blockSignals(true);
-    ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
+
+
+
     ui->FNumber->blockSignals(false);
     ui->flipH->setChecked((settings.value( "flipH", false).toBool()));
     m_projectPath = settings.value("projectPath", "").toString();
@@ -70,8 +85,10 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->minorAxisEdit->setEnabled(m_outlineShape == ELLIPSE);
     ui->minorAxisEdit->setText(QString::number(settings.value("ellipseMinorAxis", 50.).toDouble()));
     connect(&spacingChangeTimer, SIGNAL(timeout()), this, SLOT(spacingChangeTimeout()));
-
+    if (m_verticalAxis == 0)
+        m_verticalAxis = diameter;
     ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
+    ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
 
 }
 
@@ -312,8 +329,14 @@ QString mirrorDlg::getProjectPath(){
 }
 
 void mirrorDlg::on_diameter_textChanged(const QString &arg1) {
-    diameter = arg1.toDouble() *  ((mm) ? 1.: 25.4);
 
+    double diam = arg1.toDouble() *  ((mm) ? 1.: 25.4);
+    if (m_outlineShape == ELLIPSE){
+        double e = m_verticalAxis/diameter;
+        m_verticalAxis = e * diam;
+        ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
+    }
+    diameter = diam;
     FNumber = roc/(2. * diameter);
     ui->FNumber->blockSignals(true);
     ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
@@ -325,7 +348,11 @@ void mirrorDlg::on_diameter_textChanged(const QString &arg1) {
 //Used when the just loading wavfront is different
 void mirrorDlg::on_diameter_Changed(const double diam)
 {
-
+    if (m_outlineShape == ELLIPSE){
+        double e = m_verticalAxis/diameter;
+        m_verticalAxis = e * diam;
+        ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
+    }
     diameter = diam ;
     FNumber = roc/(2. * diameter);
     ui->FNumber->blockSignals(true);
@@ -365,10 +392,10 @@ void mirrorDlg::on_roc_Changed(const double newVal)
 }
 void mirrorDlg::updateZ8(){
 
-    z8 = (diameter * diameter * diameter * diameter * 1000000.) /
-            (384. * roc * roc * roc * lambda);
+    z8 = (pow(diameter,4) * 1000000.) /
+            (384. * pow(roc, 3) * lambda);
     ui->z8->blockSignals(true);
-    ui->z8->setText(QString().number(z8 * -cc));
+    ui->z8->setText(QString().number(z8 * cc));
     ui->z8->blockSignals(false);
 
 }
@@ -403,6 +430,23 @@ void mirrorDlg::on_lambda_textChanged(const QString &arg1)
 void mirrorDlg::on_nullCB_clicked(bool checked)
 {
     doNull = checked;
+    ui->FNumber->blockSignals(true);
+    ui->roc->blockSignals(true);
+    if (!doNull){
+
+        ui->FNumber->hide();
+        ui->fnumberLab->hide();
+        ui->roc->hide();
+        ui->rocLab->hide();
+    }
+    else {
+        ui->FNumber->show();
+        ui->fnumberLab->show();
+        ui->roc->show();
+        ui->rocLab->show();
+    }
+    ui->FNumber->blockSignals(false);
+    ui->roc->blockSignals(false);
 }
 
 void mirrorDlg::on_unitsCB_clicked(bool checked)
@@ -494,8 +538,15 @@ void mirrorDlg::on_ellipseShape_clicked(bool checked)
     QSettings set;
     set.setValue("outlineShape", m_outlineShape);
     ui->minorAxisEdit->setEnabled(m_outlineShape == ELLIPSE);
+    if (m_verticalAxis == 0){
+        m_verticalAxis = diameter;
+        ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
+    }
 }
 
 
-
-
+void mirrorDlg::on_buttonBox_helpRequested()
+{
+    QString link = qApp->applicationDirPath() + "/res/Help/mirrorConfig.html";
+    QDesktopServices::openUrl(QUrl(link));
+}

@@ -86,6 +86,8 @@
     <addaction name="actionLighting_properties"/>
     <addaction name="actionError_Margins"/>
     <addaction name="actionShow_Statistics_of_Loaded_wavefronts"/>
+    <addaction name="separator"/>
+    <addaction name="actionShow_unwrap_errors"/>
    </widget>
    <widget class="QMenu" name="menuConfiguration">
     <property name="title">
@@ -108,6 +110,7 @@
     <addaction name="actionIterate_outline"/>
     <addaction name="actionBath_Astig_Calculator"/>
     <addaction name="actionEdit_Zernike_values"/>
+    <addaction name="actionCamera_Calibration"/>
    </widget>
    <widget class="QMenu" name="menuSimulations">
     <property name="title">
@@ -143,8 +146,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>100</width>
-     <height>0</height>
+     <width>266</width>
+     <height>471</height>
     </size>
    </property>
    <property name="whatsThis">
@@ -173,7 +176,7 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>0</width>
+           <width>88</width>
            <height>0</height>
           </size>
          </property>
@@ -218,7 +221,7 @@ QPushButton:hover{rgb(85, 255, 255)}
          </property>
          <property name="minimumSize">
           <size>
-           <width>0</width>
+           <width>88</width>
            <height>0</height>
           </size>
          </property>
@@ -369,7 +372,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>20</width>
             <height>0</height>
            </size>
           </property>
@@ -392,7 +395,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="DFTResources.qrc">
+           <iconset>
             <normaloff>:/icons/res/1461975017_undo.png</normaloff>:/icons/res/1461975017_undo.png</iconset>
           </property>
           <property name="iconSize">
@@ -413,7 +416,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -432,7 +435,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="DFTResources.qrc">
+           <iconset>
             <normaloff>:/icons/res/1461974262_f-top_256.png</normaloff>:/icons/res/1461974262_f-top_256.png</iconset>
           </property>
           <property name="iconSize">
@@ -459,7 +462,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -478,7 +481,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="DFTResources.qrc">
+           <iconset>
             <normaloff>:/icons/res/1461974250_f-left_256.png</normaloff>:/icons/res/1461974250_f-left_256.png</iconset>
           </property>
           <property name="iconSize">
@@ -499,7 +502,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -521,7 +524,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="DFTResources.qrc">
+           <iconset>
             <normaloff>:/icons/res/1461975092_minimize.png</normaloff>:/icons/res/1461975092_minimize.png</iconset>
           </property>
           <property name="iconSize">
@@ -548,7 +551,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -567,7 +570,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="DFTResources.qrc">
+           <iconset>
             <normaloff>:/icons/res/1461974268_f-bottom_256.png</normaloff>:/icons/res/1461974268_f-bottom_256.png</iconset>
           </property>
           <property name="iconSize">
@@ -591,7 +594,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -613,7 +616,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="DFTResources.qrc">
+           <iconset>
             <normaloff>:/icons/res/1461975084_maximize.png</normaloff>:/icons/res/1461975084_maximize.png</iconset>
           </property>
           <property name="iconSize">
@@ -640,7 +643,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>70</width>
             <height>0</height>
            </size>
           </property>
@@ -659,7 +662,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="DFTResources.qrc">
+           <iconset>
             <normaloff>:/icons/res/1461974256_f-right_256.png</normaloff>:/icons/res/1461974256_f-right_256.png</iconset>
           </property>
           <property name="iconSize">
@@ -683,7 +686,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>44</width>
             <height>0</height>
            </size>
           </property>
@@ -702,7 +705,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="DFTResources.qrc">
+           <iconset>
             <normaloff>:/icons/res/redo.png</normaloff>:/icons/res/redo.png</iconset>
           </property>
           <property name="iconSize">
@@ -774,7 +777,7 @@ em;
          </property>
          <property name="minimumSize">
           <size>
-           <width>0</width>
+           <width>70</width>
            <height>0</height>
           </size>
          </property>
@@ -872,10 +875,6 @@ em;
     </layout>
     <zorder>groupBox_2</zorder>
     <zorder>groupBox</zorder>
-    <zorder>showIntensity</zorder>
-    <zorder>showChannels</zorder>
-    <zorder>checkBox</zorder>
-    <zorder>checkBox</zorder>
    </widget>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -910,7 +909,7 @@ em;
   </widget>
   <action name="actionLoad_Interferogram">
    <property name="icon">
-    <iconset resource="DFTResources.qrc">
+    <iconset>
      <normaloff>:/icons/igram6.png</normaloff>:/icons/igram6.png</iconset>
    </property>
    <property name="text">
@@ -973,7 +972,7 @@ em;
   </action>
   <action name="actionNext_Wave_Front">
    <property name="icon">
-    <iconset resource="DFTResources.qrc">
+    <iconset>
      <normaloff>:/icons/Button-Next-icon.png</normaloff>:/icons/Button-Next-icon.png</iconset>
    </property>
    <property name="text">
@@ -992,7 +991,7 @@ em;
   </action>
   <action name="actionDelete_wave_front">
    <property name="icon">
-    <iconset resource="DFTResources.qrc">
+    <iconset>
      <normaloff>:/icons/Button-Close-icon.png</normaloff>:/icons/Button-Close-icon.png</iconset>
    </property>
    <property name="text">
@@ -1123,10 +1122,18 @@ em;
     <string>Edit Zernike values</string>
    </property>
   </action>
+  <action name="actionCamera_Calibration">
+   <property name="text">
+    <string>Camera Calibration</string>
+   </property>
+  </action>
+  <action name="actionShow_unwrap_errors">
+   <property name="text">
+    <string>Show unwrap errors</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources>
-  <include location="DFTResources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

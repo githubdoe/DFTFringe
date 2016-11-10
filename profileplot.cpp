@@ -378,7 +378,7 @@ void ProfilePlot::populate()
     double mul = m_showNm * m_showSurface;
     //  ...a horizontal line at upper error margin...
     QwtPlotMarker *muY = new QwtPlotMarker();
-    muY->setLabel( QString::fromLatin1( " 1/4 wave on wavefront" ) );
+    muY->setLabel( QString::fromLatin1( " 1/8 wave on wavefront" ) );
     muY->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
     muY->setLineStyle( QwtPlotMarker::HLine );
     muY->setLinePen( Qt::red, 0, Qt::DashDotLine );
@@ -387,7 +387,7 @@ void ProfilePlot::populate()
 
     //  ...a horizontal line at lower error margin...
     QwtPlotMarker *mlY = new QwtPlotMarker();
-    mlY->setLabel( QString::fromLatin1( " -1/4 wave on wavefront" ) );
+    mlY->setLabel( QString::fromLatin1( " -1/8 wave on wavefront" ) );
     mlY->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
     mlY->setLineStyle( QwtPlotMarker::HLine );
     mlY->setLinePen( Qt::red, 0, Qt::DashDotLine );

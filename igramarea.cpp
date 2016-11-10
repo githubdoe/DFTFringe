@@ -154,7 +154,6 @@ void IgramArea::DrawSimIgram(void){
     double rad = xcen-border;
     cv::Mat simgram = makeSurfaceFromZerns(border, true);
 
-    cv::flip(simgram,simgram,1);
     igramImage = QImage((uchar*)simgram.data,
                         simgram.cols,
                         simgram.rows,
@@ -210,14 +209,70 @@ void IgramArea::doGamma(double gammaV){
 
 }
 
-
+#include <sstream>
 bool IgramArea::openImage(const QString &fileName)
 
 {
+    foreach(QWidget *widget, QApplication::topLevelWidgets()) {
+      if(widget->objectName() == "MainWindow")
+        widget->setWindowTitle(fileName);
+    }
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QImage loadedImage;
     if (!loadedImage.load(fileName))
         return false;
+
+    if (Settings2::getInstance()->m_igram->m_removeDistortion){
+        cv::Mat raw = imread(fileName.toStdString().c_str());
+        QStringList parms = Settings2::getInstance()->m_igram->m_lenseParms;
+        Mat camera = Mat::zeros(3,3,CV_64F);
+        Mat distortion =Mat::zeros(1,5, CV_64F);
+        camera.at<double>(0,0) = parms[6].toDouble();
+        camera.at<double>(1,1) = camera.at<double>(0,0);
+        double width = camera.at<double>(0,2) = parms[7].toDouble();
+        double height = camera.at<double>(1,2) = parms[8].toDouble();
+        width *= 2;
+        height *= 2;
+        double xscale = (double)(raw.cols)/width;
+        double yscale = (double)(raw.rows)/height;
+
+        for (int i = 0; i < 5; ++i){
+            distortion.at<double>(0,i) = parms[1 + i].toDouble();
+        }
+
+
+        camera.at<double>(0,2) = raw.cols/2;
+        camera.at<double>(1,2) = raw.rows/2;
+        camera.at<double>(2,2) = 1.;
+        std::stringstream ss;
+        ss  << "camera "<< camera << std::endl <<"distortion " << distortion;
+        qDebug() << ss.str().c_str();
+        Mat corrected;
+
+
+
+
+
+    Mat view, rview, map1, map2;
+//    initUndistortRectifyMap(camera, distortion, Mat(),
+//        getOptimalNewCameraMatrix(camera, distortion, raw.size(), 1, raw.size(), 0),
+//        raw.size(), CV_16SC2, map1, map2);
+
+//    view = raw.clone();
+//    remap(view, corrected, map1, map2, INTER_LINEAR);
+
+
+        undistort(raw, corrected, camera, distortion);
+
+        cvtColor(corrected,corrected, COLOR_BGRA2RGBA);
+        loadedImage =  QImage((uchar*)corrected.data,
+                            corrected.cols,
+                            corrected.rows,
+                            corrected.step,
+                            QImage::Format_RGBA8888).copy();
+
+    }
     if (mirrorDlg::get_Instance()->shouldFlipH())
         loadedImage = loadedImage.mirrored(true,false);
     hasBeenCropped = false;
@@ -1165,6 +1220,7 @@ void IgramArea::nextStep(){
     m_dftThumb->hide();
     emit showTab(1);
 }
+#include <QImageWriter>
 void IgramArea::save(){
 
     QStringList mimeTypeFilters;
@@ -1188,8 +1244,14 @@ void IgramArea::save(){
     //painter.setPen(QPen(Qt::white, 0.0));//, Qt::DotLine, Qt::RoundCap,Qt::RoundJoin));
 
     //m_outside.draw(painter,1.);
-    pm.save(fileName);
 
+    QImageWriter writer(fileName);
+    if (!writer.canWrite())
+        pm.save(fileName);
+    else {
+        writer.setQuality(100);
+        writer.write(pm);
+    }
 }
 void IgramArea::toggleHideOutline(){
     m_hideOutlines = !m_hideOutlines;
