@@ -1,22 +1,31 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <HTML>
 <HEAD>
+<style> 
+
+p.ex
+{
+    width:800px; 
+    word-wrap:break-word;
+}
+
+</style>
 <h3> Note: </h3>
-<p><i><b><font color = "Red">
+<p class = "ex"> <i><b><font color = "Red">
 This is an experimental feature.  I do not know if it is accurate or helpful.  What I tried to do to verify it was to create a grid target
 with DFTFringe and then add barrel or pincushin distortion using Imagick.  Then used DFTFringe to find and remove that distortion.  That created a straight grid with no visible distorion.  So at least I know the distorion can be determined and removed.  </p>
-<p>Next I tried to measure the distortion of the lens I use to take interferograms a Nikon 200mm zoom at 120 mm fl.  DFTFringe measured a very small barrel disitortion.  I tried removing that from several igrams I had taken and compared it to the original analysis.  The RMS value of the spherical term and final RMS value changed by about .5%. 
-<p>The biggest issue I have at this point is that ImageMagic and OpenCV (used by DFTFringe) have different distortion coefficience.  I don't know how to convert from one to the other.  So that makes it hard to experiment with them.</P>
-<p>I am stoping development on this feature at this point to let other experiment with it.</i></b></font></p>
+<p class = "ex"> Next I tried to measure the distortion of the lens I use to take interferograms a Nikon 200mm zoom at 120 mm fl.  DFTFringe measured a very small barrel disitortion.  I tried removing that from several igrams I had taken and compared it to the original analysis.  The RMS value of the spherical term and final RMS value changed by about .5%. 
+<p class = "ex"> The biggest issue I have at this point is that ImageMagic and OpenCV (used by DFTFringe) have different distortion coefficience.  I don't know how to convert from one to the other.  So that makes it hard to experiment with them.</P>
+<p class = "ex"> I am stoping development on this feature at this point to let other experiment with it.</i></b></font></p>
 
 
 <h1> Lens Distortion calibration and removal </h1>
-<p>This is to help you determine if your camera and lens combintion used to make interferograms has barrel or pincushion distortion.  You do that by taking a picture of a special target (descirbed later) with the same camera and lens used to take interferograms.  The target must be placed at the mirror under test location with the camea the same distance away from the mirror as when used in the interferometer.</p>
+<p class = "ex"> This is to help you determine if your camera and lens combintion used to make interferograms has barrel or pincushion distortion.  You do that by taking a picture of a special target (descirbed later) with the same camera and lens used to take interferograms.  The target must be placed at the mirror under test location with the camea the same distance away from the mirror as when used in the interferometer.</p>
 
 <h2> Target creation</h2>
-You can use DFTFringe to create a target eithier on a computer screen or on a printer.  Because computer screens can be bigger than most home printer paper you might want to use the computer screen.
+<p class = "ex"> You can use DFTFringe to create a target eithier on a computer screen or on a printer.  Because computer screens can be bigger than most home printer paper you might want to use the computer screen.</p>
 <br>
-You can select from three target styles.<p>
+You can select from three target styles.<p class = "ex"> 
 <style>
 table, th, td {
     border: 1px solid black;
@@ -34,34 +43,38 @@ table, th, td {
 </tr>
 </table>
 </p>
-<p>
+<p class = "ex"> 
 
 The circle grid and chess board images can be used by the automatic calibration feature.<br>
 The line grid can be used for manual inspection or used with <a href = http://hugin.sourceforge.net/tutorials/calibration/en.shtml>Hugins lens Calibration tutorial</a>.
 <h2>Calibration procedure</h2>
-</P><p><ul><li>
-To use this wizard to calibarate your lens and camera, take a picture of the calibration target.  The circle grid may be the best one to use since it is easier for the software to find the center of the circles than it is to work with the chess board image.  However that is not a known fact.  If one does not work try the other.  The target must be placed at the mirror under test location with the camea the same distance away from the mirror as when used in the interferometer.  Try to center the target and have it fill the image. Make sure the white border around the target grid is also imaged.<p>It can help to take several images with slightly different camera angles and positions.</p></li>
+</P>
+<p class = "ex">
+ <ul><li>
+<p class = "ex"> To use this wizard to calibarate your lens and camera, take a picture of the calibration target.  The circle grid may be the best one to use since it is easier for the software to find the center of the circles than it is to work with the chess board image.  However that is not a known fact.  If one does not work try the other.  The target must be placed at the mirror under test location with the camea the same distance away from the mirror as when used in the interferometer.  Try to center the target and have it fill the image. Make sure the white border around the target grid is also imaged.</p>
+
+<p class = "ex"><b> It can help to take several images with slightly different camera angles and positions. That is a must for the chess board pattern.</b></p></li>
 <li>Load one or more target images using the "Add image" button. You can delete an image from the list by right clicking on it and pressing erase.</li>
 <li>Enter the row and column count for the target grid.</li>
 <ul>
 <li>If using the circle grid count the number of rows and columns of circles and enter into the dialog.</li>
-<li>If using the chess board grid count where the black squares of one row touch the next lower row black squares and enter it as the column count. It will be the number black squares in a row times 2 minus 1. Then where one vertical column touches the next side column down one side for the row count.</li>
+<li><p class = "ex"> If using the chess board grid count where the black squares of one row touch the next lower row black squares and enter it as the column count. It will be the number black squares in a row times 2 minus 1. Then where one vertical column touches the next side column down one side for the row count.</p></li>
 </ul>
-<li>Once you have your target images loaded then press "Compute". If it can find the pattern and compute the distortion it will show a dialog with the title "Pattern Found".  That dialog can show the input pattern and the result of correcting the image along with the control points it identified. The software will display the resulting camera matrix and distortion paramters in the result column.</li>
+<li><p class = "ex"> Once you have your target images loaded then press "Compute". If it can find the pattern and compute the distortion it will show a dialog with the title "Pattern Found".  That dialog can show the input pattern and the result of correcting the image along with the control points it identified. The software will display the resulting camera matrix and distortion paramters in the result column.</p></li>
 <li>You can then save the results by pressing the "Save lens parms" button. Give the lens a name and press "OK"
 </li>
 </ul>
-<h3>Manual data entry</h3><p>
+<h3>Manual data entry</h3><p class = "ex"> 
 You can also edit or enter all you lens data manually if you know them already.
 </P>
 <h3>Camera matrix FL value explained
 </h3>
-<p>The camera matrix FL pixels value can be a little puzzeling because it's units are in pixels.  That seem a little wierd but after some reasearch you can find out more and discover it can be converted to mm by the following formula:
+<p class = "ex"> The camera matrix FL pixels value can be a little puzzeling because it's units are in pixels.  That seem a little wierd but after some reasearch you can find out more and discover it can be converted to mm by the following formula:
 	<p style="margin-left: 40px">FL<sub>mm</sub> = FL / (camera sensor pixels per mm )</p><br>
 	That will give you the focal length in mm the the target image was taken.
 </p>
 <h3>Removing distortion from an interferogram</h3>
-<p>
+<p class = "ex"> 
 The purpose of the above was to measure the distorion of a lens so that it can be removed from an interferogram. You can enable distortion removal when the interferogram is first loaded.  To do that go to the configuration/preferences menu and select interferogram.  Click on the
 <a href = igramSettingsLens.png>"Remove lens distortion" </a>checkbox.  You will see a list of lenses that you have calibrated.  You can click on one and then the program will use those values to remove distortion from any interferogram you load until you change the settings.</P>
 <h2>References</h2>

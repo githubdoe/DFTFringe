@@ -48,7 +48,7 @@ userColorMapDlg::userColorMapDlg(QWidget *parent) :
     ui(new Ui::userColorMapDlg),m_reverse(false)
 {
     ui->setupUi(this);
-
+std::cout <<" main2";
     QwtScaleWidget *rightAxis = ui->plot->axisWidget( QwtPlot::yRight );
     rightAxis->setTitle( "wavefront error" );
     rightAxis->setColorBarEnabled( true );

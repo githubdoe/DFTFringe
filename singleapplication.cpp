@@ -31,6 +31,7 @@
 #include <QtCore/QCryptographicHash>
 #include <QtNetwork/QLocalServer>
 #include <QtNetwork/QLocalSocket>
+#include <qmutex.h>
 
 #ifdef Q_OS_UNIX
     #include <signal.h>

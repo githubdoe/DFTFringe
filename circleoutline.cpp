@@ -15,11 +15,10 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
-#include "Circleoutline.h"
-#include "CircleOutline.h"
+#include "circleoutline.h"
 #include <Qmath.h>
 #include <QDebug>
-#include "math.h"
+#include <qmath.h>
 
 CircleOutline::CircleOutline(QPointF center, double rad){
     m_p1 = QPointF(center.x() - rad, center.y());

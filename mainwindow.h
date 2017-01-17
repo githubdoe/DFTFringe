@@ -83,8 +83,11 @@ public slots:
     void stopJitter();
     void restoreOgl();
     void restoreContour();
+    void restoreProfile();
     void zoomContour(bool flag);
     void zoomOgl(bool flag);
+    void zoomProfile(bool flag);
+    void imageSize(QString txt);
 signals:
     void load(SurfaceManager *);
     //void load(QStringList, SurfaceManager *);
@@ -218,6 +221,7 @@ private:
 public:
     IgramArea *m_igramArea;
 
+
 private:
     DFTArea *m_dftArea;
 
@@ -265,6 +269,7 @@ private:
     QStringList m_igramsToProcess;
     QWidget *oglFv;
     QWidget *contourFv;
+    QWidget *profileFv;
     void Batch_Process_Interferograms();
 };
 

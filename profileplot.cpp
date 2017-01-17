@@ -54,6 +54,10 @@ bool ProfilePlot::eventFilter( QObject *object, QEvent *event )
     if ( event->type() == QEvent::MouseButtonPress )
     {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent *>( event );
+        if (mouseEvent->button() == Qt::RightButton){
+            showContextMenu(mouseEvent->pos());
+            return false;
+        }
         startPos = mouseEvent->pos();
         dragging = true;
         return true;
@@ -80,7 +84,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     dragging(false),offsetType("Middle"),
     ui(new Ui::ProfilePlot),m_showNm(1.), m_showSurface(1.)
 {
-
+    zoomed = false;
     m_plot = new QwtPlot(this);
     type = 0;
     QHBoxLayout * l1 = new QHBoxLayout();
@@ -420,6 +424,24 @@ void ProfilePlot::updateGradient()
 
     pal.setBrush( QPalette::Window, gradient );
     setPalette( pal );
+}
+void ProfilePlot::zoom(){
+    zoomed = !zoomed;
+    emit zoomMe(zoomed);
+}
+
+void ProfilePlot::showContextMenu(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = mapToGlobal(pos);
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    QString txt = (zoomed)? "Restore to MainWindow" : "FullScreen";
+    myMenu.addAction(txt,  this, SLOT(zoom()));
+
+    // Show context menu at handling position
+    myMenu.exec(globalPos);
 }
 
 void ProfilePlot::resizeEvent( QResizeEvent *)

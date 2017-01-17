@@ -11,11 +11,18 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Possible unwrap errors</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,10">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="save">
+       <property name="text">
+        <string>Save as Image</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QLabel" name="label">
        <property name="text">

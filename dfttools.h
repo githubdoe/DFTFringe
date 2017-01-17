@@ -32,18 +32,20 @@ public:
     explicit DFTTools(QWidget *parent = 0);
     void connectTo(QWidget *view);
     bool wasPressed;
+    void imageSize(QString txt);
+    void setDFTSize(int val);
     ~DFTTools();
 signals:
     void doDFT();
     void resizeIgram();
     void setFilter(double);
     void dftChannel(const QString&);
-    void dftSizeChanged(const QString&);
     void dftSizeVal(int);
     void dftCenterFilter(double);
     void makeSurface();
     void enlarge(bool);
     void gamma(double);
+
 
 private slots:
 
@@ -55,6 +57,7 @@ private slots:
 
     void on_computeDFT_pressed();
 
+    void on_dftSizeSB_valueChanged(int arg1);
 
 private:
     Ui::DFTTools *ui;

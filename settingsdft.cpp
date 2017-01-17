@@ -25,8 +25,6 @@ settingsDFT::settingsDFT(QWidget *parent) :
     ui->setupUi(this);
     QSettings set;
     ui->ShowDFTTHumbCB->setChecked( set.value("DFTshowThumb", false).toBool());
-    ui->DFTSizeSB->setValue(set.value("DFTSize", 640).toInt());
-
 }
 
 settingsDFT::~settingsDFT()
@@ -38,15 +36,6 @@ bool settingsDFT::showThumb(){
     return ui->ShowDFTTHumbCB->isChecked();
 }
 
-int settingsDFT::DFTSize() {
-    return ui->DFTSizeSB->value();
-}
-
-void settingsDFT::on_DFTSizeSB_valueChanged(int)
-{
-    QSettings set;
-    set.setValue("DFTSize", ui->DFTSizeSB->value());
-}
 
 void settingsDFT::on_ShowDFTTHumbCB_clicked(bool)
 {

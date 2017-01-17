@@ -59,7 +59,7 @@
      <item>
       <widget class="QCheckBox" name="checkBox">
        <property name="text">
-        <string>Stay on top screen</string>
+        <string>Stay on top</string>
        </property>
       </widget>
      </item>

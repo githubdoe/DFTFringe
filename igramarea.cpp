@@ -21,7 +21,7 @@
 #include <QPrintDialog>
 #endif
 
-#include "IgramArea.h"
+#include "igramarea.h"
 #include "circleoutline.h"
 #include <QtGlobal>
 #include <math.h>
@@ -281,6 +281,7 @@ bool IgramArea::openImage(const QString &fileName)
     m_filename = fileName;
     zoomIndex = 1;
     igramImage = loadedImage;
+    emit imageSize(QString().sprintf("%d X %d", igramImage.size().width(), igramImage.size() .height()));
     if (m_doGamma)
         doGamma(m_gammaValue);
     igramDisplay = igramImage.copy();
@@ -1030,7 +1031,7 @@ void IgramArea::crop() {
     hasBeenCropped = true;
     scale = fitScale = (double)parentWidget()->height()/(double)igramImage.height();
     update();
-
+    emit imageSize(QString().sprintf("%d X %d", igramImage.size().width(), igramImage.size() .height()));
     emit upateColorChannels(igramImage);
 }
 void IgramArea::dftReady(QImage img){
@@ -1223,35 +1224,38 @@ void IgramArea::nextStep(){
 #include <QImageWriter>
 void IgramArea::save(){
 
+
     QStringList mimeTypeFilters;
     foreach (const QByteArray &mimeTypeName, QImageReader::supportedMimeTypes())
         mimeTypeFilters.append(mimeTypeName);
     mimeTypeFilters.sort();
     QSettings settings;
     QString lastPath = settings.value("projectPath",".").toString();
-    QFileDialog dialog(this, tr("Save interferogram"),lastPath);
-    //dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    dialog.setMimeTypeFilters(mimeTypeFilters);
-    dialog.selectMimeTypeFilter("image/jpeg");
-    QString fileName = dialog.getSaveFileName();
+
+
+    QString filters = QStringList(mimeTypeFilters.mid(1,6)).join(" ");
+
+    filters.replace("image/", " *.");
+    filters = "images(" + filters + ")";
+
+    QString ext(".png");
+    QString fileName = QFileDialog::getSaveFileName(this, "save interferogram",lastPath, filters);
+    if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(ext); }
     if (fileName.isEmpty())
         return;
     QImage pm(igramImage.width(),igramImage.height(),igramImage.format());
     QPainter painter(&pm);
 
     painter.drawImage(0,0,igramImage);
-    //painter.setOpacity(.65);
-    //painter.setPen(QPen(Qt::white, 0.0));//, Qt::DotLine, Qt::RoundCap,Qt::RoundJoin));
-
-    //m_outside.draw(painter,1.);
 
     QImageWriter writer(fileName);
     if (!writer.canWrite())
         pm.save(fileName);
     else {
-        writer.setQuality(100);
-        writer.write(pm);
-    }
+            writer.setQuality(100);
+            writer.write(pm);
+        }
+
 }
 void IgramArea::toggleHideOutline(){
     m_hideOutlines = !m_hideOutlines;
@@ -1305,3 +1309,4 @@ void IgramArea::setZoomMode(zoomMode mode){
         zoomIndex = 1;
     zoomFull();
 }
+

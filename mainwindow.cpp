@@ -39,6 +39,10 @@
 #include "bathastigdlg.h"
 
 #include "cameracalibwizard.h"
+#ifdef __LINUX__
+    #include <unistd.h>
+    #define Sleep(x) usleep(1000 * x)
+#endif
 using namespace QtConcurrent;
 vector<wavefront*> g_wavefronts;
 int g_currentsurface = 0;
@@ -90,6 +94,7 @@ MainWindow::MainWindow(QWidget *parent) :
     scrollArea = new QScrollArea;
     gscrollArea = scrollArea;
     m_igramArea = new IgramArea(scrollArea, this);
+    connect(m_igramArea, SIGNAL(imageSize(QString)), this, SLOT(imageSize(QString)));
     connect(m_igramArea, SIGNAL(statusBarUpdate(QString)), statusBar(), SLOT(showMessage(QString)));
     connect(zernikeProcess::get_Instance(), SIGNAL(statusBarUpdate(QString)), statusBar(),SLOT(showMessage(QString)));
     connect(m_igramArea, SIGNAL(upateColorChannels(QImage)), this, SLOT(updateChannels(QImage)));
@@ -108,6 +113,7 @@ MainWindow::MainWindow(QWidget *parent) :
     scrollAreaDft = new QScrollArea;
     scrollAreaDft->setBackgroundRole(QPalette::Base);
     m_dftArea = new DFTArea(scrollAreaDft, m_igramArea, m_dftTools, m_vortexDebugTool);
+    connect(m_dftArea, SIGNAL(statusBarUpdate(QString)), statusBar(), SLOT(showMessage(QString)));
     scrollAreaDft->setWidget(m_dftArea);
     scrollAreaDft->resize(800,800);
     ui->tabWidget->addTab(scrollAreaDft, "Analyze");
@@ -132,6 +138,7 @@ MainWindow::MainWindow(QWidget *parent) :
     review->s1->addWidget(m_ogl);
 
     m_profilePlot =  new ProfilePlot(review->s2,m_contourTools);
+    connect(m_profilePlot, SIGNAL(zoomMe(bool)), this, SLOT(zoomProfile(bool)));
     m_mirrorDlg = mirrorDlg::get_Instance();
     review->s2->addWidget(m_profilePlot);
     review->s1->addWidget(m_contourView);
@@ -652,6 +659,9 @@ void MainWindow::on_showChannels_clicked(bool checked)
     else
         m_colorChannels->close();
 }
+void MainWindow::imageSize(QString txt){
+    ui->igramSize->setText(txt);
+}
 
 void MainWindow::on_showIntensity_clicked(bool checked)
 {
@@ -1050,6 +1060,26 @@ void MainWindow::restoreOgl(){
     review->s1->insertWidget(0,m_ogl);
 }
 
+void MainWindow::restoreProfile(){
+    m_profilePlot->zoomed = false;
+    review->s2->insertWidget(0,m_profilePlot);
+}
+
+void MainWindow::zoomProfile(bool flag){
+    if (!flag){
+        profileFv->close();
+        return;
+    }
+    profileFv = new QWidget(0);
+    profileFv->setAttribute( Qt::WA_DeleteOnClose );
+    connect(profileFv,SIGNAL(destroyed(QObject*)),this, SLOT(restoreProfile()));
+    QVBoxLayout *l = new QVBoxLayout();
+    l->addWidget(m_profilePlot);
+    m_profilePlot->setMinimumHeight(300);
+    profileFv->setLayout(l);
+    profileFv->showMaximized();
+}
+
 void MainWindow::zoomContour(bool flag){
     if (!flag){
         contourFv->close();
@@ -1110,3 +1140,5 @@ void MainWindow::on_actionShow_unwrap_errors_triggered()
 {
     m_surfaceManager->showUnwrap();
 }
+
+

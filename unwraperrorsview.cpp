@@ -2,6 +2,13 @@
 #include "ui_unwraperrorsview.h"
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+#include <QSettings>
+#include <QFile>
+#include <QFileInfo>
+#include <QFileDialog>
+#include <QImageWriter>
+#include <QApplication>
+#include <QDesktopWidget>
 using namespace cv;
 unwrapErrorsView::unwrapErrorsView(const wavefront &wf, QWidget *parent) :
     QDialog(parent),
@@ -38,6 +45,13 @@ void unwrapErrorsView::createUnwrapErrors(){
     flip(errorView, xxx, 0);
 
     cvtColor(xxx,xxx, CV_GRAY2RGB);
+    QRect rec = QApplication::desktop()->screenGeometry();
+    int height = rec.height();
+    int width = rec.width();
+    double scale = (double)(height-200)/(double)xxx.rows;
+    if (scale < 1.){
+        cv::resize(xxx,xxx,Size(0,0), scale, scale);
+    }
     QImage tmp = QImage((uchar*)xxx.data,
                         xxx.cols,
                         xxx.rows,
@@ -52,4 +66,38 @@ void unwrapErrorsView::createUnwrapErrors(){
 unwrapErrorsView::~unwrapErrorsView()
 {
     delete ui;
+}
+
+void unwrapErrorsView::on_save_clicked()
+{
+    QSettings set;
+    QString path = set.value("mirrorConfigFile").toString();
+    QFile fn(path);
+    QFileInfo info(fn.fileName());
+    QString dd = info.dir().absolutePath();
+    const QList<QByteArray> imageFormats = QImageWriter::supportedImageFormats();
+    QStringList filter;
+    if ( imageFormats.size() > 0 )
+    {
+        QString imageFilter( tr( "Images" ) );
+        imageFilter += " (";
+        for ( int i = 0; i < imageFormats.size(); i++ )
+        {
+            if ( i > 0 )
+                imageFilter += " ";
+            imageFilter += "*.";
+            imageFilter += imageFormats[i];
+        }
+        imageFilter += ")";
+
+        filter += imageFilter;
+    }
+    QString fName = QFileDialog::getSaveFileName(0,
+        tr("Save as Image"), dd + "//unwrapErrors.png",filter.join( ";;" ));
+
+
+    if (fName.isEmpty())
+        return;
+
+    grab().save(fName);
 }

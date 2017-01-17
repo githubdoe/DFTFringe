@@ -370,9 +370,7 @@ void CamWizardPage1::on_compute_clicked()
     CamCalibrationReviewDlg dlg( images,keypoints, corrected );
     dlg.exec();
     ui->saveParams->setEnabled(true);
-    cv::Mat testImg = cv::imread("C:\\Users\\DOE\\Documents\\Astro\\Eason16_2012\\LockwoodRefigure\\DSC_3658.JPG");
-    cv::Mat fixed;
-    cv::undistort(testImg, fixed, cameraMatrix, distCoeffs);
+
     showResuslts();
 }
 

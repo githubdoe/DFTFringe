@@ -19,14 +19,14 @@
   <property name="minimumSize">
    <size>
     <width>176</width>
-    <height>239</height>
+    <height>282</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>DFT</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QVBoxLayout" name="verticalLayout_4">
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QPushButton" name="pushButton">
       <property name="sizePolicy">
@@ -119,6 +119,40 @@ hover {background-color: lightblue;}
       </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>DFT Size</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="dftSizeSB">
+        <property name="minimum">
+         <number>100</number>
+        </property>
+        <property name="maximum">
+         <number>4000</number>
+        </property>
+        <property name="singleStep">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>640</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="imageSize">
+      <property name="readOnly">
+       <bool>true</bool>
       </property>
      </widget>
     </item>

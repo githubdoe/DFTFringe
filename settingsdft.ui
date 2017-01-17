@@ -42,44 +42,6 @@
     <string>Show DFT Thumnail once Mirror is outlined in Igram.</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>70</y>
-     <width>251</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Resize mirror portion of igram  down to DFT size of:</string>
-   </property>
-  </widget>
-  <widget class="QSpinBox" name="DFTSizeSB">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>70</y>
-     <width>71</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Width and Height of DFT in Pixels&lt;/p&gt;&lt;p&gt;This determines the final size of the wavefront.&lt;/p&gt;&lt;p&gt;It will be this size or smaller if the interferogram is&lt;/p&gt;&lt;p&gt;smaller.  If the interferogram is larger it will be reduced to this size.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-   <property name="statusTip">
-    <string/>
-   </property>
-   <property name="minimum">
-    <number>100</number>
-   </property>
-   <property name="maximum">
-    <number>2000</number>
-   </property>
-   <property name="value">
-    <number>640</number>
-   </property>
-  </widget>
  </widget>
  <resources/>
  <connections>

@@ -337,11 +337,6 @@
      </item>
     </layout>
    </widget>
-   <zorder>groupBox_2</zorder>
-   <zorder>groupBox_4</zorder>
-   <zorder>groupBox_3</zorder>
-   <zorder>groupBox_5</zorder>
-   <zorder>groupBox_5</zorder>
   </widget>
  </widget>
  <resources>

@@ -75,7 +75,6 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     ui->setupUi(this);
     m_gamma = 2.5;
     connect(tools,SIGNAL(dftChannel(const QString&)), this, SLOT(setChannel(const QString&)));
-    connect(tools,SIGNAL(dftSizeChanged(const QString&)), this, SLOT(dftSizeChanged(const QString&)));
     connect(tools,SIGNAL(dftSizeVal(int)), this, SLOT(dftSizeVal(int)));
     connect(tools,SIGNAL(dftCenterFilter(double)), this, SLOT(dftCenterFilter(double)));
     connect(tools,SIGNAL(makeSurface()), this,SLOT(makeSurface()));
@@ -187,8 +186,8 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double centerDy = centerY - igramArea->m_center.m_center.y();
 
     roi.convertTo(roi,CV_32FC3);
-
-    int dftSize = Settings2::dftSize();
+    QSettings set;
+    int dftSize = set.value("DFTSize", 640).toInt();
     double scaleFactor = (double)dftSize/roi.cols;
     m_outside = CircleOutline(QPointF(xCenterShift,yCenterShift), rad);
     m_center = CircleOutline(QPointF(xCenterShift - centerDx, yCenterShift - centerDy),
@@ -196,7 +195,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     //scaleFactor = 1;
     if (scaleFactor < 1.){
 
-        cv::resize(roi,roi, cv::Size(0,0), scaleFactor, scaleFactor);
+        cv::resize(roi,roi, cv::Size(0,0), scaleFactor, scaleFactor,INTER_AREA);
         double roicx = (roi.cols-1)/2.;
         double roicy = (roi.rows-1)/2.;
         m_outside = CircleOutline(QPointF(roicx,roicy),roicx);
@@ -206,20 +205,14 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     else {
         scaleFactor = 1.;
     }
-    if (channel =="ALL RGB") {
-        cvtColor(roi,roi,CV_BGRA2BGR);
-        cvtColor(roi,roi,CV_BGR2HSV);
-    }
-
 
     // split image into three color planes
-
     split( roi, bgr_planes );
 
     cv::Scalar mean;
     mean =  cv::mean(roi);
     double maxMean = 0;
-    double maxndx = 0;
+    int maxndx = 0;
 
     // use the color plane with the largest mean value
     for (int i = 0; i < 3; ++i){
@@ -234,7 +227,12 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     if (channel == "Blue") maxndx = 0;
     else if (channel == "Green") maxndx = 1;
     else if (channel == "Red") maxndx = 2;
-
+    else if (channel == "ALL RGB") {
+        maxndx = 0;
+        bgr_planes[0] = bgr_planes[0] + bgr_planes[1] + bgr_planes[2];
+    }
+    QString co[3]  = {"Blue","Green","Red"};
+    emit statusBarUpdate(QString("DFT using channel ") + co[maxndx]);
     Mat  padded;                            //expand input image to optimal size
     int m = getOptimalDFTSize( roi.rows ) - roi.rows;
     int n = getOptimalDFTSize( roi.cols ) - roi.cols; // on the border add zero values
@@ -262,6 +260,11 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     //md.exec();
     Mat  complexI;
     merge(planes, 2, complexI);         // Add to the expanded another plane with zeros
+    if (scaleFactor == 1.){
+        tools->imageSize(QString().sprintf("DFT Size will be %d", width));
+    }
+    else
+        tools->imageSize(QString().sprintf("Image is resized from %d to %d pixels",width, complexI.cols));
     return complexI;
 }
 
@@ -336,6 +339,7 @@ QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, doub
 }
 
 void DFTArea::doDFT(){
+
     QImage img = igramArea->igramImage;
 
     cv::Mat complexI = grayComplexMatfromImage(img);
@@ -815,12 +819,14 @@ qDebug() << "plane coeffs" << coeff(0) << coeff(1) << coeff(2);
 
 // make a surface from the image using DFT and vortex transfroms.
 void DFTArea::makeSurface(){
+
     if (!tools->wasPressed)
         return;
     if (igramArea->igramImage.isNull()){
         QMessageBox::warning(0,"warning","First load an interferogram and circle the mirror.");
         return;
     }
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     tools->wasPressed = false;
     igramArea->writeOutlines(igramArea->makeOutlineName());  // save outlines including center filter
     cv::Mat phase = vortex(igramArea->igramImage,  m_center_filter);
@@ -864,7 +870,7 @@ void DFTArea::makeSurface(){
     }
 
     emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName());
-
+    QApplication::restoreOverrideCursor();
 }
 void DFTArea::newIgram(QImage){
     doDFT();

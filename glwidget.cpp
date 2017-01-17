@@ -20,11 +20,12 @@
 //#include <cmath>
 #include "qwt_math.h"
 #include "circleoutline.h"
-#include <gl/glu.h>
 #include <qsettings.h>
 #include <QOpenGLFunctions>
 #include <QFont>
 #include <QFontMetricsF>
+#include <GL/glu.h>
+typedef uint UINT;
 #define STEPS 200
 #define SHADE_STEPS 200
 

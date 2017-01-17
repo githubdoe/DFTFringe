@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<style> 
+p
+{
+    width:800px; 
+    word-wrap:break-word;
+}
+p.ex
+{
+    width:500px; 
+    word-wrap:break-word;
+}
+td {
+
+    vertical-align: top;
+}
+ul.nb
+{
+ list-style: none; 
+}
+</style>
+<body>
+<h1> Mirror Configuration Dialog </h1>
+<p class = "ex">
+This dialog is where you save the parameters for the mirror and interferogram. It can be accessed from the Configuration/mirror menu.
+Once you fill in the needed data it will be remembered from run to run until you change it.  You can also save it to a file or read it from a previously saved file.
+</p>
+<img src=mirrorconfig.png width="600" >
+<ul>
+
+<li>Enter a description of the mirror in the name field.</li>
+<li>Check the Artificial Null box if you are testing at Radius of Curvature.</li>
+<li>Enter the diameter<br>If testing an ellipse this should be the major axis.</li>
+<li><p class = ex>If using the artificial null enter a radius of curvature (2 x the Focal Length). ROC is only important if you will be using the artificial null.  So if you are measuring a flat or using an optical null to make the interferogram set it to what ever you like.  It will not be used in any computations by the program.
+</p></li>
+<li><p class = ex>Enter the obstruction if desired. This is for the obstruction in the telescope and not an obstruction on the interferogram. This area will be ignored when computing metrics and graph display of the mirror under test. It is typically used to specify the diagonal size in a Newtonian telescope.</p></li>
+<li>Enter the desired conic constant
+<ul class = nb>
+<li>
+	-1 parabola </li>
+	<li>0 sphere</li> 
+</ul>
+<li>Enter the wavelength of the interferometer source in nanometers</li>
+</ul>
+</body>

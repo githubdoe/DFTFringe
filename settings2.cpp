@@ -68,9 +68,6 @@ bool Settings2::showMask(){
     return m_debug->showMask();
 }
 
-int Settings2::dftSize(){
-    return m_dft->DFTSize();
-}
 
 void Settings2::on_listWidget_clicked(const QModelIndex &index)
 {

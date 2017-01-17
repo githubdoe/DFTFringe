@@ -241,20 +241,32 @@ FORMS    += mainwindow.ui \
     unwraperrorsview.ui \
     lensdialog.ui
 
-CONFIG( debug, debug|release ) {
-    # debug
-    LIBS += C:/qwt-6.1.2/lib/qwtd.dll
-} else {
-    # release
-    LIBS += C:/build-qwt-Desktop_Qt_5_3_MinGW_32bit-Release/lib/qwt.dll
+win32 {
+      CONFIG( debug, debug|release ) {
+        # debug
+        LIBS += C:/qwt-6.1.2/lib/qwtd.dll
+      } else {
+        # release
+        LIBS += C:/build-qwt-Desktop_Qt_5_3_MinGW_32bit-Release/lib/qwt.dll
+      }
+      INCLUDEPATH += C:\\qwt-6.1.2\\src
+      INCLUDEPATH += c:\opencv\build\include
+      LIBS += C:/opencv/build-mingw/bin/*.dll
+      message("using win32")
+      }
+
+unix {
+     INCLUDEPATH += /usr/include/qwt
+     LIBS += -lqwt-qt5
+     LIBS += -lopencv_core
+     LIBS += -lopencv_imgproc
+     LIBS += -lopencv_highgui
+     LIBS += -lGLU
+     LIBS += -lopencv_calib3d
+     LIBS += -lopencv_features2d
+     message("using linux")
+     contains(CONFIG,debug) { message("no extra debug libraries") }
 }
-INCLUDEPATH += C:\\qwt-6.1.2\\src
-
-
-INCLUDEPATH += c:\opencv\build\include
-LIBS += C:/opencv/build-mingw/bin/*.dll
-
-
 
 OTHER_FILES += \
     todo.txt
@@ -265,7 +277,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 1.10
+VERSION = 1.11
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

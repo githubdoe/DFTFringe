@@ -18,7 +18,8 @@
 #include "dfttools.h"
 #include "ui_dfttools.h"
 #include "vortex.h"
-
+#include <QSettings>
+#include "settings2.h"
 DFTTools::DFTTools(QWidget *parent) :
     QDockWidget(parent),
     ui(new Ui::DFTTools)
@@ -29,8 +30,8 @@ DFTTools::DFTTools(QWidget *parent) :
     ui->colorChannelCB->addItem("Red");
     ui->colorChannelCB->addItem("Green");
     ui->colorChannelCB->addItem("Blue");
-
-
+    QSettings set;
+    ui->dftSizeSB->setValue(set.value("DFTSize", 640).toInt());
 }
 void DFTTools::connectTo(QWidget *view){
     connect(view, SIGNAL(updateFilterSize(int)),this, SLOT(setCenterFilterValue(int)));
@@ -40,11 +41,15 @@ DFTTools::~DFTTools()
 {
     delete ui;
 }
+void DFTTools::imageSize(QString txt){
+    ui->imageSize->setText(txt);
+}
 
 void DFTTools::on_colorChannelCB_activated(const QString &arg1)
 {
     emit dftChannel(arg1);
 }
+
 
 
 void DFTTools::setCenterFilterValue(int v){
@@ -70,3 +75,12 @@ void DFTTools::on_computeDFT_pressed()
 }
 
 
+void DFTTools::setDFTSize(int val){
+    ui->dftSizeSB->setValue(val);
+}
+
+void DFTTools::on_dftSizeSB_valueChanged(int arg1)
+{    QSettings set;
+     set.setValue("DFTSize", ui->dftSizeSB->value());
+
+}

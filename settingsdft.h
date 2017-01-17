@@ -33,9 +33,7 @@ public:
     ~settingsDFT();
     bool showThumb();
     int DFTSize();
-private slots:
-    void on_DFTSizeSB_valueChanged(int arg1);
-
+public slots:
     void on_ShowDFTTHumbCB_clicked(bool checked);
 
 private:

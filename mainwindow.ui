@@ -147,7 +147,7 @@
    <property name="minimumSize">
     <size>
      <width>266</width>
-     <height>471</height>
+     <height>526</height>
     </size>
    </property>
    <property name="whatsThis">
@@ -395,7 +395,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset>
+           <iconset resource="DFTResources.qrc">
             <normaloff>:/icons/res/1461975017_undo.png</normaloff>:/icons/res/1461975017_undo.png</iconset>
           </property>
           <property name="iconSize">
@@ -435,7 +435,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset>
+           <iconset resource="DFTResources.qrc">
             <normaloff>:/icons/res/1461974262_f-top_256.png</normaloff>:/icons/res/1461974262_f-top_256.png</iconset>
           </property>
           <property name="iconSize">
@@ -481,7 +481,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset>
+           <iconset resource="DFTResources.qrc">
             <normaloff>:/icons/res/1461974250_f-left_256.png</normaloff>:/icons/res/1461974250_f-left_256.png</iconset>
           </property>
           <property name="iconSize">
@@ -524,7 +524,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset>
+           <iconset resource="DFTResources.qrc">
             <normaloff>:/icons/res/1461975092_minimize.png</normaloff>:/icons/res/1461975092_minimize.png</iconset>
           </property>
           <property name="iconSize">
@@ -570,7 +570,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset>
+           <iconset resource="DFTResources.qrc">
             <normaloff>:/icons/res/1461974268_f-bottom_256.png</normaloff>:/icons/res/1461974268_f-bottom_256.png</iconset>
           </property>
           <property name="iconSize">
@@ -616,7 +616,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset>
+           <iconset resource="DFTResources.qrc">
             <normaloff>:/icons/res/1461975084_maximize.png</normaloff>:/icons/res/1461975084_maximize.png</iconset>
           </property>
           <property name="iconSize">
@@ -662,7 +662,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset>
+           <iconset resource="DFTResources.qrc">
             <normaloff>:/icons/res/1461974256_f-right_256.png</normaloff>:/icons/res/1461974256_f-right_256.png</iconset>
           </property>
           <property name="iconSize">
@@ -705,7 +705,7 @@ em;
            <string/>
           </property>
           <property name="icon">
-           <iconset>
+           <iconset resource="DFTResources.qrc">
             <normaloff>:/icons/res/redo.png</normaloff>:/icons/res/redo.png</iconset>
           </property>
           <property name="iconSize">
@@ -860,6 +860,13 @@ em;
       </layout>
      </item>
      <item>
+      <widget class="QLineEdit" name="igramSize">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -875,6 +882,7 @@ em;
     </layout>
     <zorder>groupBox_2</zorder>
     <zorder>groupBox</zorder>
+    <zorder>igramSize</zorder>
    </widget>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -909,7 +917,7 @@ em;
   </widget>
   <action name="actionLoad_Interferogram">
    <property name="icon">
-    <iconset>
+    <iconset resource="DFTResources.qrc">
      <normaloff>:/icons/igram6.png</normaloff>:/icons/igram6.png</iconset>
    </property>
    <property name="text">
@@ -972,7 +980,7 @@ em;
   </action>
   <action name="actionNext_Wave_Front">
    <property name="icon">
-    <iconset>
+    <iconset resource="DFTResources.qrc">
      <normaloff>:/icons/Button-Next-icon.png</normaloff>:/icons/Button-Next-icon.png</iconset>
    </property>
    <property name="text">
@@ -991,7 +999,7 @@ em;
   </action>
   <action name="actionDelete_wave_front">
    <property name="icon">
-    <iconset>
+    <iconset resource="DFTResources.qrc">
      <normaloff>:/icons/Button-Close-icon.png</normaloff>:/icons/Button-Close-icon.png</iconset>
    </property>
    <property name="text">
@@ -1134,6 +1142,8 @@ em;
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="DFTResources.qrc"/>
+ </resources>
  <connections/>
 </ui>

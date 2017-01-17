@@ -16,6 +16,9 @@ public:
     explicit unwrapErrorsView(const wavefront &wf, QWidget *parent = 0);
     ~unwrapErrorsView();
 
+private slots:
+    void on_save_clicked();
+
 private:
     Ui::unwrapErrorsView *ui;
     const wavefront &m_wf;

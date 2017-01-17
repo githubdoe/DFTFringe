@@ -56,7 +56,9 @@ public:
     int type;
     double m_showSurface;
     double m_showNm;
-
+    bool zoomed;
+signals:
+    void zoomMe(bool);
 public slots:
     void setWavefronts(QVector<wavefront*> *wf);
     void angleChanged(double a);
@@ -67,6 +69,8 @@ public slots:
     void showAll();
     void showNm(bool);
     void showSurface(bool);
+    void zoom();
+    void showContextMenu(const QPoint &pos);
 private:
     void populate();
     void updateGradient();

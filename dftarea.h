@@ -68,6 +68,7 @@ signals:
     void updateFilterSize(int);
     void newWavefront(cv::Mat, CircleOutline, CircleOutline, QString);
     void dftReady(QImage);
+    void statusBarUpdate(QString);
 private:
     Ui::DFTArea *ui;
     cv::Mat input;

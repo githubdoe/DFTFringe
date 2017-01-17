@@ -20,4 +20,4 @@ why have to decrease radius -2 when masking vortexed version of ellipse?
 
 Why is simulated igram reversed from real one after import from wavefront?
 
-Smoothing does not finish sometimes.
+show all of 3D is labeled in reverse.

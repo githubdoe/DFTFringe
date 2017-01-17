@@ -74,6 +74,7 @@
 #include <QVideoWidget>
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
+#include <QScrollArea>
 
 extern QScrollArea *gscrollArea;
 enum {OutSideOutline, CenterOutline};
@@ -144,6 +145,7 @@ public:
     void shiftoutline(QPointF p);
     void setZoomMode(zoomMode mode);
     int m_current_boundry;
+
 public slots:
     void gammaChanged(bool, double);
     void generateSimIgram();
@@ -169,6 +171,7 @@ signals:
     void upateColorChannels(QImage);
     void showTab(int);
     void dftCenterFilter(double);
+    void imageSize(QString);
 protected:
     bool eventFilter(QObject *object, QEvent *event);
     void wheelEvent(QWheelEvent * event);

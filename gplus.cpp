@@ -15,7 +15,7 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
-#include "gPlus.h"
+#include "gplus.h"
 
 gPlus::gPlus(QPointF p)
 {
