@@ -13,11 +13,16 @@ Add mirror flip to output.
 Report options? Enable what goes into it?
 
 
-Why does average have non zero values outside of mask area?
+Why does average have non  values outside of mask area?
+zero
+Save all wavefronts does not restore the busy cursor to idle.
 
 
-why have to decrease radius -2 when masking vortexed version of ellipse?
+Stand astig 180 cR is 0 why?
+lMake the igram done button animate like the standastig compute button.
+Stand astig graph is cutoff on the left for the take2 test.
 
-Why is simulated igram reversed from real one after import from wavefront?
 
-show all of 3D is labeled in reverse.
+Only allow crop when there is an outline.
+
+Update does not update ignore outline changes.

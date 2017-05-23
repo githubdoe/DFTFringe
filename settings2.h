@@ -45,8 +45,7 @@ public:
     static int dftSize();
     static bool showMask();
     static bool shouldHflipIgram();
-signals:
-    void igramOutlineParmsChanged(int,int,QColor,QColor);
+
 private slots:
     void on_listWidget_clicked(const QModelIndex &index);
 

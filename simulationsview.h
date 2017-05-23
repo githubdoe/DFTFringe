@@ -43,8 +43,9 @@ public:
 private:
     bool alias;
     QTimer m_guiTimer;
+    cv::Mat m_psf;
 
-    void mtf(cv::Mat star, QString txt, QColor color);
+    void mtf(cv::Mat magPsf, QString txt, QColor color);
 public slots:
         void on_MakePB_clicked();
 private slots:

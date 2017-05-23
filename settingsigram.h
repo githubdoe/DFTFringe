@@ -25,7 +25,19 @@
 namespace Ui {
 class settingsIGram;
 }
-
+class outlineParms{
+public:
+    outlineParms(int edgeW,int centerW,QColor edgeC,QColor centerC,double op,int style,int zoomWidth,bool autoSave):
+        edgeW(edgeW),centerW(centerW),edgeC(edgeC), centerC(centerC), op(op), style(style),zoomWidth(zoomWidth), autoSaveOutline(autoSave){};
+    int edgeW;
+    int centerW;
+    QColor edgeC;
+    QColor centerC;
+    double op;
+    int style;
+    int zoomWidth;
+    bool autoSaveOutline;
+};
 class settingsIGram : public QDialog
 {
     Q_OBJECT
@@ -34,10 +46,11 @@ public:
     explicit settingsIGram(QWidget *parent = 0);
     ~settingsIGram();
     bool m_removeDistortion;
+    bool m_autoSaveOutline;
     QStringList m_lenseParms;
     void updateLenses(QString str);
 signals:
-    void igramLinesChanged(int,int,QColor,QColor, double, int, int);
+    void igramLinesChanged(outlineParms);
 private slots:
     void on_edgeLineColorPb_clicked();
 
@@ -58,6 +71,8 @@ private slots:
 
 
     void on_lenseTableView_clicked(const QModelIndex &index);
+
+    void on_SaveOutlines_clicked(bool checked);
 
 private:
 

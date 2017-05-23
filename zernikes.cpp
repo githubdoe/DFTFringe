@@ -22,7 +22,7 @@
 #include <QString>
 
 
-void dump_matrix (double *a, int nrows, int ncols, char *desc)
+void dump_matrix (double *a, int nrows, int ncols,const char *desc)
 {
     int i, j;
     qDebug() << "###############";

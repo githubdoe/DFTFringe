@@ -15,8 +15,8 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
-#include "circleoutline.h"
-#include <Qmath.h>
+#include "Circleoutline.h"
+#include <qmath.h>
 #include <QDebug>
 #include <qmath.h>
 

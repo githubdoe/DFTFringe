@@ -44,8 +44,13 @@ private slots:
     void on_pushButton_pressed();
     void zoom();
 
+    void on_histogram_clicked();
+
+    void on_fillContourCB_clicked(bool checked);
+
 private:
     Ui::contourView *ui;
+    ContourTools* tools;
 
 };
 

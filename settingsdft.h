@@ -36,6 +36,9 @@ public:
 public slots:
     void on_ShowDFTTHumbCB_clicked(bool checked);
 
+private slots:
+    void on_waveFrontWidthSb_valueChanged(int arg1);
+
 private:
     Ui::settingsDFT *ui;
 };

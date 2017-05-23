@@ -29,7 +29,7 @@
 #include <qwt_scale_engine.h>
 #include "zernikes.h"
 #include "mirrordlg.h"
-#include <opencv/cv.h>
+#include <opencv2/core/core.hpp>
 #include "wavefront.h"
 #include <QObject>
 

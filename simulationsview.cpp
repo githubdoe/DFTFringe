@@ -56,7 +56,7 @@ SimulationsView::SimulationsView(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->MTF->setAxisTitle( QwtPlot::yLeft, "Percent Contrast" );
-    ui->MTF->setAxisTitle(QwtPlot::xBottom,"Resolution arcseconds");
+    ui->MTF->setAxisTitle(QwtPlot::xBottom,"Fraction of Max spatial frequency");
 
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->enableXMin(true);
@@ -71,8 +71,14 @@ SimulationsView::SimulationsView(QWidget *parent) :
     title.setRenderFlags( Qt::AlignHCenter | Qt::AlignTop );
     t->setText(title);
     t->attach(ui->MTF);
-    ui->MTF->setAxisScaleDraw(ui->MTF->xBottom, new arcSecScaleDraw(mirrorDlg::get_Instance()->diameter));
+    //ui->MTF->setAxisScaleDraw(ui->MTF->xBottom, new arcSecScaleDraw(mirrorDlg::get_Instance()->diameter));
 
+    QList<double> ticks;
+    ticks << 5.<< 2.5  << 1. << .5 << .3;
+    double s1 = 206265 * 5.5e-4 / mirrorDlg::get_Instance()->diameter;
+    QwtScaleDiv *scaleDivP = new QwtScaleDiv( 20, .3);
+    scaleDivP->setTicks(QwtScaleDiv::MajorTick, ticks);
+    //ui->MTF->setAxisScaleDiv(QwtPlot::xBottom, *scaleDivP);
     ui->MakePB->setEnabled(false);
     QSettings set;
     ui->FFTSizeSB->blockSignals(true);
@@ -230,7 +236,7 @@ int ee95percent(cv::Mat_<double> data){
 
     int center = (data.cols-1)/2;
     double sum = 0;
-    vector<double> sums;
+    std::vector<double> sums;
     for (int i = 1; i < center; ++i) {
         sum += data(center,i+center -1);
         sum += data(center,center-i);
@@ -274,29 +280,34 @@ void etoxplusy(cv::Mat data)
     }
 }
 void SimulationsView::mtf(cv::Mat star, QString txt, QColor color){
-    cv::Mat middle = star.col(star.cols/2);
-    pow(middle,2,middle);
-    cv::Mat planes[] = {Mat_<double>(middle),
-                        cv::Mat::zeros(Size(middle.cols,middle.rows),CV_64F)};
+    cv::Mat planes[2];
     cv::Mat mtfIn, mtfOut, mtfMag;
+    split(star,planes);
+    cv::magnitude(planes[0],planes[1], planes[0]);
+    cv::pow(planes[0],2,planes[0]);
+    planes[1] = Scalar(0.);
+    cv::Mat in;
+    merge(planes,2,in);
+    shiftDFT(in);
 
-    cv::merge(planes,2,mtfIn);
-    //etoxplusy(mtfIn);
-    cv::dft(mtfIn, mtfOut);
+    cv::dft(in, mtfOut);
+    shiftDFT(mtfOut);
+
     split(mtfOut,planes);
 
     cv::magnitude(planes[0],planes[1], mtfMag);
 
     cv::normalize(mtfMag,mtfMag, 0,100,cv::NORM_MINMAX);
-    int nx = (mtfMag.rows)/2;
+    int nx = (mtfMag.rows);
+    int half = nx/2;
     QwtPlotCurve *curve1 = new QwtPlotCurve(txt);
     curve1->setPen(QPen(color));
     QPolygonF points1;
 
 
-    for (int x = 0; x < nx; ++x){
-
-        points1 << QPointF((double)(x)/nx, mtfMag.at<double>(x,0));
+    for (int x = 0; x < half; ++x){
+        double arc = (double(x)/half);
+        points1 << QPointF(arc, mtfMag.at<double>(x+half,half));
     }
     curve1->setSamples(points1);
     curve1->attach(ui->MTF);
@@ -360,7 +371,7 @@ void SimulationsView::on_MakePB_clicked()
                                        "The error usually shows up as a series of light and dark horizontal bands or dots.");
     }
 
-    cv::Mat focused = computeStarTest(m_wf->workData, 600,  40);
+    cv::Mat focused = computeStarTest(nulledSurface(0), 600,  40);
     t = fitStarTest(focused, 200,gamma/2);
     cv::putText(t,QString().sprintf("Focused").toStdString(),cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
     QImage focusDisplay ((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
@@ -389,12 +400,16 @@ void SimulationsView::on_MakePB_clicked()
     //make mtf plot
     ui->MTF->detachItems( QwtPlotItem::Rtti_PlotCurve);
     m_wf->workMask = mask;
-    focused = computeStarTest(nulledSurface(0), 512, 2);
+    focused = computeStarTest(nulledSurface(0), 512, 2.,true);
     m_wf->workMask = noObstruction;
-    perfectPSF = computeStarTest(p, 512,2);
+    perfectPSF = computeStarTest(p, 512,2.,true);
     m_wf->workMask = mask.clone();
-    mtf(focused, "actual", Qt::red);
+    mtf(focused, "Actual X axis", Qt::red);
     mtf(perfectPSF, "Perfect", Qt::black);
+    cv::Mat R90;
+    cv::transpose(focused,R90);
+    cv::flip(R90,R90,0);
+    mtf(R90, "Actual Y Axis", Qt::blue);
 
     ui->MTF->replot();
     ui->MTF->show();

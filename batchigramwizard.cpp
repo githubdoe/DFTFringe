@@ -11,6 +11,8 @@
 QRadioButton *batchIgramWizard::autoRb = 0;
 QRadioButton *batchIgramWizard::manualRb = 0;
 QPushButton *batchIgramWizard::goPb = 0;
+QPushButton *batchIgramWizard::skipFile = 0;
+QPushButton *batchIgramWizard::addFiles = 0;
 
 batchIgramWizard::batchIgramWizard(QStringList files, QWidget *parent, Qt::WindowFlags flags) :
     QWizard(parent, flags),
@@ -108,8 +110,12 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
 
     connect(this, SIGNAL(processBatchList(QStringList)), qobject_cast<MainWindow *>(manager), SLOT(batchProcess(QStringList)));
 
-    QPushButton *addFiles = new QPushButton(tr("Add Files"));
-    connect( addFiles, SIGNAL(pressed()), this, SLOT(addFiles()));
+
+    batchIgramWizard::addFiles = new QPushButton(tr("Add Files"));
+    batchIgramWizard::skipFile = new QPushButton(tr("Skip"));
+    connect(batchIgramWizard::skipFile, SIGNAL(clicked(bool)), qobject_cast<MainWindow *>(manager), SLOT(skipBatchItem()));
+    batchIgramWizard::skipFile->setEnabled(false);
+    connect(batchIgramWizard::addFiles, SIGNAL(pressed()), this, SLOT(addFiles()));
     batchIgramWizard::autoRb = new QRadioButton(tr("Auto"),this);
     batchIgramWizard::manualRb = new QRadioButton(tr("manual"),this);
     batchIgramWizard::manualRb->setChecked(true);
@@ -132,7 +138,8 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
                     "QPushButton:!enabled   { background-color:lightgray    } Working");
     hlayout->addWidget(batchIgramWizard::manualRb);
     hlayout->addWidget(batchIgramWizard::autoRb);
-    hlayout->addWidget(addFiles);
+    hlayout->addWidget(batchIgramWizard::addFiles);
+    hlayout->addWidget(batchIgramWizard::skipFile);
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(lb);
     layout->addLayout(hlayout);

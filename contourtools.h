@@ -36,9 +36,11 @@ public:
     void enablTools(bool b);
     double m_min;
     double m_max;
+
 signals:
     void ContourMapColorChanged(int);
     void showContoursChanged(double);
+    void showContourLines(bool);
     void contourZeroOffsetChanged(const QString &);
     void contourColorRangeChanged(const QString &);
     void contourIntervalChanged(double);
@@ -52,21 +54,13 @@ private slots:
     void setWaveRange(double val);
     void on_ColorMapCB_activated(int index);
 
-    void on_checkBox_stateChanged(int arg1);
-
     void on_zeroOffsetCB_activated(const QString &arg1);
 
     void on_colorRangeCB_activated(const QString &arg1);
 
-    void on_contoursteps_editingFinished();
-
-    void on_contoursteps_valueChanged(double arg1);
-
     void on_errorRangeSpin_valueChanged(double arg1);
 
     void on_LineColorBtn_clicked();
-
-    void on_FilledContourChk_stateChanged(int arg1);
 
     void on_max_textEdited(const QString &);
 

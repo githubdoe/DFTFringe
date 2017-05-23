@@ -4,6 +4,7 @@
 #include <fstream>
 #include "zernikeprocess.h"
 #include "mirrordlg.h"
+#include "myutils.h"
 zernikeEditDlg::zernikeEditDlg(SurfaceManager *sfm, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::zernikeEditDlg), m_sm(sfm), shouldEnableAll(false)
@@ -39,7 +40,7 @@ void zernikeEditDlg::on_disable_clicked()
 void zernikeEditDlg::on_createSurface_clicked()
 {
     int size = ui->sizeSb->value();
-    cv::Mat result = cv::Mat::zeros(size,size, CV_64F);
+    cv::Mat result = cv::Mat::zeros(size,size, numType);
 
     double rho;
     double xcen = (size -1)/2.;
@@ -112,7 +113,7 @@ void zernikeEditDlg::on_read_clicked()
     for (int i = z.size(); i < Z_TERMS; ++i){
         z.push_back(0.);
     }
-    tableModel->setValues(z, FALSE);
+    tableModel->setValues(z, false);
     tableModel->update();
 
 }

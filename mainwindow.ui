@@ -184,12 +184,12 @@
           <string>Crop to within 20 pixels of mirror outline and go to DFT analysis </string>
          </property>
          <property name="styleSheet">
-          <string notr="true">QPushButton {border-style: outset;
+          <string notr="true">QPushButton:pressed{background: lightblue;}
+QPushButton#pushButton {border-style: outset;
 border-width: 3px; border-radius:15px; border-color: darkgray;
 font: bold 12px;
 min-width: 5em;
 padding: 6px;}
-QPushButton:hover{rgb(85, 255, 255)}
 
 </string>
          </property>

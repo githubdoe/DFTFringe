@@ -43,10 +43,15 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     doNull = settings.value("config doNull", true).toBool();
     ui->nullCB->setChecked(doNull);
     diameter = settings.value("config diameter", 200.).toDouble();
-    ui->diameter->setText(QString().sprintf("%6.2lf",diameter));
+
     roc = settings.value("config roc", 2000.).toDouble();
     FNumber = roc/(2. * diameter);
     ui->FNumber->blockSignals(true);
+    ui->roc->blockSignals(true);
+    ui->lambda->blockSignals(true);
+    ui->cc->blockSignals(true);
+    ui->unitsCB->blockSignals(true);
+    ui->fringeSpacingEdit->blockSignals(true);
     if (!doNull){
         ui->roc->hide();
         ui->rocLab->hide();
@@ -62,15 +67,17 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
         ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
     }
     lambda = settings.value("config lambda", 640).toDouble();
-    ui->lambda->blockSignals(true);
+
     ui->lambda->setText(QString().sprintf("%6.1lf",lambda));
-    ui->lambda->blockSignals(false);
+
     obs = settings.value("config obstruction", 0.).toDouble();
-    ui->obs->setText(QString().sprintf("%6.2lf",obs));
+
     cc = settings.value("config cc", -1.).toDouble();
+
     ui->cc->setText(QString().sprintf("%6.2lf",cc));
 
     ui->unitsCB->setChecked(mm);
+
 
 
 
@@ -78,7 +85,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->flipH->setChecked((settings.value( "flipH", false).toBool()));
     m_projectPath = settings.value("projectPath", "").toString();
     fringeSpacing = settings.value("config fringe spacing", 1.).toDouble();
-    ui->fringeSpacingEdit->blockSignals(true);
+
     ui->fringeSpacingEdit->setText(QString().sprintf("%3.2lf",fringeSpacing));
     ui->fringeSpacingEdit->blockSignals(false);
     m_outlineShape = (outlineShape)settings.value("outlineShape", CIRCLE).toInt();
@@ -89,7 +96,14 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
         m_verticalAxis = diameter;
     ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
     ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
-
+    ui->diameter->setText(QString().sprintf("%6.2lf",diameter));
+    ui->obs->setText(QString().sprintf("%6.2lf",obs));
+    ui->FNumber->blockSignals(false);
+    ui->roc->blockSignals(false);
+    ui->lambda->blockSignals(false);
+    ui->cc->blockSignals(false);
+    ui->unitsCB->blockSignals(false);
+    ui->fringeSpacingEdit->blockSignals(false);
 }
 
 mirrorDlg::~mirrorDlg()

@@ -49,6 +49,9 @@ public:
     ~standAstigWizard();
 
 
+private slots:
+    void on_standAstigWizard_helpRequested();
+
 private:
     Ui::standAstigWizard *ui;
 };
@@ -99,6 +102,8 @@ public:
     QRadioButton *CWRb;
     QRadioButton *CCWRb;
     QPushButton *runpb;
+    QCheckBox *showWork;
+
 
     //int nextId() const;
 

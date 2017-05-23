@@ -18,14 +18,19 @@
 #include "contourview.h"
 #include "ui_contourview.h"
 #include <QMenu>
+#include "math.h"
+#include "pixelstats.h"
+#include <QSettings>
 
 contourView::contourView(QWidget *parent, ContourTools *tools) :
     QWidget(parent),
-    ui(new Ui::contourView), zoomed(false)
+    ui(new Ui::contourView), zoomed(false), tools(tools)
 {
     ui->setupUi(this);
     ui->widget->setTool(tools);
-    connect(ui->widget, SIGNAL(newContourRange(double)), ui->doubleSpinBox , SLOT(setValue(double)));
+    QSettings set;
+    ui->doubleSpinBox->setValue(set.value("contourRange", .100).toDouble());
+    ui->fillContourCB->setChecked(set.value("contourFillContour", true).toBool());
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(showContextMenu(QPoint)));
@@ -59,11 +64,59 @@ ContourPlot *contourView::getPlot(){
 
 void contourView::on_doubleSpinBox_valueChanged(double arg1)
 {
-    ui->widget->contourIntervalChanged(arg1);
+    ui->widget->showContoursChanged(arg1);
+    if (arg1 == 0.){
+        ui->fillContourCB->setChecked(true);
+        on_fillContourCB_clicked(true);
+    }
+
 }
 
 
 void contourView::on_pushButton_pressed()
 {
     emit showAllContours();
+}
+#include <qwt_plot_histogram.h>
+#include <opencv2/highgui/highgui.hpp>
+cv::Mat orientationMap(const cv::Mat& mag, const cv::Mat& ori, double thresh = 1.0)
+{
+    cv::Mat oriMap = cv::Mat::zeros(ori.size(), CV_8UC3);
+    cv::Vec3b red(0, 0, 255);
+    cv::Vec3b cyan(255, 255, 0);
+    cv::Vec3b green(0, 255, 0);
+    cv::Vec3b yellow(0, 255, 255);
+    for(int i = 0; i < mag.rows*mag.cols; i++)
+    {
+        float* magPixel = reinterpret_cast<float*>(mag.data + i*sizeof(float));
+        if(*magPixel > thresh)
+        {
+            float* oriPixel = reinterpret_cast<float*>(ori.data + i*sizeof(float));
+            cv::Vec3b* mapPixel = reinterpret_cast<cv::Vec3b*>(oriMap.data + i*3*sizeof(char));
+            if(*oriPixel < 90.0)
+                *mapPixel = red;
+            else if(*oriPixel >= 90.0 && *oriPixel < 180.0)
+                *mapPixel = cyan;
+            else if(*oriPixel >= 180.0 && *oriPixel < 270.0)
+                *mapPixel = green;
+            else if(*oriPixel >= 270.0 && *oriPixel < 360.0)
+                *mapPixel = yellow;
+        }
+    }
+
+    return oriMap;
+}
+void contourView::on_histogram_clicked()
+{
+
+    static pixelStats *ps = new pixelStats;
+    ps->setData(getPlot()->m_wf);
+    ps->show();
+}
+
+void contourView::on_fillContourCB_clicked(bool checked)
+{
+    QSettings set;
+    ui->widget->showSpectrogram(checked);
+
 }

@@ -68,7 +68,7 @@ SpectrogramData::SpectrogramData(): m_wf(0)
 
 void SpectrogramData::setSurface(wavefront *surface) {
     m_wf = surface;
-    setInterval( Qt::XAxis, QwtInterval(0, m_wf->workData.cols));
+    setInterval( Qt::XAxis, QwtInterval(0,m_wf->workData.cols));
     setInterval( Qt::YAxis, QwtInterval(0, m_wf->workData.rows));
 }
 
@@ -87,8 +87,6 @@ double SpectrogramData::value( double x, double y ) const
     return  (m_wf->workData(y,x)* m_wf->lambda/550.) -zOffset;
 
 }
-
-
 
 void ContourPlot::setColorMap(int ndx){
     QwtInterval iz = d_spectrogram->data()->interval( Qt::ZAxis );
@@ -114,31 +112,26 @@ void ContourPlot::contourWaveRangeChanged(double val ){
     setZRange();
 }
 
-void ContourPlot::contourIntervalChanged(double val){
-    contourRange = val;
-    QSettings set;
-    set.setValue("contourRange",val);
-    QwtInterval iz = d_spectrogram->data()->interval( Qt::ZAxis );
-    QList<double> contourLevels;
-    for ( double level = iz.minValue(); level < iz.maxValue(); level += val)
-        contourLevels += level;
-    d_spectrogram->setContourLevels( contourLevels );
-    d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode, true );
-    replot();
-}
+
 
 void ContourPlot::showContoursChanged(double val){
+    QSettings set;
+    set.setValue("contourRange",val);
     contourRange = val;
-    if (val == 0.)
-        d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode, false );
+
+    if (val == 0.){
+        d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode,false);
+        set.setValue("contourShowLines", false);
+    }
     else {
         QwtInterval iz = d_spectrogram->data()->interval( Qt::ZAxis );
         QList<double> contourLevels;
-        for ( double level = iz.minValue(); level < iz.maxValue(); level += val)
-            contourLevels += level;
+        for ( double level = iz.minValue(); level <= iz.maxValue(); level += val)
+            contourLevels << level;
         d_spectrogram->setContourLevels( contourLevels );
-        d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode, true );
-        d_spectrogram->setDefaultContourPen(QPen(m_contourPen));
+        d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode,true );
+        set.setValue("contourShowLines", true);
+        d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
     }
     replot();
 }
@@ -190,19 +183,6 @@ void ContourPlot::setZRange(){
 
     data->setInterval( Qt::ZAxis, zInt);
     setColorMap(m_colorMapNdx);
-
-    double range = zmax - zmin;
-    bool changed = false;
-    double lineCount = range/contourRange;
-    while ( lineCount > 10)
-    {
-        contourRange += .05;
-        lineCount = range/contourRange;
-        changed = true;
-    }
-    if (changed){
-        emit newContourRange(contourRange);
-    }
     emit setMinMaxValues(zmin,zmax);
     emit setWaveRange(zmax - zmin);
 
@@ -269,7 +249,6 @@ void ContourPlot::setSurface(wavefront * wf) {
 
 
     setFooter(name + QString().sprintf(" %6.3lfrms",wf->std));
-    d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode, false );
 
     plotLayout()->setAlignCanvasToScales(true);
     showContoursChanged(contourRange);
@@ -288,6 +267,7 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     m_colorMapNdx = settings.value("colorMapType",0).toInt();
     contourRange = settings.value("contourRange", .1).toDouble();
     m_contourPen = QColor(settings.value("ContourLineColor", "white").toString());
+    m_do_fill = settings.value("contourShowFill", true).toBool();
 
 
     plotLayout()->setAlignCanvasToScales( true );
@@ -295,22 +275,28 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
 
 }
 void ContourPlot::initPlot(){
-
     QSettings settings;
+    bool fill = settings.value("contourShowFill", true).toBool();
     d_spectrogram->setRenderThreadCount( 0 ); // use system specific thread count
-    d_spectrogram->setDefaultContourPen( QPen( m_contourPen));
+    d_spectrogram->setDefaultContourPen( fill ? QPen( m_contourPen): QPen(Qt::NoPen));
     d_spectrogram->setColorMap( new dftColorMap(settings.value("colorMapType",0).toInt()) );
     d_spectrogram->setCachePolicy( QwtPlotRasterItem::PaintCache );
 
     d_spectrogram->setData( new SpectrogramData() );
     d_spectrogram->attach( this );
-    d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode, true );
 
-    d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ImageMode, false );
+    d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ImageMode, fill );
     QList<double> contourLevels;
-    for ( double level = -1; level < 1; level += .05)
-        contourLevels += level;
-    d_spectrogram->setContourLevels( contourLevels );
+    double contourVal = contourRange;
+
+    qDebug() << contourVal;
+    if (contourVal > 0.001){
+        for ( double level = -1; level <1; level += contourVal)
+         contourLevels << level;
+        d_spectrogram->setContourLevels( contourLevels );
+    } else{
+        d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode,m_do_fill);
+    }
     const QFontMetrics fm( axisWidget( QwtPlot::yLeft )->font() );
     if (!m_minimal){
         QwtScaleDraw *sd = axisScaleDraw( QwtPlot::yLeft );
@@ -322,7 +308,7 @@ void ContourPlot::initPlot(){
         grid->setPen( Qt::gray, 0.0, Qt::DotLine );
         grid->attach( this);
     }
-    showSpectrogram(1);
+    showSpectrogram(fill);
 }
 
 void ContourPlot::setTool(ContourTools *tool){
@@ -344,7 +330,7 @@ void ContourPlot::on_line_color_changed(QColor c)
 void ContourPlot::contourFillChanged(int val)
 {
     if (val){
-        d_spectrogram->setDefaultContourPen(QPen(m_contourPen));
+        d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
     }
 
     replot();
@@ -352,17 +338,21 @@ void ContourPlot::contourFillChanged(int val)
 
 void ContourPlot::showContour( bool on )
 {
+    QSettings set;
+    set.setValue("contourShowLines", on);
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode, on );
     if (on)
-        d_spectrogram->setDefaultContourPen(QPen(m_contourPen));
+        d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
     replot();
 }
 
-void ContourPlot::showSpectrogram(int on )
+void ContourPlot::showSpectrogram(bool on )
 {
+    QSettings set;
+    set.setValue("contourShowFill", on);
+    m_do_fill = on;
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ImageMode, on );
-    d_spectrogram->setDefaultContourPen(
-                on ? QPen( m_contourPen,1 ) : QPen( Qt::NoPen ) );
+    d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
 
     replot();
 }

@@ -65,15 +65,12 @@ signals:
 
 public Q_SLOTS:
     void showContour( bool on );
-    void showSpectrogram( int on );
+    void showSpectrogram(bool on );
     void setAlpha( int );
-
-
     void ContourMapColorChanged(int);
     void showContoursChanged(double);
     void contourZeroOffsetChanged(const QString & val);
     void contourColorRangeChanged(const QString &arg1);
-    void contourIntervalChanged(double);
     void contourWaveRangeChanged(double);
     void on_line_color_changed(QColor);
     void contourFillChanged(int);
@@ -87,6 +84,7 @@ private:
 
     QwtPlotSpectrogram *d_spectrogram;
     QColor m_contourPen;
+    bool m_do_fill;
 protected:
 
 };

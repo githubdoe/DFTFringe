@@ -43,13 +43,11 @@ ContourTools::ContourTools(QWidget *parent) :
     int ndx = s.value("colorMap ndx", 1).toInt();
     ui->ColorMapCB->setCurrentIndex(ndx);
     double v = s.value("contourSteps", .1).toDouble();
-    ui->contoursteps->setValue(v);
+
 
     ui->zeroOffsetCB->addItem(tr("Middle"));
     ui->zeroOffsetCB->addItem(tr("Minimum"));
-    ui->contoursteps->setSingleStep(.01);
-    ui->contoursteps->setMinimum(.01);
-    ui->contoursteps->setDecimals(3);
+
     ui->errorRangeSpin->setSingleStep(.01);
     ui->errorRangeSpin->setMinimum(.01);
     ui->errorRangeSpin->setDecimals(3);
@@ -72,18 +70,14 @@ ContourTools::~ContourTools()
 
 void ContourTools::connectTo(QWidget *view){
     connect(this, SIGNAL(ContourMapColorChanged(int)), view, SLOT(ContourMapColorChanged(int)));
-    connect(this, SIGNAL(showContoursChanged(double)), view, SLOT(showContoursChanged(double)));
     connect(this, SIGNAL(contourZeroOffsetChanged(const QString &)),
             view, SLOT(contourZeroOffsetChanged(const QString &)));
     connect(this, SIGNAL(contourColorRangeChanged(const QString &)),
             view, SLOT(contourColorRangeChanged(const QString &)));
-    connect(this, SIGNAL(contourIntervalChanged(double)),
-            view, SLOT(contourIntervalChanged(double)));
     connect(view, SIGNAL(setMinMaxValues(double,double)),this, SLOT(setMinMaxValues(double,double)));
     connect(this, SIGNAL(contourWaveRangeChanged(double)),view, SLOT(contourWaveRangeChanged(double)));
     connect(view, SIGNAL(setWaveRange(double)),this, SLOT(setWaveRange(double)));
     connect(this, SIGNAL(lineColorChanged(QColor)), view, SLOT(on_line_color_changed(QColor)));
-    connect(this, SIGNAL(fillChanged(int)),         view, SLOT(showSpectrogram(int)));
     enablTools(false);
 }
 
@@ -119,14 +113,7 @@ void ContourTools::on_ColorMapCB_activated(int index)
     emit ContourMapColorChanged(index);
 }
 
-void ContourTools::on_checkBox_stateChanged(int arg1)
-{
-    ui->contoursteps->setEnabled((bool)arg1);
-    if (ui->checkBox->isChecked())
-        emit showContoursChanged(ui->contoursteps->value());
-    else
-        emit showContoursChanged(0.);
-}
+
 
 void ContourTools::on_zeroOffsetCB_activated(const QString &arg1)
 {
@@ -137,18 +124,6 @@ void ContourTools::on_colorRangeCB_activated(const QString &arg1)
 {
     ui->errorRangeSpin->setEnabled(arg1 == "Fractions of Wave");
     emit contourColorRangeChanged(arg1);
-}
-
-void ContourTools::on_contoursteps_editingFinished()
-{
-
-}
-
-void ContourTools::on_contoursteps_valueChanged(double arg1)
-{
-    QSettings s;
-    s.setValue("contourSteps", arg1);
-    emit contourIntervalChanged(arg1);
 }
 
 void ContourTools::on_errorRangeSpin_valueChanged(double arg1)
@@ -165,13 +140,6 @@ void ContourTools::on_LineColorBtn_clicked()
     ui->lineColorDisplay->setPalette(pal);
     ui->lineColorDisplay->setAutoFillBackground( true );
     emit lineColorChanged(color);
-}
-
-
-
-void ContourTools::on_FilledContourChk_stateChanged(int arg1)
-{
-    emit fillChanged((bool)arg1);
 }
 
 void ContourTools::on_max_textEdited(const QString &)

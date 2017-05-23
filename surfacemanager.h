@@ -27,7 +27,7 @@
 #include <sstream>
 #include "glwidget.h"
 #include "dftarea.h"
-#include "igramarea.h"
+#include "IgramArea.h"
 #include "profileplot.h"
 #include "surfaceanalysistools.h"
 #include <QObject>
@@ -37,7 +37,7 @@
 #include <QTimer>
 #include <QProgressDialog>
 #include "wftstats.h"
-#include "circleoutline.h"
+#include "Circleoutline.h"
 #include "simulationsview.h"
 #include "standastigwizard.h"
 
@@ -91,6 +91,8 @@ public:
     bool m_GB_enabled;
     int m_currentNdx;
     wavefront* m_wf;
+    wavefront* m_standAvg;
+    wavefront* m_standRemoved;
     int insideOffset;
     int outsideOffset;
     QWaitCondition pauseCond;
@@ -114,7 +116,7 @@ private:
     int workProgress;
     void subtract(wavefront *wf1, wavefront *wf2, bool use_null = true);
     wftStats *m_wftStats;
-    textres Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx);
+    textres Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx);
 
 signals:
     void currentNdxChanged(int);

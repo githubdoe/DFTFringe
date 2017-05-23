@@ -9,6 +9,7 @@
 #include <opencv/cv.h>
 #include <QApplication>
 #include <QMessageBox>
+#include "myutils.h"
 statsView::statsView(SurfaceManager *parent) :
     QDialog(0),
     ui(new Ui::statsView),m_removeOutliers(false), m_removeRMS(false)
@@ -216,17 +217,18 @@ void statsView::on_SaveCSV_clicked()
     QString csvName = path + "/stats.csv";
     QString fileName = QFileDialog::getSaveFileName(0,
                         tr("Save stats csv file"), csvName,
-                        tr("pdf (*.csv)"));
+                        tr("stats file (*.csv)"));
     if (fileName.isEmpty())
         return;
+    QFile thefile(fileName);
+    thefile.open(QFile::ReadWrite);
 
-    QString buf;
-    QTextStream file(&buf);
+    QTextStream file(&thefile);
     QString dir = info.dir().path();
     dir = dir.right(dir.size() - dir.lastIndexOf("/")-1);
-    file << title(dir) << ",'wavefront RMS'"<< ",,Z4,Z5,Z6,Z7,Z8,Z9,Z10 " << endl;
+    file << title(dir) << ",'wavefront RMS'"<< ",,Piston,XTile,Ytilt,Defocus,XAstig,Yastig,Z6,Z7,Spherical,Z9,Z10 " << endl;
     QString out;
-    cv::Mat mZerns(m_sm->m_wavefronts.size(),Z_TERMS,CV_64F,0.);
+    cv::Mat mZerns(m_sm->m_wavefronts.size(),Z_TERMS,numType,0.);
     int row = 0;
     mirrorDlg *md = mirrorDlg::get_Instance();
 
@@ -272,7 +274,7 @@ void statsView::on_SaveCSV_clicked()
         ++row;
 
     }
-
+    thefile.close();
 }
 
 void statsView::on_savePdf_clicked()
@@ -342,6 +344,24 @@ void statsView::on_checkBox_4_toggled(bool checked)
         m_stats->zernFrom = ui->zernFromSP->text().toInt();
         m_stats->zernTo = ui->zernToSP->text().toInt();
     }
+    getWavefronts();
+    replot();
+    sresize();
+}
+
+void statsView::on_zernFromSP_valueChanged(int arg1)
+{
+    m_stats->zernFrom = ui->zernFromSP->text().toInt();
+    m_stats->zernTo = ui->zernToSP->text().toInt();
+    getWavefronts();
+    replot();
+    sresize();
+}
+
+void statsView::on_zernToSP_valueChanged(int arg1)
+{
+    m_stats->zernFrom = ui->zernFromSP->text().toInt();
+    m_stats->zernTo = ui->zernToSP->text().toInt();
     getWavefronts();
     replot();
     sresize();

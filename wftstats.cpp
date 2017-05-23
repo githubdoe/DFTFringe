@@ -22,6 +22,8 @@
 #include <qwt_plot_histogram.h>
 #include <QTextStream>
 #include "plotcolor.h"
+
+#include "opencv2/core/core.hpp"
 class wftNameScaleDraw: public QwtScaleDraw
 {
 public:

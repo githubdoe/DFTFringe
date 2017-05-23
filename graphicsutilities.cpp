@@ -45,8 +45,11 @@ void writeCircle(std::ofstream& file, CircleOutline& circle){
 CircleOutline readCircle(std::ifstream &file){
     char buf[32 + 4];
     file.read(buf,8*4 + 4);
-    unsigned char* b = (unsigned char*)buf;
-
+    if (!file){
+        qDebug() << "failed to read.  Read only " << file.gcount();
+        return     CircleOutline();
+    }
+qDebug() << "Circle read " << file.gcount();
     double *dp = (double*)buf;
     double x = *(dp++);
     double y = *(dp++);
@@ -54,16 +57,13 @@ CircleOutline readCircle(std::ifstream &file){
 
     ++dp;
     int size = *(int *)dp; //= *(reinterpret_cast<int *>(buf));
+qDebug() << "circle size "<< size;
+    if (size > 20)
+       return     CircleOutline();
     // ignore the ellipse point section
     for (int i = 0; i < size; ++i) {
         file.read(buf,8);
-        double x,y;
-        x = *(double*)buf;
-
         file.read(buf,8);
-        y = *(double*)buf;
-
-
     }
     CircleOutline c;
     c.m_center.rx() = x;

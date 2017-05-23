@@ -20,6 +20,8 @@ public:
     static QRadioButton *autoRb;
     static QRadioButton *manualRb;
     static QPushButton *goPb;
+    static QPushButton *skipFile;
+    static QPushButton *addFiles;
     explicit batchIgramWizard(QStringList files, QWidget *parent = 0 , Qt::WindowFlags flags = 0);
     ~batchIgramWizard();
     void listReady(QStringList list);
@@ -46,5 +48,6 @@ public slots:
     void eraseItem();
 signals:
     void processBatchList(QStringList);
+
 };
 #endif // BATCHIGRAMWIZARD_H

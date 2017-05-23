@@ -36,6 +36,7 @@
 #include <QtNetwork/QLocalServer>
 #include <QtNetwork/QLocalSocket>
 #include "singleapplication.h"
+#include <qmutex.h>
 
 struct InstancesInfo {
     bool primary;

@@ -66,15 +66,18 @@
 #include <QtGui>
 #include <QLabel>
 #include <qscrollarea>
-#include "circleoutline.h"
+#include "Circleoutline.h"
 #include <list>
-#include <opencv/cv.h>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include "dftthumb.h"
 #include <QTimer>
 #include <QVideoWidget>
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
 #include <QScrollArea>
+#include "settingsigram.h"
 
 extern QScrollArea *gscrollArea;
 enum {OutSideOutline, CenterOutline};
@@ -99,6 +102,8 @@ public:
     void clear();
 
 };
+
+
 
 class IgramArea : public QWidget
 {
@@ -158,7 +163,7 @@ public slots:
     void shiftLeft();
     void zoomIn();
     void zoomOut();
-    void igramOutlineParmsChanged(int, int, QColor, QColor, double, int, int zoomWidth);
+    void igramOutlineParmsChanged(outlineParms parms);
     void increase( int i = 1);
     void decrease(int i = 1);
     void zoomFull();
@@ -201,6 +206,7 @@ private:
     bool needToConvertBGR;
     QColor centerPenColor;
     QColor edgePenColor;
+    bool m_autoSaveOutline;
 public:
     QImage igramDisplay;
 private:

@@ -32,6 +32,7 @@ psfPlot::psfPlot(QWidget *parent) :
     QwtText title( "PSF" );
     title.setRenderFlags( Qt::AlignHCenter | Qt::AlignTop );
     t->setText(title);
+    enableAxis(QwtPlot::xBottom, false);
     t->attach(this);
 }
 
@@ -52,9 +53,11 @@ void psfPlot::setData(cv::Mat wf, QString label, QPen color){
     QwtPlotCurve *curve1 = new QwtPlotCurve(label);
     QPolygonF points1;
     double w = sqrt(wf.cols);
+    wf += cv::Scalar::all(1);                    // switch to logarithmic scale
+    cv::log(wf, wf);
     for (int x = nx; x >0; --x){
 
-        points1 << QPointF(nx - x, log10(wf.at<double>(nx,x)/w));
+        points1 << QPointF(nx - x, /*log10*/(wf.at<double>(nx,x)/w));
     }
     curve1->setPen(color);
     curve1->setSamples(points1);

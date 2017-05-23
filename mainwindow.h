@@ -88,6 +88,7 @@ public slots:
     void zoomOgl(bool flag);
     void zoomProfile(bool flag);
     void imageSize(QString txt);
+    void skipBatchItem();
 signals:
     void load(SurfaceManager *);
     //void load(QStringList, SurfaceManager *);
@@ -220,13 +221,13 @@ private:
     void createDockWindows();
 public:
     IgramArea *m_igramArea;
-
+    DFTTools *m_dftTools;
 
 private:
     DFTArea *m_dftArea;
 
     contourView *m_contourView;
-    DFTTools *m_dftTools;
+
     ContourTools *m_contourTools;
     OGLControls *m_oglTools;
     surfaceAnalysisTools *m_surfTools;
@@ -254,6 +255,7 @@ private:
     bool m_showChannels;
     bool m_showIntensity;
     bool m_inBatch;
+    bool m_skipItem;
     bool m_OutlineDoneInBatch;
     bool m_batchMakeSurfaceReady;
 

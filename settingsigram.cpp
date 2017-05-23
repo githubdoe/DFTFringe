@@ -38,6 +38,8 @@ settingsIGram::settingsIGram(QWidget *parent) :
     ui->setupUi(this);
     QSettings set;
     edgeColor = QColor(set.value("igramEdgeLineColor", "white").toString());
+    m_autoSaveOutline = set.value("AutoSaveOutline", true).toBool();
+    ui->SaveOutlines->setChecked(m_autoSaveOutline);
     ui->edgeLineColorPb->setStyleSheet(colorButtonStyleSheet(edgeColor));
     centerColor = QColor(set.value("igramCenterLineColor", "yellow").toString());
     ui->centerLineColorPb->setStyleSheet(colorButtonStyleSheet(centerColor));
@@ -100,10 +102,10 @@ settingsIGram::settingsIGram(QWidget *parent) :
     ui->lenseTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     selectionModel = ui->lenseTableView->selectionModel();
 
-    QPalette* palette = new QPalette();
-    palette->setColor(QPalette::Highlight,"lightCyan");
-    palette->setColor(QPalette::HighlightedText,"black");
-    ui->lenseTableView->setPalette(*palette);
+    QPalette palette;// = new QPalette();
+    palette.setColor(QPalette::Highlight,"lightCyan");
+    palette.setColor(QPalette::HighlightedText,"black");
+    ui->lenseTableView->setPalette(palette);
 }
 
 settingsIGram::~settingsIGram()
@@ -144,8 +146,10 @@ void settingsIGram::on_buttonBox_accepted()
     set.setValue("igramLineOpacity", ui->opacitySB->value());
     set.setValue("igramLineStyle", ui->styleCB->currentIndex() + 1);
     set.setValue("igramZoomBoxWidth", ui->zoomBoxWidthSb->value());
-    emit igramLinesChanged(edgeWidth,centerWidth, edgeColor, centerColor, ui->opacitySB->value(),
-                           ui->styleCB->currentIndex()+1, ui->zoomBoxWidthSb->value());
+    set.setValue("AutoSaveOutline", m_autoSaveOutline);
+
+    emit igramLinesChanged(outlineParms(edgeWidth,centerWidth, edgeColor, centerColor, ui->opacitySB->value(),
+                           ui->styleCB->currentIndex()+1, ui->zoomBoxWidthSb->value(),m_autoSaveOutline));
 }
 
 void settingsIGram::on_removeDistortion_clicked(bool checked)
@@ -214,3 +218,10 @@ void settingsIGram::on_lenseTableView_clicked(const QModelIndex &index)
     set.setValue("currentLense", m_lensData[index.row()].join(","));
 }
 
+
+void settingsIGram::on_SaveOutlines_clicked(bool checked)
+{
+    m_autoSaveOutline = checked;
+    QSettings set;
+    set.setValue("AutoSaveOutline", m_autoSaveOutline);
+}

@@ -202,13 +202,20 @@ void surfaceAnalysisTools::nameChanged(int ndx, QString newname){
 
 void surfaceAnalysisTools::nameChanged(QString old, QString newname){
 
+    // first look for full length name match
+    QList<QListWidgetItem *> ql = ui->wavefrontList->findItems(old,Qt::MatchExactly);
+    if (ql.size() == 1){
+        ql[0]->setText(newname);
+        return;
+    }
+
     QStringList list = old.split('/');
     QString shorter = old;
 
     if (list.size() > 1)
         shorter = list[list.size()-2] + "/" + list[list.size()-1];
 
-    QList<QListWidgetItem *> ql = ui->wavefrontList->findItems(shorter,Qt::MatchEndsWith);
+    ql = ui->wavefrontList->findItems(shorter,Qt::MatchEndsWith);
     if (ql.size()) {
 
         list = newname.split('/');

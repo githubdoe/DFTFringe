@@ -23,6 +23,7 @@
 #include "surfaceanalysistools.h"
 #include "simigramdlg.h"
 #include "settings2.h"
+#include "myutils.h"
 std::vector<bool> zernEnables;
 std::vector<double> zNulls;
 double BestSC = -1.;
@@ -579,7 +580,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
     if (!m_dirty_zerns)
         return;
 
-    Z = cv::Mat(Z_TERMS,1,CV_64F, 0.);
+    Z = cv::Mat(Z_TERMS,1,numType, 0.);
 
 /*
 'calculate LSF matrix elements
@@ -699,7 +700,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
     double midy = wf.m_outside.m_center.ry();
     double rad = wf.m_outside.m_radius;
 
-    cv::Mat nulled = cv::Mat::zeros(ny,nx,CV_64F);
+    cv::Mat nulled = cv::Mat::zeros(ny,nx,numType);
 
     bool doDefocus = surfaceAnalysisTools::get_Instance()->m_useDefocus;
     double defocus = 0;
@@ -800,7 +801,7 @@ cv::Mat makeSurfaceFromZerns(int border, bool doColor){
     double rad = (double)(wx-1)/2.;
     double xcen = rad,ycen = rad;
     rad -= border;
-    cv::Mat result = cv::Mat::zeros(wx,wx, (doColor)? CV_8UC4: CV_64F);
+    cv::Mat result = cv::Mat::zeros(wx,wx, (doColor)? CV_8UC4: numType);
 
     double rho;
     double spacing = 1.;

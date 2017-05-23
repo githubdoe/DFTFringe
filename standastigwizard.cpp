@@ -63,7 +63,7 @@ IntroPage::IntroPage(QWidget *parent)
                             "include the rotation angle in the name of the averaged file.</li>"
                             "<li>Select a group of files to be analyzed. If a file name has a rotation angle in it that will be used as the rotation angle. </li>"
                             "<li>Inspect the rotation anlge for each file and alter if necessary.</li>"
-                            "</li>Press run</li>"
+                            "</li>Press compute</li>"
                             "<li>A pdf file will be generated with the results.</li><br>"
                             "</ol>"
                             "It will counter rotate each of the wavefront files you give it.<br>"
@@ -85,12 +85,9 @@ IntroPage::IntroPage(QWidget *parent)
                             "  Resulting in a new wavefront for each of the original files."
                             "  Use those files to see what the stand does to each rotation."
                             "  They should all look similar.  If not then the mirror was not"
-                            "  supported the same for each rotation.<br></p>"
+                            "  supported the same for each rotation.<br></p>"));
 
-                            "<p style=\"font-size:15px\">If <b><i>save work files</b></i> is check it will save the following:<ul>"
-                            "  <li>Counter rotated files for each of the input files with \"CR\" prepened to the file name.</li> "
-                            "  <li>Average file rotated back to match each input file with \"RAVG \" prepended to each angle. </li>"
-                            "  <li>Test stand only file for each input with \"Stand\" prepended to each angle. </li></ul></p>"));
+
 
 
     info->setReadOnly(true);
@@ -131,6 +128,8 @@ void define_input::pdfNamesPressed(){
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".pdf"); }
     AstigReportPdfName = fileName;
     pdfName->setText(fileName);
+    QSettings set;
+    set.setValue("stand pdf file", fileName.split("/").last());
 }
 void define_input::setBasePath(){
     QString baseName = QFileDialog::getExistingDirectory(
@@ -172,13 +171,14 @@ void define_input::showContextMenu(const QPoint &pos)
 define_input::define_input(QWidget *parent)
     : QWizardPage(parent)
 {
+    QSettings set;
     setTitle(tr("Specify average input files"));
     setSubTitle(tr("Add each averaged wavefront for each rotation angle. Then Press Compute."));
     browsePb = new QPushButton("Add average Wavefront file to List");
-
+    QString pdfNameStr = set.value("stand pdf file", "stand.pdf").toString();
     connect(browsePb, SIGNAL(pressed()), this, SLOT(browse()));
     AstigReportTitle = mirrorDlg::get_Instance()->m_name;
-    AstigReportPdfName = mirrorDlg::get_Instance()->getProjectPath() + "/stand.pdf";
+    AstigReportPdfName = mirrorDlg::get_Instance()->getProjectPath() + "/" + pdfNameStr;
     title = new QLineEdit(AstigReportTitle);
     pdfName = new QPushButton(AstigReportPdfName);
     connect(pdfName, SIGNAL(pressed()), this, SLOT(pdfNamesPressed()));
@@ -233,18 +233,20 @@ define_input::define_input(QWidget *parent)
     l->addWidget(CWRb, 3,4);
     l->addWidget(CCWRb, 3,5);
     l->addWidget(browsePath,2,5);
-    l->addWidget(browsePb,3,0,1,2,Qt::AlignLeft);
+    l->addWidget(browsePb,3,0,1,3,Qt::AlignLeft);
     l->addWidget(new QLabel("   "),4,0);
-    l->addWidget(lab2,6,0,1,3);
+    l->addWidget(lab2,6,0,2,10);
     listDisplay = new QListWidget();
     listDisplay->setSelectionMode( QAbstractItemView::MultiSelection);
     listDisplay->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(listDisplay, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(showContextMenu(QPoint)));
 
-    l->addWidget(listDisplay,7,0,10,-1);
+    l->addWidget(listDisplay,8,0,10,-1);
     l->addWidget(new QLabel("Report Title:"),18,0);
     l->addWidget(title, 18,1);
+    showWork = new QCheckBox("Show work Files");
+    l->addWidget(showWork, 18,2);
     l->addWidget(new QLabel("Pdf File Name:"), 19,0);
     l->addWidget(pdfName, 19,1,1,-1);
     l->addWidget(runpb, 20,0,1,7);
@@ -305,3 +307,9 @@ void define_input::browse(){
 
 }
 
+
+void standAstigWizard::on_standAstigWizard_helpRequested()
+{
+    QString link = qApp->applicationDirPath() + "/res/Help/StandAstigHelp.html";
+    QDesktopServices::openUrl(QUrl(link));
+}

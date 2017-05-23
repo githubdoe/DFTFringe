@@ -21,8 +21,8 @@
 #include <QPrintDialog>
 #endif
 
-#include "igramarea.h"
-#include "circleoutline.h"
+#include "IgramArea.h"
+#include "Circleoutline.h"
 #include <QtGlobal>
 #include <math.h>
 
@@ -38,6 +38,7 @@
 #include "imagehisto.h"
 #include "simigramdlg.h"
 #include "settings2.h"
+#include "myutils.h"
 
 void undoStack::clear() {
     m_stack.clear();
@@ -234,8 +235,6 @@ bool IgramArea::openImage(const QString &fileName)
         double height = camera.at<double>(1,2) = parms[8].toDouble();
         width *= 2;
         height *= 2;
-        double xscale = (double)(raw.cols)/width;
-        double yscale = (double)(raw.rows)/height;
 
         for (int i = 0; i < 5; ++i){
             distortion.at<double>(0,i) = parms[1 + i].toDouble();
@@ -408,7 +407,7 @@ void IgramArea::undo(){
         m_innerP2 = m_center.m_p2.m_p;
     }
     resizeImage();
-    drawBoundary();
+
 }
 void IgramArea::redo(){
     if (m_current_boundry == OutSideOutline){
@@ -429,7 +428,7 @@ void IgramArea::redo(){
 
     }
     resizeImage();
-    drawBoundary();
+
 }
 
 bool IgramArea::eventFilter(QObject *object, QEvent *event)
@@ -811,8 +810,6 @@ void IgramArea::drawBoundary()
 
     //m_outlineTimer->start(1000);
 
-
-
     //emit statusBarUpdate(QString().sprintf("%6.1lf,%6.1lf", m_OutterP1.x(),m_OutterP1.y()));
     QPainter p( &igramDisplay);
     p.drawImage(QPoint(0,0), m_withOutlines.scaled(m_withOutlines.width() * scale, m_withOutlines.height() * scale));
@@ -828,7 +825,6 @@ void IgramArea::resizeImage()
 
     if (igramImage.isNull())
         return;
-
 
     QSize newSize;
     if (zoomIndex > 1 && m_zoomMode == NORMALZOOM){
@@ -854,7 +850,7 @@ void IgramArea::resizeImage()
     } catch (...) {
         QMessageBox::warning(NULL,"","Not enough memory to zoom this large");
     }
-
+    drawBoundary();
 }
 
 
@@ -1025,7 +1021,7 @@ void IgramArea::crop() {
     m_innerP1 = m_center.m_p1.m_p;
     m_innerP2 = m_center.m_p2.m_p;
     resizeImage();
-    drawBoundary();
+
     m_outsideHist.push(igramImage, m_outside);
     m_centerHist.push(igramImage, m_center);
     hasBeenCropped = true;
@@ -1088,6 +1084,11 @@ void IgramArea::loadOutlineFile(QString fileName){
     drawBoundary();
     m_outsideHist.push(igramImage,m_outside);
     emit enableShiftButtons(true);
+
+    QString msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
+                             m_outside.m_center.x(),m_outside.m_center.y(),m_outside.m_radius, scale);
+
+    emit statusBarUpdate(msg2);
 }
 
 void IgramArea::readOutlines(){
@@ -1213,7 +1214,9 @@ void IgramArea::nextStep(){
     }
     if (!mirrorDlg::get_Instance()->isEllipse()){
         // save outline as a file.
-        writeOutlines(makeOutlineName());
+        if (Settings2::getInstance()->m_igram->m_autoSaveOutline){
+            writeOutlines(makeOutlineName());
+        }
     }
     if (!hasBeenCropped)
         crop();
@@ -1266,16 +1269,17 @@ void IgramArea::hideOutline(bool checked){
     m_hideOutlines = checked;
     drawBoundary();
 }
-void IgramArea::igramOutlineParmsChanged(int edgeW, int centerW, QColor edgeC, QColor centerC, double op, int style, int zoomWidth){
-    edgePenWidth = edgeW;
-    centerPenWidth = centerW;
-    edgePenColor = edgeC;
-    centerPenColor = centerC;
-    opacity = op;
-    lineStyle = style;
-    m_zoomBoxWidth = zoomWidth;
+void IgramArea::igramOutlineParmsChanged(outlineParms parms){
+    edgePenWidth = parms.edgeW;
+    centerPenWidth = parms.centerW;
+    edgePenColor = parms.edgeC;
+    centerPenColor = parms.centerC;
+    opacity = parms.op;
+    lineStyle = parms.style;
+    m_zoomBoxWidth = parms.zoomWidth;
+    m_autoSaveOutline = parms.autoSaveOutline;
     QSettings set;
-    set.setValue("zoomBoxWidth", zoomWidth);
+    set.setValue("zoomBoxWidth", parms.zoomWidth);
     drawBoundary();
 
 }

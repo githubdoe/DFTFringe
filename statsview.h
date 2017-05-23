@@ -47,6 +47,10 @@ private slots:
 
     void on_checkBox_4_toggled(bool checked);
 
+    void on_zernFromSP_valueChanged(int arg1);
+
+    void on_zernToSP_valueChanged(int arg1);
+
 private:
     Ui::statsView *ui;
     bool m_removeOutliers;

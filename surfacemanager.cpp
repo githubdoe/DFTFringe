@@ -60,6 +60,8 @@
 #include <QSplitter>
 #include "settingsgeneral2.h"
 #include "foucaultview.h"
+#include "myutils.h"
+
 QMutex mutex;
 int inprocess = 0;
 
@@ -246,7 +248,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
     double rad = getCurrent()->m_outside.m_radius;
     double xcen = (wx-1)/2, ycen = (wy-1)/2;
 
-    cv::Mat result = cv::Mat::zeros(wy,wx, CV_64F);
+    cv::Mat result = cv::Mat::zeros(wy,wx, numType);
 
     double rho;
 
@@ -308,7 +310,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
                                GLWidget *glPlot, metricsDisplay *mets): QObject(parent),
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourPlot(contourPlot),
     m_oglPlot(glPlot), m_metrics(mets),
-    m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),insideOffset(0),
+    m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
     outsideOffset(0),m_askAboutReverse(true), workToDo(0), m_wftStats(0)
 {
     m_simView = SimulationsView::getInstance(0);
@@ -475,7 +477,7 @@ void SurfaceManager::useDemoWaveFront(){
     double xcen = rad,ycen = rad;
     double rho;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    cv::Mat result = cv::Mat::zeros(wx,wx, CV_64F);
+    cv::Mat result = cv::Mat::zeros(wx,wx, numType);
     zernikePolar &zpolar = *zernikePolar::get_Instance();
     for (int i = 0; i <  wx; ++i)
     {
@@ -696,8 +698,10 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
                                                         ,path,
                                                         QFileDialog::ShowDirsOnly
                                                         | QFileDialog::DontResolveSymlinks);
-        if (dir == "")
+        if (dir == ""){
+            QApplication::restoreOverrideCursor();
             return;
+        }
         // find last file in dir
 
         QProgressDialog progress("Saving wavefront files", "Cancel", 0, list.size(), 0);
@@ -717,7 +721,6 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
             QString fullPath = dir + QDir::separator() + fname;
             QFileInfo info;
             // check if file exists and if yes: Is it really a file and no directory?
-            int cnt = 1;
             if (info.exists(fullPath)) {
                 if (QMessageBox::question(0,"file alread exists", fullPath +" already exists. Do you want to overwrite it?") ==
                         QMessageBox::No)
@@ -735,6 +738,15 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
 void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside, CircleOutline center, QString name){
 
     wavefront *wf;
+    QSettings set;
+    int resizeWidth = set.value("WaveFrontWidth", 640).toInt();
+
+    if (phase.rows > resizeWidth){
+        double scaleFactor = (double)resizeWidth/double(phase.rows);
+        cv::resize(phase,phase, cv::Size(resizeWidth,resizeWidth), 0, 0,INTER_AREA);
+        outside.scale(scaleFactor);
+        center.scale(scaleFactor);
+    }
 
     if (m_wavefronts.size() >0 && (m_currentNdx == 0 &&  m_wavefronts[0]->name == "Demo")){
         wf = m_wavefronts[0];
@@ -826,7 +838,7 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
     file >> width;
     file >> height;
 
-    cv::Mat data(height,width, CV_64F,0.);
+    cv::Mat data(height,width, numType,0.);
     const double mean = 0.0;
     const double stddev = 1.;
     std::default_random_engine generator;
@@ -840,7 +852,7 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         }
     }
 
-    string line;
+    std::string line;
     QString l;
     mirrorDlg *md = mirrorDlg::get_Instance();
 
@@ -851,7 +863,7 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
             diam = md->diameter;
     double xo = width/2., yo = height/2., rado = 0;
 
-    string dummy;
+    std::string dummy;
     while (getline(file, line)) {
         l = QString::fromStdString(line);
         std::istringstream iss(line);
@@ -1104,6 +1116,7 @@ void SurfaceManager::backGroundUpdate(){
     foreach (int i, doThese){
         m_wavefronts[i]->dirtyZerns = true;
         m_wavefronts[i]->wasSmoothed = false;
+        makeMask(i);
         emit generateSurfacefromWavefront(i, this);
     }
 }
@@ -1225,9 +1238,9 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         m_wavefronts << wf;
         m_surfaceTools->addWaveFront(wf->name);
         m_currentNdx = m_wavefronts.size()-1;
-        cv::Point2f ptCp(tmp.cols*0.5, tmp.rows*0.5);
+        cv::Point2f ptCp = cv::Point2f(wf->m_outside.m_center.x(), wf->m_outside.m_center.y());
         cv::Mat M = cv::getRotationMatrix2D(ptCp, angle, 1.0);
-        cv::warpAffine(tmp, wf->data , M, tmp.size(), cv::INTER_CUBIC);
+        cv::warpAffine(tmp, wf->data , M, tmp.size());
         wf->m_inside = oldWf->m_inside;
         wf->m_outside = oldWf->m_outside;
         double rad = -angle * M_PI/180.;
@@ -1323,6 +1336,14 @@ void SurfaceManager::invert(QList<int> list){
 
 #include "wftexaminer.h"
 wftExaminer *wex;
+double wrapAngle(double angle){
+    if (angle < -360){
+        angle += 360;
+    }
+    if (angle >= 360)
+        angle -= 360;
+    return angle;
+}
 void SurfaceManager::inspectWavefront(){
     wex = new wftExaminer(m_wavefronts[m_currentNdx]);
     wex->show();
@@ -1333,7 +1354,7 @@ void SurfaceManager::inspectWavefront(){
 
 
 
-textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int avgNdx ){
+textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx ){
     QTextEdit *editor = new QTextEdit;
 
     QTextDocument *doc = editor->document();
@@ -1352,17 +1373,21 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     printer.setPaperSize(QPrinter::A4);
 
     QPainter painterPDF( &printer );
-    cv::Mat xastig = cv::Mat::zeros(list.size(), 1, CV_64F);
-    cv::Mat yastig = cv::Mat::zeros(list.size(), 1, CV_64F);
-    cv::Mat standxastig = cv::Mat::zeros(list.size(), 1, CV_64F);
-    cv::Mat standyastig = cv::Mat::zeros(list.size(), 1, CV_64F);
-    cv::Mat standastig = cv::Mat::zeros(list.size(), 1, CV_64F);
+    cv::Mat xastig = cv::Mat::zeros(list.size(), 1, numType);
+    cv::Mat yastig = cv::Mat::zeros(list.size(), 1, numType);
+    cv::Mat standxastig = cv::Mat::zeros(list.size(), 1, numType);
+    cv::Mat standyastig = cv::Mat::zeros(list.size(), 1, numType);
+    cv::Mat standastig = cv::Mat::zeros(list.size(), 1, numType);
     QVector<cv::Mat> standwfs;
     QVector<double> astigMag;
     editor->resize(printer.pageRect().size());
     doc->setPageSize(printer.pageRect().size());
-    cv::Mat standavg = cv::Mat::zeros(m_wavefronts[inputs[0]]->workData.size(), CV_64F);
-    cv::Mat standavgZernMat = cv::Mat::zeros(m_wavefronts[inputs[0]]->workData.size(), CV_64F);
+    cv::Mat standavg = cv::Mat::zeros(inputs[0]->workData.size(), numType);
+    cv::Mat standavgZernMat = cv::Mat::zeros(inputs[0]->workData.size(), numType);
+    double mirrorXaverage = 0;
+    double mirrorYAverage = 0;
+    double maxXastig = 0;
+    double maxYastig = 0;
     for (int i = 0; i < list.size(); ++i){
 
         // rotate the average to match the input
@@ -1370,10 +1395,11 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         toRotate.append(avgNdx);
         int ndx = m_wavefronts.size(); // index of result of rotation
         m_surface_finished = false;
-        rotateThese(-list[i]->angle,toRotate);
+
+        rotateThese(wrapAngle(-list[i]->angle),toRotate);  // use neg angle to rotate back to original input
         while(!m_surface_finished){qApp->processEvents();}
         m_surface_finished = false;
-        subtract(m_wavefronts[inputs[i]], m_wavefronts[ndx],false);
+        subtract(inputs[i], m_wavefronts[ndx],false);
         ++ndx;      // now ndx point to the stand only wavefront
         while(!m_surface_finished){qApp->processEvents();}
         cv::Mat resized = m_wavefronts[ndx]->workData.clone();
@@ -1383,7 +1409,9 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         standavg += resized;
         //create contour of astig
         double xa = standxastig.at<double>(i,0) = m_wavefronts[ndx]->InputZerns[4];
+
         double ya = standyastig.at<double>(i,0) = m_wavefronts[ndx]->InputZerns[5];
+
         double mag = sqrt(xa * xa + ya * ya);
         standastig.at<double>(i,0) = mag;
         astigMag.push_back(sqrt(mag));
@@ -1392,12 +1420,19 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         for (int ii = 9; ii < Z_TERMS; ++ii)
             zernsToUse << ii;
 
-        cv::Mat m = computeWaveFrontFromZernikes(m_wavefronts[inputs[0]]->data.cols,m_wavefronts[inputs[0]]->data.rows,
+        cv::Mat m = computeWaveFrontFromZernikes(inputs[0]->data.cols,inputs[0]->data.rows,
                 m_wavefronts[ndx]->InputZerns, zernsToUse );
         standavgZernMat += m;
         standwfs << m;
-        xastig.at<double>(i,0) = m_wavefronts[inputs[i]]->InputZerns[4];
-        yastig.at<double>(i,0) = m_wavefronts[inputs[i]]->InputZerns[5];
+        double mirrorX = inputs[i]->InputZerns[4];
+        double mirrorY = inputs[i]->InputZerns[5];
+        xastig.at<double>(i,0) = mirrorX;
+        mirrorXaverage += mirrorX;
+        maxXastig = max(maxXastig,mirrorX);
+        mirrorYAverage += mirrorY;
+        maxYastig = max(maxYastig, mirrorY);
+        yastig.at<double>(i,0) = mirrorY;
+        qDebug() << "Mirror astigs " << mirrorX << mirrorY;
     }
     double smin,smax;
     cv::minMaxIdx(standavg,&smin, &smax);
@@ -1425,12 +1460,15 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     minMaxIdx(yastig, &ymin,&ymax);
 
     QwtPlot *pl1 = new QwtPlot();
+    pl1->setCanvasBackground(QColor(240,240,240));
+    QwtPlotGrid *grid = new QwtPlotGrid();
+    grid->attach(pl1);
     QVector<QwtPlotCurve *> curves;
     QVector<QwtPlotMarker *> markers;
     QVector<QwtPlot *> astigPlots;
 
     QwtPlotRenderer renderer;
-    renderer.setDiscardFlag( QwtPlotRenderer::DiscardBackground );
+    //renderer.setDiscardFlag( QwtPlotRenderer::DiscardBackground );
     renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasBackground );
     renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasFrame );
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend);
@@ -1442,55 +1480,78 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
                  " width='70%' cellspacing='1' cellpadding='1'>"
 
                  "<tr><b><td>rotation angle</td><td>X astig</td><td>Y astig</td><td> magnitude</td><td>astig angle Degrees</td></b></tr>");
+    double maxX = -1000;
+    double minX =1000.;
+    double maxY = -1000;
+    double minY = 1000.;
     for (int i = 0; i < list.size(); ++i){
         double xval = standxastig.at<double>(i,0);
         double yval = standyastig.at<double>(i,0);
+        maxX = max(maxX, xval);
+        minX = min(minX, xval);
+        maxY = max(maxY, yval);
+        minY = min(minY, yval);
+
+        double mag = sqrt(pow(xval,2) + pow(yval,2));
+        qDebug() << "astig " << list[i]->angle << mag;
+
+
         html.append("<tr><td><align = 'right'> " + QString().number(list[i]->angle,'f',3 ) + "</td>" );
         html.append("<td>" + QString().number(xval,'f',3) + "</td>"
                     "<td>" + QString().number(yval,'f',3) + "</td>"
-                    "<td>" + QString().number(sqrt(pow(xval,2) + pow(yval,2)),'f',3) + "</td>"
-                    "<td>" + QString().number((180./ M_PI) * atan2(yval,xval),'f',3) + "</td></right></tr>");
+                    "<td>" + QString().number(mag,'f',3) + "</td>"
+                    "<td>" + QString().number((180./ M_PI) * atan2(yval,xval),'f',1) + "</td></right></tr>");
+        qDebug() << "atan2 " << atan2(yval,xval) << "yval " << yval << "x val " << xval;
     }
     html.append("<tr></b><td>MEAN</b></td><td>" + QString().number(standXMean[0],'f',3) + "</td><td>" +
                 QString().number(standYMean[0],'f',3) + "</td><td>" + QString().number(standMean[0],'f',3) + "</td></tr>");
     html.append("<tr><b><td><b>STD</b></td><td><ALIGN ='right'>" + QString().number(standXStd[0],'f',3) + "</td><td>" +
-                QString().number(standyStd[0],'f',3) + "</td><td>" + QString().number(standStd[0],'f',3) + "<sup>o</sup></td></tr>");
+                QString().number(standyStd[0],'f',3) + "</td><td>" + QString().number(standStd[0],'f',3) + "</td></tr>");
     html.append("</table>");
 
     int cnt = 0;
     QString imagesHtml = "<table  style='ds margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;'"
                  " 'width='100%' cellspacing='2' cellpadding='0'>";
 
+    mirrorXaverage /= list.size();
+    mirrorYAverage /= list.size();
     QPolygonF mirrorAstigAtEachRotation;
+    double mirrorAstigRadius =0;
     for (int i = 0; i < list.size(); ++i){
         if (cnt++ == 0)
             imagesHtml.append("<tr>");
         // make plot of stand astig
         QwtPlotCurve *curve = new QwtPlotCurve(QString().number(list[i]->angle));
         curves << curve;
-        QPolygonF points1;
-        points1 << QPointF(0.,0.);
-        points1 << QPointF(standxastig.at<double>(i,0), standyastig.at<double>(i,0));
-        QColor color(Qt::GlobalColor( 6 + i%13 ) );
+        QColor color(Qt::GlobalColor( 7 + i%13 ) );
         QPen pen(color);
         curve->setPen(pen);
-        curve->setSamples(points1);
         curve->attach(pl1);
+        QwtPlotMarker *standPoint = new QwtPlotMarker();
+        standPoint->setSymbol(new QwtSymbol(QwtSymbol::Cross, color,color, QSize(11,11)));
+        standPoint->setValue(QPointF(standxastig.at<double>(i,0), standyastig.at<double>(i,0)));
+        standPoint->attach(pl1);
         QwtPlotMarker *m = new QwtPlotMarker();
-        m->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(5,5)));
-        mirrorAstigAtEachRotation << QPointF(m_wavefronts[inputs[i]]->InputZerns[4],m_wavefronts[inputs[i]]->InputZerns[5]);
-        m->setYValue(m_wavefronts[inputs[i]]->InputZerns[5]);
-        m->setXValue(m_wavefronts[inputs[i]]->InputZerns[4]);
+        m->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(7,7)));
+        mirrorAstigAtEachRotation << QPointF(inputs[i]->InputZerns[4],inputs[i]->InputZerns[5]);
+        double xdel = inputs[i]->InputZerns[4] - mirrorXaverage;
+        double ydel = inputs[i]->InputZerns[5] - mirrorYAverage;
+        double r = sqrt(xdel * xdel + ydel * ydel);
+        mirrorAstigRadius += r;
+        qDebug() << "radius" << r << inputs[i]->InputZerns[4] << inputs[i]->InputZerns[5];
+        m->setYValue(inputs[i]->InputZerns[5]);
+        m->setXValue(inputs[i]->InputZerns[4]);
         m->attach(pl1);
 
         // make contour plots of astig zernike terms of stand
         ContourPlot *cp = new ContourPlot();
-        cp->m_zRangeMode = "Min/Max";
-        wavefront * wf = new wavefront(*m_wavefronts[inputs[i]]);
+        cp->m_zRangeMode = "Fractions of Wave";
+        cp->contourWaveRangeChanged(inputs[0]->std* 1.25);
+        wavefront * wf = new wavefront(*inputs[i]);
 
 
         wf->data = wf->workData = standwfs[i];
-        cv::resize(m_wavefronts[inputs[i]]->workMask, wf->mask, cv::Size(wf->data.cols, wf->data.rows));
+        cv::resize(inputs[i]->workMask, wf->mask, cv::Size(wf->data.cols, wf->data.rows));
         wf->workMask = wf->mask;
 
         cv::minMaxIdx(wf->data,&smin, &smax);
@@ -1519,11 +1580,12 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
         }
     }
 
+    mirrorAstigRadius /= list.size();
     imagesHtml.append("</table>");
     //display average of all stand zernwavefronts
-    wavefront * wf2 = new wavefront(*m_wavefronts[inputs[0]]);
+    wavefront * wf2 = new wavefront(*inputs[0]);
     wf2->data = wf2->workData = standavgZernMat ;
-    cv::resize(m_wavefronts[inputs[0]]->mask,wf2->mask, cv::Size(wf2->data.cols, wf2->data.rows));
+    cv::resize(inputs[0]->mask,wf2->mask, cv::Size(wf2->data.cols, wf2->data.rows));
     wf2->workMask = wf2->mask;
     cv::Scalar mean,std;
     cv::meanStdDev(wf2->data,mean,std);
@@ -1541,7 +1603,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     cp1->setSurface(wf2);
     cp1->resize(Width, Height);
     cp1->replot();
-    QImage contour2(Width, Height, QImage::Format_ARGB32 );
+    QImage contour2(500, 500, QImage::Format_ARGB32 );
     contour2.fill( QColor( Qt::white ).rgb() );
     QPainter painter2( &contour2 );
 
@@ -1553,6 +1615,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     wf2->data = wf2->workData = standavg;
     wf2->useSANull = false;
     wf2->name = QString("Average Stand effects.");
+    m_standAvg = wf2;
     cp1->setSurface(wf2);
     cp1->resize(Width,Height);
     cp1->replot();
@@ -1561,8 +1624,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     imageName = QString("mydata://StandCotourMat.png");
     doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour2));
 
-    pl1->setAxisScale(QwtPlot::xBottom,min(-.1,xmin),max(.1,xmax));
-    pl1->setAxisScale(QwtPlot::yLeft, min(-.1, ymin), max(.1,ymax));
+
+
     pl1->insertLegend( new QwtLegend() , QwtPlot::TopLegend);
     pl1->setAxisTitle( QwtPlot::yLeft, "Y astig" );
     pl1->setAxisTitle(QwtPlot::xBottom, "X astig");
@@ -1582,7 +1645,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     // plot the mean
     QwtPlotMarker *meanMark = new QwtPlotMarker();
     meanMark->setSymbol(new QwtSymbol(QwtSymbol::Star1,QColor(255,255,255), QColor(0,0,0), QSize(30,30)));
-    meanMark->setLabel(QString("Mean") );
+    meanMark->setLabel(QString("stand Mean astig") );
     meanMark->setYValue(standYMean[0]);
     meanMark->setXValue(standXMean[0]);
     meanMark->setLabelAlignment( Qt::AlignTop );
@@ -1596,21 +1659,11 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     }
     mirrorXastig /= count;
     mirrorYastig /= count;
-    double avgAstigRradius = 0;
-    for (int i = 0; i < count; ++i){
-        double x = mirrorAstigAtEachRotation[i].rx();
-        double y = mirrorAstigAtEachRotation[i].ry();
-        x -= mirrorXastig;
-        y -= mirrorYastig;
-        double rad = sqrt (x * x + y * y);
-        avgAstigRradius += rad;
-    }
-    avgAstigRradius/= count;
 
-    QwtPlotMarker *mirrorMeanMark = new QwtPlotMarker();
-    mirrorMeanMark->setValue(QPointF(mirrorXastig, mirrorYastig));
-    mirrorMeanMark->setSymbol(new QwtSymbol(QwtSymbol::Triangle,QColor(0,255,0,40), QColor(0,0,0), QSize(30,30)));
-    mirrorMeanMark->attach(pl1);
+//    QwtPlotMarker *mirrorMeanMark = new QwtPlotMarker();
+//    mirrorMeanMark->setValue(QPointF(mirrorXastig, mirrorYastig));
+//    mirrorMeanMark->setSymbol(new QwtSymbol(QwtSymbol::Triangle,QColor(0,255,0,40), QColor(0,0,0), QSize(30,30)));
+//    mirrorMeanMark->attach(pl1);
 
     QPolygonF stdCircle;
     double SE = standStd[0]/sqrt(standastig.rows);
@@ -1621,40 +1674,50 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     curveStandStd->setPen(Qt::darkYellow,3,Qt::DotLine );
     curveStandStd->setSamples(stdCircle);
     curveStandStd->attach(pl1);
-    for (int i = 0; i < count; ++i){
-        double x = mirrorXastig - mirrorAstigAtEachRotation[i].rx();
 
-        double y = mirrorYastig - mirrorAstigAtEachRotation[i].ry();
-        double rad = sqrt(x * x + y * y);
-        stdCircle.clear();
-        for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
-            stdCircle << QPointF(mirrorXastig+rad * cos(rho), mirrorYastig + rad * sin(rho));
-        }
-        curveStandStd = new QwtPlotCurve();
-        QColor color(Qt::GlobalColor( 6 + i%13 ) );
-        QPen pen(color,2);
-        curveStandStd->setPen(pen);
-        curveStandStd->setSamples(stdCircle);
-        curveStandStd->attach(pl1);
+
+
+    // draw average astig radius circule around points.
+
+    qDebug() << mirrorAstigRadius << mirrorXaverage << mirrorYAverage;
+    QwtPlotCurve *curveAvgMirror = new QwtPlotCurve("Mirror Astig Circle");
+    stdCircle.clear();
+    for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
+        stdCircle << QPointF(mirrorXastig+mirrorAstigRadius * cos(rho), mirrorYastig + mirrorAstigRadius * sin(rho));
     }
 
-    pl1->resize(300,300);
-    pl1->replot();
+    double maxv = max(fabs(mirrorYastig) +  fabs(mirrorAstigRadius),fabs(mirrorXastig ) + fabs(mirrorAstigRadius))  * 1.2;
+    maxv = max(maxX, maxv);
+    maxv = max(fabs(minX), maxv);
+    maxv = max(maxv, maxY);
+    maxv = max(fabs(minY), maxv);
+    pl1->setAxisScale(QwtPlot::xBottom, -maxv, maxv);
+    pl1->setAxisScale(QwtPlot::yLeft,   -maxv, maxv);
+    QColor color(Qt::green);
+    QPen pen(color,3);
+    curveAvgMirror->setPen(pen);
+    curveAvgMirror->setSamples(stdCircle);
+    curveAvgMirror->attach(pl1);
 
-    contour.fill( QColor( Qt::white ).rgb() );
+    pl1->resize(500,500);
+    pl1->replot();
+    QwtPlotRenderer renderer3;
+    QImage contour3(500, 500, QImage::Format_ARGB32 );
+    contour3.fill( QColor( Qt::white ).rgb() );
+    QPainter painter3( &contour3 );
+
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend, false);
-    renderer.render( pl1, &painter, QRect(0,0,Width,Height) );
+    renderer.render( pl1, &painter3, QRect(0,0,500,500) );
     imageName = QString("mydata://plot.png");
-    doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
+    doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour3));
     results.res.append (imageName);
     html.append("<p> <img src='" + imageName + "' /></p>");
-    html.append("<p font-size:12pt> The plot above shows the astig of each input file plotted as colored squares and large circle."
-                "The center of these circles is a green triangle. The green triangle is the mean value of all the unrotated input files."""
-                " In a perfect world each circle would have the same radius and overlap. "
-                " If any circles are far different from the others look for a problem at that rotation angle.</p>"
-               "<p font-size:12pt>It shows the stand only astig ploted as lines. The line ends at the atig value. "
-               "The length of the line represents the magnitude of the astig.<br>"
-               "The mean value of test stand only astig is plotted as a large star. It and the green triangle should overlap.<br>"
+    html.append("<p font-size:12pt> The plot above shows the astig of each input file plotted as colored dots."
+                "The large green circle is the average distance all these points are from the center."
+                " In a perfect world each dot would have be on the circle. "
+                " If any dots are far from the circle look for a problem at that rotation angle.</p>"
+               "<p font-size:12pt>It shows the stand only astig ploted as plus signs.<br>"
+               "The mean value of test stand only astig is plotted as a large star. It and the center of the green circle should be the same.<br>"
                 "There is a circle around the mean value that is the standard error of the mean. Its diameter represents the "
                 "variabilty of the mean.</p>"
                 "<p font-size:12pt>If the variation for the astig values is small then "
@@ -1677,16 +1740,20 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<int> inputs, int
     return results;
 }
 
+
 void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef *> list){
     QApplication::setOverrideCursor(Qt::WaitCursor);
     // check for pairs
     QVector<rotationDef*> lookat = list.toVector();
     while (lookat.size()){
         for (int i = 0; i < lookat.size(); ++i){
-            double angle1 = lookat[i]->angle;
+            double angle1 = wrapAngle(lookat[i]->angle);
+
             double found = false;
             for (int j = i+1; j < lookat.size(); ++j){
-                if (lookat[j]->angle == angle1 -90 || lookat[j]->angle == angle1 + 90)
+                double angle2 = wrapAngle(lookat[j]->angle);
+
+                if (angle2 == wrapAngle(angle1 -90) || angle2 == wrapAngle(angle1 + 90))
                 {
                     found = true;
                     lookat.remove(j);
@@ -1750,8 +1817,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     QTextDocument *doc = editor->document();
     QList<QString> doc1Res;
     doc->setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
-    QList<int> rotated;
-    QList<int> inputs;
+    QList<wavefront *> rotated;
+    QList<wavefront *> inputs;
     editor->append("<tr>");
     int startingNdx = m_wavefronts.size() -1;
 
@@ -1759,9 +1826,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         contour.fill( QColor( Qt::white ).rgb() );
         QPainter painter( &contour );
         int ndx = m_wavefronts.size();
-        inputs.append(ndx);
-        // get input file
 
+        // get input file
         m_surface_finished = false;
         QStringList loadList;
         loadList << list[i]->fname;
@@ -1769,37 +1835,38 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         while (!m_surface_finished){qApp->processEvents();} // wait for wavefront to be computed
 
         wavefront * wf = m_wavefronts[m_currentNdx];
+        inputs.append(wf);
         unrotatedNdxs.append(m_currentNdx);
         plot->setSurface(wf);
         plot->replot();
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
 
         QString imageName = QString().sprintf("mydata://%s.png",list[i]->fname.toStdString().c_str());
-        QString angle = QString().sprintf("%6.2lf Deg",list[i]->angle);
+        QString angle = QString().sprintf("%6.2lf Deg",-list[i]->angle);
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);
         html.append("<tr><td><p align='center'> <img src='" +imageName + "' /><br><b>" + angle + "</b></p></td>");
 
-
         // counter rotate it
-        wizPage->runpb->setText(QString("Counter Rotating " + list[i]->fname));
+        wizPage->runpb->setText(QString("Counter Rotating ") + list[i]->fname.right(list[i]->fname.size() - list[i]->fname.lastIndexOf("/")-1));
         QList<int> l;
         l.append(ndx);
         ndx = m_wavefronts.size();
 
         m_surface_finished = false;
-        rotateThese(list[i]->angle,l);
-        rotated.append(ndx);
+        qDebug() << "Counter rotating " << list[i]->fname << " angle " << list[i]->angle;
+        rotateThese(wrapAngle(list[i]->angle),l);
+        rotated.append(m_wavefronts[ndx]);
         wf = m_wavefronts[ndx];
         while (!m_surface_finished){qApp->processEvents();}
+
         plot->setSurface(wf);
         plot->replot();
 
         contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
-        angle = QString().sprintf("%6.2lf Deg",list[i]->angle);
+        angle = QString().sprintf("%6.2lf Deg",-list[i]->angle);
         imageName = QString().sprintf("mydata://CR%s%s.png",list[i]->fname.toStdString().c_str(),angle.toStdString().c_str());
-
 
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);
@@ -1816,30 +1883,33 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     // Now average all the rotated ones.
     QList<wavefront *> wlist;
     for (int i = 0; i < rotated.size(); ++i){
-        wlist << m_wavefronts[rotated[i]];
+        wlist << rotated[i];
     }
-
-    int avgNdx = m_wavefronts.size();  // the index of the average
 
     m_surface_finished = false;
 
     average(wlist);
     while (!m_surface_finished){qApp->processEvents();}
-    emit(nameChanged(m_wavefronts[m_currentNdx]->name, QString("AverageStandRemoved")));
+    // now we have the average of all the counter rotated inputs.  That is the average with stand removed (hopefully.)
+    m_standRemoved = m_wavefronts[m_currentNdx];
+    emit nameChanged(m_wavefronts[m_currentNdx]->name, QString("AverageStandRemoved"));
+    m_standRemoved->name = QString("AverageStandRemoved");
+    int avgNdx = m_currentNdx;  // the index of the average
+
     QTextEdit *page2 = new QTextEdit;
     page2->resize(600,800);
     QTextDocument *doc2 = page2->document();
     QList<QString> doc2Res;
     html = ("<html><head/><body><h1>Test Stand Astig Removal</h1>"
             "<h3>Step 2. Averaged surface with stand induced terms removed:</h3>");
+    ContourPlot *plotAvg =new ContourPlot(0,0,false);//m_contourPlot;
 
-
-    plot->setSurface(m_wavefronts[m_currentNdx]);
-    contour = QImage(450,450, QImage::Format_ARGB32 );
+    plotAvg->setSurface(m_wavefronts[m_currentNdx]);
+    contour = QImage(550,450, QImage::Format_ARGB32 );
     contour.fill( QColor( Qt::white ).rgb() );
     QPainter painter( &contour );
 
-    renderer.render( plot, &painter, QRect(0,0,450,450) );
+    renderer.render( plotAvg, &painter, QRect(0,0,550,450) );
 
     QString imageName = "mydata://AvgAstigremoved.png";
     doc2->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
@@ -1850,11 +1920,13 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     page2->setHtml(html);
     //page2->show();
 
+    /**************************************************************************************************/
+    // PHASE 2
     // calculate stand astig for each input
     // for each input rotate the average by the input angle and subtract it from the input
     // plot the astig of each of the inputs which will be the stand only astig.
 
-    wizPage->runpb->setText("computing averages");
+    wizPage->runpb->setText("computing stand astigs");
     textres page3res = Phase2(list, inputs, avgNdx);
     QTabWidget *tabw = new QTabWidget();
     tabw->setTabShape(QTabWidget::Triangular);
@@ -1890,19 +1962,21 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
      cursor.insertBlock(blockFormat);
      cursor.insertHtml(page3res.Edit->toHtml());
      pdfDoc.print(&printer);
+     if (!wizPage->showWork->isChecked()){
+         //Delete all work wavefronts except the overall average with stand removed.
+         QList<int> deleteThese;
+         for (int i = m_wavefronts.size() -1; i > startingNdx; --i){
+             if (i != avgNdx)
+                deleteThese.append(i);
+         }
 
-     //Delete all work wavefronts except the overall average with stand removed.
-     QList<int> deleteThese;
-     for (int i = m_wavefronts.size() -1; i > startingNdx; --i){
-         if (i != avgNdx)
-            deleteThese.append(i);
+         deleteWaveFronts(deleteThese);
      }
-
-     deleteWaveFronts(deleteThese);
-
-    wizPage->runpb->setText("Compute");
-    wizPage->runpb->setEnabled(true);
-    QApplication::restoreOverrideCursor();
+     m_wavefronts << m_standAvg;
+     m_surfaceTools->addWaveFront(m_standAvg->name);
+     wizPage->runpb->setText("Compute");
+     wizPage->runpb->setEnabled(true);
+     QApplication::restoreOverrideCursor();
 }
 
 void SurfaceManager::computeTestStandAstig(){
@@ -1951,7 +2025,10 @@ void SurfaceManager::showAll3D(GLWidget *gl)
     for (int i = 0; i < m_wavefronts.size(); ++i)
     {
         wavefront * wf = m_wavefronts[i];
+
         gl->setSurface(wf);
+        gl->swapBuffers();
+        //gl->setSurface(wf);
         QImage glImage = gl->grabFrameBuffer();
         QPainter p2(&glImage);
         p2.setFont(serifFont);
@@ -2080,7 +2157,7 @@ void SurfaceManager::report(){
     QString title("<html><body><table width = '100%'><tr><td></td><td><h1><center>Interferometry Report for " +
                   md->m_name + "</center></td><td>"
                   + QDate::currentDate().toString() +
-                  " " +QTime::currentTime().toString()+"</td></tr></table>");
+                  " " +QTime::currentTime().toString()+"<br>DFTFringe Version:"+APP_VERSION+"</td></tr></table>");
 
     QString Diameter = (md->isEllipse()) ? " Horizontal Axis: " : " Diameter: " +QString().number(md->diameter,'f',1) ;
     QString ROC = (md->isEllipse()) ? "Vertical Axis: " + QString().number(md->m_verticalAxis) : "ROC: " +  QString().number(md->roc,'f',1);

@@ -10,7 +10,7 @@ QT += network \
       multimediawidgets \
       widgets
 QT += concurrent widgets
-QT += gui webkitwidgets\
+
 
 qtHaveModule(printsupport): QT += printsupport
 QT       += core gui
@@ -78,7 +78,6 @@ SOURCES += main.cpp\
     subtractwavefronatsdlg.cpp \
     helpdlg.cpp \
     settingsprofile.cpp \
-    batchigramprocessingdlg.cpp \
     batchigramwizard.cpp \
     outlinehelpdocwidget.cpp \
     statsview.cpp \
@@ -100,7 +99,9 @@ SOURCES += main.cpp\
     unwraperrorsview.cpp \
     lensdialog.cpp \
     singleapplication.cpp \
-    messagereceiver.cpp
+    messagereceiver.cpp \
+    myutils.cpp \
+    pixelstats.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -158,7 +159,6 @@ HEADERS  += mainwindow.h \
     subtractwavefronatsdlg.h \
     helpdlg.h \
     settingsprofile.h \
-    batchigramprocessingdlg.h \
     batchigramwizard.h \
     outlinehelpdocwidget.h \
     statsview.h \
@@ -182,7 +182,9 @@ HEADERS  += mainwindow.h \
     singleapplication.h \
     singleapplication_p.h \
     messagereceiver.h \
-    boundary.h
+    boundary.h \
+    myutils.h \
+    pixelstats.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -197,7 +199,6 @@ FORMS    += mainwindow.ui \
     wavefrontnulldlg.ui \
     metricsdisplay.ui \
     reviewwindow.ui \
-    statsdlg.ui \
     rotationdlg.ui \
     surfacepropertiesdlg.ui \
     colorchanneldisplay.ui \
@@ -222,7 +223,6 @@ FORMS    += mainwindow.ui \
     subtractwavefronatsdlg.ui \
     helpdlg.ui \
     settingsprofile.ui \
-    batchigramprocessingdlg.ui \
     batchigramwizard.ui \
     outlinehelpdocwidget.ui \
     statsview.ui \
@@ -239,7 +239,9 @@ FORMS    += mainwindow.ui \
     camcalibrationreviewdlg.ui \
     generatetargetdlg.ui \
     unwraperrorsview.ui \
-    lensdialog.ui
+    lensdialog.ui \
+    pixelstats.ui \
+    pixelhistogram.ui
 
 win32 {
       CONFIG( debug, debug|release ) {
@@ -250,14 +252,14 @@ win32 {
         LIBS += C:/build-qwt-Desktop_Qt_5_3_MinGW_32bit-Release/lib/qwt.dll
       }
       INCLUDEPATH += C:\\qwt-6.1.2\\src
-      INCLUDEPATH += c:\opencv\build\include
+      INCLUDEPATH += c:\\opencvCopy\\build\\include
       LIBS += C:/opencv/build-mingw/bin/*.dll
       message("using win32")
       }
 
 unix {
      INCLUDEPATH += /usr/include/qwt
-     LIBS += -lqwt-qt5
+     iLIBS += -lqwt-qt5
      LIBS += -lopencv_core
      LIBS += -lopencv_imgproc
      LIBS += -lopencv_highgui
@@ -277,7 +279,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 1.11
+VERSION = 1.12
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

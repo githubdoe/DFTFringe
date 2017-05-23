@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>423</width>
     <height>300</height>
    </rect>
   </property>
@@ -29,10 +29,10 @@
         <number>3</number>
        </property>
        <property name="minimum">
-        <double>0.002000000000000</double>
+        <double>0.000000000000000</double>
        </property>
        <property name="singleStep">
-        <double>0.025000000000000</double>
+        <double>0.010000000000000</double>
        </property>
        <property name="value">
         <double>0.100000000000000</double>
@@ -47,9 +47,26 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="fillContourCB">
+       <property name="text">
+        <string>FillContour</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pushButton">
        <property name="text">
         <string>Show All Wavefronts</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="histogram">
+       <property name="text">
+        <string>Histogram</string>
        </property>
       </widget>
      </item>
@@ -84,7 +101,7 @@
   <customwidget>
    <class>ContourPlot</class>
    <extends>QWidget</extends>
-   <header location="global">contourplot.h</header>
+   <header>contourplot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

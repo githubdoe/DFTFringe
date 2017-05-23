@@ -37,9 +37,10 @@
 #include "simulationsview.h"
 #include "outlinehelpdocwidget.h"
 #include "bathastigdlg.h"
+#include "settingsigram.h"
 
 #include "cameracalibwizard.h"
-#ifdef __LINUX__
+#ifndef _WIN32
     #include <unistd.h>
     #define Sleep(x) usleep(1000 * x)
 #endif
@@ -180,8 +181,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_dftTools,SIGNAL(doDFT()),m_dftArea,SLOT(doDFT()));
     settingsDlg = Settings2::getInstance();
-    connect(settingsDlg->m_igram,SIGNAL(igramLinesChanged(int,int,QColor,QColor,double,int, int)),
-            m_igramArea,SLOT(igramOutlineParmsChanged(int, int, QColor, QColor, double, int, int)));
+    connect(settingsDlg->m_igram, SIGNAL(igramLinesChanged(outlineParms)), m_igramArea, SLOT(igramOutlineParmsChanged(outlineParms)));
+
 
     QSettings settings;
     restoreState(settings.value("MainWindow/windowState").toByteArray());
@@ -347,6 +348,7 @@ QString MainWindow::strippedName(const QString &fullFileName)
 
 void MainWindow::on_actionLoad_Interferogram_triggered()
 {
+
     QStringList mimeTypeFilters;
     foreach (const QByteArray &mimeTypeName, QImageReader::supportedMimeTypes())
         mimeTypeFilters.append(mimeTypeName);
@@ -356,11 +358,15 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     QFileDialog dialog(this, tr("Open File"),lastPath);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    mimeTypeFilters.insert(0, "application/octet-stream");
+    mimeTypeFilters.insert(1,"Image files (*.png *.xpm *.jpg)");
     dialog.setMimeTypeFilters(mimeTypeFilters);
+
     QSettings set;
     QString mime = set.value("igramExt","jpeg").toString();
     mime.replace("jpg", "jpeg",Qt::CaseInsensitive);
     dialog.selectMimeTypeFilter("image/"+mime);
+    dialog.setDefaultSuffix(mime);
 
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
@@ -420,6 +426,7 @@ void MainWindow::createDockWindows(){
     m_contourTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     m_dftTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     metrics = metricsDisplay::get_instance(this);
+    metrics->setWindowTitle(QString().sprintf("metrics      DFTFringe %s",APP_VERSION));
     zernTablemodel = metrics->tableModel;
     addDockWidget(Qt::LeftDockWidgetArea, m_outlineHelp);
     addDockWidget(Qt::RightDockWidgetArea, m_dftTools);
@@ -451,10 +458,7 @@ void MainWindow::updateMetrics(wavefront& wf){
     double Strehl = pow(e, -st);
     metrics->mStrehl->setText(QString().sprintf("<b><FONT FONT SIZE = 12>%6.3lf</b>",Strehl));
 
-    double roc = m_mirrorDlg->roc;
-    double diam = wf.diameter;
-    double r3 = roc * roc * roc;
-    double d4 = diam * diam * diam * diam;
+
     double z8 = zernTablemodel->values[8];
     if (m_mirrorDlg->doNull && wf.useSANull){
         BestSC = z8/m_mirrorDlg->z8;
@@ -650,6 +654,12 @@ void MainWindow::on_pushButton_clicked()
         m_OutlineDoneInBatch = true;
     }
 }
+void MainWindow::skipBatchItem()
+{
+    m_OutlineDoneInBatch = true;
+    m_skipItem = true;
+    m_batchMakeSurfaceReady = true;
+}
 
 void MainWindow::on_showChannels_clicked(bool checked)
 {
@@ -686,7 +696,7 @@ void MainWindow::on_actionWavefront_triggered()
         return;
 
     int wx = dlg.size;
-    int wy = wx;
+
     double rad = (double)(wx-1)/2.;
     int xcen = rad;
     int ycen = rad;
@@ -829,6 +839,8 @@ void MainWindow::on_actionAbout_triggered()
                              "<li>Kieran Larken for deriving and publishing the Vortex Transform.</li>"
                              "<li>Jim Burrows for developing the original diffract program which used FFT for Foucault Simulation."
                              "</ul>"
+                             "<li><a href=\"https://groups.io/g/Interferometry\"><span style=\" text-decoration: underline; color:#0000ff;\">Additional help at Interferometry Forum</span></a></li>"
+
                              "</body></html>");
 }
 
@@ -888,28 +900,40 @@ void MainWindow::batchProcess(QStringList fileList){
 
         this->setCursor(Qt::WaitCursor);
         batchIgramWizard::goPb->setEnabled(false);
+        batchIgramWizard::addFiles->setEnabled(false);
+        batchIgramWizard::skipFile->setEnabled(true);
+        m_skipItem = false;
         QApplication::processEvents();
         QFileInfo info(m_igramsToProcess[0]);
 
         QString lastPath = info.absolutePath();
         QSettings settings;
         settings.setValue("lastPath",lastPath);
+
         foreach(QString fn, fileList){
             m_OutlineDoneInBatch = false;
             m_igramArea->openImage(fn);
             if (batchIgramWizard::manualRb->isChecked()){
-                while (m_inBatch && !m_OutlineDoneInBatch) {
+                while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
                     QApplication::processEvents();
                 }
+            }
+            if (m_skipItem){
+                m_skipItem = false;
+                continue;
             }
             if (!m_inBatch)
                 break;
             m_igramArea->nextStep();
             m_batchMakeSurfaceReady = false;
-            if (batchIgramWizard::manualRb->isChecked()){
-                while (m_inBatch && !m_batchMakeSurfaceReady) {
+            if (batchIgramWizard::manualRb->isChecked() && !m_skipItem){
+                while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {
                     QApplication::processEvents();
                 }
+            }
+            if (m_skipItem){
+                m_skipItem = false;
+                continue;
             }
             if (!m_inBatch)
                 break;
@@ -924,6 +948,8 @@ void MainWindow::batchProcess(QStringList fileList){
             Sleep(1000);
         }
         batchIgramWizard::goPb->setEnabled(true);
+        batchIgramWizard::addFiles->setEnabled(true);
+        batchIgramWizard::skipFile->setEnabled(false);
         batchWiz->close();
         delete batchWiz;
 

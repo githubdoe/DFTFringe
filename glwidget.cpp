@@ -19,7 +19,7 @@
 #include <QMouseEvent>
 //#include <cmath>
 #include "qwt_math.h"
-#include "circleoutline.h"
+#include "Circleoutline.h"
 #include <qsettings.h>
 #include <QOpenGLFunctions>
 #include <QFont>
