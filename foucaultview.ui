@@ -7,11 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>1271</width>
-    <height>503</height>
+    <height>639</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"> QPushButton{ border-style: outset;
+                        border-width: 3px;
+                        border-radius: 7px;
+                        border-color: darkgray;
+                        font: normal 12px;
+                           padding: 2px; }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,9">
    <item>
@@ -89,10 +97,10 @@
               <string> in</string>
              </property>
              <property name="decimals">
-              <number>4</number>
+              <number>5</number>
              </property>
              <property name="minimum">
-              <double>0.001000000000000</double>
+              <double>0.000400000000000</double>
              </property>
              <property name="maximum">
               <double>10.000000000000000</double>
@@ -339,17 +347,10 @@
        </widget>
       </item>
      </layout>
-     <zorder>layoutWidget</zorder>
-     <zorder>groupBox</zorder>
-     <zorder>groupBox_4</zorder>
-     <zorder>gridGroupBox</zorder>
-     <zorder>makePb</zorder>
-     <zorder>groupBox_3</zorder>
-     <zorder>groupBox_2</zorder>
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="">
+    <widget class="QGroupBox" name="groupBox">
      <layout class="QHBoxLayout" name="horizontalLayout_7">
       <property name="sizeConstraint">
        <enum>QLayout::SetMinimumSize</enum>
@@ -408,7 +409,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>40</width>
+          <width>300</width>
           <height>20</height>
          </size>
         </property>
@@ -454,21 +455,20 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_5">
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
+       <widget class="QLineEdit" name="pixeParms">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_5"/>
       </item>
       <item>
        <spacer name="horizontalSpacer_2">

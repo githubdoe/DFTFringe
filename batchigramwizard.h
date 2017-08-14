@@ -5,32 +5,54 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QStringList>
+#include <QCheckBox>
+#include <QPointF>
 
-
+class wavefrontFilterDlg;
+class QwtPlot;
+class astigScatterPlot;
+class rmsPlot;
+class SurfaceManager;
 namespace Ui {
 class batchIgramWizard;
 }
 class QListWidget;
+class batchIntro;
 class batchIgramWizard : public QWizard
 {
     Q_OBJECT
     enum { Page_Intro, Page_Process};
 
 public:
-    static QRadioButton *autoRb;
-    static QRadioButton *manualRb;
+    static QCheckBox *autoCb;
+    static QCheckBox *filterCb;
     static QPushButton *goPb;
     static QPushButton *skipFile;
     static QPushButton *addFiles;
+    static QCheckBox *saveFile;
+    static QCheckBox *deletePreviousWave;
+    static QCheckBox *showProcessPlots;
+    static QPushButton *saveZerns;
     explicit batchIgramWizard(QStringList files, QWidget *parent = 0 , Qt::WindowFlags flags = 0);
     ~batchIgramWizard();
     void listReady(QStringList list);
+
+    void addAstig(QString name, QPointF value);
+    void addRms(QString name, QPointF p);
+    void select(int n);
+    void showPlots(bool flags);
+    batchIntro *introPage;
 signals:
     void swapBathConnections(bool);
+    void abort();
 
+
+private slots:
+    void on_batchIgramWizard_finished(int result);
 
 private:
     Ui::batchIgramWizard *ui;
+
 };
 
 class batchIntro : public QWizardPage
@@ -41,13 +63,27 @@ class batchIntro : public QWizardPage
     public:
         batchIntro(QStringList files, QWidget *manger, QWidget *parent = 0);
         QListWidget *filesList;
+        astigScatterPlot *astigPlot;
+        rmsPlot *m_rmsPlot;
+        bool filterFile;
+        bool filterWavefront;
+        double filterRms;
+        bool shouldFilterFile(double rms);
+        bool shouldFilterWavefront(double rms);
+
 public slots:
     void processBatch();
     void addFiles();
     void showContextMenu(const QPoint &pos);
     void eraseItem();
+    void showPlots(bool flags);
+    void on_filter(bool);
 signals:
     void processBatchList(QStringList);
+private:
+    wavefrontFilterDlg *filterDlg;
+    void setupPlots();
+
 
 };
 #endif // BATCHIGRAMWIZARD_H

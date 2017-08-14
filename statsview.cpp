@@ -67,10 +67,23 @@ statsView::~statsView()
 }
 void statsView::getWavefronts(){
     wavefrontsToUse.clear();
-
-    for (int i = 0; i < m_sm->m_wavefronts.size(); ++i){
-        wavefrontsToUse << m_sm->m_wavefronts[i];
+    QList<int> doThese =  m_sm->m_surfaceTools->SelectedWaveFronts();
+    if (doThese.size() <2) {
+        for (int i = 0; i < m_sm->m_wavefronts.size(); ++i){
+            wavefrontsToUse << m_sm->m_wavefronts[i];
+        }
     }
+    else {
+        foreach(int i, doThese){
+            wavefrontsToUse << m_sm->m_wavefronts[i];
+        }
+    }
+    // check that metrics have been computed for each
+    foreach(wavefront *wf, wavefrontsToUse){
+       m_sm->computeMetrics(wf);
+
+    }
+
     if (m_removeOutliers){
         m_stats->computeWftStats(wavefrontsToUse,0);
         m_stats->computeZernStats(0);
@@ -87,12 +100,15 @@ void statsView::getWavefronts(){
         }
     }
     if (m_removeRMS){
-        wavefrontsToUse.clear();
-        for (int i = 0; i < m_sm->m_wavefronts.size(); ++i){
-            if ( m_sm->m_wavefronts[i]->std <= ui->RMSLimit->text().toDouble() ){
-                wavefrontsToUse << m_sm->m_wavefronts[i];
+        QVector<wavefront *> filtered;
+        double limit = ui->RMSLimit->text().toDouble();
+        foreach (wavefront * wf, wavefrontsToUse){
+            qDebug() << wf->std;
+            if ( wf->std <= limit ){
+                filtered << wf;
             }
         }
+        wavefrontsToUse = filtered;
     }
 }
 

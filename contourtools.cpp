@@ -42,9 +42,6 @@ ContourTools::ContourTools(QWidget *parent) :
     QSettings s;
     int ndx = s.value("colorMap ndx", 1).toInt();
     ui->ColorMapCB->setCurrentIndex(ndx);
-    double v = s.value("contourSteps", .1).toDouble();
-
-
     ui->zeroOffsetCB->addItem(tr("Middle"));
     ui->zeroOffsetCB->addItem(tr("Minimum"));
 

@@ -592,8 +592,6 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
         useSvd = true;
     }
 
-
-    int am_size = Z_TERMS * Z_TERMS;
     cv::Mat_<double> A;//(count,Z_TERMS);
     cv::Mat_<double> B;//(count,1);
     cv::Mat_<double> X(Z_TERMS,1);
@@ -641,11 +639,10 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
                         A(sampleCnt,i) = t;
                     }
                     else {
-                        int dy = i * Z_TERMS;
+
                         double t = zpolar.zernike(i, rho, theta);
                         for (int j = 0; j < Z_TERMS; ++j)
                         {
-                            int ndx = j + dy;
                             //Am[ndx] = Am[ndx] + t * zpolar.zernike(j, rho, theta);
                             A(i,j) +=  t * zpolar.zernike(j, rho, theta);
                         }
@@ -796,7 +793,7 @@ double zernikeProcess::Wavefront(double x1, double y1, int Order)
 */
 cv::Mat makeSurfaceFromZerns(int border, bool doColor){
     simIgramDlg &dlg = *simIgramDlg::get_instance();
-    int wx = dlg.size;
+    int wx = dlg.size & 0xFFFFFFFE; // Make the size even
     int wy = wx;
     double rad = (double)(wx-1)/2.;
     double xcen = rad,ycen = rad;
@@ -823,7 +820,7 @@ cv::Mat makeSurfaceFromZerns(int border, bool doColor){
                         dlg.star * cos(10.  *  theta) +
                         dlg.ring * cos(10 * 2. * rho);
 
-                for (int z = 0; z < dlg.zernikes.size(); ++z){
+                for (unsigned int z = 0; z < dlg.zernikes.size(); ++z){
                     double val = dlg.zernikes[z];
                     if (z == 8){
                        val = (dlg.doCorrection) ? md->cc * md->z8 * val * .01 : val;

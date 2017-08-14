@@ -16,11 +16,10 @@
 
 ****************************************************************************/
 #include "wavefrontloader.h"
-
+#include "utils.h"
 waveFrontLoader::waveFrontLoader(QObject *parent) :
     QObject(parent),  done(true),shouldCancel(false)
 {
-
     pd = new QProgressDialog("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
     connect(pd, SIGNAL(canceled()), this, SLOT(cancel()));
     connect(this, SIGNAL(status(int)), pd, SLOT(setValue(int)));
@@ -53,24 +52,51 @@ void waveFrontLoader::loadx( SurfaceManager *sm){
     emit status(0);
     bool mirrorConfigChanged = false;
     done = false;
+
     emit progressRange(0, size);
+    sm->okToUpdateSurfacesOnGenerateComplete = false;
+    try {
+        while (m_list.size() > 0){
+            int left = showmem();
+            qDebug() << left;
+            if (left < 300){
+                qDebug() << "low memory";
+                sm->okToContinue = -1;
+                emit memoryLow();
+                while(sm->okToContinue == -1){}
+                qDebug() << "continue code" << sm->okToContinue;
+                if (sm->okToContinue == QMessageBox::No)
+                {
+                    qDebug() << "Abort load";
+                    break;
+                }
+                qDebug() << "Continue load";
 
-    while (m_list.size() > 0){
-        mutex.lock();
-        QString file = m_list.front();
-        m_list.removeAt(0);
-        mutex.unlock();
+            }
+            mutex.lock();
+            QString file = m_list.front();
+            m_list.removeAt(0);
+            mutex.unlock();
 
-        if (pd->wasCanceled())
+            if (pd->wasCanceled())
                 break;
 
-        emit currentWavefront(file);
+            emit currentWavefront(file);
 
-        emit status(++prog);
-        qDebug() << " loading " << file;
-        mirrorConfigChanged |= sm->loadWavefront(file);
+            emit status(++prog);
+            mirrorConfigChanged |= sm->loadWavefront(file);
+        }
+    }
+    catch (const std::bad_alloc &ex)
+    {
+        // clean up here, e.g. save the session
+        // and close all config files.
+
+        return;
     }
 
+    emit loadComplete();
+    sm->okToUpdateSurfacesOnGenerateComplete = true;
     done = true;
     emit progressRange(0, 1);
     emit status(0);

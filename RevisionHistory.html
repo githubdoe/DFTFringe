@@ -92,7 +92,7 @@ in the contour plot footers.</li>
 <li>Modified save igram image dialog to show image types. Set default image format to .png</li>
 <li>Added save feature to unwrap error display.</li>
 </ul></ul>
-<ul><li>Version 1.12-beta</li>
+<ul><li>Version 1.12</li>
 <ul><li>Fixed bug where outline does not show up on interferogram during batch processing.</li>
 <li>Added ability to skip an interferogram and analysis on batch processing</li>
 <li>Fixed some bugs in test stand removal tool. Modified some of the text in associated dialogs.</li>
@@ -104,6 +104,25 @@ in the contour plot footers.</li>
 <li>Moved the controls for Contour line selection to the top of the Contour display.</li>
 <li>Remembers contour control settings</li>
 <li>Added pixel histogram and excesive slope display</li>
-</ul>
+</ul></ul>
 
-
+<ul><li>Version 1.13beta</li>
+<ul><li>Changed default slope limit to 1. arc second</li>
+<li>Added slope limit display to profile plot</li>
+<li>Added slope limit display to final report pdf.</li>
+<li>Fixed bug when loading wavfront that has different diameter than the config.</li>
+<li>Added a "no to all" and a "yes to all" buttons to loading wavfront warning when config does not match</li>
+<li>Added astig statistics plot in tools section.</li>
+<li>Added astig and RMS process plots to Batch processing.</li>
+<li>Added options to store wave front file on each batch processed igram. Added option to delete loaded wavefront after saving it in Batch mode</li>
+<li>Changed way loading multiple wave front files or batch process igrams works so that more can be loaded at one
+time.  Also tried to warn when memory is getting low to let the user quit at that point but still not crash. </li>
+<li>Made vortex analysis and wavefront data a little more memory efficient.</li>
+<li>Added filter button that will remove wavefronts based on RMS threshold value.</li>
+<li>Added preference to downsize wavefront files when loading them or creating them.  This helps to load more wavefronts</li>
+<li>Fixed bug when using an off center center outline and averaging files that contain one.</li>
+</ul></ul>
+<ul>
+<li>Version 1.13.1</li>
+<ul><li>Bug fixes for rotate and average</li>
+</ul></ul>

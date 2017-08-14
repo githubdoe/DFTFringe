@@ -308,7 +308,6 @@ void CamWizardPage1::on_compute_clicked()
             view2.setTo(cv::Scalar(255,255,255));
             double alpha  = .1;
             double beta = ( 1.0 - alpha );
-            int start = 0;
 
             drawChessboardCorners( view2, size, cv::Mat(pointBuf), found );
             cv::Mat dst;

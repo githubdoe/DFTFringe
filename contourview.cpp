@@ -34,6 +34,7 @@ contourView::contourView(QWidget *parent, ContourTools *tools) :
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(showContextMenu(QPoint)));
+    ps = new pixelStats;
 }
 
 contourView::~contourView()
@@ -43,6 +44,19 @@ contourView::~contourView()
 void contourView::zoom(){
     zoomed = !zoomed;
     emit zoomMe(zoomed);
+}
+
+QImage contourView::getPixstatsImage(){
+    QImage psImage = QImage(ps->size(),QImage::Format_ARGB32 );
+    QPainter p3(&psImage);
+    ps->render(&p3);
+
+    return psImage;
+}
+
+void contourView::setSurface(wavefront *wf){
+    getPlot()->setSurface(wf);
+    ps->setData(wf);
 }
 
 void contourView::showContextMenu(const QPoint &pos)
@@ -108,10 +122,8 @@ cv::Mat orientationMap(const cv::Mat& mag, const cv::Mat& ori, double thresh = 1
 }
 void contourView::on_histogram_clicked()
 {
-
-    static pixelStats *ps = new pixelStats;
-    ps->setData(getPlot()->m_wf);
     ps->show();
+
 }
 
 void contourView::on_fillContourCB_clicked(bool checked)

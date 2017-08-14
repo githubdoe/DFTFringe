@@ -267,8 +267,8 @@ void mirrorDlg::loadFile(QString & fileName){
 
         //Diameter
         if (!mm){
-            diameter *= 25.4;
-            roc *= 25.4;
+           // diameter *= 25.4;
+            //roc *= 25.4;
         }
         ui->diameter->blockSignals(true);
         ui->diameter->setText(QString().sprintf("%6.2lf",diameter));
@@ -405,6 +405,7 @@ void mirrorDlg::on_roc_Changed(const double newVal)
     updateZ8();
 }
 void mirrorDlg::updateZ8(){
+//Z = d^6 / (16 * R^5)
 
     z8 = (pow(diameter,4) * 1000000.) /
             (384. * pow(roc, 3) * lambda);

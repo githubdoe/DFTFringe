@@ -103,9 +103,7 @@ void generateTargetDlg::on_generate_clicked()
        if ( (hcnt %2) == 0)
            color=~color;
      }
-     int del = 0;
-    if (ui->useChecker->isChecked())
-        del = 1;
+
     if (ui->useChecker->isChecked()){
         --hcnt;
         --vcnt;

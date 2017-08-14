@@ -8,31 +8,41 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include "mainwindow.h"
-QRadioButton *batchIgramWizard::autoRb = 0;
-QRadioButton *batchIgramWizard::manualRb = 0;
+#include "astigscatterplot.h"
+#include "rmsplot.h"
+#include "wavefrontfilterdlg.h"
+#include "surfacemanager.h"
+QCheckBox *batchIgramWizard::autoCb = 0;
+QCheckBox *batchIgramWizard::filterCb = 0;
 QPushButton *batchIgramWizard::goPb = 0;
 QPushButton *batchIgramWizard::skipFile = 0;
 QPushButton *batchIgramWizard::addFiles = 0;
+QCheckBox *batchIgramWizard::saveFile = 0;
+QCheckBox *batchIgramWizard::showProcessPlots = 0;
+QCheckBox *batchIgramWizard::deletePreviousWave;
+QPushButton *batchIgramWizard::saveZerns = 0;
 
 batchIgramWizard::batchIgramWizard(QStringList files, QWidget *parent, Qt::WindowFlags flags) :
     QWizard(parent, flags),
     ui(new Ui::batchIgramWizard)
 {
     ui->setupUi(this);
-    setPage(batchIgramWizard::Page_Intro, new batchIntro(files, parent));
+    introPage = new batchIntro(files, parent);
+    setPage(batchIgramWizard::Page_Intro, introPage);
     setStartId(batchIgramWizard::Page_Intro);
     setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/igram6.png").scaled(40, 40, Qt::IgnoreAspectRatio, Qt::FastTransformation));
     //setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/igram6.png"));
     //setOption(HaveHelpButton, true);
     //setWindowTitle(tr("Batch Process Interferograms"));
-    button(QWizard::BackButton)->setVisible(false);
-
+    QList<QWizard::WizardButton> layout;
+    layout << QWizard::Stretch << QWizard::CancelButton;
+    setButtonLayout(layout);
+    resize(800,600);
     emit swapBathConnections(true);
 }
 
 batchIgramWizard::~batchIgramWizard()
 {
-    emit swapBathConnections(false);
     delete ui;
 }
 
@@ -87,8 +97,24 @@ void batchIntro::showContextMenu(const QPoint &pos)
     myMenu.exec(globalPos);
 }
 
+void batchIntro::setupPlots(){
+
+}
+
+void batchIntro::showPlots(bool flag){
+    if (flag){
+        astigPlot->show();
+        m_rmsPlot->show();
+    }
+    else{
+        astigPlot->hide();
+        m_rmsPlot->hide();
+    }
+}
+
 batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
-    QWizardPage(p){
+    QWizardPage(p),filterFile(false),filterWavefront(false),filterDlg(0)
+{
     setTitle(tr("Overview"));
     setSubTitle(tr(" "));
     //setPixmap(QWizard::WatermarkPixmap, QPixmap(":/res/wats2.png"));
@@ -116,9 +142,16 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     connect(batchIgramWizard::skipFile, SIGNAL(clicked(bool)), qobject_cast<MainWindow *>(manager), SLOT(skipBatchItem()));
     batchIgramWizard::skipFile->setEnabled(false);
     connect(batchIgramWizard::addFiles, SIGNAL(pressed()), this, SLOT(addFiles()));
-    batchIgramWizard::autoRb = new QRadioButton(tr("Auto"),this);
-    batchIgramWizard::manualRb = new QRadioButton(tr("manual"),this);
-    batchIgramWizard::manualRb->setChecked(true);
+    batchIgramWizard::autoCb = new QCheckBox(tr("Auto"),this);
+    batchIgramWizard::filterCb = new QCheckBox(tr("Filter"),this);
+    connect(batchIgramWizard::filterCb, SIGNAL(clicked(bool)), this, SLOT(on_filter(bool)));
+    batchIgramWizard::saveFile = new QCheckBox(tr("Save wavefront file"),this);
+    batchIgramWizard::deletePreviousWave = new QCheckBox(tr("Delete Prev Wave"), this);
+    batchIgramWizard::deletePreviousWave->setToolTip("Keeps only the last 3 analyzed wavefronts in memory."
+                                                     "\n This attemts to free up memory so more igrams can be analysed in batch mode.");
+    batchIgramWizard::showProcessPlots = new QCheckBox(tr("Show Process Plots"));
+    batchIgramWizard::showProcessPlots->setChecked(true);
+    connect(batchIgramWizard::showProcessPlots, SIGNAL(clicked(bool)),this, SLOT(showPlots(bool)));
 
     QHBoxLayout  *hlayout = new QHBoxLayout();
     batchIgramWizard::goPb = new QPushButton(tr("Process Igrams"),this);
@@ -136,16 +169,81 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
                         "stop:0 white, stop: 0.8 lawngreen, stop:1 black);"
                         "pressed {background-color: rgb(224, 0, 0) border-style: inset;}}"
                     "QPushButton:!enabled   { background-color:lightgray    } Working");
-    hlayout->addWidget(batchIgramWizard::manualRb);
-    hlayout->addWidget(batchIgramWizard::autoRb);
+    batchIgramWizard::saveZerns = new QPushButton(tr("SaveZerns"), this);
+
+    batchIgramWizard::saveZerns->setEnabled(false);
+    batchIgramWizard::saveZerns->setToolTip("If wavefronts were being deleted to save space.\n"
+                                            "Use this to save the zernike values just created by\nthe "
+                                            "Batch process in a .csv file.");
+    hlayout->addWidget(batchIgramWizard::autoCb);
+    hlayout->addWidget(batchIgramWizard::filterCb);
+    hlayout->addWidget(batchIgramWizard::saveFile);
+    hlayout->addWidget(batchIgramWizard::deletePreviousWave);
     hlayout->addWidget(batchIgramWizard::addFiles);
     hlayout->addWidget(batchIgramWizard::skipFile);
     QVBoxLayout *layout = new QVBoxLayout();
+    astigPlot = new astigScatterPlot;
+    m_rmsPlot = new rmsPlot;
+    QHBoxLayout *hlayout2 = new QHBoxLayout;
+    QHBoxLayout *hlayout3 = new QHBoxLayout;
+    hlayout2->addWidget(astigPlot);
+    hlayout2->addWidget(m_rmsPlot);
+    astigPlot->hide();
+    m_rmsPlot->hide();
     layout->addWidget(lb);
     layout->addLayout(hlayout);
     layout->addWidget(filesList);
-    layout->addWidget(batchIgramWizard::goPb, Qt::AlignLeft);
+    hlayout3->addWidget(batchIgramWizard::goPb,0, Qt::AlignLeft);
+    hlayout3->addWidget(batchIgramWizard::showProcessPlots);
+    hlayout3->addWidget(batchIgramWizard::saveZerns);
+    layout->addLayout(hlayout3);
+    layout->addLayout(hlayout2);
     setLayout(layout);
+    setupPlots();
 
+
+}
+void batchIntro::on_filter(bool flag){
+    if (flag){
+        wavefrontFilterDlg dlg;
+        if (dlg.exec()){
+            filterRms = dlg.rms();
+            filterFile = dlg.shouldFilterFile();
+            filterWavefront = dlg.shouldFilterWavefront();
+        }
+    }
+}
+bool batchIntro::shouldFilterFile(double rms){
+    return (filterFile && rms > filterRms);
+}
+bool batchIntro::shouldFilterWavefront(double rms){
+    return (filterWavefront && rms > filterRms);
+}
+
+void batchIgramWizard::addAstig(QString name, QPointF value){
+
+    introPage->astigPlot->addValue(name,value);
+}
+
+
+void batchIgramWizard::addRms(QString name, QPointF p){
+    introPage->m_rmsPlot->addValue(name,p);
+}
+
+void batchIgramWizard::showPlots(bool flags){
+    introPage->showPlots(flags);
+}
+
+void batchIgramWizard::on_batchIgramWizard_finished(int result)
+{
+    //emit swapBathConnections(false);
+
+}
+void batchIgramWizard::select(int n){
+
+    introPage->filesList->clearSelection();
+    if (introPage->filesList->count() > 0){
+        introPage->filesList->setCurrentRow(n);
+    }
 
 }

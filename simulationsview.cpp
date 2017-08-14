@@ -75,7 +75,7 @@ SimulationsView::SimulationsView(QWidget *parent) :
 
     QList<double> ticks;
     ticks << 5.<< 2.5  << 1. << .5 << .3;
-    double s1 = 206265 * 5.5e-4 / mirrorDlg::get_Instance()->diameter;
+
     QwtScaleDiv *scaleDivP = new QwtScaleDiv( 20, .3);
     scaleDivP->setTicks(QwtScaleDiv::MajorTick, ticks);
     //ui->MTF->setAxisScaleDiv(QwtPlot::xBottom, *scaleDivP);
@@ -345,7 +345,7 @@ void SimulationsView::on_MakePB_clicked()
 
     }
     QImage indisplay((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
-    ui->inside->setPixmap(QPixmap::fromImage(indisplay));
+    ui->inside->setPixmap(QPixmap::fromImage(indisplay.copy()));
 
     // outside focus star test
     cv::Mat outside = computeStarTest(nulledSurface(defocus),ui->FFTSizeSB->value(),ui->centerMagnifySB->value());
@@ -361,7 +361,7 @@ void SimulationsView::on_MakePB_clicked()
         merge(chans,3,t);
     }
     QImage outdisplay((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
-    ui->outside->setPixmap(QPixmap::fromImage(outdisplay));
+    ui->outside->setPixmap(QPixmap::fromImage(outdisplay).copy());
     if (wasAliased){
         QMessageBox::warning(NULL, tr("Warning"),
                 "Computed star test (in red) was too large for the selected size of the simulation.\n"
@@ -375,7 +375,7 @@ void SimulationsView::on_MakePB_clicked()
     t = fitStarTest(focused, 200,gamma/2);
     cv::putText(t,QString().sprintf("Focused").toStdString(),cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
     QImage focusDisplay ((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
-        ui->Focused->setPixmap(QPixmap::fromImage(focusDisplay));
+    ui->Focused->setPixmap(QPixmap::fromImage(focusDisplay.copy()));
 
     // make psf plot
     ui->psfView->clear();

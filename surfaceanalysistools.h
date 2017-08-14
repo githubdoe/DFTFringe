@@ -63,6 +63,7 @@ signals:
     void invert(QList<int>);
     void wftNameChanged(int, QString);
     void updateSelected();
+    void filterWavefronts(QList<int>);
 
 
 public slots:
@@ -109,6 +110,9 @@ private slots:
     void on_pushButton_clicked();
 
     void on_surfaceSmoothGausianBlurr_valueChanged(int arg1);
+
+
+    void on_filterPB_clicked();
 
 private:
     Ui::surfaceAnalysisTools *ui;

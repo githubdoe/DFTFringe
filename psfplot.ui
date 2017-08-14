@@ -1,9 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <author/>
- <comment/>
- <exportmacro/>
  <class>psfPlot</class>
- <widget name="psfPlot" class="QWidget">
+ <widget class="QWidget" name="psfPlot">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -16,6 +14,6 @@
    <string>Form</string>
   </property>
  </widget>
- <pixmapfunction/>
+ <resources/>
  <connections/>
 </ui>

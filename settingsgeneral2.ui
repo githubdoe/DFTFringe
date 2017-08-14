@@ -7,55 +7,168 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>348</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QCheckBox" name="checkBox">
-   <property name="geometry">
-    <rect>
-     <x>70</x>
-     <y>110</y>
-     <width>241</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="toolTip">
-    <string>Use SVD Least Square Fit to calculate Zernikes. Slower but may be more robust.
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QCheckBox" name="checkBox">
+     <property name="toolTip">
+      <string>Use SVD Least Square Fit to calculate Zernikes. Slower but may be more robust.
 Try it and if you find no difference in wavefront values then you do not need to use it.</string>
-   </property>
-   <property name="text">
-    <string>Use SVD for Zernike fitting</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="showConditionNumbersCb">
-   <property name="geometry">
-    <rect>
-     <x>70</x>
-     <y>140</y>
-     <width>231</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Show Zernike LSF matrix condition number</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="starTestMakeCb">
-   <property name="geometry">
-    <rect>
-     <x>70</x>
-     <y>180</y>
-     <width>241</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Make start test only when Make is pressed.</string>
-   </property>
-  </widget>
+     </property>
+     <property name="text">
+      <string>Use SVD for Zernike fitting</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="showConditionNumbersCb">
+     <property name="text">
+      <string>Show Zernike LSF matrix condition number</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="starTestMakeCb">
+     <property name="text">
+      <string>Make start test only when Make is pressed.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QCheckBox" name="downSizeCB">
+       <property name="toolTip">
+        <string>Enable down sizing wave front on igram analysis or wave front loading.</string>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+       <property name="text">
+        <string>Down size wavefront to: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="wavefrontSizeSb">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The wave front down sized  to this in pixels.  This can save memory and let you load more wavefronts.&lt;/p&gt;&lt;p&gt;Down side is that lowers the resolution of the surface and may lose resolution of small features like&lt;/p&gt;&lt;p&gt;sharp turned edge.  Only will down size if the check box is selected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="minimum">
+        <number>100</number>
+       </property>
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="value">
+        <number>650</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When processing interferograms or loading wavefronts warn the user if less than this amount of memory remains.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Low Memory Threshold:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="memThreshValue">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When processing interferograms or loading wavefronts warn the user if less than this amount of memory remains.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="suffix">
+        <string>MB</string>
+       </property>
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="value">
+        <number>300</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Astig Distribution Graph Width</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QSpinBox" name="AstigDistGraphWidth">
+       <property name="minimum">
+        <number>300</number>
+       </property>
+       <property name="maximum">
+        <number>2000</number>
+       </property>
+       <property name="singleStep">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>950</number>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

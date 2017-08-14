@@ -18,20 +18,27 @@
 #include "wavefront.h"
 
 wavefront::wavefront():
-    gaussian_diameter(0.),dirtyZerns(true),useSANull(true)
+    gaussian_diameter(0.),useSANull(true),dirtyZerns(true)
 {
 }
 
 wavefront::~wavefront()
 {
 
+    data.release();
+    mask.release();
+    workData.release();
+    workMask.release();
+    InputZerns.clear();
+    nulledData.release();
+
 }
 wavefront::wavefront(const wavefront &wf): data(wf.data.clone()),
-                                           mask(wf.mask.clone()),
-                                                workData(wf.workData.clone()),
-                                                InputZerns(wf.InputZerns),
     nulledData(wf.nulledData.clone()),
+    mask(wf.mask.clone()),
+    workData(wf.workData.clone()),
     workMask(wf.workMask.clone()),
+    InputZerns(wf.InputZerns),
     gaussian_diameter(wf.gaussian_diameter),
     wasSmoothed(wf.wasSmoothed),
     useSANull(wf.useSANull),

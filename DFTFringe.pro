@@ -11,7 +11,6 @@ QT += network \
       widgets
 QT += concurrent widgets
 
-
 qtHaveModule(printsupport): QT += printsupport
 QT       += core gui
 QT       += opengl widgets
@@ -101,7 +100,17 @@ SOURCES += main.cpp\
     singleapplication.cpp \
     messagereceiver.cpp \
     myutils.cpp \
-    pixelstats.cpp
+    pixelstats.cpp \
+    utilil.cpp \
+    circlefit.cpp \
+    astigstatsdlg.cpp \
+    averagewavefrontfilesdlg.cpp \
+    astigzoomer.cpp \
+    astigscatterplot.cpp \
+    wavefrontfilterdlg.cpp \
+    myplotpicker.cpp \
+    testplotclass.cpp \
+    rmsplot.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -184,7 +193,18 @@ HEADERS  += mainwindow.h \
     messagereceiver.h \
     boundary.h \
     myutils.h \
-    pixelstats.h
+    pixelstats.h \
+    utils.h \
+    circleutils.h \
+    circle.h \
+    astigstatsdlg.h \
+    averagewavefrontfilesdlg.h \
+    astigzoomer.h \
+    astigscatterplot.h \
+    wavefrontfilterdlg.h \
+    myplotpicker.h \
+    testplotclass.h \
+    rmsplot.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -241,7 +261,9 @@ FORMS    += mainwindow.ui \
     unwraperrorsview.ui \
     lensdialog.ui \
     pixelstats.ui \
-    pixelhistogram.ui
+    astigstatsdlg.ui \
+    averagewavefrontfilesdlg.ui \
+    wavefrontfilterdlg.ui
 
 win32 {
       CONFIG( debug, debug|release ) {
@@ -254,7 +276,7 @@ win32 {
       INCLUDEPATH += C:\\qwt-6.1.2\\src
       INCLUDEPATH += c:\\opencvCopy\\build\\include
       LIBS += C:/opencv/build-mingw/bin/*.dll
-      message("using win32")
+      #message("using win32")
       }
 
 unix {
@@ -279,7 +301,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 1.12
+VERSION = 1.13.1
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

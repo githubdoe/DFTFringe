@@ -38,8 +38,11 @@
 #include "outlinehelpdocwidget.h"
 #include "bathastigdlg.h"
 #include "settingsigram.h"
-
+#include "Circleoutline.h"
 #include "cameracalibwizard.h"
+#include "astigstatsdlg.h"
+#include "astigscatterplot.h"
+#include "rmsplot.h"
 #ifndef _WIN32
     #include <unistd.h>
     #define Sleep(x) usleep(1000 * x)
@@ -49,13 +52,14 @@ vector<wavefront*> g_wavefronts;
 int g_currentsurface = 0;
 QScrollArea *gscrollArea;
 
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
-    m_batchMakeSurfaceReady(false)
+    m_batchMakeSurfaceReady(false), m_astigStatsDlg(0)
 {
     ui->setupUi(this);
+
+
     const QString toolButtonStyle("QToolButton {"
                                 "border-style: outset;"
                                 "border-width: 3px;"
@@ -79,15 +83,11 @@ MainWindow::MainWindow(QWidget *parent) :
                                          "QToolButton:hover {background-color: lightblue;}");
     ui->SelectOutSideOutline->setChecked(true);
     setCentralWidget(ui->tabWidget);
-    m_loaderThread = new QThread();
-    m_waveFrontLoader = new waveFrontLoader();
-    m_waveFrontLoader->moveToThread(m_loaderThread);
+
     m_colorChannels = new ColorChannelDisplay();
-    connect(this, SIGNAL(load(SurfaceManager*)), m_waveFrontLoader, SLOT(loadx(SurfaceManager*)));
+
     m_intensityPlot = new igramIntensity(0);
 
-
-    m_loaderThread->start();
     ui->tabWidget->removeTab(0);
     ui->tabWidget->removeTab(0);
 
@@ -144,11 +144,8 @@ MainWindow::MainWindow(QWidget *parent) :
     review->s2->addWidget(m_profilePlot);
     review->s1->addWidget(m_contourView);
     //Surface Manager
-    m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView->getPlot(),
+    m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView,
                                           m_ogl->m_gl, metrics);
-    connect(m_surfaceManager, SIGNAL(load(QStringList, SurfaceManager*)), m_waveFrontLoader, SLOT(loadx(QStringList, SurfaceManager*)));
-    connect(m_surfaceManager, SIGNAL(load(SurfaceManager*)), m_waveFrontLoader, SLOT(loadx(SurfaceManager*)));
-    connect(m_surfaceManager, SIGNAL(showMessage(QString)), this, SLOT(showMessage(QString)));
     connect(m_contourView, SIGNAL(showAllContours()), m_surfaceManager, SLOT(showAllContours()));
     connect(m_dftArea, SIGNAL(newWavefront(cv::Mat,CircleOutline,CircleOutline,QString)),
             m_surfaceManager, SLOT(createSurfaceFromPhaseMap(cv::Mat,CircleOutline,CircleOutline,QString)));
@@ -156,7 +153,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_surfaceManager, SIGNAL(showTab(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
     connect(m_surfTools, SIGNAL(updateSelected()), m_surfaceManager, SLOT(backGroundUpdate()));
     connect(m_ogl, SIGNAL(showAll3d(GLWidget *)), m_surfaceManager, SLOT(showAll3D(GLWidget *)));
-
     ui->tabWidget->addTab(review, "Results");
 
     ui->tabWidget->addTab(SimulationsView::getInstance(ui->tabWidget), "Star Test, PSF, MTF");
@@ -175,7 +171,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( m_igramArea, SIGNAL(enableShiftButtons(bool)), this,SLOT(enableShiftButtons(bool)));
     connect(m_dftArea, SIGNAL(dftReady(QImage)), m_igramArea,SLOT(dftReady(QImage)));
     connect(m_igramArea, SIGNAL(dftCenterFilter(double)), m_dftArea, SLOT(dftCenterFilter(double)));
-    connect(m_igramArea, SIGNAL(upateColorChannels(QImage)), m_dftArea, SLOT(newIgram(QImage)));
+    connect(m_igramArea, SIGNAL(doDFT()), m_dftArea, SLOT(doDFT()));
     enableShiftButtons(true);
 
 
@@ -221,20 +217,38 @@ MainWindow::MainWindow(QWidget *parent) :
     openWaveFrontonInit(args);
 
 }
-
+int showmem(QString t);
 void MainWindow::openWaveFrontonInit(QStringList args){
-    qDebug()<< "args" << args;
-    bool worktodo = false;
+    QProgressDialog pd("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
+    pd.setRange(0, args.size());
+    pd.show();
+    m_surfaceManager->initWaveFrontLoad();
+    int cnt = 0;
+    QSettings set;
+    int memThreshold = set.value("lowMemoryThreshold",300).toInt();
     foreach( QString arg, args){
+        int mem = showmem("loading");
+        statusBar()->showMessage(QString().sprintf("memory %d MB", mem));
+        if (mem< memThreshold){
+            int resp = QMessageBox::warning(0,"low on memory", "Do you want to continue?", QMessageBox::Yes|QMessageBox::No);
+            if (resp == QMessageBox::No)
+               break;
+        }
+        qApp->processEvents();
+        if (pd.wasCanceled())
+            break;
+
         if (arg.toUpper().endsWith(".WFT")){
-            m_waveFrontLoader->addWavefront(arg);
-            worktodo = true;
+            pd.setLabelText(arg);
+            m_surfaceManager->loadWavefront(arg);
+            pd.setValue(++cnt);
+
         }
     }
-    if (worktodo && m_waveFrontLoader->done){
-        ui->tabWidget->setCurrentIndex(2);
-        emit load(m_surfaceManager);
-    }
+
+    ui->tabWidget->setCurrentIndex(2);
+
+
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -508,16 +522,19 @@ void MainWindow::selectDftTab(){
 
 void MainWindow::updateChannels(QImage img){
 
-    m_colorChannels->setImage(img);
-    if (m_showChannels)
+
+    if (m_showChannels){
+        m_colorChannels->setImage(img);
         m_colorChannels->show();
-    m_intensityPlot->setIgram(img);
-    if (m_showIntensity)
+    }
+
+    if (m_showIntensity){
+        m_intensityPlot->setIgram(img);
         m_intensityPlot->show();
+    }
 }
 
-void MainWindow::on_actionRead_WaveFront_triggered()
-{
+QStringList MainWindow::SelectWaveFrontFiles(){
     QSettings settings;
     QString lastPath = settings.value("lastPath",".").toString();
 
@@ -525,21 +542,29 @@ void MainWindow::on_actionRead_WaveFront_triggered()
     dialog.setDirectory(lastPath);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setNameFilter(tr("wft (*.wft)"));
-    QStringList fileNames;
 
     if (dialog.exec()) {
-        this->setCursor(Qt::WaitCursor);
-
-        QApplication::processEvents();
-        fileNames = dialog.selectedFiles();
-        QFileInfo info(fileNames[0]);
-        lastPath = info.absolutePath();
-        QSettings settings;
-        settings.setValue("lastPath",lastPath);
-        openWaveFrontonInit(fileNames);
-        this->setCursor(Qt::ArrowCursor);
-        ui->tabWidget->setCurrentIndex(2);
+        QStringList fileNames = dialog.selectedFiles();
+        if (fileNames.size() > 0){
+            QFileInfo info(fileNames[0]);
+            lastPath = info.absolutePath();
+            QSettings settings;
+            settings.setValue("lastPath",lastPath);
+            return dialog.selectedFiles();
+        }
     }
+    return QStringList();
+}
+
+void MainWindow::on_actionRead_WaveFront_triggered()
+{
+    QStringList fileNames = SelectWaveFrontFiles();
+    this->setCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+    openWaveFrontonInit(fileNames);
+    this->setCursor(Qt::ArrowCursor);
+    ui->tabWidget->setCurrentIndex(2);
+
 }
 /*
 fields = l.split()
@@ -619,7 +644,10 @@ void MainWindow::on_actionSave_Wavefront_triggered()
 }
 void MainWindow::showMessage(QString msg){
 
-    int ok = QMessageBox(QMessageBox::Information,msg, "",QMessageBox::Yes|QMessageBox::No).exec();
+
+    int ok = QMessageBox(QMessageBox::Warning,msg, "",QMessageBox::Yes|QMessageBox::No |
+                         QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
+
     m_surfaceManager->messageResult = ok;
     m_surfaceManager->pauseCond.wakeAll();
 }
@@ -659,13 +687,18 @@ void MainWindow::skipBatchItem()
     m_OutlineDoneInBatch = true;
     m_skipItem = true;
     m_batchMakeSurfaceReady = true;
+    if (batchIgramWizard::autoCb->isChecked()){
+        batchConnections(false);
+    }
 }
 
 void MainWindow::on_showChannels_clicked(bool checked)
 {
     m_showChannels = checked;
-    if (checked)
+    if (checked){
+        m_colorChannels->setImage(m_igramArea->igramImage);
         m_colorChannels->show();
+    }
     else
         m_colorChannels->close();
 }
@@ -676,8 +709,10 @@ void MainWindow::imageSize(QString txt){
 void MainWindow::on_showIntensity_clicked(bool checked)
 {
     m_showIntensity = checked;
-    if (checked)
+    if (checked){
+        m_intensityPlot->setIgram(m_igramArea->igramImage);
         m_intensityPlot->show();
+    }
     else
         m_intensityPlot->close();
 }
@@ -884,76 +919,179 @@ void MainWindow::batchFinished(int ){
 }
 
 void MainWindow::batchConnections(bool flag){
+    qDebug() << "BatchConnection " << flag;
     if (flag){
         m_inBatch = true;
         disconnect(m_dftTools, SIGNAL(makeSurface()), m_dftArea, SIGNAL(makeSurface()));
         connect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
+        connect(batchIgramWizard::saveZerns, SIGNAL(pressed()), this, SLOT(saveBatchZerns()));
     }
     else {
         m_inBatch = false;
         disconnect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
         connect(m_dftTools, SIGNAL(makeSurface()), m_dftArea, SLOT(makeSurface()));
+        disconnect(batchIgramWizard::saveZerns, SIGNAL(pressed()), this, SLOT(saveBatchZerns()));
+    }
+}
+void MainWindow::saveBatchZerns(){
+    QSettings set;
+    QString path = set.value("lastPath",".").toString();
+    QFile fn(path);
+
+    QString fName = QFileDialog::getSaveFileName(0,
+        tr("Save Zernike values"), path + "//Zerns.csv",0,0,QFileDialog::DontConfirmOverwrite);
+
+
+    if (fName.isEmpty())
+        return;
+    QFile f(fName);
+    QTextStream out(&f);
+    if (f.open(QIODevice::WriteOnly | QIODevice::Append)) {
+        QStringList dirs = path.split("/");
+        out << endl << endl;
+
+        foreach(QVector<QString>   zerns, batchZerns){
+            out << dirs[dirs.size()-1] + "/" + zerns[0];
+            for (int i = 1; i < zerns.size(); ++i){
+
+                out << "," << zerns[i];
+            }
+            out << endl;
+        }
     }
 }
 
 void MainWindow::batchProcess(QStringList fileList){
-
-        this->setCursor(Qt::WaitCursor);
-        batchIgramWizard::goPb->setEnabled(false);
-        batchIgramWizard::addFiles->setEnabled(false);
-        batchIgramWizard::skipFile->setEnabled(true);
-        m_skipItem = false;
-        QApplication::processEvents();
-        QFileInfo info(m_igramsToProcess[0]);
-
-        QString lastPath = info.absolutePath();
-        QSettings settings;
-        settings.setValue("lastPath",lastPath);
-
-        foreach(QString fn, fileList){
-            m_OutlineDoneInBatch = false;
-            m_igramArea->openImage(fn);
-            if (batchIgramWizard::manualRb->isChecked()){
-                while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
-                    QApplication::processEvents();
-                }
-            }
-            if (m_skipItem){
-                m_skipItem = false;
-                continue;
-            }
-            if (!m_inBatch)
+    QSettings set;
+    bool shouldBeep = set.value("RMSBeep>", true).toBool();
+    this->setCursor(Qt::WaitCursor);
+    batchIgramWizard::goPb->setEnabled(false);
+    batchIgramWizard::addFiles->setEnabled(false);
+    batchIgramWizard::skipFile->setEnabled(true);
+    m_skipItem = false;
+    QApplication::processEvents();
+    QFileInfo info(m_igramsToProcess[0]);
+    batchWiz->showPlots(batchIgramWizard::showProcessPlots->isChecked());
+    QString lastPath = info.absolutePath();
+    QSettings settings;
+    settings.setValue("lastPath",lastPath);
+    int memThreshold = settings.value("lowMemoryThreshold", 300).toInt();
+    int cnt = 0;
+    int last = fileList.size()-1;
+    progBar->setMinimum(0);
+    progBar->setMaximum(last);
+    int ndx = 0;
+    foreach(QString fn, fileList){
+        batchWiz->select(ndx++);
+        int mem = showmem("batch loop++++++++++++++++++++++++++++++");
+        if (mem < memThreshold){
+            QApplication::beep();
+            int resp = QMessageBox::warning(0,"low on memory", "Do you want to continue?", QMessageBox::Yes|QMessageBox::No);
+            if (resp == QMessageBox::No)
                 break;
-            m_igramArea->nextStep();
-            m_batchMakeSurfaceReady = false;
-            if (batchIgramWizard::manualRb->isChecked() && !m_skipItem){
-                while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {
-                    QApplication::processEvents();
-                }
-            }
-            if (m_skipItem){
-                m_skipItem = false;
-                continue;
-            }
-            if (!m_inBatch)
-                break;
-            m_surfaceManager->m_surface_finished = false;
-            ui->tabWidget->setCurrentIndex(2);
-            m_dftTools->wasPressed = true;
-            m_dftArea->makeSurface();
-            qDebug() << "batch make surface";
-            while(m_inBatch && !m_surfaceManager->m_surface_finished){qApp->processEvents();}
-            if (!m_inBatch)
-                break;
-            Sleep(1000);
         }
-        batchIgramWizard::goPb->setEnabled(true);
-        batchIgramWizard::addFiles->setEnabled(true);
-        batchIgramWizard::skipFile->setEnabled(false);
-        batchWiz->close();
-        delete batchWiz;
+        progBar->setValue(cnt++);
+        m_OutlineDoneInBatch = false;
+        m_igramArea->openImage(fn);
+        if (!batchIgramWizard::autoCb->isChecked()){
+            while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
+                QApplication::processEvents();
+            }
+        }
+        if (m_skipItem){
+            m_skipItem = false;
+            continue;
+        }
+        if (!m_inBatch)
+            break;
+        m_igramArea->nextStep();
+        m_batchMakeSurfaceReady = false;
+        if (!batchIgramWizard::autoCb->isChecked() && !m_skipItem){
+            while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {
+                QApplication::processEvents();
+            }
+        }
+        if (m_skipItem){
+            m_skipItem = false;
+            continue;
+        }
+        if (!m_inBatch)
+            break;
+        m_surfaceManager->m_surface_finished = false;
+        ui->tabWidget->setCurrentIndex(2);
+        m_dftTools->wasPressed = true;
+        m_dftArea->makeSurface();
 
-        this->setCursor(Qt::ArrowCursor);
+        if (!m_dftArea->success){
+            batchConnections(false);
+            break;
+        }
+        int mem2 = showmem("after vortex%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+
+        statusBar()->showMessage(QString().sprintf("mem %d MB", mem));
+
+        while(m_inBatch && !m_surfaceManager->m_surface_finished){qApp->processEvents();}
+        if (!m_inBatch)
+            break;
+        if (batchIgramWizard::filterCb->isChecked()){
+
+        }
+        wavefront *wf = m_surfaceManager->m_wavefronts.back();
+
+        if (batchWiz->introPage->shouldFilterWavefront(wf->std)){
+
+            m_surfaceManager->deleteCurrent();
+            if (shouldBeep)
+                Beep(300,250);
+        }
+        else{
+
+            QPointF astig(wf->InputZerns[4], wf->InputZerns[5]);
+            batchWiz->addAstig(wf->name, astig);
+            batchWiz->addRms(wf->name, QPointF(ndx,wf->std));
+
+
+            Sleep(1000);
+            if (batchIgramWizard::saveFile->isChecked()){
+                QSettings settings;
+                QString lastPath = settings.value("lastPath","").toString();
+                QString fileName = m_surfaceManager->m_wavefronts.back()->name;
+                QFileInfo fileinfo(fileName);
+                QString file = lastPath + "/" + fileName + ".wft";
+                m_surfaceManager->writeWavefront(file, m_surfaceManager->m_wavefronts.back(), false);
+            }
+
+            if (batchIgramWizard::deletePreviousWave->isChecked()){
+                QVector<QString> zerns;
+                zerns << wf->name;
+                foreach(double v , wf->InputZerns){
+                    zerns << QString::number(v);
+                }
+
+                batchZerns << zerns;
+
+                if (m_surfaceManager->m_wavefronts.size() > 2){
+                    m_surfaceManager->m_currentNdx =0;
+                    m_surfaceManager->deleteCurrent();
+                }
+            }
+        }
+    }
+    if (batchIgramWizard::deletePreviousWave->isChecked()){
+        batchIgramWizard::saveZerns->setEnabled(true);
+        batchIgramWizard::saveZerns->setStyleSheet("background-color: yellow");
+        batchIgramWizard::saveZerns->setToolTipDuration(10000);
+        QToolTip::showText( batchIgramWizard::saveZerns->mapToGlobal(QPoint(0,20)),batchIgramWizard::saveZerns->toolTip());
+
+    }
+    connect(batchWiz->introPage->astigPlot, SIGNAL(waveSeleted(QString)), m_surfaceManager, SLOT(wavefrontDClicked(QString)));
+    connect(batchWiz->introPage->m_rmsPlot, SIGNAL(waveSeleted(QString)), m_surfaceManager, SLOT(wavefrontDClicked(QString)));
+    progBar->reset();
+    batchIgramWizard::goPb->setEnabled(true);
+    batchIgramWizard::addFiles->setEnabled(true);
+    batchIgramWizard::skipFile->setEnabled(false);
+
+    this->setCursor(Qt::ArrowCursor);
 
 
 }
@@ -1168,3 +1306,62 @@ void MainWindow::on_actionShow_unwrap_errors_triggered()
 }
 
 
+
+void MainWindow::on_actionastig_Stats_triggered()
+{
+    if (m_astigStatsDlg)
+        delete m_astigStatsDlg;
+    m_astigStatsDlg = new astigStatsDlg(m_surfaceManager->m_wavefronts, this);
+    m_astigStatsDlg->show();
+}
+
+void MainWindow::on_actionSave_Zernike_Values_in_CSV_triggered()
+{
+    QSettings set;
+    QString path = set.value("lastPath",".").toString();
+    QFile fn(path);
+
+    QString fName = QFileDialog::getSaveFileName(0,
+        tr("Save Zernike values"), path + "//Zerns.csv",0,0,QFileDialog::DontConfirmOverwrite);
+
+
+    if (fName.isEmpty())
+        return;
+    QFile f(fName);
+    QTextStream out(&f);
+    if (f.open(QIODevice::WriteOnly | QIODevice::Append)) {
+        QStringList dirs = path.split("/");
+        out << endl << endl;
+        for (int i = 0; i < m_surfaceManager->m_wavefronts.size(); ++i){
+            wavefront* wf = m_surfaceManager->m_wavefronts[i];
+            QStringList paths = wf->name.split('/');
+            if (paths.size() > 1)
+                out << paths[paths.size()-2] + "/" + paths[paths.size() -1];
+            else{
+
+                out <<  dirs.back() + "/" + wf->name;
+            }
+            for (int z = 0; z < Z_TERMS; ++z){
+                out << "," << wf->InputZerns[z];
+            }
+            out << endl;
+        }
+    }
+}
+
+void MainWindow::on_actionAverage_wave_front_files_triggered()
+{
+    QStringList files = SelectWaveFrontFiles();
+    if (files.size() == 0)
+        return;
+    m_surfaceManager->averageWavefrontFiles( files);
+}
+
+
+void MainWindow::on_actionDebugStuff_triggered()
+{
+    for (int i = 0; i < m_surfaceManager->m_wavefronts.size(); ++i){
+        wavefront *wf = m_surfaceManager->m_wavefronts[i];
+        qDebug() << wf->name << "center" << wf->m_outside.m_center << "rad"<<wf->m_outside.m_radius;
+    }
+}

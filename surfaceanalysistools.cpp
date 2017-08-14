@@ -54,6 +54,7 @@ surfaceAnalysisTools::surfaceAnalysisTools(QWidget *parent) :
 }
 
 void surfaceAnalysisTools::enableControls(bool flag){
+
     setEnabled(flag);
 }
 
@@ -83,11 +84,8 @@ surfaceAnalysisTools::~surfaceAnalysisTools()
     delete ui;
 }
 
-
-
 void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_valueChanged(int arg1)
 {
-    qDebug() << "smooth finished";
     emit surfaceSmoothGBValue(ui->surfaceSmoothGausianBlurr->value());
 }
 void surfaceAnalysisTools::on_blurCB_clicked(bool checked)
@@ -131,6 +129,7 @@ void surfaceAnalysisTools::on_spinBox_2_valueChanged(int arg1)
 void surfaceAnalysisTools::deleteWaveFront(int i){
     QListWidgetItem* item = ui->wavefrontList->takeItem(i);
     delete item;
+
 }
 
 void surfaceAnalysisTools::on_wavefrontList_clicked(const QModelIndex &index)
@@ -142,12 +141,15 @@ void surfaceAnalysisTools::on_wavefrontList_clicked(const QModelIndex &index)
 
     QModelIndexList indexes = ui->wavefrontList->selectionModel()->selectedIndexes();
 
-    std::vector<int> indexList;
+    /*
     foreach(QModelIndex index, indexes)
     {
         emit waveFrontClicked(index.row());
-        qDebug() << index.row();
     }
+            */
+    // only enform about the last item in the list for efficency.
+    //That way surface manager does not spend time updating things not shown.
+    emit waveFrontClicked(indexes.last().row());
     currentNdxChanged(index.row());
 }
 QList<int> surfaceAnalysisTools::SelectedWaveFronts(){
@@ -184,7 +186,8 @@ void surfaceAnalysisTools::on_averagePB_clicked()
 }
 void surfaceAnalysisTools::select(int item){
     ui->wavefrontList->selectionModel()->reset();
-    ui->wavefrontList->item(item)->setSelected(true);
+    if (ui->wavefrontList->count() > 0)
+        ui->wavefrontList->item(item)->setSelected(true);
 }
 
 void surfaceAnalysisTools::on_SelectAllPB_clicked()
@@ -293,5 +296,7 @@ void surfaceAnalysisTools::on_pushButton_clicked()
 }
 
 
-
-
+void surfaceAnalysisTools::on_filterPB_clicked()
+{
+    emit filterWavefronts(SelectedWaveFronts());
+}

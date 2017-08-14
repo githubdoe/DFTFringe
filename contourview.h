@@ -21,6 +21,7 @@
 #include <QWidget>
 #include "contourtools.h"
 #include "contourplot.h"
+#include "pixelstats.h"
 namespace Ui {
 class contourView;
 }
@@ -33,7 +34,9 @@ public:
     explicit contourView(QWidget *parent = 0, ContourTools *tools = 0);
     ~contourView();
     ContourPlot *getPlot();
+    void setSurface(wavefront * wf);
     bool zoomed;
+    QImage getPixstatsImage();
 signals:
     void lineSpacingChanged(double);
     void showAllContours();
@@ -51,6 +54,7 @@ private slots:
 private:
     Ui::contourView *ui;
     ContourTools* tools;
+    pixelStats *ps;
 
 };
 

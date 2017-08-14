@@ -32,6 +32,14 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
+   <property name="styleSheet">
+    <string notr="true"> QPushButton{ border-style: outset;
+                        border-width: 3px;
+                        border-radius: 7px;
+                        border-color: darkgray;
+                        font: normal 12px;
+                           padding: 2px; }</string>
+   </property>
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
@@ -171,6 +179,12 @@
      </item>
      <item row="1" column="1" colspan="2">
       <widget class="QPushButton" name="transformsPB">
+       <property name="toolTip">
+        <string>Rotate selected wavefronts</string>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
        <property name="text">
         <string>Rotate </string>
        </property>
@@ -178,8 +192,11 @@
      </item>
      <item row="1" column="3">
       <widget class="QPushButton" name="averagePB">
-       <property name="statusTip">
+       <property name="toolTip">
         <string>Average selected wavefronts</string>
+       </property>
+       <property name="statusTip">
+        <string/>
        </property>
        <property name="styleSheet">
         <string notr="true"/>
@@ -191,6 +208,12 @@
      </item>
      <item row="2" column="0" colspan="2">
       <widget class="QPushButton" name="InvertPB">
+       <property name="toolTip">
+        <string>Invert selected wavefronts</string>
+       </property>
+       <property name="statusTip">
+        <string>Invert selected wavefronts</string>
+       </property>
        <property name="text">
         <string>Invert </string>
        </property>
@@ -223,6 +246,16 @@
        </property>
       </widget>
      </item>
+     <item row="3" column="3">
+      <widget class="QPushButton" name="filterPB">
+       <property name="toolTip">
+        <string>Remove outlier wavefronts with RMS values larger than a set threshold.</string>
+       </property>
+       <property name="text">
+        <string>Filter</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
    <widget class="QGroupBox" name="groupBox_3">
@@ -242,6 +275,12 @@
       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="4,1">
        <item>
         <widget class="QCheckBox" name="blurCB">
+         <property name="toolTip">
+          <string>Enable smoothing of wavefront</string>
+         </property>
+         <property name="statusTip">
+          <string/>
+         </property>
          <property name="text">
           <string>Gaussian Blur radius</string>
          </property>
@@ -265,7 +304,7 @@
           <number>400</number>
          </property>
          <property name="singleStep">
-          <number>1</number>
+          <number>10</number>
          </property>
          <property name="value">
           <number>21</number>

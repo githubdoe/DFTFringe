@@ -69,11 +69,13 @@
     <addaction name="actionLoad_Interferogram"/>
     <addaction name="actionLoad_outline"/>
     <addaction name="actionRead_WaveFront"/>
+    <addaction name="actionAverage_wave_front_files"/>
     <addaction name="separator"/>
     <addaction name="actionSave_outline"/>
     <addaction name="actionSave_Wavefront"/>
     <addaction name="actionSave_screen"/>
     <addaction name="actionSave_interferogram"/>
+    <addaction name="actionSave_Zernike_Values_in_CSV"/>
     <addaction name="actionSave_nulled_smoothed_wavefront"/>
     <addaction name="separator"/>
     <addaction name="actionSave_PDF_report"/>
@@ -111,6 +113,8 @@
     <addaction name="actionBath_Astig_Calculator"/>
     <addaction name="actionEdit_Zernike_values"/>
     <addaction name="actionCamera_Calibration"/>
+    <addaction name="actionastig_Stats"/>
+    <addaction name="actionDebugStuff"/>
    </widget>
    <widget class="QMenu" name="menuSimulations">
     <property name="title">
@@ -926,6 +930,9 @@ em;
    <property name="toolTip">
     <string>Load One or more interferograms.  If more than one then they will be processed as a batch.</string>
    </property>
+   <property name="statusTip">
+    <string>Load One or more interferograms.  If more than one then they will be processed as a batch.</string>
+   </property>
   </action>
   <action name="actionLoad_outline">
    <property name="text">
@@ -937,6 +944,9 @@ em;
     <string>Save WaveFront</string>
    </property>
    <property name="toolTip">
+    <string>Save Selected Wavefront or Wavefronts</string>
+   </property>
+   <property name="statusTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save Selected Wavefront or Wavefronts&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
@@ -974,7 +984,7 @@ em;
    <property name="text">
     <string>Read Wavefront/s</string>
    </property>
-   <property name="toolTip">
+   <property name="statusTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Read one or more wavefronts&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
@@ -1013,6 +1023,9 @@ em;
    <property name="text">
     <string>Subtract wave front</string>
    </property>
+   <property name="statusTip">
+    <string>Subtract another wavefront from the current one.</string>
+   </property>
   </action>
   <action name="actionIgram">
    <property name="text">
@@ -1027,6 +1040,9 @@ em;
   <action name="actionSave_Wavefront">
    <property name="text">
     <string>Save Wavefront/s</string>
+   </property>
+   <property name="statusTip">
+    <string>Save all selected wavefronts</string>
    </property>
   </action>
   <action name="actionLighting_properties">
@@ -1119,6 +1135,9 @@ em;
    <property name="text">
     <string>Show Statistics of Loaded wavefronts</string>
    </property>
+   <property name="statusTip">
+    <string>Show Statistics of Loaded wavefronts</string>
+   </property>
   </action>
   <action name="actionBath_Astig_Calculator">
    <property name="text">
@@ -1138,6 +1157,32 @@ em;
   <action name="actionShow_unwrap_errors">
    <property name="text">
     <string>Show unwrap errors</string>
+   </property>
+  </action>
+  <action name="actionastig_Stats">
+   <property name="text">
+    <string>astig Stats</string>
+   </property>
+  </action>
+  <action name="actionSave_Zernike_Values_in_CSV">
+   <property name="text">
+    <string>Save Zernike Values in CSV</string>
+   </property>
+   <property name="toolTip">
+    <string>Save loaded wavefront Zernike Values in CSV If file exists then append to it.</string>
+   </property>
+   <property name="statusTip">
+    <string>Save Zernike Values of loaded wavefronts in CSV If file exists then append to it.</string>
+   </property>
+  </action>
+  <action name="actionAverage_wave_front_files">
+   <property name="text">
+    <string>Average wave front files</string>
+   </property>
+  </action>
+  <action name="actionDebugStuff">
+   <property name="text">
+    <string>DebugStuff</string>
    </property>
   </action>
  </widget>

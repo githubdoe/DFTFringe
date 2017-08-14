@@ -140,7 +140,16 @@ void foucaultView::on_makePb_clicked()
     start = ppl - start % (ppl);// + ui->lateralKnifeSb->value() * unitMultiplyer;
 
     double pixels_per_thou = .001 / pixwidth;
+
+    qDebug()<<"fouc" << pixels_per_thou << pixwidth << pad << size;
     double slitWidthHalf = pixels_per_thou * ui->slitWidthSb->value() * 1000 * ((ui->useMM->isChecked()) ? 1./25.4 : 1.);
+    if (slitWidthHalf < .75){
+        QString msg = QString().sprintf("warning the slit width of %6.5lf may too small. Using one pixel slit instead", ui->slitWidthSb->value());
+        QMessageBox::warning(0,"warning", msg);
+
+    }
+    QString parms = QString().sprintf(" Pixel width %6.5lf slit size in pixels %d", pixwidth, (int)(2 * slitWidthHalf));
+    ui->pixeParms->setText(parms);
     // compute offset so that line is at center
     for (int y = 0; y < size; ++y)
     {

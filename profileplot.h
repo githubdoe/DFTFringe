@@ -29,6 +29,7 @@
 #include "opencv/cv.h"
 #include <QRadioButton>
 #include <QCheckBox>
+#include <QDoubleSpinBox>
 namespace Ui {
 class ProfilePlot;
 }
@@ -57,6 +58,8 @@ public:
     double m_showSurface;
     double m_showNm;
     bool zoomed;
+    bool m_showSlopeError;
+    double slopeLimitArcSec;
 signals:
     void zoomMe(bool);
 public slots:
@@ -71,6 +74,8 @@ public slots:
     void showSurface(bool);
     void zoom();
     void showContextMenu(const QPoint &pos);
+    void showSlope(bool);
+    void slopeLimit(double);
 private:
     void populate();
     void updateGradient();
@@ -78,7 +83,8 @@ private:
     QPoint startPos;
     QString offsetType;
     QwtCompass *compass;
-
+    QCheckBox *showSlopeError;
+    QDoubleSpinBox *slopeLimitSB;
 
 private:
     Ui::ProfilePlot *ui;

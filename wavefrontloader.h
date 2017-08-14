@@ -33,11 +33,12 @@ public:
     bool done;
 signals:
     void status(int);
-
+    void memoryLow();
     void progressRange(int,int);
     void currentWavefront(QString);
     void showMessage(QString);
     void diameterChangedSig(double);
+    void loadComplete();
 
 public slots:
     void loadx(SurfaceManager *sm);

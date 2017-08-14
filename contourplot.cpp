@@ -59,6 +59,8 @@ public:
         text.setBackgroundBrush( QBrush( bg ) );
         return text;
     }
+signals:
+    void select(QString);
 };
 
 
@@ -225,6 +227,7 @@ void ContourPlot::setSurface(wavefront * wf) {
     setZRange();
 
 
+
     QwtScaleWidget *rightAxis = axisWidget( QwtPlot::yRight );
     rightAxis->setTitle(tr( "wavefront error at 550nm") );
     rightAxis->setColorBarEnabled( true );
@@ -289,7 +292,7 @@ void ContourPlot::initPlot(){
     QList<double> contourLevels;
     double contourVal = contourRange;
 
-    qDebug() << contourVal;
+
     if (contourVal > 0.001){
         for ( double level = -1; level <1; level += contourVal)
          contourLevels << level;

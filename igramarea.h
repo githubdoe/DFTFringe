@@ -149,7 +149,7 @@ public:
     QString makeOutlineName();
     void shiftoutline(QPointF p);
     void setZoomMode(zoomMode mode);
-    int m_current_boundry;
+
 
 public slots:
     void gammaChanged(bool, double);
@@ -177,6 +177,7 @@ signals:
     void showTab(int);
     void dftCenterFilter(double);
     void imageSize(QString);
+    void doDFT();
 protected:
     bool eventFilter(QObject *object, QEvent *event);
     void wheelEvent(QWheelEvent * event);
@@ -224,6 +225,7 @@ private:
     double fitScale;
     int outterPcount;
     int innerPcount;
+
     int lineStyle;
 
 
@@ -240,6 +242,8 @@ private:
     bool m_edgeMode;
     int m_zoomBoxWidth;
     zoomMode m_zoomMode;
+public:
+   int m_current_boundry;
    // m_mw(mw),QWidget(parent),scale(1.),outterPcount(0), innerPcount(0), zoomFactor(0.),m_current_boundry(OutSideOutline),
       //zoomIndex(0),dragMode(false),m_hideOutlines(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false)
 };

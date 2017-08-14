@@ -72,9 +72,9 @@ double distance(QPointF p1, QPointF p2)
 }
 
 IgramArea::IgramArea(QWidget *parent, void *mw)
-    : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0),m_current_boundry(OutSideOutline),
+    : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0),
       zoomIndex(1),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
-      m_edgeMode(false), m_zoomMode(NORMALZOOM)
+      m_edgeMode(false), m_zoomMode(NORMALZOOM),m_current_boundry(OutSideOutline)
 {
 
     m_innerP1 = m_innerP2 = m_OutterP1 = m_OutterP2 = QPointF(0.,0.);
@@ -147,6 +147,7 @@ void IgramArea::DrawSimIgram(void){
     simIgramDlg &dlg = *simIgramDlg::get_instance();
     if (!dlg.exec())
         return;
+     QApplication::setOverrideCursor(Qt::WaitCursor);
     //m_demo->hide();
     int wx = dlg.size;
     double xcen = (double)(wx-1)/2.;
@@ -154,12 +155,13 @@ void IgramArea::DrawSimIgram(void){
     int border = 20;
     double rad = xcen-border;
     cv::Mat simgram = makeSurfaceFromZerns(border, true);
-
+    //cv::imshow("igram", simgram);
+    //cv::waitKey();
     igramImage = QImage((uchar*)simgram.data,
                         simgram.cols,
                         simgram.rows,
                         simgram.step,
-                        QImage::QImage::Format_RGB32);
+                        QImage::QImage::Format_RGB32).copy();
 
     qDebug() << "sim format " << igramImage.format();
 
@@ -179,11 +181,15 @@ void IgramArea::DrawSimIgram(void){
     drawBoundary();
     fitScale = (double)parentWidget()->height()/(double)igramImage.height();
     zoomIndex = 1;
+    hasBeenCropped = false;
+    needToConvertBGR = true;
     scale = fitScale;
     m_filename = "simulatedIgram";
     update();
+
     emit showTab(0);
     emit upateColorChannels(igramImage);
+    QApplication::restoreOverrideCursor();
 }
 
 
@@ -223,6 +229,10 @@ bool IgramArea::openImage(const QString &fileName)
     QImage loadedImage;
     if (!loadedImage.load(fileName))
         return false;
+
+    // convert image to 3 channel image
+    if (loadedImage.format() == QImage::Format_Indexed8)
+        loadedImage = loadedImage.convertToFormat(QImage::Format_RGB32);
 
     if (Settings2::getInstance()->m_igram->m_removeDistortion){
         cv::Mat raw = imread(fileName.toStdString().c_str());
@@ -311,44 +321,53 @@ bool IgramArea::openImage(const QString &fileName)
     QFileInfo finfo(makeOutlineName());
     if (finfo.exists()){
         loadOutlineFile(finfo.absoluteFilePath());
-
     }
-    else if (rad > 0) {
-        double cx = set.value("lastOutsideCx", 0).toDouble();
-        double cy = set.value("lastOutsideCy",0).toDouble();
+    else {
+        m_center.m_radius = 0;
+        innerPcount = 0;
 
-        // check that outline fits inside current image.
-        int width = loadedImage.size().width();
-        int height = loadedImage.size().height();
-        bool tooBig = false;
-        if (cx + rad > width ||  (cx - rad) < 0 ||  cy + rad > height || (cy-rad) < 0)
-            tooBig = true;
+        if (rad > 0) {
+            double cx = set.value("lastOutsideCx", 0).toDouble();
+            double cy = set.value("lastOutsideCy",0).toDouble();
+
+            // check that outline fits inside current image.
+            int width = loadedImage.size().width();
+            int height = loadedImage.size().height();
+            bool tooBig = false;
+            if (cx + rad > width ||  (cx - rad) < 0 ||  cy + rad > height || (cy-rad) < 0)
+                tooBig = true;
 
 
-        if (tooBig)
-            m_outside = CircleOutline(QPointF(0,0),0);
-        else {
-            m_outside = CircleOutline(QPointF(cx,cy),rad);
-            m_OutterP1 = m_outside.m_p1.m_p;
-            m_OutterP2 = m_outside.m_p2.m_p;
-            outterPcount = 2;
-            drawBoundary();
-        }
+            if (tooBig)
+                m_outside = CircleOutline(QPointF(0,0),0);
+            else {
+                m_outside = CircleOutline(QPointF(cx,cy),rad);
+                m_OutterP1 = m_outside.m_p1.m_p;
+                m_OutterP2 = m_outside.m_p2.m_p;
+                outterPcount = 2;
+                set.setValue("lastOutsideRad", rad);
+                set.setValue("lastOutsideCx", cx);
+                set.setValue("lastOutsideCy",cy);
+                drawBoundary();
+            }
+            if (m_center.m_radius== 0.) {
+                rad = set.value("lastInsideRad", 0).toDouble();
 
-        rad = set.value("lastInsideRad", 0).toDouble();
-        if (rad) {
-            double cx = set.value("lastInsideCx", 0).toDouble();
-            double cy = set.value("lastInsideCy",0).toDouble();
-            m_center = CircleOutline(QPointF(cx,cy),rad);
-            m_innerP1 = m_center.m_p1.m_p;
-            m_innerP2 = m_center.m_p2.m_p;
-            innerPcount = 2;
-            drawBoundary();
+                if (rad) {
+                    double cx = set.value("lastInsideCx", 0).toDouble();
+                    double cy = set.value("lastInsideCy",0).toDouble();
+                    m_center = CircleOutline(QPointF(cx,cy),rad);
+                    m_innerP1 = m_center.m_p1.m_p;
+                    m_innerP2 = m_center.m_p2.m_p;
+                    innerPcount = 2;
+                    drawBoundary();
+                }
+            }
         }
     }
     cropTotalDx = cropTotalDy = 0;
+    SideOutLineActive(true);
 
-    update();
     if (m_outside.m_radius > 0.)
         emit upateColorChannels(igramImage);
     emit showTab(0);
@@ -965,11 +984,15 @@ void IgramArea::createActions()
 
 void IgramArea::crop() {
     // add current bounds to crop history.
+
     double radx = m_outside.m_radius;
+    if (radx == 0)
+            return;
     double rady = radx;
     double cx = m_outside.m_center.x();
     double cy = m_outside.m_center.y();
     QSettings set;
+
     set.setValue("lastOutsideRad", radx);
 
     set.setValue("lastinsideRad", m_center.m_radius);
@@ -1029,6 +1052,7 @@ void IgramArea::crop() {
     update();
     emit imageSize(QString().sprintf("%d X %d", igramImage.size().width(), igramImage.size() .height()));
     emit upateColorChannels(igramImage);
+    emit doDFT();
 }
 void IgramArea::dftReady(QImage img){
     m_dftThumb->setImage(img);
@@ -1071,12 +1095,13 @@ void IgramArea::loadOutlineFile(QString fileName){
     emit dftCenterFilter(sideLobe.m_radius);
 
     if ((file.tellg() > 0) && (fsize > file.tellg())) {
-        qDebug() << "reading inside outline" << file.tellg() << fsize;
-
         m_center = readCircle(file);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
         innerPcount = 2;
+    }
+    else {
+        m_center.m_radius = 0;
     }
     m_OutterP1 = m_outside.m_p1.m_p;
     m_OutterP2 = m_outside.m_p2.m_p;
@@ -1087,7 +1112,10 @@ void IgramArea::loadOutlineFile(QString fileName){
 
     QString msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
                              m_outside.m_center.x(),m_outside.m_center.y(),m_outside.m_radius, scale);
-
+    if (m_center.m_radius > 0){
+        msg2 += QString().sprintf(" center outline: center= %6.1lf,%6.1lf radius = %6.2lf",
+                                  m_center.m_center.x(), m_center.m_center.y(), m_center.m_radius);
+    }
     emit statusBarUpdate(msg2);
 }
 
@@ -1130,7 +1158,7 @@ void IgramArea::writeOutlines(QString fileName){
     writeCircle(file, filter );
 
     if (m_center.m_radius > 0){
-        qDebug() << "Write inside circle";
+
         CircleOutline inside = m_center;
         inside.translate(QPointF(cropTotalDx,cropTotalDy));
         writeCircle(file,inside);

@@ -21,27 +21,29 @@
 #include <qmath.h>
 
 CircleOutline::CircleOutline(QPointF center, double rad){
-    m_p1 = QPointF(center.x() - rad, center.y());
+    center.rx() = round(2 * center.x())/2.;
+    center.ry() = round( 2 * center.y())/2.;
+    m_p1 = QPointF(center.x() - (rad), center.y());
     m_p2 = QPointF(center.x()+rad, center.y());
     m_center = center;
-    m_radius = rad;
+    m_radius = round(2 *rad)/2.;
+
 }
-double round(double v)
-{
-    return floor(v*(1./.5) + 0.5)/(1./.5);
-}
+
 
 CircleOutline::CircleOutline(QPointF p1, QPointF p2)
 {
-
+    p1.rx() = round( 2 * p1.x())/2.;
+    p1.ry() = round( 2 * p1.y())/2.;
+    p2.rx() = round(2 * p2.x())/2.;
+    p2.ry() = round(2 * p2.y())/2.;
     m_p1 = gPlus(p1);
     m_p2 = gPlus(p2);
 
-    m_center.rx() = (double)(p1.x()+p2.x())/2.d;
-    m_center.ry() = (double)(p1.y()+p2.y())/2.d;
+    m_center.rx() = (double)(p1.x()+p2.x())/2.;
+    m_center.ry() = (double)(p1.y()+p2.y())/2.;
+    m_radius = fabs(p1.x() - p2.x())/2.;
 
-
-    m_radius = abs(p1.x() - p2.x())/2.;
 }
 CircleOutline::CircleOutline()
 {   m_center = QPointF(-1,-1);
@@ -64,10 +66,12 @@ void CircleOutline::translate(QPointF del){
 }
 void CircleOutline::scale(double factor){
     m_radius *= factor;
+    m_radius = round(m_radius * 2)/2.;
+    //m_radius = (int)m_radius;
     m_p1.m_p *= factor;
     m_p2.m_p *= factor;
-    m_center.rx() = m_center.x() * factor;
-    m_center.ry() = m_center.y() * factor;
+    m_center.rx() = round(2 * m_center.x() * factor)/2.;
+    m_center.ry() = round(2 * m_center.y() * factor)/2.;
 }
 bool CircleOutline::isValid(){
     return m_radius > 0;

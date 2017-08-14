@@ -61,9 +61,8 @@ dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMa
         // wavefront is scaled from 0 to 1
 
         double range = 1.;
-        double mean= .5;
+
         if (m_wf){
-            mean = m_wf->mean;
             double zmin = m_wf->mean - 3 * m_wf->std;
             double zmax = m_wf->mean + 3 * m_wf->std;
 

@@ -21,7 +21,7 @@ public:
     ~pixelStats();
     void setData(wavefront *w);
 private slots:
-    void on_bounds_valueChanged();
+    void bounds_valueChanged();
 
     void on_fit_clicked(bool checked);
 

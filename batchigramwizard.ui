@@ -22,6 +22,9 @@
   <property name="wizardStyle">
    <enum>QWizard::ClassicStyle</enum>
   </property>
+  <property name="options">
+   <set>QWizard::HelpButtonOnRight</set>
+  </property>
  </widget>
  <resources/>
  <connections/>

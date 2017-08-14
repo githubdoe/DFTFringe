@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<style> 
+p
+{
+    width:600px; 
+    word-wrap:break-word;
+}
+p.ex
+{
+    width:300px; 
+    word-wrap:break-word;
+}
+td {
+
+    vertical-align: top;
+}
+</style>
+<H1>Tips and Tricks</H1>
+<ul>
+<li>
+<h2>Obtain Good Fringe Contrast by rotating laser</h2>
+<p>Rotate the laser until the contrast is at a maximum.  The laser is usually polarized and it's reflection in the cube will change the polarization of the reflected beam.  If the two beams exiting the cube do not match then the contrast is reduced.  Rotating the laser will allow you to find where the best contrast position is.</p>
+</li><li>
+<h2> Correct camera focus</h2>
+<p>The camera should be focused on the mirror.  It can help to focus on a target placed just at the front of the mirror.</P>
+</li><li>
+<h2>Cause of Blurry fringes</h2>
+<P>Blurry fringes on part of the interferogram are usually caused by vibration of the mirror or interferometer.  Faster shutter speed is required to reduce the issue if the vibrations can not be reduced.</p>
+</li><li>
+<h2>Zernike terms to ignore</h2>
+<p> Zernike terms of piston, tilt, defocus, and coma are usually disabled because except for coma they are the result of the setup and not the mirror itself.  Coma values depend on tilt values and the outline position of the mirror.  It is next to impossible to determine the correct value.  For mirrors used in Newtonian collimation will compensate for any coma in the mirror.</p> 
+</li>
+
+
+
+<li>
+<h2>Artificial Null</h2>
+
+The following was excerpted from Dave Rowe's RTMC 2004 presentation</a> with permission.
+<p>
+</p>
+<ul>
+  <li>
+<p>When a paraboloidal mirror is tested at its center of curvature, the measured wavefront will have a non-zero Z<sub>8</sub> component (principle spherical aberration):</p>
+    <dl>
+      <dt></dt>
+      <dd>
+        <i>
+Z<sub>8</sub> = D<sup>4 </sup>/ (384 * Lambda * R<sup>3</sup>)  </i></dd>
+
+      <dt>where</dt>
+      <dd> D = diameter, R = radius of curvature, Lambda = wavelength</dd>
+
+    </dl>
+  </li>
+  <p>
+  </p>
+  <li><p>DFTFringe will use this information to remove the desired correction from the data if you select the use artificial null check box in the mirror configuration and the desired cc is set to other than 0.</p></li>
+
+  <li>Notice the strong dependence on the diameter - a small error in defining the pupil can make a significant error in accuracy<br>
+    <dl>
+      <dt></dt>
+      <dd>
+Example:  300 mm f/5 mirror, if  D<sub>err</sub>/D = 1% then  Z<sub>8 err</sub> = 1/20 lambda</dd>
+    </dl>
+  </li>
+
+	
+  <li>Artificial nulling has accuracy issues for large, fast mirrors</li>
+
+</ul>
+</li>
+
+
+<li>
+<h2> Inverted wavefront and when to invert it back </h2>
+<p>The analysis software does not know which side of the wavefront it is analyzing. This can mean it inverts the wavefront under certain circumstances that are too hard to predict. This will invert the zernike values and the whole wavefront. In particular when the Z8 spherical term is inverted the artificial null will not be correct. This will create a surface with a lot of SA that is not actually there. The software can guess when an inversion happens when one is testing a surface with an expected CC other than 0. A negative conic value should have a negative Z8 term. If it is positive one of two things are at fault. </p>
+<ol>
+<li>The surface analysis is inverted and needs to be inverted back to the correct one.</li>
+<li>The surface is not inverted and truly has a conic with the wrong sign from the desired surface.</li>
+</ol>
+<p>When the sign of Z8 does not match the sign of the desired conic the software will ask the user if the surface should be inverted. 
+The user then needs to decide.  For cases where a known paraboloidial mirror is being measured the answer will be yes. 
+If one is testing a sphere (Desired conic of 0.) or a mirror just staring to be corrected the user has a harder time deciding. One method is to heat a portion of the surface with a thumb before taking the interferogram.  That will raise the surface slightly.  If in the analysis that area is raise then the Z8 sign is correct.  If instead there is a dent then the z8 sign is inverted and the wavefront should been inverted.
+</p>
+<p>For convience the program remembers the answer to the question and will invert any other wavefront it thinks are inverted (sign of Z8 does not match sign of desired conic and you answered yes to the prompt to invert) util the program is restarted.</p>
+<p>One can always invert the wavefront later using the invert button on the surface controls.</p>
+</li>
+
+
+<li>
+<h2> Gaussian Blur filter </h2>
+<p>The gaussian blur filter is used to reduce the high spatial frequency noise added by the analysis.  One way to determine how large to make the filter value so that you are not removing actual surface detail is to take a few good Foucault images.  Then compare these to DFTFringe's Foucault simualtion with varius filter values.</p>
+</li>
+
+<li>
+<h2> How to deal with out of memory issues </h2>
+<p>As igrams get bigger DFTFring can run out of memory and crash when loading several
+wavefronts.  The wave front file is the size the mirror is in pixels in the interferogram.  There are a few things you can do to help.</p>
+<p>After you have a wavefront file save it, then delete it from the program before analyzing another.  If you are using the batch analyze feature you can select to save the wavefront file and delete it automatically on each interferogram. When you want to average them all together use the Average wave front command from the Files menu. It will average them all without keeping them all in memory.
+</p>
+<p>When processing interferograms in batch mode the program will warn the user when memory reaches a low threshold set in the preferences dialog under general tab.  That value should be set depending on the size of the wavefront generated.  For a 400 x 400 wavefront a value of 350 MB remaining is good.</p>
+<p>The other methods involve reducing the size of the wave front file.</p>
+<ol>
+<li> Reduce the size of the wavefront that is loaded or created.
+<ul>
+<p>You can change the size of wavefront that is loaded or generated in analysis. Use the preferences general tab and select down size.</p>
+<p>The issue with this is that the surface resolution is less and it may loose
+details of small thin zones like sharp turned edge.</p>
+</ul>
+</li>
+<li>Reduce the size of the interferogram when analyzing it.
+<ul>
+<p>You can tell the program to reduce the size of the interferogram before it analyzes it. Change the DFT control's "DFT Size" on the DFT Tab.  This will reduce the size of the image before it make the DFT.  The wave front size will match the DFT Size.</p>
+<p>You can only do this if the fringes are wide enough to still contain several pixels
+ofter the resize.  If the fringes become too small then you should not use this method.</P>  
+</ul>
+</li>
+</ol></p>
+</li>
+
+<li>
+<h2>Inspecting interferogram for correct exposure</h2>
+<table>
+<tr>
+<tc>
+<p width:50%><a href = intensitygraph.png><img src = intensitygraph.png width = "250" align = "right"/></a>Correct expose of the interferogram is key to getting a good analysis. You can inspect the intensity of the fringes using DFTFringe show intensity check box.</p>
+<p></p><br clear = all>
+
+<p>Next you can select the stay on top check box to keep the intensity graph visible.  If you don't check it the graph will sometime hide underneath the main window but can be called up from your windows tool bar or clicking on the show check box once more.
+<p>It is best to wait to view the graph until after you have outlined the mirror and pressed done.  That way the image will be cropped and centered on the mirror in the interferogram. If you did not check the show intensity checkk box to begin with you can always go back to the interferogram tab to see the interferogram tools where it resides.</p>
+<img src = overexposedgreen.png></p>
+
+
+<p>You can move the compass control to change the angle of the sample line.  The line always rotates around the center of the image.</p>
+<h3>What to look for in the intensity graph</h3>
+<ol><li>
+<p>When using a laser as the interferometer source there should only be one color present. If there are more then the image was over exposed.
+The example above is an over exposed geen interferogram.
+
+
+<li><p>If a color value goes up to the top of the graph then it is probably clipped and is over exposed. In the example above the green color is clipped.</p></li>
+<p> Below is a well exposed interferogram that also reduces fringe print through by using a darker exposure.</p>
+<a href = wellexposed.png ><img src = wellexposed.png width = 300 align = "bottom"></a>
+<p>You can also see the difference between well exposed and too high exposer in the DFT display.  The higher exposure creates more aliase side lobes than the lower exposure one.
+<a href =highExposure.png> <img src = highExposure.png width = "350" align = "center"></a>Exposure too high.
+<br clear = all><br><p>
+<a href = LowExposure.png> <img src = LowExposure.png width = "350" align = "center"></a> Exposure good.</p>
+<br clear = all>
+</ol>
+</p></li>
+</li>
+</ul>
+</BODY>
+</HTML>

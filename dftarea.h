@@ -53,6 +53,7 @@ public:
     double m_center_filter;
     cv::Mat vortex(QImage &img,
                double low);
+    bool success;
 public slots:
     void doDFT();
     void dftSizeChanged(const QString&);

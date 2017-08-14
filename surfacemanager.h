@@ -39,9 +39,10 @@
 #include "wftstats.h"
 #include "Circleoutline.h"
 #include "simulationsview.h"
+#include "contourview.h"
 #include "standastigwizard.h"
 
-
+enum configRESPONSE { YES, NO, ASK};
 struct textres {
     QTextEdit *Edit;
     QList<QString> res;
@@ -52,10 +53,10 @@ class SurfaceManager : public QObject
 public:
 
     explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
-                   ContourPlot *contourPlo = 0, GLWidget *glPlot = 0, metricsDisplay *mets = 0);
+                   contourView *contourView = 0, GLWidget *glPlot = 0, metricsDisplay *mets = 0);
     ~SurfaceManager();
     static SurfaceManager *get_instance(QObject *parent = 0, surfaceAnalysisTools *tools = 0,
-                                        ProfilePlot *profilePlot = 0, ContourPlot *contourPlot = 0,
+                                        ProfilePlot *profilePlot = 0, contourView *contourPlot = 0,
                                         GLWidget *glPlot = 0, metricsDisplay *mets = 0);
     static SurfaceManager *m_instance;
     bool loadWavefront(const QString &fileName);
@@ -71,6 +72,10 @@ public:
     void writeWavefront(QString fname, wavefront *wf, bool saveNulled);
     void useDemoWaveFront();
     void showUnwrap();
+    void initWaveFrontLoad();
+    void averageWavefrontFiles(QStringList files);
+    void downSizeWf(wavefront *wf);
+    wavefront *readWaveFront(const QString &fileName, bool &mirrorParamsChanged);
     inline wavefront *getCurrent(){
         if (m_wavefronts.size() == 0)
             return 0;
@@ -82,7 +87,7 @@ public:
     QVector<wavefront*> m_wavefronts;
     surfaceAnalysisTools *m_surfaceTools;
     ProfilePlot *m_profilePlot;
-    ContourPlot* m_contourPlot;
+    contourView* m_contourView;
     SimulationsView *m_simView;
     GLWidget *m_oglPlot;
     QImage m_allContours;
@@ -105,8 +110,15 @@ public:
 
     void average(QList<wavefront *> wfList);
     void subtractWavefronts();
+
     bool m_askAboutReverse;
     bool m_surface_finished;
+    configRESPONSE diamResp;
+    configRESPONSE rocResp;
+    configRESPONSE lambdResp;
+    int okToContinue;
+    bool okToUpdateSurfacesOnGenerateComplete;
+    void makeMask(wavefront* wf);
 private:
     QProgressDialog *pd;
     QThread *m_generatorThread;
@@ -125,7 +137,6 @@ signals:
     void deleteWavefront(int);
     void rotateTheseSig(int, QList<int>);
     void progress(int);
-    void showMessage(QString);
     void diameterChanged(double);
     void rocChanged(double);
     void nameChanged(QString, QString);
@@ -146,8 +157,10 @@ private slots:
     void deleteWaveFronts(QList<int> list);
     void average(QList<int> list);
     void transfrom(QList<int> list);
+    void filter(QList<int> list);
     void saveAllContours();
     void enableTools();
+
 public slots:
     void rotateThese(double angle, QList<int> list);
     void createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
@@ -158,6 +171,8 @@ public slots:
     void computeStandAstig(define_input *wizPage, QList<rotationDef *>);
     void ObstructionChanged();
     void showAll3D(GLWidget *);
+    void loadComplete();
+    void memoryLow();
 };
 
 
@@ -167,6 +182,7 @@ class surfaceGenerator : public QObject {
 public:
     surfaceGenerator(SurfaceManager *sm);
     ~surfaceGenerator();
+
 
 public slots:
     void process(int wavefront_index, SurfaceManager *sm);
@@ -181,6 +197,7 @@ private:
     SurfaceManager* m_sm;
     QMutex sync;
     zern_generator * m_zg;
+
 };
 
 #endif // SURFACEMANAGER_H

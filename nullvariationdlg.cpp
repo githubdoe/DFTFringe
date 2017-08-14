@@ -185,7 +185,7 @@ void nullVariationDlg::on_ComputeSim_clicked()
     double roc_tol = ui->rocDelta->text().toDouble() * mul;
     double d_tol = ui->diameterDelta->text().toDouble() * mul;
     double diam =  ui->diameter->text().toDouble() * mul;
-    double rad = diam/2;
+
     double roc = ui->roc->text().toDouble() * mul;
     mirrorDlg *md = mirrorDlg::get_Instance();
     double lambda = md->lambda;

@@ -6,12 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>423</width>
+    <width>519</width>
     <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"> QPushButton{ border-style: outset;
+                        border-width: 4px;
+                        border-radius: 7px;
+                        border-color: darkgray;
+                        font: normal 12px;
+                           padding: 2px; }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

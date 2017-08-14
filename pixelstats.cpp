@@ -143,7 +143,7 @@ void CanvasPicker::select( const QPoint &pos )
             QwtPlotMarker *m = static_cast<QwtPlotMarker *>( *it );
 
             const QwtScaleMap xMap = plot()->canvasMap(2);
-            double x = plot()->invTransform(m->xAxis(), pos.x() );
+
             const double cx = xMap.transform( m->xValue());
 
             double d = px - cx;
@@ -285,7 +285,7 @@ void CanvasPicker::shiftCurveCursor( bool up )
  * ******************************************************************************/
 pixelStats::pixelStats(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::pixelStats), slopeLimitArcSec(.5)
+    ui(new Ui::pixelStats), slopeLimitArcSec(1.)
 {
     ui->setupUi(this);
     ui->splitter->setHandleWidth(6);
@@ -297,7 +297,7 @@ pixelStats::pixelStats(QWidget *parent) :
     ui->verticalLayout->addWidget(scrollArea);
     scrollArea->setWidgetResizable(true);
     CanvasPicker *cp = new CanvasPicker(ui->histo);
-    connect(cp,SIGNAL(markerMoved()), this, SLOT(on_bounds_valueChanged()));
+    connect(cp,SIGNAL(markerMoved()), this,SLOT(bounds_valueChanged()));
 
     setWindowFlags(    Qt::WindowStaysOnTopHint);
 
@@ -312,8 +312,8 @@ pixelStats::~pixelStats()
 
 void pixelStats::setData(wavefront *w){
    m_wf = w;
-   g_ub = m_wf->min +  (m_wf->max-m_wf->min) * .8;
-   g_lb = m_wf->min +  (m_wf->max-m_wf->min) * .2;
+   g_ub = m_wf->min +  (m_wf->max-m_wf->min) * .9;
+   g_lb = m_wf->min +  (m_wf->max-m_wf->min) * .1;
 
    updateSurface();
    updateHisto();
@@ -326,140 +326,182 @@ cv::Mat mat2gray(const cv::Mat& src)
     return dst;
 }
 cv::Mat slope(wavefront * wf){
-    cv::Mat gradx(wf->data.rows,wf->data.cols, CV_64F),grady(wf->data.rows,wf->data.cols, CV_64F), mag;
+    int half = wf->data.cols/2;
+    cv::Mat gradx = cv::Mat::zeros(wf->data.rows,wf->data.cols, CV_64F);
+    cv::Mat grady = cv::Mat::zeros(wf->data.rows,wf->data.cols, CV_64F);
+    cv::Mat mag;
+    cv::Mat avgX = gradx.clone();
+    cv::Mat avgY = grady.clone();
     double wAdjust = 550./wf->lambda;
-    double wavePerPixel = wAdjust* (wf->diameter/(2 * (wf->m_outside.m_radius)))/
+    double mmPerPixel = wf->diameter/(2 * (wf->m_outside.m_radius));
+    double wavePerPixel = wAdjust* (mmPerPixel)/
                                 (wf->lambda * 1.e-6);
+    int pixelsPerInch = 1.;//12 /mmPerPixel;
+    int dist =1;//pixelsPerInch/2;
+
 
     const double radToArcSec = 206265.;
-    for(int x = 0; x < wf->data.cols-1; ++x){
-        for (int y = 0; y < wf->data.rows-1; ++y){
-            if (wf->workData.at<bool>(x,y) && wf->workMask.at<bool>(x+1,y)){
-                double h  = wf->workData.at<double>(x,y ) -
-                                               wf->workData.at<double>(x+1,y);
+
+    for (int y = 0; y < wf->data.rows; ++y){
+        for (int x = 0; x < wf->data.cols; ++x){
+            double avg = 0;
+            if (wf->workMask.at<bool>(y,x) && (x + pixelsPerInch) < wf->workData.cols   &&
+                    wf->workMask.at<bool>(y,x+pixelsPerInch)){
+                for (int i = 0; i < pixelsPerInch; ++i){
+                        avg += wf->workData(y,x+i);
+                }
+                avgX.at<double>(y,x) = avg/pixelsPerInch;
+
+            }
+        }
+    }
+
+    for (int x = 0; x < wf->data.cols; ++x){
+        for (int y = 0; y < wf->data.rows; ++y){
+            double avg = 0;
+            if (wf->workMask.at<bool>(y,x) && (y + pixelsPerInch) < wf->workData.rows   &&
+                    wf->workMask.at<bool>(y + pixelsPerInch)){
+                for (int i = 0; i < pixelsPerInch; ++i){
+                    avg += wf->workData(y+i,x);
+                }
+                avgY.at<double>(y,x) = avg/pixelsPerInch;
+            }
+        }
+    }
+    for(int y = 0; y < wf->data.rows-1; ++y){
+
+         for (int x = 0; x < wf->data.cols-1; ++x){
+            if (wf->workMask.at<bool>(y,x) && x+dist < wf->data.cols && wf->workMask.at<bool>(y,x+1)){
+                double h  = avgX.at<double>(y,x ) - avgX.at<double>(y,x+dist);
+                if ( y == half){
+                    //qDebug() << x << h << avgX.at<double>(y,x);
+                }
                 double slope = atan2( h, wavePerPixel) * radToArcSec;
-                gradx.at<double>(x,y) = fabs(slope);
+                gradx.at<double>(y,x) = fabs(slope);
 
             }
             else{
-                gradx.at<double>(x,y) = 0.;
+                gradx.at<double>(y,x) = 0.;
             }
-            if (wf->workMask.at<bool>(x,y) && wf->workMask.at<bool>(x,y+1)){
-                double h = wf->workData.at<double>(x,y ) - wf->workData.at<double>(x,y+1);
+            if (wf->workMask.at<bool>(y,x) && y+dist < wf->data.rows && wf->workMask.at<bool>(y+1,x)){
+                double h = avgY.at<double>(y,x ) - avgY.at<double>(y+dist,x);
                 double slope = atan2(h, wavePerPixel) * radToArcSec;
-                grady.at<double>(x,y) = fabs(slope);
+                grady.at<double>(y,x) = fabs(slope);
             }
             else{
-                grady.at<double>(x,y) = 0.;
+                grady.at<double>(y,x) = 0.;
             }
         }
     }
 
     cv::magnitude(gradx, grady, mag);
-    cv::Mat maskedMag;
+    //cv::imshow("gradx", mat2gray(mag));
+    //cv::waitKey(1);
     mag.copyTo(mag, wf->workMask);
+/*
+    QwtPlot *pl = new QwtPlot();
+    QwtPlotCurve *curve1 = new QwtPlotCurve("middle");
+    QPolygonF points1;
+
+    for (int x = 0; x < mag.cols; ++x){
+
+        points1 << QPointF(x, gradx.at<double>(half,x));
+        //qDebug() << points1.last().y();
+    }
+
+    curve1->setSamples(points1);
+    curve1->attach(pl);
+    curve1->setPen( Qt::red);
+    pl->replot();
+    pl->show();
+*/
     return mag;
 }
-
+#include "dftarea.h"
 void pixelStats::updateSurface(){
-
-    cv::Mat sur = cv::Mat::zeros(m_wf->data.rows, m_wf->data.cols, CV_8UC3);
-    double ub,lb;
-    ub = g_ub;
-    lb = g_lb;
-    for (int x = 0; x < sur.cols; ++x){
-        for (int y = 0; y < sur.rows; ++y){
-            double v = m_wf->workData.at<double>(y,x);
-            if (m_wf->workMask.at<bool>(x,y)){
-                if (v > ub){
-                    sur.at<cv::Vec3b>(y,x) =cv::Vec3b(255,0,0);
-                }
-                else if (v < lb){
-                    sur.at<cv::Vec3b>(y,x) = cv::Vec3b(0,0,255);
-                }
-                else sur.at<cv::Vec3b>(y,x) = cv::Vec3b(220,220,220);
-            }
-        }
-    }
-    if (true){
-        cv::Mat mag = slope(m_wf);
-
-        //cv::imshow("mag", mat2gray(mag));
-        //cv::waitKey(1);
-
-        double vmin,vmax;
-
-        cv::minMaxLoc(mag, &vmin, &vmax,0,0, m_wf->workMask);
+    try {
+        cv::Mat sur = cv::Mat::zeros(m_wf->data.rows, m_wf->data.cols, CV_8UC3);
+        double ub,lb;
+        ub = g_ub;
+        lb = g_lb;
 
         for (int x = 0; x < sur.cols; ++x){
             for (int y = 0; y < sur.rows; ++y){
-                double v = mag.at<double>(y,x);
-                if (m_wf->workMask.at<bool>(x,y)){
-                    if (fabs(v) > slopeLimitArcSec){
-                        int c = 255 -125 * (fabs(v)-slopeLimitArcSec)/vmax;
-                        sur.at<cv::Vec3b>(y,x) =cv::Vec3b(c,c,0);
+                double v = m_wf->workData.at<double>(y,x);
+                if (m_wf->workMask.at<bool>(y,x)){
+                    if (v > ub){
+                        sur.at<cv::Vec3b>(y,x) =cv::Vec3b(255,0,0);
                     }
-                    else mag.at<double>(y,x) = 0;
+                    else if (v < lb){
+                        sur.at<cv::Vec3b>(y,x) = cv::Vec3b(0,0,255);
+                    }
+                    else sur.at<cv::Vec3b>(y,x) = cv::Vec3b(220,220,220);
                 }
             }
         }
-/*
-        // make contour plot
-        ContourPlot *cp = new ContourPlot();
+        if (true){
+            cv::Mat mag = slope(m_wf);
+
+            //cv::imshow("mag", mat2gray(mag));
+            //cv::waitKey(1);
+
+            double vmin,vmax;
+
+            cv::minMaxLoc(mag, &vmin, &vmax,0,0, m_wf->workMask);
+
+            for (int x = 0; x < sur.cols; ++x){
+                for (int y = 0; y < sur.rows; ++y){
+                    double v = mag.at<double>(y,x);
+                    if (m_wf->workMask.at<bool>(y,x)){
+                        if (fabs(v) > slopeLimitArcSec){
+                            int c = 255 -125 * (fabs(v)-slopeLimitArcSec)/vmax;
+                            sur.at<cv::Vec3b>(y,x) =cv::Vec3b(c,c,0);
+                        }
+                        else mag.at<double>(y,x) = 0;
+                    }
+                }
+            }
 
 
-        wavefront * wf = new wavefront(*m_wf);
+            if (ui->minmaxloc->isChecked()){
+                double minv,maxv;
+                cv::Point minp,maxp;
+                cv::minMaxLoc(m_wf->workData, &minv,&maxv, &minp,&maxp, m_wf->workMask );
+
+                cv::circle(sur, maxp, 10, cv::Scalar(255,0,0));
+                cv::circle(sur, minp, 10, cv::Scalar(0,0,255));
+            }
+            cv::flip(sur,sur,0);
 
 
-        wf->data = wf->workData = mag;
-        wf->workMask = m_wf->workMask;
-        cv::Scalar mean,std;
-        cv::meanStdDev(wf->data,mean,std);
-        qDebug() << std[0] << mean[0];
-        wf->std = std[0] ;
-        wf->useSANull = false;
-        wf->min = vmin;
-        wf->max =  vmax;
-        wf->name = QString("slope error");
 
-        cp->setSurface(wf);
-        cp->m_zRangeMode = "Min/Max";
-        cp->showContoursChanged(.1);
-        cp->setZRange();
-        cp->resize(500,500);
-        cp->replot();
-        cp->show();*/
+            QImage tmp = QImage((uchar*)sur.data,
+                                sur.cols,
+                                sur.rows,
+                                sur.step,
+                                QImage::Format_RGB888).copy();
+
+            //ui->image->resize(m_wf->data.cols, m_wf->data.rows);
+            // set a scaled pixmap to a w x h window keeping its aspect ratio
+            ui->image->setPixmap(QPixmap::fromImage(tmp));//.scaled(labelSize, Qt::KeepAspectRatio)));
+            if (!ui->fit->isChecked())
+                ui->image->adjustSize();
+
+        }
     }
+    catch (const std::bad_alloc &ex)
+    {
+        // clean up here, e.g. save the session
+        // and close all config files.
+        qDebug() << ex.what();
 
-    if (ui->minmaxloc->isChecked()){
-        double minv,maxv;
-        cv::Point minp,maxp;
-        cv::minMaxLoc(m_wf->workData, &minv,&maxv, &minp,&maxp, m_wf->workMask );
-
-        cv::circle(sur, maxp, 10, cv::Scalar(255,0,0));
-        cv::circle(sur, minp, 10, cv::Scalar(0,0,255));
     }
-    cv::flip(sur,sur,0);
-
-
-
-    QImage tmp = QImage((uchar*)sur.data,
-                        sur.cols,
-                        sur.rows,
-                        sur.step,
-                        QImage::Format_RGB888).copy();
-
-    //ui->image->resize(m_wf->data.cols, m_wf->data.rows);
-    // set a scaled pixmap to a w x h window keeping its aspect ratio
-    ui->image->setPixmap(QPixmap::fromImage(tmp));//.scaled(labelSize, Qt::KeepAspectRatio)));
-    if (!ui->fit->isChecked())
-        ui->image->adjustSize();
-
-
+    return;
 }
 
 void  pixelStats::updateHisto(){
-
+    if (m_wf->min == m_wf->max)
+        return;
     ui->histo->detachItems( QwtPlotItem::Rtti_PlotCurve);
     ui->histo->detachItems( QwtPlotItem::Rtti_PlotMarker);
     ui->histo->detachItems(QwtPlotItem::Rtti_PlotItem);
@@ -503,7 +545,7 @@ void  pixelStats::updateHisto(){
 
     histPlot->setSamples(histData);
     histPlot->attach(ui->histo);
-    ui->histo->setAxisTitle(QwtPlot::xBottom,"error waves");
+    ui->histo->setAxisTitle(QwtPlot::xBottom,"Error in waves on wavefront");
     ui->histo->setTitle("");
     //  ...a vertical line at upper bound
     QwtPlotMarker *muY = g_ubMarker = new QwtPlotMarker();
@@ -547,7 +589,7 @@ void  pixelStats::updateHisto(){
 
 
 
-void pixelStats::on_bounds_valueChanged()
+void pixelStats::bounds_valueChanged()
 {
     updateSurface();
 }

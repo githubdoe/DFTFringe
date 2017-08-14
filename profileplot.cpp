@@ -43,6 +43,7 @@
 #include <qlayout.h>
 #include "settings2.h"
 #include "mirrordlg.h"
+#include <qwt_plot_textlabel.h>
 
 #define PITORAD  M_PI/180.;
 double g_angle = 270. * PITORAD; //start at 90 deg (pointing east)
@@ -81,8 +82,8 @@ bool ProfilePlot::eventFilter( QObject *object, QEvent *event )
 
 ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     QWidget( parent ), m_wf(0), m_tools(tools),
-    dragging(false),offsetType("Middle"),
-    ui(new Ui::ProfilePlot),m_showNm(1.), m_showSurface(1.)
+     m_showSurface(1.),m_showNm(1.),dragging(false),
+     offsetType("Middle"),ui(new Ui::ProfilePlot)
 {
     zoomed = false;
     m_plot = new QwtPlot(this);
@@ -99,6 +100,32 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     connect(OneOnly, SIGNAL(clicked()), this, SLOT(showOne()));
     connect(ShowAll, SIGNAL(clicked()), this, SLOT(showAll()));
     l1->addStretch();
+    showSlopeError = new QCheckBox("Show Slope: ");
+    slopeLimitSB = new QDoubleSpinBox();
+
+
+    QSettings set;
+    slopeLimitArcSec = set.value("slopeLimitArcSec", 1.).toDouble();
+    slopeLimitSB->setValue(slopeLimitArcSec);
+    slopeLimitSB->setPrefix(" > ");
+    slopeLimitSB->setSuffix(" arcseconds on wavefront");
+    slopeLimitSB->setToolTip("<html><head/><body><p>Besides PV or RMS measurements of the wavefrontit is also important"
+                             " to check for slope values that exceed 1 arc second on the wave front.</p><p>This display"
+                             " colors any pixel whoes neighbor pixel creates a slope in the wavefront greater than the "
+                             "value set in this control in arc seconds.</p><p>These values are highly dependent on the "
+                             "smoothing value used for the wavefront. The usual method of choosing a good smoothing value "
+                             "is</p><p>to look at the smoothed simulated foucault image until it matches what the real "
+                             "Foucault image is or until it seems similar to other foucault images </p><p>you have seen."
+                             "There is always the risk that too much smoothing will reduce the slope of actual details.</p></body></html>");
+    m_showSlopeError = set.value("slopeShow", true).toBool();
+    if (!m_showSlopeError)
+        slopeLimitSB->hide();
+    showSlopeError->setChecked(m_showSlopeError);
+    connect(slopeLimitSB, SIGNAL(valueChanged(double)), this, SLOT(slopeLimit(double)));
+    connect(showSlopeError,SIGNAL(clicked(bool)), this, SLOT(showSlope(bool)));
+
+    l1->addWidget(showSlopeError);
+    l1->addWidget(slopeLimitSB);
     l1->addWidget(showNmCB);
     l1->addWidget(showSurfaceCB);
     l1->addWidget(OneOnly);
@@ -183,6 +210,26 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     ui->setupUi(this);
     populate();
 }
+void ProfilePlot::showSlope(bool val){
+    m_showSlopeError = val;
+    if (!val)
+        slopeLimitSB->hide();
+    else
+        slopeLimitSB->show();
+
+    QSettings set;
+    set.setValue("slopeShow",val);
+    populate();
+    m_plot->replot();
+}
+void ProfilePlot::slopeLimit(double val){
+    slopeLimitArcSec = val;
+    QSettings set;
+    set.setValue("slopeLimitArcSec",val);
+    populate();
+    m_plot->replot();
+}
+
 void ProfilePlot::showNm(bool flag){
     m_showNm = (flag) ? 550. : 1.;
     setSurface(m_wf);
@@ -264,10 +311,11 @@ void ProfilePlot::setSurface(wavefront * wf){
 QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     QPolygonF points;
     double steps = 1./wf->m_outside.m_radius;
+    double radius = wf->diameter/2.;
     for (double rad = -1.; rad < 1.; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
-        double radx = rad * wf->diameter/2.;
+        double radx = rad * radius;
         double e = 1.;
         mirrorDlg &md = *mirrorDlg::get_Instance();
         if (md.isEllipse()){
@@ -286,10 +334,34 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
         else
             points << QPointF(radx, 0.0);
     }
+    if (m_showSlopeError){
+        double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
+        double xDel = points[0].x() - points[1].x();
+        double hDelLimit =m_showNm *  m_showSurface * ((550./m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /550.e-6);
+
+        for (int i = 0; i < points.size()-1; ++i){
+            double hdel = (points[i].y()- points[i+1].y());
+            if (fabs(hdel) > hDelLimit){
+                QVector<QPointF> pts;
+                QwtPlotCurve *limitCurve = new QwtPlotCurve;
+                pts<< points[i] << points[i+1];
+                limitCurve->setSamples(pts);
+
+                limitCurve->setPen(QPen(QColor("orange"),4));
+                limitCurve->setLegendAttribute(QwtPlotCurve::LegendShowSymbol,false );
+                limitCurve->setLegendAttribute(QwtPlotCurve::LegendShowLine,false );
+                limitCurve->setItemAttribute(QwtPlotCurve::Legend,false);
+                limitCurve->attach( m_plot);
+
+            }
+        }
+    }
     return points;
 }
 void ProfilePlot::populate()
 {
+
+
     compass->setGeometry(QRect(70,5,70,70));
     QString tmp("nanometers");
     if (m_showNm == 1.)
@@ -305,6 +377,23 @@ void ProfilePlot::populate()
     grid->setMajorPen( Qt::black,0.0,Qt::DotLine);
     if (m_wf == 0)
         return;
+    QSettings settings;
+    int smoothing = settings.value("GBValue", 0).toInt();
+    m_plot->detachItems(QwtPlotItem::Rtti_PlotTextLabel);
+    if (m_wf->m_outside.m_radius > 0 && smoothing > 1 && settings.value("GBlur", false).toBool()){
+        double val = m_wf->diameter * (double)smoothing/(m_wf->m_outside.m_radius);
+        QString t = QString().sprintf("Surface Smoothing diameter %6.1lf mm %6.2lf%%", val,100.* (double)smoothing/(m_wf->m_outside.m_radius)  );
+        QwtText title(t);
+        title.setRenderFlags( Qt::AlignHCenter | Qt::AlignTop );
+
+        QFont font;
+        font.setPointSize(12);
+        title.setFont( font );
+
+        QwtPlotTextLabel *titleItem = new QwtPlotTextLabel();
+        titleItem->setText( title );
+        titleItem->attach( m_plot );
+    }
     // axes
     double lower = -m_wf->diameter/2 - 10;
     double upper = m_wf->diameter/2 + 10;
@@ -321,12 +410,18 @@ void ProfilePlot::populate()
     // Insert new curves
     switch (type) {
     case 0:{
+
         QwtPlotCurve *cprofile = new QwtPlotCurve( "" );
         cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
         cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
         cprofile->setPen( Qt::black );
         cprofile->attach( m_plot );
-        cprofile->setSamples( createProfile( m_showNm * m_showSurface,m_wf) );
+        QPolygonF points = createProfile( m_showNm * m_showSurface,m_wf);
+        cprofile->setSamples( points );
+
+
+
+
 
         break;
     }

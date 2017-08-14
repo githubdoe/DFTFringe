@@ -116,6 +116,7 @@ bool LenseTableModel::removeRows(int row, int count, const QModelIndex &parent)
     beginRemoveRows(parent, row, row + count - 1);
     m_data->removeAt(row);
     endRemoveRows();
+    return true;
 }
 
 

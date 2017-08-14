@@ -111,7 +111,7 @@ public:
 };
 
 wftStats::wftStats(mirrorDlg *md):
-     wftPlot(new QwtPlot(0)), zernPlot(new QwtPlot(0)), wftHistogram(new QwtPlot(0)),md(md),m_showWftNames(false),
+     wftPlot(new QwtPlot(0)), zernPlot(new QwtPlot(0)), wftHistogram(new QwtPlot(0)),m_showWftNames(false),md(md),
      m_doInputs(true), m_doZernGroup(false), zernFrom(0),zernTo(5)
 {
 }

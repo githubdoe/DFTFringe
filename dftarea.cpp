@@ -25,6 +25,7 @@
 #include "settings2.h"
 #include "myutils.h"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "utils.h"
 using namespace cv;
 
 cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data){
@@ -194,8 +195,8 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     if (scaleFactor < 1.){
 
         cv::resize(roi,roi, cv::Size(0,0), scaleFactor, scaleFactor,INTER_AREA);
-        double roicx = (roi.cols-1)/2.;
-        double roicy = (roi.rows-1)/2.;
+        double roicx = roi.cols/2.-.5;
+        double roicy = roi.rows/2.-.5;
         m_outside = CircleOutline(QPointF(roicx,roicy),roicx);
         m_center = CircleOutline(QPointF((roicx - centerDx * scaleFactor), (roicy - centerDy * scaleFactor)),
                                  m_center.m_radius * scaleFactor);
@@ -247,7 +248,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
 
     m_mask = makeMask(m_outside,m_center,*planes);
     if (Settings2::showMask())
-        showData("Mask", m_mask);
+        showData("Maskdft", m_mask);
     cv::Mat tmpMask;
 
     planes[0].copyTo(tmpMask,m_mask);    // Convert image to binary
@@ -292,6 +293,7 @@ void shiftDFT(cv::Mat &magI){
 }
 
 void showData(const std::string& txt, cv::Mat mat, bool useLog){
+
     cv::Mat tmp = mat.clone();
     if (useLog){
         tmp = mat+1;
@@ -339,6 +341,7 @@ QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, doub
 
 void DFTArea::doDFT(){
 
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     QImage img = igramArea->igramImage;
 
     cv::Mat complexI = grayComplexMatfromImage(img);
@@ -374,8 +377,9 @@ void DFTArea::doDFT(){
 
     //emit selectDFTTab();
     update();
-    if (Settings2::showDFT())
-        emit dftReady(magIImage);     //Creates a thumbnail dft area
+    //if (Settings2::showDFT())
+        //emit dftReady(magIImage);     //Creates a thumbnail dft area
+    QApplication::restoreOverrideCursor();
 }
 void DFTArea::gamma(int i){
     double v = 1. + 5. * (double)i/99.;
@@ -474,25 +478,26 @@ void qg_path_follower_vortex (Size size, double *phase, double *qmap,
   }
   delete[] flags;
 }
-MEMORYSTATUSEX statex;
+
 
 
 cv::Mat DFTArea::vortex(QImage &img, double low)
   {
-    try {
-    statex.dwLength = sizeof (statex);
-    GlobalMemoryStatusEx (&statex);
-    qDebug() <<
-          QString().sprintf("RAM2: %ld %lldMeg ",statex.dwMemoryLoad,statex.ullAvailPhys/1048576 );
 
+    try
+    {
+
+
+    int startMem = showmem("start Vortex");
     cv::Mat image = grayComplexMatfromImage(img);
-    cv::Mat imagePlanes[2];
-    split(image,imagePlanes);
 
+    cv::Mat imageMat;
+    image.convertTo(imageMat, numType);
+    image.release();
 
-    int xsize = image.cols;
-    int ysize = image.rows;
-    int nx = xsize, ny = ysize;
+    int xsize = imageMat.cols;
+    int ysize = imageMat.rows;
+
     int size = xsize*ysize;
     double smooth = .01 * m_vortexDebugTool->m_smooth * xsize/2.;
     double *dir = new double[size];
@@ -511,8 +516,28 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     double *spiralRe = new double [size];
     double *spiralIm = new double[size];
 
-    // Create rho and theta arrays for later use.
 
+
+
+
+    if (m_vortexDebugTool->m_showInput){
+        cv::Mat tmp = cv::Mat(ysize,xsize,numType, imRe);
+        cv::Mat xx;
+        tmp.convertTo(xx,CV_32F);
+        cv::imshow("input", xx);
+        cv::waitKey(1);
+    }
+
+
+    cv::Mat fdomMat;
+    cv::Mat fdomPlanes[2];
+
+
+    dft(imageMat,fdomMat);
+    split(fdomMat, fdomPlanes);
+
+
+    // Create rho and theta arrays for later use.
     int *ix = new int[xsize];
     int *iy = new int[ysize];
     for (int i=0; i<=xsize/2; ++i) ix[i] = -i;
@@ -531,52 +556,8 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
         theta[base+i] = atan2 (iy[j], ix[i]);
       }
     }
-
-    // Prepare the image and convert it to doubles.
-    float *pIm = imagePlanes[0].ptr<float>(0);
-    for (int i=0; i<size; ++i) {
-      imRe[i] = (double)(pIm[i]);
-
-    }
-/*
-    QwtPlot *pl1 = new QwtPlot();
-    QwtPlotCurve *curve1 = new QwtPlotCurve("DFT image");
-    QPolygonF points1;
-    for (int x = 0; x < xsize; ++x){
-        double v = imRe[size/2 + x];
-        points1 << QPointF(x,v);
-    }
-    curve1->setSamples(points1);
-    curve1->attach(pl1);
-
-
-
-    pl1->resize(1000,400);
-    pl1->show();
-*/
-    if (m_vortexDebugTool->m_showInput){
-        cv::Mat tmp = cv::Mat(ysize,xsize,numType, imRe);
-        cv::Mat xx;
-        tmp.convertTo(xx,CV_32F);
-        cv::imshow("input", xx);
-        cv::waitKey(1);
-    }
-
-    // Take the Fourier transform.
-    cv::Mat imPlanes[2] = {cv::Mat(Size(nx,ny), numType, imRe),
-                           cv::Mat::zeros(Size(nx,ny),numType)};
-
-    cv::Mat imMat;
-    cv::Mat fdomMat;
-    cv::Mat fdomPlanes[2];
-    merge(imPlanes,2, imMat);
-
-    dft(imMat,fdomMat);
-    split(fdomMat, fdomPlanes);
-
-    //p = fftw_plan_dft_2d (ysize, xsize, im, fdom, FFTW_FORWARD, FFTW_ESTIMATE);
-    //fftw_execute (p);
-
+    delete[] ix;
+    delete[] iy;
     // High-pass filter the Fourier domain to remove the background.
     double *planes[2] = {fdomPlanes[0].ptr<double>(0), fdomPlanes[1].ptr<double>(0)};
     if (low > 0)
@@ -597,22 +578,28 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
 
     //p = fftw_plan_dft_2d (ysize, xsize, fdom, im, FFTW_BACKWARD, FFTW_ESTIMATE);
     //fftw_execute (p);
-    dft(fdomMat, imMat, DFT_INVERSE);
-    split(imMat,imPlanes);
+    dft(fdomMat, imageMat, DFT_INVERSE);
+    cv::Mat imPlanes[2];
+    split(imageMat,imPlanes);
+
+
 
     imPlanes[0]/= size;
     cv::Mat tmp;
     imPlanes[0].copyTo(tmp, m_mask);
     imPlanes[0] = tmp.clone();
+    tmp.release();
     // Normalize the image by removing the exterior and centering values.
     cv::Scalar mean,std;
     cv::meanStdDev(imPlanes[0],mean,std, m_mask);
     double sum = 0;
     double *q = imPlanes[0].ptr<double>(0);
 
-    merge(imPlanes,2, imMat);
+    merge(imPlanes,2, imageMat);
 
-    dft(imMat,fdomMat);
+    dft(imageMat,fdomMat);
+    imageMat.release();
+
     double dc = fdomMat.at<double>(0,0,0);
     dc/=size;
     int count = 0;
@@ -633,7 +620,6 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     if (0) { //(0 == strcmp (what, "im2")) {
         showData("im border added", imPlanes[0].clone());
     }
-    merge(imPlanes,2,imMat);
 
     // Calculate the intermediate values d1 and d2.
 
@@ -641,6 +627,8 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
       spiralRe[i] = cos(theta[i]);
       spiralIm[i] = sin(theta[i]);
     }
+    delete[] theta;
+
     split(fdomMat,fdomPlanes);
     double *fdomRe = (double*)(fdomPlanes[0].data);
     double *fdomIm = (double *)(fdomPlanes[1].data);
@@ -685,8 +673,12 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     cv::Mat rPlanes[2] = {cv::Mat::zeros(Size(xsize,ysize),numType), cv::Mat::zeros(Size(xsize,ysize),numType)};
     cv::Mat d1Planes[2];
     cv::Mat d2Planes[2];
+
     split(d1Mat,d1Planes);
+    d1Mat.release();
     split(d2Mat,d2Planes);
+    d2Mat.release();
+
     double *d1Re = (double *)(d1Planes[0].data);
     double *d1Im = (double *)(d1Planes[1].data);
     double *d2Re = (double *)(d2Planes[0].data);
@@ -699,16 +691,21 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
       rRe[i] = d1Re[i]*d1Re[i] - d1Im[i]*d1Im[i] - imRe[i]*d2Re[i];
       rIm[i] = d1Re[i]*d1Im[i] + d1Im[i]*d1Re[i] - imRe[i]*d2Im[i];
     }
+
     //smooth = 0;
     if (smooth > 0) {
+
         merge(rPlanes,2, rMat);
+
         cv::Mat temp;
         cv::Mat tempPlanes[2];
       // Low-pass filter r to smooth it.
       dft(rMat,temp);
+
       //p = fftw_plan_dft_2d (ysize, xsize, r, temp, FFTW_FORWARD, FFTW_ESTIMATE);
       //fftw_execute (p);
       split(temp,tempPlanes);
+
       double *tempRe = (double *)(tempPlanes[0].data);
       double *tempIm = (double *)(tempPlanes[1].data);
 
@@ -717,13 +714,21 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
         tempRe[i] *= a;
         tempIm[i] *= a;
       }
-      //showData("smooth", tempPlanes[0].clone());
+      delete[] rho;
+
       merge(tempPlanes,2,temp);
+
+      tempPlanes[0].release();
+      tempPlanes[1].release();
+
       dft(temp,rMat,DFT_INVERSE);
+      temp.release();
+
       //p = fftw_plan_dft_2d (ysize, xsize, temp, r, FFTW_BACKWARD, FFTW_ESTIMATE);
       //fftw_execute (p);
       rMat/= size;
       split(rMat,rPlanes);
+      rMat.release();
     }
 
     for (int i=0; i<size; ++i)
@@ -752,19 +757,23 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
       imIm[i] = d1Re[i]*cos(-dir[i]) - d1Im[i]*sin(-dir[i]);
 
       // Display the isolated side lobe.
-    cv::Mat sideLobe;
-    merge(imPlanes,2,sideLobe);
-    shiftDFT(sideLobe);
-    dft(sideLobe,fdomMat);
-    shiftDFT(fdomMat);\
     if (m_vortexDebugTool->m_showFdom3){
+        cv::Mat sideLobe;
+        merge(imPlanes,2,sideLobe);
+        shiftDFT(sideLobe);
+        dft(sideLobe,fdomMat);
+        shiftDFT(fdomMat);\
         showMag(fdomMat, true, "fdom3");
+        sideLobe.release();
     }
+
     cv::Mat phase(Size(xsize,ysize), numType);
     double *p = (double *)(phase.data);
     for (int i=0; i<size; ++i) {
        p[i] = atan2 (imIm[i], imRe[i]);
      }
+    imPlanes[0].release();
+    imPlanes[1].release();
     // mask to only the mirror portion.
     phase.copyTo(tmp, m_mask);
     phase = tmp.clone();
@@ -774,47 +783,41 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
         cv::imshow(" wrapped ", tt);
         cv::waitKey(1);
     }
+
     delete[] qmap;
     delete[] orient;
     delete[] d1[0];
     delete[] d1[1];
     delete[] d2[0];
     delete[] d2[1];
-    delete[] rho;
-    delete[] theta;
+
     delete[] spiralRe;
     delete[] spiralIm;
     delete[] dir;
     delete[] path;
-    GlobalMemoryStatusEx (&statex);
-    qDebug() <<
-          QString().sprintf("RAM good: %ld %lldMeg ",statex.dwMemoryLoad,statex.ullAvailPhys/1048576LL );
+    tmp.release();
+
     return phase;
     }
     catch (std::bad_alloc &e){
-        GlobalMemoryStatusEx (&statex);
-        qDebug() <<
-              QString().sprintf("Bad alloc: %ld %lldMeg",statex.dwMemoryLoad,statex.ullAvailPhys/1048576 );
+        showmem();
         qDebug() << QString().sprintf("Error %s", e.what());
-       cv::Mat phase = cv::Mat::zeros(Size(100,100), numType);
-       return phase;
+       //cv::Mat phase = cv::Mat::zeros(Size(100,100), numType);
+
+       return cv::Mat();
     }
     catch ( std::exception &e){
-        GlobalMemoryStatusEx (&statex);
-        qDebug() <<
-              QString().sprintf("Bad alloc: %ld %lld Meg",statex.dwMemoryLoad,statex.ullAvailPhys/1048576 );
+
         qDebug() << QString().sprintf(" some Error %s", e.what());
-       cv::Mat phase = cv::Mat::zeros(Size(100,100), numType);
+       cv::Mat phase = cv::Mat::zeros(Size(0,0), numType);
        return phase;
     }
     catch (...){
-        GlobalMemoryStatusEx (&statex);
-        qDebug() <<
-              QString().sprintf("Bad alloc: %ld %lld ",statex.dwMemoryLoad,statex.ullAvailPhys/1024LL );
         qDebug() << QString().sprintf(" Unknown error ");
        cv::Mat phase = cv::Mat::zeros(Size(100,100), numType);
        return phase;
     }
+
 }
 cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask){
     cv::Mat_<double> coeff(3,1);
@@ -857,6 +860,8 @@ void DFTArea::makeSurface(){
 
     if (!tools->wasPressed)
         return;
+
+
     if (igramArea->igramImage.isNull()){
         QMessageBox::warning(0,"warning","First load an interferogram and circle the mirror.");
         return;
@@ -866,11 +871,22 @@ void DFTArea::makeSurface(){
     if (Settings2::getInstance()->m_igram->m_autoSaveOutline){
         igramArea->writeOutlines(igramArea->makeOutlineName());  // save outlines including center filter
     }
-    cv::Mat phase = vortex(igramArea->igramImage,  m_center_filter);
-    statex.dwLength = sizeof (statex);
-    GlobalMemoryStatusEx (&statex);
-    qDebug() <<
-          QString().sprintf("RAM3: %ld %lld Meg",statex.dwMemoryLoad,statex.ullAvailPhys/1048576 );
+    cv::Mat phase;
+    try {
+
+        phase = vortex(igramArea->igramImage,  m_center_filter);
+
+    }
+        catch (std::exception const& e){
+    }
+
+    if (phase.cols == 0){
+        QMessageBox::warning(0,"warning", "Possible out of memory proplem.  If possible try deleting some wave front files.");
+        QApplication::restoreOverrideCursor();
+        success = false;
+        return;
+    }
+
     cv::Mat result = cv::Mat::zeros(phase.size(), numType);
 
     phase.copyTo(result, m_mask);
@@ -883,10 +899,10 @@ void DFTArea::makeSurface(){
     mask = (255 - m_mask)/255;
     unwrap((double *)(phase.data), (double *)(result.data), (char *)(mask.data),
            phase.size().width, phase.size().height);
-
+    phase.release();
     flip(result,result,0); // flip around x axis.
-    m_outside.m_center.ry() = result.rows - m_outside.m_center.y();
-    m_center.m_center.ry() = result.rows - m_center.m_center.y();
+    m_outside.m_center.ry() = (result.rows-1) - m_outside.m_center.y();
+    m_center.m_center.ry() =  (result.rows-1) - m_center.m_center.y();
     mirrorDlg *md = mirrorDlg::get_Instance();
 
     if (md->fringeSpacing != 1.){
@@ -908,6 +924,7 @@ void DFTArea::makeSurface(){
 
     emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName());
     QApplication::restoreOverrideCursor();
+    success = true;
 }
 void DFTArea::newIgram(QImage){
     doDFT();

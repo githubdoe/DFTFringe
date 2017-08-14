@@ -47,7 +47,7 @@ void unwrapErrorsView::createUnwrapErrors(){
     cvtColor(xxx,xxx, CV_GRAY2RGB);
     QRect rec = QApplication::desktop()->screenGeometry();
     int height = rec.height();
-    int width = rec.width();
+
     double scale = (double)(height-200)/(double)xxx.rows;
     if (scale < 1.){
         cv::resize(xxx,xxx,Size(0,0), scale, scale);

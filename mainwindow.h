@@ -46,6 +46,8 @@
 #include "batchigramwizard.h"
 #include "outlinehelpdocwidget.h"
 #include "foucaultview.h"
+#include "astigstatsdlg.h"
+#include "wavefrontfilterdlg.h"
 namespace Ui {
 class MainWindow;
 }
@@ -70,6 +72,8 @@ public:
     Settings2 *settingsDlg;
     wavefront *getCurrentWavefront();
     void openWaveFrontonInit(QStringList args);
+    QStringList SelectWaveFrontFiles();
+
 public slots:
     void enableShiftButtons(bool enable);
     void showMessage(QString);
@@ -162,7 +166,6 @@ private slots:
 
     void on_actionTest_Stand_Astig_Removal_triggered();
 
-
     void on_reverseGammaCB_clicked(bool checked);
 
     void on_actionSubtract_wave_front_triggered();
@@ -206,6 +209,15 @@ private slots:
     void on_actionCamera_Calibration_triggered();
 
     void on_actionShow_unwrap_errors_triggered();
+
+    void on_actionastig_Stats_triggered();
+
+    void on_actionSave_Zernike_Values_in_CSV_triggered();
+
+    void on_actionAverage_wave_front_files_triggered();
+    void saveBatchZerns();
+
+    void on_actionDebugStuff_triggered();
 
 private:
 
@@ -258,12 +270,11 @@ private:
     bool m_skipItem;
     bool m_OutlineDoneInBatch;
     bool m_batchMakeSurfaceReady;
+    astigStatsDlg *m_astigStatsDlg;
 
     enum { MaxRecentFiles = 5 };
     QAction *recentFileActs[MaxRecentFiles];
 
-    waveFrontLoader * m_waveFrontLoader;
-    QThread * m_loaderThread;
     ColorChannelDisplay *m_colorChannels;
     igramIntensity *m_intensityPlot;
     vortexDebug    *m_vortexDebugTool;
@@ -273,6 +284,7 @@ private:
     QWidget *contourFv;
     QWidget *profileFv;
     void Batch_Process_Interferograms();
+    QVector<QVector<QString> > batchZerns;
 };
 
 #endif // MAINWINDOW_H

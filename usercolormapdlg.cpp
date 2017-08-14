@@ -163,7 +163,6 @@ void userColorMapDlg::on_pb00_clicked()
     ui->pb00->setStyleSheet(s);
     ui->pb00->update();
     QSettings set;
-    qDebug() << c.name();
     set.setValue("userColorStopColor00",c.name());
     setColorMap();
     emit colorMapChanged(5);
@@ -177,7 +176,6 @@ void userColorMapDlg::on_pb01_clicked()
     ui->pb01->setStyleSheet(s);
     ui->pb01->update();
     QSettings set;
-    qDebug() << c.name();
     set.setValue("userColorStopColor01",c.name());
     setColorMap();
     emit colorMapChanged(5);
@@ -190,7 +188,6 @@ void userColorMapDlg::on_pb02_clicked()
     ui->pb02->setStyleSheet(s);
     ui->pb02->update();
     QSettings set;
-    qDebug() << c.name();
     set.setValue("userColorStopColor02",c.name());
     setColorMap();
     emit colorMapChanged(5);

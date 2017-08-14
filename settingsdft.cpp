@@ -25,9 +25,6 @@ settingsDFT::settingsDFT(QWidget *parent) :
     ui->setupUi(this);
     QSettings set;
     ui->ShowDFTTHumbCB->setChecked( set.value("DFTshowThumb", false).toBool());
-    ui->waveFrontWidthSb->blockSignals(true);
-    ui->waveFrontWidthSb->setValue(set.value("WaveFrontWidth", 0).toInt());
-    ui->waveFrontWidthSb->blockSignals(false);
 }
 
 settingsDFT::~settingsDFT()
@@ -45,14 +42,4 @@ void settingsDFT::on_ShowDFTTHumbCB_clicked(bool)
     set.setValue("DFTshowThumb", ui->ShowDFTTHumbCB->isChecked());
 }
 
-void settingsDFT::on_waveFrontWidthSb_valueChanged(int arg1)
-{
-    QSettings set;
-    if (arg1 == 0){
-        arg1 = set.value("DFTSize", 640).toInt();
-    }
-    set.setValue("WaveFrontWidth", arg1);
-    ui->waveFrontWidthSb->blockSignals(true);
-    ui->waveFrontWidthSb->setValue(arg1);
-    ui->waveFrontWidthSb->blockSignals(false);
-}
+

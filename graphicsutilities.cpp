@@ -49,7 +49,7 @@ CircleOutline readCircle(std::ifstream &file){
         qDebug() << "failed to read.  Read only " << file.gcount();
         return     CircleOutline();
     }
-qDebug() << "Circle read " << file.gcount();
+
     double *dp = (double*)buf;
     double x = *(dp++);
     double y = *(dp++);
@@ -57,7 +57,7 @@ qDebug() << "Circle read " << file.gcount();
 
     ++dp;
     int size = *(int *)dp; //= *(reinterpret_cast<int *>(buf));
-qDebug() << "circle size "<< size;
+
     if (size > 20)
        return     CircleOutline();
     // ignore the ellipse point section

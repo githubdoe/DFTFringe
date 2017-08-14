@@ -6,12 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>418</width>
-    <height>620</height>
+    <width>507</width>
+    <height>562</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Wavefront error Histogram in pixels</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -19,7 +25,7 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <widget class="QWidget" name="layoutWidget">
+     <widget class="QWidget" name="layoutWidget_3">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QwtPlot" name="histo" native="true">
@@ -29,69 +35,116 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Move the&lt;span style=&quot; color:#ff0000;&quot;&gt; red&lt;/span&gt; and &lt;span style=&quot; color:#0055ff;&quot;&gt;blue&lt;/span&gt; lines with the left mouse button. To adjust just were the first red an blue pixels show up on the image below. At that point you then have the PV measurements of the analysis. Moving the points further to the middle lowers the threshold for the display of each type of pixel.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
         </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
-      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
+     <widget class="QFrame" name="frame">
+      <property name="frameShape">
+       <enum>QFrame::Box</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <property name="lineWidth">
+       <number>5</number>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1">
          <item>
-          <widget class="QCheckBox" name="minmaxloc">
+          <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Show min/mac location</string>
+            <string>&lt;b&gt;Excessive Slope in Yellow.  Max height pixels in red. Min height pixels in blue.&lt;/b&gt;</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::RichText</enum>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="fit">
-           <property name="text">
-            <string>Fit Surface</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QCheckBox" name="minmaxloc">
+             <property name="toolTip">
+              <string>Draws a blue circile around the lowes pixel and a red circle around the highest circle.</string>
+             </property>
+             <property name="text">
+              <string>Show min/max location</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="fit">
+             <property name="toolTip">
+              <string>Shrink mirror to fit in this dialog.</string>
+             </property>
+             <property name="text">
+              <string>Fit Surface</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioButton_2">
+             <property name="toolTip">
+              <string>Show mirror full size with scroll bars.</string>
+             </property>
+             <property name="text">
+              <string>full size</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Show Slopes</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="arcSecs">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Besides PV or RMS measurements of the wavefrontit is also important to check for slope values that exceed 1 arc second on the wave front.&lt;/p&gt;&lt;p&gt;This display colors any pixel whoes neighbor pixel creates a slope in the wavefront greater than the value set in this control in arc seconds.&lt;/p&gt;&lt;p&gt;These values are highly dependent on the smoothing value used for the wavefront. The usual method of choosing a good smoothing value is&lt;/p&gt;&lt;p&gt;to look at the smoothed simulated foucault image until it matches what the real Foucault image is or until it seems similar to other foucault images &lt;/p&gt;&lt;p&gt;you have seen. There is always the risk that too much smoothing will reduce the slope of actual details.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="prefix">
+              <string>&gt;</string>
+             </property>
+             <property name="suffix">
+              <string> ArcSecs</string>
+             </property>
+             <property name="minimum">
+              <double>0.050000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>60.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+             <property name="value">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="image">
            <property name="text">
-            <string>Max slope ArcSec</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDoubleSpinBox" name="arcSecs">
-           <property name="minimum">
-            <double>0.050000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>60.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.100000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.500000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="radioButton_2">
-           <property name="text">
-            <string>full size</string>
+            <string>TextLabel</string>
            </property>
           </widget>
          </item>
         </layout>
-       </item>
-       <item>
-        <widget class="QLabel" name="image">
-         <property name="text">
-          <string>TextLabel</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>

@@ -19,6 +19,7 @@
 #include <QApplication>
 #include "singleapplication.h"
 #include "messagereceiver.h"
+#include "utils.h"
 
 int main(int argc, char *argv[])
 {    // Allow secondary instances
@@ -46,6 +47,12 @@ int main(int argc, char *argv[])
     MainWindow *w = new MainWindow;
     msgReceiver.m_mainWindow = w;
 
+#if defined(_WIN32)
+
+    showmem();
+
+
+#endif
     w->show();
 
     return app.exec();
