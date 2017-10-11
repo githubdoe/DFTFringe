@@ -41,7 +41,7 @@
 #include "simulationsview.h"
 #include "contourview.h"
 #include "standastigwizard.h"
-
+#include <QPointF>
 enum configRESPONSE { YES, NO, ASK};
 struct textres {
     QTextEdit *Edit;
@@ -62,7 +62,7 @@ public:
     bool loadWavefront(const QString &fileName);
     void sendSurface(wavefront* wf);
     void computeMetrics(wavefront *wf);
-    void makeMask(int waveNdx);
+    void makeMask(int waveNdx, bool useCenterCircle = true);
     void previous();
     void next();
     void deleteCurrent();
@@ -75,6 +75,7 @@ public:
     void initWaveFrontLoad();
     void averageWavefrontFiles(QStringList files);
     void downSizeWf(wavefront *wf);
+    void process(int wavefront_index, SurfaceManager *sm);
     wavefront *readWaveFront(const QString &fileName, bool &mirrorParamsChanged);
     inline wavefront *getCurrent(){
         if (m_wavefronts.size() == 0)
@@ -100,9 +101,6 @@ public:
     wavefront* m_standRemoved;
     int insideOffset;
     int outsideOffset;
-    QWaitCondition pauseCond;
-
-    QMutex sync;
     int messageResult;
     void inspectWavefront();
 
@@ -118,10 +116,10 @@ public:
     configRESPONSE lambdResp;
     int okToContinue;
     bool okToUpdateSurfacesOnGenerateComplete;
-    void makeMask(wavefront* wf);
+    void makeMask(wavefront* wf, bool useInsideCircle = true);
+    void generateSurfacefromWavefront(int ndx);
 private:
     QProgressDialog *pd;
-    QThread *m_generatorThread;
     QTimer *m_waveFrontTimer;
     QTimer *m_toolsEnableTimer;
     int workToDo;
@@ -133,7 +131,6 @@ private:
 signals:
     void currentNdxChanged(int);
     void waveFrontClicked(int);
-    void generateSurfacefromWavefront(int ndx, SurfaceManager * sm);
     void deleteWavefront(int);
     void rotateTheseSig(int, QList<int>);
     void progress(int);
@@ -164,7 +161,8 @@ private slots:
 public slots:
     void rotateThese(double angle, QList<int> list);
     void createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
-                                   CircleOutline center, QString name);
+                                   CircleOutline center, QString name,
+                                   QVector<std::vector<cv::Point> > polyArea= QVector<std::vector<cv::Point> >());
     void invert(QList<int> list);
     void wftNameChanged(int, QString);
     void showAllContours();
@@ -176,28 +174,5 @@ public slots:
 };
 
 
-class surfaceGenerator : public QObject {
-    Q_OBJECT
-
-public:
-    surfaceGenerator(SurfaceManager *sm);
-    ~surfaceGenerator();
-
-
-public slots:
-    void process(int wavefront_index, SurfaceManager *sm);
-
-signals:
-    void finished(int wavefront_index);
-    void error(QString err);
-    void showMessage(QString);
-
-private:
-    // add your variables here
-    SurfaceManager* m_sm;
-    QMutex sync;
-    zern_generator * m_zg;
-
-};
 
 #endif // SURFACEMANAGER_H

@@ -66,8 +66,7 @@
 #include "circle.h"
 #include "utils.h"
 #include "wavefrontFilterDlg.h"
-QMutex mutex;
-int inprocess = 0;
+
 
 void expandBorder(wavefront *wf){
 
@@ -181,69 +180,77 @@ public:
 
     }
 };
-// --- CONSTRUCTOR ---
-surfaceGenerator::surfaceGenerator(SurfaceManager *sm) :
-    m_sm(sm),
-    m_zg(0)
-{
-
-}
-
-// --- DECONSTRUCTOR ---
-surfaceGenerator::~surfaceGenerator() {
-    // free resources
-}
-
 // --- PROCESS ---
 // Start processing data.
-void surfaceGenerator::process(int wavefrontNdx, SurfaceManager *sm) {
+void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
     // allocate resources using new here
-
-    m_sm = sm;
-    mutex.lock();
-    ++inprocess;
-    mutex.unlock();
-    wavefront *wf = m_sm->m_wavefronts[wavefrontNdx];
+    wavefront *wf = m_wavefronts[wavefrontNdx];
     if (wf->dirtyZerns){
         if (mirrorDlg::get_Instance()->isEllipse()){
             wf->nulledData = wf->data.clone();
-            if (m_sm->m_GB_enabled){
+            if (m_GB_enabled){
 
                     //expandBorder(wf);
-                    cv::GaussianBlur( wf->nulledData.clone(), wf->workData, cv::Size( m_sm->m_gbValue, m_sm->m_gbValue ),0,0);
+                    cv::GaussianBlur( wf->nulledData.clone(), wf->workData, cv::Size( m_gbValue, m_gbValue ),0,0);
             }
             else {
                 wf->workData = wf->data.clone();
             }
             wf->InputZerns = std::vector<double>(Z_TERMS, 0);
             wf->dirtyZerns = false;
-            emit finished( wavefrontNdx);
+            surfaceGenFinished( wavefrontNdx);
 
             return;
         }
 
         //compute zernike values
         zernikeProcess &zp = *zernikeProcess::get_Instance();
-
+        mirrorDlg *md = mirrorDlg::get_Instance();
         zp.unwrap_to_zernikes(*wf);
+        // check for swapped conic value
+        if (md->cc * wf->InputZerns[8] < 0.){
+            bool reverse = false;
+            if (m_askAboutReverse){
+                if (QMessageBox::Yes == QMessageBox::question(0,"should invert?","Wavefront seems inverted.  Do you want to invert it?"))
+                {
+                   reverse = true;
+                    m_askAboutReverse = false;
+                }else
+                {
+                    reverse = false;
+                }
+            }
+            else {
+                reverse = true;
+            }
+            if (reverse){
+                wf->data *= -1;
+            }
+            zp.unwrap_to_zernikes(*wf);
+        }
+        ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
 
-        ((MainWindow*)m_sm->parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
+        // fill in void from obstruction of igram.
+        if (wf->m_inside.m_radius > 0 || wf->regions.size() > 0){
+            zp.fillVoid(*wf);
+            makeMask(wf, false);
 
+        }
         // null out desired terms.
         wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables,0,Z_TERMS   );
         wf->dirtyZerns = false;
 
+
     }
     wf->workData = wf->nulledData.clone();
-    if (m_sm->m_GB_enabled){
+    if (m_GB_enabled){
             expandBorder(wf);
-            cv::GaussianBlur( wf->nulledData.clone(), wf->workData, cv::Size( m_sm->m_gbValue, m_sm->m_gbValue ),0,0);
+            cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
+                              cv::Size( m_gbValue, m_gbValue ),0,0);
     }
 
     wf->nulledData.release();
-
-    QMutexLocker lock(&mutex);
-    emit finished( wavefrontNdx);
+    surfaceGenFinished( wavefrontNdx);
 }
 cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector<double> &zerns, QVector<int> zernsToUse){
     double rad = getCurrent()->m_outside.m_radius;
@@ -318,9 +325,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_simView = SimulationsView::getInstance(0);
     pd = new QProgressDialog();
     connect (this,SIGNAL(progress(int)), pd, SLOT(setValue(int)));
-    m_generatorThread = new QThread;
-    surfaceGenerator *sg = new surfaceGenerator(this);
-    sg->moveToThread(m_generatorThread);
+
     m_profilePlot->setWavefronts(&m_wavefronts);
     // create a timer for surface change update to all non current wave fronts
     m_waveFrontTimer = new QTimer(this);
@@ -328,10 +333,6 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     // setup signal and slot
     connect(m_waveFrontTimer, SIGNAL(timeout()),this, SLOT(backGroundUpdate()));
     connect(m_toolsEnableTimer, SIGNAL(timeout()), this, SLOT(enableTools()));
-    connect(m_generatorThread, SIGNAL(finished()), m_generatorThread, SLOT(deleteLater()));
-    connect(this, SIGNAL(generateSurfacefromWavefront(int, SurfaceManager *)), sg, SLOT(process(int, SurfaceManager *)));
-    connect(sg, SIGNAL(finished(int)), this, SLOT(surfaceGenFinished(int)));
-    m_generatorThread->start();
 
     connect(m_surfaceTools, SIGNAL(waveFrontClicked(int)), this, SLOT(waveFrontClickedSlot(int)));
     connect(m_surfaceTools, SIGNAL(wavefrontDClicked(const QString &)), this, SLOT(wavefrontDClicked(const QString &)));
@@ -363,20 +364,40 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
 
 SurfaceManager::~SurfaceManager(){}
 
+void DrawPoly(cv::Mat &data, QVector<std::vector<cv::Point> > poly){
+    for (int n = 0; n < poly.size(); ++n){
+        cv::Point points[1][poly[n].size()];
+        for (int i = 0; i < poly[n].size(); ++i){
 
+            points[0][i] = cv::Point(poly[n][i].x, data.rows - poly[n][i].y);
 
-void SurfaceManager::makeMask(int waveNdx){
-    makeMask(m_wavefronts[waveNdx]);
+        }
+        for (int j = 0; j < poly[n].size()-1; ++j){
+            cv::line(data, points[0][j], points[0][j+1], cv::Scalar(0));
+
+        }
+        const Point* ppt[1] = { points[0]};
+        int npt[] = { poly[n].size() };
+
+        fillPoly( data, ppt, npt, 1, Scalar(0), 8 );
+
+    }
 }
 
-void SurfaceManager::makeMask(wavefront *wf){
+void SurfaceManager::makeMask(int waveNdx, bool useCenterCircle){
+    makeMask(m_wavefronts[waveNdx], useCenterCircle);
+}
+
+
+void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     int width = wf->data.cols;
     int height = wf->data.rows;
     double xm,ym;
     xm = wf->m_outside.m_center.x();
     ym = wf->m_outside.m_center.y();
-    double radm =wf->m_outside.m_radius + outsideOffset - 2;
-    double rado = wf->m_inside.m_radius;
+    double radm =wf->m_outside.m_radius + outsideOffset-1;
+    double rado = wf->m_inside.m_radius + insideOffset ;
+
     double cx = wf->m_inside.m_center.x();
     double cy = wf->m_inside.m_center.y();
     cv::Mat mask = cv::Mat::zeros(height,width,CV_8U);
@@ -390,21 +411,20 @@ void SurfaceManager::makeMask(wavefront *wf){
             if (!mirrorDlg::get_Instance()->isEllipse()){
                 double dx = (double)(x - xm)/(radm);
                 double dy = (double)(y - ym)/(radm);
-                if ((sqrt(dx * dx + dy * dy) <= 1.) && (wf->data.at<double>(y,x) != 0))
+                if ((sqrt(dx * dx + dy * dy) <= 1.))
                     mask.at<uchar>(y,x) = 255;
             }
             else {
                 if (fabs(x -xm) > rx || fabs(y -ym) > ry)
                     continue;
                 double v = pow(x - xm, 2)/rx2 + pow(y - ym, 2)/ry2;
-                if ( v <= 1 && (wf->data.at<double>(y,x) != 0))
-                    mask.at<uchar>(y,x) = 255;
+                if ( v <= 1)
+                    mask.at<uchar>(y,x) = 0;
             }
         }
     }
 
     if (rado > 0) {
-        rado += insideOffset + 2;
         for (int y = 0; y < height; ++y){
             for (int x = 0; x < width; ++x){
                 double dx = (double)(x - (cx))/(rado);
@@ -414,6 +434,38 @@ void SurfaceManager::makeMask(wavefront *wf){
             }
         }
     }
+    // expand the region by 10%
+    if (wf->regions.size() > 0 && useInsideCircle){
+        for (int n = 0; n < wf->regions.size(); ++ n){
+            int xavg = 0;
+            int yavg = 0;
+            for (int i = 0; i < wf->regions[n].size(); ++i){
+                xavg += wf->regions[n][i].x;
+                yavg += wf->regions[n][i].y;
+            }
+            xavg /= wf->regions[n].size();
+            yavg /= wf->regions[n].size();
+            // find the closest point to the center
+            double shortest = 99999;
+            int shortestndx;
+            for (int i = 0; i < wf->regions[n].size(); ++i){
+                int delx = wf->regions[n][i].x - xavg;
+                int dely = wf->regions[n][i].y - yavg;
+                double del = sqrt(delx * delx + dely * dely);
+                if (del < shortest){
+                    shortest = del;
+                    shortestndx = i;
+                }
+            }
+            double scale = (shortest+2)/shortest;
+            for (int i = 0; i < wf->regions[n].size(); ++i){
+                wf->regions[n][i].x = scale * (wf->regions[n][i].x - xavg) + xavg;
+                wf->regions[n][i].y = scale * (wf->regions[n][i].y - yavg) + yavg;
+            }
+        }
+        DrawPoly(mask, wf->regions);
+
+    }
     wf->mask = mask;
     wf->workMask = mask.clone();
 
@@ -421,11 +473,13 @@ void SurfaceManager::makeMask(wavefront *wf){
     double r = md.obs * (2. * radm)/md.diameter;
     r/= 2.;
     if (r > 0){
+
         cv::Mat m = wf->workMask;
-        circle(m,Point(m.cols/2,m.cols/2),r, Scalar(0),-1);
+        circle(m,Point((m.cols-1)/2,(m.cols-1)/2),r, Scalar(0),-1);
     }
+
     if (Settings2::showMask())
-        showData("Make Mask", mask);
+        showData("surface manager mask",mask);
 
 }
 void SurfaceManager::wftNameChanged(int ndx, QString name){
@@ -521,16 +575,14 @@ void SurfaceManager::useDemoWaveFront(){
 
 void SurfaceManager::waveFrontClickedSlot(int ndx)
 {
-    if (inprocess != 0)
-        return;
+
     m_currentNdx = ndx;
     QString msg = QString().sprintf(" %dx%d ",m_wavefronts[ndx]->data.cols, m_wavefronts[ndx]->data.rows);
-    qDebug() << msg;
+    ((MainWindow*)parent())->statusBar()->showMessage(msg);
     sendSurface(m_wavefronts[ndx]);
 }
 void SurfaceManager::deleteWaveFronts(QList<int> list){
-    if (inprocess != 0)
-        return;
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
     foreach(int ndx, list ){
         m_currentNdx = ndx;
@@ -552,9 +604,6 @@ void SurfaceManager::wavefrontDClicked(const QString & name){
 
 void SurfaceManager::surfaceSmoothGBValue(int value){
 
-    if (inprocess != 0)
-        return;
-
     if (value %2 == 0) ++value;  // make sure blur radius is always odd;
     m_gbValue = value;
 
@@ -575,8 +624,7 @@ void SurfaceManager::surfaceSmoothGBValue(int value){
 
 }
 void SurfaceManager::surfaceSmoothGBEnabled(bool b){
-    if (inprocess != 0)
-        return;
+
     m_GB_enabled = b;
 
     QSettings settings;
@@ -746,16 +794,28 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
     }
     QApplication::restoreOverrideCursor();
 }
-void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside, CircleOutline center, QString name){
+void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
+                                               CircleOutline center,
+                                               QString name, QVector<std::vector<Point> > polyArea){
 
     wavefront *wf;
-qDebug() << "createSurface"<< phase.rows << phase.cols << outside.m_center << outside.m_radius;
+
     int newrows = Settings2::getInstance()->m_general->wavefrontSize();
     if (Settings2::getInstance()->m_general->shouldDownsize() && ( phase.rows > newrows)){
         double scaleFactor = (double)newrows/double(phase.rows);
         cv::resize(phase,phase, cv::Size(newrows,newrows), 0, 0,INTER_AREA);
         outside.scale(scaleFactor);
         center.scale(scaleFactor);
+
+        for (int n = 0; n < polyArea.size(); ++n){
+            for (unsigned int i = 0; i < polyArea[n].size(); ++i){
+                int x = round((polyArea[n][i].x) * scaleFactor);
+                int y = round((polyArea[n][i].y) * scaleFactor);
+                polyArea[n][i].x = x;
+                polyArea[n][i].y = y;
+            }
+        }
+
     }
 
     if (m_wavefronts.size() >0 && (m_currentNdx == 0 &&  m_wavefronts[0]->name == "Demo")){
@@ -783,43 +843,15 @@ qDebug() << "createSurface"<< phase.rows << phase.cols << outside.m_center << ou
     wf->roc = md->roc;
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
+    wf->regions = polyArea;
     m_currentNdx = m_wavefronts.size()-1;
 
     makeMask(m_currentNdx);
-    m_surface_finished = false;
-    emit generateSurfacefromWavefront(m_currentNdx, this);
-    while (!m_surface_finished) {qApp->processEvents();}
-    // check for swapped conic value
-    if (md->cc * wf->InputZerns[8] < 0.){
-        bool reverse = false;
-        if (m_askAboutReverse){
-            if (QMessageBox::Yes == QMessageBox::question(0,"should invert?","Wavefront seems inverted.  Do you want to invert it?"))
-            {
-               reverse = true;
-                m_askAboutReverse = false;
-            }else
-            {
-                reverse = false;
-            }
-        }
-        else {
-            reverse = true;
-        }
-        if (reverse){
-            wf->data *= -1;
-            wf->dirtyZerns = true;
-            wf->wasSmoothed = false;
-            m_surface_finished = false;
-            emit generateSurfacefromWavefront(m_currentNdx, this);
-            while (!m_surface_finished) {qApp->processEvents();}
 
-        }
-    }
-qDebug() << "surface from phase"<< wf->m_outside.m_center << wf->m_outside.m_radius;
+    generateSurfacefromWavefront(m_currentNdx);
     loadComplete();
     m_surfaceTools->select(m_currentNdx);
     emit showTab(2);
-
 }
 
 wavefront * SurfaceManager::readWaveFront(const QString &fileName, bool &mirrorParamsChanged){
@@ -847,7 +879,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName, bool &mirrorP
     QString l;
     mirrorDlg *md = mirrorDlg::get_Instance();
 
-    double xm = width/2.,ym = (height)/2.,
+    double xm = (width-1)/2.,ym = (height-1)/2.,
             radm = min(xm,ym)-2 ,
             roc = md->roc,
             lambda = md->lambda,
@@ -1046,9 +1078,8 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
     }
     makeMask(m_currentNdx);
     m_surface_finished = false;
-    emit generateSurfacefromWavefront(m_currentNdx, this);
-    while (!m_surface_finished){qApp->processEvents();}
-    //m_surfaceTools->select(m_currentNdx);
+    generateSurfacefromWavefront(m_currentNdx);
+
     return mirrorParamsChanged;
 }
 void SurfaceManager::deleteCurrent(){
@@ -1139,19 +1170,16 @@ void SurfaceManager::saveAllWaveFrontStats(){
 void SurfaceManager::enableTools(){
 
     m_toolsEnableTimer->stop();
-    if (inprocess == 0){
-        m_surfaceTools->setEnabled(true);
 
-    }
+    m_surfaceTools->setEnabled(true);
+
+
 }
 
 void SurfaceManager::surfaceGenFinished(int ndx) {
     if (workToDo > 0)
         emit progress(++workProgress);
-    mutex.lock();
-    --inprocess;
 
-    mutex.unlock();
     m_surface_finished = true;
     if (okToUpdateSurfacesOnGenerateComplete){
         loadComplete();
@@ -1184,7 +1212,7 @@ void SurfaceManager::backGroundUpdate(){
         m_wavefronts[i]->dirtyZerns = true;
         m_wavefronts[i]->wasSmoothed = false;
         makeMask(i);
-        emit generateSurfacefromWavefront(i, this);
+        generateSurfacefromWavefront(i);
     }
     loadComplete();
 }
@@ -1312,10 +1340,8 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     wf->dirtyZerns = true;
     m_surfaceTools->addWaveFront(wf->name);
     m_currentNdx = m_wavefronts.size()-1;
-    m_surface_finished = false;
     makeMask(wf);
-    emit generateSurfacefromWavefront(m_currentNdx, this);
-    while (!m_surface_finished) {qApp->processEvents();}
+    generateSurfacefromWavefront(m_currentNdx);
 
     if (needsUpdate)
         m_waveFrontTimer->start(1000);
@@ -1339,8 +1365,7 @@ void SurfaceManager::averageWavefrontFiles(QStringList files){
             m_currentNdx = m_wavefronts.size()-1;
             //makeMask(m_currentNdx);
             m_surface_finished = false;
-            emit generateSurfacefromWavefront(m_currentNdx, this);
-            while (!m_surface_finished) {qApp->processEvents();}
+            generateSurfacefromWavefront(m_currentNdx);
             m_surfaceTools->select(m_currentNdx);
         }
     }
@@ -1363,51 +1388,36 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         //emit nameChanged(wf->name, newName);
 
         wf->name = newName;
-        cv::Mat tmp = oldWf->data.clone();
-        wf->data = tmp;
+        cv::Mat tmp;
         m_wavefronts << wf;
         m_surfaceTools->addWaveFront(wf->name);
         m_currentNdx = m_wavefronts.size()-1;
         m_surfaceTools->select(m_currentNdx);
 
-        cv::Mat br = wf->mask.clone();
-
         cv::Point2f ptCp = cv::Point2f(wf->m_outside.m_center.x(), wf->m_outside.m_center.y());
 
         cv::Mat M = cv::getRotationMatrix2D(ptCp, angle, 1.0);
-        cv::warpAffine(tmp, wf->data , M, tmp.size());
-        cv::warpAffine(wf->mask, wf->mask, M, wf->data.size());
-        cv::threshold( wf->mask, wf->mask, 254, 255,cv::THRESH_TOZERO );
-        wf->m_inside = oldWf->m_inside;
-        wf->m_outside = oldWf->m_outside;
+        // interpolation that is needed for rotation will use part of the backgound at the edge
+        //  This will mess up the edge so we mask off 3 pixels.
+        cv::Mat edgeMask = cv::Mat::zeros(wf->data.rows, wf->data.cols, wf->mask.type());
+        cv::warpAffine(wf->data ,tmp, M, wf->data.size(),CV_INTER_NN);
+        wf->data = tmp.clone();
+
         double rad = -angle * M_PI/180.;
         double sina = sin(rad);
         double cosa = cos(rad);
+
         double sx = wf->m_inside.m_center.x() - wf->m_outside.m_center.x();
         double sy = wf->m_inside.m_center.y() - wf->m_outside.m_center.y();
 
         wf->m_inside.m_center.rx() = sx * cosa - sy * sina + wf->m_outside.m_center.x();
         wf->m_inside.m_center.ry() = sx * sina + sy * cosa + wf->m_outside.m_center.y();
 
-        cv::Mat mm = cv::Mat::ones(wf->data.rows, wf->data.cols, wf->data.type());
-        for (int y = 0; y < wf->data.rows; ++y){
-            for (int x = 0; x < wf->data.cols; ++x){
-                if (wf->data.at<double>(y,x) == 0.)
-                    mm.at<double>(y,x) = 0;
-            }
-        }
-
-        //makeMask(wf);
-        cv::Mat xosr;
-        cv::bitwise_xor(br,wf->mask,xosr);
-        wf->workMask = wf->mask.clone();
-
+        makeMask(m_currentNdx);
         wf->dirtyZerns = true;
         wf->wasSmoothed = false;
         m_surface_finished = false;
-        emit generateSurfacefromWavefront(m_currentNdx,this);
-        while (!m_surface_finished) {qApp->processEvents();}
-
+        generateSurfacefromWavefront(m_currentNdx);
     }
     loadComplete();
 }
@@ -1422,9 +1432,11 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
         cv::resize(resize,resize, cv::Size(wf1->data.cols, wf1->data.rows));
         cv::resize(mask, mask, cv::Size(wf1->data.cols, wf1->data.rows));
     }
+
     cv::bitwise_and(mask, wf1->mask, mask);
     cv::Mat masked;
     cv::Mat result = wf1->data - resize;
+
     result.copyTo(masked, mask);
     wavefront *resultwf = new wavefront;
     *resultwf = *wf1;
@@ -1445,8 +1457,8 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
     if (!use_null){
         resultwf->useSANull = false;
     }
-    emit generateSurfacefromWavefront(m_currentNdx,this);
-    while (!m_surface_finished){qApp->processEvents();}
+    generateSurfacefromWavefront(m_currentNdx);
+
     loadComplete();
     m_surfaceTools->select(m_currentNdx);
 }

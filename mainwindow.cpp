@@ -43,6 +43,7 @@
 #include "astigstatsdlg.h"
 #include "astigscatterplot.h"
 #include "rmsplot.h"
+#include "regionedittools.h"
 #ifndef _WIN32
     #include <unistd.h>
     #define Sleep(x) usleep(1000 * x)
@@ -122,7 +123,12 @@ MainWindow::MainWindow(QWidget *parent) :
     m_contourTools = new ContourTools(this);
     m_outlineHelp = new outlineHelpDocWidget(this);
     m_surfTools = surfaceAnalysisTools::get_Instance(this);
-
+    m_regionsEdit = new regionEditTools(this);
+    m_regionsEdit->hide();
+    m_igramArea->m_regionEdit = m_regionsEdit;
+    connect(m_regionsEdit, SIGNAL(addregion()),m_igramArea, SLOT(addregion()));
+    connect(m_regionsEdit, SIGNAL(deleteregion(int)), m_igramArea, SLOT(deleteregion(int)));
+    connect(m_regionsEdit, SIGNAL(selectRegion(int)), m_igramArea, SLOT(selectRegion(int)));
     //DocWindows
     createDockWindows();
 
@@ -147,8 +153,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView,
                                           m_ogl->m_gl, metrics);
     connect(m_contourView, SIGNAL(showAllContours()), m_surfaceManager, SLOT(showAllContours()));
-    connect(m_dftArea, SIGNAL(newWavefront(cv::Mat,CircleOutline,CircleOutline,QString)),
-            m_surfaceManager, SLOT(createSurfaceFromPhaseMap(cv::Mat,CircleOutline,CircleOutline,QString)));
+    connect(m_dftArea, SIGNAL(newWavefront(cv::Mat,CircleOutline,CircleOutline,QString, QVector<std::vector<cv::Point> >)),
+            m_surfaceManager, SLOT(createSurfaceFromPhaseMap(cv::Mat,CircleOutline,CircleOutline,QString, QVector<std::vector<cv::Point> >)));
     connect(m_surfaceManager, SIGNAL(diameterChanged(double)),this,SLOT(diameterChanged(double)));
     connect(m_surfaceManager, SIGNAL(showTab(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
     connect(m_surfTools, SIGNAL(updateSelected()), m_surfaceManager, SLOT(backGroundUpdate()));
@@ -314,6 +320,7 @@ void MainWindow::openRecentFile()
 bool MainWindow::loadFile(const QString &fileName)
 {
     m_igramArea->openImage(fileName);
+    ui->SelectOutSideOutline->setChecked(true);
     setCurrentFile(fileName);
     return true;
 }
@@ -381,7 +388,7 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     mime.replace("jpg", "jpeg",Qt::CaseInsensitive);
     dialog.selectMimeTypeFilter("image/"+mime);
     dialog.setDefaultSuffix(mime);
-
+    ui->SelectObsOutline->setChecked(false);
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
             QFileInfo a(dialog.selectedFiles().first());
@@ -416,6 +423,7 @@ void MainWindow::on_pushButton_5_clicked()
     // make sure current boundary is the outside one.
     ui->SelectOutSideOutline->setChecked(true);
     ui->SelectObsOutline->setChecked(false);
+
 }
 
 
@@ -443,6 +451,8 @@ void MainWindow::createDockWindows(){
     metrics->setWindowTitle(QString().sprintf("metrics      DFTFringe %s",APP_VERSION));
     zernTablemodel = metrics->tableModel;
     addDockWidget(Qt::LeftDockWidgetArea, m_outlineHelp);
+    addDockWidget(Qt::RightDockWidgetArea, m_regionsEdit);
+    splitDockWidget(m_regionsEdit, ui->outlineTools, Qt::Vertical);
     addDockWidget(Qt::RightDockWidgetArea, m_dftTools);
     addDockWidget(Qt::RightDockWidgetArea, m_contourTools);
     addDockWidget(Qt::RightDockWidgetArea, m_surfTools);
@@ -649,7 +659,7 @@ void MainWindow::showMessage(QString msg){
                          QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
     m_surfaceManager->messageResult = ok;
-    m_surfaceManager->pauseCond.wakeAll();
+
 }
 
 void MainWindow::diameterChanged(double v){
@@ -667,11 +677,13 @@ void MainWindow::on_actionLighting_properties_triggered()
 void MainWindow::on_SelectOutSideOutline_clicked(bool checked)
 {
     m_igramArea->SideOutLineActive( checked);
+    m_regionsEdit->hide();
 }
 
 void MainWindow::on_SelectObsOutline_clicked(bool checked)
 {
-        m_igramArea->SideOutLineActive( !checked);
+    m_igramArea->CenterOutlineActive(checked);
+    m_regionsEdit->hide();
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -733,14 +745,14 @@ void MainWindow::on_actionWavefront_triggered()
     int wx = dlg.size;
 
     double rad = (double)(wx-1)/2.;
-    int xcen = rad;
-    int ycen = rad;
+    double xcen = rad;
+    double ycen = rad;
     int border = 1;
 
     rad -= border;
     cv::Mat result = makeSurfaceFromZerns(border);
     m_surfaceManager->createSurfaceFromPhaseMap(result,
-                                                CircleOutline(QPointF(xcen,ycen),rad),
+                                                CircleOutline(QPointF(xcen,ycen),rad-2),
                                                 CircleOutline(QPointF(0,0),0),
                                                 QString("Simulated_Wavefront"));
 }
@@ -993,6 +1005,7 @@ void MainWindow::batchProcess(QStringList fileList){
         progBar->setValue(cnt++);
         m_OutlineDoneInBatch = false;
         m_igramArea->openImage(fn);
+        ui->SelectOutSideOutline->setChecked(true);
         if (!batchIgramWizard::autoCb->isChecked()){
             while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
                 QApplication::processEvents();
@@ -1017,7 +1030,7 @@ void MainWindow::batchProcess(QStringList fileList){
         }
         if (!m_inBatch)
             break;
-        m_surfaceManager->m_surface_finished = false;
+
         ui->tabWidget->setCurrentIndex(2);
         m_dftTools->wasPressed = true;
         m_dftArea->makeSurface();
@@ -1030,7 +1043,7 @@ void MainWindow::batchProcess(QStringList fileList){
 
         statusBar()->showMessage(QString().sprintf("mem %d MB", mem));
 
-        while(m_inBatch && !m_surfaceManager->m_surface_finished){qApp->processEvents();}
+        qApp->processEvents();
         if (!m_inBatch)
             break;
         if (batchIgramWizard::filterCb->isChecked()){
@@ -1182,7 +1195,7 @@ void MainWindow::startJitter(){
         ui->tabWidget->setCurrentIndex(2);
         m_dftTools->wasPressed = true;
         m_dftArea->makeSurface();
-        while(m_inBatch && !m_surfaceManager->m_surface_finished){qApp->processEvents();}
+        qApp->processEvents();
         wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
         wf->name = QString().sprintf("x:_%d_Y:_%d_radius:_%d",x,y,rad);
         dlg->status(wf->name);
@@ -1356,12 +1369,26 @@ void MainWindow::on_actionAverage_wave_front_files_triggered()
         return;
     m_surfaceManager->averageWavefrontFiles( files);
 }
-
-
+#include <qwt_plot_curve.h>
 void MainWindow::on_actionDebugStuff_triggered()
 {
-    for (int i = 0; i < m_surfaceManager->m_wavefronts.size(); ++i){
-        wavefront *wf = m_surfaceManager->m_wavefronts[i];
-        qDebug() << wf->name << "center" << wf->m_outside.m_center << "rad"<<wf->m_outside.m_radius;
+    wavefront &wf = *m_surfaceManager->m_wavefronts.back();
+    cv::Mat zz = cv::Mat::ones(wf.data.size(), wf.data.type());
+    for (int y = 0; y < wf.data.rows; ++y){
+        for (int x = 0; x < wf.data.cols; ++x){
+            if (wf.data.at<double>(y,x) == 0. && wf.mask.at<bool>(y,x)){
+                zz.at<double>(y,x) = 0;
+            }
+        }
     }
+    cv::Mat zzz;
+    cv::resize(zz,zzz, cv::Size(0,0),2,2);
+    cv::imshow("zzz", zz);
+    cv::waitKey(0);
+}
+
+void MainWindow::on_polygonRb_clicked(bool checked)
+{
+    m_igramArea->PolyAreaActive(checked);
+    m_regionsEdit->show();
 }

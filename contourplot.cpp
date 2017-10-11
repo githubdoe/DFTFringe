@@ -251,7 +251,7 @@ void ContourPlot::setSurface(wavefront * wf) {
         name = wf->name;
 
 
-    setFooter(name + QString().sprintf(" %6.3lfrms",wf->std));
+    setFooter(name + QString().sprintf(" %6.3lfrms %d X %d",wf->std, wf->data.cols, wf->data.rows));
 
     plotLayout()->setAlignCanvasToScales(true);
     showContoursChanged(contourRange);

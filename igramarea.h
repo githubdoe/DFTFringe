@@ -80,8 +80,9 @@
 #include "settingsigram.h"
 
 extern QScrollArea *gscrollArea;
-enum {OutSideOutline, CenterOutline};
+enum {OutSideOutline, CenterOutline, PolyArea};
 enum zoomMode {NORMALZOOM, EDGEZOOM};
+class regionEditTools;
 class outlinePair{
 public:
     QImage m_image;
@@ -131,6 +132,8 @@ public:
     void readOutlines();
 
     void SideOutLineActive(bool checked);
+    void CenterOutlineActive(bool checked);
+    void PolyAreaActive(bool checked);
     void nextStep();
     bool sideOutlineIsActive;
     void save();
@@ -199,6 +202,7 @@ private:
     void zoom(int del, QPointF zoompt);
     bool modified;
     bool scribbling;
+    bool regionMode;
     bool verticalTracking;
     int edgePenWidth;
     int centerPenWidth;
@@ -208,8 +212,14 @@ private:
     QColor centerPenColor;
     QColor edgePenColor;
     bool m_autoSaveOutline;
+    void deleteRegions();
+
 public:
     QImage igramDisplay;
+    QVector<std::vector<cv::Point> > m_polygons;
+    int polyndx;
+    regionEditTools *m_regionEdit;
+    void syncRegions();
 private:
     QImage m_withOutlines;
     QPointF m_OutterP1;
@@ -218,6 +228,7 @@ private:
     QPointF m_innerP2;
     QPointF lastPoint;
     QPointF zoompt;
+
     undoStack m_outsideHist;
     undoStack m_centerHist;
     QAction *fitToWindowAct;
@@ -242,8 +253,13 @@ private:
     bool m_edgeMode;
     int m_zoomBoxWidth;
     zoomMode m_zoomMode;
+    void increaseRegion(int n, double scale);
 public:
    int m_current_boundry;
+public slots:
+   void addregion();
+   void deleteregion(int);
+   void selectRegion(int);
    // m_mw(mw),QWidget(parent),scale(1.),outterPcount(0), innerPcount(0), zoomFactor(0.),m_current_boundry(OutSideOutline),
       //zoomIndex(0),dragMode(false),m_hideOutlines(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false)
 };

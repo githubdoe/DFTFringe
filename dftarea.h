@@ -67,7 +67,8 @@ signals:
     void setDftSizeVal(int);
     void selectDFTTab();
     void updateFilterSize(int);
-    void newWavefront(cv::Mat, CircleOutline, CircleOutline, QString);
+    void newWavefront(cv::Mat, CircleOutline, CircleOutline, QString,
+                      QVector<std::vector<cv::Point> >);
     void dftReady(QImage);
     void statusBarUpdate(QString);
 private:
@@ -77,6 +78,7 @@ private:
     bool capture;
     CircleOutline m_outside;
     CircleOutline m_center;
+    QVector<std::vector<cv::Point> > m_poly;
     double m_gamma;
 
     IgramArea *igramArea;

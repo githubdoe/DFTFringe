@@ -28,3 +28,6 @@ average with central hole not at center seems to be wrong with a huge fringe.
 
 
 losing memory even if not calling imagetogray or even vortex.
+
+Region number is not correct after deleting a region.
+close region list on done.

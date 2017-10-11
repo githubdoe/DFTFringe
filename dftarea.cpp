@@ -28,7 +28,8 @@
 #include "utils.h"
 using namespace cv;
 
-cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data){
+cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
+                  QVector<std::vector<cv::Point> > poly){
     int width = data.cols;
     int height = data.rows;
 
@@ -62,6 +63,26 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data){
             }
         }
     }
+    if (poly.size()>0){
+        for (int n = 0; n < poly.size(); ++n){
+            cv::Point points[1][poly[n].size()];
+            for (int i = 0; i < poly[n].size(); ++i){
+
+                points[0][i] = cv::Point(poly[n][i].x, poly[n][i].y);
+
+            }
+            for (int j = 0; j < poly[n].size()-1; ++j){
+                cv::line(mask, points[0][j], points[0][j+1], cv::Scalar(0));
+
+            }
+            const Point* ppt[1] = { points[0]};
+            int npt[] = { poly[n].size() };
+
+            fillPoly( mask, ppt, npt, 1, Scalar(0), 8 );
+        }
+    }
+    if (Settings2::showMask())
+        showData("DFT mask",mask);
     return mask;
 }
 
@@ -154,19 +175,21 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     // create an roi that is a square around the outline.
     double centerX = igramArea->m_outside.m_center.x();
     double centerY = igramArea->m_outside.m_center.y();
-    double rad = igramArea->m_outside.m_radius;
-    double rady = rad;
+
+    double radx = igramArea->m_outside.m_radius;
+    double rady = radx;
     mirrorDlg &md = *mirrorDlg::get_Instance();
     if (md.isEllipse()){
         rady = rady * md.m_verticalAxis/ md.diameter;
     }
-    double radpix = ceil(rad);
-    double left = centerX - radpix;
+
+    double left = centerX - radx;
     double top = centerY - rady;
+
     std::vector<Mat > bgr_planes;
     top = max(top,0.);
     left = max(left,0.);
-    int width = 2. * (radpix);
+    int width = 2. * (radx);
     int height = 2. * rady;
     width = min(width, img.width());
     height = min(height, img.height());
@@ -188,13 +211,13 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     QSettings set;
     int dftSize = set.value("DFTSize", 640).toInt();
     double scaleFactor = (double)dftSize/roi.cols;
-    m_outside = CircleOutline(QPointF(xCenterShift,yCenterShift), rad);
+    m_outside = CircleOutline(QPointF(xCenterShift,yCenterShift), radx);
     m_center = CircleOutline(QPointF(xCenterShift - centerDx, yCenterShift - centerDy),
                              igramArea->m_center.m_radius);
-    //scaleFactor = 1;
     if (scaleFactor < 1.){
 
         cv::resize(roi,roi, cv::Size(0,0), scaleFactor, scaleFactor,INTER_AREA);
+
         double roicx = roi.cols/2.-.5;
         double roicy = roi.rows/2.-.5;
         m_outside = CircleOutline(QPointF(roicx,roicy),roicx);
@@ -204,7 +227,15 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     else {
         scaleFactor = 1.;
     }
-
+    m_poly.clear();
+    for (int n = 0; n < igramArea->m_polygons.size(); ++n){
+        m_poly.append(std::vector< cv::Point>());
+        for (unsigned int i = 0; i < igramArea->m_polygons[n].size(); ++i){
+            int x = round((igramArea->m_polygons[n][i].x - left) * scaleFactor);
+            int y = round((igramArea->m_polygons[n][i].y - top) * scaleFactor);
+            m_poly.back().push_back(cv::Point(x,y));
+        }
+    }
     // split image into three color planes
     split( roi, bgr_planes );
 
@@ -246,9 +277,8 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     // disabled adding optomizing DFT boarder.
     Mat planes[] = {Mat_<float>(padded), Mat::zeros(padded.size(), CV_32F)};
 
-    m_mask = makeMask(m_outside,m_center,*planes);
-    if (Settings2::showMask())
-        showData("Maskdft", m_mask);
+    m_mask = makeMask(m_outside,m_center,*planes, m_poly);
+
     cv::Mat tmpMask;
 
     planes[0].copyTo(tmpMask,m_mask);    // Convert image to binary
@@ -857,10 +887,8 @@ qDebug() << "plane coeffs" << coeff(0) << coeff(1) << coeff(2);
 
 // make a surface from the image using DFT and vortex transfroms.
 void DFTArea::makeSurface(){
-
     if (!tools->wasPressed)
         return;
-
 
     if (igramArea->igramImage.isNull()){
         QMessageBox::warning(0,"warning","First load an interferogram and circle the mirror.");
@@ -913,7 +941,7 @@ void DFTArea::makeSurface(){
         CircleOutline t = m_outside;
         t.enlarge(-2);
 
-        m_mask = makeMask(t,m_center, result);
+        m_mask = makeMask(t,m_center, result, m_poly);
         result = subtractPlane(result, m_mask);
     }
 
@@ -922,7 +950,8 @@ void DFTArea::makeSurface(){
         showData("result surface", result.clone());
     }
 
-    emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName());
+    emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName(),
+                        m_poly);
     QApplication::restoreOverrideCursor();
     success = true;
 }

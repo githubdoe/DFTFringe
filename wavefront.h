@@ -19,7 +19,7 @@
 #define WAVEFRONT_H
 #include "opencv/cv.h"
 #include "Circleoutline.h"
-
+#include <QPointF>
 class wavefront
 {
 public:
@@ -48,6 +48,7 @@ public:
     double std;
     double mean;
     bool dirtyZerns;
+    QVector<std::vector<cv::Point> > regions;
 
 
 };

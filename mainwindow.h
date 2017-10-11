@@ -48,6 +48,7 @@
 #include "foucaultview.h"
 #include "astigstatsdlg.h"
 #include "wavefrontfilterdlg.h"
+class regionEditTools;
 namespace Ui {
 class MainWindow;
 }
@@ -219,6 +220,8 @@ private slots:
 
     void on_actionDebugStuff_triggered();
 
+    void on_polygonRb_clicked(bool checked);
+
 private:
 
     Ui::MainWindow *ui;
@@ -244,6 +247,7 @@ private:
     OGLControls *m_oglTools;
     surfaceAnalysisTools *m_surfTools;
     outlineHelpDocWidget *m_outlineHelp;
+    regionEditTools *m_regionsEdit;
     SurfaceManager *m_surfaceManager;
     QScrollArea *scrollArea;
     QScrollArea *scrollAreaDft;

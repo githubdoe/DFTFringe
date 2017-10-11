@@ -43,6 +43,7 @@ public:
     cv::Mat null_unwrapped(wavefront&wf,  std::vector<double> zerns, std::vector<bool> enables,int start_term =0, int last_term = Z_TERMS);
     //double Wavefront(double x1, double y1, int Order);
     void unwrap_to_zernikes(zern_generator *zg, cv::Mat wf, cv::Mat mask);
+    void fillVoid(wavefront &wf);
     cv::Mat Z;
     cv::Mat inputZ;
     bool m_dirty_zerns;

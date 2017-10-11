@@ -39,7 +39,8 @@
 #include "simigramdlg.h"
 #include "settings2.h"
 #include "myutils.h"
-
+#include <fstream>
+#include "regionedittools.h"
 void undoStack::clear() {
     m_stack.clear();
     m_redo.clear();
@@ -81,7 +82,9 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     setAttribute(Qt::WA_StaticContents);
     modified = false;
     scribbling = false;
+    regionMode = false;
     verticalTracking = false;
+    polyndx = 0;
     QSettings set;
     m_zoomBoxWidth = set.value("zoomBoxWidth", 200).toInt();
     centerPenColor = set.value("igramCenterLineColor", QColor("white").name()).toString();
@@ -259,27 +262,16 @@ bool IgramArea::openImage(const QString &fileName)
         qDebug() << ss.str().c_str();
         Mat corrected;
 
-
-
-
-
-    Mat view, rview, map1, map2;
-//    initUndistortRectifyMap(camera, distortion, Mat(),
-//        getOptimalNewCameraMatrix(camera, distortion, raw.size(), 1, raw.size(), 0),
-//        raw.size(), CV_16SC2, map1, map2);
-
-//    view = raw.clone();
-//    remap(view, corrected, map1, map2, INTER_LINEAR);
-
+        Mat view, rview, map1, map2;
 
         undistort(raw, corrected, camera, distortion);
 
         cvtColor(corrected,corrected, COLOR_BGRA2RGBA);
         loadedImage =  QImage((uchar*)corrected.data,
-                            corrected.cols,
-                            corrected.rows,
-                            corrected.step,
-                            QImage::Format_RGBA8888).copy();
+                              corrected.cols,
+                              corrected.rows,
+                              corrected.step,
+                              QImage::Format_RGBA8888).copy();
 
     }
     if (mirrorDlg::get_Instance()->shouldFlipH())
@@ -316,10 +308,13 @@ bool IgramArea::openImage(const QString &fileName)
     QSettings settings;
     settings.setValue("lastPath",lastPath);
     resizeImage();
-
+    m_polygons.clear();
+    m_regionEdit->clear();
+    m_regionEdit->hide();
     // check for an outline file
     QFileInfo finfo(makeOutlineName());
     if (finfo.exists()){
+        deleteRegions();
         loadOutlineFile(finfo.absoluteFilePath());
     }
     else {
@@ -363,6 +358,23 @@ bool IgramArea::openImage(const QString &fileName)
                     drawBoundary();
                 }
             }
+            QStringList regionsList = set.value("lastRegions", "").toString().split("\n");
+
+            int r = 0;
+            foreach(QString str, regionsList){
+                if (str == "")
+                    continue;
+                m_regionEdit->addRegion(QString().sprintf("Region %d",++r));
+                QStringList vals = str.split(" ");
+                std::vector< cv::Point> region;
+                for (int i = 1; i < vals.size(); ++i){
+                    QStringList pointVals = vals[i].split(",");
+                    region.push_back(cv::Point(pointVals[0].toInt(), pointVals[1].toInt()));
+                }
+                if (region.size() > 0)
+                    m_polygons.append(region);
+            }
+            drawBoundary();
         }
     }
     cropTotalDx = cropTotalDy = 0;
@@ -370,11 +382,18 @@ bool IgramArea::openImage(const QString &fileName)
 
     if (m_outside.m_radius > 0.)
         emit upateColorChannels(igramImage);
+    syncRegions();
     emit showTab(0);
     QApplication::restoreOverrideCursor();
     return true;
 }
+void IgramArea::syncRegions(){
 
+    m_regionEdit->clear();
+    for (int n = 0; n < m_polygons.size(); ++n){
+        m_regionEdit->addRegion(QString().sprintf("Region %d", n+1));
+    }
+}
 
 bool IgramArea::saveImage(const QString &fileName, const char *fileFormat)
 
@@ -418,7 +437,7 @@ void IgramArea::undo(){
         igramImage = p.m_image;
         m_OutterP1 = m_outside.m_p1.m_p;
         m_OutterP2 = m_outside.m_p2.m_p;
-    } else {
+    } if (m_current_boundry == CenterOutline) {
         outlinePair p = m_centerHist.undo();
         m_center = p.m_outline;
         igramImage = p.m_image;
@@ -437,7 +456,7 @@ void IgramArea::redo(){
         m_OutterP1 = m_outside.m_p1.m_p;
         m_OutterP2 = m_outside.m_p2.m_p;
     }
-    else {
+    else if (m_current_boundry == CenterOutline){
         outlinePair p = m_centerHist.redo();
 
         m_center = p.m_outline;
@@ -475,6 +494,37 @@ bool IgramArea::eventFilter(QObject *object, QEvent *event)
     return QObject::eventFilter( object, event );
 }
 
+void IgramArea::increaseRegion(int n, double scale){
+
+    int xavg = 0;
+    int yavg = 0;
+    for (int i = 0; i < m_polygons[n].size(); ++i){
+        xavg += m_polygons[n][i].x;
+        yavg += m_polygons[n][i].y;
+    }
+    xavg /= m_polygons[n].size();
+    yavg /= m_polygons[n].size();
+    // find the closest point to the center
+    double shortest = 99999;
+    int shortestndx;
+    for (int i = 0; i < m_polygons[n].size(); ++i){
+        int delx = m_polygons[n][i].x - xavg;
+        int dely = m_polygons[n][i].y - yavg;
+        double del = sqrt(delx * delx + dely * dely);
+        if (del < shortest){
+            shortest = del;
+            shortestndx = i;
+        }
+    }
+
+    for (int i = 0; i < m_polygons[n].size(); ++i){
+        m_polygons[n][i].x = scale * (m_polygons[n][i].x - xavg) + xavg;
+        m_polygons[n][i].y = scale * (m_polygons[n][i].y - yavg) + yavg;
+    }
+
+
+}
+
 void IgramArea::increase(int i) {
 
     if (m_current_boundry == OutSideOutline) {
@@ -482,10 +532,13 @@ void IgramArea::increase(int i) {
         m_OutterP1 = m_outside.m_p1.m_p;
         m_OutterP2 = m_outside.m_p2.m_p;
     }
-    else {
+    else if (m_current_boundry == CenterOutline){
         m_center.enlarge(i);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
+    }
+    else if (m_current_boundry == PolyArea){
+        increaseRegion(polyndx,1.1);
     }
     drawBoundary();
 }
@@ -496,10 +549,13 @@ void IgramArea::decrease(int i){
         m_OutterP1 = m_outside.m_p1.m_p;
         m_OutterP2 = m_outside.m_p2.m_p;
     }
-    else {
+    else if (m_current_boundry == CenterOutline) {
         m_center.enlarge(-1);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
+    }
+    else if (m_current_boundry == PolyArea){
+        increaseRegion(polyndx, .9);
     }
     drawBoundary();
 }
@@ -514,12 +570,14 @@ void IgramArea::zoomOut(){
 void IgramArea::zoomFull(){
     zoomIndex = 1;
     scale = fitScale;
-    zoom(0, QPointF(0,0));
+    resizeImage();
+    //zoom(0, QPointF(0,0));
 
 }
 void IgramArea::zoom(int del, QPointF zoompt){
 
     zoomIndex += del;
+    qDebug() << "zoom "<< del << zoomIndex;
     if (zoomIndex < 1) {
         zoomIndex = 1;
     }
@@ -547,6 +605,7 @@ void IgramArea::zoom(int del, QPointF zoompt){
     }
     else {
         scale = fitScale;
+        resize(igramImage.size() * fitScale * zoomIndex);
         gscrollArea->setWidgetResizable(true);
     }
     drawBoundary();
@@ -570,7 +629,7 @@ void IgramArea::wheelEvent (QWheelEvent *e)
             m_OutterP1 = m_outside.m_p1.m_p;
             m_OutterP2 = m_outside.m_p2.m_p;
         }
-        else {
+        else if (m_current_boundry == CenterOutline){
             m_center.enlarge(del);
             m_innerP1 = m_center.m_p1.m_p;
             m_innerP2 = m_center.m_p1.m_p;
@@ -585,9 +644,26 @@ void IgramArea::wheelEvent (QWheelEvent *e)
     zoom(del, zoompt);
 
 }
+void IgramArea::deleteregion(int r){
+    m_polygons.removeAt(r);
+    drawBoundary();
+    syncRegions();
+}
+
+void IgramArea::addregion(){
+    m_regionEdit->addRegion( QString().sprintf("Region %d",m_polygons.size()+1));
+    m_polygons.append(std::vector< cv::Point>());
+    polyndx = m_polygons.size()-1;
+}
+
+void IgramArea::selectRegion(int r){
+    polyndx = r;
+    drawBoundary();
+}
 
 void IgramArea::mousePressEvent(QMouseEvent *event)
 {
+
     if (igramImage.isNull())
         return;
 
@@ -602,12 +678,44 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
             drawBoundary();
             return;
         }
-
-        scribbling = true;
         if (m_current_boundry == OutSideOutline) m_outside.m_radius = 0;
+        else
+        if (m_current_boundry == PolyArea){
+
+            QPointF scaledp = pos/scale;
+            lastPoint = scaledp;
+            if (regionMode){
+                if (m_regionEdit->m_doLine){
+                    // if current point is close to start then exit region Mode
+                    int dx = m_polygons[polyndx][0].x - scaledp.x();
+                    int dy = m_polygons[polyndx][0].y - scaledp.y();
+                    int d = sqrt(dx * dx + dy * dy);
+                    if (d < 10 ){
+
+                        m_polygons[polyndx].push_back(cv::Point(
+                                                         m_polygons[polyndx][0].x,
+                                                         m_polygons[polyndx][0].y));
+                        syncRegions();
+                        regionMode = false;
+                    }
+                    else {
+                        m_polygons[polyndx].push_back(cv::Point(scaledp.x(),scaledp.y()));
+                    }
+                }
+                return;
+            }
+
+            syncRegions();
+            std::vector< cv::Point> r;
+            r.push_back(cv::Point(scaledp.x(), scaledp.y()));
+            m_polygons.append(r);
+            polyndx = m_polygons.size() -1;
+            //drawBoundary();
+            regionMode = true;
+            return;
+        }
         else m_center.m_radius = 0;
-
-
+        scribbling = true;
         pos = pos/scale;
         pos.setX((int)pos.x());
         pos.setY((int)(pos.y()));
@@ -615,7 +723,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         if (m_current_boundry == OutSideOutline){
             Pcount = &outterPcount;
         }
-        else {
+        else if (m_current_boundry == CenterOutline){
             Pcount = &innerPcount;
         }
         // if doing ellipse and on the center line
@@ -636,7 +744,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
                         m_OutterP1= m_OutterP2;
                         m_OutterP2= pos;
                     }
-                    else {
+                    else if (m_current_boundry == CenterOutline){
                         m_innerP1 = m_innerP2;
                         m_innerP2 = pos;
                     }
@@ -646,7 +754,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
                 if (m_current_boundry == OutSideOutline){
                     m_OutterP2 = pos;
                 }
-                else {
+                else if (m_current_boundry == CenterOutline){
                     m_innerP2 = pos;
                 }
             }
@@ -654,7 +762,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
                 if (m_current_boundry == OutSideOutline){
                     m_OutterP1 = pos;
                 }
-                else {
+                else if (m_current_boundry == CenterOutline){
                     m_innerP1 = pos;
                 }
                 *Pcount = 1;
@@ -663,7 +771,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         else {
             if (m_current_boundry == OutSideOutline)
                 m_OutterP1 = pos;
-            else
+            else if (m_current_boundry == CenterOutline)
                 m_innerP1 = pos;
             *Pcount=1;
         }
@@ -701,11 +809,19 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
             m_OutterP1.ry() = scaledPos.y();
 
         }
+
         else {
             innerPcount = 2;
             m_innerP2 = scaledPos;
 
         }
+        drawBoundary();
+    }
+    if ( regionMode){
+        if (m_regionEdit->m_doFreeform && event->buttons() & Qt::LeftButton){
+            m_polygons[polyndx].push_back(cv::Point(scaledPos.x(), scaledPos.y()));
+        }
+        lastPoint = scaledPos;
         drawBoundary();
     }
     else if ((event->buttons() & Qt::LeftButton) & dragMode){
@@ -716,16 +832,23 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
                 m_OutterP1 += del;
                 m_OutterP2 += del;
             }
-            else {
+            else if (m_current_boundry == CenterOutline){
                 m_center.translate((del));
                 m_innerP1 += del;
                 m_innerP2 += del;
             }
-
-            drawBoundary();
-            lastPoint = scaledPos;
-
         }
+        if (m_current_boundry == PolyArea){
+            QPointF del = scaledPos - lastPoint;
+            qDebug() << "move "<< del << lastPoint;
+
+            for (unsigned int i = 0; i < m_polygons[polyndx].size(); ++i){
+                m_polygons[polyndx][i].x += del.x();
+                m_polygons[polyndx][i].y += del.y();
+            }
+        }
+        drawBoundary();
+        lastPoint = scaledPos;
     }
 }
 
@@ -746,11 +869,22 @@ void IgramArea::mouseReleaseEvent(QMouseEvent *event)
             m_outside = CircleOutline(m_OutterP1,m_OutterP2);
             m_outsideHist.push(igramImage, m_outside);
         }
-        else{
+        else if (m_current_boundry == CenterOutline){
             m_center = CircleOutline(m_innerP1,m_innerP2);
             m_centerHist.push(igramImage, m_center);
         }
         emit enableShiftButtons(true);
+    }
+    if (event->button() == Qt::LeftButton && regionMode){
+
+        if (m_regionEdit->m_doLine){
+
+        }
+        else {
+            m_polygons[polyndx].push_back( cv::Point(m_polygons[polyndx][0].x,m_polygons[polyndx][0].y));
+            syncRegions();
+            regionMode = false;
+        }
     }
 
     drawBoundary();
@@ -781,6 +915,7 @@ void drawCircle(QPointF& p1, QPointF& p2, QPainter& painter)
 void IgramArea::drawBoundary()
 
 {
+
     m_withOutlines = igramImage.copy();
 
     QPainter painter(&m_withOutlines);
@@ -805,6 +940,64 @@ void IgramArea::drawBoundary()
             inside.draw(painter,1.);
 
         }
+
+        if (m_polygons.size() > 0){
+            QFont font;
+            font.setPixelSize(30);
+            painter.setFont(font);
+            for (int n = 0; n < m_polygons.size(); ++n){
+                if (n == polyndx && m_current_boundry == PolyArea){
+                    painter.setPen(QPen(QColor("white"),3));
+                    if (regionMode && m_regionEdit->m_doLine){
+                        // if current point is close to start then exit region Mode
+                        int dx = m_polygons[polyndx][0].x - lastPoint.x();
+                        int dy = m_polygons[polyndx][0].y - lastPoint.y();
+                        int d = sqrt(dx * dx + dy * dy);
+                        if (d < 10 ){
+                            painter.setPen(QPen(centerPenColor, 5, (Qt::PenStyle)lineStyle));
+                        }
+                    }
+                }
+                else {
+
+                    painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
+                }
+                QPointF p(m_polygons[n][0].x -10, m_polygons[n][0].y - 10);
+                painter.drawText(p,QString().sprintf("%d",n+1));
+                if (m_polygons[n].size() > 1){
+                    for (int j = 0; j < m_polygons[n].size()-1; ++j){
+                        painter.drawLine(m_polygons[n][j].x, m_polygons[n][j].y,
+                                         m_polygons[n][j+1].x, m_polygons[n][j+1].y);
+                    }
+                    QPointF p(m_polygons[n][0].x -10, m_polygons[n][0].y - 10);
+                    painter.drawText(p,QString().sprintf("%d",n+1));
+                }
+                if (regionMode){
+
+                    if (m_regionEdit->m_doLine){
+                        for (unsigned int i = 1; i < m_polygons[polyndx].size()-1; ++i){
+
+                            painter.drawLine(m_polygons[polyndx][i-1].x,
+                                             m_polygons[polyndx][i-1].y,
+                                             m_polygons[polyndx][i].x,
+                                             m_polygons[polyndx][i].y);
+                        }
+                        painter.drawLine(m_polygons[polyndx].back().x, m_polygons[polyndx].back().y,
+                                         lastPoint.x(), lastPoint.y());
+                    }
+                    else {
+
+                    // close the poly back to the start
+                    int j = m_polygons[n].size() -1;
+                    painter.drawLine(m_polygons[n][j].x,m_polygons[n][j].y,
+
+                                    m_polygons[n][m_polygons[n].size()-1].x,
+                                    m_polygons[n][m_polygons[n].size()-1].y);
+                    }
+                }
+            }
+
+        }
     }
     QString msg;
     QString msg2;
@@ -825,11 +1018,9 @@ void IgramArea::drawBoundary()
         msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
                                  inside.m_center.x(),inside.m_center.y(),inside.m_radius, scale);
     }
-    emit statusBarUpdate(msg+msg2);
+    if (m_current_boundry != PolyArea)
+        emit statusBarUpdate(msg+msg2);
 
-    //m_outlineTimer->start(1000);
-
-    //emit statusBarUpdate(QString().sprintf("%6.1lf,%6.1lf", m_OutterP1.x(),m_OutterP1.y()));
     QPainter p( &igramDisplay);
     p.drawImage(QPoint(0,0), m_withOutlines.scaled(m_withOutlines.width() * scale, m_withOutlines.height() * scale));
 
@@ -995,9 +1186,7 @@ void IgramArea::crop() {
 
     set.setValue("lastOutsideRad", radx);
 
-    set.setValue("lastinsideRad", m_center.m_radius);
-    set.setValue("lastinsideCx", m_center.m_center.x());
-    set.setValue("lastInsideCy", m_center.m_center.y());
+
     int width = igramImage.width();
     int height = igramImage.height();
     int right = width - (radx + cx);
@@ -1029,14 +1218,29 @@ void IgramArea::crop() {
 
     x = igramImage.width()/2;
     y = igramImage.height()/2;
-
-
+    QString text;
+    QTextStream regions(&text);
+    for (int i = 0; i < m_polygons.size(); ++i){
+        regions << "Poly";
+        for(int j = 0; j < m_polygons[i].size(); ++j){
+            regions << " " << QString().number(m_polygons[i][j].x) << ","<<
+                       QString().number(m_polygons[i][j].y);
+            m_polygons[i][j].x -=crop_dx;
+            m_polygons[i][j].y -= crop_dy;
+        }
+        regions << "\n";
+    }
+    set.setValue("lastRegions", text);
     m_outside.translate(QPointF(-crop_dx,-crop_dy));
     cx = m_outside.m_center.x() + crop_dx;
     cy = m_outside.m_center.y() + crop_dy;
     set.setValue("lastOutsideCx",cx);
     set.setValue("lastOutsideCy",cy);
+
+    set.setValue("lastinsideRad", m_center.m_radius);
     m_center.translate(QPointF(-crop_dx,-crop_dy));
+    set.setValue("lastinsideCx", m_center.m_center.x() + crop_dx);
+    set.setValue("lastInsideCy", m_center.m_center.y() + crop_dy);
     // need to rescale p1 and p2 because of the crop
     scale = (double)(this->height())/y;
     m_OutterP1 = m_outside.m_p1.m_p;
@@ -1063,13 +1267,24 @@ void IgramArea::dftReady(QImage img){
 
     m_dftThumb->move(p.x() + wr.width() - r.width(),p.y());
 }
+void IgramArea::PolyAreaActive(bool checked){
+    if (checked)
+        m_current_boundry = PolyArea;
+    drawBoundary();
+    update();
+
+}
 
 void IgramArea::SideOutLineActive(bool checked){
-    sideOutlineIsActive = checked;
     if (checked)
        m_current_boundry = OutSideOutline;
-    else
-       m_current_boundry = CenterOutline;
+    drawBoundary();
+    update();
+}
+void IgramArea::CenterOutlineActive(bool checked){
+    if (checked)
+        m_current_boundry = CenterOutline;
+    drawBoundary();
     update();
 }
 
@@ -1095,13 +1310,30 @@ void IgramArea::loadOutlineFile(QString fileName){
     emit dftCenterFilter(sideLobe.m_radius);
 
     if ((file.tellg() > 0) && (fsize > file.tellg())) {
-        m_center = readCircle(file);
-        m_innerP1 = m_center.m_p1.m_p;
-        m_innerP2 = m_center.m_p2.m_p;
-        innerPcount = 2;
+        if (file.peek() != 'P'){
+            m_center = readCircle(file);
+            m_innerP1 = m_center.m_p1.m_p;
+            m_innerP2 = m_center.m_p2.m_p;
+            innerPcount = 2;
+        }
     }
     else {
         m_center.m_radius = 0;
+    }
+    std::string line;
+    m_polygons.clear();
+    while(std::getline(file, line)){
+        if (line == "Poly"){
+            std::getline(file,line);
+            m_polygons.push_back(std::vector< cv::Point>());
+            m_regionEdit->addRegion(QString().sprintf("Region %d", m_polygons.size()));
+            QStringList data = QString::fromStdString(line).split(" ");
+            for (int i = 0; i < data.size()-1; ++i){
+                QStringList vals = data[i].split(",");
+                m_polygons.back().push_back(cv::Point(vals[0].toDouble(),vals[1].toDouble()));
+
+            }
+        }
     }
     m_OutterP1 = m_outside.m_p1.m_p;
     m_OutterP2 = m_outside.m_p2.m_p;
@@ -1126,8 +1358,8 @@ void IgramArea::readOutlines(){
                         tr("oln (*.oln)"));
     if (fileName.isEmpty())
         return;
+    deleteRegions();
     loadOutlineFile(fileName);
-
 }
 QString IgramArea::makeOutlineName(){
     QSettings settings;
@@ -1163,6 +1395,15 @@ void IgramArea::writeOutlines(QString fileName){
         inside.translate(QPointF(cropTotalDx,cropTotalDy));
         writeCircle(file,inside);
     }
+    for (int i = 0; i < m_polygons.size(); ++ i){
+        if (m_polygons[i].size() > 0){
+            file << "Poly"<<std::endl;
+            for (int j = 0; j < m_polygons[i].size(); ++j){
+                file <<(m_polygons[i][j].x+cropTotalDx) << "," << (m_polygons[i][j].y+cropTotalDy) << " ";
+            }
+            file << std::endl;
+        }
+    }
     file.flush();
     file.close();
 
@@ -1192,7 +1433,14 @@ void IgramArea::deleteOutline(){
         set.setValue("lastOutsideCx",0);
         set.setValue("lastOutsideCy",0);
     }
-    else {
+    else if (m_current_boundry == PolyArea){
+        for (int n = 0; n < m_polygons.size(); ++n){
+            m_regionEdit->deleteRegion(n);
+        }
+        m_polygons.clear();
+        syncRegions();
+    }
+    else if (m_current_boundry == CenterOutline){
         m_centerHist.clear();
         m_center = CircleOutline(QPointF(0,0),0);
         innerPcount = 0;
@@ -1205,6 +1453,13 @@ void IgramArea::deleteOutline(){
 
     drawBoundary();
 }
+void IgramArea::deleteRegions(){
+    for (int i = 0; i < m_polygons.size(); ++i){
+        m_regionEdit->deleteRegion(i);
+    }
+    m_polygons.clear();
+}
+
 void IgramArea::shiftoutline(QPointF p) {
     if (m_current_boundry == OutSideOutline){
         m_outside.translate(p);
@@ -1212,7 +1467,7 @@ void IgramArea::shiftoutline(QPointF p) {
         m_OutterP2 = m_outside.m_p2.m_p;
         m_outsideHist.push(igramImage, m_outside);
     }
-    else {
+    else if (m_current_boundry == CenterOutline){
         m_center.translate(p);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
@@ -1248,7 +1503,7 @@ void IgramArea::nextStep(){
     }
     if (!hasBeenCropped)
         crop();
-
+    m_regionEdit->hide();
     m_dftThumb->hide();
     emit showTab(1);
 }

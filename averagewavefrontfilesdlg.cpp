@@ -54,13 +54,13 @@ void averageWaveFrontFilesDlg::on_process_clicked()
         if (first){
             first = false;
             average = sm->readWaveFront(name, configChanged );
-            sm->makeMask(average);
+            sm->makeMask(average, false);
             mask = average->mask.clone();
 
         }
         else {
             wavefront *second = sm->readWaveFront(name, configChanged);
-            sm->makeMask(second);
+            sm->makeMask(second, false);
             int size1 = average->data.rows * average->data.cols;
             int size2 = second->data.rows * second->data.cols;
             cv::Mat resize = second->data.clone();

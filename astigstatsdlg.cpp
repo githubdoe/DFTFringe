@@ -850,7 +850,7 @@ void astigStatsDlg::on_distribution_clicked()
         ypl->setTitle(" Y " + QString().number(size) + " samples");
         ypl->setAxisTitle(QwtPlot::xBottom, " SD: " + QString().number(ystd.val[0]));
 
-        html.append("<p style=\"page-break-before: always\"><hr><center><h2> Sample Group " + Name +
+        html.append("<p style=\"page-break-before: always\"><br><center><h2> Sample Group " + Name +
                     "</h2></center></p><br><br>");
 
         QPixmap pm = xpl->grab();

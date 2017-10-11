@@ -27,7 +27,7 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="1">
+    <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="minimumSize">
        <size>
@@ -150,7 +150,7 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>266</width>
+     <width>304</width>
      <height>526</height>
     </size>
    </property>
@@ -296,13 +296,23 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
         <item>
          <widget class="QRadioButton" name="SelectObsOutline">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selet this to edit the center hole of the mirror if presen in the interferogramt.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Selet this to edit the center hole of the mirror if presen in the interferogramt.&lt;/p&gt;&lt;p&gt;This area of the surface will be set to zero and igrnoed by any metrics.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="statusTip">
            <string>Work on center hole outline</string>
           </property>
           <property name="text">
            <string>Central hole</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="polygonRb">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Outline areas of the interferogram to ignore but fill wavefront data  in with interpolated data from the zernike values.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Region</string>
           </property>
          </widget>
         </item>
@@ -1181,8 +1191,14 @@ em;
    </property>
   </action>
   <action name="actionDebugStuff">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>DebugStuff</string>
+   </property>
+   <property name="visible">
+    <bool>true</bool>
    </property>
   </action>
  </widget>

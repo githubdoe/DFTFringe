@@ -381,15 +381,14 @@ void mirrorDlg::on_diameter_Changed(const double diam)
 
 void mirrorDlg::on_roc_textChanged(const QString &arg1)
 {
-
     roc = arg1.toDouble() * ((mm) ? 1: 25.4);
     FNumber = roc /(2. * diameter);
     ui->FNumber->blockSignals(true);
     ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
     ui->FNumber->blockSignals(false);
     updateZ8();
-
 }
+
 /* used when the just loading wavefront is different */
 void mirrorDlg::on_roc_Changed(const double newVal)
 {

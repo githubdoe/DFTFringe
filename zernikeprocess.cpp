@@ -495,11 +495,6 @@ double Zernike(int n, double X, double Y)
 }
 
 
-/*
-Public Function Wavefront(x1 As Double, y1 As Double, Order As Integer)
-'computes the wavefront deviation from all selected Zernikes
-*/
-
 
 zernikeProcess *zernikeProcess::m_Instance = NULL;
 zernikeProcess *zernikeProcess::get_Instance(){
@@ -515,59 +510,6 @@ zernikeProcess::zernikeProcess(QObject *parent) :
     md = mirrorDlg::get_Instance();;
 }
 
-//void zernikeProcess::unwrap_to_zernikes(zern_generator *zg, cv::Mat wf, cv::Mat mask){
-//    // given a wavefront generate arbitrary number of zernikes from it.  Then create wavefront from the zernikies.
-//    double *m = (double *)(wf.data);
-
-//    int size = wf.cols;
-
-//    //'calculate LSF matrix elements
-//    int terms = zg->get_terms_cnt();
-//    int am_size = terms* terms;
-//    double* Am = new double[am_size];
-//    double* Bm = new double[terms];
-//    for (int  i = 0; i < am_size; ++i)
-//    {
-//        Am[i] = 0.;
-//    }
-//    for (int i = 0; i < terms; ++i)
-//        Bm[i] = 0;
-
-//    //calculate LSF right hand side
-//    for(int y = 0; y < size; ++y) //for each point on the surface
-//    {
-//        for(int x = 0; x < size; ++x)
-//        {
-//             if (mask.at<bool>(x,y))
-//            {
-//                int sndx = x + y* size;
-
-//                for (int  i = 0; i < terms; ++i)
-//                {
-//                    double ipoly = zg->get_zpoly(i,x,y);
-//                    int dy = i * terms;
-//                    for (int j = 0; j < terms; ++j)
-//                    {
-//                        int ndx = j + dy;
-//                        Am[ndx] = Am[ndx] +
-//                                ipoly * zg->get_zpoly(j, x, y);
-//                    }
-//                    Bm[i] = Bm[i] + m[sndx] * ipoly;
-
-//                }
-
-//            }
-//        }
-
-//    }
-//    // compute coefficients
-//    gauss_jordan (terms, Am, Bm);
-//    for (int i = 0; i < terms; ++i){
-//        qDebug() << i << " " << Bm[i];
-//    }
-//    zg->set_zcoefs(Bm);
-//    delete[] Am;
-//}
 // compute zernikes from unwrapped surface
 #define SAMPLE_WIDTH 1
 void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
@@ -582,9 +524,9 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
 
     Z = cv::Mat(Z_TERMS,1,numType, 0.);
 
-/*
-'calculate LSF matrix elements
-*/
+    /*
+    'calculate LSF matrix elements
+    */
 
     Settings2 &settings = *Settings2::getInstance();
     bool useSvd = false;
@@ -629,7 +571,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
             double rho = sqrt(ux * ux + uy * uy);
             double theta = atan2(uy,ux);
             zpolar.init(rho, theta);
-            if (wf.workMask.at<bool>(y,x) != 0){
+            if ( rho <= 1. && wf.data.at<double>(y,x) != 0.0){
 
                 for ( int i = 0; i < Z_TERMS; ++i)
                 {
@@ -688,7 +630,6 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
     cv::Mat unwrapped = wf.data.clone();
 
-
     double scz8 = md->z8 * md->cc;
     if (!md->doNull || !wf.useSANull){
         scz8 = 0.;
@@ -710,17 +651,17 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
     {
         for(int x = 0; x < nx; ++x)
         {
-            if(wf.mask.at<bool>(y,x))
+
+            if (wf.workMask.at<bool>(y,x) != 0 && wf.data.at<double>(y,x) != 0.)
             {
                 ux = (double)(x - midx)/rad;
                 uy = (double)(y - midy)/rad;
                 rho = sqrt(ux * ux + uy * uy);
-                theta = atan2(uy,ux);
-                zpolar.init(rho,theta);
-
                 if (rho > 1.){
                     continue;
                 }
+                theta = atan2(uy,ux);
+                zpolar.init(rho,theta);
 
                 sz = unwrapped.at<double>(y,x);
                 nz = 0;
@@ -740,6 +681,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                         nz -= zerns[z] * zpolar.zernike(z,rho, theta);
 
                 }
+
                 nulled.at<double>(y,x) = sz +nz;
             }
         }
@@ -750,47 +692,59 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
     return nulled;
 }
 
-/*
-Public Function Wavefront(x1 As Double, y1 As Double, Order As Integer)
-'computes the wavefront deviation from all selected Zernikes
-*/
-/*
-double zernikeProcess::Wavefront(double x1, double y1, int Order)
-{
-    double S1;
+void zernikeProcess::fillVoid(wavefront &wf){
+    double ux,uy;
+    double rho,theta;
 
+    zernikePolar &zpolar = *zernikePolar::get_Instance();
 
-    S1 = 0;
-
-    for(int  j = 0; j < Order; ++j)
-    {
-        if (zernEnables[j])
-        {
-            double W = Zernike(j,x1,y1);
-            double z = zNulls[j];
-
-//            if (j ==4 && m_remove_bath_astig)
-//            {
-//                z = z - m_bath_astig;
-//            }
-
-            S1 = S1 + z * W;
-
-            if (j == 8 && md->doNull)
-            {
-                S1 = S1 - md->z8 * md->cc * W;
+    if (wf.regions.size() > 0){
+        int startx = 9999;
+        int endx = 0;
+        int starty = 9999;
+        int endy = 0;
+        for (int n = 0; n < wf.regions.size(); ++n){
+            for (int i = 0; i < wf.regions[n].size(); ++i){
+                int x = wf.regions[n][i].x;
+                int y = wf.mask.rows - wf.regions[n][i].y;
+                startx = fmin(startx, x);
+                endx = fmax(endx, x);
+                starty = fmin(starty, y);
+                endy = fmax(endy, y);
             }
 
+            startx-= 2;
+            endx += 2;
+            starty -=2;
+            endy +=2;
+            double midx = wf.m_outside.m_center.x();
+            double midy = wf.m_outside.m_center.y();
+            double rad = wf.m_outside.m_radius;
+            for (int y = starty; y < endy; ++y){
+                for (int x = startx; x < endx; ++x){
+                    if (x < 0 || y < 0 || x >= wf.data.cols || y >= wf.data.rows){
+                        continue;
+                    }
+                    if (wf.mask.at<bool>(y,x) == 0.){
+                        ux = (double)(x - midx)/rad;
+                        uy = (double)(y - midy)/rad;
+                        rho = sqrt(ux * ux + uy * uy);
+                        theta = atan2(uy,ux);
+                        zpolar.init(rho,theta);
+                        double v = 0.;
 
+                        for (int z = 0; z < Z_TERMS; ++z){
+                            v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
+                        }
 
+                        wf.data.at<double>(y,x) = v;
+                    }
+                }
+            }
         }
     }
-    return(S1);
-
 }
 
-
-*/
 cv::Mat makeSurfaceFromZerns(int border, bool doColor){
     simIgramDlg &dlg = *simIgramDlg::get_instance();
     int wx = dlg.size & 0xFFFFFFFE; // Make the size even
