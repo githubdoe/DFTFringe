@@ -152,10 +152,11 @@ void IgramArea::DrawSimIgram(void){
         return;
      QApplication::setOverrideCursor(Qt::WaitCursor);
     //m_demo->hide();
-    int wx = dlg.size;
+    int border = 20;
+    int wx = dlg.size + 2 * border;
     double xcen = (double)(wx-1)/2.;
     double ycen = (double)(wx-1)/2.;
-    int border = 20;
+
     double rad = xcen-border;
     cv::Mat simgram = makeSurfaceFromZerns(border, true);
     //cv::imshow("igram", simgram);

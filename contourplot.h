@@ -44,12 +44,12 @@ public:
 
     wavefront* m_wf;
     ContourTools *m_tools;
-    bool m_useMiddleOffset;
-    int m_colorMapNdx;
-    double m_zOffset;
-    double m_waveRange;
+    static bool m_useMiddleOffset;
+    static int m_colorMapNdx;
+    static double m_zOffset;
+    static double m_waveRange;
     double contourRange;
-    QString m_zRangeMode;
+    static QString m_zRangeMode;
     ContourPlot(QWidget * = NULL, ContourTools *tools  = 0, bool minimal = false);
     void setSurface(wavefront * mat);
     void applyZeroOffset(bool useMiddle);

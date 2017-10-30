@@ -23,7 +23,8 @@
 #include "gplus.h"
 #include <QVector>
 #include <QPointF>
-
+#include <opencv/cv.h>
+void fillCircle(cv::Mat &m, double cx, double cy, double rad, void *color);
 class CircleOutline: public boundary
 {
     public:
@@ -33,6 +34,7 @@ class CircleOutline: public boundary
         virtual ~CircleOutline();
         void draw(QPainter& painter, double scale, double scale2 = -1.);
         bool isInside(QPointF& p , int offset = 0);
+        bool isInside(double x, double y, int offset=0);
         void enlarge(int del);
         void translate(QPointF del);
         void scale(double factor);

@@ -44,6 +44,7 @@ GLWidget::GLWidget(QWidget *parent, ContourTools* tools, surfaceAnalysisTools* s
       m_flip_y_view(false),
       m_flip_x_view(false)
 {
+    m_spinRate = 5;
     QSettings set;
     m_background = QColor(set.value("oglBackground", "black").toString());
     //====== Initial lighting params
@@ -89,11 +90,17 @@ GLWidget::GLWidget(QWidget *parent, ContourTools* tools, surfaceAnalysisTools* s
     connect(m_tools, SIGNAL(newDisplayErrorRange(double,double)),
             this, SLOT(setMinMaxValues(double,double)));
     connect(tools, SIGNAL(contourColorRangeChanged(QString)), SLOT(contourColorRangeChanged(QString)));
+    connect(&aniTimer, SIGNAL(timeout()),this, SLOT(updateAni()));
 }
 
 GLWidget::~GLWidget()
 {
     makeCurrent();
+}
+
+void GLWidget::updateAni(){
+    setYRotation(yRot + m_spinRate);
+    aniTimer.start(10);
 }
 
 void GLWidget::setBackground(QColor c){

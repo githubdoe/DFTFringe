@@ -40,6 +40,13 @@ Try it and if you find no difference in wavefront values then you do not need to
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="applyOffsets">
+     <property name="text">
+      <string>Apply edge offsets when saving wavefront.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QCheckBox" name="downSizeCB">

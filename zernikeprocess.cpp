@@ -569,10 +569,10 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
             double ux = (x -wf.m_outside.m_center.x()) * delta;
             double uy = (y -wf.m_outside.m_center.y()) * delta;
             double rho = sqrt(ux * ux + uy * uy);
-            double theta = atan2(uy,ux);
-            zpolar.init(rho, theta);
-            if ( rho <= 1. && wf.data.at<double>(y,x) != 0.0){
 
+            if ( rho <= 1. && (wf.mask.at<uchar>(y,x) != 0) && wf.data.at<double>(y,x) != 0.0){
+                double theta = atan2(uy,ux);
+                zpolar.init(rho, theta);
                 for ( int i = 0; i < Z_TERMS; ++i)
                 {
 
@@ -637,8 +637,14 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
     double midx = wf.m_outside.m_center.rx();
     double midy = wf.m_outside.m_center.ry();
     double rad = wf.m_outside.m_radius;
-
-    cv::Mat nulled = cv::Mat::zeros(ny,nx,numType);
+    cv::Mat mask = cv::Mat::zeros(wf.data.size(), CV_8UC1);
+    uchar val = 0xff;
+    fillCircle(mask, midx,midy, rad + 2, &val);
+    cv::Mat nulled = cv::Mat::zeros(wf.data.size(),numType);
+    if (wf.m_inside.m_radius > 0){
+        uchar val = 0;
+        fillCircle(mask, wf.m_inside.m_center.x(), wf.m_inside.m_center.y(), wf.m_inside.m_radius-2, &val);
+    }
 
     bool doDefocus = surfaceAnalysisTools::get_Instance()->m_useDefocus;
     double defocus = 0;
@@ -652,7 +658,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
         for(int x = 0; x < nx; ++x)
         {
 
-            if (wf.workMask.at<bool>(y,x) != 0 && wf.data.at<double>(y,x) != 0.)
+            if (mask.at<bool>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0)
             {
                 ux = (double)(x - midx)/rad;
                 uy = (double)(y - midy)/rad;
@@ -660,6 +666,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 if (rho > 1.){
                     continue;
                 }
+
                 theta = atan2(uy,ux);
                 zpolar.init(rho,theta);
 
@@ -747,7 +754,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
 
 cv::Mat makeSurfaceFromZerns(int border, bool doColor){
     simIgramDlg &dlg = *simIgramDlg::get_instance();
-    int wx = dlg.size & 0xFFFFFFFE; // Make the size even
+    int wx = dlg.size + 2 *  border;
     int wy = wx;
     double rad = (double)(wx-1)/2.;
     double xcen = rad,ycen = rad;
@@ -788,6 +795,7 @@ cv::Mat makeSurfaceFromZerns(int border, bool doColor){
                     result.at<Vec4b>(y,x)[3] = 255;
                 }
                 else {
+                    if (S1 == 0.0) S1 += .0000001;
                     result.at<double>(y,x) = S1;
                 }
             }

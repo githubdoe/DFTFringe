@@ -225,9 +225,6 @@ void ContourPlot::setSurface(wavefront * wf) {
         applyZeroOffset(false);
 
     setZRange();
-
-
-
     QwtScaleWidget *rightAxis = axisWidget( QwtPlot::yRight );
     rightAxis->setTitle(tr( "wavefront error at 550nm") );
     rightAxis->setColorBarEnabled( true );
@@ -260,10 +257,13 @@ void ContourPlot::setSurface(wavefront * wf) {
     //resize(QSize(width()-1,height()-1));
     //resize(QSize(width()+1,height()+1));
 }
-
+double ContourPlot::m_waveRange;
+bool ContourPlot::m_useMiddleOffset = true;
+int ContourPlot::m_colorMapNdx = 0;
+QString ContourPlot::m_zRangeMode("Auto");
+double ContourPlot::m_zOffset = 0.;
 ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
-    QwtPlot( parent ),m_wf(0),m_tools(tools), m_useMiddleOffset(true),m_colorMapNdx(0)
-    ,m_zRangeMode("Auto"), m_autoInterval(false),m_minimal(minimal),m_contourPen(Qt::white)
+    QwtPlot( parent ),m_wf(0),m_tools(tools), m_autoInterval(false),m_minimal(minimal),m_contourPen(Qt::white)
 {
     d_spectrogram = new QwtPlotSpectrogram();
     QSettings settings;

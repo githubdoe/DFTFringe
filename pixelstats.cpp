@@ -500,7 +500,7 @@ void pixelStats::updateSurface(){
 }
 
 void  pixelStats::updateHisto(){
-    if (m_wf->min == m_wf->max)
+    if ((float)(m_wf->min) == (float)(m_wf->max))
         return;
     ui->histo->detachItems( QwtPlotItem::Rtti_PlotCurve);
     ui->histo->detachItems( QwtPlotItem::Rtti_PlotMarker);

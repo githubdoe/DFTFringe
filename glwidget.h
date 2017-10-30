@@ -30,6 +30,7 @@
 #include "surfaceanalysistools.h"
 #include "surfacepropertiesdlg.h"
 #define RADIUS 400
+#include <Qtimer>
 class CQuad
 {
 public:
@@ -76,9 +77,12 @@ public:
     int m_blue;
     QCheckBox FillCB;
     QColor m_background;
+    QTimer aniTimer;
     void setBackground(QColor c);
+    int m_spinRate;
 
 public slots:
+    void updateAni();
     void setXRotation(int angle);
     void setYRotation(int angle);
     void setZRotation(int angle);

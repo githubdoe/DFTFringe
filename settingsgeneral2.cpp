@@ -35,6 +35,11 @@ void SettingsGeneral2::on_wavefrontSizeSb_valueChanged(int arg1){
     set.setValue("wavefrontDownSizeValue", arg1);
 }
 
+void SettingsGeneral2::on_applyOffsets_clicked(bool checked){
+   QSettings set;
+   set.setValue("applyOffsets", checked);
+}
+
 void SettingsGeneral2::on_downSizeCB_clicked(bool checked){
     QSettings set;
     set.setValue("wavefrontShouldDownsize", checked);

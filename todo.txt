@@ -19,15 +19,11 @@ zero
 
 Make the igram done button animate like the standastig compute button.
 
-Central obs flips sides in batch mode.
+make wavefront does not create same for even and odd sized wavefronts.
 
-make astig SD graphs small top to bottom when only two are displayed.
-Figure out how to get a better layout for them.
-
-average with central hole not at center seems to be wrong with a huge fringe.
-
+rotate and save not loadable by old versions because outline is different.
+   Outline is same but outer rows of data are zer0.
 
 losing memory even if not calling imagetogray or even vortex.
 
-Region number is not correct after deleting a region.
-close region list on done.
+pdf report default directory is not correct.

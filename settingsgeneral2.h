@@ -33,6 +33,7 @@ private slots:
     void on_downSizeCB_clicked(bool checked);
     void on_memThreshValue_valueChanged(int val);
     void on_AstigDistGraphWidth_valueChanged(int val);
+    void on_applyOffsets_clicked(bool checked);
 private:
     Ui::SettingsGeneral2 *ui;
     bool m_useSVD;

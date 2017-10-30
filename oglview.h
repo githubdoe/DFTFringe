@@ -44,14 +44,19 @@ public:
     QColor m_background;
     bool zoomed;
     QSize sizeHint() const;
+    int m_spinRate;
 signals:
     void showAll3d(GLWidget *);
     void zoomMe(bool);
 public slots:
     void showAll();
+    void saveImage();
     void setBackground( );
     void zoom();
     void showContextMenu(const QPoint &pos);
+    void animate(bool);
+    void spinRate(int);
+    void saveVideo();
 
 };
 

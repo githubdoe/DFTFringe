@@ -141,7 +141,6 @@ void foucaultView::on_makePb_clicked()
 
     double pixels_per_thou = .001 / pixwidth;
 
-    qDebug()<<"fouc" << pixels_per_thou << pixwidth << pad << size;
     double slitWidthHalf = pixels_per_thou * ui->slitWidthSb->value() * 1000 * ((ui->useMM->isChecked()) ? 1./25.4 : 1.);
     if (slitWidthHalf < .75){
         QString msg = QString().sprintf("warning the slit width of %6.5lf may too small. Using one pixel slit instead", ui->slitWidthSb->value());
@@ -388,7 +387,8 @@ void foucaultView::on_rocOffsetSlider_valueChanged(int value)
 
 }
 inline double foucaultView::getStep(){
-    return (ui->autoStepSize->isChecked())? round(100. * ((ui->useMM->isChecked()) ? 25.4 * m_sag/40. : m_sag/40.))/100. : ui->rocStepSize->value();
+    return (ui->autoStepSize->isChecked())? round(1000. * ((ui->useMM->isChecked()) ? 25.4 * m_sag/5. : m_sag/5.))/1000. :
+                                            ui->rocStepSize->value();
 }
 
 void foucaultView::on_clearCenterCb_clicked()
@@ -402,6 +402,9 @@ void foucaultView::on_autoStepSize_clicked(bool checked)
     ui->rocStepSize->setEnabled(!checked);
 
     double step = getStep();
+    ui->rocStepSize->setValue(step);
+
+
     for (int i = 0; i< 17; ++i){
         double val = (i - 8) * step * 5;
         findChild<QLabel *>(QString().sprintf("l%d",i))->setText(QString::number(val));

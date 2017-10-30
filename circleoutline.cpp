@@ -51,6 +51,33 @@ CircleOutline::CircleOutline()
 }
 
 CircleOutline::~CircleOutline(){}
+bool CircleOutline::isInside(double x, double y, int offset)
+{
+    double x1,y1;
+    x1 = (x+.5) - m_center.x();
+    y1 = (y+.5) - m_center.y();
+    return (sqrt(x1 * x1 + y1 * y1) <= (m_radius-offset));
+}
+
+void fillCircle(cv::Mat &m, double cx, double cy, double rad, void* color){
+    //Size size = m.size();
+    size_t step = m.step;
+    int pix_size = (int)m.elemSize();
+    uchar* ptr = m.ptr();
+
+#define ICV_PUT_POINT( ptr, x )     \
+    memcpy( ptr + (x)*pix_size, color, pix_size );
+
+    for (int y = 0; y < m.rows; ++y){
+        uchar *tptr0 = ptr + y * step;
+        for (int x = 0; x < m.cols; ++x){
+            double dx = (double)(x  - cx)/(rad);
+            double dy = (double)(y  - cy)/(rad);
+            if (sqrt(dx * dx + dy * dy) <= 1.)
+                ICV_PUT_POINT(tptr0, x);
+        }
+    }
+}
 
 bool CircleOutline::isInside(QPointF& p, int offset)
 {

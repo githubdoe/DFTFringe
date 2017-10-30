@@ -227,7 +227,8 @@ int showmem(QString t);
 void MainWindow::openWaveFrontonInit(QStringList args){
     QProgressDialog pd("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
     pd.setRange(0, args.size());
-    pd.show();
+    if (args.length()> 0)
+        pd.show();
     m_surfaceManager->initWaveFrontLoad();
     int cnt = 0;
     QSettings set;
@@ -741,18 +742,18 @@ void MainWindow::on_actionWavefront_triggered()
     dlg.setWindowTitle("Wavefront terms");
     if (!dlg.exec())
         return;
-
-    int wx = dlg.size;
+    int border = 3;
+    int wx = dlg.size + 2 * border;
 
     double rad = (double)(wx-1)/2.;
     double xcen = rad;
     double ycen = rad;
-    int border = 1;
+
 
     rad -= border;
     cv::Mat result = makeSurfaceFromZerns(border);
     m_surfaceManager->createSurfaceFromPhaseMap(result,
-                                                CircleOutline(QPointF(xcen,ycen),rad-2),
+                                                CircleOutline(QPointF(xcen,ycen),rad),
                                                 CircleOutline(QPointF(0,0),0),
                                                 QString("Simulated_Wavefront"));
 }
@@ -1372,19 +1373,40 @@ void MainWindow::on_actionAverage_wave_front_files_triggered()
 #include <qwt_plot_curve.h>
 void MainWindow::on_actionDebugStuff_triggered()
 {
-    wavefront &wf = *m_surfaceManager->m_wavefronts.back();
-    cv::Mat zz = cv::Mat::ones(wf.data.size(), wf.data.type());
-    for (int y = 0; y < wf.data.rows; ++y){
-        for (int x = 0; x < wf.data.cols; ++x){
-            if (wf.data.at<double>(y,x) == 0. && wf.mask.at<bool>(y,x)){
-                zz.at<double>(y,x) = 0;
-            }
-        }
+    wavefront *wf = m_surfaceManager->m_wavefronts.back();
+    int x =0;
+    int y = wf->data.rows/2;
+    QList<QString> l;
+    for (int x = 0; x < wf->data.cols; ++x){
+        //qDebug() << x << wf->data.at<double>(y,x);
     }
-    cv::Mat zzz;
-    cv::resize(zz,zzz, cv::Size(0,0),2,2);
-    cv::imshow("zzz", zz);
-    cv::waitKey(0);
+    while (wf->data.at<double>(y,x) == 0.0){
+        qDebug() << x << wf->data.at<double>(y,x);
+        ++x;
+        l.append("0");
+    }
+    l.append("...");
+
+    while (wf->data.at<double>(y,x) != 0.0){ ++x;}
+    while(x++ < wf->data.cols){
+        l.append("0");
+    }
+    l.append("\n");
+    qDebug() << l;
+    l.clear();
+    x = 0;
+    while (wf->data.at<double>(y,x) == 0.0){
+        qDebug() << x << wf->data.at<double>(x,y);
+        ++x;
+        l.append("0");
+    }
+    l.append("...");
+
+    while (wf->data.at<double>(x,y) != 0.0){ ++x;}
+    while(x++ < wf->data.cols){
+        l.append("0");
+    }
+       qDebug() << l;
 }
 
 void MainWindow::on_polygonRb_clicked(bool checked)

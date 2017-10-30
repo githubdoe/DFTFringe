@@ -66,29 +66,153 @@
 #include "circle.h"
 #include "utils.h"
 #include "wavefrontFilterDlg.h"
+#include "reportdlg.h"
+#include "Circleoutline.h"
+#include <math.h>
+cv::Mat theMask;
+cv::Mat deb;
+double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
+{
 
+    int w = mat.rows;
+    int h = mat.cols;
 
+    // bilinear interpolation to compute  pixel from its
+    // four neighbors
+    if (x < 0)
+        return 0;
+    if (y < 0)
+        return 0;
+    if (x >= w)
+        return 0.;
+    if (y >= h)
+        return 0.;
+
+    int fx = floor(x);
+    int fy = floor(y);
+
+    double a = x - fx;
+    double b = y - fy;
+    try {
+        double f00 = mat.at<double>(fy,fx);
+        // if not interpolation needed then return the anchor point
+        if (a == 0.0 && b == 0.0)
+            return f00;
+
+        if (fy >= h-1)
+        {
+                return 0.;
+        }
+
+        if (fx >= w-1)
+        {
+            return 0.;
+        }
+        bool f00inside = mask.at<uchar>(fy,fx);
+        double f01 = mat.at<double>(fy+1, fx);//[fx + (fy + 1) * w];
+        bool f01inside = mask.at<uchar>(fy+1,fx);
+        double f11 = mat.at<double>(fy+1,fx+1);//[fx + 1 + (fy+1) * w];
+        bool f11inside = mask.at<uchar>(fy+1,fx+1);
+        double 	f10 = mat.at<double>(fy,fx+1);//[ndx_src + 1];
+        bool f10inside = mask.at<uchar>(fy,fx+1);
+
+        // full bilinear
+        if (f00inside && f01inside && f10inside && f11inside)
+            return f00 + a *( f10 - f00) + b * (f01 - f00) +
+                    a * b * (f00 + f11 - f10 - f01);
+        {
+            // not all four corners are inside boundary  find which two are and to linear.
+            if (f00inside && f10inside){
+                return f00 +  a * (f10-f00);
+            }
+            if (f00inside && f01inside){
+                return f00 + b * (f01 - f00);
+            }
+            if (f01inside && f11inside){
+                return f01 + b * (f11 - f01);
+            }
+            if (f11inside && f01inside){
+                return f11 + a * (f11 - f10);
+            }
+
+            // Only one inside
+            if(f00inside) return f00;
+            if (f01inside) return f01;
+            if (f10inside) return f10;
+            if (f11inside) return f11;
+
+            // none were inside boundary so go look in the other direction.
+            double sum = 0.;
+            int cnt = 0;
+            int u = 1;
+            for (int del = 1; del <= u; ++del){
+                if (fy+del > h) continue;
+                if (fy -del < 0) continue;
+                if (fx +del > w) continue;
+                if (fx - del < 0) continue;
+
+                if (mask.at<uchar>(fy+del,fx) != 0){
+                    sum += mat.at<double>(fy+del, fx);
+                    ++cnt;
+                }
+                if (mask.at<uchar>(fy-del,fx)!= 0){
+                    sum += mat.at<double>(fy-del, fx);
+                    ++cnt;
+                }
+                if (mask.at<uchar>(fy,fx+del)!= 0){
+                    sum += mat.at<double>(fy,fx+del);
+                    ++cnt;
+                }
+                if (mask.at<uchar>(fy,fx-del)!= 0){
+                    sum += mat.at<double>(fy,fx-del);
+                    ++cnt;
+                }
+                if (mask.at<uchar>(fy+del,fx+del)!= 0){
+                    sum += mat.at<double>(fy+del, fx+del);
+                    ++cnt;
+                }
+                if (mask.at<uchar>(fy-del,fx-del)!= 0){
+                    sum += mat.at<double>(fy-del, fx-del);
+                    ++cnt;
+                }
+            }
+            if (cnt > 0){
+                sum /= cnt;
+                return sum;
+            }
+            return 0.;
+
+        }
+
+    }
+    catch (...)  // would like to catch just access violations here but this was quick.
+    {
+        qDebug() << "except";
+        return 0.0;
+    }
+}
 void expandBorder(wavefront *wf){
 
     double cx, cy;
     cx = wf->m_outside.m_center.rx();
     cy = wf->m_outside.m_center.ry();
-    double rad = wf->m_outside.m_radius;
-
+    double rad = wf->m_outside.m_radius-2;
+    double r2 = rad * rad;
     for (int y = 0; y < wf->data.rows; ++y){
+        double y1 = (double)(y - cy);
+        double v = y1/rad;
         for (int x = 0; x < wf->data.cols; ++x){
-            int dx = x - cx;
-            int dy = y - cy;
-            double rho = sqrt(dx * dx + dy * dy);
-            if (rho/rad > 1.){
-                double rx = rad* (dx/rho) + cx;
-                double ry = rad * (dy/rho) + cy;
-                double drx = x - rx;
-                double dry = y - ry;
-                double nx = rx - drx;
-                double ny = ry - dry;
-                //qDebug() << x << y << rx << ry << nx << ny;
-                wf->nulledData(y,x) = wf->nulledData(ny,nx);
+            double x1 = (double)(x - cx);
+            double u = x1/rad;
+            double rho = sqrt(u * u + v * v);
+            if (rho > 1.){
+
+                double D = (x1 * x1 + y1 * y1);
+                double alpha = r2/D;
+                double xr = alpha * x1 + cx;
+                double yr = alpha * y1 + cy;
+
+                wf->nulledData.at<double>(y,x) = bilinear(wf->nulledData,wf->mask, xr,yr);
             }
 
         }
@@ -191,7 +315,8 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
             if (m_GB_enabled){
 
                     //expandBorder(wf);
-                    cv::GaussianBlur( wf->nulledData.clone(), wf->workData, cv::Size( m_gbValue, m_gbValue ),0,0);
+                    cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
+                                      cv::Size( m_gbValue, m_gbValue ),0,0,BORDER_REFLECT);
             }
             else {
                 wf->workData = wf->data.clone();
@@ -237,6 +362,9 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
 
         }
         // null out desired terms.
+        //cv::Mat tiltremoved = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables, 0,3);
+        //wf->data = tiltremoved;
+        zp.unwrap_to_zernikes(*wf);
         wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables,0,Z_TERMS   );
         wf->dirtyZerns = false;
 
@@ -246,7 +374,7 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
     if (m_GB_enabled){
             expandBorder(wf);
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
-                              cv::Size( m_gbValue, m_gbValue ),0,0);
+                              cv::Size( m_gbValue, m_gbValue ),0,0,BORDER_REFLECT);
     }
 
     wf->nulledData.release();
@@ -395,8 +523,8 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     double xm,ym;
     xm = wf->m_outside.m_center.x();
     ym = wf->m_outside.m_center.y();
-    double radm =wf->m_outside.m_radius + outsideOffset-1;
-    double rado = wf->m_inside.m_radius + insideOffset ;
+    double radm =wf->m_outside.m_radius + outsideOffset-2;
+    double rado = wf->m_inside.m_radius + insideOffset + 1;
 
     double cx = wf->m_inside.m_center.x();
     double cy = wf->m_inside.m_center.y();
@@ -406,33 +534,26 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     double rx2 = rx * rx;
     double ry = rx * md.m_verticalAxis/md.diameter;
     double ry2 = ry * ry;
-    for (int y = 0; y < height; ++y){
-        for (int x = 0; x < width; ++x){
-            if (!mirrorDlg::get_Instance()->isEllipse()){
-                double dx = (double)(x - xm)/(radm);
-                double dy = (double)(y - ym)/(radm);
-                if ((sqrt(dx * dx + dy * dy) <= 1.))
-                    mask.at<uchar>(y,x) = 255;
-            }
-            else {
+    if (!mirrorDlg::get_Instance()->isEllipse()){
+        uchar v = 0x2ff;
+        fillCircle(mask, xm,ym,radm, &v);
+    }
+    else {
+        for (int y = 0; y < height; ++y){
+            for (int x = 0; x < width; ++x){
+
                 if (fabs(x -xm) > rx || fabs(y -ym) > ry)
                     continue;
                 double v = pow(x - xm, 2)/rx2 + pow(y - ym, 2)/ry2;
-                if ( v <= 1)
-                    mask.at<uchar>(y,x) = 0;
+                if (v <= 1)
+                    mask.at<uchar>(y,x) = 255;
             }
         }
     }
 
     if (rado > 0) {
-        for (int y = 0; y < height; ++y){
-            for (int x = 0; x < width; ++x){
-                double dx = (double)(x - (cx))/(rado);
-                double dy = (double)(y - (cy))/(rado);
-                if (sqrt(dx * dx + dy * dy) < 1.)
-                    mask.at<uchar>(y,x) = 0;
-            }
-        }
+        uchar color = 0;
+        fillCircle(mask, cx,cy,rado, &color);
     }
     // expand the region by 10%
     if (wf->regions.size() > 0 && useInsideCircle){
@@ -466,9 +587,9 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
         DrawPoly(mask, wf->regions);
 
     }
-    wf->mask = mask;
+    wf->mask = mask.clone();
     wf->workMask = mask.clone();
-
+    theMask = mask.clone();
     // add central obstruction
     double r = md.obs * (2. * radm)/md.diameter;
     r/= 2.;
@@ -480,6 +601,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
 
     if (Settings2::showMask())
         showData("surface manager mask",mask);
+
 
 }
 void SurfaceManager::wftNameChanged(int ndx, QString name){
@@ -701,17 +823,23 @@ void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulle
             }
         }
     }
+    int offsetOutside = 0;
+    QSettings set;
+    if (set.value("applyOffsets", false).toBool()){
+        offsetOutside = outsideOffset;
+    }
 
     file << "outside ellipse " <<
                    wf->m_outside.m_center.x()
          << " " << wf->m_outside.m_center.y()
-         << " " << wf->m_outside.m_radius
+         << " " << wf->m_outside.m_radius + offsetOutside
          << " "  << wf->m_outside.m_radius << std:: endl;
+
 
     if (wf->m_inside.m_radius > 0){
         file << "obstruction ellipse " << wf->m_inside.m_center.x()
          << " " << wf->m_inside.m_center.y()
-         << " " << wf->m_inside.m_radius
+         << " " << wf->m_inside.m_radius + ((set.value("applyOffsets", false).toBool()) ? insideOffset: 0)
          << " " << wf->m_inside.m_radius << std:: endl;
     }
 
@@ -932,7 +1060,6 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName, bool &mirrorP
     }
     wf->m_inside = CircleOutline(QPoint(xo,yo), rado);
 
-qDebug() << "read wavefront m_outside"<< wf->m_outside.m_center;
 
     if (lambda != md->lambda){
         if (lambdResp == ASK){
@@ -1110,7 +1237,8 @@ void SurfaceManager::processSmoothing(){
     if (m_GB_enabled){
         if (wf->wasSmoothed != m_GB_enabled || wf->GBSmoothingValue != m_gbValue) {
 
-            cv::GaussianBlur( wf->nulledData.clone(), wf->workData, cv::Size( m_gbValue, m_gbValue ),0,0);
+            cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
+                              cv::Size( m_gbValue, m_gbValue ),0,0,BORDER_REFLECT);
         }
     }
     else if (wf->wasSmoothed == true) {
@@ -1319,19 +1447,11 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
     cv::Mat masked;
     sum = sum/wfList.size();
-    sum.copyTo(masked, mask);
 
-    cv::Mat mm = cv::Mat::ones(masked.rows, masked.cols, masked.type());
-    for (int y = 0; y < masked.rows; ++y){
-        for (int x = 0; x < masked.cols; ++x){
-            if (masked.at<double>(y,x) == 0.)
-                mm.at<double>(y,x) = 0;
-        }
-    }
 
     wavefront *wf = new wavefront();
     *wf = *wfList[0];
-    wf->data = masked.clone();
+    wf->data = sum.clone();
     wf->mask = mask;
     wf->workMask = mask.clone();
     m_wavefronts << wf;
@@ -1372,6 +1492,38 @@ void SurfaceManager::averageWavefrontFiles(QStringList files){
 
 }
 
+cv::Mat rotate(wavefront * wf, double ang){
+    double rad = -ang * M_PI/180.;
+
+    double sina = sin(rad);
+    if (fabs(sina) < .00001) sina = 0.;
+
+    double cosa = cos(rad);
+    if (fabs(cosa) < .00001)
+        cosa = 0.;
+    double xcen = wf->m_outside.m_center.x();
+    double ycen = wf->m_outside.m_center.y();
+
+    cv::Mat rotated = cv::Mat::zeros(wf->data.size(), wf->data.type());
+
+    for (int y = 0; y < wf->data.rows; ++y)
+    {
+
+        for (int x = 0; x < wf->data.cols; ++x)
+        {
+            double sx = (double)x  - xcen;
+            double sy = (double)y  - ycen;
+            double x1 = sx * cosa - sy * sina + xcen;
+            double y1 = sx * sina + sy * cosa + ycen;
+            if (wf->mask.at<uchar>(y,x) != 0)
+            {
+               rotated.at<double>(y,x) = bilinear(wf->data,wf->mask, x1,y1);
+            }
+        }
+    }
+    return rotated;
+}
+
 void SurfaceManager::rotateThese(double angle, QList<int> list){
     workToDo = list.size();
     workProgress = 0;
@@ -1393,17 +1545,16 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         m_surfaceTools->addWaveFront(wf->name);
         m_currentNdx = m_wavefronts.size()-1;
         m_surfaceTools->select(m_currentNdx);
-
-        cv::Point2f ptCp = cv::Point2f(wf->m_outside.m_center.x(), wf->m_outside.m_center.y());
-
-        cv::Mat M = cv::getRotationMatrix2D(ptCp, angle, 1.0);
-        // interpolation that is needed for rotation will use part of the backgound at the edge
-        //  This will mess up the edge so we mask off 3 pixels.
-        cv::Mat edgeMask = cv::Mat::zeros(wf->data.rows, wf->data.cols, wf->mask.type());
-        cv::warpAffine(wf->data ,tmp, M, wf->data.size(),CV_INTER_NN);
-        wf->data = tmp.clone();
+        //wf->mask = cv::Mat::zeros(wf->data.size(), CV_8UC1);
+        uchar ones = 0xff;
+        //fillCircle(wf->mask, wf->m_outside.m_center.x(), wf->m_outside.m_center.y(),
+                   //wf->m_outside.m_radius, &ones);
 
         double rad = -angle * M_PI/180.;
+        cv::Mat rotated = rotate(wf, angle);
+
+        wf->data = rotated.clone();
+
         double sina = sin(rad);
         double cosa = cos(rad);
 
@@ -1437,10 +1588,10 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
     cv::Mat masked;
     cv::Mat result = wf1->data - resize;
 
-    result.copyTo(masked, mask);
+    //result.copyTo(masked, mask);
     wavefront *resultwf = new wavefront;
     *resultwf = *wf1;
-    resultwf->data = masked.clone();
+    resultwf->data = result.clone();
     resultwf->mask = mask.clone();
     resultwf->workMask = mask.clone();
     m_wavefronts << resultwf;
@@ -2353,16 +2504,16 @@ void SurfaceManager::report(){
                              tr("No wave front loaded to create a report for."));
         return;
     }
-    QString fileName = QFileDialog::getSaveFileName((QWidget* )0, "Save PDF report", QString(mirrorDlg::get_Instance()->getProjectPath() +
-                                                                                        "/Report.pdf"), "*.pdf");
-    if (fileName.isEmpty())
+    ReportDlg dlg;
+    if (!dlg.exec())
         return;
-    if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".pdf"); }
+
+
 
     QPrinter printer(QPrinter::HighResolution);
     printer.setColorMode( QPrinter::Color );
     printer.setFullPage( true );
-    printer.setOutputFileName( fileName );
+    printer.setOutputFileName( dlg.fileName );
     printer.setOutputFormat( QPrinter::PdfFormat );
     printer.setResolution(85);
     printer.setPaperSize(QPrinter::A4);
@@ -2375,7 +2526,7 @@ void SurfaceManager::report(){
 
     metricsDisplay *metrics = metricsDisplay::get_instance();
     QString title("<html><body><table width = '100%'><tr><td></td><td><h1><center>Interferometry Report for " +
-                  md->m_name + "</center></td><td>"
+                  dlg.title + "</center></td><td>"
                   + QDate::currentDate().toString() +
                   " " +QTime::currentTime().toString()+"<br>DFTFringe Version:"+APP_VERSION+"</td></tr></table>");
 
@@ -2410,9 +2561,21 @@ void SurfaceManager::report(){
                 val -= md->z8 * md->cc;
             }
 
+
             zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf </td><td>%6.3lf</td></tr></table>",
-                                                                                                                             val, computeRMS(i,val)) + "</td><td>" +
+                             val, computeRMS(i,val)) + "</td><td>" +
                          QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
+            if (i == 5){
+                double x = wf->InputZerns[4];
+                double y = wf->InputZerns[5];
+                double mag = sqrt(x * x + y * y);
+                double angle = atan2(y,x);
+
+                zerns.append("<tr><td>astig Polar</td><td><table width = '100%'><tr><td>"
+                             + QString().sprintf("%6.3lf </td><td>%6.3lf Deg.</td></tr></table>",
+                                 mag, angle * (180.0 / M_PI)) + "</td><td>" +
+                             QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
+            }
         }
 
 
@@ -2430,46 +2593,74 @@ void SurfaceManager::report(){
     }
     QString tail = "</body></html>";
     QTextDocument *doc = editor->document();
-
-    // get the contour plot image
-
+    QString contourHtml;
     QImage contWindow =  QImage(m_contourView->size(),QImage::Format_ARGB32 );
     QPainter p1(&contWindow);
-    m_contourView->render(&p1);
-    QString contour("mydata://contour.png");
-    doc->addResource(QTextDocument::ImageResource,  QUrl(contour), QVariant(contWindow));
-    QString contourHtml = "<p> <img src='" +contour + "'</p>";
-    QString threeD("threeD");
+    // get the contour plot image
+    if (dlg.show_contour){
+
+
+        qDebug() << "contour size" << m_contourView->size();
+
+        m_contourView->render(&p1);
+        if (dlg.reduceContour){
+            contWindow = contWindow.scaled(3 * contWindow.width()/4, contWindow.height()/2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+        }
+        QString contour("mydata://contour.png");
+        doc->addResource(QTextDocument::ImageResource,  QUrl(contour), QVariant(contWindow));
+        contourHtml.append( "<p> <img src='" +contour + "'</p>");
+
+    }
 
     // get the 3D image
-    QImage image = QImage(600,500, QImage::Format_ARGB32 );
-    image.fill( QColor( Qt::white ).rgb() );
-    QImage ddd = m_oglPlot->renderPixmap(600,400).toImage();
-    doc->addResource(QTextDocument::ImageResource,  QUrl(threeD), QVariant(ddd));
-    contourHtml.append("<p> <img src='" +threeD + "'</p>");
-
-    //get the profile plot image
-    QImage i2 = QImage(((MainWindow*)(parent()))->m_profilePlot->size(),QImage::Format_ARGB32);
-    QPainter p2(&i2);
-    ((MainWindow*)(parent()))->m_profilePlot->render(&p2);
-    QImage i2Scaled = i2.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-    QString profile("mydata://profile.png");
-    doc->addResource(QTextDocument::ImageResource,  QUrl(profile), QVariant(i2Scaled));
-    contourHtml.append("<p> <img src='" +profile + "'</p>");
-
-    // add star test if not testing a flat
-    if (!md->isEllipse()){
-        SimulationsView *sv = SimulationsView::getInstance(0);
-        if (sv->needs_drawing){
-            sv->on_MakePB_clicked();
+    if (dlg.show_3D){
+        QString threeD("threeD.png");
+        QImage image = QImage(600,500, QImage::Format_ARGB32 );
+        image.fill( QColor( Qt::white ).rgb() );
+        QImage ddd = m_oglPlot->renderPixmap(600,400).toImage();
+        if (dlg.reduce3D){
+            ddd = ddd.scaled(3 * ddd.width()/4, ddd.height()/2,Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
         }
-        QImage svImage = QImage(sv->size(),QImage::Format_ARGB32 );
-        QPainter p3(&svImage);
-        sv->render(&p3);
-        QImage svImageScaled = svImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-        QString svpng("mydata://sv.png");
-        doc->addResource(QTextDocument::ImageResource,  QUrl(svpng), QVariant(svImageScaled));
-        contourHtml.append("<p> <img src='" +svpng + "'</p>");
+        doc->addResource(QTextDocument::ImageResource,  QUrl(threeD), QVariant(ddd));
+        contourHtml.append("<p> <img src='" +threeD + "'</p>");
+    }
+    if (dlg.show_profile){
+        //get the profile plot image
+        QImage i2 = QImage(((MainWindow*)(parent()))->m_profilePlot->size(),QImage::Format_ARGB32);
+        QPainter p2(&i2);
+        ((MainWindow*)(parent()))->m_profilePlot->render(&p2);
+        QImage i2Scaled = i2.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+        QString profile("mydata://profile.png");
+        doc->addResource(QTextDocument::ImageResource,  QUrl(profile), QVariant(i2Scaled));
+        contourHtml.append("<p> <img src='" +profile + "'</p>");
+    }
+    if (dlg.show_startest){
+        // add star test if not testing a flat
+        if (!md->isEllipse()){
+            SimulationsView *sv = SimulationsView::getInstance(0);
+            if (sv->needs_drawing){
+                sv->on_MakePB_clicked();
+            }
+            QImage svImage = QImage(sv->size(),QImage::Format_ARGB32 );
+            QPainter p3(&svImage);
+            sv->render(&p3);
+            QImage svImageScaled = svImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+            QString svpng("mydata://sv.png");
+            doc->addResource(QTextDocument::ImageResource,  QUrl(svpng), QVariant(svImageScaled));
+            contourHtml.append("<p> <img src='" +svpng + "'</p>");
+        }
+    }
+    if (dlg.show_foucault)
+    {
+        foucaultView *fv = foucaultView::get_Instance(0);
+        fv->on_makePb_clicked();
+        QImage fvImage = QImage(fv->size(),QImage::Format_ARGB32 );
+        QPainter p3(&fvImage);
+        fv->render(&p3);
+        QImage fvImageScaled = fvImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+        QString fvpng("mydata://fv.png");
+        doc->addResource(QTextDocument::ImageResource,  QUrl(fvpng), QVariant(fvImageScaled));
+        contourHtml.append("<p> <img src='" +fvpng + "'</p>");
     }
 
     // add igram
@@ -2480,13 +2671,14 @@ void SurfaceManager::report(){
                          QVariant(igram.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
         contourHtml.append("<p> <img src='" +sigram + "'</p>Typical Interferogram");
     }
-
-    // add pixel stats window
-    QImage pixStats = m_contourView->getPixstatsImage();
-    QString pixStat("mydata://pixStat.png");
-    doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
-                     QVariant(pixStats.scaled(printer.pageRect().size().width() -50, 700,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
-    contourHtml.append("<p> <img src = '" + pixStat + "'</p>PixelStatistics and Slope error");
+    if (dlg.show_histogram){
+        // add pixel stats window
+        QImage pixStats = m_contourView->getPixstatsImage();
+        QString pixStat("mydata://pixStat.png");
+        doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
+                         QVariant(pixStats.scaled(printer.pageRect().size().width() -50, 700,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
+        contourHtml.append("<p> <img src = '" + pixStat + "'</p>PixelStatistics and Slope error");
+    }
     editor->setHtml(title + html +zerns + contourHtml+ tail);
     editor->print(&printer);
     editor->show();
