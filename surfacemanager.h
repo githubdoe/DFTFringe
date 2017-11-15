@@ -118,6 +118,7 @@ public:
     bool okToUpdateSurfacesOnGenerateComplete;
     void makeMask(wavefront* wf, bool useInsideCircle = true);
     void generateSurfacefromWavefront(int ndx);
+    void generateSurfacefromWavefront(wavefront *wf);
 private:
     QProgressDialog *pd;
     QTimer *m_waveFrontTimer;
@@ -157,6 +158,7 @@ private slots:
     void filter(QList<int> list);
     void saveAllContours();
     void enableTools();
+    void averageComplete(wavefront *wft);
 
 public slots:
     void rotateThese(double angle, QList<int> list);

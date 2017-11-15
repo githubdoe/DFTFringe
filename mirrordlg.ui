@@ -185,7 +185,7 @@ Wave Length nm</string>
       <item row="3" column="3" colspan="2">
        <widget class="QLineEdit" name="roc">
         <property name="toolTip">
-         <string>Radius of curvature of mirror or 0 if testing a flat</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Positive value of Radius of curvature of mirror or 0 if testing a flat.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>

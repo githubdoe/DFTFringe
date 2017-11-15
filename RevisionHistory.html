@@ -141,6 +141,25 @@ time.  Also tried to warn when memory is getting low to let the user quit at tha
 <li>Imporved offset values for Ronchi and Foucault simulations.</li>
 <li>Corrected size of simulated interferogram to match requested size.</li>
 <li>Changed gaussian blur to not cross mirror outline thus better preserving the edge of the mirror</li>
-
 </ul></ul>
-<ul>
+<ul><li>Version 2.1</li>
+<ul><li>Fixed problems created by 2.0 when rotating, averaging, and writing wavefronts</li>
+<li>Added save 3d image and 3d Video creation</li>
+<li>Added options to report and added astig polar value to report</li>
+<li>Made contour settings also apply to the show all contours function.</li>
+<li>Imporved offset values for Ronchi and Foucault simulations.</li>
+<li>Corrected size of simulated interferogram to match requested size.</li>
+<li>Changed gaussian blur to not cross mirror outline thus better preserving the edge of the mirror</li>
+</ul></ul>
+<ul><li>Version 2.2</li>
+<ul><li>Changed averaging algorithm to update inverted wavefronts if required.</li>
+<li>Added center boundary to Gaussian blur processing to keep bluring the center hole edge improperly.</li>
+<li>Improved Foucault simulation offset slider values and settings. </li>
+<li>Added lateral knif and screen offset to Foucault and ronchi simulations.  Tweeked the starting ROC slider offset and the step size calculated by Auto Offset mode.</li>
+<li>Fixed region edge problem creating a 0 value pixel</li>
+<li>Restored contour plot scale after running test stand astig removal.</li>
+<li>Corrected center hole logic that created a bad value at the center of the hole.</li>
+<li>Added feature to display the resized interferogram that is used by the DFT analysis so that it can be compared to the full size version.
+This allows one to check for fringes that may be too thin. </li>
+<li> fixed rotation direction bug.</li>
+<ul><ul>

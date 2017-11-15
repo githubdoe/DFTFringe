@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>176</width>
-    <height>282</height>
+    <height>305</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -153,6 +153,16 @@ hover {background-color: lightblue;}
      <widget class="QLineEdit" name="imageSize">
       <property name="readOnly">
        <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="showResized">
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show original sized interferogram of the mirror and show one at the DFTReize value.&lt;/p&gt;&lt;p&gt;Use this to determine if the fringes will become too small for the selected resize value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="text">
+       <string>Show Resized Image</string>
       </property>
      </widget>
     </item>

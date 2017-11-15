@@ -91,6 +91,7 @@ void averageWaveFrontFilesDlg::on_process_clicked()
     ui->progressBar->setValue(0);
     ui->progressBar->setFormat("Done");
     QApplication::restoreOverrideCursor();
+    emit averageComplete( average );
 }
 
 void averageWaveFrontFilesDlg::on_addFiles_clicked()

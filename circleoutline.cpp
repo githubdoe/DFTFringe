@@ -73,10 +73,14 @@ void fillCircle(cv::Mat &m, double cx, double cy, double rad, void* color){
         for (int x = 0; x < m.cols; ++x){
             double dx = (double)(x  - cx)/(rad);
             double dy = (double)(y  - cy)/(rad);
-            if (sqrt(dx * dx + dy * dy) <= 1.)
+            if (sqrt(dx * dx + dy * dy) <= 1.){
                 ICV_PUT_POINT(tptr0, x);
+            }
+
         }
     }
+
+
 }
 
 bool CircleOutline::isInside(QPointF& p, int offset)

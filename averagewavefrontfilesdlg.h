@@ -19,6 +19,8 @@ public:
     explicit averageWaveFrontFilesDlg(QStringList list, SurfaceManager *sm, QWidget *parent = 0);
     ~averageWaveFrontFilesDlg();
     wavefront *average;
+signals:
+    void averageComplete(wavefront *);
 private slots:
 
     void on_MoveUp_clicked();

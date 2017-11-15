@@ -35,7 +35,7 @@ public:
     int DFTSize();
 public slots:
     void on_ShowDFTTHumbCB_clicked(bool checked);
-
+    void on_showDownSizedIgram_clicked(bool checked);
 
 
 private:

@@ -63,6 +63,7 @@ public slots:
     void makeSurface();
     void newIgram(QImage);
     void gamma(int);
+    void showResizedDlg();
 signals:
     void setDftSizeVal(int);
     void selectDFTTab();

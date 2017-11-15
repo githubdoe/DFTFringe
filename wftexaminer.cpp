@@ -58,6 +58,7 @@ void wftExaminer::setupPlot(){
     QwtScaleEngine *s = m_Pl->axisScaleEngine(QwtPlot::xBottom);
     QwtScaleDiv sd1 = s->divideScale(0,m_wf->data.cols-1, m_wf->data.cols/20,1);
     m_Pl->setAxisScaleDiv(QwtPlot::xBottom, sd1);
+
     for (int x = 0; x < m.cols; ++x){
         double v = m.at<double>(m_wf->workData.rows - 1 - m_y,x);
         points << QPointF(x,v);

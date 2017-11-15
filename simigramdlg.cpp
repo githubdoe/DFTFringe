@@ -193,16 +193,12 @@ void simIgramDlg::on_buttonBox_accepted()
     s.setValue("simSize", size);
 }
 
-
 void simIgramDlg::on_importPb_clicked()
 {
     SurfaceManager &sm = *SurfaceManager::get_instance();
     if (sm.m_wavefronts.size() == 0)
         return;
     zernikes = sm.getCurrent()->InputZerns;
-    zernikes[1] = xtilt;
-    zernikes[2] = ytilt;
-    zernikes[3] = defocus;
     tableModel->setValues(&zernikes);
     ui->correctionPb->setChecked(false);
     ui->Z8Pb->setChecked(true);

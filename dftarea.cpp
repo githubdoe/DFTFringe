@@ -26,6 +26,7 @@
 #include "myutils.h"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "utils.h"
+#include "showaliasdlg.h"
 using namespace cv;
 
 cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
@@ -94,11 +95,13 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
 {
     ui->setupUi(this);
     m_gamma = 2.5;
+
     connect(tools,SIGNAL(dftChannel(const QString&)), this, SLOT(setChannel(const QString&)));
     connect(tools,SIGNAL(dftSizeVal(int)), this, SLOT(dftSizeVal(int)));
     connect(tools,SIGNAL(dftCenterFilter(double)), this, SLOT(dftCenterFilter(double)));
     connect(tools,SIGNAL(makeSurface()), this,SLOT(makeSurface()));
     connect(tools,SIGNAL(doDFT()), this,SLOT(doDFT()));
+    connect(tools,SIGNAL(showResized()),this, SLOT(showResizedDlg()));
     tools->connectTo(this);
     capture = false;
     QSettings set;
@@ -206,8 +209,8 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
 
     double centerDx = centerX - igramArea->m_center.m_center.x();
     double centerDy = centerY - igramArea->m_center.m_center.y();
-
     roi.convertTo(roi,CV_32FC3);
+
     QSettings set;
     int dftSize = set.value("DFTSize", 640).toInt();
     double scaleFactor = (double)dftSize/roi.cols;
@@ -215,9 +218,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     m_center = CircleOutline(QPointF(xCenterShift - centerDx, yCenterShift - centerDy),
                              igramArea->m_center.m_radius);
     if (scaleFactor < 1.){
-
         cv::resize(roi,roi, cv::Size(0,0), scaleFactor, scaleFactor,INTER_AREA);
-
         double roicx = roi.cols/2.-.5;
         double roicy = roi.rows/2.-.5;
         m_outside = CircleOutline(QPointF(roicx,roicy),roicx);
@@ -273,7 +274,9 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
         copyMakeBorder(bgr_planes[maxndx], padded, 0, m, 0, n, BORDER_CONSTANT, Scalar::all(0));
     else
         padded = bgr_planes[maxndx].clone();
+
     padded = padded - mean[maxndx];
+
     // disabled adding optomizing DFT boarder.
     Mat planes[] = {Mat_<float>(padded), Mat::zeros(padded.size(), CV_32F)};
 
@@ -294,6 +297,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     }
     else
         tools->imageSize(QString().sprintf("Image is resized from %d to %d pixels",width, complexI.cols));
+
     return complexI;
 }
 
@@ -329,6 +333,7 @@ void showData(const std::string& txt, cv::Mat mat, bool useLog){
         tmp = mat+1;
         log(tmp, tmp);
     }
+    cv::namedWindow(txt, WINDOW_NORMAL);
     normalize(tmp, tmp,0,255,CV_MINMAX);
     tmp.convertTo(tmp,CV_8U);
     cvtColor(tmp,tmp, CV_GRAY2RGB);
@@ -368,7 +373,7 @@ QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, doub
     return QImage((uchar*)magI.data, magI.cols, magI.rows, magI.step, QImage::Format_RGB888).copy();
 }
 
-
+RNG rng(12345);
 void DFTArea::doDFT(){
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -396,6 +401,8 @@ void DFTArea::doDFT(){
     m_dft.release();
     m_dft = complexI/complexI.size().area();
     magIImage = showMag(complexI,false,"", true, m_gamma);
+
+
     scale = 1.;
     double h = magIImage.height();
 
@@ -984,5 +991,18 @@ void DFTArea::mousePressEvent(QMouseEvent *event)
 
         emit updateFilterSize(rad/scale);
         capture = true;
+    }
+}
+void DFTArea::showResizedDlg(){
+    if (igramArea->igramImage.width() == 0)
+            return;
+    QSettings set;
+    int size = set.value("DFTSize", 640).toInt();
+    showAliasDlg dlg(size);
+    dlg.setImage(igramArea->igramImage);
+    if (dlg.exec()){
+        tools->setDFTSize(dlg.resizedValue);
+        doDFT();
+
     }
 }

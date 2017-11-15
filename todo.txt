@@ -27,3 +27,5 @@ rotate and save not loadable by old versions because outline is different.
 losing memory even if not calling imagetogray or even vortex.
 
 pdf report default directory is not correct.
+
+Ignore region expansion will be too large on small wavefronts.

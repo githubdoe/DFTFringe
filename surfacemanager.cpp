@@ -192,12 +192,19 @@ double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
     }
 }
 void expandBorder(wavefront *wf){
-
     double cx, cy;
     cx = wf->m_outside.m_center.rx();
     cy = wf->m_outside.m_center.ry();
     double rad = wf->m_outside.m_radius-2;
     double r2 = rad * rad;
+    double rc2 = wf->m_inside.m_radius * wf->m_inside.m_radius;
+    cv::Mat centerMask;
+    if (wf->m_inside.m_radius){
+        centerMask = cv::Mat::ones(wf->data.size(), CV_8UC1);
+        uchar zero = 0;
+        fillCircle(centerMask, wf->m_inside.m_center.x(), wf->m_inside.m_center.y(),
+                   wf->m_inside.m_radius, &zero);
+    }
     for (int y = 0; y < wf->data.rows; ++y){
         double y1 = (double)(y - cy);
         double v = y1/rad;
@@ -213,6 +220,20 @@ void expandBorder(wavefront *wf){
                 double yr = alpha * y1 + cy;
 
                 wf->nulledData.at<double>(y,x) = bilinear(wf->nulledData,wf->mask, xr,yr);
+            }
+            if (wf->m_inside.m_radius && centerMask.at<uchar>(y,x) == 0){
+                double x1 = (double)(x - wf->m_inside.m_center.x());
+                double y1 = (double)(y - wf->m_inside.m_center.y());
+                double u = x1 /( wf->m_inside.m_radius+2);
+                double v = y1 / (wf->m_inside.m_radius+2);
+                double rho = sqrt(u * u + v * v);
+                if (rho > .1 && rho <= 1.){
+                    double D = (x1 * x1 + y1 * y1);
+                    double alpha = rc2/D;
+                    double xr = alpha * x1 + wf->m_inside.m_center.x();
+                    double yr = alpha * y1 + wf->m_inside.m_center.y();
+                    wf->nulledData.at<double>(y,x) = bilinear(wf->nulledData,centerMask, xr,yr);
+                }
             }
 
         }
@@ -307,8 +328,14 @@ public:
 // --- PROCESS ---
 // Start processing data.
 void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
-    // allocate resources using new here
+
     wavefront *wf = m_wavefronts[wavefrontNdx];
+    generateSurfacefromWavefront(wf);
+    surfaceGenFinished( wavefrontNdx);
+}
+
+void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
+
     if (wf->dirtyZerns){
         if (mirrorDlg::get_Instance()->isEllipse()){
             wf->nulledData = wf->data.clone();
@@ -323,7 +350,7 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
             }
             wf->InputZerns = std::vector<double>(Z_TERMS, 0);
             wf->dirtyZerns = false;
-            surfaceGenFinished( wavefrontNdx);
+
 
             return;
         }
@@ -378,7 +405,6 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
     }
 
     wf->nulledData.release();
-    surfaceGenFinished( wavefrontNdx);
 }
 cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector<double> &zerns, QVector<int> zernsToUse){
     double rad = getCurrent()->m_outside.m_radius;
@@ -524,7 +550,9 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     xm = wf->m_outside.m_center.x();
     ym = wf->m_outside.m_center.y();
     double radm =wf->m_outside.m_radius + outsideOffset-2;
-    double rado = wf->m_inside.m_radius + insideOffset + 1;
+    double rado = wf->m_inside.m_radius + insideOffset;
+    if (rado > 0)
+        rado += (insideOffset + 1);
 
     double cx = wf->m_inside.m_center.x();
     double cy = wf->m_inside.m_center.y();
@@ -555,6 +583,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
         uchar color = 0;
         fillCircle(mask, cx,cy,rado, &color);
     }
+
     // expand the region by 10%
     if (wf->regions.size() > 0 && useInsideCircle){
         for (int n = 0; n < wf->regions.size(); ++ n){
@@ -578,7 +607,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
                     shortestndx = i;
                 }
             }
-            double scale = (shortest+2)/shortest;
+            double scale = 1.1 * (shortest+2)/shortest;
             for (int i = 0; i < wf->regions[n].size(); ++i){
                 wf->regions[n][i].x = scale * (wf->regions[n][i].x - xavg) + xavg;
                 wf->regions[n][i].y = scale * (wf->regions[n][i].y - yavg) + yavg;
@@ -590,6 +619,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     wf->mask = mask.clone();
     wf->workMask = mask.clone();
     theMask = mask.clone();
+
     // add central obstruction
     double r = md.obs * (2. * radm)/md.diameter;
     r/= 2.;
@@ -601,7 +631,6 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
 
     if (Settings2::showMask())
         showData("surface manager mask",mask);
-
 
 }
 void SurfaceManager::wftNameChanged(int ndx, QString name){
@@ -1204,6 +1233,7 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         downSizeWf(wf);
     }
     makeMask(m_currentNdx);
+
     m_surface_finished = false;
     generateSurfacefromWavefront(m_currentNdx);
 
@@ -1382,19 +1412,22 @@ void SurfaceManager::average(QList<wavefront *> wfList){
                     wf->wasSmoothed = false;
                     m_surface_finished = false;
                     needsUpdate = true;
+                    generateSurfacefromWavefront(wf);
                 }
             }
         }
         else {
+            QApplication::restoreOverrideCursor();
             return;
         }
     }
+
     // normalize the size to the most common size
 
     QHash<QString,int> sizes;
     for (int i = 0; i < wfList.size(); ++i){
         QString size;
-        size.sprintf("%d %d",wfList[i]->workData.rows, wfList[i]->workData.cols);
+        size.sprintf("%d %d",wfList[i]->data.rows, wfList[i]->data.cols);
         if (*sizes.find(size))
         {
             ++sizes[size];
@@ -1423,7 +1456,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
         cv::resize(mask,mask,Size(rrows,rcols));
     }
 
-    cv::Mat sum = cv::Mat::ones(rrows,rcols, m_wavefronts[m_currentNdx]->workData.type());
+    cv::Mat sum = cv::Mat::zeros(rrows,rcols, m_wavefronts[m_currentNdx]->data.type());
     cv::Mat count = cv::Mat::zeros(rrows,rcols, CV_32S);
     cv::Mat resizedImage;
 
@@ -1471,29 +1504,31 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     QApplication::restoreOverrideCursor();
 }
 #include "averagewavefrontfilesdlg.h"
+void SurfaceManager::averageComplete(wavefront *wf){
+    wf->workMask = wf->mask.clone();
+    m_wavefronts << wf;
+    wf->wasSmoothed = false;
+    wf->name = "Average.wft";
+    wf->dirtyZerns = true;
+    m_surfaceTools->addWaveFront(wf->name);
+    m_currentNdx = m_wavefronts.size()-1;
+    //makeMask(m_currentNdx);
+    m_surface_finished = false;
+    generateSurfacefromWavefront(m_currentNdx);
+    m_surfaceTools->select(m_currentNdx);
+}
+
 void SurfaceManager::averageWavefrontFiles(QStringList files){
     averageWaveFrontFilesDlg dlg(files, this);
+    connect(&dlg, SIGNAL(averageComplete(wavefront*)), this, SLOT(averageComplete(wavefront *)));
     if (dlg.exec()){
-        if (dlg.average){
-            wavefront *wf = dlg.average;
-            wf->workMask = wf->mask.clone();
-            m_wavefronts << wf;
-            wf->wasSmoothed = false;
-            wf->name = "Average.wft";
-            wf->dirtyZerns = true;
-            m_surfaceTools->addWaveFront(wf->name);
-            m_currentNdx = m_wavefronts.size()-1;
-            //makeMask(m_currentNdx);
-            m_surface_finished = false;
-            generateSurfacefromWavefront(m_currentNdx);
-            m_surfaceTools->select(m_currentNdx);
-        }
+
     }
 
 }
 
 cv::Mat rotate(wavefront * wf, double ang){
-    double rad = -ang * M_PI/180.;
+    double rad = ang * M_PI/180.;
 
     double sina = sin(rad);
     if (fabs(sina) < .00001) sina = 0.;
@@ -1517,7 +1552,11 @@ cv::Mat rotate(wavefront * wf, double ang){
             double y1 = sx * sina + sy * cosa + ycen;
             if (wf->mask.at<uchar>(y,x) != 0)
             {
-               rotated.at<double>(y,x) = bilinear(wf->data,wf->mask, x1,y1);
+                double v = bilinear(wf->data,wf->mask, x1,y1);
+                if (v == 0.){
+                    qDebug() <<"(v == 0)" << x1 << y1 << x << y << wf->data.at<double>(y1,x1);
+                }
+                rotated.at<double>(y,x) = v;
             }
         }
     }
@@ -1551,6 +1590,23 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
                    //wf->m_outside.m_radius, &ones);
 
         double rad = -angle * M_PI/180.;
+//        cv::Mat t = cv::Mat::zeros(wf->data.size(), CV_8UC1);
+//        double xsum = 0;
+//        double ysum = 0;
+//        int cnt = 0;
+//        for (int y = 0; y < t.rows; ++y){
+//            for (int x = 0; x < t.cols; ++x){
+//                if (wf->data.at<double>(y,x) == 0.){
+//                    t.at<uchar>(y,x) = 255;
+//                    xsum += x;
+//                    ysum += y;
+//                    ++cnt;
+//                }
+//            }
+//        }
+//        qDebug() << "center issue"<< xsum/cnt << ysum/cnt;
+//        cv::imshow("ttt", t);
+//        cv::waitKey(1);
         cv::Mat rotated = rotate(wf, angle);
 
         wf->data = rotated.clone();
@@ -1988,6 +2044,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     cp1->replot();
     contour2.fill( QColor( Qt::white ).rgb() );
     renderer.render( cp1, &painter2, QRect(0,0,Width,Height) );
+    cp1->m_zRangeMode = "Auto"; // restore contour plot to auto scaling.
     imageName = QString("mydata://StandCotourMat.png");
     doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour2));
 

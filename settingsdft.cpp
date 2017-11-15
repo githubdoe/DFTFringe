@@ -43,3 +43,10 @@ void settingsDFT::on_ShowDFTTHumbCB_clicked(bool)
 }
 
 
+
+void settingsDFT::on_showDownSizedIgram_clicked(bool checked)
+{
+    QSettings set;
+    set.setValue("DFTshowDownSizedIgram", checked);
+}
+

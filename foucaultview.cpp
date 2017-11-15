@@ -14,6 +14,7 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     ui(new Ui::foucaultView), heightMultiply(1)
 {
     m_wf = 0;
+    lateralOffset = 0;
     needsDrawing = false;
     ui->setupUi(this);
     QSettings set;
@@ -40,6 +41,14 @@ void foucaultView::setSurface(wavefront *wf){
     double FL = md->roc/2.;
     double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
     m_sag = mul * (rad * rad) /( 4 * FL);
+
+    ui->rocOffsetSb->blockSignals(true);
+    m_sag = round(100 * m_sag)/100.;
+
+
+    ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
+
+
     on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
 }
@@ -85,8 +94,6 @@ void foucaultView::on_makePb_clicked()
     std::vector<double> newZerns = zerns;
     double z3 = pv / ( moving_constant);
 
-
-//qDebug() << "Z3" << z3 << "z{3]" << newZerns[3] << "pv" << pv << "coc_Offset_mm" << coc_offset_mm;
     bool oldDoNull = md->doNull;
     md->doNull = false;
 
@@ -95,13 +102,13 @@ void foucaultView::on_makePb_clicked()
     newZerns[3] = newZerns[3] - 3 * newZerns[8];
     m_wf->InputZerns = newZerns;
     sv->setSurface(m_wf);
-//qDebug() << "size "<< size << "pad" << pad;
+
 
     surf_fft = sv->computeStarTest(heightMultiply * sv->nulledSurface(z3), size, pad ,true);
     //showMag(surf_fft, true, "star ", true, gamma);
     size = surf_fft.cols;
 
-    int hx = (size -1)/2;
+    int hx = (size -1)/2 + lateralOffset;
     m_wf->InputZerns = zerns;
 
     md->doNull = oldDoNull;
@@ -379,15 +386,19 @@ void foucaultView::on_h4x_clicked()
 
 void foucaultView::on_rocOffsetSlider_valueChanged(int value)
 {
+
     double step = getStep();
-    double offset = value * step;
+    double offset = (value) * step;
 
     ui->rocOffsetSb->setValue(offset);
+
     m_guiTimer.start(1000);
 
 }
 inline double foucaultView::getStep(){
-    return (ui->autoStepSize->isChecked())? round(1000. * ((ui->useMM->isChecked()) ? 25.4 * m_sag/5. : m_sag/5.))/1000. :
+    // slider has 40 positive positions and 40 neg positions.
+    // A slider step then is sag / 40
+    return (ui->autoStepSize->isChecked())? round(1000. * ((ui->useMM->isChecked()) ? 25.4 * m_sag/40. : m_sag/40))/1000. :
                                             ui->rocStepSize->value();
 }
 
@@ -402,11 +413,12 @@ void foucaultView::on_autoStepSize_clicked(bool checked)
     ui->rocStepSize->setEnabled(!checked);
 
     double step = getStep();
+
     ui->rocStepSize->setValue(step);
 
-
+    // create 17 labels where each label is 5 steps apart.
     for (int i = 0; i< 17; ++i){
-        double val = (i - 8) * step * 5;
+        double val =  (i - 8) * step * 5;  // label slider every 5 steps.
         findChild<QLabel *>(QString().sprintf("l%d",i))->setText(QString::number(val));
     }
 }
@@ -414,5 +426,11 @@ void foucaultView::on_autoStepSize_clicked(bool checked)
 void foucaultView::on_rocStepSize_editingFinished()
 {
     on_autoStepSize_clicked(ui->autoStepSize->isChecked());
+    m_guiTimer.start(100);
+}
+
+void foucaultView::on_lateralOffset_valueChanged(int arg1)
+{
+    lateralOffset = arg1;
     m_guiTimer.start(100);
 }

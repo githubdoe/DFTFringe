@@ -171,7 +171,7 @@ void intensityPlot::setSurface(QImage img){
     //cv::imshow("Red", s[0]);
     //cv::imshow("Green",s[1]);
     //cv::imshow("Blue",s[2]);
-    cv::waitKey(1);
+    //cv::waitKey(1);
     setAxisScale( yLeft, 0,255);
     populate();
     replot();

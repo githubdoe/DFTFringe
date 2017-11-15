@@ -152,7 +152,7 @@ public:
     QString makeOutlineName();
     void shiftoutline(QPointF p);
     void setZoomMode(zoomMode mode);
-
+    void showAliasDialog();
 
 public slots:
     void gammaChanged(bool, double);

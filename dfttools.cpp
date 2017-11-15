@@ -84,3 +84,8 @@ void DFTTools::on_dftSizeSB_valueChanged(int arg1)
      set.setValue("DFTSize", ui->dftSizeSB->value());
 
 }
+
+void DFTTools::on_showResized_pressed()
+{
+    emit showResized();
+}

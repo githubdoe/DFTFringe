@@ -45,6 +45,7 @@ signals:
     void makeSurface();
     void enlarge(bool);
     void gamma(double);
+    void showResized();
 
 
 private slots:
@@ -58,6 +59,8 @@ private slots:
     void on_computeDFT_pressed();
 
     void on_dftSizeSB_valueChanged(int arg1);
+
+    void on_showResized_pressed();
 
 private:
     Ui::DFTTools *ui;

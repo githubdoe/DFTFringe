@@ -57,6 +57,8 @@ private slots:
 
     void on_rocStepSize_editingFinished();
 
+    void on_lateralOffset_valueChanged(int arg1);
+
 private:
     Ui::foucaultView *ui;
     SurfaceManager *m_sm;
@@ -66,6 +68,7 @@ private:
     int heightMultiply;
     double m_sag;
     wavefront *m_wf;
+    int lateralOffset;
 };
 
 #endif // FOUCAULTVIEW_H

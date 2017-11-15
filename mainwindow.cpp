@@ -995,6 +995,7 @@ void MainWindow::batchProcess(QStringList fileList){
     progBar->setMaximum(last);
     int ndx = 0;
     foreach(QString fn, fileList){
+        QApplication::processEvents();
         batchWiz->select(ndx++);
         int mem = showmem("batch loop++++++++++++++++++++++++++++++");
         if (mem < memThreshold){
@@ -1035,7 +1036,7 @@ void MainWindow::batchProcess(QStringList fileList){
         ui->tabWidget->setCurrentIndex(2);
         m_dftTools->wasPressed = true;
         m_dftArea->makeSurface();
-
+        QApplication::processEvents();
         if (!m_dftArea->success){
             batchConnections(false);
             break;
@@ -1059,7 +1060,6 @@ void MainWindow::batchProcess(QStringList fileList){
                 Beep(300,250);
         }
         else{
-
             QPointF astig(wf->InputZerns[4], wf->InputZerns[5]);
             batchWiz->addAstig(wf->name, astig);
             batchWiz->addRms(wf->name, QPointF(ndx,wf->std));
@@ -1374,39 +1374,23 @@ void MainWindow::on_actionAverage_wave_front_files_triggered()
 void MainWindow::on_actionDebugStuff_triggered()
 {
     wavefront *wf = m_surfaceManager->m_wavefronts.back();
-    int x =0;
-    int y = wf->data.rows/2;
-    QList<QString> l;
-    for (int x = 0; x < wf->data.cols; ++x){
-        //qDebug() << x << wf->data.at<double>(y,x);
-    }
-    while (wf->data.at<double>(y,x) == 0.0){
-        qDebug() << x << wf->data.at<double>(y,x);
-        ++x;
-        l.append("0");
-    }
-    l.append("...");
+    cv::Mat m1 = wf->data;
+    cv::Mat noise = cv::Mat::zeros(m1.size(), m1.type());
+    double val = .05;
+    for (int y = 20; y < noise.rows -20; y += 20){
+        for (int x = 20; x < noise.cols - 20; x += 20){
+            fillCircle(noise, x,y, 11, &val);
+        }
 
-    while (wf->data.at<double>(y,x) != 0.0){ ++x;}
-    while(x++ < wf->data.cols){
-        l.append("0");
     }
-    l.append("\n");
-    qDebug() << l;
-    l.clear();
-    x = 0;
-    while (wf->data.at<double>(y,x) == 0.0){
-        qDebug() << x << wf->data.at<double>(x,y);
-        ++x;
-        l.append("0");
-    }
-    l.append("...");
+    cv::Mat g(noise.size(), noise.type());
+    cv::GaussianBlur(noise, g,cv::Size( 11, 1 ),0,0,BORDER_REFLECT);
+    wf->data = m1 + g + .00001;
+    showData("debug", wf->data);
+    //m_surfaceManager->generateSurfacefromWavefront(wf);
+    //cv::Mat m2 = m_surfaceManager->m_wavefronts[1]->data;
+    //cv::Mat m3 = m_surfaceManager->m_wavefronts[2]->workData;
 
-    while (wf->data.at<double>(x,y) != 0.0){ ++x;}
-    while(x++ < wf->data.cols){
-        l.append("0");
-    }
-       qDebug() << l;
 }
 
 void MainWindow::on_polygonRb_clicked(bool checked)
@@ -1414,3 +1398,5 @@ void MainWindow::on_polygonRb_clicked(bool checked)
     m_igramArea->PolyAreaActive(checked);
     m_regionsEdit->show();
 }
+
+

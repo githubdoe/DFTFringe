@@ -113,7 +113,8 @@ SOURCES += main.cpp\
     rmsplot.cpp \
     regionedittools.cpp \
     reportdlg.cpp \
-    videosetupdlg.cpp
+    videosetupdlg.cpp \
+    showaliasdlg.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -210,7 +211,8 @@ HEADERS  += mainwindow.h \
     rmsplot.h \
     regionedittools.h \
     reportdlg.h \
-    videosetupdlg.h
+    videosetupdlg.h \
+    showaliasdlg.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -272,7 +274,8 @@ FORMS    += mainwindow.ui \
     wavefrontfilterdlg.ui \
     regionedittools.ui \
     reportdlg.ui \
-    videosetupdlg.ui
+    videosetupdlg.ui \
+    showaliasdlg.ui
 
 win32 {
       CONFIG( debug, debug|release ) {
@@ -310,7 +313,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 2.1
+VERSION = 2.2
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

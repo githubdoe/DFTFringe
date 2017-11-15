@@ -159,6 +159,7 @@ void IgramArea::DrawSimIgram(void){
 
     double rad = xcen-border;
     cv::Mat simgram = makeSurfaceFromZerns(border, true);
+    cv::flip(simgram,simgram,0);
     //cv::imshow("igram", simgram);
     //cv::waitKey();
     igramImage = QImage((uchar*)simgram.data,
@@ -167,7 +168,6 @@ void IgramArea::DrawSimIgram(void){
                         simgram.step,
                         QImage::QImage::Format_RGB32).copy();
 
-    qDebug() << "sim format " << igramImage.format();
 
     zoomIndex = 1;
     m_outsideHist.clear();
@@ -1597,4 +1597,6 @@ void IgramArea::setZoomMode(zoomMode mode){
         zoomIndex = 1;
     zoomFull();
 }
+#include "showaliasdlg.h"
+
 

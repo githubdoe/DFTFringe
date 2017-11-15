@@ -455,6 +455,19 @@
        </layout>
       </item>
       <item>
+       <widget class="QSpinBox" name="lateralOffset">
+        <property name="suffix">
+         <string> Lateral Offset</string>
+        </property>
+        <property name="minimum">
+         <number>-50</number>
+        </property>
+        <property name="maximum">
+         <number>50</number>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QLineEdit" name="pixeParms">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">

@@ -1201,6 +1201,11 @@ em;
     <bool>true</bool>
    </property>
   </action>
+  <action name="actionShow_Alias_info">
+   <property name="text">
+    <string>Show Alias info</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
