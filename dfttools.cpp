@@ -25,11 +25,7 @@ DFTTools::DFTTools(QWidget *parent) :
     ui(new Ui::DFTTools)
 {
     ui->setupUi(this);
-    ui->colorChannelCB->addItem("Auto");
-    ui->colorChannelCB->addItem("ALL RGB");
-    ui->colorChannelCB->addItem("Red");
-    ui->colorChannelCB->addItem("Green");
-    ui->colorChannelCB->addItem("Blue");
+
     QSettings set;
     ui->dftSizeSB->setValue(set.value("DFTSize", 640).toInt());
 }
@@ -45,10 +41,7 @@ void DFTTools::imageSize(QString txt){
     ui->imageSize->setText(txt);
 }
 
-void DFTTools::on_colorChannelCB_activated(const QString &arg1)
-{
-    emit dftChannel(arg1);
-}
+
 
 
 

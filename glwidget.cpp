@@ -238,7 +238,7 @@ void GLWidget::paintGL()
 
     */
 
-        DrawScene();
+    DrawScene();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -787,7 +787,6 @@ void GLWidget::setZranges(){
     m_max_y =  maxy;
     m_min_y =  miny;
 
-
 }
 
 void GLWidget::showContoursChanged(double){
@@ -806,6 +805,8 @@ void GLWidget::contourColorRangeChanged(const QString &arg1){
 
 void GLWidget::setMinMaxValues(double min, double max){
     m_profile_scale_setting = max - min;
+    m_max_y =  max;
+    m_min_y =  min;
     m_list_good = false;
     updateGL();
 }

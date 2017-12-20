@@ -34,11 +34,7 @@ ColorChannelDisplay::~ColorChannelDisplay()
 {
     delete ui;
 }
-void ColorChannelDisplay::setImage(QImage img){
-    cv::Mat imgMat(img.height(), img.width(), CV_8UC4, img.bits(), img.bytesPerLine());
-    cv::Mat planes[4];
-    cvtColor(imgMat,imgMat,CV_BGR2RGB);
-    split(imgMat,planes);
+void ColorChannelDisplay::setImage(cv::Mat imgMat){
 
     for (int channel = 0; channel < 3; ++channel){
         cv::Mat planes[4];

@@ -51,7 +51,7 @@ public:
 
 signals:
     void doxform(QList<int>);
-    void surfaceSmoothGBValue(int);
+    void surfaceSmoothGBValue(double);
     void surfaceSmoothGBEnabled(bool);
     void wavefrontDClicked(const QString &);
     void waveFrontClicked(int ndx);
@@ -109,10 +109,9 @@ private slots:
 
     void on_pushButton_clicked();
 
-    void on_surfaceSmoothGausianBlurr_valueChanged(int arg1);
-
-
     void on_filterPB_clicked();
+
+    void on_surfaceSmoothGausianBlurr_valueChanged(double arg1);
 
 private:
     Ui::surfaceAnalysisTools *ui;

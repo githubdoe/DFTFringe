@@ -27,8 +27,9 @@ void dftColorMap::setUserStops(QList<colorStop> &stops) {
 }
 
 
-dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMargin, double scale):
-        QwtLinearColorMap( Qt::black, Qt::white ),m_wf(wf)
+dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMargin, double scale,
+                         QColor less, QColor more):
+        QwtLinearColorMap( less, more ),m_wf(wf)
 {
 
     switch (type) {
@@ -48,6 +49,10 @@ dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMa
         }
         break;
     case 5:
+    {
+        QColor color1 = dftColorMap::userStops[0].color;
+        QColor color2 = dftColorMap::userStops.back().color;
+        setColorInterval(color1,color2);
         foreach(colorStop s, dftColorMap::userStops){
             s.color.setRed(s.color.red() * scale);
             s.color.setGreen(s.color.green() * scale);
@@ -55,6 +60,7 @@ dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMa
             addColorStop(s.pos,s.color);
         }
         break;
+    }
     case 4:// Exceeds error limit
     {
         // figure out where on this wavefront -.125 +.125 is when

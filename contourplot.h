@@ -74,6 +74,7 @@ public Q_SLOTS:
     void contourWaveRangeChanged(double);
     void on_line_color_changed(QColor);
     void contourFillChanged(int);
+    void newDisplayErrorRange(double min, double max);
 #ifndef QT_NO_PRINTER
     void printPlot();
 #endif

@@ -42,7 +42,7 @@ surfaceAnalysisTools::surfaceAnalysisTools(QWidget *parent) :
     m_blurrRadius = ui->blurMm;
     QSettings settings;
     bool ch = settings.value("GBlur", true).toBool();
-    double val = settings.value("GBValue", 21.).toDouble();
+    double val = settings.value("GBValue", 20.).toDouble();
     ui->surfaceSmoothGausianBlurr->setValue(val);
     ui->blurCB->setCheckState((ch) ? Qt::Checked : Qt::Unchecked);
     m_useDefocus = false;
@@ -84,10 +84,6 @@ surfaceAnalysisTools::~surfaceAnalysisTools()
     delete ui;
 }
 
-void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_valueChanged(int arg1)
-{
-    emit surfaceSmoothGBValue(ui->surfaceSmoothGausianBlurr->value());
-}
 void surfaceAnalysisTools::on_blurCB_clicked(bool checked)
 {
     ui->surfaceSmoothGausianBlurr->setEnabled(checked);
@@ -241,7 +237,8 @@ void surfaceAnalysisTools::on_defocusDial_valueChanged(int value)
     double mm = f * f * 8. * waves * .00055;  //mmeters
     ui->defocusNm->setText(QString().sprintf("%6.3lf", mm));
     m_defocus = waves;
-    m_defocusTimer.start(500);
+    emit defocusChanged();
+
 }
 
 void surfaceAnalysisTools::defocusTimerDone(){
@@ -254,7 +251,7 @@ void surfaceAnalysisTools::on_checkBox_clicked(bool checked)
     m_useDefocus = checked;
     ui->defocusDial->setEnabled(checked);
     ui->defocusWaves->setEnabled(checked);
-    m_defocusTimer.start(500);
+    emit defocusChanged();
 }
 
 void surfaceAnalysisTools::on_defocusWaves_textChanged(const QString &arg1)
@@ -263,7 +260,8 @@ void surfaceAnalysisTools::on_defocusWaves_textChanged(const QString &arg1)
     double f = mirrorDlg::get_Instance()->FNumber;
     double mm = f * f * 8. * m_defocus * .00055;  //mmeters
     ui->defocusNm->setText(QString().sprintf("%6.3lf", mm));
-    m_defocusTimer.start(1000);
+    emit defocusChanged();
+    //m_defocusTimer.start(1000);
 }
 
 void surfaceAnalysisTools::on_InvertPB_pressed()
@@ -299,4 +297,11 @@ void surfaceAnalysisTools::on_pushButton_clicked()
 void surfaceAnalysisTools::on_filterPB_clicked()
 {
     emit filterWavefronts(SelectedWaveFronts());
+}
+
+
+
+void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_valueChanged(double arg1)
+{
+   surfaceSmoothGBValue(arg1);
 }

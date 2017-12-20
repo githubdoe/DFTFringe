@@ -55,6 +55,9 @@ Wave Length nm</string>
      <property name="enabled">
       <bool>false</bool>
      </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Computed from mirror parameters and used when testing a non sphere at Radius of Curvature.&lt;/p&gt;&lt;p&gt;Uses Miirror Diameter, ROC  Interferogram wave length, and desired conic constant.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;d</string>
+     </property>
     </widget>
    </item>
    <item row="1" column="3">
@@ -156,7 +159,11 @@ Wave Length nm</string>
        </widget>
       </item>
       <item row="4" column="3" colspan="2">
-       <widget class="QLineEdit" name="FNumber"/>
+       <widget class="QLineEdit" name="FNumber">
+        <property name="toolTip">
+         <string>Changing this value will compute the Roc value.</string>
+        </property>
+       </widget>
       </item>
       <item row="5" column="1" colspan="2">
        <widget class="QLabel" name="label_5">
@@ -185,7 +192,7 @@ Wave Length nm</string>
       <item row="3" column="3" colspan="2">
        <widget class="QLineEdit" name="roc">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Positive value of Radius of curvature of mirror or 0 if testing a flat.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Positive value of Radius of curvature of mirror or 0 if testing a flat. Will be ignored if Artificial Null is checked.&lt;/p&gt;&lt;p&gt;The Fnumber will be computed from this value and the diameter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
@@ -216,7 +223,7 @@ Wave Length nm</string>
       <item row="7" column="4">
        <widget class="QLineEdit" name="cc">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set to 0 if testing a flat or a sphere.&lt;/p&gt;&lt;p&gt;Set to -1 if testing a parabaloid.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Desired conic Constant.  The actual value will be computed by the analysis.&lt;/p&gt;&lt;p&gt;This value is used in computing the Artiicial Null value.&lt;/p&gt;&lt;p&gt;Set to 0 if testing a flat or a sphere.&lt;/p&gt;&lt;p&gt;Set to -1 if testing a paraboloid.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>

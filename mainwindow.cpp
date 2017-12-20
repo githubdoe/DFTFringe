@@ -44,6 +44,8 @@
 #include "astigscatterplot.h"
 #include "rmsplot.h"
 #include "regionedittools.h"
+#include "utils.h"
+#include "colorchannel.h"
 #ifndef _WIN32
     #include <unistd.h>
     #define Sleep(x) usleep(1000 * x)
@@ -99,7 +101,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_igramArea, SIGNAL(imageSize(QString)), this, SLOT(imageSize(QString)));
     connect(m_igramArea, SIGNAL(statusBarUpdate(QString)), statusBar(), SLOT(showMessage(QString)));
     connect(zernikeProcess::get_Instance(), SIGNAL(statusBarUpdate(QString)), statusBar(),SLOT(showMessage(QString)));
-    connect(m_igramArea, SIGNAL(upateColorChannels(QImage)), this, SLOT(updateChannels(QImage)));
+    connect(m_igramArea, SIGNAL(upateColorChannels(cv::Mat)), this, SLOT(updateChannels(cv::Mat)));
     connect(m_igramArea, SIGNAL(showTab(int)),  ui->tabWidget, SLOT(setCurrentIndex(int)));
     connect(this, SIGNAL(gammaChanged(bool,double)), m_igramArea, SLOT(gammaChanged(bool, double)));
     m_igramArea->setBackgroundRole(QPalette::Base);
@@ -114,7 +116,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // setup DFT window
     scrollAreaDft = new QScrollArea;
     scrollAreaDft->setBackgroundRole(QPalette::Base);
-    m_dftArea = new DFTArea(scrollAreaDft, m_igramArea, m_dftTools, m_vortexDebugTool);
+    m_dftArea = DFTArea::get_Instance(scrollAreaDft, m_igramArea, m_dftTools, m_vortexDebugTool);
     connect(m_dftArea, SIGNAL(statusBarUpdate(QString)), statusBar(), SLOT(showMessage(QString)));
     scrollAreaDft->setWidget(m_dftArea);
     scrollAreaDft->resize(800,800);
@@ -187,6 +189,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     QSettings settings;
+
+
     restoreState(settings.value("MainWindow/windowState").toByteArray());
     restoreGeometry(settings.value("geometry").toByteArray());
     connect(m_dftArea,SIGNAL(selectDFTTab()), this, SLOT(selectDftTab()));
@@ -220,6 +224,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusBar->addPermanentWidget(progBar);
 
     QStringList args = QCoreApplication::arguments();
+
+    // setup color channel selection controls
+    ui->autoChannel->setChecked(settings.value("colorChannelUseAuto", true).toBool());
+    ui->greenChannel->setChecked(settings.value("colorChannelUseGreen",false).toBool());
+    ui->redChannel->setChecked(settings.value("colorChannelUseRed", false).toBool());
+    ui->blueChannel->setChecked(settings.value("colorChannelUseBlue", false).toBool());
+    ui->showColorIgram->setChecked(settings.value("colorChannelShowColor", false).toBool());
     openWaveFrontonInit(args);
 
 }
@@ -470,8 +481,6 @@ void MainWindow::createDockWindows(){
     metrics->hide();
     m_vortexDebugTool->hide();
 }
-
-
 void MainWindow::updateMetrics(wavefront& wf){
     metrics->setName(wf.name);
     metrics->mDiam->setText(QString().sprintf("%6.3lf",wf.diameter));
@@ -488,12 +497,17 @@ void MainWindow::updateMetrics(wavefront& wf){
     if (m_mirrorDlg->doNull && wf.useSANull){
         BestSC = z8/m_mirrorDlg->z8;
     }
-    else
-     BestSC = m_mirrorDlg->cc +z8/m_mirrorDlg->z8;
-
+    else {
+        BestSC = m_mirrorDlg->cc +z8/m_mirrorDlg->z8;
+    }
+    metrics->setOutputLambda(outputLambda);
 
     metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing, m_mirrorDlg->lambda);
-    metrics->mCC->setText(QString().sprintf("<FONT FONT SIZE = 7>%6.3lf",BestSC));
+    if (m_mirrorDlg->doNull)
+        metrics->mCC->setText(QString().sprintf("<FONT FONT SIZE = 7>%6.3lf",BestSC));
+    else {
+        metrics->mCC->setText("NA");
+    }
     if (m_mirrorDlg->isEllipse()){
         metrics->mCC->setText("NA");
         metrics->mROC->setText("NA");
@@ -531,7 +545,7 @@ void MainWindow::selectDftTab(){
     ui->tabWidget->setCurrentIndex(1);
 }
 
-void MainWindow::updateChannels(QImage img){
+void MainWindow::updateChannels(cv::Mat img){
 
 
     if (m_showChannels){
@@ -709,7 +723,7 @@ void MainWindow::on_showChannels_clicked(bool checked)
 {
     m_showChannels = checked;
     if (checked){
-        m_colorChannels->setImage(m_igramArea->igramImage);
+        m_colorChannels->setImage(m_igramArea->qImageToMat(m_igramArea->igramColor));
         m_colorChannels->show();
     }
     else
@@ -723,7 +737,7 @@ void MainWindow::on_showIntensity_clicked(bool checked)
 {
     m_showIntensity = checked;
     if (checked){
-        m_intensityPlot->setIgram(m_igramArea->igramImage);
+        m_intensityPlot->setIgram(m_igramArea->qImageToMat(m_igramArea->igramColor));
         m_intensityPlot->show();
     }
     else
@@ -974,6 +988,7 @@ void MainWindow::saveBatchZerns(){
     }
 }
 
+
 void MainWindow::batchProcess(QStringList fileList){
     QSettings set;
     bool shouldBeep = set.value("RMSBeep>", true).toBool();
@@ -989,12 +1004,16 @@ void MainWindow::batchProcess(QStringList fileList){
     QSettings settings;
     settings.setValue("lastPath",lastPath);
     int memThreshold = settings.value("lowMemoryThreshold", 300).toInt();
-    int cnt = 0;
     int last = fileList.size()-1;
     progBar->setMinimum(0);
     progBar->setMaximum(last);
     int ndx = 0;
+    VideoWriter *vw;
+    int cnt = 0;
+    int width, height;
+    QString videoFileName;
     foreach(QString fn, fileList){
+
         QApplication::processEvents();
         batchWiz->select(ndx++);
         int mem = showmem("batch loop++++++++++++++++++++++++++++++");
@@ -1007,6 +1026,13 @@ void MainWindow::batchProcess(QStringList fileList){
         progBar->setValue(cnt++);
         m_OutlineDoneInBatch = false;
         m_igramArea->openImage(fn);
+        QApplication::processEvents();
+#ifdef Q_OS_WIN
+        Sleep(uint(1000));
+#else
+        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
+        nanosleep(&ts, NULL);
+#endif
         ui->SelectOutSideOutline->setChecked(true);
         if (!batchIgramWizard::autoCb->isChecked()){
             while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
@@ -1020,6 +1046,13 @@ void MainWindow::batchProcess(QStringList fileList){
         if (!m_inBatch)
             break;
         m_igramArea->nextStep();
+        QApplication::processEvents();
+#ifdef Q_OS_WIN
+        Sleep(uint(1000));
+#else
+        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
+        nanosleep(&ts, NULL);
+#endif
         m_batchMakeSurfaceReady = false;
         if (!batchIgramWizard::autoCb->isChecked() && !m_skipItem){
             while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {
@@ -1041,9 +1074,9 @@ void MainWindow::batchProcess(QStringList fileList){
             batchConnections(false);
             break;
         }
-        int mem2 = showmem("after vortex%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+        int mem2 = showmem("after vortex");
+        batchIgramWizard::memStatus->setText(QString().sprintf("mem %d MB", mem));
 
-        statusBar()->showMessage(QString().sprintf("mem %d MB", mem));
 
         qApp->processEvents();
         if (!m_inBatch)
@@ -1074,7 +1107,42 @@ void MainWindow::batchProcess(QStringList fileList){
                 QString file = lastPath + "/" + fileName + ".wft";
                 m_surfaceManager->writeWavefront(file, m_surfaceManager->m_wavefronts.back(), false);
             }
+            if (batchIgramWizard::makeReviewAvi->isChecked()){
 
+                if (cnt == 1){
+                    width = 800;
+                    height = 600;
+                    vw = new VideoWriter;
+                    videoFileName = QFileDialog::getSaveFileName(0, "Save Review video as:", lastPath,"review.avi" );
+                    vw->open(videoFileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
+                    batchIgramWizard::reviewFileName = videoFileName;
+                }
+                QImage img = QImage(width,height,QImage::Format_RGB32);
+                QImage d3 = m_ogl->m_gl->grabFrameBuffer().scaled(width/2,height/2);
+                QImage dft = m_dftArea->grab().toImage().scaled(width/2, height/2);
+                QImage igram = m_igramArea->grab().toImage().scaled(width/2, height/2);
+                QImage contour = m_contourView->getPlot()->grab().toImage().scaled(width/2, height/2);
+                QPainter painter(&img);
+                painter.drawImage(0,0,igram);
+                painter.drawImage(width/2,0, dft);
+                painter.drawImage(0,height/2, d3);
+                painter.drawImage(width/2,height/2,contour);
+                painter.setPen(Qt::yellow);
+                painter.setBrush(Qt::yellow);
+                QFileInfo info(fn);
+                double cx = set.value("lastOutsideCx",0).toDouble();
+                double cy = set.value("lastOutsideCy",0.).toDouble();
+                wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
+                QString txt = QString().sprintf("%s RMS: %6.3lf outline center x,y: %6.1lf, %6.1lf",
+                                                info.baseName().toStdString().c_str(),
+                                                wf->std,
+                                                cx,cy);
+                painter.drawText(20,height/2 + 15, txt);
+                cv::Mat frame = cv::Mat(img.height(), img.width(),CV_8UC4, img.bits(), img.bytesPerLine()).clone();
+                cv::Mat resized;
+                cv::resize(frame, resized, cv::Size(width,height));
+                vw->write(resized);
+            }
             if (batchIgramWizard::deletePreviousWave->isChecked()){
                 QVector<QString> zerns;
                 zerns << wf->name;
@@ -1106,7 +1174,11 @@ void MainWindow::batchProcess(QStringList fileList){
     batchIgramWizard::skipFile->setEnabled(false);
 
     this->setCursor(Qt::ArrowCursor);
-
+    if (batchIgramWizard::makeReviewAvi->isChecked()){
+        delete vw;
+        batchIgramWizard::playReview->setEnabled(true);
+        ui->actionPlay_batch_results_review_movie->setEnabled(true);
+    }
 
 }
 
@@ -1371,27 +1443,7 @@ void MainWindow::on_actionAverage_wave_front_files_triggered()
     m_surfaceManager->averageWavefrontFiles( files);
 }
 #include <qwt_plot_curve.h>
-void MainWindow::on_actionDebugStuff_triggered()
-{
-    wavefront *wf = m_surfaceManager->m_wavefronts.back();
-    cv::Mat m1 = wf->data;
-    cv::Mat noise = cv::Mat::zeros(m1.size(), m1.type());
-    double val = .05;
-    for (int y = 20; y < noise.rows -20; y += 20){
-        for (int x = 20; x < noise.cols - 20; x += 20){
-            fillCircle(noise, x,y, 11, &val);
-        }
 
-    }
-    cv::Mat g(noise.size(), noise.type());
-    cv::GaussianBlur(noise, g,cv::Size( 11, 1 ),0,0,BORDER_REFLECT);
-    wf->data = m1 + g + .00001;
-    showData("debug", wf->data);
-    //m_surfaceManager->generateSurfacefromWavefront(wf);
-    //cv::Mat m2 = m_surfaceManager->m_wavefronts[1]->data;
-    //cv::Mat m3 = m_surfaceManager->m_wavefronts[2]->workData;
-
-}
 
 void MainWindow::on_polygonRb_clicked(bool checked)
 {
@@ -1399,4 +1451,171 @@ void MainWindow::on_polygonRb_clicked(bool checked)
     m_regionsEdit->show();
 }
 
+void MainWindow::on_autoOutline_clicked()
+{
+    m_igramArea->autoTraceOutline();
+}
 
+void MainWindow::on_autoChannel_clicked(bool checked)
+{
+    if (!checked)
+        return;
+    colorChannel::get_instance()->setAuto(checked);
+    QSettings set;
+    set.setValue("colorChannelUseAuto", checked);
+    set.setValue("colorChannelUseRed", !checked);
+    set.setValue("colorChannelUseGreen", !checked);
+    set.setValue("colorChannelUseBlue", !checked);
+
+}
+
+void MainWindow::on_redChannel_clicked(bool checked)
+{
+    colorChannel::get_instance()->setRed(checked);
+    QSettings set;
+    set.setValue("colorChannelUseRed", checked);
+    set.setValue("colorChannelUseGreen", !checked);
+    set.setValue("colorChannelUseBlue", !checked);
+    set.setValue("colorChannelUseAuto", !checked);
+}
+
+void MainWindow::on_greenChannel_clicked(bool checked)
+{
+    colorChannel::get_instance()->setGreen(checked);
+    QSettings set;
+    set.setValue("colorChannelUseGreen", checked);
+    set.setValue("colorChannelUseBlue", !checked);
+    set.setValue("colorChannelUseRed", !checked);
+    set.setValue("colorChannelUseAuto", !checked);
+}
+
+void MainWindow::on_blueChannel_clicked(bool checked)
+{
+    colorChannel::get_instance()->setBlue(checked);
+    QSettings set;
+    set.setValue("colorChannelUseBlue", checked);
+    set.setValue("colorChannelUseGreen", !checked);
+    set.setValue("colorChannelUseRed", !checked);
+    set.setValue("colorChannelUseAuto", !checked);
+}
+
+void MainWindow::on_showColorIgram_clicked(bool checked)
+{
+    colorChannel::get_instance()->showOriginalColorImage(checked);
+    QSettings set;
+    set.setValue("colorChannelShowColor", checked);
+}
+
+void MainWindow::on_useLastOutline_clicked()
+{
+    m_igramArea->useLastOutline();
+}
+
+void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
+{
+    QStringList fileNames = SelectWaveFrontFiles();
+    this->setCursor(Qt::WaitCursor);
+    QProgressDialog pd("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
+    pd.setRange(0, fileNames.size());
+    if (fileNames.length()> 0)
+        pd.show();
+    int cnt = 0;
+    QSettings set;
+    QString lastPath = set.value("lastPath",".").toString();
+    int memThreshold = set.value("lowMemoryThreshold",300).toInt();
+    QImage img = m_ogl->m_gl->grabFrameBuffer();
+
+    int width = img.width();
+    int height = img.height();
+
+    try {
+        QString fileName = QFileDialog::getSaveFileName(0, "Save AVI video as:", lastPath,"*.avi" );
+        if (fileName.length() > 0){
+            if (!(fileName.toUpper().endsWith(".AVI")))
+                fileName.append(".avi");
+            VideoWriter video(fileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
+            if (!video.isOpened()){
+                QString msg = QString().sprintf("could not open %s %dx%d for writing.", fileName.toStdString().c_str(),
+                                                width, height);
+                QMessageBox::warning(0,"warning", msg);
+                return;
+            }
+            foreach (QString name, fileNames){
+                int mem = showmem("loading");
+                statusBar()->showMessage(QString().sprintf("memory %d MB", mem));
+                if (mem< memThreshold + 50){
+                    while (m_surfaceManager->m_wavefronts.size() > 1){
+                        m_surfaceManager->deleteCurrent();
+                    }
+                }
+                QApplication::processEvents();
+
+                if (pd.wasCanceled())
+                    break;
+
+
+                pd.setLabelText(name);
+                QApplication::processEvents();
+                wavefront *wf = m_surfaceManager->readWaveFront(name,false);
+
+                m_surfaceManager->makeMask(wf);
+                m_surfaceManager->generateSurfacefromWavefront(wf);
+                m_surfaceManager->computeMetrics(wf);
+
+                pd.setValue(++cnt);
+
+                m_ogl->m_gl->setSurface(wf);
+                delete wf;
+                QApplication::processEvents();
+
+                QImage img = m_ogl->m_gl->grabFrameBuffer();
+                QPainter painter(&img);
+                painter.setPen(Qt::yellow);
+                painter.setBrush(Qt::yellow);
+                QFileInfo info(name);
+                painter.drawText(20,50, info.baseName());
+                cv::Mat frame = cv::Mat(img.height(), img.width(),CV_8UC4, img.bits(), img.bytesPerLine()).clone();
+                cv::Mat resized;
+                cv::resize(frame, resized, cv::Size(width,height));
+                video.write(resized);
+            }
+        }
+    }
+    catch(std::exception& e) {
+        qDebug() <<  "Exception writing video " << e.what();
+    }
+
+    this->setCursor(Qt::ArrowCursor);
+
+}
+
+void MainWindow::on_actionDebugStuff_triggered()
+{
+
+
+}
+#include "outlinestatsdlg.h"
+void MainWindow::on_actionShow_outline_statistics_triggered()
+{
+    QSettings settings;
+    QString lastPath = settings.value("lastPath",".").toString();
+
+    QFileDialog dialog(this);
+    dialog.setDirectory(lastPath);
+    dialog.setFileMode(QFileDialog::ExistingFiles);
+    dialog.setNameFilter(tr("oln (*.oln)"));
+
+    if (dialog.exec()) {
+        QStringList fileNames = dialog.selectedFiles();
+        outlineStatsDlg outDlg(fileNames, this);
+        outDlg.exec();
+        QFileInfo info(fileNames[0]);
+        lastPath = info.absolutePath();
+        settings.setValue("lastPath",lastPath);
+    }
+}
+
+void MainWindow::on_actionPlay_batch_results_review_movie_triggered()
+{
+    QDesktopServices::openUrl(QUrl(batchIgramWizard::reviewFileName));
+}

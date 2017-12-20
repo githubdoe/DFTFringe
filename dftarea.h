@@ -30,6 +30,8 @@ using namespace cv;
 extern void showData(const std::string& txt, cv::Mat mat, bool useLog = false);
 extern QImage showMag(cv::Mat complexI, bool show = false, const char *title = "FFT", bool doLog = true, double gamma = 0);
 extern void shiftDFT(cv::Mat &magI);
+
+
 namespace Ui {
 class DFTArea;
 }
@@ -42,6 +44,8 @@ public:
     explicit DFTArea(QWidget *parent = 0, IgramArea* ip = 0, DFTTools *tools = 0,
                      vortexDebug *vdbug = 0);
     ~DFTArea();
+    static DFTArea *get_Instance(QWidget *parent = 0,IgramArea* ip = 0, DFTTools *tools = 0,
+                                 vortexDebug *vdbug = 0);
     int m_size;
     cv::Mat fftmagI;
     cv::Mat magI;
@@ -53,6 +57,8 @@ public:
     double m_center_filter;
     cv::Mat vortex(QImage &img,
                double low);
+
+
     bool success;
 public slots:
     void doDFT();
@@ -73,6 +79,7 @@ signals:
     void dftReady(QImage);
     void statusBarUpdate(QString);
 private:
+    static DFTArea *m_Instance;
     Ui::DFTArea *ui;
     cv::Mat input;
     cv::Mat m_mask;

@@ -54,11 +54,14 @@ void metricsDisplay::setWavePerFringe(double val, double lambda){
     mirrorDlg *md = mirrorDlg::get_Instance();
     QString donull = (md->doNull) ? (QString().sprintf("SANull: %6.4lf",md->z8 * md->cc)) : "";
     ui->desiredConicLb->setText(QString().sprintf("Desired Conic: %6.2lf ", md->cc) + donull);
-    ui->zernTitle->setText( "Zernike Values ");
+    ui->zernTitle->setText( "Zernike Values @ interferogram wavelength");
     if (md->isEllipse()){
         ui->desiredConicLb->setText("");
         ui->zernTitle->setText("Zernike Values not computed for Flats");
     }
+}
+void metricsDisplay::setOutputLambda(double val){
+    ui->label_5->setText(QString().sprintf("Wavefront RMS at %6.1lf nm", val));
 }
 
 void metricsDisplay::setName(QString name){

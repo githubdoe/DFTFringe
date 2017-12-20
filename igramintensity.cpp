@@ -33,7 +33,7 @@ igramIntensity::~igramIntensity()
 {
     delete ui;
 }
-void igramIntensity::setIgram(QImage img){
+void igramIntensity::setIgram(cv::Mat img){
 
     ui->plot->setSurface(img);
 

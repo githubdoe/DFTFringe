@@ -20,6 +20,7 @@
 
 #include <QDialog>
 #include <QImage>
+#include <opencv2/core/core.hpp>
 namespace Ui {
 class ColorChannelDisplay;
 }
@@ -32,7 +33,7 @@ class ColorChannelDisplay : public QDialog
 public:
     explicit ColorChannelDisplay(QWidget *parent = 0);
     ~ColorChannelDisplay();
-    void setImage(QImage img);
+    void setImage(cv::Mat imgMat);
 
 private:
     Ui::ColorChannelDisplay *ui;

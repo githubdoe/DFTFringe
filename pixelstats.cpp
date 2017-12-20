@@ -22,6 +22,7 @@
 #include "contourplot.h"
 #include "wavefront.h"
 #include "math.h"
+#include "utils.h"
 double g_lb, g_ub;
 int idx = -1;   // ndx of which marker is being moved by mouse.
 QwtPlotMarker* g_lbMarker;
@@ -325,14 +326,15 @@ cv::Mat mat2gray(const cv::Mat& src)
 
     return dst;
 }
+
 cv::Mat slope(wavefront * wf){
     int half = wf->data.cols/2;
-    cv::Mat gradx = cv::Mat::zeros(wf->data.rows,wf->data.cols, CV_64F);
-    cv::Mat grady = cv::Mat::zeros(wf->data.rows,wf->data.cols, CV_64F);
+    cv::Mat gradx = cv::Mat::zeros(wf->data.rows,wf->data.cols, CV_64FC1);
+    cv::Mat grady = cv::Mat::zeros(wf->data.rows,wf->data.cols, CV_64FC1);
     cv::Mat mag;
     cv::Mat avgX = gradx.clone();
     cv::Mat avgY = grady.clone();
-    double wAdjust = 550./wf->lambda;
+    double wAdjust = outputLambda/wf->lambda;
     double mmPerPixel = wf->diameter/(2 * (wf->m_outside.m_radius));
     double wavePerPixel = wAdjust* (mmPerPixel)/
                                 (wf->lambda * 1.e-6);

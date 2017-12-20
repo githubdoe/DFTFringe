@@ -18,6 +18,7 @@ class batchIgramWizard;
 }
 class QListWidget;
 class batchIntro;
+class QLabel;
 class batchIgramWizard : public QWizard
 {
     Q_OBJECT
@@ -33,6 +34,10 @@ public:
     static QCheckBox *deletePreviousWave;
     static QCheckBox *showProcessPlots;
     static QPushButton *saveZerns;
+    static QCheckBox *makeReviewAvi;
+    static QLabel *memStatus;
+    static QString reviewFileName;
+    static QPushButton *playReview;
     explicit batchIgramWizard(QStringList files, QWidget *parent = 0 , Qt::WindowFlags flags = 0);
     ~batchIgramWizard();
     void listReady(QStringList list);
@@ -78,6 +83,7 @@ public slots:
     void eraseItem();
     void showPlots(bool flags);
     void on_filter(bool);
+    void play_review();
 signals:
     void processBatchList(QStringList);
 private:

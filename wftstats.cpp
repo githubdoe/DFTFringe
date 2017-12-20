@@ -22,7 +22,7 @@
 #include <qwt_plot_histogram.h>
 #include <QTextStream>
 #include "plotcolor.h"
-
+#include "utils.h"
 #include "opencv2/core/core.hpp"
 class wftNameScaleDraw: public QwtScaleDraw
 {
@@ -135,10 +135,10 @@ void wftStats::computeZernStats( int ndx){
         for (int i = 0; i < c.rows; ++i){
 
             int row = (i + ndx) % c.rows;
-            double v = computeRMS(ndx,c.at<double>(row)) * 550./md->lambda;
+            double v = computeRMS(ndx,c.at<double>(row)) * outputLambda/md->lambda;
             if (isPair){
                 cv::Mat c2 = m_Zerns.col(zern+1);
-                double v2 = computeRMS(ndx,c2.at<double>(row)) * 550./md->lambda;
+                double v2 = computeRMS(ndx,c2.at<double>(row)) * outputLambda/md->lambda;
                 double s = sqrt(v * v + v2 * v2);
                 v = s;
                 zname += " ";
@@ -198,7 +198,7 @@ QVector<int> histoz(const std::vector<double> data, int bins, double min, double
 void wftStats::computeWftStats( QVector<wavefront*> wavefronts, int ndx){
     spherical.clear();
     sphericaRunningAvg.clear();
-    m_Zerns = cv::Mat(wavefronts.size(),Z_TERMS,CV_64F,0.);
+    m_Zerns = cv::Mat(wavefronts.size(),Z_TERMS,CV_64FC1,0.);
     int row = 0;
     double sperAvg = 0;
     for (int i = 0; i < wavefronts.size(); ++i)
@@ -212,7 +212,7 @@ void wftStats::computeWftStats( QVector<wavefront*> wavefronts, int ndx){
             // apply software Null if needed
             if (ndx == 8 and md->doNull)
                 v -= md->z8 * md->cc;
-            double Sigma = computeRMS(ndx,v) * 550./md->lambda;
+            double Sigma = computeRMS(ndx,v) * outputLambda/md->lambda;
 
             if (ndx == 8) {
                 spherical << QPointF(row,Sigma);
@@ -299,13 +299,13 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
         cv::Mat avg = sum/(j+1);
         cv::Scalar mean,std;
         cv::meanStdDev(resized,mean,std,mask);
-        double stdi = std.val[0]* md->lambda/550.;
+        double stdi = std.val[0]* md->lambda/outputLambda;
         cv::meanStdDev(avg,mean,std,mask);
-        avgPoints << QPointF(j,std.val[0] * md->lambda/550.);
+        avgPoints << QPointF(j,std.val[0] * md->lambda/outputLambda);
         wftPoints << QPointF(j,stdi);
         trueNdx << i;
     }
-    cv::Mat wftStatsx(avgPoints.size(), 1, CV_64F);  // used to compute std and mean
+    cv::Mat wftStatsx(avgPoints.size(), 1, CV_64FC1);  // used to compute std and mean
     std::vector<double> vecWftRMS;    // used to compute quartiles
 
     for (int ndx = 0; ndx < wftPoints.size(); ++ndx){

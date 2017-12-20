@@ -76,7 +76,8 @@ public:
     void averageWavefrontFiles(QStringList files);
     void downSizeWf(wavefront *wf);
     void process(int wavefront_index, SurfaceManager *sm);
-    wavefront *readWaveFront(const QString &fileName, bool &mirrorParamsChanged);
+    wavefront *readWaveFront(QString fileName, bool mirrorParamsChanged);
+    wavefront *xxx(QString name, bool t);
     inline wavefront *getCurrent(){
         if (m_wavefronts.size() == 0)
             return 0;
@@ -148,7 +149,7 @@ private slots:
     void centerMaskValue(int val);
     void outsideMaskValue(int val);
     void surfaceSmoothGBEnabled(bool b);
-    void surfaceSmoothGBValue(int value);
+    void surfaceSmoothGBValue(double value);
     void computeZerns();
     void surfaceGenFinished(int ndx);
     void backGroundUpdate();
@@ -159,6 +160,7 @@ private slots:
     void saveAllContours();
     void enableTools();
     void averageComplete(wavefront *wft);
+    void outputLambdaChanged(double val);
 
 public slots:
     void rotateThese(double angle, QList<int> list);
@@ -173,6 +175,7 @@ public slots:
     void showAll3D(GLWidget *);
     void loadComplete();
     void memoryLow();
+    void defocusChanged();
 };
 
 

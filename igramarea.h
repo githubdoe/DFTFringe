@@ -112,9 +112,7 @@ class IgramArea : public QWidget
 
 public:
     IgramArea(QWidget *parent = 0, void *mwp = 0 );
-    QMediaPlayer *player;
-    QMediaPlaylist *playlist;
-    QVideoWidget *videoWidget;
+
     void *m_mw;
     bool openImage(const QString &fileName);
     bool saveImage(const QString &fileName, const char *fileFormat);
@@ -130,19 +128,20 @@ public:
     void saveOutlines();
     void deleteOutline();
     void readOutlines();
+    void autoTraceOutline();
 
     void SideOutLineActive(bool checked);
     void CenterOutlineActive(bool checked);
     void PolyAreaActive(bool checked);
-    void nextStep();
+    void save();    void nextStep();
     bool sideOutlineIsActive;
-    void save();
+
 
     void doGamma(double gammaV);
-    QImage igramImage;
     QString m_filename;
     CircleOutline m_outside;
     CircleOutline m_center;
+    cv::Mat igramData;
     void hideOutline(bool checked);
     bool m_hideOutlines;
     void loadOutlineFile(QString filename);
@@ -153,7 +152,8 @@ public:
     void shiftoutline(QPointF p);
     void setZoomMode(zoomMode mode);
     void showAliasDialog();
-
+    cv::Mat igramToGray(cv::Mat roi);
+    cv::Mat qImageToMat(QImage &roi);
 public slots:
     void gammaChanged(bool, double);
     void generateSimIgram();
@@ -176,7 +176,7 @@ signals:
     void enableShiftButtons(bool);
     void statusBarUpdate(QString);
     void selectDFTab();
-    void upateColorChannels(QImage);
+    void upateColorChannels(cv::Mat);
     void showTab(int);
     void dftCenterFilter(double);
     void imageSize(QString);
@@ -213,13 +213,21 @@ private:
     QColor edgePenColor;
     bool m_autoSaveOutline;
     void deleteRegions();
-
+    double leftMargin;
+    double searchOutlineScale;
+    cv::Point2d findBestOutline(cv::Mat gray, int start, int end,int step, double &resp, int *radius);
+    cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end,int step, double &resp, int *radius);
 public:
-    QImage igramDisplay;
+    QImage igramColor;
+    QImage igramDisplay;    // gray with outlines
+    QImage igramGray;       // the unlined gray igram.
     QVector<std::vector<cv::Point> > m_polygons;
     int polyndx;
     regionEditTools *m_regionEdit;
     void syncRegions();
+    void findOutline();
+    void findCenterHole();
+    void useLastOutline();
 private:
     QImage m_withOutlines;
     QPointF m_OutterP1;
@@ -228,6 +236,7 @@ private:
     QPointF m_innerP2;
     QPointF lastPoint;
     QPointF zoompt;
+    QString m_searchMsg;
 
     undoStack m_outsideHist;
     undoStack m_centerHist;
@@ -252,14 +261,19 @@ private:
     bool hasBeenCropped;
     bool m_edgeMode;
     int m_zoomBoxWidth;
+    int m_usingChannel;
     zoomMode m_zoomMode;
     void increaseRegion(int n, double scale);
+    QImage getBestChannel(QImage &img);
+    bool m_searching_outside;
+    bool m_searching_center;
 public:
    int m_current_boundry;
 public slots:
    void addregion();
    void deleteregion(int);
    void selectRegion(int);
+   void colorChannelChanged();
    // m_mw(mw),QWidget(parent),scale(1.),outterPcount(0), innerPcount(0), zoomFactor(0.),m_current_boundry(OutSideOutline),
       //zoomIndex(0),dragMode(false),m_hideOutlines(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false)
 };

@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>176</width>
+    <width>228</width>
     <height>710</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>176</width>
+    <width>228</width>
     <height>408</height>
    </size>
   </property>
@@ -169,7 +169,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item>
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="BestCCLabel">
         <property name="text">
          <string>Best Fit
 Conic:</string>
@@ -180,6 +180,9 @@ Conic:</string>
        <widget class="QLabel" name="metConic">
         <property name="enabled">
          <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only computed if Artificial null is checked in Mirror Configuratoin.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="frameShape">
          <enum>QFrame::Panel</enum>

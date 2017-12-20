@@ -41,6 +41,8 @@
 #include "myutils.h"
 #include <fstream>
 #include "regionedittools.h"
+#include "dftarea.h"
+#include "colorchannel.h"
 void undoStack::clear() {
     m_stack.clear();
     m_redo.clear();
@@ -72,6 +74,9 @@ double distance(QPointF p1, QPointF p2)
     return qSqrt((p1.x() - p2.x())*(p1.x() - p2.x()) + (p1.y() - p2.y())*(p1.y() - p2.y()));
 }
 
+QImage cvMatToImage(cv::Mat out){
+    return QImage((uchar*)out.data, out.cols, out.rows,out.step1() ,QImage::Format_RGB888).copy();
+}
 IgramArea::IgramArea(QWidget *parent, void *mw)
     : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0),
       zoomIndex(1),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
@@ -82,6 +87,8 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     setAttribute(Qt::WA_StaticContents);
     modified = false;
     scribbling = false;
+    m_searching_outside = false;
+    m_searching_center = false;
     regionMode = false;
     verticalTracking = false;
     polyndx = 0;
@@ -127,6 +134,13 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     shortcut = new QShortcut(QKeySequence("1"), this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(edgeMode()));
 
+    connect(colorChannel::get_instance(),SIGNAL(useChannelsChanged()), this, SLOT(colorChannelChanged()));
+}
+void IgramArea::colorChannelChanged(){
+    cv::Mat bestChan = igramToGray(qImageToMat(igramColor));
+    igramGray = cvMatToImage(bestChan);
+    igramDisplay = igramGray.copy();
+    resizeImage();
 
 }
 
@@ -160,30 +174,29 @@ void IgramArea::DrawSimIgram(void){
     double rad = xcen-border;
     cv::Mat simgram = makeSurfaceFromZerns(border, true);
     cv::flip(simgram,simgram,0);
-    //cv::imshow("igram", simgram);
-    //cv::waitKey();
-    igramImage = QImage((uchar*)simgram.data,
+
+    igramColor = QImage((uchar*)simgram.data,
                         simgram.cols,
                         simgram.rows,
                         simgram.step,
                         QImage::QImage::Format_RGB32).copy();
 
-
+    cv::Mat bestChannel = igramToGray(qImageToMat(igramColor));
+    igramGray = cvMatToImage(bestChannel);
     zoomIndex = 1;
     m_outsideHist.clear();
     m_centerHist.clear();
     modified = false;
-    igramDisplay = igramImage.copy();
-    igramImage = igramDisplay.copy();
+
     resizeImage();
 
     m_outside = CircleOutline(QPointF(xcen, ycen),rad);
     m_OutterP1 = m_outside.m_p1.m_p;
     m_OutterP2 = m_outside.m_p2.m_p;
     outterPcount = 2;
-    m_outsideHist.push(igramImage,m_outside);
+    deleteRegions();
     drawBoundary();
-    fitScale = (double)parentWidget()->height()/(double)igramImage.height();
+    fitScale = (double)parentWidget()->height()/(double)igramColor.height();
     zoomIndex = 1;
     hasBeenCropped = false;
     needToConvertBGR = true;
@@ -192,14 +205,14 @@ void IgramArea::DrawSimIgram(void){
     update();
 
     emit showTab(0);
-    emit upateColorChannels(igramImage);
+    emit upateColorChannels(qImageToMat(igramColor));
     QApplication::restoreOverrideCursor();
 }
 
 
 void IgramArea::doGamma(double gammaV){
 
-        cv::Mat mm(igramImage.height(), igramImage.width(), CV_8UC4, igramImage.bits(), igramImage.bytesPerLine());
+        cv::Mat mm(igramColor.height(), igramColor.width(), CV_8UC4, igramColor.bits(), igramColor.bytesPerLine());
         mm.convertTo(mm,CV_32FC4);
 
         //cv::Mat bgr_planes[4];
@@ -212,15 +225,275 @@ void IgramArea::doGamma(double gammaV){
         //if (needToConvertBGR)
             //cvtColor(mm,mm,CV_BGRA2RGBA);
         needToConvertBGR = false;
-        mm.convertTo(mm,CV_8UC4);
+        mm.convertTo(mm,CV_8UC3);
 
-        QImage img((uchar*)mm.data, mm.cols, mm.rows,mm.step1() ,QImage::Format_RGB32);
-        igramImage = img.copy();
+        QImage img((uchar*)mm.data, mm.cols, mm.rows,mm.step1() ,QImage::Format_RGB888);
+        igramColor = img.copy();
         update();
 
 }
 
-#include <sstream>
+Mat IgramArea::qImageToMat(QImage &img){
+    QImage::Format f = img.format();
+    int depth = img.depth();
+    int planesCnt = img.bitPlaneCount();
+    qDebug() << "format " << f << depth << planesCnt;
+    cv::Mat iMat;
+    switch (depth){
+        case 24:
+            iMat = cv::Mat(img.height(), img.width(), CV_8UC3, img.bits(), img.bytesPerLine());
+            return iMat;
+        case 32:
+            iMat = cv::Mat(img.height(), img.width(), CV_8UC4, img.bits(), img.bytesPerLine());
+            cv::Mat cvtMat;
+            qDebug() << "removing alpha channel";
+            cv::cvtColor(iMat, cvtMat, CV_BGRA2BGR);
+            return cvtMat;
+        break;
+    }
+     return iMat;
+}
+
+Mat IgramArea::igramToGray(cv::Mat roi){
+    // split image into three color planes
+
+    cv::Mat planes[4];
+    split( roi, planes );
+
+    int maxndx = 0;
+    cv::Mat outMat;
+     colorChannel &channel = *colorChannel::get_instance();
+    if (channel.useAuto){
+        // use the color plane with the largest mean value
+        cv::Scalar mean,std;
+        cv::meanStdDev(roi,mean,std);
+        double maxStd = 0;
+        for (int i = 0; i < 3; ++i){
+            if (std[i] > maxStd){
+                maxndx = i;
+                maxStd = std[i];
+            }
+        }
+    }
+    else {
+        if (channel.useRed){
+            maxndx = 2;
+        }
+        if (channel.useGreen){
+            maxndx = 1;
+        }
+        if (channel.useBlue){
+            maxndx = 0;
+        }
+    }
+    for (int i = 0; i < 3; ++i){
+        planes[i] = planes[maxndx];
+    }
+    m_usingChannel = maxndx;
+    static char *colorNames[] = {"blue","green","red"};
+    cv::Mat gray;
+    cv::merge(planes, 3, gray);
+    emit imageSize(QString().sprintf("%d X %d using %s channel", igramColor.size().width(),
+                                     igramColor.size() .height(), colorNames[maxndx]));
+    return gray;
+
+}
+cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,int step,
+                                             double &resp, int *radius){
+    double cx  = m_outside.m_center.x() * searchOutlineScale;
+    double cy = m_outside.m_center.y() * searchOutlineScale;
+    int outradius = m_outside.m_radius * searchOutlineScale;
+    double maxresp = 0.;
+    double maxrad;
+    cv::Point2d bestc;
+    for (int rad0 = start; rad0 != end;  rad0 += step){
+        cv::Mat circlem = cv::Mat::zeros(gray.size(), gray.type());
+        circlem = 0.;
+        // create a torus
+        cv::Point outsideCenter(cx,cy);
+        cv::circle(circlem, outsideCenter, outradius, cv::Scalar(200),-1); // outer diameter
+        // center hole
+        cv::circle(circlem, outsideCenter, rad0, cv::Scalar(0), -1);
+
+        double resp;
+        cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
+                                                   noArray(), &resp);
+        Point2d c(gray.cols/2. - center.x, gray.rows/2.- center.y);
+        if (resp > maxresp){
+            maxresp = resp;
+            *radius = rad0;
+            bestc = c;
+
+            CircleOutline newoutline(m_outside.m_center, rad0/searchOutlineScale);
+            m_innerP1 = newoutline.m_p1.m_p;
+            m_innerP2 = newoutline.m_p2.m_p;
+            innerPcount = 2;
+
+            drawBoundary();
+            qApp->processEvents();
+
+        }
+    }
+    return bestc;
+}
+cv::Point2d IgramArea::findBestOutline(cv::Mat gray, int start, int end,int step, double &resp, int *radius){
+    double cx = gray.cols/2.;
+    double cy = gray.rows/2.;
+    double maxresp = 0.;
+    double maxrad;
+    cv::Point2d bestc;
+    for (int rad0 = start; rad0 != end;  rad0 += step){
+        cv::Mat circlem = cv::Mat::zeros(gray.size(), gray.type());
+        circlem = 0.;
+        cv::circle(circlem, cv::Point2f(cx,cy), rad0, cv::Scalar(200),-1);
+
+
+        double resp;
+        cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
+                                                   noArray(), &resp);
+        Point2d c(gray.cols/2. - center.x, gray.rows/2.- center.y);
+
+        if (resp > maxresp){
+            maxresp = resp;
+            *radius = rad0;
+            bestc = c;
+
+            CircleOutline newoutline(QPointF(bestc.x/searchOutlineScale, bestc.y/searchOutlineScale),
+                                     rad0/searchOutlineScale);
+            m_OutterP1 = newoutline.m_p1.m_p;
+            m_OutterP2 = newoutline.m_p2.m_p;
+            outterPcount = 2;
+
+            drawBoundary();
+            qApp->processEvents();
+
+        }
+    }
+    return bestc;
+}
+void IgramArea::findCenterHole(){
+    m_searching_center = true;
+    QImage img = igramGray;
+    cv::Mat igram(img.height(), img.width(), CV_8UC3, img.bits(), img.bytesPerLine());
+    cv::Mat gray;
+    cvtColor(igram, gray, CV_BGR2GRAY);
+    double scale = 300./img.height();
+    if (scale > 1.)
+        scale = 1.;
+    searchOutlineScale = scale;
+    leftMargin = 0;
+    cv::resize(gray, gray, cv::Size(0,0), scale,scale);
+
+    double resp;
+    int radius;
+    cv::Point2d bestc = findBestCenterOutline(gray, 2,(m_outside.m_radius/2) * scale, 1,
+                                              resp, &radius);
+    radius /= scale;
+    scale = searchOutlineScale = 1.;
+    leftMargin = 0;
+    cvtColor(igram, gray, CV_BGRA2GRAY);
+    searchOutlineScale = 1.;
+    bestc = findBestCenterOutline(gray, radius+20, radius/2, -1, resp, &radius);
+
+    m_searching_center  = false;
+}
+
+void IgramArea::findOutline(){
+    m_searching_outside = true;
+    QImage img = igramGray;
+    cv::Mat igram(img.height(), img.width(), CV_8UC3, img.bits(), img.bytesPerLine());
+    cv::Mat gray;
+    cvtColor(igram, gray, CV_BGRA2GRAY);
+
+    double scale = 300./ gray.cols;
+    searchOutlineScale = scale;
+    leftMargin = 0;
+    cv::resize(gray, gray, cv::Size(0,0), scale,scale);
+
+    double cx = gray.cols/2.;
+    double cy = gray.rows/2.;
+    double rad = gray.rows/2. -2;
+    double resp;
+    int radius;
+    cv::Point2d bestc = findBestOutline(gray, rad, rad/2, -1, resp, &radius);
+
+    // now crop to the current best circle + 5 and try full size
+
+    cvtColor(igram, gray, CV_BGRA2GRAY);
+    radius /= scale;
+    int left = (bestc.x/scale) - radius +5;
+    if (left < 0)
+        left = 0;
+    leftMargin = left;
+    searchOutlineScale = 1.;
+    int width = 2 * radius + 10;
+
+    cv::Mat roi = gray;
+    if (width > 0  && left+width < gray.cols){    // if width wide enough to crop to radius then do so
+        cv::Mat roi = gray(cv::Rect((int)left,0, width, gray.rows)).clone();
+    }
+    else {
+        left = leftMargin = 0;
+
+    }
+    bestc = findBestOutline(roi, radius + 10, radius -10, -1, resp, &radius);
+    m_searching_outside = false;
+
+}
+void IgramArea::autoTraceOutline(){
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    if (m_current_boundry == OutSideOutline){
+        findOutline();
+    }
+    else if (m_current_boundry == CenterOutline){
+        findCenterHole();
+    }
+    drawBoundary();
+    QApplication::restoreOverrideCursor();
+}
+void IgramArea::useLastOutline(){
+    if (igramGray.isNull())
+        return;
+    QSettings set;
+    if (m_current_boundry == OutSideOutline){
+        double rad = set.value("lastOutsideRad", 0).toDouble();
+        if (rad > 0){
+            double cx = set.value("lastOutsideCx", 0).toDouble();
+            double cy = set.value("lastOutsideCy",0).toDouble();
+            // check that outline fits inside current image.
+            int width = igramColor.size().width();
+            int height = igramColor.size().height();
+            bool tooBig = false;
+            if (cx + rad > width ||  (cx - rad) < 0 ||  cy + rad > height || (cy-rad) < 0)
+                tooBig = true;
+
+
+            if (tooBig)
+                m_outside = CircleOutline(QPointF(0,0),0);
+            else {
+                m_outside = CircleOutline(QPointF(cx,cy),rad);
+                m_OutterP1 = m_outside.m_p1.m_p;
+                m_OutterP2 = m_outside.m_p2.m_p;
+                outterPcount = 2;
+                drawBoundary();
+            }
+        }
+    }
+    if (m_current_boundry == CenterOutline) {
+        double rad = set.value("lastInsideRad", 0).toDouble();
+
+        if (rad) {
+            double cx = set.value("lastInsideCx", 0).toDouble();
+            double cy = set.value("lastInsideCy",0).toDouble();
+            m_center = CircleOutline(QPointF(cx,cy),rad);
+            m_innerP1 = m_center.m_p1.m_p;
+            m_innerP2 = m_center.m_p2.m_p;
+            innerPcount = 2;
+            drawBoundary();
+        }
+    }
+}
+
 bool IgramArea::openImage(const QString &fileName)
 
 {
@@ -236,13 +509,13 @@ bool IgramArea::openImage(const QString &fileName)
 
     // convert image to 3 channel image
     if (loadedImage.format() == QImage::Format_Indexed8)
-        loadedImage = loadedImage.convertToFormat(QImage::Format_RGB32);
+        loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
 
     if (Settings2::getInstance()->m_igram->m_removeDistortion){
         cv::Mat raw = imread(fileName.toStdString().c_str());
         QStringList parms = Settings2::getInstance()->m_igram->m_lenseParms;
-        Mat camera = Mat::zeros(3,3,CV_64F);
-        Mat distortion =Mat::zeros(1,5, CV_64F);
+        Mat camera = Mat::zeros(3,3,CV_64FC1);
+        Mat distortion =Mat::zeros(1,5, CV_64FC1);
         camera.at<double>(0,0) = parms[6].toDouble();
         camera.at<double>(1,1) = camera.at<double>(0,0);
         double width = camera.at<double>(0,2) = parms[7].toDouble();
@@ -267,12 +540,12 @@ bool IgramArea::openImage(const QString &fileName)
 
         undistort(raw, corrected, camera, distortion);
 
-        cvtColor(corrected,corrected, COLOR_BGRA2RGBA);
+        cvtColor(corrected,corrected, COLOR_BGR2RGB);
         loadedImage =  QImage((uchar*)corrected.data,
                               corrected.cols,
                               corrected.rows,
                               corrected.step,
-                              QImage::Format_RGBA8888).copy();
+                              QImage::Format_RGB888).copy();
 
     }
     if (mirrorDlg::get_Instance()->shouldFlipH())
@@ -282,15 +555,26 @@ bool IgramArea::openImage(const QString &fileName)
     //m_demo->hide();
     m_filename = fileName;
     zoomIndex = 1;
-    igramImage = loadedImage;
-    emit imageSize(QString().sprintf("%d X %d", igramImage.size().width(), igramImage.size() .height()));
+    igramColor = loadedImage;
+
+
+
     if (m_doGamma)
         doGamma(m_gammaValue);
-    igramDisplay = igramImage.copy();
+    cv::Mat bestChan = igramToGray(qImageToMat(igramColor));
+    igramGray = cvMatToImage(bestChan);
+
+    igramDisplay = igramGray.copy();
+/*
+    QLabel *testl = new QLabel(0);
+    testl->setPixmap(QPixmap::fromImage(igramDisplay));
+    testl->show();
+    */
+
     m_outsideHist.clear();
-    m_outsideHist.push(igramImage, m_outside);
+    m_outsideHist.push(igramGray, m_outside);
     m_centerHist.clear();
-    m_centerHist.push(igramImage,m_center);
+    m_centerHist.push(igramGray,m_center);
     modified = false;
     QSettings set;
 
@@ -299,8 +583,8 @@ bool IgramArea::openImage(const QString &fileName)
 
 
     gscrollArea->setWidgetResizable(true);
-    if (igramImage.height() > height())
-            fitScale = (double)parentWidget()->height()/(double)igramImage.height();
+    if (igramGray.height() > height())
+            fitScale = (double)parentWidget()->height()/(double)igramGray.height();
     else
         fitScale = 1;
     scale = fitScale;
@@ -314,52 +598,39 @@ bool IgramArea::openImage(const QString &fileName)
     m_regionEdit->hide();
     // check for an outline file
     QFileInfo finfo(makeOutlineName());
+    emit showTab(0);
+    qApp->processEvents();
     if (finfo.exists()){
         deleteRegions();
         loadOutlineFile(finfo.absoluteFilePath());
     }
     else {
-        m_center.m_radius = 0;
-        innerPcount = 0;
+        double xoffset , yoffset = 0;
 
-        if (rad > 0) {
-            double cx = set.value("lastOutsideCx", 0).toDouble();
-            double cy = set.value("lastOutsideCy",0).toDouble();
+        qDebug() << "autooutline" << set.contains("autoOutline");
+        if (set.value("autoOutline",true).toBool()){
+            findOutline();
+            double x = set.value("lastOutsideCx", 0).toDouble();
+            double y = set.value("lastOutsideCy",0).toDouble();
+            xoffset = (m_outside.m_center.x()-x);
+            yoffset = (m_outside.m_center.y() - y);
+        }
 
-            // check that outline fits inside current image.
-            int width = loadedImage.size().width();
-            int height = loadedImage.size().height();
-            bool tooBig = false;
-            if (cx + rad > width ||  (cx - rad) < 0 ||  cy + rad > height || (cy-rad) < 0)
-                tooBig = true;
+        // if there was a center outline last time then use it but adjust it's center
+        //  to the new outline.
+        double centerRad = set.value("lastInside", 0).toDouble();
+        if (centerRad > 0){
+            double cx = set.value("lastInsideCx", 0).toDouble();
+            double cy = set.value("lastInsideCy",0).toDouble();
 
+            m_center = CircleOutline(QPointF(cx +xoffset,cy + yoffset),rad);
+            m_innerP1 = m_center.m_p1.m_p;
+            m_innerP2 = m_center.m_p2.m_p;
+            innerPcount = 2;
+        }
 
-            if (tooBig)
-                m_outside = CircleOutline(QPointF(0,0),0);
-            else {
-                m_outside = CircleOutline(QPointF(cx,cy),rad);
-                m_OutterP1 = m_outside.m_p1.m_p;
-                m_OutterP2 = m_outside.m_p2.m_p;
-                outterPcount = 2;
-                set.setValue("lastOutsideRad", rad);
-                set.setValue("lastOutsideCx", cx);
-                set.setValue("lastOutsideCy",cy);
-                drawBoundary();
-            }
-            if (m_center.m_radius== 0.) {
-                rad = set.value("lastInsideRad", 0).toDouble();
-
-                if (rad) {
-                    double cx = set.value("lastInsideCx", 0).toDouble();
-                    double cy = set.value("lastInsideCy",0).toDouble();
-                    m_center = CircleOutline(QPointF(cx,cy),rad);
-                    m_innerP1 = m_center.m_p1.m_p;
-                    m_innerP2 = m_center.m_p2.m_p;
-                    innerPcount = 2;
-                    drawBoundary();
-                }
-            }
-            QStringList regionsList = set.value("lastRegions", "").toString().split("\n");
+        QStringList regionsList = set.value("lastRegions", "").toString().split("\n");
+        if (regionsList.size() > 1){
 
             int r = 0;
             foreach(QString str, regionsList){
@@ -370,21 +641,22 @@ bool IgramArea::openImage(const QString &fileName)
                 std::vector< cv::Point> region;
                 for (int i = 1; i < vals.size(); ++i){
                     QStringList pointVals = vals[i].split(",");
-                    region.push_back(cv::Point(pointVals[0].toInt(), pointVals[1].toInt()));
+                    region.push_back(cv::Point(pointVals[0].toInt()+xoffset, pointVals[1].toInt()+yoffset));
                 }
                 if (region.size() > 0)
                     m_polygons.append(region);
             }
-            drawBoundary();
         }
+        drawBoundary();
     }
+
     cropTotalDx = cropTotalDy = 0;
     SideOutLineActive(true);
 
     if (m_outside.m_radius > 0.)
-        emit upateColorChannels(igramImage);
+        emit upateColorChannels(qImageToMat(igramColor));
     syncRegions();
-    emit showTab(0);
+
     QApplication::restoreOverrideCursor();
     return true;
 }
@@ -399,7 +671,7 @@ void IgramArea::syncRegions(){
 bool IgramArea::saveImage(const QString &fileName, const char *fileFormat)
 
 {
-    QImage visibleImage = igramImage;
+    QImage visibleImage = igramColor;
 
 
     if (visibleImage.save(fileName, fileFormat)) {
@@ -427,7 +699,7 @@ void IgramArea::setPenWidth(int newWidth)
 void IgramArea::clearImage()
 //! [9] //! [10]
 {
-    igramImage.fill(qRgb(255, 255, 255));
+    igramColor.fill(qRgb(255, 255, 255));
     modified = true;
     update();
 }
@@ -435,13 +707,13 @@ void IgramArea::undo(){
     if (m_current_boundry == OutSideOutline){
         outlinePair p = m_outsideHist.undo();
         m_outside = p.m_outline;
-        igramImage = p.m_image;
+        igramColor = p.m_image;
         m_OutterP1 = m_outside.m_p1.m_p;
         m_OutterP2 = m_outside.m_p2.m_p;
     } if (m_current_boundry == CenterOutline) {
         outlinePair p = m_centerHist.undo();
         m_center = p.m_outline;
-        igramImage = p.m_image;
+        igramColor = p.m_image;
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
     }
@@ -453,7 +725,7 @@ void IgramArea::redo(){
         outlinePair p = m_outsideHist.redo();
 
         m_outside = p.m_outline;
-        igramImage = p.m_image;
+        igramColor = p.m_image;
         m_OutterP1 = m_outside.m_p1.m_p;
         m_OutterP2 = m_outside.m_p2.m_p;
     }
@@ -461,7 +733,7 @@ void IgramArea::redo(){
         outlinePair p = m_centerHist.redo();
 
         m_center = p.m_outline;
-        igramImage = p.m_image;
+        igramColor = p.m_image;
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
 
@@ -472,7 +744,7 @@ void IgramArea::redo(){
 
 bool IgramArea::eventFilter(QObject *object, QEvent *event)
 {
-    if (igramImage.isNull())
+    if (igramColor.isNull())
         return false;
 
     if (event->type() == QEvent::KeyPress) {
@@ -538,7 +810,7 @@ void IgramArea::increase(int i) {
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
     }
-    else if (m_current_boundry == PolyArea){
+    else if (m_current_boundry == PolyArea && m_polygons.size() > 0){
         increaseRegion(polyndx,1.1);
     }
     drawBoundary();
@@ -555,7 +827,7 @@ void IgramArea::decrease(int i){
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
     }
-    else if (m_current_boundry == PolyArea){
+    else if (m_current_boundry == PolyArea && m_polygons.size() > 0){
         increaseRegion(polyndx, .9);
     }
     drawBoundary();
@@ -592,7 +864,7 @@ void IgramArea::zoom(int del, QPointF zoompt){
     if (zoomIndex > 1) {
 
         gscrollArea->setWidgetResizable(false);
-        resize(igramImage.size() * fitScale * zoomIndex);
+        resize(igramGray.size() * fitScale * zoomIndex);
 
         //gscrollArea->ensureVisible(width()/2,height()/2);
 
@@ -606,7 +878,7 @@ void IgramArea::zoom(int del, QPointF zoompt){
     }
     else {
         scale = fitScale;
-        resize(igramImage.size() * fitScale * zoomIndex);
+        resize(igramGray.size() * fitScale * zoomIndex);
         gscrollArea->setWidgetResizable(true);
     }
     drawBoundary();
@@ -614,7 +886,7 @@ void IgramArea::zoom(int del, QPointF zoompt){
 
 void IgramArea::wheelEvent (QWheelEvent *e)
 {
-    if (igramImage.isNull())
+    if (igramGray.isNull())
         return;
 
     QString result;
@@ -665,7 +937,7 @@ void IgramArea::selectRegion(int r){
 void IgramArea::mousePressEvent(QMouseEvent *event)
 {
 
-    if (igramImage.isNull())
+    if (igramGray.isNull())
         return;
 
     if (event->button() == Qt::LeftButton) {
@@ -784,7 +1056,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
 
 void IgramArea::mouseMoveEvent(QMouseEvent *event)
 {
-    if (igramImage.isNull())
+    if (igramGray.isNull())
         return;
 
     QPointF pos = event->pos();
@@ -841,7 +1113,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
         }
         if (m_current_boundry == PolyArea){
             QPointF del = scaledPos - lastPoint;
-            qDebug() << "move "<< del << lastPoint;
+
 
             for (unsigned int i = 0; i < m_polygons[polyndx].size(); ++i){
                 m_polygons[polyndx][i].x += del.x();
@@ -855,7 +1127,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
 
 void IgramArea::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (igramImage.isNull())
+    if (igramGray.isNull())
         return;
     setCursor(Qt::ArrowCursor);
     if (event->button() == Qt::LeftButton && verticalTracking) {
@@ -868,11 +1140,11 @@ void IgramArea::mouseReleaseEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton && (scribbling || dragMode)) {
         if (m_current_boundry == OutSideOutline){
             m_outside = CircleOutline(m_OutterP1,m_OutterP2);
-            m_outsideHist.push(igramImage, m_outside);
+            m_outsideHist.push(igramGray, m_outside);
         }
         else if (m_current_boundry == CenterOutline){
             m_center = CircleOutline(m_innerP1,m_innerP2);
-            m_centerHist.push(igramImage, m_center);
+            m_centerHist.push(igramGray, m_center);
         }
         emit enableShiftButtons(true);
     }
@@ -897,7 +1169,7 @@ void IgramArea::mouseReleaseEvent(QMouseEvent *event)
 void IgramArea::resizeEvent(QResizeEvent *event)
 
 {
-    if (igramImage.isNull())
+    if (igramGray.isNull())
         return;
 
     resizeImage();
@@ -912,15 +1184,22 @@ void drawCircle(QPointF& p1, QPointF& p2, QPainter& painter)
     c.draw(painter,1.);
 }
 
+QImage IgramArea::getBestChannel(QImage &img){
+    cv::Mat gray = igramToGray(qImageToMat(img));
+    cv::Mat bestChan;
+    cv::cvtColor(gray,bestChan, CV_GRAY2BGR);
+    return QImage((uchar*)bestChan.data, bestChan.cols,
+                          bestChan.rows, bestChan.step, QImage::Format_RGB888).copy();
+}
 
 void IgramArea::drawBoundary()
 
 {
 
-    m_withOutlines = igramImage.copy();
+    m_withOutlines = colorChannel::get_instance()->m_showOriginalColorImage ? igramColor:igramGray;
 
     QPainter painter(&m_withOutlines);
-    painter.drawImage(0,0,igramImage);
+    painter.drawImage(0,0,m_withOutlines);
 
     CircleOutline outside(m_OutterP1,m_OutterP2);
     CircleOutline inside(m_innerP1, m_innerP2);
@@ -928,16 +1207,39 @@ void IgramArea::drawBoundary()
     if (!m_hideOutlines){
         painter.setOpacity(opacity * .01);
         if (outside.m_radius > 0){
+
             painter.setPen(QPen(edgePenColor, edgePenWidth, (Qt::PenStyle)lineStyle));
 
             mirrorDlg &md = *mirrorDlg::get_Instance();
             if ((md.isEllipse())){
                 s2 = md.m_verticalAxis/ md.diameter;
                            }
+            if (m_searching_outside){
+                QColor c(Qt::cyan);
+                c.setAlpha(30);
+                painter.setBrush(c);
+                painter.drawEllipse(outside.m_center,
+                                    outside.m_radius,
+                                    outside.m_radius);
+            }
+            else {
+                painter.setBrush(Qt::NoBrush);
+            }
             outside.draw(painter,1.,s2);
         }
         if (inside.m_radius > 0 && innerPcount > 1){
             painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
+            if (m_searching_center){
+                QColor c(Qt::cyan);
+                c.setAlpha(30);
+                painter.setBrush(c);
+                painter.drawEllipse(inside.m_center,
+                                    inside.m_radius,
+                                    inside.m_radius);
+            }
+            else {
+                painter.setBrush(Qt::NoBrush);
+            }
             inside.draw(painter,1.);
 
         }
@@ -991,7 +1293,6 @@ void IgramArea::drawBoundary()
                     // close the poly back to the start
                     int j = m_polygons[n].size() -1;
                     painter.drawLine(m_polygons[n][j].x,m_polygons[n][j].y,
-
                                     m_polygons[n][m_polygons[n].size()-1].x,
                                     m_polygons[n][m_polygons[n].size()-1].y);
                     }
@@ -1034,28 +1335,39 @@ void IgramArea::resizeImage()
 
 {
 
-    if (igramImage.isNull())
+    if (igramGray.isNull())
         return;
 
     QSize newSize;
     if (zoomIndex > 1 && m_zoomMode == NORMALZOOM){
         scale = fitScale * zoomIndex;
-        newSize = QSize(igramImage.width() * scale,igramImage.height()* scale);
+        newSize = QSize(igramGray.width() * scale,igramGray.height()* scale);
         gscrollArea->setWidgetResizable(false);
     }
     else
-    {   double scaleh = (double)parentWidget()->height()/(double)igramImage.height();
-        double scalew = (double)parentWidget()->width()/(double)igramImage.width();
+    {   double scaleh = (double)parentWidget()->height()/(double)igramGray.height();
+        double scalew = (double)parentWidget()->width()/(double)igramGray.width();
         newSize = gscrollArea->size();
         gscrollArea->setWidgetResizable(true);
         scale = min(scaleh,scalew);
     }
     try {
-        QImage newImage(newSize, QImage::Format_RGB32);
-        if (igramImage.isNull())
+        QImage newImage(newSize, QImage::Format_RGB888);
+        if (igramGray.isNull())
             return;
         QPainter painter(&newImage);
-        igramDisplay = igramImage.scaled(igramImage.width() * scale, igramImage.height() * scale);
+        QImage resized;
+        if (colorChannel::get_instance()->m_showOriginalColorImage){
+            resized = igramColor.scaled(igramGray.width() * scale,
+                                      igramGray.height() * scale);
+        }
+        else {
+            resized = igramGray.scaled(igramGray.width() * scale,
+                                      igramGray.height() * scale);
+        }
+
+
+        igramDisplay = resized;
         painter.drawImage(QPoint(0, 0), igramDisplay);
         //scale = fitScale = (double)parentWidget()->height()/(double)igramImage.height();
     } catch (...) {
@@ -1080,7 +1392,7 @@ void IgramArea::paintEvent(QPaintEvent *event)
         int dw = parentWidget()->width()/2;
         int dh = parentWidget()->height();
 
-        QImage roi(viewW * 2, viewW, igramImage.format());
+        QImage roi(viewW * 2, viewW, igramGray.format());
         roi.fill(QColor(0,0,0));
 
         CircleOutline circle((m_current_boundry == OutSideOutline) ? m_OutterP1 : m_innerP1,
@@ -1121,7 +1433,7 @@ void IgramArea::paintEvent(QPaintEvent *event)
         painter.drawImage(dw - viewW, dh/2+ 20, top2, w/2 - viewW  , (h - viewW)/2, viewW * 2, viewW);
 
         //Left *************************************************************
-        QImage roi2(viewW, 2 * viewW, igramImage.format());
+        QImage roi2(viewW, 2 * viewW, igramGray.format());
         roi.fill(QColor(0,0,0));
         QPainter p2(&roi2);
         topx = circle.m_center.rx() - circle.m_radius - viewW/2;
@@ -1187,22 +1499,21 @@ void IgramArea::crop() {
 
     set.setValue("lastOutsideRad", radx);
 
-
-    int width = igramImage.width();
-    int height = igramImage.height();
+    int width = igramGray.width();
+    int height = igramGray.height();
     int right = width - (radx + cx);
     int left = fmax(0, cx - radx);
     int top,bottom;
 
     top = fmax(0, cy - radx);
-    bottom = igramImage.height() - (radx + cy);
+    bottom = igramColor.height() - (radx + cy);
     mirrorDlg &md = *mirrorDlg::get_Instance();
 
     if (md.isEllipse()){
         double e = md.m_verticalAxis/md.diameter;
         rady =  radx * e;
         top = fmax(0,cy - rady);
-        bottom = igramImage.height() - (rady + cy);
+        bottom = igramColor.height() - (rady + cy);
     }
     int border = fmin(left,fmin(right,fmin(bottom,fmin(top,20))));
     int x = cx - radx - border;
@@ -1210,15 +1521,15 @@ void IgramArea::crop() {
     width = 2 * (radx + border);
     height = 2 * (rady + border);
 
-    igramImage = igramImage.copy(QRect(x, y, width, height));
-
+    igramColor = igramColor.copy(QRect(x, y, width, height));
+    igramGray =   igramGray.copy(QRect(x, y, width, height));
     crop_dx = x;
     crop_dy = y;
     cropTotalDx += x;
     cropTotalDy += y;
 
-    x = igramImage.width()/2;
-    y = igramImage.height()/2;
+    x = igramGray.width()/2;
+    y = igramGray.height()/2;
     QString text;
     QTextStream regions(&text);
     for (int i = 0; i < m_polygons.size(); ++i){
@@ -1250,13 +1561,13 @@ void IgramArea::crop() {
     m_innerP2 = m_center.m_p2.m_p;
     resizeImage();
 
-    m_outsideHist.push(igramImage, m_outside);
-    m_centerHist.push(igramImage, m_center);
+    m_outsideHist.push(igramGray, m_outside);
+    m_centerHist.push(igramGray, m_center);
     hasBeenCropped = true;
-    scale = fitScale = (double)parentWidget()->height()/(double)igramImage.height();
+    scale = fitScale = (double)parentWidget()->height()/(double)igramGray.height();
     update();
-    emit imageSize(QString().sprintf("%d X %d", igramImage.size().width(), igramImage.size() .height()));
-    emit upateColorChannels(igramImage);
+    emit imageSize(QString().sprintf("%d X %d", igramGray.size().width(), igramGray.size() .height()));
+    emit upateColorChannels(qImageToMat(igramColor));
     emit doDFT();
 }
 void IgramArea::dftReady(QImage img){
@@ -1340,7 +1651,7 @@ void IgramArea::loadOutlineFile(QString fileName){
     m_OutterP2 = m_outside.m_p2.m_p;
     outterPcount = 2;
     drawBoundary();
-    m_outsideHist.push(igramImage,m_outside);
+    m_outsideHist.push(igramGray,m_outside);
     emit enableShiftButtons(true);
 
     QString msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
@@ -1408,10 +1719,10 @@ void IgramArea::writeOutlines(QString fileName){
     file.flush();
     file.close();
 
-    std::ifstream ifile((fileName.toStdString().c_str()));
+   /* std::ifstream ifile((fileName.toStdString().c_str()));
     char buf[32];
     ifile.read(buf,32);
-    ifile.close();
+    ifile.close();*/
 }
 
 void IgramArea::saveOutlines(){
@@ -1466,13 +1777,13 @@ void IgramArea::shiftoutline(QPointF p) {
         m_outside.translate(p);
         m_OutterP1 = m_outside.m_p1.m_p;
         m_OutterP2 = m_outside.m_p2.m_p;
-        m_outsideHist.push(igramImage, m_outside);
+        m_outsideHist.push(igramGray, m_outside);
     }
     else if (m_current_boundry == CenterOutline){
         m_center.translate(p);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
-        m_centerHist.push(igramImage, m_center);
+        m_centerHist.push(igramGray, m_center);
     }
     drawBoundary();
 
@@ -1530,10 +1841,10 @@ void IgramArea::save(){
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(ext); }
     if (fileName.isEmpty())
         return;
-    QImage pm(igramImage.width(),igramImage.height(),igramImage.format());
+    QImage pm(igramColor.width(),igramColor.height(),igramColor.format());
     QPainter painter(&pm);
 
-    painter.drawImage(0,0,igramImage);
+    painter.drawImage(0,0,igramColor);
 
     QImageWriter writer(fileName);
     if (!writer.canWrite())
@@ -1570,7 +1881,7 @@ void IgramArea::igramOutlineParmsChanged(outlineParms parms){
 void IgramArea::gammaChanged(bool checked, double value){
     m_gammaValue = value;
     m_doGamma = checked;
-    if (igramImage.isNull())
+    if (igramGray.isNull())
         return;
     if (checked){
         doGamma(value);
@@ -1580,10 +1891,10 @@ void IgramArea::gammaChanged(bool checked, double value){
         doGamma(1./m_lastGamma);
         m_lastGamma = 0;
     }
-    igramDisplay = igramImage.copy();
+    igramDisplay = igramGray.copy();
     resizeImage();
     if (m_outside.m_radius > 0.)
-        emit upateColorChannels(igramImage);
+        emit upateColorChannels(qImageToMat(igramColor));
     update();
 }
 void IgramArea::setZoomMode(zoomMode mode){

@@ -59,10 +59,9 @@ std::cout <<" main2";
     stops.clear();
 
     QString sx = QString().sprintf("userColorStopColor%02d",10);
-    for (int i = 0; i < 13; ++i){
+    for (int i = 0; i < 11; ++i){
         double pos = set.value(QString().sprintf("userColorStopPos%02d", i), (double)i * .1).toDouble();
-        if (pos == 1.)
-            pos = .99;
+
         QColor c = QColor(set.value(QString().sprintf("userColorStopColor%02d", i), plotColors[i%10]).toString());
 
         stops << colorStop(pos,c);
@@ -79,14 +78,6 @@ std::cout <<" main2";
         }
 
     }
-
-    QString s ="background-color: #" + QString::number(stops[11].color.rgb(), 16).toUpper();
-    ui->pbMore->setStyleSheet(s);
-    ui->pbMore->update();
-
-    s ="background-color: #" + QString::number(stops[12].color.rgb(), 16).toUpper();
-    ui->pbLess->setStyleSheet(s);
-    ui->pbLess->update();
 
 
     d_spectrogram = new QwtPlotSpectrogram();
@@ -121,7 +112,7 @@ void userColorMapDlg::setColorMap(){
         stops[0].pos = .01;
         stopList << stops[0];
     }
-    for (int i = 1; i < 11; ++i){
+    for (int i = 0; i < 12; ++i){
         QCheckBox * cb = findChild<QCheckBox *>(QString().sprintf("cb%02d",i));
         if (cb && cb->isChecked()) {
             colorStop s(((m_reverse)? stops[10 - i].pos : stops[i].pos), stops[i].color);
@@ -131,8 +122,8 @@ void userColorMapDlg::setColorMap(){
     }
 
     dftColorMap::userStops = stopList;
-    d_spectrogram->setColorMap( new ColorMap(stopList, stops[12].color, stops[11].color) );
-    rightAxis->setColorMap( zInterval, new ColorMap(stopList, stops[12].color,stops[11].color) );
+    d_spectrogram->setColorMap( new ColorMap(stopList ));
+    rightAxis->setColorMap( zInterval, new ColorMap(stopList ));
     ui->plot->replot();
     ui->plot->show();
 
@@ -290,41 +281,14 @@ void userColorMapDlg::on_pb10_clicked()
     QColor c = QColorDialog::getColor(stops[10].color);
     stops[10].color = c;
     QString s("background-color: #" + QString::number(c.rgb(), 16).toUpper());
-    ui->pb10->setStyleSheet(s);
-    ui->pb10->update();
+    ui->pb09->setStyleSheet(s);
+    ui->pb09->update();
     QSettings set;
-    set.setValue("userColorStopColor10",c.name());
+    set.setValue("userColorStopColor09",c.name());
     setColorMap();
     emit colorMapChanged(5);
 }
 
-void userColorMapDlg::on_pbMore_clicked()
-{
-    QColor c = QColorDialog::getColor(stops[11].color);
-    stops[11].color = c;
-    QString s("background-color: #" + QString::number(c.rgb(), 16).toUpper());
-    ui->pbMore->setStyleSheet(s);
-    ui->pbMore->update();
-    QSettings set;
-    set.setValue("userColorStopColor11",c.name());
-    setColorMap();
-    emit colorMapChanged(5);
-}
-
-void userColorMapDlg::on_pbLess_clicked()
-{
-
-        QColor c = QColorDialog::getColor(stops[12].color);
-        stops[12].color = c;
-        QString s("background-color: #" + QString::number(c.rgb(), 16).toUpper());
-        ui->pbLess->setStyleSheet(s);
-        ui->pbLess->update();
-        QSettings set;
-        set.setValue("userColorStopColor12",c.name());
-        setColorMap();
-        emit colorMapChanged(5);
-
-}
 void userColorMapDlg::on_apply_clicked()
 {
     emit colorMapChanged(5);
@@ -415,6 +379,7 @@ void userColorMapDlg::on_cb10_clicked()
     setColorMap();
     emit colorMapChanged(5);
 }
+
 
 void userColorMapDlg::on_savePb_clicked()
 {

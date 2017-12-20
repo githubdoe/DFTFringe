@@ -35,9 +35,13 @@ private slots:
 
     void on_deleteFiles_clicked();
 
+    void on_filterCB_clicked(bool checked);
+
 private:
     Ui::averageWaveFrontFilesDlg *ui;
     bool abort;
+    double filterRMS;
+    bool useFilter;
 };
 
 #endif // AVERAGEWAVEFRONTFILESDLG_H

@@ -33,6 +33,9 @@
      </item>
      <item>
       <widget class="QDoubleSpinBox" name="doubleSpinBox">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select spacing in waves of conatour lines.  Set t0 0 for no contour lines.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="decimals">
         <number>3</number>
        </property>

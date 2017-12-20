@@ -1,31 +1,14 @@
 
-why is intensity profile jagged?
-
-Add average of stand only wavefronts to the wavefront list.
-
-MTF does not match OpenFringe.
-
-check left right and up down displays correctly
 
 Add mirror flip to output.
 
 
-Report options? Enable what goes into it?
-
-
-Why does average have non  values outside of mask area?
-zero
-
 
 Make the igram done button animate like the standastig compute button.
 
-make wavefront does not create same for even and odd sized wavefronts.
 
 rotate and save not loadable by old versions because outline is different.
    Outline is same but outer rows of data are zer0.
 
 losing memory even if not calling imagetogray or even vortex.
 
-pdf report default directory is not correct.
-
-Ignore region expansion will be too large on small wavefronts.

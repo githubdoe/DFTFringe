@@ -75,6 +75,7 @@ void ContourTools::connectTo(QWidget *view){
     connect(this, SIGNAL(contourWaveRangeChanged(double)),view, SLOT(contourWaveRangeChanged(double)));
     connect(view, SIGNAL(setWaveRange(double)),this, SLOT(setWaveRange(double)));
     connect(this, SIGNAL(lineColorChanged(QColor)), view, SLOT(on_line_color_changed(QColor)));
+    connect(this, SIGNAL(newDisplayErrorRange(double,double)), view, SLOT(newDisplayErrorRange(double,double)));
     enablTools(false);
 }
 
@@ -94,12 +95,12 @@ void ContourTools::setWaveRange(double val){
 void ContourTools::setMinMaxValues(double min, double max){
     m_min = min;
     m_max = max;
-    ui->newMin->blockSignals(true);
-    ui->max->blockSignals(true);
-    ui->newMin->setText(QString().sprintf("%5.2lf",min));
-    ui->max ->setText(QString().sprintf("%5.2lf",max));
-    ui->max->blockSignals(false);
-    ui->max->blockSignals(false);
+    ui->minSB->blockSignals(true);
+    ui->maxSB->blockSignals(true);
+    ui->minSB->setValue(min);
+    ui->maxSB->setValue(max);
+    ui->maxSB->blockSignals(false);
+    ui->minSB->blockSignals(false);
     emit newDisplayErrorRange(min,max);
 }
 
@@ -139,12 +140,7 @@ void ContourTools::on_LineColorBtn_clicked()
     emit lineColorChanged(color);
 }
 
-void ContourTools::on_max_textEdited(const QString &)
-{
-    m_max = ui->max->text().toDouble();
-    m_min = ui->newMin->text().toDouble();
-    m_minmaxEditTimer->start(1000);
-}
+
 
 //called when timer for edit expires.
 void ContourTools::updateMinMax(){
@@ -152,9 +148,16 @@ void ContourTools::updateMinMax(){
 }
 
 
-void ContourTools::on_newMin_textEdited(const QString &)
+
+
+void ContourTools::on_maxSB_valueChanged(double arg1)
 {
-    m_min = ui->newMin->text().toDouble();
-    //qDebug() << m_min;
+    m_max = arg1;
+    m_minmaxEditTimer->start(1000);
+}
+
+void ContourTools::on_minSB_valueChanged(double arg1)
+{
+    m_min = arg1;
     m_minmaxEditTimer->start(1000);
 }

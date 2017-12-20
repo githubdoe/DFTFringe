@@ -157,36 +157,12 @@ void OGLView::saveVideo(){
     }
 }
 
-/*
- * originalPixmap = pixmap;
-qImageSingle = originalPixmap.toImage(); //Convert QPicmap to QImage
-
-//Get QImage data to Open-cv Mat
-frame = Mat(qImageSingle.height(),qImageSingle.width(),CV_8UC3,qImageSingle.bits(),qImageSingle.bytesPerLine()).clone();
-
-namedWindow("MyVideo",CV_WINDOW_AUTOSIZE);
-imshow("MyVideo", frame);
-
-vector<int> compression_params;
-compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-compression_params.push_back(9);
-try {
-    imwrite("alpha2.png", frame, compression_params);
-    VideoWriter video("out2.avi",CV_FOURCC('M','J','P','G'),10, Size(qImageSingle.width(),qImageSingle.height()),true);
-    for(int i=0;i<100;i++){
-       video.write(frame); //Write frame to VideoWriter
-    }
-}
-catch (runtime_error& ex) {
-    fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
-}
- * */
 void OGLView::saveImage(){
     QSettings set;
     QString lastPath = set.value("lastPath",".").toString();
     QString fileName = QFileDialog::getSaveFileName(0, "Image file Name", lastPath,"*.jpg" );
     if (fileName.length() > 0){
-        m_gl->swapBuffers();
+        //m_gl->swapBuffers();
         QImage glImage = m_gl->grabFrameBuffer();
         glImage.save(fileName);
 

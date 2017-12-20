@@ -100,7 +100,7 @@ signals:
     void messageResult(int);
     void gammaChanged(bool, double);
 private slots:
-    void updateChannels(QImage);
+    void updateChannels(cv::Mat);
     void openRecentFile();
     void on_actionLoad_Interferogram_triggered();
     void on_pushButton_5_clicked();
@@ -222,6 +222,26 @@ private slots:
 
     void on_polygonRb_clicked(bool checked);
 
+
+    void on_autoOutline_clicked();
+
+    void on_autoChannel_clicked(bool checked);
+
+    void on_redChannel_clicked(bool checked);
+
+    void on_greenChannel_clicked(bool checked);
+
+    void on_blueChannel_clicked(bool checked);
+
+    void on_showColorIgram_clicked(bool checked);
+
+    void on_useLastOutline_clicked();
+
+    void on_actionCreate_Movie_of_wavefronts_triggered();
+
+    void on_actionShow_outline_statistics_triggered();
+
+    void on_actionPlay_batch_results_review_movie_triggered();
 
 private:
 

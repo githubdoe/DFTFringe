@@ -62,9 +62,9 @@ private slots:
 
     void on_LineColorBtn_clicked();
 
-    void on_max_textEdited(const QString &);
+    void on_maxSB_valueChanged(double arg1);
 
-    void on_newMin_textEdited(const QString &);
+    void on_minSB_valueChanged(double arg1);
 
 private:
     Ui::ContourTools *ui;

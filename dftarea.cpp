@@ -29,6 +29,8 @@
 #include "showaliasdlg.h"
 using namespace cv;
 
+
+
 cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
                   QVector<std::vector<cv::Point> > poly){
     int width = data.cols;
@@ -85,6 +87,14 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
     if (Settings2::showMask())
         showData("DFT mask",mask);
     return mask;
+}
+
+DFTArea *DFTArea::m_Instance = 0;
+DFTArea * DFTArea::get_Instance(QWidget *parent, IgramArea *ip, DFTTools *tools, vortexDebug *vdbug){
+    if  (m_Instance == NULL){
+        m_Instance = new DFTArea(parent, ip,tools,vdbug);
+    }
+    return m_Instance;
 }
 
 DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug *vdbug) :
@@ -161,7 +171,7 @@ void DFTArea::dftSizeVal(int val){
 void DFTArea::dftSizeChanged(const QString& val){
     dftSizeStr = val;
     if (val == "same as Igram"){
-        int newVal = igramArea->igramImage.width();
+        int newVal = igramArea->igramGray.width();
         emit setDftSizeVal(newVal);
     }
     if (val == "640 x 640") {
@@ -189,7 +199,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double left = centerX - radx;
     double top = centerY - rady;
 
-    std::vector<Mat > bgr_planes;
+
     top = max(top,0.);
     left = max(left,0.);
     int width = 2. * (radx);
@@ -201,7 +211,7 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double xCenterShift = centerX - left;
     double yCenterShift = centerY - top;
 
-    cv::Mat iMat(img.height(), img.width(), CV_8UC4, img.bits(), img.bytesPerLine());
+    cv::Mat iMat(img.height(), img.width(), CV_8UC3, img.bits(), img.bytesPerLine());
     cv::Mat tmp = iMat.clone();
 
 
@@ -209,7 +219,6 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
 
     double centerDx = centerX - igramArea->m_center.m_center.x();
     double centerDy = centerY - igramArea->m_center.m_center.y();
-    roi.convertTo(roi,CV_32FC3);
 
     QSettings set;
     int dftSize = set.value("DFTSize", 640).toInt();
@@ -237,45 +246,13 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
             m_poly.back().push_back(cv::Point(x,y));
         }
     }
-    // split image into three color planes
-    split( roi, bgr_planes );
 
-    cv::Scalar mean;
-    mean =  cv::mean(roi);
-    double maxMean = 0;
-    int maxndx = 0;
+    cv::Mat channels[3];
+    cv::split(roi, channels);
+    cv::Mat padded;
+    channels[0].convertTo(padded,CV_32F);
 
-    // use the color plane with the largest mean value
-    for (int i = 0; i < 3; ++i){
-        double m = mean[i];
-        //qDebug() << QString().sprintf("%lf", m);
 
-        if (m > maxMean){
-            maxMean =m;
-            maxndx = i;
-        }
-    }
-    if (channel == "Blue") maxndx = 0;
-    else if (channel == "Green") maxndx = 1;
-    else if (channel == "Red") maxndx = 2;
-    else if (channel == "ALL RGB") {
-        maxndx = 0;
-        bgr_planes[0] = bgr_planes[0] + bgr_planes[1] + bgr_planes[2];
-    }
-    QString co[3]  = {"Blue","Green","Red"};
-    emit statusBarUpdate(QString("DFT using channel ") + co[maxndx]);
-    Mat  padded;                            //expand input image to optimal size
-    int m = getOptimalDFTSize( roi.rows ) - roi.rows;
-    int n = getOptimalDFTSize( roi.cols ) - roi.cols; // on the border add zero values
-    m =0;
-    n = 0;
-
-    if (m > 0 || n > 0)
-        copyMakeBorder(bgr_planes[maxndx], padded, 0, m, 0, n, BORDER_CONSTANT, Scalar::all(0));
-    else
-        padded = bgr_planes[maxndx].clone();
-
-    padded = padded - mean[maxndx];
 
     // disabled adding optomizing DFT boarder.
     Mat planes[] = {Mat_<float>(padded), Mat::zeros(padded.size(), CV_32F)};
@@ -286,12 +263,13 @@ Mat DFTArea::grayComplexMatfromImage(QImage &img){
 
     planes[0].copyTo(tmpMask,m_mask);    // Convert image to binary
     planes[0] = tmpMask.clone();
-    mean =  cv::mean(planes[0],m_mask);
+    cv::Scalar mean =  cv::mean(planes[0],m_mask);
     planes[0] -= mean;
     //matDisplay md(planes[0],mean[0]);
     //md.exec();
     Mat  complexI;
     merge(planes, 2, complexI);         // Add to the expanded another plane with zeros
+
     if (scaleFactor == 1.){
         tools->imageSize(QString().sprintf("DFT Size will be %d", width));
     }
@@ -377,7 +355,7 @@ RNG rng(12345);
 void DFTArea::doDFT(){
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    QImage img = igramArea->igramImage;
+    QImage img = igramArea->igramGray;
 
     cv::Mat complexI = grayComplexMatfromImage(img);
     cv::Mat planes[2];
@@ -808,7 +786,9 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     double *p = (double *)(phase.data);
     for (int i=0; i<size; ++i) {
        p[i] = atan2 (imIm[i], imRe[i]);
-     }
+
+    }
+
     imPlanes[0].release();
     imPlanes[1].release();
     // mask to only the mirror portion.
@@ -897,7 +877,7 @@ void DFTArea::makeSurface(){
     if (!tools->wasPressed)
         return;
 
-    if (igramArea->igramImage.isNull()){
+    if (igramArea->igramGray.isNull()){
         QMessageBox::warning(0,"warning","First load an interferogram and circle the mirror.");
         return;
     }
@@ -909,7 +889,7 @@ void DFTArea::makeSurface(){
     cv::Mat phase;
     try {
 
-        phase = vortex(igramArea->igramImage,  m_center_filter);
+        phase = vortex(igramArea->igramGray,  m_center_filter);
 
     }
         catch (std::exception const& e){
@@ -994,12 +974,12 @@ void DFTArea::mousePressEvent(QMouseEvent *event)
     }
 }
 void DFTArea::showResizedDlg(){
-    if (igramArea->igramImage.width() == 0)
+    if (igramArea->igramGray.width() == 0)
             return;
     QSettings set;
     int size = set.value("DFTSize", 640).toInt();
     showAliasDlg dlg(size);
-    dlg.setImage(igramArea->igramImage);
+    dlg.setImage(igramArea->igramGray);
     if (dlg.exec()){
         tools->setDFTSize(dlg.resizedValue);
         doDFT();

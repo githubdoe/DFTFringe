@@ -106,6 +106,7 @@ settingsIGram::settingsIGram(QWidget *parent) :
     palette.setColor(QPalette::Highlight,"lightCyan");
     palette.setColor(QPalette::HighlightedText,"black");
     ui->lenseTableView->setPalette(palette);
+    ui->autoOutline->setChecked( set.value("autoOutline", true).toBool());
 }
 
 settingsIGram::~settingsIGram()
@@ -224,4 +225,11 @@ void settingsIGram::on_SaveOutlines_clicked(bool checked)
     m_autoSaveOutline = checked;
     QSettings set;
     set.setValue("AutoSaveOutline", m_autoSaveOutline);
+}
+
+void settingsIGram::on_autoOutline_clicked(bool checked)
+{
+    QSettings set;
+    set.setValue("autoOutline", checked);
+     qDebug() << "autooutline" << set.contains("autoOutline");
 }

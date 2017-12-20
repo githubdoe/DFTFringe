@@ -39,6 +39,7 @@
 #include "dftcolormap.h"
 #include <QDebug>
 #include <math.h>
+#include "utils.h"
 double zOffset = 0;
 
 class MyZoomer: public QwtPlotZoomer
@@ -86,7 +87,7 @@ double SpectrogramData::value( double x, double y ) const
     if ((m_wf->workMask.at<uint8_t>((int)y,(int)x)) != 255){
         return -10;
     }
-    return  (m_wf->workData(y,x)* m_wf->lambda/550.) -zOffset;
+    return  (m_wf->workData(y,x)* m_wf->lambda/outputLambda) -zOffset;
 
 }
 
@@ -112,6 +113,7 @@ void ContourPlot::ContourMapColorChanged(int ndx) {
 void ContourPlot::contourWaveRangeChanged(double val ){
     m_waveRange = val;
     setZRange();
+    replot();
 }
 
 
@@ -189,6 +191,13 @@ void ContourPlot::setZRange(){
     emit setWaveRange(zmax - zmin);
 
 }
+void ContourPlot::newDisplayErrorRange(double min,double max){
+    QwtInterval zInt(min,max);
+    SpectrogramData *data = (SpectrogramData*)d_spectrogram->data();
+    data->setInterval( Qt::ZAxis, zInt);
+    setColorMap(m_colorMapNdx);
+    replot();
+}
 
 void ContourPlot::contourColorRangeChanged(const QString &arg1){
     m_zRangeMode = arg1;
@@ -226,7 +235,7 @@ void ContourPlot::setSurface(wavefront * wf) {
 
     setZRange();
     QwtScaleWidget *rightAxis = axisWidget( QwtPlot::yRight );
-    rightAxis->setTitle(tr( "wavefront error at 550nm") );
+    rightAxis->setTitle( QString().sprintf("wavefront error at %6.2lf nm", outputLambda) );
     rightAxis->setColorBarEnabled( true );
     rightAxis->setColorBarWidth(30);
     if (!m_minimal){

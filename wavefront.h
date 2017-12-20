@@ -35,7 +35,7 @@ public:
     double gaussian_diameter;
     bool wasSmoothed;
     bool useSANull;
-    int GBSmoothingValue;
+    double GBSmoothingValue;
 
     QString name;
     double lambda;

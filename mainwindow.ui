@@ -79,6 +79,7 @@
     <addaction name="actionSave_nulled_smoothed_wavefront"/>
     <addaction name="separator"/>
     <addaction name="actionSave_PDF_report"/>
+    <addaction name="actionCreate_Movie_of_wavefronts"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -90,6 +91,8 @@
     <addaction name="actionShow_Statistics_of_Loaded_wavefronts"/>
     <addaction name="separator"/>
     <addaction name="actionShow_unwrap_errors"/>
+    <addaction name="actionShow_outline_statistics"/>
+    <addaction name="actionPlay_batch_results_review_movie"/>
    </widget>
    <widget class="QMenu" name="menuConfiguration">
     <property name="title">
@@ -150,8 +153,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>304</width>
-     <height>526</height>
+     <width>329</width>
+     <height>609</height>
     </size>
    </property>
    <property name="whatsThis">
@@ -353,6 +356,24 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
          </property>
          <property name="text">
           <string>Save Outline</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QPushButton" name="useLastOutline">
+         <property name="text">
+          <string>Use Last Outline</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="autoOutline">
+         <property name="text">
+          <string>Auto trace outline</string>
          </property>
         </widget>
        </item>
@@ -874,6 +895,57 @@ em;
       </layout>
      </item>
      <item>
+      <widget class="QGroupBox" name="groupBox_3">
+       <property name="title">
+        <string>Color channel Selection</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <item>
+           <widget class="QRadioButton" name="autoChannel">
+            <property name="text">
+             <string>Auto</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="greenChannel">
+            <property name="text">
+             <string>Green</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="blueChannel">
+            <property name="text">
+             <string>Blue</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="redChannel">
+            <property name="text">
+             <string>Red</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="showColorIgram">
+          <property name="text">
+           <string>Show original color image</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
       <widget class="QLineEdit" name="igramSize">
        <property name="readOnly">
         <bool>true</bool>
@@ -897,6 +969,7 @@ em;
     <zorder>groupBox_2</zorder>
     <zorder>groupBox</zorder>
     <zorder>igramSize</zorder>
+    <zorder>groupBox_3</zorder>
    </widget>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -1060,12 +1133,12 @@ em;
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>lighting properties</string>
+    <string>Lighting properties</string>
    </property>
   </action>
   <action name="actionSave_screen">
    <property name="text">
-    <string>save screen</string>
+    <string>Save screen</string>
    </property>
   </action>
   <action name="actionSave_interferogram">
@@ -1075,7 +1148,7 @@ em;
   </action>
   <action name="actionWavefront">
    <property name="text">
-    <string>wavefront</string>
+    <string>Wavefront</string>
    </property>
   </action>
   <action name="actionWave_Front_Inspector">
@@ -1090,7 +1163,7 @@ em;
   </action>
   <action name="actionSave_nulled_smoothed_wavefront">
    <property name="text">
-    <string>save nulled smoothed wavefront</string>
+    <string>Save nulled smoothed wavefront</string>
    </property>
   </action>
   <action name="actionTest_Stand_Astig_Removal">
@@ -1204,6 +1277,24 @@ em;
   <action name="actionShow_Alias_info">
    <property name="text">
     <string>Show Alias info</string>
+   </property>
+  </action>
+  <action name="actionCreate_Movie_of_wavefronts">
+   <property name="text">
+    <string>Create Movie of wavefronts</string>
+   </property>
+  </action>
+  <action name="actionShow_outline_statistics">
+   <property name="text">
+    <string>Show outline statistics</string>
+   </property>
+  </action>
+  <action name="actionPlay_batch_results_review_movie">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Play batch results review movie</string>
    </property>
   </action>
  </widget>

@@ -114,7 +114,12 @@ SOURCES += main.cpp\
     regionedittools.cpp \
     reportdlg.cpp \
     videosetupdlg.cpp \
-    showaliasdlg.cpp
+    showaliasdlg.cpp \
+    colorchannel.cpp \
+    wavefrontaveragefilterdlg.cpp \
+    rejectedwavefrontsdlg.cpp \
+    outlinestatsdlg.cpp \
+    filteroutlinesdlg.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -212,7 +217,12 @@ HEADERS  += mainwindow.h \
     regionedittools.h \
     reportdlg.h \
     videosetupdlg.h \
-    showaliasdlg.h
+    showaliasdlg.h \
+    colorchannel.h \
+    wavefrontaveragefilterdlg.h \
+    rejectedwavefrontsdlg.h \
+    outlinestatsdlg.h \
+    filteroutlinesdlg.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -275,7 +285,11 @@ FORMS    += mainwindow.ui \
     regionedittools.ui \
     reportdlg.ui \
     videosetupdlg.ui \
-    showaliasdlg.ui
+    showaliasdlg.ui \
+    wavefrontaveragefilterdlg.ui \
+    rejectedwavefrontsdlg.ui \
+    outlinestatsdlg.ui \
+    filteroutlinesdlg.ui
 
 win32 {
       CONFIG( debug, debug|release ) {
@@ -286,7 +300,7 @@ win32 {
         LIBS += C:/build-qwt-Desktop_Qt_5_3_MinGW_32bit-Release/lib/qwt.dll
       }
       INCLUDEPATH += C:\\qwt-6.1.2\\src
-      INCLUDEPATH += c:\\opencvCopy\\build\\include
+      INCLUDEPATH += c:\\opencv\\build\\include
       LIBS += C:/opencv/build-mingw/bin/*.dll
       #message("using win32")
       }
@@ -313,7 +327,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 2.2
+VERSION = 3.0
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

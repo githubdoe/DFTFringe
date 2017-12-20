@@ -104,11 +104,11 @@ bool CamWizardPage1::runCalibration( cv::Size& imageSize, cv::Mat& cameraMatrix,
                             std::vector<float>& reprojErrs,  double& totalAvgErr)
 {
 
-    cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
+    cameraMatrix = cv::Mat::eye(3, 3, CV_64FC1);
     //if( s.flag & CV_CALIB_FIX_ASPECT_RATIO )
         cameraMatrix.at<double>(0,0) = 1.0;
 
-    distCoeffs = cv::Mat::zeros(8, 1, CV_64F);
+    distCoeffs = cv::Mat::zeros(8, 1, CV_64FC1);
 
     cv::vector<cv::vector<cv::Point3f> > objectPoints(1);
     calcBoardCornerPositions( cv::Size(ui->columns->value(), ui->rows->value()), 1,

@@ -158,13 +158,11 @@ void intensityPlot::angleChanged(double a){
 
 
 
-void intensityPlot::setSurface(QImage img){
+void intensityPlot::setSurface(cv::Mat imgMat){
 
-    m_img = img;
-    cv::Mat imgMat(img.height(), img.width(), CV_8UC4, img.bits(), img.bytesPerLine());
-    //cv::cvtColor(imgMat,imgMat,CV_BGRA2RGBA);
+    m_img = imgMat;
     split(imgMat,planes);
-    cv::Mat s[4];
+    cv::Mat s[3];
     cv::resize(planes[0],s[0], cv::Size(200,200));
     cv::resize(planes[1],s[1], cv::Size(200,200));
     cv::resize(planes[2],s[2], cv::Size(200,200));
@@ -187,11 +185,11 @@ void intensityPlot::populate()
     grid->enableYMin(true);
     grid->attach( this);
     grid->setPen( Qt::gray, 0.0, Qt::DotLine );
-    if (m_img.width() == 0)
+    if (m_img.cols == 0)
         return;
     // axes
     detachItems( QwtPlotItem::Rtti_PlotCurve);
-    double rad = m_img.width();
+    double rad = m_img.cols;
     setAxisScale( xBottom, 0, rad );
     QColor colors[] = {Qt::blue, Qt::green, Qt::red};
 

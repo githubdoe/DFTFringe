@@ -60,6 +60,7 @@ public:
     bool zoomed;
     bool m_showSlopeError;
     double slopeLimitArcSec;
+    void setDefocusValue(double val);
 signals:
     void zoomMe(bool);
 public slots:
@@ -85,6 +86,7 @@ private:
     QwtCompass *compass;
     QCheckBox *showSlopeError;
     QDoubleSpinBox *slopeLimitSB;
+    double m_defocusValue;
 
 private:
     Ui::ProfilePlot *ui;

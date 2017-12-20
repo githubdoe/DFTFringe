@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>528</width>
+    <width>678</width>
     <height>493</height>
    </rect>
   </property>
@@ -85,6 +85,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="filterCB">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Exclude wavefronts from the average that exceed an RMS value.&lt;/p&gt;&lt;p&gt;Excluded wavefronts will be colored in red at the end of the average.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string>Filter</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -130,7 +140,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Abort|QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Abort|QDialogButtonBox::Cancel</set>
      </property>
      <property name="centerButtons">
       <bool>true</bool>

@@ -10,6 +10,7 @@
 #include <QApplication>
 #include <QMessageBox>
 #include "myutils.h"
+#include "utils.h"
 statsView::statsView(SurfaceManager *parent) :
     QDialog(0),
     ui(new Ui::statsView),m_removeOutliers(false), m_removeRMS(false)
@@ -274,7 +275,7 @@ void statsView::on_SaveCSV_clicked()
             // apply software Null if needed
             if (ndx == 8 and md->doNull)
                 v -= md->z8 * md->cc;
-            double Sigma = computeRMS(ndx,v) * md->lambda/550.;
+            double Sigma = computeRMS(ndx,v) * md->lambda/outputLambda;
 
             if (ndx == 8) {
                 spherical << QPointF(row,Sigma);
@@ -282,7 +283,7 @@ void statsView::on_SaveCSV_clicked()
                 sphericaRunningAvg << QPointF(row,sperAvg/(i+1));
             }
 
-            mZerns.at<double>(row,ndx) =  Sigma * md->lambda/550.;
+            mZerns.at<double>(row,ndx) =  Sigma * md->lambda/outputLambda;
 
         }
 

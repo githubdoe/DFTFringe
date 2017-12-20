@@ -215,3 +215,22 @@ void simIgramDlg::on_Z8Pb_clicked(bool checked)
 {
     doCorrection = !checked;
 }
+
+void simIgramDlg::on_clearPiston_pressed()
+{
+    for (int i =0; i < 4; ++i){
+        zernikes[i] = 0;
+
+    }
+    tableModel->setValues(&zernikes);
+    update();
+}
+
+void simIgramDlg::on_clearAll_pressed()
+{
+    for (int i = 0; i < zernikes.size(); ++i){
+        zernikes[i] = 0;
+    }
+    tableModel->setValues(&zernikes);
+    update();
+}

@@ -97,6 +97,7 @@ public slots:
     void surfaceSpecular(int value);
     void surfaceShine(int value);
     void surfaceEmission(int value);
+
     // from countour tools
     void showContoursChanged(double);
     void contourZeroOffsetChanged(const QString &);

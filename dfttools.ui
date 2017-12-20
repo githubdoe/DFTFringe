@@ -82,18 +82,6 @@ hover {background-color: lightblue;}
      </layout>
     </item>
     <item>
-     <widget class="QGroupBox" name="groupBox_3">
-      <property name="title">
-       <string>Color Channel Select</string>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QComboBox" name="colorChannelCB"/>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
      <widget class="QPushButton" name="computeDFT">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">

@@ -27,15 +27,15 @@ Q_OBJECT
 public:
     intensityPlot(QWidget *parent = NULL);
     virtual ~intensityPlot() {}
-    void setSurface(QImage img);
+    void setSurface(cv::Mat imgMat);
     virtual void resizeEvent( QResizeEvent * );
     void showRed(bool);
     void showBlue(bool);
     void showGreen(bool);
     double m_waveRange;
     virtual bool eventFilter( QObject *, QEvent * );
-    QImage m_img;
-    cv::Mat planes[4];
+    cv::Mat m_img;
+    cv::Mat planes[3];
 public slots:
     void angleChanged(double a);
 

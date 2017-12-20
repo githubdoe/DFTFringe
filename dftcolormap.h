@@ -25,7 +25,8 @@ class dftColorMap: public QwtLinearColorMap
 {
 public:
     dftColorMap(int type = 0, wavefront *wf= 0, bool zeroBased = true,
-                double errorMargin = .125, double scale = 1.);
+                double errorMargin = .125, double scale = 1., QColor less = Qt::black,
+                QColor more = Qt::white);
     void setRange(double low, double high);
     static void setUserStops(QList<colorStop> &stops);
     wavefront *m_wf;

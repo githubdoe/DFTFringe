@@ -60,7 +60,7 @@ showAliasDlg::showAliasDlg(int size, QWidget *parent) :
 {
 
     ui->setupUi(this);
-    m_contrast = 10.;
+    m_contrast = 1.;
     ui->resizedSB->blockSignals(true);
     ui->resizedSB->setValue(size);
 
@@ -89,9 +89,9 @@ showAliasDlg::~showAliasDlg()
  }
 void showAliasDlg::contrast(){
     QImage temp = m_img.copy();
-    cv::Mat res(temp.height(),temp.width(),CV_8UC4,(uchar*)temp.bits(),temp.bytesPerLine());
+    cv::Mat res(temp.height(),temp.width(),CV_8UC3,(uchar*)temp.bits(),temp.bytesPerLine());
 
-    cv::cvtColor(res,gray, cv::COLOR_RGBA2GRAY);
+    cv::cvtColor(res,gray, cv::COLOR_RGB2GRAY);
 
     for( int y = 0; y < gray.rows; y++ ) {
         for( int x = 0; x < gray.cols; x++ ) {
@@ -111,7 +111,8 @@ void showAliasDlg::downSize(){
 }
 void showAliasDlg::on_contrastSlider_sliderMoved(int position)
 {
-    m_contrast = 20. * position/100.;
+    qDebug() << "contrast" << position;
+    m_contrast = 2. * position/100.;
     contrast();
     downSize();
 }

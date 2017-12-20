@@ -682,7 +682,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 for (int z = start_term; z < Z_TERMS; ++z)
                 {
                     if ((z == 3) & doDefocus)
-                        nz -= defocus * zpolar.zernike(z,rho, theta);
+                        nz += defocus * zpolar.zernike(z,rho, theta);
 
                     if (!enables[z])
                         nz -= zerns[z] * zpolar.zernike(z,rho, theta);

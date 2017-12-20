@@ -7,6 +7,7 @@
 #include <QVector>
 #include <QMenu>
 #include "zernikeprocess.h"
+extern double outputLambda;
 foucaultView *foucaultView::m_instance = 0;
 
 foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
@@ -88,7 +89,7 @@ void foucaultView::on_makePb_clicked()
 
     double b = (fl * 2) + coc_offset_mm;
     double pv =   ( sqrt((r2)+(fl * fl * 4.))
-         - (sqrt(r2+ b * b) - coc_offset_mm) )/ (550 * 1.E-6);
+         - (sqrt(r2+ b * b) - coc_offset_mm) )/ (outputLambda * 1.E-6);
 
     std::vector<double> zerns = m_wf->InputZerns;
     std::vector<double> newZerns = zerns;
@@ -115,21 +116,21 @@ void foucaultView::on_makePb_clicked()
 
     double hy = hx;
 
-    cv::Mat vknife[] = {cv::Mat::zeros(size,size,CV_64F)
-                        ,cv::Mat::zeros(Size(size,size),CV_64F)};
+    cv::Mat vknife[] = {cv::Mat::zeros(size,size,CV_64FC1)
+                        ,cv::Mat::zeros(Size(size,size),CV_64FC1)};
 
-    cv::Mat ronchiGrid[] = {cv::Mat::zeros(size,size,CV_64F)
-                            ,cv::Mat::zeros(Size(size,size),CV_64F)};
+    cv::Mat ronchiGrid[] = {cv::Mat::zeros(size,size,CV_64FC1)
+                            ,cv::Mat::zeros(Size(size,size),CV_64FC1)};
 
-    cv::Mat slit[] = {cv::Mat::zeros(size,size,CV_64F)
-                   ,cv::Mat::zeros(Size(size,size),CV_64F)};
+    cv::Mat slit[] = {cv::Mat::zeros(size,size,CV_64FC1)
+                   ,cv::Mat::zeros(Size(size,size),CV_64FC1)};
 
 
-    cv::Mat ronchiSlit[] = {cv::Mat::zeros(size,size,CV_64F)
-                   ,cv::Mat::zeros(Size(size,size),CV_64F)};
+    cv::Mat ronchiSlit[] = {cv::Mat::zeros(size,size,CV_64FC1)
+                   ,cv::Mat::zeros(Size(size,size),CV_64FC1)};
 
     // compute real world pixel width.
-    double pixwidth =  550.E-6* Fnumber * 2./(25.4 * pad);
+    double pixwidth =  outputLambda * 1.E-6* Fnumber * 2./(25.4 * pad);
 
     double lpi = ui->lpiSb->value()  * ((ui->useMM->isChecked()) ? 25.4 : 1.);
 

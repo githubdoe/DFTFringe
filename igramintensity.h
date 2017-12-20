@@ -20,6 +20,7 @@
 
 #include <QDialog>
 #include <QImage>
+#include <opencv2/core/core.hpp>
 namespace Ui {
 class igramIntensity;
 }
@@ -31,7 +32,7 @@ class igramIntensity : public QDialog
 public:
     explicit igramIntensity(QWidget *parent = 0);
     ~igramIntensity();
-    void setIgram(QImage img);
+    void setIgram(cv::Mat img);
 private slots:
     void on_showRed_clicked(bool checked);
 

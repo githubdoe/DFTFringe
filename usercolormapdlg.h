@@ -129,10 +129,6 @@ private slots:
 
     void on_cb10_clicked();
 
-    void on_pbMore_clicked();
-
-    void on_pbLess_clicked();
-
     void on_savePb_clicked();
 
     void on_loadPb_clicked();

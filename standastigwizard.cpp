@@ -256,10 +256,11 @@ define_input::define_input(QWidget *parent)
 
 
 void define_input::compute(){
-    if (listDisplay->count() == 0){
-        QMessageBox::warning(0, "", "You must first add some wavefront files to the list.");
+    if (listDisplay->count() < 2){
+        QMessageBox::warning(0, "", "You must first add at least 2 wavefront files to the list.");
         return;
     }
+
     AstigReportTitle = title->text();
     runpb->setText("Working");
     runpb->setEnabled(false);

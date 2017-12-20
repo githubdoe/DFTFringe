@@ -71,6 +71,7 @@
 #include <math.h>
 cv::Mat theMask;
 cv::Mat deb;
+double outputLambda;
 double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
 {
 
@@ -341,9 +342,12 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             wf->nulledData = wf->data.clone();
             if (m_GB_enabled){
 
-                    //expandBorder(wf);
+                // compute blur radius
+                int gaussianRad = wf->m_outside.m_radius * m_gbValue * .01;
+                gaussianRad &= 0xfffffffe;
+                ++gaussianRad;
                     cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
-                                      cv::Size( m_gbValue, m_gbValue ),0,0,BORDER_REFLECT);
+                                      cv::Size( gaussianRad, gaussianRad ),0,0,BORDER_REFLECT);
             }
             else {
                 wf->workData = wf->data.clone();
@@ -400,8 +404,12 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     wf->workData = wf->nulledData.clone();
     if (m_GB_enabled){
             expandBorder(wf);
+            // compute blur radius
+            int gaussianRad = wf->m_outside.m_radius * m_gbValue * .01;
+            gaussianRad &= 0xfffffffe;
+            ++gaussianRad;
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
-                              cv::Size( m_gbValue, m_gbValue ),0,0,BORDER_REFLECT);
+                              cv::Size( gaussianRad, gaussianRad ),0,0,BORDER_REFLECT);
     }
 
     wf->nulledData.release();
@@ -434,7 +442,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
                     int z = zernsToUse[ii];
 
                     if ( z == 3 && m_surfaceTools->m_useDefocus){
-                        S1 -= m_surfaceTools->m_defocus * zpolar.zernike(z,rho,theta);
+                        S1 += m_surfaceTools->m_defocus * zpolar.zernike(z,rho,theta);
                     }
                     else {
                         if (en[z]){
@@ -493,11 +501,11 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     connect(m_surfaceTools, SIGNAL(centerMaskValue(int)),this, SLOT(centerMaskValue(int)));
     connect(m_surfaceTools, SIGNAL(outsideMaskValue(int)),this, SLOT(outsideMaskValue(int)));
     connect(m_surfaceTools, SIGNAL(surfaceSmoothGBEnabled(bool)), this, SLOT(surfaceSmoothGBEnabled(bool)));
-    connect(m_surfaceTools, SIGNAL(surfaceSmoothGBValue(int)), this, SLOT(surfaceSmoothGBValue(int)));
+    connect(m_surfaceTools, SIGNAL(surfaceSmoothGBValue(double)), this, SLOT(surfaceSmoothGBValue(double)));
     connect(m_surfaceTools, SIGNAL(wftNameChanged(int,QString)), this, SLOT(wftNameChanged(int,QString)));
     connect(this, SIGNAL(nameChanged(QString, QString)), m_surfaceTools, SLOT(nameChanged(QString,QString)));
     connect(m_metrics, SIGNAL(recomputeZerns()), this, SLOT(computeZerns()));
-    connect(m_surfaceTools, SIGNAL(defocusChanged()), this, SLOT(computeZerns()));
+    connect(m_surfaceTools, SIGNAL(defocusChanged()), this, SLOT(defocusChanged()));
     connect(this, SIGNAL(currentNdxChanged(int)), m_surfaceTools, SLOT(currentNdxChanged(int)));
     connect(this, SIGNAL(deleteWavefront(int)), m_surfaceTools, SLOT(deleteWaveFront(int)));
     connect(m_surfaceTools, SIGNAL(deleteTheseWaveFronts(QList<int>)), this, SLOT(deleteWaveFronts(QList<int>)));
@@ -510,14 +518,24 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     connect(mirrorDlg::get_Instance(),SIGNAL(obstructionChanged()), this, SLOT(ObstructionChanged()));
     QSettings settings;
     m_GB_enabled = settings.value("GBlur", true).toBool();
-    m_gbValue = settings.value("GBValue", 21).toInt();
+    if (!settings.contains("gaussianRadiusConverted")){
+            settings.setValue("gaussianRadiusConverted", true);
+            settings.setValue("GBValue", 20.);
+    }
+    m_gbValue = settings.value("GBValue", 20.).toDouble();
     //useDemoWaveFront();
-
+    connect(Settings2::getInstance()->m_general, SIGNAL(outputLambdaChanged(double)), this, SLOT(outputLambdaChanged(double)));
+    outputLambda = settings.value("outputLambda", 550.).toDouble();
+    //useDemoWaveFront();
+    surfaceSmoothGBValue(m_gbValue);
     initWaveFrontLoad();
 }
 
 SurfaceManager::~SurfaceManager(){}
-
+void SurfaceManager::outputLambdaChanged(double val){
+    outputLambda = val;
+    computeZerns();
+}
 void DrawPoly(cv::Mat &data, QVector<std::vector<cv::Point> > poly){
     for (int n = 0; n < poly.size(); ++n){
         cv::Point points[1][poly[n].size()];
@@ -753,21 +771,17 @@ void SurfaceManager::wavefrontDClicked(const QString & name){
     }
 }
 
-void SurfaceManager::surfaceSmoothGBValue(int value){
-
-    if (value %2 == 0) ++value;  // make sure blur radius is always odd;
-    m_gbValue = value;
+void SurfaceManager::surfaceSmoothGBValue(double value){
 
     QSettings settings;
-    settings.setValue("GBValue", m_gbValue);
-    double rad = 320.;
-    if (m_wavefronts.size() != 0)
-        rad = m_wavefronts[m_currentNdx]->m_outside.m_radius-1;
+    settings.setValue("GBValue", value);
+    m_gbValue = value;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double mmPerPixel = md->diameter/(2 * rad);
-    m_surfaceTools->setBlurText(QString().sprintf("%6.2lf mm",m_gbValue* mmPerPixel));
+
+    m_surfaceTools->setBlurText(QString().sprintf("%6.2lf mm", .01 * value * md->diameter));
     if (m_wavefronts.size() == 0)
         return;
+
     m_wavefronts[m_currentNdx]->GBSmoothingValue = 0;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
 
@@ -798,16 +812,16 @@ void SurfaceManager::computeMetrics(wavefront *wf){
     mirrorDlg *md = mirrorDlg::get_Instance();
     cv::Scalar mean,std;
     cv::meanStdDev(wf->workData,mean,std,wf->workMask);
-    wf->mean = mean.val[0] * md->lambda/550.;
-    wf->std = std.val[0]* md->lambda/550.;
+    wf->mean = mean.val[0] * md->lambda/outputLambda;
+    wf->std = std.val[0]* md->lambda/outputLambda;
 
     double mmin;
     double mmax;
 
     minMaxIdx(wf->workData, &mmin,&mmax);
 
-    wf->min = mmin * md->lambda/550.;
-    wf->max = mmax * md->lambda/550.;
+    wf->min = mmin * md->lambda/outputLambda;
+    wf->max = mmax * md->lambda/outputLambda;
 
 
     ((MainWindow*)(parent()))->zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
@@ -815,7 +829,19 @@ void SurfaceManager::computeMetrics(wavefront *wf){
     ((MainWindow*)(parent()))->updateMetrics(*wf);
 
 }
+void SurfaceManager::defocusChanged(){
 
+    double val = m_surfaceTools->m_defocus;
+    if (!m_surfaceTools->m_useDefocus)
+        val = 0.;
+    wavefront *wf = m_wavefronts[m_currentNdx];
+    wf->dirtyZerns = true;
+    wf->wasSmoothed = false;
+    generateSurfacefromWavefront(wf);
+    m_profilePlot->setDefocusValue(val);
+    m_waveFrontTimer->start(2000);
+
+}
 
 void SurfaceManager::computeZerns()
 {
@@ -1010,8 +1036,11 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     m_surfaceTools->select(m_currentNdx);
     emit showTab(2);
 }
+wavefront *SurfaceManager::xxx(QString name, bool t){
+    return readWaveFront(name, false);
+}
 
-wavefront * SurfaceManager::readWaveFront(const QString &fileName, bool &mirrorParamsChanged){
+wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsChanged){
     std::ifstream file(fileName.toStdString().c_str());
     if (!file) {
         QString b = "Can not read file " + fileName + " " +strerror(errno);
@@ -1263,12 +1292,16 @@ void SurfaceManager::deleteCurrent(){
 void SurfaceManager::processSmoothing(){
     if (m_wavefronts.size() == 0)
         return;
+
     wavefront *wf = m_wavefronts[m_currentNdx];
     if (m_GB_enabled){
         if (wf->wasSmoothed != m_GB_enabled || wf->GBSmoothingValue != m_gbValue) {
-
+            // compute blur radius
+            int gaussianRad = 2. * wf->m_outside.m_radius * m_gbValue * .01;
+            gaussianRad &= 0xfffffffe;
+            ++gaussianRad;
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
-                              cv::Size( m_gbValue, m_gbValue ),0,0,BORDER_REFLECT);
+                              cv::Size( gaussianRad, gaussianRad ),0,0,BORDER_REFLECT);
         }
     }
     else if (wf->wasSmoothed == true) {
@@ -1851,8 +1884,24 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         yastig.at<double>(i,0) = mirrorY;
         qDebug() << "Mirror astigs " << mirrorX << mirrorY;
     }
-    CircleData d(xastig.rows, xastig.ptr<double>(0), yastig.ptr<double>(0));
-    Circle c = CircleFitByHyper(d);
+    Circle fittedcircle;
+    if (xastig.rows > 2){
+        CircleData d(xastig.rows, xastig.ptr<double>(0), yastig.ptr<double>(0));
+        fittedcircle = CircleFitByHyper(d);
+    } else if (xastig.rows == 2)
+    {
+        double xmean = 0;
+        double ymean = 0;
+        for (int i = 0; i < xastig.rows; ++i){
+            xmean += xastig.at<double>(i,0);
+            ymean += yastig.at<double>(i,0);
+        }
+        double xdel = xastig.at<double>(0,0) - xmean/xastig.rows;
+        double ydel = yastig.at<double>(0,0) - ymean/xastig.rows;
+        double r = sqrt(xdel * xdel + ydel * ydel);
+        fittedcircle = Circle(xmean/xastig.rows, ymean/xastig.rows, r );
+    }
+
 
     double smin,smax;
     cv::minMaxIdx(standavg,&smin, &smax);
@@ -1926,8 +1975,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
                     "<td>" + QString().number((180./ M_PI) * atan2(yval,xval),'f',1) + "</td></right></tr>");
 
     }
-    html.append("<tr></b><td>MEAN</b></td><td>" + QString().number(c.a,'f',3) + "</td><td>" +
-                QString().number(c.b,'f',3) + "</td><td>" + QString().number(sqrt(c.a * c.a + c.b * c.b),'f',3) + "</td></tr>");
+    html.append("<tr></b><td>MEAN</b></td><td>" + QString().number(fittedcircle.a,'f',3) + "</td><td>" +
+                QString().number(fittedcircle.b,'f',3) + "</td><td>" + QString().number(sqrt(fittedcircle.a * fittedcircle.a + fittedcircle.b * fittedcircle.b),'f',3) + "</td></tr>");
     html.append("<tr><b><td><b>STD</b></td><td><ALIGN ='right'>" + QString().number(standXStd[0],'f',3) + "</td><td>" +
                 QString().number(standyStd[0],'f',3) + "</td><td>" + QString().number(standStd[0],'f',3) + "</td></tr>");
     html.append("</table>");
@@ -2102,12 +2151,12 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 
     // draw average astig radius circule around points.
 
-    meanMark->setValue(c.a,c.b);
+    meanMark->setValue(fittedcircle.a,fittedcircle.b);
     QwtPlotCurve *curveAvgMirror = new QwtPlotCurve("Mirror Astig Circle");
     stdCircle.clear();
     for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
         //stdCircle << QPointF(mirrorXastig+mirrorAstigRadius * cos(rho), mirrorYastig + mirrorAstigRadius * sin(rho));
-        stdCircle << QPointF(c.a+c.r * cos(rho), c.b + c.r * sin(rho));
+        stdCircle << QPointF(fittedcircle.a+fittedcircle.r * cos(rho), fittedcircle.b + fittedcircle.r * sin(rho));
 
     }
 
@@ -2167,9 +2216,9 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 
 
 void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef *> list){
-    QApplication::setOverrideCursor(Qt::WaitCursor);
     // check for pairs
     QVector<rotationDef*> lookat = list.toVector();
+
     while (lookat.size()){
         for (int i = 0; i < lookat.size(); ++i){
             double angle1 = wrapAngle(lookat[i]->angle);
@@ -2189,15 +2238,21 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
             }
 
             if (!found){
-                QMessageBox::warning(0, tr("Error"),
+                if (QMessageBox::Yes ==
+                  QMessageBox::question(0, tr("Error"),
                                      QString().sprintf("No 90 deg pair for %s and angle %6.2lf",
                                                        lookat[i]->fname.toStdString().c_str(),
-                                                       lookat[i]->angle));
-                lookat.remove(i);
+                                                       lookat[i]->angle))){
+                        wizPage->runpb->setText("compute");
+                        wizPage->runpb->setEnabled(true);
+                        return;
+                }
+            lookat.remove(i);
             }
             break;
         }
     }
+        QApplication::setOverrideCursor(Qt::WaitCursor);
     QPrinter printer(QPrinter::HighResolution);
     printer.setColorMode( QPrinter::Color );
     printer.setFullPage( true );
@@ -2450,7 +2505,7 @@ void SurfaceManager::showAll3D(GLWidget *gl)
         wavefront * wf = m_wavefronts[i];
 
         gl->setSurface(wf);
-        gl->swapBuffers();
+        //gl->swapBuffers();
         //gl->setSurface(wf);
         QImage glImage = gl->grabFrameBuffer();
         QPainter p2(&glImage);
@@ -2594,18 +2649,21 @@ void SurfaceManager::report(){
     QString html = "<p style=\'font-size:15px'>"
             "<table border='1' width = '100%'><tr><td>" + Diameter + " mm</td><td>" + ROC + " mm</td>"
             "<td>" +FNumber+ "</td></tr>"
-            "<tr><td> RMS: " + QString().number(wf->std,'f',3) + " waves at 550nm</td><td>Strehl: " + metrics->mStrehl->text() +
+            "<tr><td> RMS: " + QString().number(wf->std,'f',3) +
+                QString().sprintf(" waves at %6.1lf nm</td><td>Strehl: ",outputLambda) + metrics->mStrehl->text() +
             "</td><td>" + BFC + "</td></tr>"
             "<tr><td>" + ((md->isEllipse()) ? "":"Desired Conic: " + QString::number(md->cc)) + "</td><td>" +
             ((md->doNull) ? QString().sprintf("SANull: %6.4lf",md->z8 * md->cc) : "No software Null") + "</td>"
-            "<td>Waves per fringe: " + QString::number(md->fringeSpacing) + "<br>Test Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
+            "<td>Waves per fringe: " + QString::number(md->fringeSpacing) + "<br>Interferogram Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
             "</table></p>";
 
     // zerenike values
     QString zerns("<p>This is a flat so no zernike values are computed.</p>");
     if (!md->isEllipse()){
-        zerns = "<p>Zernike Values :<br><table width='100%'><tr><td><table  border='1' width='40%'>";
-        zerns.append("<tr><td>Term</td><td><table width = '100%'><tr><td>Wyant</td><td>RMS</td></tr></table></tr>");
+        zerns = "<p><br><table width='100%' border = '1'>"
+                "<tr><th colspan = '2'><h2>Zernike Values at interferogram wavelength</h2></th></tr>"
+                "<tr><td><table  border='1' width='40%'>";
+        zerns.append("<tr><th>Term</th><td><table width = '100%'><tr><th>Wyant</th><th>RMS</th></tr></table></td></tr>");
         int half = Z_TERMS/2 +2;
         for (int i = 3; i < half; ++i){
             double val = wf->InputZerns[i];
@@ -2636,8 +2694,10 @@ void SurfaceManager::report(){
         }
 
 
-        zerns.append("</table></td><td><table border='1' width = '50%'>");
-        zerns.append("<tr><td>Term</td><td><table width = '100%'><tr><td>Wyant</td><td>RMS</td></tr></table></tr>");
+        zerns.append("</table></td>");
+
+        zerns.append("<td><table border='1' width = '50%'>"
+                     "<tr><th>Term</th><td><table width = '100%'><tr><th>Wyant</th><th>RMS</th></tr></table></tr>");
 
         for (int i = half; i < Z_TERMS; ++i){
             double val = wf->InputZerns[i];
@@ -2665,22 +2725,23 @@ void SurfaceManager::report(){
         }
         QString contour("mydata://contour.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(contour), QVariant(contWindow));
-        contourHtml.append( "<p> <img src='" +contour + "'</p>");
+        contourHtml.append( "<table border = \"1\"><tr><th>Contour Plot</th></tr> <tr><td> <img src='" +
+                            contour + "'></td></tr></table><br>");
 
     }
 
     // get the 3D image
     if (dlg.show_3D){
         QString threeD("threeD.png");
-        QImage image = QImage(600,500, QImage::Format_ARGB32 );
-        image.fill( QColor( Qt::white ).rgb() );
-        QImage ddd = m_oglPlot->renderPixmap(600,400).toImage();
+        QImage ddd = m_oglPlot->grabFrameBuffer();
         if (dlg.reduce3D){
             ddd = ddd.scaled(3 * ddd.width()/4, ddd.height()/2,Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
         }
         doc->addResource(QTextDocument::ImageResource,  QUrl(threeD), QVariant(ddd));
-        contourHtml.append("<p> <img src='" +threeD + "'</p>");
+        contourHtml.append("<table border = \"1\"><tr><th><h2>3D Surface Plot</h2></th></tr> <tr><td> <img src='" +
+                           threeD + "'</td></tr></table><br>");
     }
+
     if (dlg.show_profile){
         //get the profile plot image
         QImage i2 = QImage(((MainWindow*)(parent()))->m_profilePlot->size(),QImage::Format_ARGB32);
@@ -2689,10 +2750,11 @@ void SurfaceManager::report(){
         QImage i2Scaled = i2.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
         QString profile("mydata://profile.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(profile), QVariant(i2Scaled));
-        contourHtml.append("<p> <img src='" +profile + "'</p>");
+        contourHtml.append("<table border = \"1\"><tr><th>Profile Plot</th></tr> <tr><td> <img src='" +
+                           profile + "'</td></tr></table><br>");
     }
     if (dlg.show_startest){
-        // add star test if not testing a flat
+        // add star test if not testing a
         if (!md->isEllipse()){
             SimulationsView *sv = SimulationsView::getInstance(0);
             if (sv->needs_drawing){
@@ -2704,7 +2766,8 @@ void SurfaceManager::report(){
             QImage svImageScaled = svImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
             QString svpng("mydata://sv.png");
             doc->addResource(QTextDocument::ImageResource,  QUrl(svpng), QVariant(svImageScaled));
-            contourHtml.append("<p> <img src='" +svpng + "'</p>");
+            contourHtml.append("<table border = \"1\"><tr><th>Star test, PSF and MTF</th></tr> <tr><td> <img src='" +
+                               svpng + "'></td></tr></table><br>");
         }
     }
     if (dlg.show_foucault)
@@ -2717,7 +2780,8 @@ void SurfaceManager::report(){
         QImage fvImageScaled = fvImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
         QString fvpng("mydata://fv.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(fvpng), QVariant(fvImageScaled));
-        contourHtml.append("<p> <img src='" +fvpng + "'</p>");
+        contourHtml.append("<table border = \"1\"><tr><th>Simulated Ronchi and Foucault</th></tr> <tr><td> <img src='" +
+                           fvpng + "'></td></tr></table><br>");
     }
 
     // add igram
@@ -2726,7 +2790,8 @@ void SurfaceManager::report(){
         QString sigram("mydata://igram.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(sigram),
                          QVariant(igram.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
-        contourHtml.append("<p> <img src='" +sigram + "'</p>Typical Interferogram");
+        contourHtml.append("<table border = \"1\"><tr><th>typical interferogram</th></tr> <tr><td> <img src='" +
+                           sigram + "'></td></tr></table><br>");
     }
     if (dlg.show_histogram){
         // add pixel stats window
@@ -2734,7 +2799,8 @@ void SurfaceManager::report(){
         QString pixStat("mydata://pixStat.png");
         doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
                          QVariant(pixStats.scaled(printer.pageRect().size().width() -50, 700,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
-        contourHtml.append("<p> <img src = '" + pixStat + "'</p>PixelStatistics and Slope error");
+        contourHtml.append("<table border = \"1\"><tr><th>Pixel Hitogram and SLope error</th></tr> <tr><td> <img src = '" +
+                           pixStat + "'></td></tr></table>");
     }
     editor->setHtml(title + html +zerns + contourHtml+ tail);
     editor->print(&printer);

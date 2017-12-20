@@ -19,12 +19,15 @@ public:
     bool useStarTestMake(){
         return m_useStarTestMakeOnly;
     }
+    bool valsChanged;
     int m_waveFrontSize;
     bool m_downsize;
     bool shouldDownsize(){ return m_downsize;}
     int wavefrontSize(){ return m_waveFrontSize;}
 
     int memoryThreshold();
+signals:
+    void outputLambdaChanged(double val);
 private slots:
     void on_checkBox_clicked(bool checked);
     void on_starTestMakeCb_clicked(bool checked);
@@ -34,6 +37,8 @@ private slots:
     void on_memThreshValue_valueChanged(int val);
     void on_AstigDistGraphWidth_valueChanged(int val);
     void on_applyOffsets_clicked(bool checked);
+    void on_outputLambda_valueChanged(double val);
+    void on_apply_clicked();
 private:
     Ui::SettingsGeneral2 *ui;
     bool m_useSVD;

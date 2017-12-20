@@ -31,6 +31,7 @@
 #include <qwt_scale_draw.h>
 #include <QSettings>
 #include "settings2.h"
+#include "utils.h"
 double M2PI = M_PI * 2.;
 SimulationsView *SimulationsView::m_Instance = 0;
 class arcSecScaleDraw: public QwtScaleDraw
@@ -135,12 +136,16 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
     // if use wavefront then apply defocus to wavefront.
     QSettings settings;
     bool GB_enabled = settings.value("GBlur", true).toBool();
-    double gbValue = settings.value("GBValue", 21).toInt();
+
     cv::Mat nulled_surface = zp.null_unwrapped( *(m_Instance->m_wf), newZerns, zernEnables);
     if (GB_enabled){
-        cv::GaussianBlur( nulled_surface, nulled_surface , cv::Size( gbValue, gbValue ),0,0);
+        double gbValue = settings.value("GBValue", 21).toDouble();
+        int blurRad = .01 * gbValue * md->diameter;
+        blurRad &= 0xfffffffe;
+        ++blurRad;
+        cv::GaussianBlur( nulled_surface, nulled_surface , cv::Size( blurRad, blurRad ),0,0);
     }
-    nulled_surface  *= M2PI * md->lambda/550.;
+    nulled_surface  *= M2PI * md->lambda/outputLambda;
     return nulled_surface;
 }
 
@@ -152,8 +157,8 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
     int nx = surface.size().width;//pupil_size;
     int ny = surface.size().height;
 
-    cv::Mat tmp[] = {cv::Mat::zeros(Size(nx,ny),CV_64F)
-                    ,cv::Mat::zeros(Size(nx,ny),CV_64F)};
+    cv::Mat tmp[] = {cv::Mat::zeros(Size(nx,ny),CV_64FC1)
+                    ,cv::Mat::zeros(Size(nx,ny),CV_64FC1)};
 
     for (int y = 0; y < ny; ++y){
         for (int x = 0; x < nx; ++x){
@@ -178,8 +183,8 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
     cv::resize(tmp[0],tmp[0],cv::Size(padSize,padSize),cv::INTER_AREA);
     cv::resize(tmp[1],tmp[1],cv::Size(padSize,padSize),cv::INTER_AREA);
 
-    cv::Mat in[] = {cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64F)
-                    ,cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64F)};
+    cv::Mat in[] = {cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)
+                    ,cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)};
 
     tmp[0].copyTo(in[0](cv::Rect(0,0,tmp[0].cols,tmp[0].cols)));
     tmp[1].copyTo(in[1](cv::Rect(0,0,tmp[0].cols,tmp[0].cols)));

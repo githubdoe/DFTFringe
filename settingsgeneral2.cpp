@@ -1,11 +1,11 @@
 #include "settingsgeneral2.h"
 #include "ui_settingsgeneral2.h"
 #include <QSettings>
-
+extern double outputLambda;
 SettingsGeneral2::SettingsGeneral2(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsGeneral2),m_useSVD(false),
-    m_showConditionNumbers(false)
+    m_showConditionNumbers(false), valsChanged(false)
 {
     ui->setupUi(this);
     QSettings set;
@@ -21,6 +21,9 @@ SettingsGeneral2::SettingsGeneral2(QWidget *parent) :
     ui->memThreshValue->blockSignals(false);
     ui->wavefrontSizeSb->blockSignals(false);
     ui->downSizeCB->blockSignals(false);
+    ui->outputLambda->blockSignals(true);
+    ui->outputLambda->setValue(set.value("outputLambda", 550.).toDouble());
+    ui->outputLambda->blockSignals(false);
 
 }
 
@@ -50,6 +53,12 @@ int SettingsGeneral2::memoryThreshold(){
     return ui->memThreshValue->value();
 }
 
+void SettingsGeneral2::on_outputLambda_valueChanged(double val){
+   QSettings set;
+   set.setValue("outputLambda", val);
+   valsChanged = true;
+
+}
 
 void SettingsGeneral2::on_memThreshValue_valueChanged(int val){
     QSettings set;
@@ -83,4 +92,12 @@ bool SettingsGeneral2::showConditionNumbers(){
 void SettingsGeneral2::on_showConditionNumbersCb_clicked(bool checked)
 {
     m_showConditionNumbers = checked;
+}
+void SettingsGeneral2::on_apply_clicked(){
+    if (valsChanged){
+       QSettings set;
+       outputLambda = set.value("outputLambda", 550.).toDouble();
+        emit outputLambdaChanged(set.value("outputLambda", 550.).toDouble());
+        valsChanged = false;
+    }
 }

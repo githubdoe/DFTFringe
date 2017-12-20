@@ -44,6 +44,7 @@
 #include "settings2.h"
 #include "mirrordlg.h"
 #include <qwt_plot_textlabel.h>
+extern double outputLambda;
 
 #define PITORAD  M_PI/180.;
 double g_angle = 270. * PITORAD; //start at 90 deg (pointing east)
@@ -83,7 +84,7 @@ bool ProfilePlot::eventFilter( QObject *object, QEvent *event )
 ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     QWidget( parent ), m_wf(0), m_tools(tools),
      m_showSurface(1.),m_showNm(1.),dragging(false),
-     offsetType("Middle"),ui(new Ui::ProfilePlot)
+     offsetType("Middle"),ui(new Ui::ProfilePlot), m_defocusValue(0.)
 {
     zoomed = false;
     m_plot = new QwtPlot(this);
@@ -231,7 +232,7 @@ void ProfilePlot::slopeLimit(double val){
 }
 
 void ProfilePlot::showNm(bool flag){
-    m_showNm = (flag) ? 550. : 1.;
+    m_showNm = (flag) ? outputLambda : 1.;
     setSurface(m_wf);
 }
 void ProfilePlot::showSurface(bool flag){
@@ -308,6 +309,15 @@ void ProfilePlot::setSurface(wavefront * wf){
     populate();
     m_plot->replot();
 }
+
+void ProfilePlot::setDefocusValue(double val){
+        m_defocusValue = val;
+        if (val != 0.){
+            populate();
+            m_plot->replot();
+        }
+}
+
 QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     QPolygonF points;
     double steps = 1./wf->m_outside.m_radius;
@@ -317,6 +327,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
         double radn = rad * wf->m_outside.m_radius;
         double radx = rad * radius;
         double e = 1.;
+
         mirrorDlg &md = *mirrorDlg::get_Instance();
         if (md.isEllipse()){
             e = md.m_verticalAxis/md.diameter;
@@ -328,16 +339,21 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
 
         }
         else if (wf->workMask.at<bool>(dy,dx)){
-            points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx)) *
-                                    wf->lambda/550.) +y_offset * units);
+            double defocus = 0.;
+            if (m_defocusValue != 0.){
+                defocus = m_defocusValue * (-1. + 2. * rad * rad);
+            }
+            points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) + defocus) *
+                                    wf->lambda/outputLambda)  +y_offset * units);
         }
         else
             points << QPointF(radx, 0.0);
+
     }
     if (m_showSlopeError){
         double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
         double xDel = points[0].x() - points[1].x();
-        double hDelLimit =m_showNm *  m_showSurface * ((550./m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /550.e-6);
+        double hDelLimit =m_showNm *  m_showSurface * ((outputLambda/m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /outputLambda * 1.e-6);
 
         for (int i = 0; i < points.size()-1; ++i){
             double hdel = (points[i].y()- points[i+1].y());
@@ -358,6 +374,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     }
     return points;
 }
+
 void ProfilePlot::populate()
 {
 
@@ -365,7 +382,7 @@ void ProfilePlot::populate()
     compass->setGeometry(QRect(70,5,70,70));
     QString tmp("nanometers");
     if (m_showNm == 1.)
-        tmp = "wavelength at 550 nm";
+        tmp = QString().sprintf("waves of %6.1lf nm",outputLambda);
     m_plot->setAxisTitle( m_plot->yLeft, "Error in " + tmp );
     m_plot->setAxisTitle( m_plot->xBottom, "Radius mm" );
 
@@ -378,11 +395,11 @@ void ProfilePlot::populate()
     if (m_wf == 0)
         return;
     QSettings settings;
-    int smoothing = settings.value("GBValue", 0).toInt();
+    double smoothing = settings.value("GBValue", 20).toDouble();
     m_plot->detachItems(QwtPlotItem::Rtti_PlotTextLabel);
-    if (m_wf->m_outside.m_radius > 0 && smoothing > 1 && settings.value("GBlur", false).toBool()){
-        double val = m_wf->diameter * (double)smoothing/(m_wf->m_outside.m_radius);
-        QString t = QString().sprintf("Surface Smoothing diameter %6.1lf mm %6.2lf%%", val,100.* (double)smoothing/(m_wf->m_outside.m_radius)  );
+    if (m_wf->m_outside.m_radius > 0 && settings.value("GBlur", false).toBool()){
+        double val = .01 * (m_wf->diameter) * smoothing;
+        QString t = QString().sprintf("Surface Smoothing diameter %6.2lf%% of surface diameter %6.1lf mm", smoothing , val );
         QwtText title(t);
         title.setRenderFlags( Qt::AlignHCenter | Qt::AlignTop );
 

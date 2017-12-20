@@ -78,6 +78,10 @@ private slots:
 
     void on_Z8Pb_clicked(bool checked);
 
+    void on_clearPiston_pressed();
+
+    void on_clearAll_pressed();
+
 private:
     Ui::simIgramDlg *ui;
     static simIgramDlg *m_instance;

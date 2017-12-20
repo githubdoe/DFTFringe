@@ -51,7 +51,7 @@ signals:
 private slots:
 
     void setCenterFilterValue(int);
-    void on_colorChannelCB_activated(const QString &arg1);
+
     void on_filterAdjuster_valueChanged(double arg1);
 
     void on_pushButton_clicked();
