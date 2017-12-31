@@ -139,7 +139,7 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
 
     cv::Mat nulled_surface = zp.null_unwrapped( *(m_Instance->m_wf), newZerns, zernEnables);
     if (GB_enabled){
-        double gbValue = settings.value("GBValue", 21).toDouble();
+        double gbValue = settings.value("GBValue", 21).toInt();
         int blurRad = .01 * gbValue * md->diameter;
         blurRad &= 0xfffffffe;
         ++blurRad;

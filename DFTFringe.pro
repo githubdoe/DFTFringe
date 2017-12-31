@@ -302,7 +302,7 @@ win32 {
       INCLUDEPATH += C:\\qwt-6.1.2\\src
       INCLUDEPATH += c:\\opencv\\build\\include
       LIBS += C:/opencv/build-mingw/bin/*.dll
-      #message("using win32")
+      message("using win32")
       }
 
 unix {
@@ -327,7 +327,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 3.0
+VERSION = 3.2
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

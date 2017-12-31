@@ -82,7 +82,8 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
       zoomIndex(1),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
       m_edgeMode(false), m_zoomMode(NORMALZOOM),m_current_boundry(OutSideOutline)
 {
-
+    leftMargin = 0;
+    searchOutlineScale = 1.;
     m_innerP1 = m_innerP2 = m_OutterP1 = m_OutterP2 = QPointF(0.,0.);
     setAttribute(Qt::WA_StaticContents);
     modified = false;
@@ -298,33 +299,81 @@ Mat IgramArea::igramToGray(cv::Mat roi){
     return gray;
 
 }
+cv::Mat toSobel(cv::Mat roi){
+    /// Create window
+    //cv::namedWindow("sobel", CV_WINDOW_NORMAL );
+    /// Generate grad_x and grad_y
+    Mat grad_x, grad_y, grad;
+    Mat abs_grad_x, abs_grad_y;
+    int scale = 1;
+
+    /// Gradient X
+    //Scharr( src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
+    cv::Sobel( roi, grad_x, -1, 1, 0, 3, scale, 0, BORDER_DEFAULT );
+    cv::convertScaleAbs( grad_x, abs_grad_x );
+
+    /// Gradient Y
+    //Scharr( src_gray, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
+    cv::Sobel( roi, grad_y, -1, 0, 1, 3, scale, 0, BORDER_DEFAULT );
+    cv::convertScaleAbs( grad_y, abs_grad_y );
+
+    /// Total Gradient (approximate)
+    addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+
+    //cv::imshow( "sobel", grad );
+
+    //cv::waitKey(1);
+    return grad;
+}
 cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,int step,
-                                             double &resp, int *radius){
+                                             double &resp, int *radius, bool useExisting){
     double cx  = m_outside.m_center.x() * searchOutlineScale;
     double cy = m_outside.m_center.y() * searchOutlineScale;
     int outradius = m_outside.m_radius * searchOutlineScale;
     double maxresp = 0.;
     double maxrad;
     cv::Point2d bestc;
+
+    int limit = 5;
+    cv::Rect bounds;
+    if (useExisting){
+        bounds.x = m_center.m_center.x() * searchOutlineScale -limit;
+        bounds.y = m_center.m_center.y() * searchOutlineScale -limit;
+        bounds.width =  2 * limit;
+        bounds.height = 2 * limit;
+    }
+    QVector<QPointF> points;
+    int cnt = end - start;
+    if (cnt < 0) cnt *= -1;
+    MainWindow::me->progBar->setRange(0,cnt);
+    cnt = 0;
+
     for (int rad0 = start; rad0 != end;  rad0 += step){
+        MainWindow::me->progBar->setValue(++cnt);
+        MainWindow::me->progBar->setFormat(QString().sprintf("Radius %d",rad0));
+        // create a light gray image
+        cv::Point insideCenter(cx, cy);
         cv::Mat circlem = cv::Mat::zeros(gray.size(), gray.type());
-        circlem = 0.;
-        // create a torus
-        cv::Point outsideCenter(cx,cy);
-        cv::circle(circlem, outsideCenter, outradius, cv::Scalar(200),-1); // outer diameter
-        // center hole
-        cv::circle(circlem, outsideCenter, rad0, cv::Scalar(0), -1);
+        cv::circle(circlem, insideCenter, m_outside.m_radius * searchOutlineScale, cv::Scalar(250), -1);
+        // dark center hole
+        cv::circle(circlem, insideCenter, rad0, cv::Scalar(50), -1);
 
         double resp;
         cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
                                                    noArray(), &resp);
-        Point2d c(gray.cols/2. - center.x, gray.rows/2.- center.y);
+        int x = cx - center.x;
+        int y = cy - center.y;
+
+        Point2d c(x,y);
+        points << QPointF(rad0, resp);
+        if (bounds.width > 0 && !bounds.contains(c))
+            continue;
         if (resp > maxresp){
             maxresp = resp;
             *radius = rad0;
             bestc = c;
-
-            CircleOutline newoutline(m_outside.m_center, rad0/searchOutlineScale);
+            QPointF qp(c.x,c.y);
+            CircleOutline newoutline(QPointF(x/searchOutlineScale, y/searchOutlineScale), rad0/searchOutlineScale);
             m_innerP1 = newoutline.m_p1.m_p;
             m_innerP2 = newoutline.m_p2.m_p;
             innerPcount = 2;
@@ -333,16 +382,38 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
             qApp->processEvents();
 
         }
+
     }
+    MainWindow::me->progBar->reset();
+//    qDebug() <<"bestresp" << maxresp;
+//    QwtPlot *plot = new QwtPlot();
+//    QwtPlotCurve  *curve = new QwtPlotCurve();
+//    curve->setSamples(points);
+//    curve->attach(plot);
+//    plot->replot();
+//    plot->show();
     return bestc;
 }
-cv::Point2d IgramArea::findBestOutline(cv::Mat gray, int start, int end,int step, double &resp, int *radius){
+cv::Point2d IgramArea::findBestOutline(cv::Mat gray, int start, int end,int step,
+                                       double &resp, int *radius, cv::Rect bounds){
     double cx = gray.cols/2.;
     double cy = gray.rows/2.;
     double maxresp = 0.;
     double maxrad;
     cv::Point2d bestc;
+
+    int cnt = end - start;
+    if (cnt < 0)
+        cnt *=-1;
+    MainWindow::me->progBar->setRange(0, cnt);
+    cnt = 0;
     for (int rad0 = start; rad0 != end;  rad0 += step){
+        MainWindow::me->progBar->setValue(++cnt);
+        MainWindow::me->progBar->setFormat(QString().sprintf("Radius: %d",rad0));
+        qApp->processEvents();
+
+        if (rad0 < 0)
+            continue;
         cv::Mat circlem = cv::Mat::zeros(gray.size(), gray.type());
         circlem = 0.;
         cv::circle(circlem, cv::Point2f(cx,cy), rad0, cv::Scalar(200),-1);
@@ -351,14 +422,27 @@ cv::Point2d IgramArea::findBestOutline(cv::Mat gray, int start, int end,int step
         double resp;
         cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
                                                    noArray(), &resp);
-        Point2d c(gray.cols/2. - center.x, gray.rows/2.- center.y);
+        // compute location from the shift
+        Point2d c(cx - center.x, cy - center.y);
+
+        // if outline is outside of image then reject it
+        if (c.x - rad0 < 0 || c.y - rad0 < 0 || c.x + rad0 > gray.cols || c.y + rad0 > gray.rows)
+            continue;
+
+        // on pass 2 if center is not within bounds of center of first outline reject it.
+        if (bounds.width > 0 && !bounds.contains(c)){
+            int xc = bounds.x + bounds.width/2;
+            int yc = bounds.y + bounds.height/2;
+            qDebug() << "not in center"<< c.x << c.y << xc << yc << c.x - xc << c.y - yc;
+            continue;
+        }
 
         if (resp > maxresp){
             maxresp = resp;
             *radius = rad0;
             bestc = c;
 
-            CircleOutline newoutline(QPointF(bestc.x/searchOutlineScale, bestc.y/searchOutlineScale),
+            CircleOutline newoutline(QPointF(bestc.x/searchOutlineScale + leftMargin, bestc.y/searchOutlineScale),
                                      rad0/searchOutlineScale);
             m_OutterP1 = newoutline.m_p1.m_p;
             m_OutterP2 = newoutline.m_p2.m_p;
@@ -369,74 +453,215 @@ cv::Point2d IgramArea::findBestOutline(cv::Mat gray, int start, int end,int step
 
         }
     }
+    MainWindow::me->progBar->reset();
     return bestc;
 }
 void IgramArea::findCenterHole(){
+    QSettings set;
+    bool useExisting = set.value("useGuideOutline", false).toBool();
+    if (useExisting && m_center.m_radius == 0){
+       QMessageBox::warning(NULL,"","First create a mirror hole outline.");
+       return;
+    }
     m_searching_center = true;
+
+    emit statusBarUpdate("Searching for center hole phase 1",2);
     QImage img = igramGray;
     cv::Mat igram(img.height(), img.width(), CV_8UC3, img.bits(), img.bytesPerLine());
     cv::Mat gray;
     cvtColor(igram, gray, CV_BGR2GRAY);
-    double scale = 300./img.height();
+    double scale = 250./img.height();
     if (scale > 1.)
         scale = 1.;
+    gray = toSobel(gray);
     searchOutlineScale = scale;
     leftMargin = 0;
-    cv::resize(gray, gray, cv::Size(0,0), scale,scale);
+    cv::Mat small;
+    cv::resize(gray, small, cv::Size(0,0), scale,scale);
 
+    int start = 10;
+    int end = m_outside.m_radius/2 * scale;
+    cv::Rect bounds;
+    if (useExisting){
+        start = m_center.m_radius * scale -5;
+        end = m_center.m_radius * scale + 5;
+        bounds.x = m_center.m_center.x() -5;
+        bounds.y = m_center.m_center.y() -5;
+        bounds.width = 10;
+        bounds.height = 10;
+    }
     double resp;
     int radius;
-    cv::Point2d bestc = findBestCenterOutline(gray, 2,(m_outside.m_radius/2) * scale, 1,
-                                              resp, &radius);
-    radius /= scale;
-    scale = searchOutlineScale = 1.;
-    leftMargin = 0;
-    cvtColor(igram, gray, CV_BGRA2GRAY);
-    searchOutlineScale = 1.;
-    bestc = findBestCenterOutline(gray, radius+20, radius/2, -1, resp, &radius);
+    cv::Point2d bestc = findBestCenterOutline(small, start,end, 1,
+                                              resp, &radius, useExisting);
 
+    int x = bestc.x/scale;
+    int y = bestc.y/scale;
+    radius/= scale;
+    if (useExisting)
+        radius = m_center.m_radius;
+
+    Point2d firstPassCenter(x,y);
+    if (useExisting){
+        firstPassCenter.x = m_center.m_center.x();
+        firstPassCenter.y = m_center.m_center.y();
+    }
+    // phase 2 search for full size hole
+    int limit = 2./scale;
+    qDebug() << "limit" << limit;
+
+    int left = x - (radius +20);
+    if (left < 0)
+        left = 0;
+
+    leftMargin = left;
+    if (useExisting){
+        limit = 3;
+        start = radius -limit;
+        end = radius  + limit;
+        bounds.x = x -limit - left;
+        bounds.y = y -limit;
+        bounds.width = 2 * limit;
+        bounds.height = 2 * limit;
+    }
+    searchOutlineScale = 1.;
+    int width = 2 * radius + 40;
+    cv::Mat roi = gray;
+    if (left+width >= gray.cols){
+        width = gray.cols - left;
+    }
+    cv::Rect r((int)left,0, width, gray.rows);
+    roi = gray(r);
+
+    int cx = roi.cols/2;
+    int cy = roi.rows/2;
+    double maxresp = 0.;
+    double maxrad;
+
+    emit statusBarUpdate("refining center outline",2);
+    MainWindow::me->progBar->reset();
+    MainWindow::me->progBar->setRange(radius-20, radius+20);
+    for (int rad = radius - 20; rad < radius + 20; ++rad){
+        MainWindow::me->progBar->setValue(rad);
+        MainWindow::me->progBar->setFormat(QString().sprintf("Radius: %d",rad));
+        qApp->processEvents();
+        cv::Mat key = cv::Mat::ones(roi.rows, roi.cols, roi.type());
+        key = cv::Scalar(250);
+        cv::circle(key, cv::Point2f(cx,cy), rad, cv::Scalar(0),-1);
+
+        double resp;
+        cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(roi),cv::Mat_<float>(key),
+                                                   noArray(), &resp);
+
+        int x = cx - center.x;
+        int y = cy - center.y;
+        Point2d c(x,y);
+        Point2d secondPassCenter(x + left, y);
+        // if center is more than 1/2 diameter away from outside center then reject
+        int delx = abs(secondPassCenter.x - firstPassCenter.x);
+        int dely = abs(secondPassCenter.y - firstPassCenter.y);
+
+        if  ( delx > limit || dely > limit)
+            continue;
+
+//        cv::Mat t = roi.clone();
+//        cv::circle(t, c, rad, cv::Scalar(255), 1);
+//        cv::namedWindow("second pass",CV_WINDOW_NORMAL);
+//        cv::imshow("second pass", t);
+//        cv::waitKey(1);
+        qDebug() << "try"<< x << y << resp << rad;
+        if (resp > maxresp){
+             maxresp = resp;
+            bestc = c;
+            qDebug() << "center refine"<< x << y << resp << delx << dely << rad;
+
+            CircleOutline newoutline(QPointF(bestc.x+ left, bestc.y),
+                                     rad);
+            m_innerP1 = newoutline.m_p1.m_p;
+            m_innerP2 = newoutline.m_p2.m_p;
+            innerPcount = 2;
+            drawBoundary();
+            qApp->processEvents();
+
+
+        }
+    }
+    MainWindow::me->progBar->reset();
     m_searching_center  = false;
 }
 
 void IgramArea::findOutline(){
+    QSettings set;
+    bool useExisting = set.value("useGuideOutline",false).toBool();
+    if (useExisting && m_outside.m_radius == 0){
+       QMessageBox::warning(NULL,"","First create a mirror outside outline.");
+       return;
+    }
     m_searching_outside = true;
+    int searchMargin = set.value("outlineScanRange",20).toInt();
     QImage img = igramGray;
     cv::Mat igram(img.height(), img.width(), CV_8UC3, img.bits(), img.bytesPerLine());
     cv::Mat gray;
-    cvtColor(igram, gray, CV_BGRA2GRAY);
-
-    double scale = 300./ gray.cols;
-    searchOutlineScale = scale;
-    leftMargin = 0;
-    cv::resize(gray, gray, cv::Size(0,0), scale,scale);
-
-    double cx = gray.cols/2.;
-    double cy = gray.rows/2.;
-    double rad = gray.rows/2. -2;
-    double resp;
+    cvtColor(igram, gray, CV_BGR2GRAY);
+    gray = toSobel(gray);
+    double scale = 1.;
+    double resp = 0;
     int radius;
-    cv::Point2d bestc = findBestOutline(gray, rad, rad/2, -1, resp, &radius);
+    cv::Point2d bestc;
 
+    if (!useExisting){
+        scale = 300./ gray.rows;
+        searchOutlineScale = scale;
+        leftMargin = 0;
+        cv::Mat small;
+        cv::resize(gray, small, cv::Size(0,0), scale,scale);
+
+        double cx = small.cols/2.;
+        double cy = small.rows/2.;
+        double rad = small.rows/2. -2;
+        int start = rad;
+        int end = rad/2.;
+
+        emit statusBarUpdate("searching for outside mirror phase 1.",2);
+        bestc= findBestOutline(small, start, end, -1, resp, &radius);
+        bestc.x = bestc.x/scale;
+        bestc.y = bestc.y/scale;
+
+        radius /= scale;
+
+    }
+    else {
+      bestc = Point2d(m_outside.m_center.x(), m_outside.m_center.y());
+      radius = m_outside.m_radius;
+      searchMargin = set.value("outlineScanRange", 40).toInt();
+
+    }
     // now crop to the current best circle + 5 and try full size
+    resp = 0;
 
-    cvtColor(igram, gray, CV_BGRA2GRAY);
-    radius /= scale;
-    int left = (bestc.x/scale) - radius +5;
+
+
+    int left = bestc.x - (radius +20);
     if (left < 0)
         left = 0;
     leftMargin = left;
     searchOutlineScale = 1.;
-    int width = 2 * radius + 10;
-
+    int width = 2 * (radius + searchMargin);
     cv::Mat roi = gray;
-    if (width > 0  && left+width < gray.cols){    // if width wide enough to crop to radius then do so
-        cv::Mat roi = gray(cv::Rect((int)left,0, width, gray.rows)).clone();
+    if (left+width >= gray.cols){
+        width = gray.cols - left;
     }
-    else {
-        left = leftMargin = 0;
+    cv::Rect r((int)left,0, width, gray.rows);
+    roi = gray(r);
 
-    }
-    bestc = findBestOutline(roi, radius + 10, radius -10, -1, resp, &radius);
+    emit statusBarUpdate( "refining outside outline position.",2);
+    cv::Rect centerBound(bestc.x - leftMargin - searchMargin, bestc.y - searchMargin,
+                         2 * searchMargin, 2 * searchMargin);
+
+    cv::Mat showRect = roi.clone();
+    cv::rectangle(showRect, centerBound, Scalar(255,255,255), 3);
+    bestc = findBestOutline(roi, radius + searchMargin, radius -searchMargin, -1, resp, &radius, centerBound);
+
     m_searching_outside = false;
 
 }
@@ -446,10 +671,16 @@ void IgramArea::autoTraceOutline(){
         findOutline();
     }
     else if (m_current_boundry == CenterOutline){
-        findCenterHole();
+        if (m_outside.m_radius == 0){
+           QMessageBox::warning(NULL,"","First create a mirror outside outline.");
+        }
+        else {
+            findCenterHole();
+        }
     }
     drawBoundary();
     QApplication::restoreOverrideCursor();
+    emit statusBarUpdate( "",2);
 }
 void IgramArea::useLastOutline(){
     if (igramGray.isNull())
@@ -494,7 +725,7 @@ void IgramArea::useLastOutline(){
     }
 }
 
-bool IgramArea::openImage(const QString &fileName)
+bool IgramArea::openImage(const QString &fileName, bool autoOutside)
 
 {
     foreach(QWidget *widget, QApplication::topLevelWidgets()) {
@@ -614,6 +845,7 @@ bool IgramArea::openImage(const QString &fileName)
             double y = set.value("lastOutsideCy",0).toDouble();
             xoffset = (m_outside.m_center.x()-x);
             yoffset = (m_outside.m_center.y() - y);
+
         }
 
         // if there was a center outline last time then use it but adjust it's center
@@ -1231,11 +1463,14 @@ void IgramArea::drawBoundary()
             painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
             if (m_searching_center){
                 QColor c(Qt::cyan);
+
                 c.setAlpha(30);
                 painter.setBrush(c);
                 painter.drawEllipse(inside.m_center,
                                     inside.m_radius,
                                     inside.m_radius);
+
+
             }
             else {
                 painter.setBrush(Qt::NoBrush);
@@ -1321,7 +1556,7 @@ void IgramArea::drawBoundary()
                                  inside.m_center.x(),inside.m_center.y(),inside.m_radius, scale);
     }
     if (m_current_boundry != PolyArea)
-        emit statusBarUpdate(msg+msg2);
+        emit statusBarUpdate(msg+msg2,1);
 
     QPainter p( &igramDisplay);
     p.drawImage(QPoint(0,0), m_withOutlines.scaled(m_withOutlines.width() * scale, m_withOutlines.height() * scale));
@@ -1420,21 +1655,23 @@ void IgramArea::paintEvent(QPaintEvent *event)
         painter.drawImage(dw - viewW, dh/2- viewW - 20, top2, w/2 - viewW  ,   (h - viewW)/2, viewW * 2, viewW);
 
         //bottom *************************************************************
-        roi.fill(QColor(0,0,0));
+        QImage bottom = roi.copy();
+        bottom.fill(QColor(0,0,0));
+        QPainter pbottom(&bottom);
         topy = (circle.m_center.ry() + circle.m_radius * e - viewW/2);
         shifty = 0;
         if (topy > m_withOutlines.height()){
             shifty = topy - m_withOutlines.height();
         }
-        ptop.drawImage(0,0-shifty, m_withOutlines, topx, topy - shifty,viewW * 2, viewW-shifty);
-        top2 = roi.scaled(scale * roi.width(), scale * roi.height());
+        pbottom.drawImage(0,0-shifty, m_withOutlines, topx, topy - shifty,viewW * 2, viewW-shifty);
+        top2 = bottom.scaled(scale * bottom.width(), scale * bottom.height());
         w = top2.width();
         h = top2.height();
         painter.drawImage(dw - viewW, dh/2+ 20, top2, w/2 - viewW  , (h - viewW)/2, viewW * 2, viewW);
 
         //Left *************************************************************
         QImage roi2(viewW, 2 * viewW, igramGray.format());
-        roi.fill(QColor(0,0,0));
+        roi2.fill(QColor(0,0,0));
         QPainter p2(&roi2);
         topx = circle.m_center.rx() - circle.m_radius - viewW/2;
         topy = circle.m_center.ry() - viewW;
@@ -1452,8 +1689,9 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
         // right ************************************************************
         topx = circle.m_center.rx() + circle.m_radius - viewW/2;
-        roi2.fill(QColor(0,0,0));
-
+        QImage right(viewW, 2 * viewW, igramGray.format());
+        right.fill(QColor(0,0,0));
+        QPainter pright(&right);
         topx = circle.m_center.rx() + circle.m_radius - viewW/2;
         topy = circle.m_center.ry() - viewW;
         shiftl = 0;
@@ -1461,8 +1699,8 @@ void IgramArea::paintEvent(QPaintEvent *event)
             topx = topx -  m_withOutlines.width();
             shiftl = topx;
         }
-        p2.drawImage(shiftl,0,m_withOutlines, topx + shiftl, topy ,viewW-shiftl, viewW * 2);
-        top2 = roi2.scaled(scale * roi2.width(), scale * roi2.height());
+        pright.drawImage(shiftl,0,m_withOutlines, topx + shiftl, topy ,viewW-shiftl, viewW * 2);
+        top2 = right.scaled(scale * right.width(), scale * right.height());
         w = top2.width();
         h = top2.height();
         painter.drawImage(dw + viewW + 20, dh/2 - viewW, top2, (w - viewW)/2, h/2 - viewW, viewW, 2 * viewW);
@@ -1660,7 +1898,7 @@ void IgramArea::loadOutlineFile(QString fileName){
         msg2 += QString().sprintf(" center outline: center= %6.1lf,%6.1lf radius = %6.2lf",
                                   m_center.m_center.x(), m_center.m_center.y(), m_center.m_radius);
     }
-    emit statusBarUpdate(msg2);
+    emit statusBarUpdate(msg2,1);
 }
 
 void IgramArea::readOutlines(){

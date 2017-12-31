@@ -51,7 +51,7 @@ public:
     MainWindow *mw;
 
 signals:
-void statusBarUpdate(QString);
+void statusBarUpdate(QString, int);
 public slots:
 
 };

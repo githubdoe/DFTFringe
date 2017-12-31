@@ -611,7 +611,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
 
         double conditionNumber = 1./cv::invert(A,Ai,DECOMP_SVD);
         double c2 = cv::norm(A,NORM_L2) * cv::norm(Ai,NORM_L2);
-        emit statusBarUpdate(QString().sprintf(" Zernike LSF matrix Condition Numbers %6.3lf %6.3lf", conditionNumber, c2));
+        emit statusBarUpdate(QString().sprintf(" Zernike LSF matrix Condition Numbers %6.3lf %6.3lf", conditionNumber, c2),1);
     }
     wf.InputZerns = std::vector<double>(Z_TERMS,0);
     for (int z = 0; z < X.rows; ++z){

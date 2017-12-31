@@ -395,7 +395,7 @@ void ProfilePlot::populate()
     if (m_wf == 0)
         return;
     QSettings settings;
-    double smoothing = settings.value("GBValue", 20).toDouble();
+    double smoothing = settings.value("GBValue", 20).toInt();
     m_plot->detachItems(QwtPlotItem::Rtti_PlotTextLabel);
     if (m_wf->m_outside.m_radius > 0 && settings.value("GBlur", false).toBool()){
         double val = .01 * (m_wf->diameter) * smoothing;

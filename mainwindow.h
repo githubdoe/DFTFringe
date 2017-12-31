@@ -65,6 +65,9 @@ public:
     int addTab(QWidget* w, const QString &name);
     mirrorDlg *m_mirrorDlg;
     QProgressBar *progBar;
+    static MainWindow *me;
+    QLabel *status1;
+    QLabel *status2;
     ProfilePlot *m_profilePlot;
     uint zernEnableUpdateTime;
     ZernTableModel *zernTablemodel;
@@ -75,9 +78,10 @@ public:
     void openWaveFrontonInit(QStringList args);
     QStringList SelectWaveFrontFiles();
 
+
 public slots:
     void enableShiftButtons(bool enable);
-    void showMessage(QString);
+    void showMessage(QString, int id);
     void diameterChanged(double);
     void rocChanged(double);
     void batchProcess(QStringList fileList);
@@ -242,6 +246,12 @@ private slots:
     void on_actionShow_outline_statistics_triggered();
 
     void on_actionPlay_batch_results_review_movie_triggered();
+
+    void on_useExistingAsGuide_clicked(bool checked);
+
+    void on_autoTraceCB_clicked(bool checked);
+
+    void on_scanMargin_valueChanged(int arg1);
 
 private:
 

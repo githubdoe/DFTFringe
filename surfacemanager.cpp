@@ -343,8 +343,9 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             if (m_GB_enabled){
 
                 // compute blur radius
-                int gaussianRad = wf->m_outside.m_radius * m_gbValue * .01;
+                int gaussianRad = 2 * wf->m_outside.m_radius * m_gbValue * .01;
                 gaussianRad &= 0xfffffffe;
+
                 ++gaussianRad;
                     cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
                                       cv::Size( gaussianRad, gaussianRad ),0,0,BORDER_REFLECT);
@@ -405,9 +406,11 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     if (m_GB_enabled){
             expandBorder(wf);
             // compute blur radius
-            int gaussianRad = wf->m_outside.m_radius * m_gbValue * .01;
+            int gaussianRad = 2 * wf->m_outside.m_radius * m_gbValue * .01;
+
             gaussianRad &= 0xfffffffe;
             ++gaussianRad;
+            qDebug() << "blurr rad" << gaussianRad;
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
                               cv::Size( gaussianRad, gaussianRad ),0,0,BORDER_REFLECT);
     }
@@ -520,9 +523,9 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_GB_enabled = settings.value("GBlur", true).toBool();
     if (!settings.contains("gaussianRadiusConverted")){
             settings.setValue("gaussianRadiusConverted", true);
-            settings.setValue("GBValue", 20.);
+            settings.setValue("GBValue", 20);
     }
-    m_gbValue = settings.value("GBValue", 20.).toDouble();
+    m_gbValue = settings.value("GBValue", 20).toInt();
     //useDemoWaveFront();
     connect(Settings2::getInstance()->m_general, SIGNAL(outputLambdaChanged(double)), this, SLOT(outputLambdaChanged(double)));
     outputLambda = settings.value("outputLambda", 550.).toDouble();
@@ -774,7 +777,7 @@ void SurfaceManager::wavefrontDClicked(const QString & name){
 void SurfaceManager::surfaceSmoothGBValue(double value){
 
     QSettings settings;
-    settings.setValue("GBValue", value);
+    settings.setValue("GBValue", (int)(value));
     m_gbValue = value;
     mirrorDlg *md = mirrorDlg::get_Instance();
 

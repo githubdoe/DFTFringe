@@ -42,7 +42,7 @@ surfaceAnalysisTools::surfaceAnalysisTools(QWidget *parent) :
     m_blurrRadius = ui->blurMm;
     QSettings settings;
     bool ch = settings.value("GBlur", true).toBool();
-    double val = settings.value("GBValue", 20.).toDouble();
+    double val = settings.value("GBValue", 20).toInt();
     ui->surfaceSmoothGausianBlurr->setValue(val);
     ui->blurCB->setCheckState((ch) ? Qt::Checked : Qt::Unchecked);
     m_useDefocus = false;
@@ -303,5 +303,5 @@ void surfaceAnalysisTools::on_filterPB_clicked()
 
 void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_valueChanged(double arg1)
 {
-   surfaceSmoothGBValue(arg1);
+   emit     surfaceSmoothGBValue(arg1);
 }

@@ -74,8 +74,6 @@ private slots:
 
     void on_SaveOutlines_clicked(bool checked);
 
-    void on_autoOutline_clicked(bool checked);
-
 private:
 
     Ui::settingsIGram *ui;

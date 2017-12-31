@@ -77,7 +77,7 @@ signals:
     void newWavefront(cv::Mat, CircleOutline, CircleOutline, QString,
                       QVector<std::vector<cv::Point> >);
     void dftReady(QImage);
-    void statusBarUpdate(QString);
+    void statusBarUpdate(QString, int);
 private:
     static DFTArea *m_Instance;
     Ui::DFTArea *ui;

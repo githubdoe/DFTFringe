@@ -154,7 +154,7 @@
    <property name="minimumSize">
     <size>
      <width>329</width>
-     <height>609</height>
+     <height>730</height>
     </size>
    </property>
    <property name="whatsThis">
@@ -370,14 +370,74 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QPushButton" name="autoOutline">
-         <property name="text">
-          <string>Auto trace outline</string>
-         </property>
-        </widget>
-       </item>
       </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_9"/>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_4">
+       <property name="title">
+        <string>Auto Trace outline</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <item>
+           <widget class="QCheckBox" name="autoTraceCB">
+            <property name="text">
+             <string>Auto trace on load</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="autoOutline">
+            <property name="text">
+             <string>Auto trace outline</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <item>
+           <widget class="QCheckBox" name="useExistingAsGuide">
+            <property name="text">
+             <string>Scan around existing outline +/-</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="scanMargin">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How many pixels to scan on either side of the existing outine to look for a better outline.&lt;/p&gt;&lt;p&gt;Used when existig outline is used and on the second phase (refine search.)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="suffix">
+             <string> pixels</string>
+            </property>
+            <property name="prefix">
+             <string/>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="value">
+             <number>40</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+       <zorder></zorder>
+       <zorder></zorder>
+       <zorder>autoOutline</zorder>
+       <zorder>autoTraceCB</zorder>
+      </widget>
      </item>
      <item>
       <widget class="QGroupBox" name="groupBox_2">
@@ -970,6 +1030,8 @@ em;
     <zorder>groupBox</zorder>
     <zorder>igramSize</zorder>
     <zorder>groupBox_3</zorder>
+    <zorder></zorder>
+    <zorder>groupBox_4</zorder>
    </widget>
   </widget>
   <widget class="QToolBar" name="toolBar">

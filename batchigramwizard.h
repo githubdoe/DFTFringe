@@ -38,6 +38,8 @@ public:
     static QLabel *memStatus;
     static QString reviewFileName;
     static QPushButton *playReview;
+    static QCheckBox *autoOutlineOutside;
+    static QCheckBox *autoOutlineCenter;
     explicit batchIgramWizard(QStringList files, QWidget *parent = 0 , Qt::WindowFlags flags = 0);
     ~batchIgramWizard();
     void listReady(QStringList list);

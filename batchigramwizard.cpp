@@ -25,6 +25,9 @@ QLabel *batchIgramWizard::memStatus = 0;
 QCheckBox *batchIgramWizard::makeReviewAvi = 0;
 QString batchIgramWizard::reviewFileName;
 QPushButton  *batchIgramWizard::playReview = 0;
+QCheckBox *batchIgramWizard::autoOutlineCenter = 0;
+QCheckBox *batchIgramWizard::autoOutlineOutside = 0;
+
 batchIgramWizard::batchIgramWizard(QStringList files, QWidget *parent, Qt::WindowFlags flags) :
     QWizard(parent, flags),
     ui(new Ui::batchIgramWizard)
@@ -157,6 +160,7 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     connect(batchIgramWizard::showProcessPlots, SIGNAL(clicked(bool)),this, SLOT(showPlots(bool)));
 
     QHBoxLayout  *hlayout = new QHBoxLayout();
+    QGroupBox  *outlineGB = new QGroupBox("Auto Outlines");
     batchIgramWizard::goPb = new QPushButton(tr("Process Igrams"),this);
     connect(batchIgramWizard::goPb, SIGNAL(pressed()), this, SLOT(processBatch()));
     batchIgramWizard::goPb->setStyleSheet("QPushButton{"
@@ -173,6 +177,13 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
                         "pressed {background-color: rgb(224, 0, 0) border-style: inset;}}"
                     "QPushButton:!enabled   { background-color:lightgray    } Working");
     batchIgramWizard::saveZerns = new QPushButton(tr("SaveZerns"), this);
+    batchIgramWizard::autoOutlineCenter = new QCheckBox("auto outline center hole");
+    batchIgramWizard::autoOutlineCenter->setToolTip(tr("auto outline center if not present in .oln file or if .oln does not exist."));
+    //batchIgramWizard::autoOutlineOutside = new QCheckBox("auto outline mirror outside");
+    QHBoxLayout *gbLayout = new QHBoxLayout();
+    //gbLayout->addWidget(batchIgramWizard::autoOutlineOutside);
+    gbLayout->addWidget(batchIgramWizard::autoOutlineCenter);
+    outlineGB->setLayout(gbLayout);
     batchIgramWizard::makeReviewAvi = new QCheckBox(tr("Make review AVI"));
     batchIgramWizard::makeReviewAvi->setToolTip("Create a movie where each frame \nshows the igram, dft, 3D and contour plot\n"
                                                 " of each interferogram analyzed.");
@@ -183,6 +194,7 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     batchIgramWizard::saveZerns->setToolTip("If wavefronts were being deleted to save space.\n"
                                             "Use this to save the zernike values just created by\nthe "
                                             "Batch process in a .csv file.");
+    outlineGB->setLayout(gbLayout);
     hlayout->addWidget(batchIgramWizard::autoCb);
     hlayout->addWidget(batchIgramWizard::filterCb);
     hlayout->addWidget(batchIgramWizard::saveFile);
@@ -201,6 +213,7 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     m_rmsPlot->hide();
     layout->addWidget(lb);
     layout->addLayout(hlayout);
+    layout->addWidget(outlineGB);
     layout->addWidget(filesList);
     hlayout3->addWidget(batchIgramWizard::goPb,0, Qt::AlignLeft);
     hlayout3->addWidget(batchIgramWizard::showProcessPlots);

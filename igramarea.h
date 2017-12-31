@@ -114,7 +114,7 @@ public:
     IgramArea(QWidget *parent = 0, void *mwp = 0 );
 
     void *m_mw;
-    bool openImage(const QString &fileName);
+    bool openImage(const QString &fileName, bool autoOutside = true);
     bool saveImage(const QString &fileName, const char *fileFormat);
     void setPenColor(const QColor &newColor);
     void setPenWidth(int newWidth);
@@ -174,7 +174,7 @@ public slots:
     void edgeMode();
 signals:
     void enableShiftButtons(bool);
-    void statusBarUpdate(QString);
+    void statusBarUpdate(QString, int);
     void selectDFTab();
     void upateColorChannels(cv::Mat);
     void showTab(int);
@@ -215,8 +215,9 @@ private:
     void deleteRegions();
     double leftMargin;
     double searchOutlineScale;
-    cv::Point2d findBestOutline(cv::Mat gray, int start, int end,int step, double &resp, int *radius);
-    cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end,int step, double &resp, int *radius);
+    cv::Point2d findBestOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, cv::Rect bounds = cv::Rect());
+    cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, bool useExisting);
+    QString m_outlineMsg;
 public:
     QImage igramColor;
     QImage igramDisplay;    // gray with outlines
@@ -224,6 +225,7 @@ public:
     QVector<std::vector<cv::Point> > m_polygons;
     int polyndx;
     regionEditTools *m_regionEdit;
+    bool m_userGuided;
     void syncRegions();
     void findOutline();
     void findCenterHole();

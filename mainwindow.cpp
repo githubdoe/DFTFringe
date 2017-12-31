@@ -54,7 +54,7 @@ using namespace QtConcurrent;
 vector<wavefront*> g_wavefronts;
 int g_currentsurface = 0;
 QScrollArea *gscrollArea;
-
+MainWindow *MainWindow::me = 0;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
@@ -78,7 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
     rw->setStyleSheet(toolButtonStyle);
     rw = ui->toolBar->widgetForAction(ui->actionSubtract_wave_front);
     rw->setStyleSheet(toolButtonStyle);
-
+    me = this;
 
     ui->toolBar->setStyleSheet("QToolBar { spacing: 10px;}");
               ui->toolBar->setStyleSheet("QToolButton {border-style: outset;border-width: 3px;"
@@ -99,8 +99,8 @@ MainWindow::MainWindow(QWidget *parent) :
     gscrollArea = scrollArea;
     m_igramArea = new IgramArea(scrollArea, this);
     connect(m_igramArea, SIGNAL(imageSize(QString)), this, SLOT(imageSize(QString)));
-    connect(m_igramArea, SIGNAL(statusBarUpdate(QString)), statusBar(), SLOT(showMessage(QString)));
-    connect(zernikeProcess::get_Instance(), SIGNAL(statusBarUpdate(QString)), statusBar(),SLOT(showMessage(QString)));
+    connect(m_igramArea, SIGNAL(statusBarUpdate(QString,int)), this, SLOT(showMessage(QString, int)));
+    connect(zernikeProcess::get_Instance(), SIGNAL(statusBarUpdate(QString,int)), this,SLOT(showMessage(QString,int)));
     connect(m_igramArea, SIGNAL(upateColorChannels(cv::Mat)), this, SLOT(updateChannels(cv::Mat)));
     connect(m_igramArea, SIGNAL(showTab(int)),  ui->tabWidget, SLOT(setCurrentIndex(int)));
     connect(this, SIGNAL(gammaChanged(bool,double)), m_igramArea, SLOT(gammaChanged(bool, double)));
@@ -117,7 +117,7 @@ MainWindow::MainWindow(QWidget *parent) :
     scrollAreaDft = new QScrollArea;
     scrollAreaDft->setBackgroundRole(QPalette::Base);
     m_dftArea = DFTArea::get_Instance(scrollAreaDft, m_igramArea, m_dftTools, m_vortexDebugTool);
-    connect(m_dftArea, SIGNAL(statusBarUpdate(QString)), statusBar(), SLOT(showMessage(QString)));
+    connect(m_dftArea, SIGNAL(statusBarUpdate(QString,int)), this, SLOT(showMessage(QString,int)));
     scrollAreaDft->setWidget(m_dftArea);
     scrollAreaDft->resize(800,800);
     ui->tabWidget->addTab(scrollAreaDft, "Analyze");
@@ -205,7 +205,9 @@ MainWindow::MainWindow(QWidget *parent) :
     //tabifyDockWidget(m_vortexDebugTool,m_metrics);
     ui->outlineTools->show();
     ui->outlineTools->raise();
-
+    ui->useExistingAsGuide->setChecked(settings.value("useGuideOutline", false).toBool());
+    ui->autoTraceCB->setChecked(settings.value("autoOutline", false).toBool());
+    ui->scanMargin->setValue( settings.value("outlineScanRange",40).toInt());
     zernEnables = std::vector<bool>(Z_TERMS, true);
 
     //disable first 8 enables except for astig
@@ -221,8 +223,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_surfaceManager, SIGNAL(rocChanged(double)),this, SLOT(rocChanged(double)));
     connect(m_mirrorDlg, SIGNAL(newPath(QString)),this, SLOT(newMirrorDlgPath(QString)));
     progBar = new QProgressBar(this);
-    ui->statusBar->addPermanentWidget(progBar);
 
+    status1 = new QLabel();
+    status2 = new QLabel();
+    ui->statusBar->addWidget(status1);
+    ui->statusBar->addPermanentWidget(status2,2);
+    ui->statusBar->addPermanentWidget(progBar,1);
     QStringList args = QCoreApplication::arguments();
 
     // setup color channel selection controls
@@ -667,13 +673,16 @@ void MainWindow::on_actionSave_Wavefront_triggered()
 {
     m_surfaceManager->SaveWavefronts(false);
 }
-void MainWindow::showMessage(QString msg){
+void MainWindow::showMessage(QString msg, int id){
 
+    switch(id){
+    case 1:
+        status1->setText(msg);
+        break;
+    case 2:
+        status2->setText(QString("      ") + msg);
+    }
 
-    int ok = QMessageBox(QMessageBox::Warning,msg, "",QMessageBox::Yes|QMessageBox::No |
-                         QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
-
-    m_surfaceManager->messageResult = ok;
 
 }
 
@@ -1025,7 +1034,12 @@ void MainWindow::batchProcess(QStringList fileList){
         }
         progBar->setValue(cnt++);
         m_OutlineDoneInBatch = false;
+        ui->SelectOutSideOutline->setChecked(true);
         m_igramArea->openImage(fn);
+        if (batchIgramWizard::autoCb->isChecked() && batchIgramWizard::autoOutlineCenter &&
+                m_igramArea->m_center.m_radius == 0){
+            m_igramArea->findCenterHole();
+        }
         QApplication::processEvents();
 #ifdef Q_OS_WIN
         Sleep(uint(1000));
@@ -1533,7 +1547,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
         if (fileName.length() > 0){
             if (!(fileName.toUpper().endsWith(".AVI")))
                 fileName.append(".avi");
-            VideoWriter video(fileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
+            cv::VideoWriter video("v",-1,4,cv::Size(width,height),true);
             if (!video.isOpened()){
                 QString msg = QString().sprintf("could not open %s %dx%d for writing.", fileName.toStdString().c_str(),
                                                 width, height);
@@ -1591,8 +1605,12 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 
 void MainWindow::on_actionDebugStuff_triggered()
 {
-
-
+    progBar->setRange(0,1000);
+    for (int i = 0; i < 1000; ++i){
+        progBar->setValue(i);
+        qApp->processEvents();
+    }
+    m_ogl->m_gl->swapBuffers();
 }
 #include "outlinestatsdlg.h"
 void MainWindow::on_actionShow_outline_statistics_triggered()
@@ -1619,3 +1637,22 @@ void MainWindow::on_actionPlay_batch_results_review_movie_triggered()
 {
     QDesktopServices::openUrl(QUrl(batchIgramWizard::reviewFileName));
 }
+
+void MainWindow::on_useExistingAsGuide_clicked(bool checked)
+{
+    QSettings set;
+    set.setValue("useGuideOutline", checked);
+}
+
+void MainWindow::on_autoTraceCB_clicked(bool checked)
+{
+    QSettings set;
+    set.setValue("autoOutline", checked);
+}
+
+void MainWindow::on_scanMargin_valueChanged(int arg1)
+{
+    QSettings set;
+    set.setValue("outlineScanRange", arg1);
+}
+
