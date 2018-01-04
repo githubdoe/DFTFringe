@@ -78,6 +78,7 @@
 #include <QMediaPlaylist>
 #include <QScrollArea>
 #include "settingsigram.h"
+#include <QDockWidget>
 
 extern QScrollArea *gscrollArea;
 enum {OutSideOutline, CenterOutline, PolyArea};
@@ -195,7 +196,8 @@ protected:
     void DrawSimIgram(void);
 private:
     QPushButton *m_demo;
-
+    QWidget *outlinePlotWindow;
+    QDockWidget *dock;
     void drawBoundary();
     void resizeImage();
     void createActions();
@@ -215,7 +217,7 @@ private:
     void deleteRegions();
     double leftMargin;
     double searchOutlineScale;
-    cv::Point2d findBestOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, cv::Rect bounds = cv::Rect());
+    cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, int pass);
     cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, bool useExisting);
     QString m_outlineMsg;
 public:
@@ -269,6 +271,10 @@ private:
     QImage getBestChannel(QImage &img);
     bool m_searching_outside;
     bool m_searching_center;
+    int autoOutsideRadiusOffset;
+    int autoOutsideXOffset;
+    int autoOutsideYOffset;
+
 public:
    int m_current_boundry;
 public slots:

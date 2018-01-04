@@ -119,7 +119,8 @@ SOURCES += main.cpp\
     wavefrontaveragefilterdlg.cpp \
     rejectedwavefrontsdlg.cpp \
     outlinestatsdlg.cpp \
-    filteroutlinesdlg.cpp
+    filteroutlinesdlg.cpp \
+    outlineplots.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -222,7 +223,8 @@ HEADERS  += mainwindow.h \
     wavefrontaveragefilterdlg.h \
     rejectedwavefrontsdlg.h \
     outlinestatsdlg.h \
-    filteroutlinesdlg.h
+    filteroutlinesdlg.h \
+    outlineplots.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -289,7 +291,8 @@ FORMS    += mainwindow.ui \
     wavefrontaveragefilterdlg.ui \
     rejectedwavefrontsdlg.ui \
     outlinestatsdlg.ui \
-    filteroutlinesdlg.ui
+    filteroutlinesdlg.ui \
+    outlineplots.ui
 
 win32 {
       CONFIG( debug, debug|release ) {

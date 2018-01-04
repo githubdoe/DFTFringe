@@ -42,6 +42,19 @@
     <string>Show Mask used for analysis</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="debugOutline">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>60</y>
+     <width>181</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Show outline work in progress</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections>

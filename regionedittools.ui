@@ -10,6 +10,9 @@
     <height>223</height>
    </rect>
   </property>
+  <property name="features">
+   <set>QDockWidget::DockWidgetClosable</set>
+  </property>
   <property name="windowTitle">
    <string>Region Editor</string>
   </property>

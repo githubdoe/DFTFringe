@@ -54,7 +54,12 @@ settingsIGram::settingsIGram(QWidget *parent) :
     ui->styleCB->setEditable(false);
     ui->styleCB->setIconSize(QSize(80,14));
     ui->styleCB->setMinimumWidth(80);
-
+    ui->outsideX->setValue(set.value("autoOutlineXOffset", 0).toInt());
+    ui->outsideY->setValue(set.value("autoOutlineYOffset", 0).toInt());
+    ui->mirrorRadiusSB->setValue(set.value("autoOutlineRadOffset", 0).toInt());
+    ui->holeX->setValue(set.value("autoholeXOffset", 0).toInt());
+    ui->holeY->setValue(set.value("autoholeYOffset", 0).toInt());
+    ui->holeRadius->setValue(set.value("autoHoleRadOffset",0).toInt());
     for (int aaa = Qt::SolidLine; aaa < Qt::CustomDashLine; aaa++)
     {
         QPixmap pix(80,14);
@@ -227,3 +232,39 @@ void settingsIGram::on_SaveOutlines_clicked(bool checked)
 }
 
 
+
+void settingsIGram::on_mirrorRadiusSB_valueChanged(int arg1)
+{
+    QSettings set;
+    set.setValue("autoOutlineRadOffset", arg1);
+}
+
+void settingsIGram::on_outsideX_valueChanged(int arg1)
+{
+    QSettings set;
+    set.setValue("autoOutlineXOffset", arg1);
+}
+
+void settingsIGram::on_outsideY_valueChanged(int arg1)
+{
+    QSettings set;
+    set.setValue("autoOutlineYOffset", arg1);
+}
+
+void settingsIGram::on_holeRadius_valueChanged(int arg1)
+{
+    QSettings set;
+    set.setValue("autoHoleRadOffset", arg1);
+}
+
+void settingsIGram::on_holeX_valueChanged(int arg1)
+{
+    QSettings set;
+    set.setValue("autoholeXOffset", arg1);
+}
+
+void settingsIGram::on_holeY_valueChanged(int arg1)
+{
+    QSettings set;
+    set.setValue("autoholeYOffset", arg1);
+}

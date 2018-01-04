@@ -391,7 +391,6 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         if (wf->m_inside.m_radius > 0 || wf->regions.size() > 0){
             zp.fillVoid(*wf);
             makeMask(wf, false);
-
         }
         // null out desired terms.
         //cv::Mat tiltremoved = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables, 0,3);

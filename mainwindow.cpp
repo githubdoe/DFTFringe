@@ -46,6 +46,7 @@
 #include "regionedittools.h"
 #include "utils.h"
 #include "colorchannel.h"
+
 #ifndef _WIN32
     #include <unistd.h>
     #define Sleep(x) usleep(1000 * x)
@@ -55,6 +56,7 @@ vector<wavefront*> g_wavefronts;
 int g_currentsurface = 0;
 QScrollArea *gscrollArea;
 MainWindow *MainWindow::me = 0;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
@@ -95,7 +97,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->removeTab(0);
 
     // setup igram window
-    scrollArea = new QScrollArea;
+
+    scrollArea = new QScrollArea();
+
     gscrollArea = scrollArea;
     m_igramArea = new IgramArea(scrollArea, this);
     connect(m_igramArea, SIGNAL(imageSize(QString)), this, SLOT(imageSize(QString)));
@@ -124,6 +128,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_contourTools = new ContourTools(this);
     m_outlineHelp = new outlineHelpDocWidget(this);
+    m_outlinePlots = new outlinePlots(this);
     m_surfTools = surfaceAnalysisTools::get_Instance(this);
     m_regionsEdit = new regionEditTools(this);
     m_regionsEdit->hide();
@@ -226,7 +231,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     status1 = new QLabel();
     status2 = new QLabel();
+    status3 = new QLabel();
     ui->statusBar->addWidget(status1);
+    ui->statusBar->addWidget(status3);
     ui->statusBar->addPermanentWidget(status2,2);
     ui->statusBar->addPermanentWidget(progBar,1);
     QStringList args = QCoreApplication::arguments();
@@ -469,6 +476,7 @@ void MainWindow::createDockWindows(){
     metrics->setWindowTitle(QString().sprintf("metrics      DFTFringe %s",APP_VERSION));
     zernTablemodel = metrics->tableModel;
     addDockWidget(Qt::LeftDockWidgetArea, m_outlineHelp);
+    addDockWidget(Qt::LeftDockWidgetArea, m_outlinePlots);
     addDockWidget(Qt::RightDockWidgetArea, m_regionsEdit);
     splitDockWidget(m_regionsEdit, ui->outlineTools, Qt::Vertical);
     addDockWidget(Qt::RightDockWidgetArea, m_dftTools);
@@ -483,9 +491,11 @@ void MainWindow::createDockWindows(){
     ui->menuView->addAction(metrics->toggleViewAction());
     ui->menuView->addAction(m_vortexDebugTool->toggleViewAction());
     ui->menuView->addAction(m_outlineHelp->toggleViewAction());
+    ui->menuView->addAction(m_outlinePlots->toggleViewAction());
     m_outlineHelp->hide();
     metrics->hide();
     m_vortexDebugTool->hide();
+    m_outlinePlots->hide();
 }
 void MainWindow::updateMetrics(wavefront& wf){
     metrics->setName(wf.name);
@@ -681,6 +691,10 @@ void MainWindow::showMessage(QString msg, int id){
         break;
     case 2:
         status2->setText(QString("      ") + msg);
+        break;
+    case 3:
+        status3->setText(msg);
+        break;
     }
 
 
@@ -1036,7 +1050,8 @@ void MainWindow::batchProcess(QStringList fileList){
         m_OutlineDoneInBatch = false;
         ui->SelectOutSideOutline->setChecked(true);
         m_igramArea->openImage(fn);
-        if (batchIgramWizard::autoCb->isChecked() && batchIgramWizard::autoOutlineCenter &&
+        if (batchIgramWizard::autoCb->isChecked() &&
+                batchIgramWizard::autoOutlineCenter->isChecked() &&
                 m_igramArea->m_center.m_radius == 0){
             m_igramArea->findCenterHole();
         }
@@ -1656,3 +1671,8 @@ void MainWindow::on_scanMargin_valueChanged(int arg1)
     set.setValue("outlineScanRange", arg1);
 }
 
+void MainWindow::on_autoOutlineHelp_clicked()
+{
+    QString link = qApp->applicationDirPath() + "/res/Help/outlineing.html";
+    QDesktopServices::openUrl(QUrl(link));
+}

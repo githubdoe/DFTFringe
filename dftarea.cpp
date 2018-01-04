@@ -234,7 +234,15 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     else {
         scaleFactor = 1.;
     }
-
+    m_poly.clear();
+    for (int n = 0; n < igramArea->m_polygons.size(); ++n){
+        m_poly.append(std::vector< cv::Point>());
+        for (unsigned int i = 0; i < igramArea->m_polygons[n].size(); ++i){
+            int x = round((igramArea->m_polygons[n][i].x - left) * scaleFactor);
+            int y = round((igramArea->m_polygons[n][i].y - top) * scaleFactor);
+            m_poly.back().push_back(cv::Point(x,y));
+        }
+    }
     // split image into three color planes
     split( roi, bgr_planes );
 
@@ -870,7 +878,7 @@ qDebug() << "plane coeffs" << coeff(0) << coeff(1) << coeff(2);
 void DFTArea::makeSurface(){
     if (!tools->wasPressed)
         return;
-
+    MainWindow::me->m_outlinePlots->hide();
     if (igramArea->igramGray.isNull()){
         QMessageBox::warning(0,"warning","First load an interferogram and circle the mirror.");
         return;

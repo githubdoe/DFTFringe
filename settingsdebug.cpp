@@ -25,6 +25,7 @@ settingsDebug::settingsDebug(QWidget *parent) :
     ui->setupUi(this);
     QSettings set;
     ui->checkBox->setChecked(set.value("DebugShowMask",false).toBool());
+    ui->debugOutline->setChecked(set.value("DebugShowOutlining",false).toBool());
 }
 
 settingsDebug::~settingsDebug()
@@ -39,4 +40,10 @@ void settingsDebug::on_checkBox_clicked(bool arg)
 {
     QSettings set;
     set.setValue("DebugShowMask",arg );
+}
+
+void settingsDebug::on_debugOutline_clicked(bool checked)
+{
+    QSettings set;
+    set.setValue("DebugShowOutlining", checked);
 }

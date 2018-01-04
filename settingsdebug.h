@@ -35,6 +35,8 @@ public:
 private slots:
     void on_checkBox_clicked(bool checked);
 
+    void on_debugOutline_clicked(bool checked);
+
 private:
     Ui::settingsDebug *ui;
 };

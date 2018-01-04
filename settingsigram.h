@@ -74,6 +74,18 @@ private slots:
 
     void on_SaveOutlines_clicked(bool checked);
 
+    void on_mirrorRadiusSB_valueChanged(int arg1);
+
+    void on_outsideX_valueChanged(int arg1);
+
+    void on_outsideY_valueChanged(int arg1);
+
+    void on_holeRadius_valueChanged(int arg1);
+
+    void on_holeX_valueChanged(int arg1);
+
+    void on_holeY_valueChanged(int arg1);
+
 private:
 
     Ui::settingsIGram *ui;

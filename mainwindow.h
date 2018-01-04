@@ -48,6 +48,7 @@
 #include "foucaultview.h"
 #include "astigstatsdlg.h"
 #include "wavefrontfilterdlg.h"
+#include "outlineplots.h"
 class regionEditTools;
 namespace Ui {
 class MainWindow;
@@ -68,6 +69,7 @@ public:
     static MainWindow *me;
     QLabel *status1;
     QLabel *status2;
+    QLabel *status3;
     ProfilePlot *m_profilePlot;
     uint zernEnableUpdateTime;
     ZernTableModel *zernTablemodel;
@@ -253,6 +255,8 @@ private slots:
 
     void on_scanMargin_valueChanged(int arg1);
 
+    void on_autoOutlineHelp_clicked();
+
 private:
 
     Ui::MainWindow *ui;
@@ -268,7 +272,7 @@ private:
 public:
     IgramArea *m_igramArea;
     DFTTools *m_dftTools;
-
+    outlinePlots *m_outlinePlots;
 private:
     DFTArea *m_dftArea;
 
@@ -283,6 +287,7 @@ private:
     QScrollArea *scrollArea;
     QScrollArea *scrollAreaDft;
     QDockWidget * m_metrics;
+
     OGLView *m_ogl;
     double scaleFactor;
     QString curFile;

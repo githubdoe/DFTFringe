@@ -153,12 +153,15 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>329</width>
-     <height>730</height>
+     <width>372</width>
+     <height>735</height>
     </size>
    </property>
    <property name="whatsThis">
     <string/>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
    <property name="allowedAreas">
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
@@ -380,11 +383,20 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
        <property name="title">
         <string>Auto Trace outline</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
+       <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,2">
+        <property name="bottomMargin">
+         <number>7</number>
+        </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="2,4">
           <item>
            <widget class="QCheckBox" name="autoTraceCB">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>Auto trace on load</string>
             </property>
@@ -392,6 +404,20 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
           </item>
           <item>
            <widget class="QPushButton" name="autoOutline">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+            </property>
             <property name="text">
              <string>Auto trace outline</string>
             </property>
@@ -400,9 +426,15 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="8,4,2">
           <item>
            <widget class="QCheckBox" name="useExistingAsGuide">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>Scan around existing outline +/-</string>
             </property>
@@ -410,6 +442,12 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
           </item>
           <item>
            <widget class="QSpinBox" name="scanMargin">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How many pixels to scan on either side of the existing outine to look for a better outline.&lt;/p&gt;&lt;p&gt;Used when existig outline is used and on the second phase (refine search.)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
@@ -423,10 +461,43 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
              <number>1</number>
             </property>
             <property name="maximum">
-             <number>100</number>
+             <number>400</number>
             </property>
             <property name="value">
              <number>40</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="autoOutlineHelp">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>40</width>
+              <height>30</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>40</width>
+              <height>31</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"> border-style: outset;
+ border-width: 3px;
+ border-radius:7px;
+ border-color: darkgray;
+ min-width: 4em;
+ padding: 6px;</string>
+            </property>
+            <property name="text">
+             <string>?</string>
             </property>
            </widget>
           </item>
@@ -435,8 +506,6 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
        </layout>
        <zorder></zorder>
        <zorder></zorder>
-       <zorder>autoOutline</zorder>
-       <zorder>autoTraceCB</zorder>
       </widget>
      </item>
      <item>
