@@ -2727,21 +2727,27 @@ void SurfaceManager::report(){
         }
         QString contour("mydata://contour.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(contour), QVariant(contWindow));
-        contourHtml.append( "<table style=\"page-break-before:always\" border = \"1\"><tr><th>Contour Plot</th></tr> <tr><td> <img src='" +
-                            contour + "'></td></tr></table><br>");
+        contourHtml.append( "<p><table style=\"page-break-before:always\" border = \"1\"><tr><th>Contour Plot</th></tr> <tr><td> <img src='" +
+                            contour + "'></td></tr></table></p>");
 
     }
 
     // get the 3D image
     if (dlg.show_3D){
         QString threeD("threeD.png");
+        m_oglPlot->resize(600,600);
         QImage ddd = m_oglPlot->grabFrameBuffer();
         if (dlg.reduce3D){
             ddd = ddd.scaled(3 * ddd.width()/4, ddd.height()/2,Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+            doc->addResource(QTextDocument::ImageResource,  QUrl(threeD), QVariant(ddd));
+            contourHtml.append("<table border = \"1\"><tr><th><h2>3D Surface Plot</h2></th></tr> <tr><td> <img src='" +
+                               threeD + "'</td></tr></table><br>");
         }
+        else {
         doc->addResource(QTextDocument::ImageResource,  QUrl(threeD), QVariant(ddd));
-        contourHtml.append("<table border = \"1\"><tr><th><h2>3D Surface Plot</h2></th></tr> <tr><td> <img src='" +
+        contourHtml.append("<table style=\"page-break-before:always\" border = \"1\"><tr><th><h2>3D Surface Plot</h2></th></tr> <tr><td> <img src='" +
                            threeD + "'</td></tr></table><br>");
+        }
     }
 
     if (dlg.show_profile){
