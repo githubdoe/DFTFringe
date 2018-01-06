@@ -1620,11 +1620,6 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 
 void MainWindow::on_actionDebugStuff_triggered()
 {
-    progBar->setRange(0,1000);
-    for (int i = 0; i < 1000; ++i){
-        progBar->setValue(i);
-        qApp->processEvents();
-    }
     m_ogl->m_gl->swapBuffers();
 }
 #include "outlinestatsdlg.h"

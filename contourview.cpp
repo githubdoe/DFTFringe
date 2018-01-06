@@ -31,6 +31,7 @@ contourView::contourView(QWidget *parent, ContourTools *tools) :
     QSettings set;
     ui->doubleSpinBox->setValue(set.value("contourRange", .100).toDouble());
     ui->fillContourCB->setChecked(set.value("contourFillContour", true).toBool());
+    ui->showRuler->setChecked(set.value("contourShowRuler",false).toBool());
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(showContextMenu(QPoint)));
@@ -131,4 +132,12 @@ void contourView::on_fillContourCB_clicked(bool checked)
     QSettings set;
     ui->widget->showSpectrogram(checked);
 
+}
+
+void contourView::on_showRuler_clicked(bool checked)
+{
+    QSettings set;
+    set.setValue("contourShowRuler", checked);
+    if (getPlot()->m_wf)
+        setSurface(getPlot()->m_wf);
 }

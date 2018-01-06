@@ -2720,14 +2720,14 @@ void SurfaceManager::report(){
 
 
         qDebug() << "contour size" << m_contourView->size();
-
+        m_contourView->resize(600,500);
         m_contourView->render(&p1);
         if (dlg.reduceContour){
             contWindow = contWindow.scaled(3 * contWindow.width()/4, contWindow.height()/2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
         }
         QString contour("mydata://contour.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(contour), QVariant(contWindow));
-        contourHtml.append( "<table border = \"1\"><tr><th>Contour Plot</th></tr> <tr><td> <img src='" +
+        contourHtml.append( "<table style=\"page-break-before:always\" border = \"1\"><tr><th>Contour Plot</th></tr> <tr><td> <img src='" +
                             contour + "'></td></tr></table><br>");
 
     }
@@ -2752,7 +2752,7 @@ void SurfaceManager::report(){
         QImage i2Scaled = i2.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
         QString profile("mydata://profile.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(profile), QVariant(i2Scaled));
-        contourHtml.append("<table border = \"1\"><tr><th>Profile Plot</th></tr> <tr><td> <img src='" +
+        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Profile Plot</th></tr> <tr><td> <img src='" +
                            profile + "'</td></tr></table><br>");
     }
     if (dlg.show_startest){
@@ -2782,7 +2782,7 @@ void SurfaceManager::report(){
         QImage fvImageScaled = fvImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
         QString fvpng("mydata://fv.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(fvpng), QVariant(fvImageScaled));
-        contourHtml.append("<table border = \"1\"><tr><th>Simulated Ronchi and Foucault</th></tr> <tr><td> <img src='" +
+        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Simulated Ronchi and Foucault</th></tr> <tr><td> <img src='" +
                            fvpng + "'></td></tr></table><br>");
     }
 
@@ -2792,7 +2792,7 @@ void SurfaceManager::report(){
         QString sigram("mydata://igram.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(sigram),
                          QVariant(igram.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
-        contourHtml.append("<table border = \"1\"><tr><th>typical interferogram</th></tr> <tr><td> <img src='" +
+        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>typical interferogram</th></tr> <tr><td> <img src='" +
                            sigram + "'></td></tr></table><br>");
     }
     if (dlg.show_histogram){
@@ -2801,7 +2801,7 @@ void SurfaceManager::report(){
         QString pixStat("mydata://pixStat.png");
         doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
                          QVariant(pixStats.scaled(printer.pageRect().size().width() -50, 700,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
-        contourHtml.append("<table border = \"1\"><tr><th>Pixel Hitogram and SLope error</th></tr> <tr><td> <img src = '" +
+        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Hitogram and SLope error</th></tr> <tr><td> <img src = '" +
                            pixStat + "'></td></tr></table>");
     }
     editor->setHtml(title + html +zerns + contourHtml+ tail);

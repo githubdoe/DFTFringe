@@ -330,7 +330,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 3.2
+VERSION = 3.2a
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

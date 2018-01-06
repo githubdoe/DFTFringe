@@ -40,6 +40,8 @@
 #include <QDebug>
 #include <math.h>
 #include "utils.h"
+#include <qwt_plot_shapeitem.h>
+#include <QSettings>
 double zOffset = 0;
 
 class MyZoomer: public QwtPlotZoomer
@@ -74,7 +76,7 @@ void SpectrogramData::setSurface(wavefront *surface) {
     setInterval( Qt::XAxis, QwtInterval(0,m_wf->workData.cols));
     setInterval( Qt::YAxis, QwtInterval(0, m_wf->workData.rows));
 }
-
+#include <qwt_round_scale_draw.h>
 double SpectrogramData::value( double x, double y ) const
 {
 
@@ -217,6 +219,80 @@ void ContourPlot::drawCanvas(QPainter* p)
     QStaticText txt("number");
 
 }
+#include <QPainterPath>
+#include <qwt_plot_shapeitem.h>
+#include <qwt_plot_marker.h>
+void ContourPlot::ruler(){
+
+    detachItems(QwtPlotItem::Rtti_PlotShape);
+    detachItems(QwtPlotItem::Rtti_PlotMarker);
+    QSettings set;
+    if (set.value("contourShowRuler", false).toBool()){
+        int half = m_wf->data.rows/2.;
+        double pixelsPermm =(m_wf->m_outside.m_radius/(m_wf->diameter/2));
+        QPainterPath radials;
+        for (int ang = 0; ang <= 360; ang += 30){
+
+            double radians= ( ang * M_PI ) / 180. ;
+            double sina = sin(radians);
+            double cosa = cos(radians);
+            // move to start
+            int startx =  -half * cosa;
+            int starty =  -half * sina;
+            radials.moveTo( half + startx,half + starty);
+            // line to end
+            int endx = half - startx;
+            int endy = half - starty;
+            radials.lineTo(endx,endy);
+        }
+
+        QwtPlotShapeItem *item = new QwtPlotShapeItem( "");
+        item->setShape(radials);
+        item->setPen(Qt::gray,1);
+        item->attach(this);
+        for (int r = 10 ; r < m_wf->diameter/2; r+= 10){
+            int rsize =  2 * r * pixelsPermm;
+            QwtPlotShapeItem *item = new QwtPlotShapeItem( "");
+            QRectF rect;
+            QPointF p(half, half);
+            rect.setSize( QSize(rsize,rsize) );
+            rect.moveCenter(p );
+            QPainterPath ppath;
+            ppath.addEllipse( rect );
+            item->setShape( ppath);
+            QPen pen( Qt::gray, 1 );
+            if (r % 50 == 0){
+                pen = QPen(Qt::black,2);
+                QwtPlotMarker *label = new QwtPlotMarker();
+                label->setLineStyle(QwtPlotMarker::NoLine);
+                QwtText t;
+                label->setLabel(QString().number(r));
+                label->setValue(rsize/2 + half, half);
+                label->setLabelAlignment(Qt::AlignRight| Qt::AlignBottom);
+                label->attach(this);
+            }
+            pen.setJoinStyle( Qt::MiterJoin );
+            item->setPen( pen );
+            //item->setBrush( fillColor );
+
+            item->attach( this );
+        }
+        QwtPlotMarker *yAxis = new QwtPlotMarker();
+        yAxis->setLineStyle(QwtPlotMarker::VLine);
+        yAxis->setXValue(m_wf->data.cols/2);
+        yAxis->setLinePen(Qt::black);
+        yAxis->attach(this);
+        QwtPlotMarker *xAxis = new QwtPlotMarker();
+        xAxis->setLineStyle(QwtPlotMarker::HLine);
+        xAxis->setYValue(m_wf->data.rows/2);
+        xAxis->setLinePen(Qt::black);
+        xAxis->attach(this);
+
+
+
+    }
+}
+
 void ContourPlot::setSurface(wavefront * wf) {
     m_wf = wf;
     if (wf == 0)
@@ -224,8 +300,7 @@ void ContourPlot::setSurface(wavefront * wf) {
 
     initPlot();
 
-    m_tools->enablTools(true);
-    m_zOffset = 0.;
+        ruler();
 
     SpectrogramData *data = (SpectrogramData*)d_spectrogram->data();
     data->setSurface(wf);
@@ -365,6 +440,12 @@ void ContourPlot::showSpectrogram(bool on )
     m_do_fill = on;
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ImageMode, on );
     d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
+
+    QwtPlotShapeItem *item = new QwtPlotShapeItem( "" );
+    item->setItemAttribute( QwtPlotItem::Legend, true );
+    item->setLegendMode( QwtPlotShapeItem::LegendShape );
+    item->setLegendIconSize( QSize( 20, 20 ) );
+    item->setRenderHint( QwtPlotItem::RenderAntialiased, true );
 
     replot();
 }

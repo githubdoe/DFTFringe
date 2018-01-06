@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>519</width>
+    <width>695</width>
     <height>300</height>
    </rect>
   </property>
@@ -78,6 +78,13 @@
       <widget class="QPushButton" name="histogram">
        <property name="text">
         <string>Histogram</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="showRuler">
+       <property name="text">
+        <string>Ruler</string>
        </property>
       </widget>
      </item>

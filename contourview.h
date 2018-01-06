@@ -29,7 +29,7 @@ class contourView;
 class contourView : public QWidget
 {
     Q_OBJECT
-
+    enum ruler{RULERNONE,RULERMETRIC,RULERINCH};
 public:
     explicit contourView(QWidget *parent = 0, ContourTools *tools = 0);
     ~contourView();
@@ -51,10 +51,13 @@ private slots:
 
     void on_fillContourCB_clicked(bool checked);
 
+    void on_showRuler_clicked(bool checked);
+
 private:
     Ui::contourView *ui;
     ContourTools* tools;
     pixelStats *ps;
+    ruler rulerSetting;
 
 };
 

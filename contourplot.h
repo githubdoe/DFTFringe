@@ -86,6 +86,7 @@ private:
     QwtPlotSpectrogram *d_spectrogram;
     QColor m_contourPen;
     bool m_do_fill;
+    void ruler();
 protected:
 
 };
