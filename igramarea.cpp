@@ -449,11 +449,13 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     double firstResp;
     double rmean;
     double rmeanpeak = 0;
-    bool goodpeakup = false;
+    double avg;
     if (showDebug){
         cv::namedWindow("outline debug",CV_WINDOW_NORMAL);
         cv::moveWindow("outline debug", 10,10);
     }
+    double oldDel;
+    double downcnt = 0.;
     for (int rad0 = start; rad0 != end;  rad0 += step){
         MainWindow::me->progBar->setValue(++cnt);
         MainWindow::me->progBar->setFormat(QString().sprintf("Radius: %d",rad0));
@@ -469,6 +471,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
         cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
                                                    noArray(), &resp);
         resp = fabs(resp);
+        avg += resp;
         // compute location from the shift
         Point2d c(cx - center.x, cy - center.y);
         if (showDebug){
@@ -485,18 +488,29 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
         if (goodCnt == 0){
             firstResp = resp;
             rmean = resp;
+            oldDel = rmean;
+            goodCnt = 1;
         }
         else {
             double oldmean = rmean;
             rmean = .3 * resp + (1-.3) * rmean;
             rmeanpeak = fmax(rmeanpeak, rmean);
             mpoints << QPointF(rad0/searchOutlineScale,rmean );
+            del  = rmean - oldDel;
+            oldDel = rmean;
+
         }
 
-        if (resp > 20 * firstResp) goodpeakup = true;
-        // if after 10 samples there was a peak and now were are less than the mean then exit.
+        // if after 10 samples we are on the down slope for 4 samples then quit.
         if (++goodCnt > 10){
-            if (rmean < .25 * rmeanpeak){
+
+
+            if (del <0  ){
+                ++downcnt;
+            }
+            else
+                downcnt = 0;
+            if (downcnt > 4){
                 resp  = maxresp;
                 break;
             }
@@ -510,7 +524,6 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
             maxresp = resp;
             *radius = rad0;
             bestc = c;
-
             CircleOutline newoutline(QPointF(bestc.x/searchOutlineScale + leftMargin, bestc.y/searchOutlineScale),
                                      rad0/searchOutlineScale);
             m_OutterP1 = newoutline.m_p1.m_p;
@@ -732,6 +745,7 @@ void IgramArea::findOutline(){
        QMessageBox::warning(NULL,"","First create a mirror outside outline to use as a guide.");
        return;
     }
+
     bool showDebug = set.value("DebugShowOutlining", false).toBool();
     for (int i = 1; i < 5; ++i){
         QwtPlot *plot = MainWindow::me->m_outlinePlots->getPLot(i);
@@ -754,7 +768,10 @@ void IgramArea::findOutline(){
     cv::Point2d bestc;
 
     if (!useExisting){
-        scale = .25;
+        scale = 300./gray.rows;
+        if (scale > 1)
+                scale = 1.;
+        qDebug() << "scale" << scale;
 
         searchOutlineScale = scale;
         leftMargin = 0;
@@ -765,7 +782,7 @@ void IgramArea::findOutline(){
         double cy = small.rows/2.;
         double rad = small.rows/2. -2;
         int start = rad;
-        int end = rad/2.;
+        int end = 25;
 
         emit statusBarUpdate("searching for outside mirror phase 1.",2);
         bestc= findBestOutsideOutline(small, start, end, -1, resp, &radius, 1);
@@ -786,6 +803,8 @@ void IgramArea::findOutline(){
       searchMargin = set.value("outlineScanRange", 40).toInt();
 
     }
+    int dftSize = set.value("DFTSize", 640).toInt();
+
     // now crop to the current best circle + 5 and try full size
     resp = 0;
 

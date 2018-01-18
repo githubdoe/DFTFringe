@@ -125,7 +125,6 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
 
     mirrorDlg *md = mirrorDlg::get_Instance();
 
-
     // defocus is in waves on input
 
     std::vector<double> newZerns = m_Instance->m_wf->InputZerns;
