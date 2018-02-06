@@ -299,8 +299,9 @@ void ContourPlot::setSurface(wavefront * wf) {
         return;
 
     initPlot();
-
-        ruler();
+    m_tools->enablTools(true);
+    m_zOffset = 0.;
+    ruler();
 
     SpectrogramData *data = (SpectrogramData*)d_spectrogram->data();
     data->setSurface(wf);

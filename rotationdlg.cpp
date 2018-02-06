@@ -18,6 +18,7 @@
 #include "rotationdlg.h"
 #include "ui_rotationdlg.h"
 #include <opencv/cv.h>
+#include <qsettings.h>
 RotationDlg::RotationDlg( QList<int> list, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RotationDlg), list(list)
@@ -28,6 +29,9 @@ RotationDlg::RotationDlg( QList<int> list, QWidget *parent) :
     for (int i = 0; i < 5; ++i){
         ui->interp->addItem(names[i],interpModes[i]);
     }
+    QSettings set;
+    ui->angleSB->setValue(set.value("rotationAngle", 90).toDouble());
+    ui->CCWCB->setChecked(set.value("rotationSign", 1).toInt() == -1);
 }
 
 RotationDlg::~RotationDlg()
@@ -39,5 +43,8 @@ void RotationDlg::on_buttonBox_accepted()
 {
     int sign = (ui->CCWCB->isChecked()) ?  -1:1;
     int interp = ui->interp->currentData().toInt();
+    QSettings set;
+    set.setValue("rotationAngle" ,ui->angleSB->value());
+    set.setValue("rotationSign", sign);
     emit rotateTheseSig(sign * ui->angleSB->value(), list);
 }

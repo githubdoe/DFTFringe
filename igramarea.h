@@ -274,6 +274,7 @@ private:
     int autoOutsideRadiusOffset;
     int autoOutsideXOffset;
     int autoOutsideYOffset;
+    void adjustCenterandRegions();
 
 public:
    int m_current_boundry;

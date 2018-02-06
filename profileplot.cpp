@@ -322,7 +322,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     QPolygonF points;
     double steps = 1./wf->m_outside.m_radius;
     double radius = wf->diameter/2.;
-    for (double rad = -1.; rad < 1.; rad += steps){
+    for (double rad = -1.; rad < 1; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
         double radx = rad * radius;
@@ -346,18 +346,18 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
             points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) + defocus) *
                                     wf->lambda/outputLambda)  +y_offset * units);
         }
-        else
-            points << QPointF(radx, 0.0);
+
 
     }
     if (m_showSlopeError){
         double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
         double xDel = points[0].x() - points[1].x();
-        double hDelLimit =m_showNm *  m_showSurface * ((outputLambda/m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /outputLambda * 1.e-6);
+        double hDelLimit =m_showNm *  m_showSurface * ((outputLambda/m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /(outputLambda * 1.e-6));
 
-        for (int i = 0; i < points.size()-1; ++i){
+        for (int i = 0; i < points.size() - 1; ++i){
             double hdel = (points[i].y()- points[i+1].y());
             if (fabs(hdel) > hDelLimit){
+
                 QVector<QPointF> pts;
                 QwtPlotCurve *limitCurve = new QwtPlotCurve;
                 pts<< points[i] << points[i+1];
@@ -444,6 +444,7 @@ void ProfilePlot::populate()
     }
     case 1: {
         double startAngle = g_angle;
+
         for (int i = 0; i < 16; ++i){
             QPolygonF points;
             g_angle = startAngle + i * M_PI/ 16;
@@ -451,10 +452,9 @@ void ProfilePlot::populate()
             cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
             cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
             cprofile->setPen( Qt::black );
-
-            cprofile->setSamples( createProfile( m_showNm * m_showSurface,m_wf));
+            points = createProfile( m_showNm * m_showSurface,m_wf);
+            cprofile->setSamples( points);
             cprofile->attach( m_plot );
-
         }
 
         g_angle = startAngle;

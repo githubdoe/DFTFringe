@@ -12,3 +12,6 @@ rotate and save not loadable by old versions because outline is different.
 
 losing memory even if not calling imagetogray or even vortex.
 
+Regions do not move relataive to the outline in auto.  Fixed
+Slope error profile plot seems wrong where it colors all of the line.
+

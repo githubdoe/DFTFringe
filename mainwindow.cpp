@@ -213,6 +213,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->useExistingAsGuide->setChecked(settings.value("useGuideOutline", false).toBool());
     ui->autoTraceCB->setChecked(settings.value("autoOutline", false).toBool());
     ui->scanMargin->setValue( settings.value("outlineScanRange",40).toInt());
+    // setup auto outline controls.
     zernEnables = std::vector<bool>(Z_TERMS, true);
 
     //disable first 8 enables except for astig
@@ -244,6 +245,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->redChannel->setChecked(settings.value("colorChannelUseRed", false).toBool());
     ui->blueChannel->setChecked(settings.value("colorChannelUseBlue", false).toBool());
     ui->showColorIgram->setChecked(settings.value("colorChannelShowColor", false).toBool());
+
     openWaveFrontonInit(args);
 
 }
@@ -1621,6 +1623,12 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 void MainWindow::on_actionDebugStuff_triggered()
 {
     m_ogl->m_gl->swapBuffers();
+    QList<int> l;
+    l << 0;
+    for (double ang = 0; ang <= 360; ang += 22.5){
+        m_surfaceManager->rotateThese(ang,l);
+    }
+
 }
 #include "outlinestatsdlg.h"
 void MainWindow::on_actionShow_outline_statistics_triggered()

@@ -44,7 +44,7 @@
 #include "dftarea.h"
 #include "colorchannel.h"
 #include "outlineplots.h"
-
+#include "qwt_scale_draw.h"
 QVBoxLayout *debugLayout = 0;
 void undoStack::clear() {
     m_stack.clear();
@@ -456,7 +456,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     }
     double oldDel;
     double downcnt = 0.;
-    for (int rad0 = start; rad0 != end;  rad0 += step){
+    for (int rad0 = start; rad0 >= end;  rad0 += step){
         MainWindow::me->progBar->setValue(++cnt);
         MainWindow::me->progBar->setFormat(QString().sprintf("Radius: %d",rad0));
         qApp->processEvents();
@@ -502,9 +502,8 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
         }
 
         // if after 10 samples we are on the down slope for 4 samples then quit.
-        if (++goodCnt > 10){
 
-
+        if (++goodCnt > 10 && pass == 2){
             if (del <0  ){
                 ++downcnt;
             }
@@ -512,7 +511,8 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
                 downcnt = 0;
             if (downcnt > 4){
                 resp  = maxresp;
-                break;
+                if (bestc.x != 0)
+                    break;
             }
         }
 
@@ -530,7 +530,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
             m_OutterP2 = newoutline.m_p2.m_p;
             outterPcount = 2;
 
-            drawBoundary();
+            if (pass == 2)drawBoundary();
             qApp->processEvents();
 
         }
@@ -552,6 +552,9 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     curve->setSamples(points);
     curve->attach(plot);
     mcurve->attach(plot);
+    QwtScaleDraw *scaleDraw = plot->axisScaleDraw(QwtPlot::xBottom);
+    scaleDraw->setLabelAlignment(Qt::AlignTop);
+    scaleDraw->setLabelRotation(60);
     plot->replot();
     plot->setWindowTitle("match at radius r");
 
@@ -729,6 +732,8 @@ void IgramArea::findCenterHole(){
     curve->setStyle(QwtPlotCurve::Sticks);
     curve->attach(plot);
     mcurve->attach(plot);
+    QwtScaleDraw *scaleDraw = plot->axisScaleDraw(QwtPlot::xBottom);
+    scaleDraw->setLabelRotation(30);
     plot->replot();
     plot->setWindowTitle("center match at radius r");
 
@@ -785,7 +790,7 @@ void IgramArea::findOutline(){
         int end = 25;
 
         emit statusBarUpdate("searching for outside mirror phase 1.",2);
-        bestc= findBestOutsideOutline(small, start, end, -1, resp, &radius, 1);
+        bestc= findBestOutsideOutline(small, start, end, -2, resp, &radius, 1);
         if (bestc.x == 0){
             QMessageBox::warning(NULL,"Failed","Could not find mirror outline.");
             return;
@@ -863,6 +868,7 @@ void IgramArea::autoTraceOutline(){
             findCenterHole();
         }
     }
+    adjustCenterandRegions();
     drawBoundary();
     QApplication::restoreOverrideCursor();
     emit statusBarUpdate( "",2);
@@ -906,6 +912,47 @@ void IgramArea::useLastOutline(){
             m_innerP2 = m_center.m_p2.m_p;
             innerPcount = 2;
             drawBoundary();
+        }
+    }
+}
+void IgramArea::adjustCenterandRegions(){
+    double xoffset , yoffset = 0;
+    QSettings set;
+    double x = set.value("lastOutsideCx", 0).toDouble();
+    double y = set.value("lastOutsideCy",0).toDouble();
+    double rad = set.value("lastOutsideRad", 0).toDouble();
+    xoffset = (m_outside.m_center.x()-x);
+    yoffset = (m_outside.m_center.y() - y);
+
+    // if there was a center outline last time then use it but adjust it's center
+    //  to the new outline.
+    double centerRad = set.value("lastInside", 0).toDouble();
+    if (centerRad > 0){
+        double cx = set.value("lastInsideCx", 0).toDouble();
+        double cy = set.value("lastInsideCy",0).toDouble();
+
+        m_center = CircleOutline(QPointF(cx +xoffset,cy + yoffset),rad);
+        m_innerP1 = m_center.m_p1.m_p;
+        m_innerP2 = m_center.m_p2.m_p;
+        innerPcount = 2;
+    }
+
+    QStringList regionsList = set.value("lastRegions", "").toString().split("\n");
+    if (regionsList.size() > 1){
+        m_polygons.clear();
+        int r = 0;
+        foreach(QString str, regionsList){
+            if (str == "")
+                continue;
+            m_regionEdit->addRegion(QString().sprintf("Region %d",++r));
+            QStringList vals = str.split(" ");
+            std::vector< cv::Point> region;
+            for (int i = 1; i < vals.size(); ++i){
+                QStringList pointVals = vals[i].split(",");
+                region.push_back(cv::Point(pointVals[0].toInt()+xoffset, pointVals[1].toInt()+yoffset));
+            }
+            if (region.size() > 0)
+                m_polygons.append(region);
         }
     }
 }
@@ -993,11 +1040,6 @@ bool IgramArea::openImage(const QString &fileName, bool autoOutside)
     m_centerHist.push(igramGray,m_center);
     modified = false;
     QSettings set;
-
-
-    double rad = set.value("lastOutsideRad", 0).toDouble();
-
-
     gscrollArea->setWidgetResizable(true);
     if (igramGray.height() > height())
             fitScale = (double)parentWidget()->height()/(double)igramGray.height();
@@ -1021,51 +1063,18 @@ bool IgramArea::openImage(const QString &fileName, bool autoOutside)
         loadOutlineFile(finfo.absoluteFilePath());
     }
     else {
-        double xoffset , yoffset = 0;
-        useLastOutline();
 
-        if (set.value("autoOutline",true).toBool()){
+        useLastOutline();
+        // setup auto outline controls.
+    }
+
+    if (set.value("autoOutline",true).toBool()){
             findOutline();
         }
+    adjustCenterandRegions();
 
-        double x = set.value("lastOutsideCx", 0).toDouble();
-        double y = set.value("lastOutsideCy",0).toDouble();
-        xoffset = (m_outside.m_center.x()-x);
-        yoffset = (m_outside.m_center.y() - y);
+    drawBoundary();
 
-        // if there was a center outline last time then use it but adjust it's center
-        //  to the new outline.
-        double centerRad = set.value("lastInside", 0).toDouble();
-        if (centerRad > 0){
-            double cx = set.value("lastInsideCx", 0).toDouble();
-            double cy = set.value("lastInsideCy",0).toDouble();
-
-            m_center = CircleOutline(QPointF(cx +xoffset,cy + yoffset),rad);
-            m_innerP1 = m_center.m_p1.m_p;
-            m_innerP2 = m_center.m_p2.m_p;
-            innerPcount = 2;
-        }
-
-        QStringList regionsList = set.value("lastRegions", "").toString().split("\n");
-        if (regionsList.size() > 1){
-
-            int r = 0;
-            foreach(QString str, regionsList){
-                if (str == "")
-                    continue;
-                m_regionEdit->addRegion(QString().sprintf("Region %d",++r));
-                QStringList vals = str.split(" ");
-                std::vector< cv::Point> region;
-                for (int i = 1; i < vals.size(); ++i){
-                    QStringList pointVals = vals[i].split(",");
-                    region.push_back(cv::Point(pointVals[0].toInt()+xoffset, pointVals[1].toInt()+yoffset));
-                }
-                if (region.size() > 0)
-                    m_polygons.append(region);
-            }
-        }
-        drawBoundary();
-    }
 
     cropTotalDx = cropTotalDy = 0;
     SideOutLineActive(true);

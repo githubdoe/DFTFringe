@@ -192,12 +192,12 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     }
     double radpix = ceil(rad);
     double left = centerX - radpix;
-    double top = centerY - rady;
+    double top = centerY - radpix;
     std::vector<Mat > bgr_planes;
     top = max(top,0.);
     left = max(left,0.);
     int width = 2. * (radpix);
-    int height = 2. * rady;
+    int height = width;
     width = min(width, img.width());
     height = min(height, img.height());
 
@@ -267,7 +267,7 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     planes[0].copyTo(tmpMask,m_mask);    // Convert image to binary
     planes[0] = tmpMask.clone();
     mean =  cv::mean(planes[0],m_mask);
-qDebug() << "old mean" << mean[0];
+
     planes[0] -= mean;
     //matDisplay md(planes[0],mean[0]);
     //md.exec();
