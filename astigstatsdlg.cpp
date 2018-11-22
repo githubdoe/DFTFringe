@@ -554,7 +554,7 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y){
         double yz = y.at<float>(i);
         double angle, mag;
         if (m_usePolar){
-            angle = atan2(yz,xz);
+            angle = atan2(yz,xz)/2;
             mag = sqrt(xz * xz + yz * yz);
 
             xz = mag;

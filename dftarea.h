@@ -57,7 +57,7 @@ public:
     double m_center_filter;
     cv::Mat vortex(QImage &img,
                double low);
-
+void diffract();
 
     bool success;
 public slots:

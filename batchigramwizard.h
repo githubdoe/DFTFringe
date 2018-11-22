@@ -7,7 +7,7 @@
 #include <QStringList>
 #include <QCheckBox>
 #include <QPointF>
-
+#include <QProgressBar>
 class wavefrontFilterDlg;
 class QwtPlot;
 class astigScatterPlot;
@@ -37,7 +37,7 @@ public:
     static QCheckBox *makeReviewAvi;
     static QLabel *memStatus;
     static QString reviewFileName;
-    static QPushButton *playReview;
+
     static QCheckBox *autoOutlineOutside;
     static QCheckBox *autoOutlineCenter;
     explicit batchIgramWizard(QStringList files, QWidget *parent = 0 , Qt::WindowFlags flags = 0);
@@ -46,6 +46,7 @@ public:
 
     void addAstig(QString name, QPointF value);
     void addRms(QString name, QPointF p);
+    void progressValue(int min, int max, int value);
     void select(int n);
     void showPlots(bool flags);
     batchIntro *introPage;
@@ -70,6 +71,7 @@ class batchIntro : public QWizardPage
     public:
         batchIntro(QStringList files, QWidget *manger, QWidget *parent = 0);
         QListWidget *filesList;
+        QProgressBar *pgrBar;
         astigScatterPlot *astigPlot;
         rmsPlot *m_rmsPlot;
         bool filterFile;
@@ -85,7 +87,7 @@ public slots:
     void eraseItem();
     void showPlots(bool flags);
     void on_filter(bool);
-    void play_review();
+
 signals:
     void processBatchList(QStringList);
 private:

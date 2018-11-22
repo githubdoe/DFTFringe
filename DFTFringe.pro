@@ -120,7 +120,9 @@ SOURCES += main.cpp\
     rejectedwavefrontsdlg.cpp \
     outlinestatsdlg.cpp \
     filteroutlinesdlg.cpp \
-    outlineplots.cpp
+    outlineplots.cpp \
+    transformwavefrontdlg.cpp \
+    showallcontoursdlg.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -224,7 +226,9 @@ HEADERS  += mainwindow.h \
     rejectedwavefrontsdlg.h \
     outlinestatsdlg.h \
     filteroutlinesdlg.h \
-    outlineplots.h
+    outlineplots.h \
+    transformwavefrontdlg.h \
+    showallcontoursdlg.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -292,7 +296,9 @@ FORMS    += mainwindow.ui \
     rejectedwavefrontsdlg.ui \
     outlinestatsdlg.ui \
     filteroutlinesdlg.ui \
-    outlineplots.ui
+    outlineplots.ui \
+    transformwavefrontdlg.ui \
+    showallcontoursdlg.ui
 
 win32 {
       CONFIG( debug, debug|release ) {
@@ -330,7 +336,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 3.2c
+VERSION = 3.3
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

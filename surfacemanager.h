@@ -111,6 +111,7 @@ public:
     void subtractWavefronts();
 
     bool m_askAboutReverse;
+    bool m_ignoreInverse;
     bool m_surface_finished;
     configRESPONSE diamResp;
     configRESPONSE rocResp;
@@ -120,6 +121,7 @@ public:
     void makeMask(wavefront* wf, bool useInsideCircle = true);
     void generateSurfacefromWavefront(int ndx);
     void generateSurfacefromWavefront(wavefront *wf);
+    void transform();
 private:
     QProgressDialog *pd;
     QTimer *m_waveFrontTimer;
@@ -161,6 +163,14 @@ private slots:
     void enableTools();
     void averageComplete(wavefront *wft);
     void outputLambdaChanged(double val);
+    void resize(wavefront * wf, int size);
+    void changeWavelength(wavefront *wf, double wavelength);
+    void flipHorizontal(wavefront *wf);
+    void flipVertical(wavefront *wf);
+    void resizeW(int size);
+    void changeWavelength(double wavelength);
+    void flipHorizontal();
+    void flipVertical();
 
 public slots:
     void rotateThese(double angle, QList<int> list);
@@ -176,6 +186,7 @@ public slots:
     void loadComplete();
     void memoryLow();
     void defocusChanged();
+    void tiltAnalysis();
 };
 
 

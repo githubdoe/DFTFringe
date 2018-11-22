@@ -42,24 +42,35 @@
 #include "utils.h"
 #include <qwt_plot_shapeitem.h>
 #include <QSettings>
+#include <qwt_picker_machine.h>
+
+
 double zOffset = 0;
 
 class MyZoomer: public QwtPlotZoomer
 {
 public:
-    MyZoomer( QWidget *canvas ):
-        QwtPlotZoomer( canvas )
+    ContourPlot* thePlot;
+    MyZoomer( QWidget *canvas ,ContourPlot* plot):
+        QwtPlotZoomer( canvas ), thePlot(plot)
     {
         setTrackerMode( AlwaysOn );
     }
 
     virtual QwtText trackerTextF( const QPointF &pos ) const
     {
+        if (thePlot->m_wf == 0)
+                return QwtText("");
         QColor bg( Qt::white );
         bg.setAlpha( 200 );
+        int x = thePlot->invTransform(QwtPlot::xBottom, pos.x());
+        int y = thePlot->invTransform(QwtPlot::yLeft, pos.y());
+        double v = thePlot->d_spectrogram->data()->value(pos.x(),pos.y());
 
-        QwtText text = QwtPlotZoomer::trackerTextF( pos );
+        QwtText text(QString().sprintf("%lf",v));
+        text.setFont(QFont("Arial",12));
         text.setBackgroundBrush( QBrush( bg ) );
+        thePlot->selected(pos);
         return text;
     }
 signals:
@@ -69,7 +80,9 @@ signals:
 
 SpectrogramData::SpectrogramData(): m_wf(0)
 {
+
 }
+
 
 void SpectrogramData::setSurface(wavefront *surface) {
     m_wf = surface;
@@ -77,6 +90,7 @@ void SpectrogramData::setSurface(wavefront *surface) {
     setInterval( Qt::YAxis, QwtInterval(0, m_wf->workData.rows));
 }
 #include <qwt_round_scale_draw.h>
+extern double g_angle;
 double SpectrogramData::value( double x, double y ) const
 {
 
@@ -177,8 +191,8 @@ void ContourPlot::setZRange(){
 
     }
     else if (m_zRangeMode == "Min/Max"){
-        zmin = m_wf->min;
-        zmax = m_wf->max;
+        zmin = m_min;
+        zmax = m_max;
     }
     else if (m_zRangeMode == "Fractions of Wave"){
         zmin = -m_waveRange/2;
@@ -195,6 +209,8 @@ void ContourPlot::setZRange(){
 }
 void ContourPlot::newDisplayErrorRange(double min,double max){
     QwtInterval zInt(min,max);
+    m_min = min;
+    m_max = max;
     SpectrogramData *data = (SpectrogramData*)d_spectrogram->data();
     data->setInterval( Qt::ZAxis, zInt);
     setColorMap(m_colorMapNdx);
@@ -277,6 +293,9 @@ void ContourPlot::ruler(){
 
             item->attach( this );
         }
+
+
+
         QwtPlotMarker *yAxis = new QwtPlotMarker();
         yAxis->setLineStyle(QwtPlotMarker::VLine);
         yAxis->setXValue(m_wf->data.cols/2);
@@ -292,6 +311,52 @@ void ContourPlot::ruler(){
 
     }
 }
+void ContourPlot::moved(const QPointF pos){
+
+}
+
+void ContourPlot::selected(const QPointF& pos){
+    if (m_wf==0)
+        return;
+
+    int half = m_wf->data.rows/2.;
+    double delx = pos.x() - half;
+    double dely = pos.y() - half;
+    double angle = atan2(dely,delx);
+    if (angle != m_lastAngle){
+        drawProfileLine(angle);
+        emit sigPointSelected(pos);
+        m_lastAngle = angle;
+    }
+}
+
+void ContourPlot::drawProfileLine(const double angle){
+
+    ruler();
+    double sina = sin(angle);
+    double cosa = cos(angle);
+    QPainterPath radials;
+    int half = m_wf->data.rows/2.;
+    // move to start
+    int startx =  -half * cosa;
+    int starty =  -half * sina;
+    radials.moveTo( half + startx,half + starty);
+    // line to end
+    int endx = half - startx;
+    int endy = half - starty;
+    radials.lineTo(endx,endy);
+    QwtPlotShapeItem *item = new QwtPlotShapeItem( "");
+    item->setShape(radials);
+    item->setPen(QColor(50,50,50,100),3,Qt::DashDotDotLine);
+
+    QwtPlotShapeItem *itemb = new QwtPlotShapeItem( "");
+    itemb->setShape(radials);
+    itemb->setPen(QColor(250,250,250,100),10);
+    itemb->attach(this);
+    item->attach(this);
+    replot();
+}
+
 
 void ContourPlot::setSurface(wavefront * wf) {
     m_wf = wf;
@@ -337,7 +402,7 @@ void ContourPlot::setSurface(wavefront * wf) {
 
     plotLayout()->setAlignCanvasToScales(true);
     showContoursChanged(contourRange);
-
+    tracker_->setZoomBase(true);
     replot();
     //resize(QSize(width()-1,height()-1));
     //resize(QSize(width()+1,height()+1));
@@ -351,6 +416,15 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     QwtPlot( parent ),m_wf(0),m_tools(tools), m_autoInterval(false),m_minimal(minimal),m_contourPen(Qt::white)
 {
     d_spectrogram = new QwtPlotSpectrogram();
+    picker_ = new QwtPlotPicker(this->canvas());
+    picker_->setStateMachine(new QwtPickerClickPointMachine);
+
+    tracker_ = new MyZoomer(this->canvas(), this);
+
+
+    connect(picker_, SIGNAL(selected(const QPointF&)),
+            SLOT(selected(const QPointF&)));
+
     QSettings settings;
     m_colorMapNdx = settings.value("colorMapType",0).toInt();
     contourRange = settings.value("contourRange", .1).toDouble();
@@ -456,6 +530,7 @@ void ContourPlot::setAlpha( int alpha )
     d_spectrogram->setAlpha( alpha );
     replot();
 }
+
 
 #ifndef QT_NO_PRINTER
 

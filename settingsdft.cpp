@@ -25,6 +25,10 @@ settingsDFT::settingsDFT(QWidget *parent) :
     ui->setupUi(this);
     QSettings set;
     ui->ShowDFTTHumbCB->setChecked( set.value("DFTshowThumb", false).toBool());
+    flipv = set.value("DFT Flip Vertical", false).toBool();
+    ui->flipVert->setChecked(flipv);
+    fliph = set.value("DFT Flip Horizontal", false).toBool();
+    ui->flipHorizontal->setChecked(fliph);
 }
 
 settingsDFT::~settingsDFT()
@@ -50,3 +54,17 @@ void settingsDFT::on_showDownSizedIgram_clicked(bool checked)
     set.setValue("DFTshowDownSizedIgram", checked);
 }
 
+
+void settingsDFT::on_flipVert_clicked(bool checked)
+{
+    QSettings set;
+    flipv = checked;
+    set.setValue("DFT Flip Vertical", checked);
+}
+
+void settingsDFT::on_flipHorizontal_clicked(bool checked)
+{
+    QSettings set;
+    fliph = checked;
+    set.setValue("DFT Flip Horizontal", checked);
+}

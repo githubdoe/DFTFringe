@@ -33,10 +33,18 @@ public:
     ~settingsDFT();
     bool showThumb();
     int DFTSize();
+    bool flipv;
+    bool fliph;
+
 public slots:
     void on_ShowDFTTHumbCB_clicked(bool checked);
     void on_showDownSizedIgram_clicked(bool checked);
 
+
+private slots:
+    void on_flipVert_clicked(bool checked);
+
+    void on_flipHorizontal_clicked(bool checked);
 
 private:
     Ui::settingsDFT *ui;

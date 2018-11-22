@@ -25,7 +25,9 @@
 #include "contourtools.h"
 #include "usercolormapdlg.h"
 #include "wavefront.h"
-
+# include <qwt_picker.h>
+# include <qwt_plot_picker.h>
+class MyZoomer;
 class SpectrogramData: public QwtRasterData
 {
 public:
@@ -39,9 +41,12 @@ public:
 class ContourPlot: public QwtPlot
 {
     Q_OBJECT
+    QwtPlotPicker* picker_;
+    MyZoomer* tracker_;
+    double m_lastAngle;
 
 public:
-
+    QwtPlotSpectrogram *d_spectrogram;
     wavefront* m_wf;
     ContourTools *m_tools;
     static bool m_useMiddleOffset;
@@ -58,10 +63,19 @@ public:
     void setTool(ContourTools* tool);
     bool m_autoInterval;
     bool m_minimal;
+
+
+
 signals:
     void setMinMaxValues(double,double);
     void setWaveRange(double);
     void newContourRange(double);
+    void sigPointSelected(const QPointF&);
+
+public Q_SLOTS:
+  void selected(const QPointF& pos);
+  void moved(const QPointF);
+
 
 public Q_SLOTS:
     void showContour( bool on );
@@ -75,6 +89,7 @@ public Q_SLOTS:
     void on_line_color_changed(QColor);
     void contourFillChanged(int);
     void newDisplayErrorRange(double min, double max);
+    void drawProfileLine(const double ang);
 #ifndef QT_NO_PRINTER
     void printPlot();
 #endif
@@ -83,10 +98,13 @@ private:
     void drawCanvas(QPainter* p);
     void initPlot();
 
-    QwtPlotSpectrogram *d_spectrogram;
+
     QColor m_contourPen;
     bool m_do_fill;
     void ruler();
+    double m_min;
+    double m_max;
+
 protected:
 
 };

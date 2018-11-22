@@ -13,6 +13,7 @@ class foucaultView : public QWidget
     Q_OBJECT
 
 public:
+    QString imageDir;
     static foucaultView *get_Instance(SurfaceManager *sm = 0);
     static foucaultView *m_instance;
     explicit foucaultView(QWidget *parent = 0, SurfaceManager *sm = 0);
@@ -58,6 +59,8 @@ private slots:
     void on_rocStepSize_editingFinished();
 
     void on_lateralOffset_valueChanged(int arg1);
+
+    void on_SaveImageCB_clicked(bool checked);
 
 private:
     Ui::foucaultView *ui;

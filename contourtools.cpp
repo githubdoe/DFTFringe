@@ -101,6 +101,7 @@ void ContourTools::setMinMaxValues(double min, double max){
     ui->maxSB->setValue(max);
     ui->maxSB->blockSignals(false);
     ui->minSB->blockSignals(false);
+
     emit newDisplayErrorRange(min,max);
 }
 
@@ -147,17 +148,20 @@ void ContourTools::updateMinMax(){
     emit newDisplayErrorRange(m_min,m_max);
 }
 
-
-
-
 void ContourTools::on_maxSB_valueChanged(double arg1)
 {
     m_max = arg1;
+    ui->errorRangeSpin->blockSignals(true);
+    ui->errorRangeSpin->setValue(m_max-m_min);
+    ui->errorRangeSpin->blockSignals(false);
     m_minmaxEditTimer->start(1000);
 }
 
 void ContourTools::on_minSB_valueChanged(double arg1)
 {
     m_min = arg1;
+    ui->errorRangeSpin->blockSignals(true);
+    ui->errorRangeSpin->setValue(m_max-m_min);
+    ui->errorRangeSpin->blockSignals(false);
     m_minmaxEditTimer->start(1000);
 }

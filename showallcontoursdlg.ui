@@ -1,54 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>settingsDFT</class>
- <widget class="QDialog" name="settingsDFT">
+ <class>showAllContoursDlg</class>
+ <widget class="QDialog" name="showAllContoursDlg">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>371</width>
-    <height>156</height>
+    <width>400</width>
+    <height>112</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QCheckBox" name="ShowDFTTHumbCB">
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>Show DFT Thumnail once Mirror is outlined in Igram.</string>
+      <string>Page Width</string>
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="QCheckBox" name="showDownSizedIgram">
-     <property name="text">
-      <string>SHow Down sized interferogram.</string>
+   <item row="0" column="1">
+    <widget class="QSpinBox" name="Width">
+     <property name="suffix">
+      <string> Pixels</string>
+     </property>
+     <property name="maximum">
+      <number>4000</number>
+     </property>
+     <property name="value">
+      <number>1000</number>
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="QCheckBox" name="flipVert">
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Flip analysis vertical</string>
+      <string>Columns</string>
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="QCheckBox" name="flipHorizontal">
-     <property name="text">
-      <string>Flip analysis horizontal</string>
+   <item row="1" column="1">
+    <widget class="QSpinBox" name="columns">
+     <property name="maximum">
+      <number>10</number>
+     </property>
+     <property name="value">
+      <number>2</number>
      </property>
     </widget>
    </item>
-   <item>
+   <item row="2" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Apply</set>
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
@@ -59,7 +68,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>settingsDFT</receiver>
+   <receiver>showAllContoursDlg</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -75,7 +84,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>settingsDFT</receiver>
+   <receiver>showAllContoursDlg</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

@@ -69,6 +69,7 @@
 #include "reportdlg.h"
 #include "Circleoutline.h"
 #include <math.h>
+#include "transformwavefrontdlg.h"
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -365,7 +366,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         mirrorDlg *md = mirrorDlg::get_Instance();
         zp.unwrap_to_zernikes(*wf);
         // check for swapped conic value
-        if (md->cc * wf->InputZerns[8] < 0.){
+        if (!m_ignoreInverse && md->cc * wf->InputZerns[8] < 0.){
             bool reverse = false;
             if (m_askAboutReverse){
                 if (QMessageBox::Yes == QMessageBox::question(0,"should invert?","Wavefront seems inverted.  Do you want to invert it?"))
@@ -483,7 +484,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
     m_oglPlot(glPlot), m_metrics(mets),
     m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
-    outsideOffset(0),m_askAboutReverse(true), workToDo(0), m_wftStats(0)
+    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), workToDo(0), m_wftStats(0)
 {
     okToUpdateSurfacesOnGenerateComplete = true;
     m_simView = SimulationsView::getInstance(0);
@@ -633,6 +634,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
                 wf->regions[n][i].y = scale * (wf->regions[n][i].y - yavg) + yavg;
             }
         }
+
         DrawPoly(mask, wf->regions);
 
     }
@@ -1146,7 +1148,6 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
             md->newLambda(QString::number(lambda));
         }
         else {
-            lambda = md->diameter;
             mirrorParamsChanged = true;
         }
     }
@@ -1267,7 +1268,6 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
 
     m_surface_finished = false;
     generateSurfacefromWavefront(m_currentNdx);
-
     return mirrorParamsChanged;
 }
 void SurfaceManager::deleteCurrent(){
@@ -1528,6 +1528,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     wf->dirtyZerns = true;
     m_surfaceTools->addWaveFront(wf->name);
     m_currentNdx = m_wavefronts.size()-1;
+    wf->regions.clear();
     makeMask(wf);
     generateSurfacefromWavefront(m_currentNdx);
 
@@ -1738,6 +1739,7 @@ void SurfaceManager::invert(QList<int> list){
         m_wavefronts[list[i]]->data *= -1;
         m_wavefronts[list[i]]->dirtyZerns = true;
         m_wavefronts[list[i]]->wasSmoothed = false;
+        m_askAboutReverse = true;
     }
     m_waveFrontTimer->start(500);
 }
@@ -1797,8 +1799,42 @@ void SurfaceManager::inspectWavefront(){
 
 #include <sstream>
 
+#include <QMap>
 
+void plotlineThruAstigs(QwtPlot *plt, cv::Mat xastig, cv::Mat yastig, QList<rotationDef *>list){
 
+  QList<rotationDef *> tmplist = list;
+  QList<QPointF> values;
+  for (int i = 0; i < list.size(); ++i){
+      values << QPointF(xastig.at<double>(i,0), yastig.at<double>(i,0));
+  }
+    while (tmplist.size()){
+
+        double angle = tmplist.front()->angle;
+        double x1 = values.front().x();
+        double y1 = values.front().y();
+        for (int j = 1; j < tmplist.size(); ++j){
+            if (fabs(angle - tmplist[j]->angle) == 90 || fabs(tmplist[j]->angle - angle) == 90){
+                double x2 = values[j].x();
+                double y2 = values[j].y();
+                QwtPlotCurve *curve = new QwtPlotCurve();
+                curve->setItemAttribute(QwtPlotItem::Legend, false);
+                QPolygonF line;
+
+                line << QPointF(x1,y1);
+                line << QPointF(x2,y2);
+                curve->setSamples(line);
+                curve->attach(plt);
+                tmplist.removeAt(j);
+                values.removeAt(j);
+                break;
+            }
+        }
+        tmplist.removeFirst();
+        values.removeFirst();
+    }
+
+}
 
 // calculate stand astig for each input
 // for each input rotate the average by the input angle and subtract it from the input
@@ -1840,8 +1876,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     double mirrorYAverage = 0;
     double maxXastig = 0;
     double maxYastig = 0;
+    m_ignoreInverse = true;
     for (int i = 0; i < list.size(); ++i){
-
         // rotate the average to match the input
         QList<int> toRotate;
         toRotate.append(avgNdx);
@@ -1886,22 +1922,35 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         yastig.at<double>(i,0) = mirrorY;
         qDebug() << "Mirror astigs " << mirrorX << mirrorY;
     }
+
+    Circle fittedcircle1;
+    Circle fittedcircle2;
     Circle fittedcircle;
     if (xastig.rows > 2){
         CircleData d(xastig.rows, xastig.ptr<double>(0), yastig.ptr<double>(0));
-        fittedcircle = CircleFitByHyper(d);
-    } else if (xastig.rows == 2)
-    {
+        fittedcircle1 = CircleFitByHyper(d);
+    }
+
+
         double xmean = 0;
         double ymean = 0;
         for (int i = 0; i < xastig.rows; ++i){
             xmean += xastig.at<double>(i,0);
             ymean += yastig.at<double>(i,0);
         }
-        double xdel = xastig.at<double>(0,0) - xmean/xastig.rows;
-        double ydel = yastig.at<double>(0,0) - ymean/xastig.rows;
-        double r = sqrt(xdel * xdel + ydel * ydel);
-        fittedcircle = Circle(xmean/xastig.rows, ymean/xastig.rows, r );
+        double avgRadius = 0;
+        for (int i = 0; i < list.size(); ++i){
+            double xdel = xastig.at<double>(i,0) - xmean/xastig.rows;
+            double ydel = yastig.at<double>(i,0) - ymean/xastig.rows;
+
+            avgRadius += sqrt(xdel * xdel + ydel * ydel);
+        }
+        fittedcircle2 = Circle(xmean/xastig.rows, ymean/xastig.rows, avgRadius/xastig.rows );
+        fittedcircle = fittedcircle2;
+qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
+    fittedcircle = fittedcircle1;
+    if (xastig.rows == 2 || fittedcircle1.r > 1.5 * fittedcircle2.r ){
+        fittedcircle = fittedcircle2;
     }
 
 
@@ -1974,7 +2023,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         html.append("<td>" + QString().number(xval,'f',3) + "</td>"
                     "<td>" + QString().number(yval,'f',3) + "</td>"
                     "<td>" + QString().number(mag,'f',3) + "</td>"
-                    "<td>" + QString().number((180./ M_PI) * atan2(yval,xval),'f',1) + "</td></right></tr>");
+                    "<td>" + QString().number((180./ M_PI) * atan2(yval,xval)/2.,'f',1) + "</td></right></tr>");
 
     }
     html.append("<tr></b><td>MEAN</b></td><td>" + QString().number(fittedcircle.a,'f',3) + "</td><td>" +
@@ -1991,6 +2040,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     mirrorYAverage /= list.size();
     QPolygonF mirrorAstigAtEachRotation;
     double mirrorAstigRadius =0;
+    plotlineThruAstigs(pl1, xastig, yastig, list);
     for (int i = 0; i < list.size(); ++i){
         if (cnt++ == 0)
             imagesHtml.append("<tr>");
@@ -2020,7 +2070,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         // make contour plots of astig zernike terms of stand
         ContourPlot *cp = new ContourPlot();
         cp->m_zRangeMode = "Fractions of Wave";
-        cp->contourWaveRangeChanged(inputs[0]->std* 1.25);
+        cp->contourWaveRangeChanged(inputs[0]->std* 3);
         wavefront * wf = new wavefront(*inputs[i]);
 
 
@@ -2089,10 +2139,16 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     wf2->data = wf2->workData = standavg;
     wf2->useSANull = false;
     wf2->name = QString("Average Stand effects.");
+    wf2->dirtyZerns = true;
+    wf2->wasSmoothed = false;
+    makeMask(wf2);
+    generateSurfacefromWavefront(wf2);
+    m_ignoreInverse = false;
     m_standAvg = wf2;
     cp1->setSurface(wf2);
     cp1->resize(Width,Height);
     cp1->replot();
+
     contour2.fill( QColor( Qt::white ).rgb() );
     renderer.render( cp1, &painter2, QRect(0,0,Width,Height) );
     cp1->m_zRangeMode = "Auto"; // restore contour plot to auto scaling.
@@ -2119,7 +2175,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     mux->attach( pl1);
     // plot the mean
     QwtPlotMarker *meanMark = new QwtPlotMarker();
-    meanMark->setSymbol(new QwtSymbol(QwtSymbol::Star1,QColor(255,255,255), QColor(0,0,0), QSize(30,30)));
+    meanMark->setSymbol(new QwtSymbol(QwtSymbol::Star1,QColor(255,255,255), QColor(0,0,0), QSize(15,15)));
     meanMark->setLabel(QString("stand Mean astig") );
 
     meanMark->setLabelAlignment( Qt::AlignTop );
@@ -2152,8 +2208,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     //curveStandStd->attach(pl1);
 
     // draw average astig radius circule around points.
-
-    meanMark->setValue(fittedcircle.a,fittedcircle.b);
+    meanMark->setValue(wf2->InputZerns[4], wf2->InputZerns[5]);
     QwtPlotCurve *curveAvgMirror = new QwtPlotCurve("Mirror Astig Circle");
     stdCircle.clear();
     for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
@@ -2174,7 +2229,6 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     curveAvgMirror->setPen(pen);
     curveAvgMirror->setSamples(stdCircle);
     curveAvgMirror->attach(pl1);
-
     pl1->resize(500,500);
     pl1->replot();
     QwtPlotRenderer renderer3;
@@ -2550,15 +2604,20 @@ void SurfaceManager::showAll3D(GLWidget *gl)
     w->show();
     QApplication::restoreOverrideCursor();
 }
-
+#include "showallcontoursdlg.h"
 void SurfaceManager::showAllContours(){
+    showAllContoursDlg dlg;
+    if (!dlg.exec()) {
+        return;
+    }
     QApplication::setOverrideCursor(Qt::WaitCursor);
     ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot;
     //plot->m_minimal = true;
-    int width = 420;
-    int height = 350;
+    int cols = dlg.getColumns();
+    int width = dlg.getWidth()/cols;
+    int height = width * .82;
 
-    int rows =  ceil((double)m_wavefronts.size()/4.);
+    int rows =  ceil((double)m_wavefronts.size()/cols);
     int columns = min(m_wavefronts.size(),int(ceil((double)m_wavefronts.size()/rows)));
     const QSizeF size(columns * (width + 10), rows * (height + 10));
     const QRect imageRect = QRect(0,0,size.width(),size.height());
@@ -2686,7 +2745,7 @@ void SurfaceManager::report(){
                 double x = wf->InputZerns[4];
                 double y = wf->InputZerns[5];
                 double mag = sqrt(x * x + y * y);
-                double angle = atan2(y,x);
+                double angle = atan2(y,x)/2;
 
                 zerns.append("<tr><td>astig Polar</td><td><table width = '100%'><tr><td>"
                              + QString().sprintf("%6.3lf </td><td>%6.3lf Deg.</td></tr></table>",
@@ -2720,7 +2779,8 @@ void SurfaceManager::report(){
 
 
         qDebug() << "contour size" << m_contourView->size();
-        m_contourView->resize(600,500);
+        m_contourView->resize(600,400);
+        m_contourView->repaint();
         m_contourView->render(&p1);
         if (dlg.reduceContour){
             contWindow = contWindow.scaled(3 * contWindow.width()/4, contWindow.height()/2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
@@ -2736,6 +2796,8 @@ void SurfaceManager::report(){
     if (dlg.show_3D){
         QString threeD("threeD.png");
         m_oglPlot->resize(600,600);
+        m_oglPlot->repaint();
+        m_oglPlot->swapBuffers();
         QImage ddd = m_oglPlot->grabFrameBuffer();
         if (dlg.reduce3D){
             ddd = ddd.scaled(3 * ddd.width()/4, ddd.height()/2,Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
@@ -2826,7 +2888,232 @@ void SurfaceManager::initWaveFrontLoad(){
     rocResp = ASK;
     lambdResp = ASK;
 }
+void SurfaceManager::transform(){
+    TransformWaveFrontDlg dlg;
+    connect(&dlg, SIGNAL(flipLR()), this, SLOT(flipHorizontal()));
+    connect(&dlg, SIGNAL(flipV()),this,   SLOT(flipVertical()));
+    connect(&dlg, SIGNAL(resizeW(int)), this, SLOT(resizeW(int)));
+    connect(&dlg, SIGNAL(changeWavelength(double)), this, SLOT(changeWavelength(double)));
+
+    dlg.exec();
+}
+
 void SurfaceManager::memoryLow(){
     int resp = QMessageBox::warning(0,"low on memory", "Do you want to continue?");
         okToContinue = resp;
+}
+void SurfaceManager::resize( wavefront *wf, int size){
+    wavefront *nwf = new wavefront();
+    *nwf = *wf;
+    nwf->dirtyZerns = true;
+    cv::Mat newData;
+    cv::Mat newMask;
+    cv::resize(wf->data,newData, cv::Size(size,size));
+    cv::resize(wf->mask, newMask, cv::Size(size,size));
+    nwf->data = newData.clone();
+    nwf->mask = newMask.clone();
+
+    nwf->m_outside.m_center.rx() = size/2.;
+    nwf->m_outside.m_center.ry() = size/2.;
+    double scale = (double)size/wf->data.rows;
+    nwf->m_outside.m_radius = wf->m_outside.m_radius * scale -1;
+    m_wavefronts << nwf;
+    nwf->wasSmoothed = false;
+    nwf->name = wf->name + "_newsize";
+    m_surfaceTools->addWaveFront(nwf->name);
+    m_currentNdx = m_wavefronts.size()-1;
+    makeMask(nwf);
+    generateSurfacefromWavefront(m_currentNdx);
+
+}
+void SurfaceManager::changeWavelength( wavefront *wf, double wavelength){
+    wavefront *nwf = new wavefront();
+    *nwf = *wf;
+    nwf->dirtyZerns = true;
+    nwf->data = nwf->data * ( wf->lambda/wavelength);
+    nwf->lambda = wavelength;
+    m_wavefronts << nwf;
+    nwf->wasSmoothed = false;
+    nwf->name = wf->name + "_newWavelength";
+    m_surfaceTools->addWaveFront(nwf->name);
+    m_currentNdx = m_wavefronts.size()-1;
+    makeMask(nwf);
+    generateSurfacefromWavefront(m_currentNdx);
+}
+void SurfaceManager::flipHorizontal( wavefront *wf){
+    cv::Mat newData;
+    cv::Mat newMask;
+    cv::flip(wf->data, newData, 1);
+    cv::flip(wf->mask, newMask, 1);
+
+    wavefront *nwf = new wavefront();
+    *nwf = *wf;
+    nwf->dirtyZerns = true;
+    nwf->m_inside.m_center.rx() = wf->data.cols-1 - wf->m_inside.m_center.x();
+    nwf->m_outside.m_center.rx() = wf->data.cols-1 - wf->m_outside.m_center.x();
+
+    nwf->data = newData.clone();
+    nwf->mask = newMask.clone();
+
+
+    nwf->workMask = newMask.clone();
+    m_wavefronts << nwf;
+    nwf->wasSmoothed = false;
+    nwf->name = wf->name + "_FlippedH";
+    m_surfaceTools->addWaveFront(nwf->name);
+    m_currentNdx = m_wavefronts.size()-1;
+    makeMask(nwf);
+    generateSurfacefromWavefront(m_currentNdx);
+}
+void SurfaceManager::flipVertical( wavefront *wf){
+    cv::Mat newData;
+    cv::Mat newMask;
+    cv::flip(wf->data, newData, 0);
+    cv::flip(wf->mask, newMask, 0);
+
+    wavefront *nwf = new wavefront();
+    *nwf = *wf;
+    nwf->dirtyZerns = true;
+    nwf->m_inside.m_center.rx() = wf->data.cols-1 - wf->m_inside.m_center.x();
+    nwf->m_outside.m_center.rx() = wf->data.cols-1 - wf->m_outside.m_center.x();
+
+    nwf->data = newData.clone();
+    nwf->mask = newMask.clone();
+
+
+    nwf->workMask = newMask.clone();
+    m_wavefronts << nwf;
+    nwf->wasSmoothed = false;
+    nwf->name = wf->name + "_FlippedV";
+    m_surfaceTools->addWaveFront(nwf->name);
+    m_currentNdx = m_wavefronts.size()-1;
+    makeMask(nwf);
+    generateSurfacefromWavefront(m_currentNdx);
+}
+void SurfaceManager::resizeW(int size){
+    QList<int> list = m_surfaceTools->SelectedWaveFronts();
+
+    if (list.length() == 0){
+        QMessageBox::warning(0, tr("Warning"),
+                             tr("No wavefronts have been selected."));
+
+        return;
+    }
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    foreach(int ndx, list){
+        resize(m_wavefronts[ndx], size);
+    }
+    QApplication::restoreOverrideCursor();
+}
+void SurfaceManager::changeWavelength(double wavelength){
+    QList<int> list = m_surfaceTools->SelectedWaveFronts();
+    if (list.length() == 0){
+        QMessageBox::warning(0, tr("Warning"),
+                             tr("No wavefronts have been selected."));
+
+        return;
+    }
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    foreach(int ndx, list){
+        changeWavelength(m_wavefronts[ndx], wavelength);
+    }
+    QApplication::restoreOverrideCursor();
+}
+void SurfaceManager::flipVertical(){
+    QList<int> list = m_surfaceTools->SelectedWaveFronts();
+    if (list.length() == 0){
+        QMessageBox::warning(0, tr("Warning"),
+                             tr("No wavefronts have been selected."));
+
+        return;
+
+    }
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    foreach (int ndx, list) {
+        flipVertical(m_wavefronts[ndx]);
+    }
+    QApplication::restoreOverrideCursor();
+}
+void SurfaceManager::flipHorizontal(){
+    QList<int> list = m_surfaceTools->SelectedWaveFronts();
+    if (list.length() == 0){
+        QMessageBox::warning(0, tr("Warning"),
+                             tr("No wavefronts have been selected."));
+
+        return;
+
+    }
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    foreach (int ndx, list) {
+        flipHorizontal(m_wavefronts[ndx]);
+    }
+    QApplication::restoreOverrideCursor();
+}
+bool QPointFLessThan(const QPointF &p1, const QPointF & p2){
+    return p1.x() < p2.x();
+}
+
+void SurfaceManager::tiltAnalysis(){
+    QSettings set;
+    QString path = set.value("mirrorConfigFile").toString();
+    QFile fn(path);
+    QFileInfo info(fn.fileName());
+    QString dd = info.dir().absolutePath();
+    QString fName = QFileDialog::getOpenFileName(0,
+        tr("Select a zerns.csv file"), dd + "//Zerns.csv");
+
+    if (fName.isEmpty())
+        return;
+    QFile f(fName);
+    QTextStream in(&f);
+    QFileInfo info2(f);
+
+    QList<QPointF> xvals;
+    QList<QPointF> yvals;
+
+    if (f.open(QIODevice::ReadOnly)) {
+        QString line;
+        do {
+            line = in.readLine();
+            if (line.size() == 0)
+                continue;
+            if (line[0] == '#')
+                continue;
+            QStringList data = line.split(',');
+            if (!data[0].contains("/")){
+                data[0] = info2.absoluteDir().dirName() + "/"+ data[0];
+            }
+            xvals << QPointF(data[2].toDouble(), data[5].toDouble());
+            yvals << QPointF(data[3].toDouble(), data[6].toDouble());
+
+
+        } while (!line.isNull());
+    }
+
+
+
+   cv::Mat xline;
+   //cv::fitLine(xvals.toVector().toStdVector(), xline, CV_DIST_L2, 0,.01,.01);
+   std::sort(xvals.begin(), xvals.end(), QPointFLessThan);
+   std::sort(yvals.begin(), yvals.end(), QPointFLessThan);
+   QwtPlot *pl1 = new QwtPlot();
+   pl1->resize(800,600);
+   pl1->insertLegend( new QwtLegend() , QwtPlot::TopLegend);
+   pl1->setAxisTitle( QwtPlot::yLeft, "astig" );
+   pl1->setAxisTitle(QwtPlot::xBottom, "tilt");
+   pl1->setTitle(QString().sprintf("tilt vs Astig %d samples", xvals.length()));
+   QwtPlotGrid *grid = new QwtPlotGrid();
+   grid->attach(pl1);
+   QwtPlotCurve *xTilt = new QwtPlotCurve("X");
+   QwtPlotCurve *yTilt = new QwtPlotCurve("y");
+   xTilt->setStyle(QwtPlotCurve::Dots);
+   yTilt->setStyle(QwtPlotCurve::Dots);
+   QwtPlotCurve *xTLine = new QwtPlotCurve("X fit");
+   xTilt->setPen(Qt::red,4);
+   yTilt->setPen(Qt::blue,4);
+   xTilt->setSamples(xvals.toVector());
+   yTilt->setSamples(yvals.toVector());
+   xTilt->attach(pl1);
+   yTilt->attach(pl1);
+   pl1->show();
 }

@@ -257,6 +257,12 @@ private slots:
 
     void on_autoOutlineHelp_clicked();
 
+    void on_actionwave_front_transforms_triggered();
+
+    void on_actiontilt_versus_astig_analysis_triggered();
+
+    void on_actionSave_curent_profile_triggered();
+
 private:
 
     Ui::MainWindow *ui;

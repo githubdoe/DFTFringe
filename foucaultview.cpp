@@ -42,14 +42,11 @@ void foucaultView::setSurface(wavefront *wf){
     double FL = md->roc/2.;
     double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
     m_sag = mul * (rad * rad) /( 4 * FL);
-
-    ui->rocOffsetSb->blockSignals(true);
     m_sag = round(100 * m_sag)/100.;
 
-
+    ui->rocOffsetSlider->blockSignals(true);
     ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
-
-
+    ui->rocOffsetSlider->blockSignals(false);
     on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
 }
@@ -259,9 +256,17 @@ void foucaultView::on_makePb_clicked()
     QImage foucault = showMag(knifeSurf, false,"", false, gamma);
     startx = size - m_wf->data.cols;
     foucault = foucault.copy(startx,startx,m_wf->data.cols, m_wf->data.cols);
-
-
-
+/*
+    cv::Mat iMat(foucault.height(), foucault.width(), CV_8UC3, foucault.bits(), foucault.bytesPerLine());
+    cv::Mat flipped;
+    cv::flip(iMat,flipped, 1);
+    cv::Mat diffed;
+    cv::absdiff(iMat, flipped, diffed);
+    diffed = diffed * 10;
+    cv::imshow("diffed", diffed);
+    cv::waitKey(1);
+    foucault = QImage((uchar*)diffed.data, diffed.cols, diffed.rows, diffed.step, QImage::Format_RGB888).copy();
+*/
     foucault = foucault.mirrored(true, false);
     s = ui->foucaultViewLb->size();
     ui->foucaultViewLb->setPixmap(QPixmap::fromImage(foucault.scaledToWidth(s.width())));
@@ -312,7 +317,7 @@ void foucaultView::on_rocOffsetSb_editingFinished()
     ui->rocOffsetSlider->blockSignals(true);
     ui->rocOffsetSlider->setValue(pos);
     ui->rocOffsetSlider->blockSignals(false);
-
+qDebug() << "slider" << val << step << pos;
     m_guiTimer.start(500);
 }
 
@@ -348,8 +353,12 @@ void foucaultView::on_scanPb_clicked()
     double steps = ui->scanSteps->value();
     double start = ui->scanStart->value();
     double end = ui->scanEndOffset->value();
-    double step = (end - start)/steps;
-    for (double v = start; v <= end ; v += step){
+    double step = (end - start)/steps + step;
+    foucaultView *fv = foucaultView::get_Instance(0);
+    int cnt = 0;
+    QSettings settings;
+    QString lastPath = settings.value("lastPath","").toString();
+    for (double v = start; v <= end; v += step){
 
         ui->rocOffsetSb->setValue(v);
         double st = (ui->useMM->isChecked()) ? 24.5 * m_sag/40 : m_sag/40;
@@ -360,6 +369,14 @@ void foucaultView::on_scanPb_clicked()
         ui->rocOffsetSlider->blockSignals(false);
         on_makePb_clicked();
 
+        QImage fvImage = QImage(fv->size(),QImage::Format_ARGB32 );
+
+        QPainter p3(&fvImage);
+        fv->render(&p3);
+        if (ui->SaveImageCB->isChecked()){
+            QString fvpng = QString().sprintf("%s//fv%06d.jpg",imageDir.toStdString().c_str(), cnt++);
+            fvImage.save(fvpng);
+        }
         qApp->processEvents();
 
     }
@@ -416,7 +433,7 @@ void foucaultView::on_autoStepSize_clicked(bool checked)
     double step = getStep();
 
     ui->rocStepSize->setValue(step);
-
+    m_sag = 40 * step;
     // create 17 labels where each label is 5 steps apart.
     for (int i = 0; i< 17; ++i){
         double val =  (i - 8) * step * 5;  // label slider every 5 steps.
@@ -434,4 +451,17 @@ void foucaultView::on_lateralOffset_valueChanged(int arg1)
 {
     lateralOffset = arg1;
     m_guiTimer.start(100);
+}
+
+void foucaultView::on_SaveImageCB_clicked(bool checked)
+{
+    if (!checked)
+        return;
+    QSettings settings;
+    imageDir = settings.value("lastPath","").toString();
+
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Directory where images are to be saved"),
+                                                 imageDir,
+                                                 QFileDialog::ShowDirsOnly
+                                                 | QFileDialog::DontResolveSymlinks);
 }

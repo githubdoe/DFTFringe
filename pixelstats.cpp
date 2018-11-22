@@ -361,12 +361,14 @@ cv::Mat slope(wavefront * wf){
     for (int x = 0; x < wf->data.cols; ++x){
         for (int y = 0; y < wf->data.rows; ++y){
             double avg = 0;
+
             if (wf->workMask.at<bool>(y,x) && (y + pixelsPerInch) < wf->workData.rows   &&
-                    wf->workMask.at<bool>(y + pixelsPerInch)){
+                    wf->workMask.at<bool>(y + pixelsPerInch,x)){
                 for (int i = 0; i < pixelsPerInch; ++i){
                     avg += wf->workData(y+i,x);
                 }
                 avgY.at<double>(y,x) = avg/pixelsPerInch;
+
             }
         }
     }
@@ -376,7 +378,7 @@ cv::Mat slope(wavefront * wf){
             if (wf->workMask.at<bool>(y,x) && x+dist < wf->data.cols && wf->workMask.at<bool>(y,x+1)){
                 double h  = avgX.at<double>(y,x ) - avgX.at<double>(y,x+dist);
                 if ( y == half){
-                    //qDebug() << x << h << avgX.at<double>(y,x);
+
                 }
                 double slope = atan2( h, wavePerPixel) * radToArcSec;
                 gradx.at<double>(y,x) = fabs(slope);

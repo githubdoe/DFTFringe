@@ -780,8 +780,8 @@ void GLWidget::setZranges(){
     }
 
     else if (m_zRangeMode == "Min/Max"){
-        maxy = m_wf->max;
-        miny = m_wf->min;
+        maxy = m_max_y;
+        miny = m_min_y;
     }
 
     m_max_y =  maxy;

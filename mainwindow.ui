@@ -77,6 +77,7 @@
     <addaction name="actionSave_interferogram"/>
     <addaction name="actionSave_Zernike_Values_in_CSV"/>
     <addaction name="actionSave_nulled_smoothed_wavefront"/>
+    <addaction name="actionSave_curent_profile"/>
     <addaction name="separator"/>
     <addaction name="actionSave_PDF_report"/>
     <addaction name="actionCreate_Movie_of_wavefronts"/>
@@ -117,6 +118,8 @@
     <addaction name="actionEdit_Zernike_values"/>
     <addaction name="actionCamera_Calibration"/>
     <addaction name="actionastig_Stats"/>
+    <addaction name="actionwave_front_transforms"/>
+    <addaction name="actiontilt_versus_astig_analysis"/>
     <addaction name="actionDebugStuff"/>
    </widget>
    <widget class="QMenu" name="menuSimulations">
@@ -1426,6 +1429,21 @@ em;
    </property>
    <property name="text">
     <string>Play batch results review movie</string>
+   </property>
+  </action>
+  <action name="actionwave_front_transforms">
+   <property name="text">
+    <string>wave front transforms</string>
+   </property>
+  </action>
+  <action name="actiontilt_versus_astig_analysis">
+   <property name="text">
+    <string>tilt versus astig analysis</string>
+   </property>
+  </action>
+  <action name="actionSave_curent_profile">
+   <property name="text">
+    <string>Save curent profile</string>
    </property>
   </action>
  </widget>

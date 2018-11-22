@@ -255,6 +255,7 @@ private:
 
     int zoomIndex;
     bool dragMode;
+    bool cntrlPressed;
     QPointF dragStart;
     int crop_dx;
     int crop_dy;

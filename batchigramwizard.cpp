@@ -24,7 +24,6 @@ QPushButton *batchIgramWizard::saveZerns = 0;
 QLabel *batchIgramWizard::memStatus = 0;
 QCheckBox *batchIgramWizard::makeReviewAvi = 0;
 QString batchIgramWizard::reviewFileName;
-QPushButton  *batchIgramWizard::playReview = 0;
 QCheckBox *batchIgramWizard::autoOutlineCenter = 0;
 QCheckBox *batchIgramWizard::autoOutlineOutside = 0;
 
@@ -142,7 +141,7 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
 
     connect(this, SIGNAL(processBatchList(QStringList)), qobject_cast<MainWindow *>(manager), SLOT(batchProcess(QStringList)));
 
-
+    pgrBar = new QProgressBar;
     batchIgramWizard::addFiles = new QPushButton(tr("Add Files"));
     batchIgramWizard::skipFile = new QPushButton(tr("Skip"));
     connect(batchIgramWizard::skipFile, SIGNAL(clicked(bool)), qobject_cast<MainWindow *>(manager), SLOT(skipBatchItem()));
@@ -183,13 +182,12 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     QHBoxLayout *gbLayout = new QHBoxLayout();
     //gbLayout->addWidget(batchIgramWizard::autoOutlineOutside);
     gbLayout->addWidget(batchIgramWizard::autoOutlineCenter);
+    gbLayout->addWidget(pgrBar);
     outlineGB->setLayout(gbLayout);
-    batchIgramWizard::makeReviewAvi = new QCheckBox(tr("Make review AVI"));
-    batchIgramWizard::makeReviewAvi->setToolTip("Create a movie where each frame \nshows the igram, dft, 3D and contour plot\n"
+    batchIgramWizard::makeReviewAvi = new QCheckBox(tr("Make review images"));
+    batchIgramWizard::makeReviewAvi->setToolTip("Create a sub directory \"review\" where each file \nshows the igram, dft, 3D and contour plot\n"
                                                 " of each interferogram analyzed.");
-    batchIgramWizard::playReview = new QPushButton(tr("Play review movie"), this);
-    batchIgramWizard::playReview->setEnabled(false);
-    connect(batchIgramWizard::playReview, SIGNAL(pressed()), this, SLOT(play_review()));
+
     batchIgramWizard::saveZerns->setEnabled(false);
     batchIgramWizard::saveZerns->setToolTip("If wavefronts were being deleted to save space.\n"
                                             "Use this to save the zernike values just created by\nthe "
@@ -218,7 +216,6 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     hlayout3->addWidget(batchIgramWizard::goPb,0, Qt::AlignLeft);
     hlayout3->addWidget(batchIgramWizard::showProcessPlots);
     hlayout3->addWidget(batchIgramWizard::makeReviewAvi);
-    hlayout3->addWidget(batchIgramWizard::playReview);
     hlayout3->addWidget(batchIgramWizard::memStatus);
     hlayout3->addWidget(batchIgramWizard::saveZerns);
     layout->addLayout(hlayout3);
@@ -228,9 +225,7 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
 
 
 }
-void batchIntro::play_review(){
-    QDesktopServices::openUrl(QUrl(batchIgramWizard::reviewFileName));
-}
+
 
 void batchIntro::on_filter(bool flag){
     if (flag){
@@ -254,6 +249,10 @@ void batchIgramWizard::addAstig(QString name, QPointF value){
     introPage->astigPlot->addValue(name,value);
 }
 
+void batchIgramWizard::progressValue(int min, int max, int value){
+    introPage->pgrBar->setRange(min, max);
+    introPage->pgrBar->setValue(value);
+}
 
 void batchIgramWizard::addRms(QString name, QPointF p){
     introPage->m_rmsPlot->addValue(name,p);

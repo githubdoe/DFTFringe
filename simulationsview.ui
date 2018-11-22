@@ -143,6 +143,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="MakePB">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="toolTip">
         <string>Generat star tests.</string>
        </property>

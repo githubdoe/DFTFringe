@@ -153,6 +153,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_profilePlot =  new ProfilePlot(review->s2,m_contourTools);
     connect(m_profilePlot, SIGNAL(zoomMe(bool)), this, SLOT(zoomProfile(bool)));
+    connect(m_profilePlot, SIGNAL(profileAngleChanged(double)), m_contourView->getPlot(), SLOT(drawProfileLine(double)));
+    connect(m_contourView, SIGNAL(sigPointSelected(const QPointF&)), m_profilePlot, SLOT(contourPointSelected(const QPointF&)));
     m_mirrorDlg = mirrorDlg::get_Instance();
     review->s2->addWidget(m_profilePlot);
     review->s1->addWidget(m_contourView);
@@ -733,6 +735,7 @@ void MainWindow::on_pushButton_clicked()
     else {
         m_OutlineDoneInBatch = true;
     }
+    ui->SelectOutSideOutline->setChecked(true);
 }
 void MainWindow::skipBatchItem()
 {
@@ -1015,6 +1018,7 @@ void MainWindow::saveBatchZerns(){
 
 
 void MainWindow::batchProcess(QStringList fileList){
+    m_contourView->getPlot()->blockSignals(true);
     QSettings set;
     bool shouldBeep = set.value("RMSBeep>", true).toBool();
     this->setCursor(Qt::WaitCursor);
@@ -1030,8 +1034,7 @@ void MainWindow::batchProcess(QStringList fileList){
     settings.setValue("lastPath",lastPath);
     int memThreshold = settings.value("lowMemoryThreshold", 300).toInt();
     int last = fileList.size()-1;
-    progBar->setMinimum(0);
-    progBar->setMaximum(last);
+
     int ndx = 0;
     VideoWriter *vw;
     int cnt = 0;
@@ -1048,7 +1051,8 @@ void MainWindow::batchProcess(QStringList fileList){
             if (resp == QMessageBox::No)
                 break;
         }
-        progBar->setValue(cnt++);
+
+
         m_OutlineDoneInBatch = false;
         ui->SelectOutSideOutline->setChecked(true);
         m_igramArea->openImage(fn);
@@ -1057,6 +1061,7 @@ void MainWindow::batchProcess(QStringList fileList){
                 m_igramArea->m_center.m_radius == 0){
             m_igramArea->findCenterHole();
         }
+
         QApplication::processEvents();
 #ifdef Q_OS_WIN
         Sleep(uint(1000));
@@ -1071,11 +1076,13 @@ void MainWindow::batchProcess(QStringList fileList){
             }
         }
         if (m_skipItem){
+            cnt++;
             m_skipItem = false;
             continue;
         }
         if (!m_inBatch)
             break;
+
         m_igramArea->nextStep();
         QApplication::processEvents();
 #ifdef Q_OS_WIN
@@ -1092,6 +1099,7 @@ void MainWindow::batchProcess(QStringList fileList){
         }
         if (m_skipItem){
             m_skipItem = false;
+            ++cnt;
             continue;
         }
         if (!m_inBatch)
@@ -1140,13 +1148,20 @@ void MainWindow::batchProcess(QStringList fileList){
             }
             if (batchIgramWizard::makeReviewAvi->isChecked()){
 
-                if (cnt == 1){
+                if (cnt == 0){
+                    QSettings settings;
+                    QString lastPath = settings.value("lastPath","").toString();
                     width = 800;
                     height = 600;
-                    vw = new VideoWriter;
-                    videoFileName = QFileDialog::getSaveFileName(0, "Save Review video as:", lastPath,"review.avi" );
-                    vw->open(videoFileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
-                    batchIgramWizard::reviewFileName = videoFileName;
+                    //vw = new VideoWriter;
+                    //videoFileName = QFileDialog::getSaveFileName(0, "Save Review video as:", lastPath,"review.avi" );
+                    //vw->open(videoFileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
+                    // check if file exists and if yes: Is it really a file and no directory?
+                    QString reviewPath = lastPath + "/review";
+                    QDir dir(reviewPath);
+                    if (!dir.exists())
+                        dir.mkpath(reviewPath);
+                    //::reviewFileName = videoFileName;
                 }
                 QImage img = QImage(width,height,QImage::Format_RGB32);
                 QImage d3 = m_ogl->m_gl->grabFrameBuffer().scaled(width/2,height/2);
@@ -1172,7 +1187,12 @@ void MainWindow::batchProcess(QStringList fileList){
                 cv::Mat frame = cv::Mat(img.height(), img.width(),CV_8UC4, img.bits(), img.bytesPerLine()).clone();
                 cv::Mat resized;
                 cv::resize(frame, resized, cv::Size(width,height));
-                vw->write(resized);
+
+                QString lastPath = settings.value("lastPath","").toString();
+                QString fileName = m_surfaceManager->m_wavefronts.back()->name;
+                QFileInfo fileinfo(fileName);
+                QString file = lastPath + "/review/" + fileName + "_review.jpg";
+                cv::imwrite(file.toStdString().c_str(),resized);
             }
             if (batchIgramWizard::deletePreviousWave->isChecked()){
                 QVector<QString> zerns;
@@ -1189,6 +1209,9 @@ void MainWindow::batchProcess(QStringList fileList){
                 }
             }
         }
+        batchWiz->progressValue(0,last, cnt++);
+        qApp->processEvents();
+
     }
     if (batchIgramWizard::deletePreviousWave->isChecked()){
         batchIgramWizard::saveZerns->setEnabled(true);
@@ -1205,11 +1228,7 @@ void MainWindow::batchProcess(QStringList fileList){
     batchIgramWizard::skipFile->setEnabled(false);
 
     this->setCursor(Qt::ArrowCursor);
-    if (batchIgramWizard::makeReviewAvi->isChecked()){
-        delete vw;
-        batchIgramWizard::playReview->setEnabled(true);
-        ui->actionPlay_batch_results_review_movie->setEnabled(true);
-    }
+    m_contourView->getPlot()->blockSignals(false);
 
 }
 
@@ -1623,12 +1642,6 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 void MainWindow::on_actionDebugStuff_triggered()
 {
     m_ogl->m_gl->swapBuffers();
-    QList<int> l;
-    l << 0;
-    for (double ang = 0; ang <= 360; ang += 22.5){
-        m_surfaceManager->rotateThese(ang,l);
-    }
-
 }
 #include "outlinestatsdlg.h"
 void MainWindow::on_actionShow_outline_statistics_triggered()
@@ -1678,4 +1691,36 @@ void MainWindow::on_autoOutlineHelp_clicked()
 {
     QString link = qApp->applicationDirPath() + "/res/Help/outlineing.html";
     QDesktopServices::openUrl(QUrl(link));
+}
+#include "transformwavefrontdlg.h"
+void MainWindow::on_actionwave_front_transforms_triggered()
+{
+   m_surfaceManager->transform();
+
+}
+
+void MainWindow::on_actiontilt_versus_astig_analysis_triggered()
+{
+
+    m_surfaceManager->tiltAnalysis();
+}
+
+void MainWindow::on_actionSave_curent_profile_triggered()
+{
+    if (m_profilePlot->m_wf == 0)
+        return;
+    QSettings settings;
+    QString lastPath = settings.value("projectPath",".").toString();
+    QString fName = QFileDialog::getSaveFileName(0,
+        tr("Save Profile"), lastPath + "//profile.txt");
+    if (fName.isEmpty())
+        return;
+    QFile f(fName);
+    QTextStream out(&f);
+    if (f.open(QIODevice::WriteOnly )){
+            QPolygonF points = m_profilePlot->createProfile(m_profilePlot->m_showNm * m_profilePlot->m_showSurface,m_profilePlot->m_wf);
+            foreach (QPointF pt, points) {
+                out << pt.x() << " " << pt.y() << endl;
+            }
+    }
 }

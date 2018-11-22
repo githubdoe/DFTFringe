@@ -63,6 +63,8 @@ public:
     void setDefocusValue(double val);
 signals:
     void zoomMe(bool);
+    void profileAngleChanged(const double ang);
+
 public slots:
     void setWavefronts(QVector<wavefront*> *wf);
     void angleChanged(double a);
@@ -77,6 +79,8 @@ public slots:
     void showContextMenu(const QPoint &pos);
     void showSlope(bool);
     void slopeLimit(double);
+    void contourPointSelected(const QPointF &pos);
+
 private:
     void populate();
     void updateGradient();

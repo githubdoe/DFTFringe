@@ -185,18 +185,19 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double centerX = igramArea->m_outside.m_center.x();
     double centerY = igramArea->m_outside.m_center.y();
     double rad = igramArea->m_outside.m_radius;
+
     double rady = rad;
     mirrorDlg &md = *mirrorDlg::get_Instance();
     if (md.isEllipse()){
         rady = rady * md.m_verticalAxis/ md.diameter;
     }
-    double radpix = ceil(rad);
-    double left = centerX - radpix;
-    double top = centerY - radpix;
+
+    double left = centerX - rad;
+    double top = centerY - rad;
     std::vector<Mat > bgr_planes;
     top = max(top,0.);
     left = max(left,0.);
-    int width = 2. * (radpix);
+    int width = 2. * (rad);
     int height = width;
     width = min(width, img.width());
     height = min(height, img.height());
@@ -218,9 +219,11 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     QSettings set;
     int dftSize = set.value("DFTSize", 640).toInt();
     double scaleFactor = (double)dftSize/roi.cols;
+
     m_outside = CircleOutline(QPointF(xCenterShift,yCenterShift), rad);
     m_center = CircleOutline(QPointF(xCenterShift - centerDx, yCenterShift - centerDy),
                              igramArea->m_center.m_radius);
+
     //scaleFactor = 1;
     if (scaleFactor < 1.){
 
@@ -354,6 +357,9 @@ QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, doub
 }
 
 RNG rng(12345);
+
+
+
 void DFTArea::doDFT(){
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -410,7 +416,7 @@ void DFTArea::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.drawImage(QPoint(0,0),magIImage);
     painter.setBrush(QColor(0,0,100,50));
-    painter.drawEllipse(QPointF(magIImage.width()/2,magIImage.height()/2),
+    painter.drawEllipse(QPointF((magIImage.width()-1)/2,(magIImage.height()-1)/2),
                         scale * m_center_filter,scale * m_center_filter);
     if (m_center_filter > 0.) {
         double val = (double)m_center_filter * scale;
@@ -856,7 +862,7 @@ cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask){
     cv::solve(X,Z,coeff,CV_SVD);
     // plane generation, Z = Ax + By + C
     // distance calculation d = Ax + By - z + C / sqrt(A^2 + B^2 + C^2)
-qDebug() << "plane coeffs" << coeff(0) << coeff(1) << coeff(2);
+
 
     cv::Mat_<double> newPhase(phase.size());
     for (int y = 0; y < phase.rows; ++y){
@@ -917,9 +923,17 @@ void DFTArea::makeSurface(){
     unwrap((double *)(phase.data), (double *)(result.data), (char *)(mask.data),
            phase.size().width, phase.size().height);
     phase.release();
-    flip(result,result,0); // flip around x axis.
-    m_outside.m_center.ry() = (result.rows-1) - m_outside.m_center.y();
-    m_center.m_center.ry() =  (result.rows-1) - m_center.m_center.y();
+    if (!Settings2::m_dft->flipv){  // Y is normally inverted because 0 is at bottom not top of image.
+        flip(result,result,0); // flip around x axis.
+         m_outside.m_center.ry() = (result.rows-1) - m_outside.m_center.y();
+         m_center.m_center.ry() =  (result.rows-1) - m_center.m_center.y();
+    }
+    if (Settings2::m_dft->fliph){
+        flip(result,result,1); // flip around x axis.
+         m_outside.m_center.rx() = (result.cols-1) - m_outside.m_center.x();
+         m_center.m_center.rx() =  (result.cols-1) - m_center.m_center.x();
+    }
+
     mirrorDlg *md = mirrorDlg::get_Instance();
 
     if (md->fringeSpacing != 1.){

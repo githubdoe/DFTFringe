@@ -282,16 +282,19 @@ void ProfilePlot::newDisplayErrorRange(double min, double max){
 }
 
 void ProfilePlot::angleChanged(double a){
+    if (m_wf == 0)
+        return;
     g_angle = a * PITORAD;
+
     if (type == 2 || type == 0)
         populate();
     m_plot->replot();
+    emit profileAngleChanged(M_2_PI - g_angle +M_PI/4.);
 }
-
-
 
 void ProfilePlot::setSurface(wavefront * wf){
     m_wf = wf;
+
     QString surf("wavefront");
     if (m_showSurface == .5)
         surf = "surface";
@@ -320,32 +323,43 @@ void ProfilePlot::setDefocusValue(double val){
 
 QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     QPolygonF points;
+
     double steps = 1./wf->m_outside.m_radius;
     double radius = wf->diameter/2.;
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    double obs_radius = md.obs/2.;
+
     for (double rad = -1.; rad < 1; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
         double radx = rad * radius;
         double e = 1.;
 
-        mirrorDlg &md = *mirrorDlg::get_Instance();
+
         if (md.isEllipse()){
             e = md.m_verticalAxis/md.diameter;
         }
         dx = radn * cos(g_angle + M_PI_2) + wf->m_outside.m_center.x();
         dy = -radn * e * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y();
         if (dy >= wf->data.rows || dx >= wf->data.cols || dy < 0 || dx < 0){
-            points << QPointF(radx,0.0);
+            continue;
 
         }
-        else if (wf->workMask.at<bool>(dy,dx)){
-            double defocus = 0.;
-            if (m_defocusValue != 0.){
-                defocus = m_defocusValue * (-1. + 2. * rad * rad);
-            }
-            points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) + defocus) *
-                                    wf->lambda/outputLambda)  +y_offset * units);
+        if (abs(radx) < obs_radius){
+            points << QPointF(radx,0.0);
+            continue;
         }
+
+        if (wf->workMask.at<bool>(dy,dx)){
+                double defocus = 0.;
+                if (m_defocusValue != 0.){
+                    defocus = m_defocusValue * (-1. + 2. * rad * rad);
+                }
+                points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) + defocus) *
+                                        wf->lambda/outputLambda)  +y_offset * units);
+            }
+            //else points << QPointF(radx,0.0);
+
 
 
     }
@@ -356,6 +370,8 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
 
         for (int i = 0; i < points.size() - 1; ++i){
             double hdel = (points[i].y()- points[i+1].y());
+            if (fabs(points[i].x()) < obs_radius || fabs(points[i+1].x()) < obs_radius)
+                continue;
             if (fabs(hdel) > hDelLimit){
 
                 QVector<QPointF> pts;
@@ -377,8 +393,6 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
 
 void ProfilePlot::populate()
 {
-
-
     compass->setGeometry(QRect(70,5,70,70));
     QString tmp("nanometers");
     if (m_showNm == 1.)
@@ -568,3 +582,25 @@ void ProfilePlot::resizeEvent( QResizeEvent *)
         wfs = wf;
     }
 
+void ProfilePlot::contourPointSelected(const QPointF &pos){
+    if (m_wf == 0)
+        return;
+    double delx = pos.x() - m_wf->data.rows/2;
+    double dely = pos.y() - m_wf->data.cols/2;
+
+    double angle = atan2(delx,dely);  // swaped x and y to rotate by 90 deg.
+    double angle2 = angle;
+    const double twopi = M_PI * 2.;
+    // force 0 to 360
+    if (angle < 0)
+        angle = twopi + angle;
+
+    g_angle = angle;
+    double deg = angle * 180./M_PI; // radians to degrees
+    compass->blockSignals(true);
+    compass->setValue(deg);
+    populate();
+    m_plot->replot();
+    compass->blockSignals(false);
+
+}

@@ -12,6 +12,22 @@ rotate and save not loadable by old versions because outline is different.
 
 losing memory even if not calling imagetogray or even vortex.
 
-Regions do not move relataive to the outline in auto.  Fixed
-Slope error profile plot seems wrong where it colors all of the line.
+
+
+Foucault slider does not match roc offset or seem reasonable with the image.
+
+The min/max error color range uses the igram wave length and not the wavelength converted to 550nm.
+
+error color scale format min/max values change when changing wavefronts.
+show all wavefronts picks a funny color scheme.
+
+Ronchi simulation 3.8mm offset does not move the slider further than 1.2mm on the screen for a 5 F7 mirror.
+
+
+
+
+
+
+
+
 

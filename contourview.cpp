@@ -35,6 +35,9 @@ contourView::contourView(QWidget *parent, ContourTools *tools) :
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(showContextMenu(QPoint)));
+
+    connect(getPlot(), SIGNAL(sigPointSelected(const QPointF&)), this, SLOT(pointSelected(const QPointF&)));
+
     ps = new pixelStats;
 }
 
@@ -53,6 +56,10 @@ QImage contourView::getPixstatsImage(){
     ps->render(&p3);
 
     return psImage;
+}
+
+void contourView::pointSelected(const QPointF &pos){
+    emit sigPointSelected(pos);
 }
 
 void contourView::setSurface(wavefront *wf){
@@ -141,3 +148,5 @@ void contourView::on_showRuler_clicked(bool checked)
     if (getPlot()->m_wf)
         setSurface(getPlot()->m_wf);
 }
+
+
