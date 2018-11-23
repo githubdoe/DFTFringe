@@ -971,8 +971,8 @@ bool IgramArea::openImage(const QString &fileName, bool autoOutside)
         return false;
 
     // convert image to 3 channel image
-    //if (loadedImage.format() != QImage::Format_RGB888)
-        //loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
+    if (loadedImage.format() != QImage::Format_RGB888)
+        loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
 
     if (Settings2::getInstance()->m_igram->m_removeDistortion){
         cv::Mat raw = imread(fileName.toStdString().c_str());
