@@ -122,6 +122,7 @@ MainWindow::MainWindow(QWidget *parent) :
     scrollAreaDft->setBackgroundRole(QPalette::Base);
     m_dftArea = DFTArea::get_Instance(scrollAreaDft, m_igramArea, m_dftTools, m_vortexDebugTool);
     connect(m_dftArea, SIGNAL(statusBarUpdate(QString,int)), this, SLOT(showMessage(QString,int)));
+    connect(ui->pushButton, SIGNAL(clicked()), m_dftArea, SLOT(outlineDoneSig()));
     scrollAreaDft->setWidget(m_dftArea);
     scrollAreaDft->resize(800,800);
     ui->tabWidget->addTab(scrollAreaDft, "Analyze");
@@ -154,7 +155,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_profilePlot =  new ProfilePlot(review->s2,m_contourTools);
     connect(m_profilePlot, SIGNAL(zoomMe(bool)), this, SLOT(zoomProfile(bool)));
     connect(m_profilePlot, SIGNAL(profileAngleChanged(double)), m_contourView->getPlot(), SLOT(drawProfileLine(double)));
-    connect(m_contourView, SIGNAL(sigPointSelected(const QPointF&)), m_profilePlot, SLOT(contourPointSelected(const QPointF&)));
+    connect(m_contourView->getPlot()    , SIGNAL(sigPointSelected(const QPointF&)), m_profilePlot, SLOT(contourPointSelected(const QPointF&)));
     m_mirrorDlg = mirrorDlg::get_Instance();
     review->s2->addWidget(m_profilePlot);
     review->s1->addWidget(m_contourView);
@@ -1723,4 +1724,10 @@ void MainWindow::on_actionSave_curent_profile_triggered()
                 out << pt.x() << " " << pt.y() << endl;
             }
     }
+}
+
+void MainWindow::on_actionProcess_PSI_interferograms_triggered()
+{
+    m_dftArea->doPSIstep1();
+
 }

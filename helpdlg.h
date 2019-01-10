@@ -28,8 +28,10 @@ class HelpDlg : public QDialog
 {
     Q_OBJECT
 
+
 public:
     explicit HelpDlg(QWidget *parent = 0);
+    void setHelpText(QString txt);
     ~HelpDlg();
 
 private:

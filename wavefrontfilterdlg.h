@@ -28,6 +28,8 @@ private slots:
     void waveSelected(QString m);
     void on_beepEnable_clicked(bool checked);
 
+    void on_remove_clicked(bool checked);
+
 private:
     Ui::wavefrontFilterDlg *ui;
 };

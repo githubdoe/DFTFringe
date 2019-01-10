@@ -393,6 +393,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
 
 void ProfilePlot::populate()
 {
+    m_plot->detachItems(QwtPlotItem::Rtti_PlotItem);
     compass->setGeometry(QRect(70,5,70,70));
     QString tmp("nanometers");
     if (m_showNm == 1.)
@@ -411,6 +412,7 @@ void ProfilePlot::populate()
     QSettings settings;
     double smoothing = settings.value("GBValue", 20).toInt();
     m_plot->detachItems(QwtPlotItem::Rtti_PlotTextLabel);
+
     if (m_wf->m_outside.m_radius > 0 && settings.value("GBlur", false).toBool()){
         double val = .01 * (m_wf->diameter) * smoothing;
         QString t = QString().sprintf("Surface Smoothing diameter %6.2lf%% of surface diameter %6.1lf mm", smoothing , val );
@@ -440,7 +442,7 @@ void ProfilePlot::populate()
 
     // Insert new curves
     switch (type) {
-    case 0:{
+    case 0:{        // show one
 
         QwtPlotCurve *cprofile = new QwtPlotCurve( "" );
         cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
@@ -456,7 +458,7 @@ void ProfilePlot::populate()
 
         break;
     }
-    case 1: {
+    case 1: {   // show 16 diameters
         double startAngle = g_angle;
 
         for (int i = 0; i < 16; ++i){
@@ -475,11 +477,19 @@ void ProfilePlot::populate()
         break;
 
     }
-    case 2:{
+    case 2:{    // show each wave front
 
         m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
         for (int i = 0; i < wfs->size(); ++i){
-            QwtPlotCurve *cprofile = new QwtPlotCurve(wfs->at(i)->name );
+            QStringList path = wfs->at(i)->name.split("/");
+            QString name;
+            int l = path.length();
+            if (l >= 2){
+                name = path[l-2] + "/" + path[l-1];
+            }
+            else
+                name = wfs->at(i)->name;
+            QwtPlotCurve *cprofile = new QwtPlotCurve(name );
             cprofile->setPen(QPen(Settings2::m_profile->getColor(i)));
             cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
             cprofile->setSamples( createProfile( m_showNm * m_showSurface,wfs->at(i)));

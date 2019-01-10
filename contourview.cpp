@@ -36,9 +36,9 @@ contourView::contourView(QWidget *parent, ContourTools *tools) :
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(showContextMenu(QPoint)));
 
-    connect(getPlot(), SIGNAL(sigPointSelected(const QPointF&)), this, SLOT(pointSelected(const QPointF&)));
-
     ps = new pixelStats;
+
+    ui->LinkProfileCB->setChecked(set.value("linkProfilePlot", true).toBool());
 }
 
 contourView::~contourView()
@@ -58,9 +58,7 @@ QImage contourView::getPixstatsImage(){
     return psImage;
 }
 
-void contourView::pointSelected(const QPointF &pos){
-    emit sigPointSelected(pos);
-}
+
 
 void contourView::setSurface(wavefront *wf){
     getPlot()->setSurface(wf);
@@ -150,3 +148,10 @@ void contourView::on_showRuler_clicked(bool checked)
 }
 
 
+
+void contourView::on_LinkProfileCB_clicked(bool checked)
+{
+    QSettings set;
+    set.setValue("linkProfilePlot", checked);
+    getPlot()->m_linkProfile = checked;
+}

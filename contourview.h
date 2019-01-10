@@ -41,7 +41,6 @@ signals:
     void lineSpacingChanged(double);
     void showAllContours();
     void zoomMe(bool);
-    void sigPointSelected(const QPointF &);
 private slots:
     void on_doubleSpinBox_valueChanged(double arg1);
     void showContextMenu(const QPoint &pos);
@@ -53,8 +52,9 @@ private slots:
     void on_fillContourCB_clicked(bool checked);
 
     void on_showRuler_clicked(bool checked);
-    void pointSelected(const QPointF& pos);
 
+
+    void on_LinkProfileCB_clicked(bool checked);
 
 private:
     Ui::contourView *ui;

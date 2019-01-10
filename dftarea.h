@@ -26,6 +26,7 @@
 #include <QImage>
 #include "vortexdebug.h"
 #include <string>
+#include "psi_dlg.h"
 using namespace cv;
 extern void showData(const std::string& txt, cv::Mat mat, bool useLog = false);
 extern QImage showMag(cv::Mat complexI, bool show = false, const char *title = "FFT", bool doLog = true, double gamma = 0);
@@ -61,6 +62,11 @@ void diffract();
 
     bool success;
 public slots:
+    void doPSIstep1();
+    bool doPSIstep2();
+    void doPSIstep3();
+    void doPSIstep4();
+    void method2();
     void doDFT();
     void dftSizeChanged(const QString&);
     void dftSizeVal(int);
@@ -70,6 +76,7 @@ public slots:
     void newIgram(QImage);
     void gamma(int);
     void showResizedDlg();
+    void outlineDoneSig();
 signals:
     void setDftSizeVal(int);
     void selectDFTTab();
@@ -84,10 +91,14 @@ private:
     cv::Mat input;
     cv::Mat m_mask;
     bool capture;
+    int m_PSIstate;
+    bool m_outlineComplete;
     CircleOutline m_outside;
     CircleOutline m_center;
     QVector<std::vector<cv::Point> > m_poly;
     double m_gamma;
+    QStringList m_psiFiles;
+    cv::Mat m_psiPhases;
 
     IgramArea *igramArea;
     void paintEvent(QPaintEvent *);
@@ -100,6 +111,12 @@ private:
     int m;  // x border added to dft
     int n;  //y border added to dft
     double scale;
+    PSI_dlg* m_Psidlg;
+    cv::Mat PSILoadImages(QStringList files);
+    cv::Mat PSILoadFullImages(QStringList files);
+    cv::Mat m_psiImages;
+    int m_psiRows;
+    int m_psiCols;
 };
 
 

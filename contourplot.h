@@ -63,6 +63,7 @@ public:
     void setTool(ContourTools* tool);
     bool m_autoInterval;
     bool m_minimal;
+    bool m_linkProfile;
 
 
 

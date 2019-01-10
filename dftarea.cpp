@@ -35,7 +35,6 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
                   QVector<std::vector<cv::Point> > poly){
     int width = data.cols;
     int height = data.rows;
-
     double radm = ceil(outside.m_radius) + 1;
     double rady = radm;
     mirrorDlg &md = *mirrorDlg::get_Instance();
@@ -103,6 +102,9 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     m_vortexDebugTool(vdbug)
 
 {
+    m_outlineComplete = false;
+    m_PSIstate = 0;
+    m_Psidlg = new PSI_dlg;
     ui->setupUi(this);
     m_gamma = 2.5;
 
@@ -272,8 +274,7 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     mean =  cv::mean(planes[0],m_mask);
 
     planes[0] -= mean;
-    //matDisplay md(planes[0],mean[0]);
-    //md.exec();
+
     Mat  complexI;
     merge(planes, 2, complexI);         // Add to the expanded another plane with zeros
     if (scaleFactor == 1.){
@@ -1002,3 +1003,463 @@ void DFTArea::showResizedDlg(){
 
     }
 }
+
+
+
+void DFTArea::outlineDoneSig(){
+    m_outlineComplete = true;
+    qDebug() << "outlinecomplete";
+    // turn of timer
+}
+void DFTArea::doPSIstep1(){
+    //m_Psidlg = new Psidlg;
+    if (!doPSIstep2())
+        return;
+    if (m_psiFiles.size() == 0)
+        return;
+
+    // load first igram
+    if (!igramArea->openImage(m_Psidlg->files()[0])){
+        // error could not open igram
+        qDebug() << "could not load igram";
+        return;
+    }
+    QSettings set;
+    if (set.value("psiShowOutlineHelp", true).toBool()){
+        if (QMessageBox::question(this,"Set Outline","Set or adjust the outline on this "
+                             "interferogram.\nThen press the Done button.\n\n\n"
+                                  "Do you want to see this message the next time?",
+                                                              QMessageBox::Yes|QMessageBox::No,
+                                                              QMessageBox::Yes) == QMessageBox::Yes) {
+            set.setValue("psiShowOutlineHelp",true);
+        }
+        else
+            set.setValue("psiShowOutlineHelp", false);
+
+    }
+
+
+
+
+    // wait for outline done signal
+    m_outlineComplete = false;
+    while (!m_outlineComplete){
+        qApp->processEvents();
+    }
+        m_outlineComplete = false;
+    if (m_Psidlg->m_knownPhase)
+        doPSIstep4();
+    else
+        method2();
+
+}
+
+bool DFTArea::doPSIstep2(){
+    if (m_Psidlg->exec()){
+        m_psiFiles = m_Psidlg->files();
+        m_psiPhases = m_Psidlg->phases();
+        return true;
+    }
+    return false;
+}
+void DFTArea::doPSIstep3(){
+// waiting
+
+
+}
+cv::Mat DFTArea::PSILoadFullImages(QStringList files){
+    int cnt = 0;
+    cv::Mat data;
+    int imagecount = m_psiFiles.size();
+
+    foreach(QString name, m_psiFiles){
+
+        qDebug() << name;
+        if (!igramArea->openImage(name)){
+            // error could not open igram
+            QString msg = QString().sprintf("Could not open interferogram %s", name.toStdString().c_str());
+            QMessageBox::warning(0,"Load Failed", msg);
+            return data;
+        }
+        //igramArea->crop();
+        cv::Mat igram = igramArea->qImageToMat(igramArea->igramGray);
+        double mmin;
+        double mmax;
+        minMaxIdx(igram, &mmin,&mmax);
+        qDebug() <<"MinMax"<< mmin << mmax;
+
+        minMaxIdx(igram, &mmin,&mmax);
+        qDebug() <<"MinMax"<< mmin << mmax;
+        qDebug() << "igram size" << igram.cols << igram.rows;
+
+        cv::Mat planes[3];
+        split(igram,planes);
+        cv::Mat datam = planes[0];
+
+        datam.convertTo(datam, CV_64FC1);
+        datam = datam/255.;
+        //showData("datam",datam.clone());
+//        for (int i = 0; i < 600;){
+//            QString msg;
+//            for (int j = 0; j < 8; ++j){
+//                msg.append(QString().sprintf("%6.2lf ", datam.at<double>(i+j,400)));
+//            }
+//            qDebug() << msg;
+//            i += 8;
+//        }
+
+        //showData(name.toStdString().c_str(), datam.clone());
+        //qDebug() << "datam" << datam.rows << datam.cols << datam.channels();
+        cv::Mat rowImage = datam.reshape(0,datam.total()).t();
+
+        qDebug() << "rowImage" << rowImage.rows << rowImage.cols;
+        cv::Mat mmm = rowImage.reshape(0, 600);
+        showData("mmm", mmm);
+        if (cnt++ == 0){
+            data = rowImage;
+            m_psiRows = datam.rows;
+            m_psiCols = datam.cols;
+        }
+        else {
+            if ((datam.cols != m_psiCols) || (datam.rows != m_psiRows)){
+                QString msg = QString().sprintf("igram %s (%d,%d)is not the same size as %s (%d,%d)",
+                  m_psiFiles[cnt].toStdString().c_str(),datam.rows,datam.cols, m_psiFiles[0].toStdString().c_str(),
+                        m_psiRows,m_psiCols);
+                QMessageBox::warning(0, "Failed", msg);
+                 QApplication::restoreOverrideCursor();
+                 return data;
+            }
+
+            cv::vconcat(data,rowImage, data);
+
+        }
+    }
+
+    return data;
+}
+
+cv::Mat DFTArea::PSILoadImages(QStringList files){
+    int cnt = 0;
+    cv::Mat data;
+    int imagecount = m_psiFiles.size();
+
+    foreach(QString igram, m_psiFiles){
+
+        qDebug() << igram;
+        if (!igramArea->openImage(igram)){
+            // error could not open igram
+            QString msg = QString().sprintf("Could not open interferogram %s", igram.toStdString().c_str());
+            QMessageBox::warning(0,"Load Failed", msg);
+            return data;
+        }
+
+
+        //igramArea->crop();
+        cv::Mat complexi = grayComplexMatfromImage(igramArea->igramGray);
+        cv::Mat planes[2];
+        split(complexi,planes);
+
+        cv::Mat datam = planes[0];
+        //qDebug() << "datam" << datam.rows << datam.cols << datam.channels();
+        cv::Mat rowImage = datam.reshape(0,datam.total()).t();
+        rowImage.convertTo(rowImage, CV_64FC1);
+        //qDebug() << "rowImage" << rowImage.rows << rowImage.cols;
+        if (cnt++ == 0){
+            data = rowImage;
+            m_psiRows = datam.rows;
+            m_psiCols = datam.cols;
+qDebug() << "image data" << rowImage.at<double>(0);
+
+        }
+        else {
+            if ((datam.cols != m_psiCols) || (datam.rows != m_psiRows)){
+                QString msg = QString().sprintf("igram %s (%d,%d)is not the same size as %s (%d,%d)",
+                  m_psiFiles[cnt].toStdString().c_str(),datam.rows,datam.cols, m_psiFiles[0].toStdString().c_str(),
+                        m_psiRows,m_psiCols);
+                QMessageBox::warning(0, "Failed", msg);
+                 QApplication::restoreOverrideCursor();
+                 return data;
+            }
+
+            cv::vconcat(data,rowImage, data);
+
+        }
+
+    }
+    return data;
+}
+cv::Mat sinMat(cv::Mat mat){
+    cv::Mat result(mat.rows,mat.cols, mat.type());
+    double* resptr = result.ptr<double>(0);
+    double* matptr = mat.ptr<double>(0);
+    int last = mat.total();
+    for (int i = 0; i < last; ++i ){
+        resptr[i] = sin(matptr[i]);
+    }
+    return result;
+}
+cv::Mat cosMat(cv::Mat mat){
+    cv::Mat result(mat.rows,mat.cols, mat.type());
+    double* resptr = result.ptr<double>(0);
+    double* matptr = mat.ptr<double>(0);
+    int last = mat.total();
+    for (int i = 0; i < last; ++i ){
+        resptr[i] = cos(matptr[i]);
+        //qDebug() << "cos" << matptr[i] << resptr[i];
+    }
+    return result;
+}
+
+cv::Mat atan2Mat(cv::Mat y, cv::Mat x){
+
+    cv::Mat result(x.rows,x.cols, x.type());
+    double* resptr = result.ptr<double>(0);
+    double* xptr = x.ptr<double>(0);
+    double* yptr = y.ptr<double>(0);
+    int last = x.total();
+    int cnt = 0;
+    for (int i = 0; i < last; ++i ){
+        resptr[i] = atan2(yptr[i],xptr[i]);
+        //if (++cnt < 20)
+        //qDebug() << "atan2"<< resptr[i] << yptr[i] << xptr[i];
+    }
+    return result;
+
+}
+void dumpMat(cv::Mat m, QString title = ""){
+    qDebug() << "\r" << title << m.rows <<"X" << m.cols;
+    for (int r = 0; r < m.rows; ++r){
+        QString msg;
+        for (int c = 0; c < m.cols; ++c){
+          msg = msg + QString().sprintf("% 6.2e",m.at<double>(r,c)) + " ";
+          if ( c > 8){
+              msg = msg + "...";
+              break;
+          }
+        }
+        qDebug() << msg;
+        if (r > 8) {
+            qDebug() << "...";
+            break;
+        }
+    }
+}
+void DFTArea::doPSIstep4(){
+
+        m_outlineComplete = false;
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+        cv::Mat images = PSILoadImages(m_psiFiles);
+
+        int imagecount = m_psiFiles.size();
+dumpMat(m_psiPhases);
+        //mat X = join_rows(join_rows(ones(nf), cos(m_psiPhases)), sin(m_psiPhases));
+        cv::Mat ones =  cv::Mat::ones(imagecount, 1, CV_64FC1);
+        cv::Mat phasesine = sinMat(m_psiPhases);
+        cv::Mat phasecosine = cosMat(m_psiPhases);
+
+        cv::hconcat(ones,phasesine,ones);
+        cv::hconcat(ones,phasecosine,ones);
+        //qDebug() << "ones" << ones.rows << ones.cols;
+        cv::Mat diag = cv::Mat::eye(imagecount,imagecount,CV_64FC1);
+        cv::Mat B;
+        cv::Mat X = diag * ones;
+        qDebug() << "x";
+        cv::Mat A = diag * images;
+        qDebug() << "a";
+        qDebug() << "solve";
+        try{
+            cv::solve(X, A,B,DECOMP_QR);
+        }
+        catch (cv::Exception ex) {
+            QMessageBox::warning(0,"error", ex.what());
+            QApplication::restoreOverrideCursor();
+            return;
+        }
+
+
+        qDebug() << "solve Done" << B.cols << B.rows;
+
+        cv::Mat phi(1,imagecount,CV_64FC1);
+        cv::Mat background = B.row(0).reshape(0,m_psiRows);
+        //showData("background", background.clone());
+
+        cv::Mat surface = atan2Mat(-B.row(2), B.row(1));
+
+        qDebug() << "surface"<< surface.rows << surface.cols;
+        cv::Mat surfmat =surface.reshape(0,m_psiCols);
+        //cv::Mat modul = modu.reshape(0,rows);
+        //showData("mod", modul);
+        cv::Mat phase = surfmat.clone();
+        //qDebug() << "phase "<< phase.cols << phase.rows << m_mask.rows << m_mask.cols;
+        //showData("phase",phase.clone());
+        cv::Mat mask = m_mask.clone();
+        normalize(phase, phase,0,1.,CV_MINMAX, -1,mask);
+
+        cv::Mat mask2 = mask.clone();
+        mask2 = (255 - mask2)/255;
+        //showData("mask", mask2);
+        cv::Mat result = cv::Mat::zeros(phase.size(), numType);
+        unwrap((double *)(phase.data), (double *)(result.data), (char *)(mask2.data),
+               phase.cols, phase.rows);
+
+        //showData("surface", result.clone());
+        QSettings set;
+        if (!Settings2::m_dft->flipv){  // Y is normally inverted because 0 is at bottom not top of image.
+            flip(result,result,0); // flip around x axis.
+             m_outside.m_center.ry() = (result.rows-1) - m_outside.m_center.y();
+             m_center.m_center.ry() =  (result.rows-1) - m_center.m_center.y();
+        }
+        if (Settings2::m_dft->fliph){
+            flip(result,result,1); // flip around x axis.
+             m_outside.m_center.rx() = (result.cols-1) - m_outside.m_center.x();
+             m_center.m_center.rx() =  (result.cols-1) - m_center.m_center.x();
+        }
+        emit newWavefront(result, m_outside, m_center, "PSI", m_poly);
+     QApplication::restoreOverrideCursor();
+}
+/*
+
+
+List aiapsiCt(const mat& images, const vec& phases_init, const double& ptol, const int& maxiter) {
+  uword M = images.n_cols;
+  uword N = images.n_rows;
+
+  vec phases = phases_init - phases_init(0);
+  vec phases_last = phases_init - phases_init(0);
+
+  mat S(N, 3);
+  mat Phi(3, M);
+  rowvec phi(M);
+  rowvec mod(M);
+  double sdp;
+  int i;
+
+  for (i=0; i<maxiter; i++) {
+
+    // Estimate the phase from the current estimate of phase shifts
+
+    S = join_rows(join_rows(ones(N), cos(phases)), sin(phases));
+    Phi = pinv(S) * images;
+    phi = atan2(-Phi.row(2), Phi.row(1));
+    Phi = join_cols(join_cols(ones<rowvec>(M), cos(phi)), -sin(phi));
+
+    // Estimate phase shifts from current estimate of phase.
+    // Solves normal equations for speed
+
+    S = images * (pinv(Phi * Phi.t()) * Phi).t();
+    phases = atan2(S.col(2), S.col(1));
+    phases = phases - phases(0);
+    sdp = norm(sin(phases-phases_last), 2);
+
+    // repeat until convergence
+
+    if (sdp < ptol) break;
+    phases_last = phases;
+  }
+
+  S = join_rows(join_rows(ones(N), cos(phases)), sin(phases));
+  Phi = pinv(S) * images;
+  phi = atan2(-Phi.row(2), Phi.row(1));
+  mod = sqrt(square(Phi.row(1)) + square(Phi.row(2)));
+  mod = mod/max(mod);
+  return List::create(Named("phi") = phi,
+                      Named("mod") = mod,
+                      Named("phases") = phases,
+                      Named("iter") = i);
+}
+*/
+
+
+void DFTArea::method2(){
+      cv::Mat images = PSILoadFullImages(m_psiFiles);
+
+
+dumpMat(images, "Images");
+
+
+      //List aiapsiCt(const mat& images, const vec& phases_init, const double& ptol, const int& maxiter) {
+      int M = images.cols;
+      int N = images.rows;
+qDebug() << N << " images of width " << M;
+      int maxiter = 10;
+      double ptol = .01;
+      cv::Mat phases = m_psiPhases - m_psiPhases.at<double>(0);
+      cv::Mat phases_last = phases.clone();
+cv::Mat phaseHistory = phases.clone();
+      cv::Mat S(N, 3, CV_64FC1);
+      cv::Mat Phi(3, M, CV_64FC1);
+      cv::Mat phi(1,M, CV_64FC1);
+      cv::Mat mod(1,M, CV_64FC1);
+      double sdp;
+      int i;
+      cv::Mat NOnes = cv::Mat::ones(N,1, CV_64FC1);
+dumpMat(phases, "initial phases");
+      cv::Mat MOnes = cv::Mat::ones(1,M,CV_64FC1);
+      for (i=0; i<maxiter; i++) {
+qDebug() << "\n\n";
+        // Estimate the phase from the current estimate of phase shifts
+        //S = join_rows(join_rows(ones(N), cos(phases)), sin(phases));
+        cv::Mat tmp;
+        cv::hconcat(cv::Mat::ones(N,1, CV_64FC1), cosMat(phases), tmp);
+        cv::hconcat(tmp, sinMat(phases), S );
+dumpMat(phases, QString().sprintf("phases at start of pass %d",i).toStdString().c_str());
+dumpMat(S, "S = join_rows(join_rows(ones(N), cos(phases)), sin(phases))");
+        //Phi = pinv(S) * images;
+cv::Mat pinv = S.inv(DECOMP_SVD);
+dumpMat (pinv,"S+");
+        Phi = S.inv(DECOMP_SVD) * images;
+dumpMat(Phi(cv::Rect(13200,0,8,3)),"Phi out");
+        //phi = atan2(-Phi.row(2), Phi.row(1));
+        phi = atan2Mat(-Phi.row(2), Phi.row(1));
+dumpMat(images(cv::Rect(13200,0,8,3)), "images (13200,0,8,3");
+
+
+        //Phi = join_cols(join_cols(ones<rowvec>(M), cos(phi)), -sin(phi));
+        cv::vconcat(cv::Mat::ones(1,M,CV_64FC1), cosMat(phi), tmp);
+        cv::vconcat(tmp, -sinMat(phi), Phi);
+dumpMat(Phi(cv::Rect(13200,0,8,3)),"Phi(13200,0,8,3");
+
+        // Estimate phase shifts from current estimate of phase.
+        // Solves normal equations for speed
+        //S = images * (pinv(Phi * Phi.t()) * Phi).t();
+cv::Mat pinv2 = (Phi * Phi.t()).inv(DECOMP_SVD);
+dumpMat(pinv2, "inv(Phi * Phi.T()");
+cv::Mat xx = pinv2 * Phi;
+dumpMat(xx, "xx = pinvResult * Phi");
+
+        //S = images * ((Phi * Phi.t()).inv(DECOMP_SVD) * Phi).t();
+        //S = images * Phi.inv(DECOMP_SVD);
+        S = images * xx.t();
+dumpMat(S,"S = images * (pinv(Phi * Phi.t()) * Phi).t();");
+
+
+        //phases = atan2(S.col(2), S.col(1));
+        phases = atan2Mat(S.col(2), S.col(1));
+        phases = phases - phases.at<double>(0);
+dumpMat(phases,"computed phases at end of pass");
+
+cv::hconcat(phaseHistory, phases, phaseHistory);
+        //sdp = norm(sin(phases-phases_last), 2);
+        sdp = norm(sinMat(phases - phases_last),2);
+        // repeat until convergence
+qDebug() << "sdp" << sdp;
+        if (sdp < ptol) break;
+        phases_last = phases.clone();
+      }
+
+qDebug() << "phases iter done" << i << sdp;
+dumpMat(phaseHistory.t());
+      //S = join_rows(join_rows(ones(N), cos(phases)), sin(phases));
+      cv::Mat tmp;
+      cv::hconcat(cv::Mat::ones(N,1,CV_64FC1), cosMat(phases), tmp);
+      cv::hconcat(tmp, sinMat(phases),S);
+
+
+      //Phi = pinv(S) * images;
+      //phi = atan2(-Phi.row(2), Phi.row(1));
+      //mod = sqrt(square(Phi.row(1)) + square(Phi.row(2)));
+      //mod = mod/max(mod);
+
+}
+
+

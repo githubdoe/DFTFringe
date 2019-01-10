@@ -16,6 +16,7 @@ wavefrontFilterDlg::wavefrontFilterDlg(QWidget *parent) :
     ui->rmsValue->setValue(set.value("filterRMS", .1).toDouble());
     ui->rmsValue->blockSignals(false);
     ui->beepEnable->setChecked(set.value("RMSBeep>", true).toBool());
+    ui->remove->setChecked(set.value("filterRemoveFlag", false).toBool());
     resize(200,200);
 }
 
@@ -65,4 +66,10 @@ void wavefrontFilterDlg::on_beepEnable_clicked(bool checked)
 {
     QSettings set;
     set.setValue("RMSBeep>", checked);
+}
+
+void wavefrontFilterDlg::on_remove_clicked(bool checked)
+{
+    QSettings set;
+    set.setValue("filterRemoveFlag", checked);
 }

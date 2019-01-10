@@ -263,6 +263,8 @@ private slots:
 
     void on_actionSave_curent_profile_triggered();
 
+    void on_actionProcess_PSI_interferograms_triggered();
+
 private:
 
     Ui::MainWindow *ui;

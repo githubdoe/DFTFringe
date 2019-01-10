@@ -142,7 +142,6 @@ public:
     QString m_filename;
     CircleOutline m_outside;
     CircleOutline m_center;
-    cv::Mat igramData;
     void hideOutline(bool checked);
     bool m_hideOutlines;
     void loadOutlineFile(QString filename);
@@ -217,10 +216,11 @@ private:
     void deleteRegions();
     double leftMargin;
     double searchOutlineScale;
-    cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, int pass);
+    //cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, int pass);
     cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, bool useExisting);
     QString m_outlineMsg;
 public:
+    cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, int pass);
     QImage igramColor;
     QImage igramDisplay;    // gray with outlines
     QImage igramGray;       // the unlined gray igram.

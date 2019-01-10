@@ -280,7 +280,7 @@
             <double>-10.000000000000000</double>
            </property>
            <property name="maximum">
-            <double>1.000000000000000</double>
+            <double>10.000000000000000</double>
            </property>
            <property name="singleStep">
             <double>0.010000000000000</double>
@@ -303,7 +303,7 @@
             <number>3</number>
            </property>
            <property name="minimum">
-            <double>0.000000000000000</double>
+            <double>-10.000000000000000</double>
            </property>
            <property name="maximum">
             <double>10.000000000000000</double>
@@ -319,20 +319,10 @@
          <item row="1" column="2">
           <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>Steps</string>
+            <string>Step size:</string>
            </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QSpinBox" name="scanSteps">
-           <property name="minimum">
-            <number>2</number>
-           </property>
-           <property name="maximum">
-            <number>50</number>
-           </property>
-           <property name="value">
-            <number>10</number>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -347,6 +337,16 @@
           <widget class="QCheckBox" name="SaveImageCB">
            <property name="text">
             <string>Save Images</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QDoubleSpinBox" name="scanSteps">
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="value">
+            <double>0.001000000000000</double>
            </property>
           </widget>
          </item>
@@ -397,7 +397,7 @@
            <bool>false</bool>
           </property>
           <property name="decimals">
-           <number>3</number>
+           <number>5</number>
           </property>
           <property name="singleStep">
            <double>0.001000000000000</double>

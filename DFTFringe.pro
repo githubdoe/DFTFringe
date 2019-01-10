@@ -122,7 +122,8 @@ SOURCES += main.cpp\
     filteroutlinesdlg.cpp \
     outlineplots.cpp \
     transformwavefrontdlg.cpp \
-    showallcontoursdlg.cpp
+    showallcontoursdlg.cpp \
+    psi_dlg.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -228,7 +229,8 @@ HEADERS  += mainwindow.h \
     filteroutlinesdlg.h \
     outlineplots.h \
     transformwavefrontdlg.h \
-    showallcontoursdlg.h
+    showallcontoursdlg.h \
+    psi_dlg.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
@@ -298,7 +300,8 @@ FORMS    += mainwindow.ui \
     filteroutlinesdlg.ui \
     outlineplots.ui \
     transformwavefrontdlg.ui \
-    showallcontoursdlg.ui
+    showallcontoursdlg.ui \
+    psi_dlg.ui
 
 win32 {
       CONFIG( debug, debug|release ) {
@@ -336,7 +339,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 3.3a
+VERSION = 4.0
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
@@ -438,6 +441,7 @@ DISTFILES += \
     res/Help/lensDistort.html \
     res/Help/unwrap_errors.html \
     res/Help/chessGrid.png \
-    res/Help/circles.png
+    res/Help/circles.png \
+    res/Help/PSIHelp.html
 
     TRANSLATIONS    = dftfringe_fr.ts

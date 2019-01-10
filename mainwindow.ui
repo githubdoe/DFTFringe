@@ -70,6 +70,7 @@
     <addaction name="actionLoad_outline"/>
     <addaction name="actionRead_WaveFront"/>
     <addaction name="actionAverage_wave_front_files"/>
+    <addaction name="actionProcess_PSI_interferograms"/>
     <addaction name="separator"/>
     <addaction name="actionSave_outline"/>
     <addaction name="actionSave_Wavefront"/>
@@ -1444,6 +1445,11 @@ em;
   <action name="actionSave_curent_profile">
    <property name="text">
     <string>Save curent profile</string>
+   </property>
+  </action>
+  <action name="actionProcess_PSI_interferograms">
+   <property name="text">
+    <string>Process PSI interferograms</string>
    </property>
   </action>
  </widget>

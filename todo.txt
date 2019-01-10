@@ -21,13 +21,9 @@ The min/max error color range uses the igram wave length and not the wavelength 
 error color scale format min/max values change when changing wavefronts.
 show all wavefronts picks a funny color scheme.
 
-Ronchi simulation 3.8mm offset does not move the slider further than 1.2mm on the screen for a 5 F7 mirror.
 
+Add spherical null (DPAC mode) to simulations.
 
-
-
-
-
-
+Astig stats help is bogus.
 
 

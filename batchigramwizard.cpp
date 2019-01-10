@@ -140,6 +140,7 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     connect(filesList, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
 
     connect(this, SIGNAL(processBatchList(QStringList)), qobject_cast<MainWindow *>(manager), SLOT(batchProcess(QStringList)));
+    QSettings set;
 
     pgrBar = new QProgressBar;
     batchIgramWizard::addFiles = new QPushButton(tr("Add Files"));
@@ -149,15 +150,19 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     connect(batchIgramWizard::addFiles, SIGNAL(pressed()), this, SLOT(addFiles()));
     batchIgramWizard::autoCb = new QCheckBox(tr("Auto"),this);
     batchIgramWizard::filterCb = new QCheckBox(tr("Filter"),this);
+    batchIgramWizard::filterCb->setChecked( set.value("batchWizardFilterFlag", false).toBool());
     connect(batchIgramWizard::filterCb, SIGNAL(clicked(bool)), this, SLOT(on_filter(bool)));
     batchIgramWizard::saveFile = new QCheckBox(tr("Save wavefront file"),this);
+    batchIgramWizard::saveFile->setChecked(set.value("batchSaveFile", false).toBool());
     batchIgramWizard::deletePreviousWave = new QCheckBox(tr("Delete Prev Wave"), this);
     batchIgramWizard::deletePreviousWave->setToolTip("Keeps only the last 3 analyzed wavefronts in memory."
                                                      "\n This attemts to free up memory so more igrams can be analysed in batch mode.");
+    batchIgramWizard::deletePreviousWave->setChecked(set.value("deletePrevWave", false).toBool());
     batchIgramWizard::showProcessPlots = new QCheckBox(tr("Show Process Plots"));
     batchIgramWizard::showProcessPlots->setChecked(true);
     connect(batchIgramWizard::showProcessPlots, SIGNAL(clicked(bool)),this, SLOT(showPlots(bool)));
-
+    connect(batchIgramWizard::saveFile, SIGNAL(clicked(bool)),this, SLOT(on_saveFiles(bool)));
+    connect(batchIgramWizard::deletePreviousWave, SIGNAL(clicked(bool)),this, SLOT(on_deletePreviousWave(bool)));
     QHBoxLayout  *hlayout = new QHBoxLayout();
     QGroupBox  *outlineGB = new QGroupBox("Auto Outlines");
     batchIgramWizard::goPb = new QPushButton(tr("Process Igrams"),this);
@@ -222,12 +227,22 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     layout->addLayout(hlayout2);
     setLayout(layout);
     setupPlots();
-
+    filterRms = set.value("filterRMS", .1).toDouble();
+    filterFile  = set.value("filterRemoveFlag", false).toBool();
 
 }
-
+void batchIntro::on_saveFiles(bool flag){
+    QSettings set;
+    set.setValue("batchSaveFile", flag);
+}
+void batchIntro::on_deletePreviousWave(bool flag){
+    QSettings set;
+    set.setValue("deletePrevWave", flag);
+}
 
 void batchIntro::on_filter(bool flag){
+    QSettings set;
+    set.setValue("batchWizardFilterFlag", flag);
     if (flag){
         wavefrontFilterDlg dlg;
         if (dlg.exec()){
@@ -267,6 +282,7 @@ void batchIgramWizard::on_batchIgramWizard_finished(int result)
     //emit swapBathConnections(false);
 
 }
+
 void batchIgramWizard::select(int n){
 
     introPage->filesList->clearSelection();

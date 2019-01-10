@@ -41,7 +41,7 @@ void rmsPlot::addValue(QString name, QPointF p){
     QwtPlotMarker *m = new QwtPlotMarker(name);
     if (p.y() > m_max)
         m_max = p.y();
-    setAxisScale(QwtPlot::yLeft,   0, 2 * m_max);
+    setAxisScale(QwtPlot::yLeft,   0, 1.25 * m_max);
     setAxisScale(QwtPlot::xBottom,   0, p.x() + 2);
     m->setValue(p.x(), p.y());
 

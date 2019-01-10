@@ -43,7 +43,7 @@ void foucaultView::setSurface(wavefront *wf){
     double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
     m_sag = mul * (rad * rad) /( 4 * FL);
     m_sag = round(100 * m_sag)/100.;
-
+    m_temp_sag = m_sag;
     ui->rocOffsetSlider->blockSignals(true);
     ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
     ui->rocOffsetSlider->blockSignals(false);
@@ -237,7 +237,18 @@ void foucaultView::on_makePb_clicked()
 
     ronchi = ronchi.mirrored(true,false);
     QSize s = ui->ronchiViewLb->size();
-    ui->ronchiViewLb->setPixmap(QPixmap::fromImage(ronchi.scaledToWidth(s.width())));
+    QPixmap rp = QPixmap::fromImage(ronchi.scaledToWidth(s.width()));
+
+    QPainter painter(&rp);
+    painter.save();
+    painter.drawPixmap(0, 0, rp);
+    painter.setPen(QPen(QColor(Qt::white)));
+    painter.setFont(QFont("Arial", 15));
+    QString zoffsetStr = QString().sprintf("%6.3lf %s", ui->rocOffsetSb->value(),
+                                           ui->useMM->isChecked()? "mm" : "in");
+    painter.drawText(20, 40, zoffsetStr);
+    painter.restore();
+    ui->ronchiViewLb->setPixmap(rp);
 
     merge(vknife, 2, complexIn);
     merge(slit,2,complexIn2);
@@ -311,7 +322,7 @@ void foucaultView::on_lpiSb_editingFinished()
 void foucaultView::on_rocOffsetSb_editingFinished()
 {
     double val = ui->rocOffsetSb->value();
-    double step = m_sag/40;
+    double step = m_temp_sag/40;
 
     int pos = val / step;
     ui->rocOffsetSlider->blockSignals(true);
@@ -333,6 +344,8 @@ void foucaultView::on_useMM_clicked(bool checked)
     double mul = 25.4;
     if ( !checked)
         mul = 1./25.4;
+
+
     QString suffix = (checked) ? " mm" : " in";
     ui->rocOffsetSb->setValue( ui->rocOffsetSb->value() * mul);
     ui->rocOffsetSb->setSuffix(suffix);
@@ -340,11 +353,18 @@ void foucaultView::on_useMM_clicked(bool checked)
     ui->slitWidthSb->setSuffix(suffix);
     ui->lpiSb->setValue(ui->lpiSb->value() / mul);
     ui->gridGroupBox->setTitle((checked) ? "Ronchi LPmm ": "Ronchi LPI ");
-    ui->rocStepSize->setValue( (checked) ? 25.4 * ui->rocStepSize->value(): ui->rocStepSize->value()/25.4);
-    ui->scanEndOffset->setValue ((checked) ? 25.4 * ui->scanEndOffset->value() : ui->scanEndOffset->value() /25.4);
-    ui->scanStart->setValue((checked) ? 25.4 * ui->scanStart->value() : ui->scanStart->value()/25.4);
-    on_autoStepSize_clicked(ui->autoStepSize->isChecked());
+    double xx = ui->rocStepSize->value();
+ //qDebug() << ui->rocStepSize->value() << mul << xx;
+    ui->rocStepSize->setValue( mul * ui->rocStepSize->value());
+    ui->scanEndOffset->setValue (mul * ui->scanEndOffset->value());
+    ui->scanStart->setValue(mul * ui->scanStart->value());
+    //on_autoStepSize_clicked(ui->autoStepSize->isChecked());
+         //qDebug() << "xx" << ui->rocStepSize->value();
+         draw_ROC_Scale();
+
     m_guiTimer.start(500);
+
+
 }
 
 void foucaultView::on_scanPb_clicked()
@@ -353,7 +373,9 @@ void foucaultView::on_scanPb_clicked()
     double steps = ui->scanSteps->value();
     double start = ui->scanStart->value();
     double end = ui->scanEndOffset->value();
-    double step = (end - start)/steps + step;
+    double step = ui->scanSteps->value();
+    if (step == 0)
+       step = .001;
     foucaultView *fv = foucaultView::get_Instance(0);
     int cnt = 0;
     QSettings settings;
@@ -361,7 +383,7 @@ void foucaultView::on_scanPb_clicked()
     for (double v = start; v <= end; v += step){
 
         ui->rocOffsetSb->setValue(v);
-        double st = (ui->useMM->isChecked()) ? 24.5 * m_sag/40 : m_sag/40;
+        double st = (ui->useMM->isChecked()) ? 24.5 * m_temp_sag/40 : m_temp_sag/40;
 
         int pos = v / st;
         ui->rocOffsetSlider->blockSignals(true);
@@ -374,7 +396,7 @@ void foucaultView::on_scanPb_clicked()
         QPainter p3(&fvImage);
         fv->render(&p3);
         if (ui->SaveImageCB->isChecked()){
-            QString fvpng = QString().sprintf("%s//fv%06d.jpg",imageDir.toStdString().c_str(), cnt++);
+            QString fvpng = QString().sprintf("%s//%06d.jpg",imageDir.toStdString().c_str(), cnt++);
             fvImage.save(fvpng);
         }
         qApp->processEvents();
@@ -416,13 +438,21 @@ void foucaultView::on_rocOffsetSlider_valueChanged(int value)
 inline double foucaultView::getStep(){
     // slider has 40 positive positions and 40 neg positions.
     // A slider step then is sag / 40
-    return (ui->autoStepSize->isChecked())? round(1000. * ((ui->useMM->isChecked()) ? 25.4 * m_sag/40. : m_sag/40))/1000. :
+    return (ui->autoStepSize->isChecked())? round(1000. * ((ui->useMM->isChecked()) ? 25.4 * m_temp_sag/40. : m_sag/40))/1000. :
                                             ui->rocStepSize->value();
 }
 
 void foucaultView::on_clearCenterCb_clicked()
 {
         m_guiTimer.start(100);
+}
+void foucaultView::draw_ROC_Scale(){
+    // create 17 labels where each label is 5 steps apart.
+    double step = getStep();
+    for (int i = 0; i< 17; ++i){
+        double val =  (i - 8) * step * 5;  // label slider every 5 steps.
+        findChild<QLabel *>(QString().sprintf("l%d",i))->setText(QString::number(val));
+    }
 }
 
 void foucaultView::on_autoStepSize_clicked(bool checked)
@@ -432,13 +462,14 @@ void foucaultView::on_autoStepSize_clicked(bool checked)
 
     double step = getStep();
 
-    ui->rocStepSize->setValue(step);
-    m_sag = 40 * step;
-    // create 17 labels where each label is 5 steps apart.
-    for (int i = 0; i< 17; ++i){
-        double val =  (i - 8) * step * 5;  // label slider every 5 steps.
-        findChild<QLabel *>(QString().sprintf("l%d",i))->setText(QString::number(val));
+    if (checked){
+        m_temp_sag = m_sag;
+        ui->rocStepSize->setValue(step);
     }
+    else
+        m_temp_sag = 40 * step;
+
+    draw_ROC_Scale();
 }
 
 void foucaultView::on_rocStepSize_editingFinished()
@@ -464,4 +495,6 @@ void foucaultView::on_SaveImageCB_clicked(bool checked)
                                                  imageDir,
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks);
+    if (!dir.isEmpty())
+        imageDir = dir;
 }

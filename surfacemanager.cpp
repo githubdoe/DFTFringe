@@ -70,6 +70,7 @@
 #include "Circleoutline.h"
 #include <math.h>
 #include "transformwavefrontdlg.h"
+#include "psi_dlg.h"
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -2520,7 +2521,7 @@ void SurfaceManager::computeTestStandAstig(){
 
 void SurfaceManager::saveAllContours(){
     QSettings settings;
-    QString lastPath = settings.value("projectPath","").toString();
+    QString lastPath = settings.value("lastPath","").toString();
     const QList<QByteArray> imageFormats = QImageWriter::supportedImageFormats();
     QStringList filter;
     QString imageFilter( tr( "Images" ) );
@@ -3117,3 +3118,4 @@ void SurfaceManager::tiltAnalysis(){
    yTilt->attach(pl1);
    pl1->show();
 }
+

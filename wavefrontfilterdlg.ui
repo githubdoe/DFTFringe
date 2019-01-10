@@ -58,7 +58,11 @@ You can click on the dot and it will be set as the current displayed wavefront.<
       </widget>
      </item>
      <item>
-      <widget class="QDoubleSpinBox" name="rmsValue"/>
+      <widget class="QDoubleSpinBox" name="rmsValue">
+       <property name="decimals">
+        <number>3</number>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

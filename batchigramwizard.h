@@ -87,6 +87,8 @@ public slots:
     void eraseItem();
     void showPlots(bool flags);
     void on_filter(bool);
+    void on_saveFiles(bool);
+    void on_deletePreviousWave(bool);
 
 signals:
     void processBatchList(QStringList);

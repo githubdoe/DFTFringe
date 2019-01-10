@@ -70,8 +70,10 @@ private:
     double getStep();
     int heightMultiply;
     double m_sag;
+    double m_temp_sag;
     wavefront *m_wf;
     int lateralOffset;
+    void draw_ROC_Scale();
 };
 
 #endif // FOUCAULTVIEW_H

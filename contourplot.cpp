@@ -46,7 +46,8 @@
 
 
 double zOffset = 0;
-
+double lastx = -1.;
+double lasty = -1.;
 class MyZoomer: public QwtPlotZoomer
 {
 public:
@@ -61,13 +62,24 @@ public:
     {
         if (thePlot->m_wf == 0)
                 return QwtText("");
+        if(!QGuiApplication::keyboardModifiers().testFlag(Qt::ShiftModifier))
+            return QwtText("");
+        if (pos.x() == lastx && pos.y() == lasty)
+            return QwtText("");
+        lastx = pos.x();
+        lasty = pos.y();
         QColor bg( Qt::white );
         bg.setAlpha( 200 );
         int x = thePlot->invTransform(QwtPlot::xBottom, pos.x());
         int y = thePlot->invTransform(QwtPlot::yLeft, pos.y());
         double v = thePlot->d_spectrogram->data()->value(pos.x(),pos.y());
-
-        QwtText text(QString().sprintf("%lf",v));
+        int half = thePlot->m_wf->data.rows/2.;
+        double delx = pos.x() - half;
+        double dely = pos.y() - half;
+        //double angle = atan2(dely,delx);
+        double R = sqrt( delx * delx + dely * dely )/thePlot->m_wf->data.rows;
+        double r = R * thePlot->m_wf->diameter;
+        QwtText text(QString().sprintf("%lf R:%3.2lfmm",v, r));
         text.setFont(QFont("Arial",12));
         text.setBackgroundBrush( QBrush( bg ) );
         thePlot->selected(pos);
@@ -318,14 +330,16 @@ void ContourPlot::moved(const QPointF pos){
 void ContourPlot::selected(const QPointF& pos){
     if (m_wf==0)
         return;
-
+    if(!QGuiApplication::keyboardModifiers().testFlag(Qt::ShiftModifier))
+        return;
     int half = m_wf->data.rows/2.;
     double delx = pos.x() - half;
     double dely = pos.y() - half;
     double angle = atan2(dely,delx);
     if (angle != m_lastAngle){
         drawProfileLine(angle);
-        emit sigPointSelected(pos);
+        if (m_linkProfile)
+            emit sigPointSelected(pos);
         m_lastAngle = angle;
     }
 }
@@ -413,7 +427,7 @@ int ContourPlot::m_colorMapNdx = 0;
 QString ContourPlot::m_zRangeMode("Auto");
 double ContourPlot::m_zOffset = 0.;
 ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
-    QwtPlot( parent ),m_wf(0),m_tools(tools), m_autoInterval(false),m_minimal(minimal),m_contourPen(Qt::white)
+    QwtPlot( parent ),m_wf(0),m_tools(tools), m_autoInterval(false),m_minimal(minimal), m_linkProfile(true),m_contourPen(Qt::white)
 {
     d_spectrogram = new QwtPlotSpectrogram();
     picker_ = new QwtPlotPicker(this->canvas());
@@ -432,6 +446,7 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     m_do_fill = settings.value("contourShowFill", true).toBool();
 
 
+    m_linkProfile = settings.value("linkProfilePlot", true).toBool();
     plotLayout()->setAlignCanvasToScales( true );
     initPlot();
 

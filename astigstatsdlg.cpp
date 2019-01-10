@@ -903,8 +903,10 @@ void astigStatsDlg::on_help_clicked()
     QFile file(path);
     file.open(QFile::ReadOnly | QFile::Text);
     QTextStream stream(&file);
-    html.append(stream.readAll());
     html.append("</body></html>");
+    html.append(stream.readAll());
+    qDebug() << html;
+
     editor->setHtml(html);
 
     editor->resize(800,600);

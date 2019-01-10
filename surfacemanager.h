@@ -122,6 +122,7 @@ public:
     void generateSurfacefromWavefront(int ndx);
     void generateSurfacefromWavefront(wavefront *wf);
     void transform();
+
 private:
     QProgressDialog *pd;
     QTimer *m_waveFrontTimer;
