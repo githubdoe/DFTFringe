@@ -442,6 +442,9 @@ DISTFILES += \
     res/Help/unwrap_errors.html \
     res/Help/chessGrid.png \
     res/Help/circles.png \
-    res/Help/PSIHelp.html
+    res/Help/PSIHelp.html \
+    res/Help/astigsummary.html \
+    res/Help/astigSummary.png \
+    res/Help/badStandSummary.png
 
     TRANSLATIONS    = dftfringe_fr.ts

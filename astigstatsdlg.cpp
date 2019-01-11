@@ -893,25 +893,20 @@ void astigStatsDlg::on_sdCB_clicked()
 {
     plot();
 }
-
+#include "helpdlg.h"
 void astigStatsDlg::on_help_clicked()
 {
-    QTextEdit *editor = new QTextEdit;
+    HelpDlg dlg;
     QString html;
     QString path = qApp->applicationDirPath() + "/res/Help/astigsummary.html";
-
-    QFile file(path);
+    QDesktopServices::openUrl(QUrl(path));
+    /*QFile file(path);
     file.open(QFile::ReadOnly | QFile::Text);
     QTextStream stream(&file);
-    html.append("</body></html>");
     html.append(stream.readAll());
-    qDebug() << html;
-
-    editor->setHtml(html);
-
-    editor->resize(800,600);
-    qDebug() << html;
-    editor->show();
+    html.append("</body></html>");
+    dlg.setHelpText(html);
+    dlg.exec();*/
 }
 
 void astigStatsDlg::on_clearPb_clicked()

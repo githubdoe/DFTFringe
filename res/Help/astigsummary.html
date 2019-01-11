@@ -1,7 +1,57 @@
-<p>
-<div class="img">
- <a href=astigSummary.png><img src=oneIgramanalysis.png width="600" ></a>
- <div class="desc">Astig Summary Plot</div>
-</div>
 
+
+
+<html><head/><style>p{font-size: 16px;}</style><body>
+
+<h1><center>Astig Variability analisys</center></h1>
+
+<p>Astigmatism values vary from sample to sample due to air currents and placement on the test stand. This report displays that variabity and shows when enough samples have been obtained to average out the variability of air currents at each mirror rotation. The first plot shows an overview of all the samples.  The rest of the plots show the sample distribution of each group and an  accumulating average of the x and y astigs of the samples in the group.  Usually each group is from one mirror rotation and contains one sample that is the average of all the samples in that group.</p>
+<p>
+The following plot shows the astigmatism at each sample for every rotation.  Each rotation has a group of samples including an average of all the samples in the group.</p>
+
+<p>
+ <img src=astigSummary.png width = 800>
 </p>
+
+<h2> Summary plot specifics </h2>
+<p>
+The larger filled circle is the average for each sample of smaller same colored dots. Thin circles is the radius of the standard deviation
+of the mean of the samples at that group.  The thick black circle is the best fit circle to all of the averages.  Its center is the astigmatism value of the test stand and its radius is the magnitude of the astigmatism on the mirror.</p>
+
+<p>There must be three or more rotation groups for the best fit circle to be enabled.  If the thick circle does not fit the points well that indicates that the astigmatism of the test stand was not uniform at each rotation or there were not enough samples taken at some of the rotation angles.
+</p>
+
+<h3> Summary plot Legend </h3>
+<p>All numeric values are in terms of Wyant Zernike values on the wavefront.
+<ul>
+<li>The large filled circles shows the average for that group and the magnitude of the x and y astig values at that groups rotation angle. </li>
+<li>The small square shows the standard diviation from the mean.</li>
+<li> If there are three or more groups and the best fit circle is drawn then the bottom black square shows the magnitude of the astig.</li>
+</ul> </p>
+
+<h2>Input data formats for this plot</h2>
+
+<p>Each group of samples at one rotation should have originally been stored in seperate directories whoes names represent the rotation angle for that group of samples. That way when they are loaded back into DFTFringe they will have the rotation angle prepended to their name and then so will the data in the csv file when zernike values added to the .csv.
+Directory names should not have commas or spaces in them.
+</P>
+<p>
+The data for this plot can come form one of two sources.
+<ol><li>
+From the loaded wavefronts. </li>
+<li>From a comma separated (.csv) file of Zernike Coefficients made by DFTFringe. The .csv file is created from loaded wavefronts and can be added to at different times.  So many groups of a large number of wavefronts can be added to it.  Use the "Files/write zern .csv file to create or append to a .csv file.
+</li>
+</ol>
+</p>
+
+
+
+<p>Each rotation or group should originally been stored in seperate directories whoes names represent the rotation angle for the group of samples. 
+</P>
+
+<h2> When plot indicate problems with data</h2>
+<p>Sometimes if the test stand forces are not the same at each group or astig mean value was not correct because of air currents, the graph will show that by a very bad fit of the best fit circle through the rotation averages.  Here is an example.</P
+<p>
+ <img src=badStandSummary.png width = 800>
+</p>
+<p>The issue is that the astig value for the (0,90) deg pair is much larger than the (45,135) deg pair so the best fit algorithm got confued. It could be that air currents are not averaged out or it could be that test stand forces were not the same for each rotation. More samples at each rotation may resoslve the issue.<p>
+<h2 Sample Distribution charts<h2>
