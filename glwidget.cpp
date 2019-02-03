@@ -19,12 +19,13 @@
 #include <QMouseEvent>
 //#include <cmath>
 #include "qwt_math.h"
-#include "Circleoutline.h"
+#include "circleoutline.h"
 #include <qsettings.h>
 #include <QOpenGLFunctions>
 #include <QFont>
 #include <QFontMetricsF>
 #include <GL/glu.h>
+#include <opencv2/imgproc.hpp>
 typedef uint UINT;
 #define STEPS 200
 #define SHADE_STEPS 200
@@ -325,14 +326,14 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     int dx = event->x() - lastPos.x();
     int dy = event->y() - lastPos.y();
     if (event->buttons() & Qt::LeftButton) {
-        if(event->modifiers() && Qt::ShiftModifier ){
+        if(event->modifiers() & Qt::ShiftModifier ){
             //setXTranslation();
             //setYTranslation();
         }
-        else if (event->modifiers()&& Qt::ControlModifier ){
+        else if (event->modifiers() & Qt::ControlModifier ){
             // light movement
         }
-        else if (event->modifiers() && Qt::AltModifier ){
+        else if (event->modifiers() & Qt::AltModifier ){
         }
         else {
             setXRotation(xRot + 2 * dy);

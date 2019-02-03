@@ -3,7 +3,7 @@
 #include <qwt_plot.h>
 #include <qwt_plot_histogram.h>
 #include <qwt_plot_marker.h>
-#include <qdebug>
+#include <QDebug>
 #include <QScreen>
 #include <QScrollBar>
 #include <QVBoxLayout>

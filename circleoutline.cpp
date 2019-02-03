@@ -15,7 +15,7 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
-#include "Circleoutline.h"
+#include "circleoutline.h"
 #include <qmath.h>
 #include <QDebug>
 #include <qmath.h>
@@ -145,6 +145,3 @@ void CircleOutline::enlarge(int del) {
     m_p1.m_p.rx()-= del;
     m_p2.m_p.rx()+= del;
 }
-
-
-

@@ -30,7 +30,7 @@
 #include "surfaceanalysistools.h"
 #include "surfacepropertiesdlg.h"
 #define RADIUS 400
-#include <Qtimer>
+#include <qtimer.h>
 class CQuad
 {
 public:

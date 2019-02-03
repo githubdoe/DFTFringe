@@ -116,12 +116,12 @@ void qg_path_follower (int nx, int ny, double *phase, double *qmap,
     while (1) {
 
         // Find the point of highest quality.
-        double m = -HUGE;
+        double m = std::numeric_limits<double>::min();
         int mndx;
         for (int k=0; k < size; ++k)
             if (qmap[k] > m && ! flags[k])
                 m = qmap[mndx = k];
-        if (m == -HUGE) break;
+        if (m == std::numeric_limits<double>::min()) break;
 
         // Unwrap the first point.
         unwrap_and_insert (mndx, phase[mndx]);

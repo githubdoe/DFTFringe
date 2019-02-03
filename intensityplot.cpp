@@ -37,6 +37,7 @@
 #include <qwt_math.h>
 #include <math.h>
 #include <opencv/highgui.h>
+#include <opencv2/imgproc.hpp>
 #include <qevent.h>
 #include <qwt_scale_draw.h>
 #define PITORAD  M_PI/180.

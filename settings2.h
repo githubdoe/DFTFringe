@@ -23,7 +23,7 @@
 #include "settingsdft.h"
 #include "settingsdebug.h"
 #include "settingsprofile.h"
-#include "settingsGeneral2.h"
+#include "settingsgeneral2.h"
 namespace Ui {
 class Settings2;
 }

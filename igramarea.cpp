@@ -21,8 +21,8 @@
 #include <QPrintDialog>
 #endif
 
-#include "IgramArea.h"
-#include "Circleoutline.h"
+#include "igramarea.h"
+#include "circleoutline.h"
 #include <QtGlobal>
 #include <math.h>
 
@@ -300,7 +300,7 @@ Mat IgramArea::igramToGray(cv::Mat roi){
         planes[i] = planes[maxndx];
     }
     m_usingChannel = maxndx;
-    static char *colorNames[] = {"blue","green","red"};
+    static const char *colorNames[] = {"blue","green","red"};
     cv::Mat gray;
     cv::merge(planes, 3, gray);
     emit imageSize(QString().sprintf("%d X %d using %s channel", igramColor.size().width(),
@@ -372,8 +372,8 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
         cv::circle(circlem, insideCenter, rad0, cv::Scalar(50), -1);
 
         double resp;
-        cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
-                                                   noArray(), &resp);
+        cv::Point2d center = cv::phaseCorrelate(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
+                                                noArray(), &resp);
         int x = cx - center.x;
         int y = cy - center.y;
 
@@ -467,8 +467,8 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
         cv::circle(circlem, cv::Point2f(cx,cy), rad0, cv::Scalar(255),-1);
 
         double resp;
-        cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
-                                                   noArray(), &resp);
+        cv::Point2d center = cv::phaseCorrelate(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
+                                                noArray(), &resp);
         resp = fabs(resp);
         avg += resp;
         // compute location from the shift
@@ -677,8 +677,8 @@ void IgramArea::findCenterHole(){
         cv::circle(key, cv::Point2f(cx,cy), rad, cv::Scalar(0),-1);
 
         double resp;
-        cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(roi),cv::Mat_<float>(key),
-                                                   noArray(), &resp);
+        cv::Point2d center = cv::phaseCorrelate(cv::Mat_<float>(roi),cv::Mat_<float>(key),
+                                                noArray(), &resp);
 
         int x = cx - center.x;
         int y = cy - center.y;
@@ -2355,5 +2355,3 @@ void IgramArea::setZoomMode(zoomMode mode){
     zoomFull();
 }
 #include "showaliasdlg.h"
-
-

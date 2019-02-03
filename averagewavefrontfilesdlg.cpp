@@ -1,4 +1,5 @@
 #include "averagewavefrontfilesdlg.h"
+#include <opencv2/imgproc.hpp>
 #include "ui_averagewavefrontfilesdlg.h"
 #include "surfacemanager.h"
 #include "mainwindow.h"
