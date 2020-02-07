@@ -1,4 +1,5 @@
 #include "astigzoomer.h"
+#include <math.h>
 #include <qwt_scale_map.h>
 #include <qwt_plot.h>
 #include <qwt_plot_marker.h>

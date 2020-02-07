@@ -1,4 +1,5 @@
 #include "camwizardpage1.h"
+#include <vector>
 #include "ui_camwizardpage1.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -17,6 +18,7 @@
 #include <QInputDialog>
 #include "settings2.h"
 using namespace cv;
+
 CamWizardPage1::CamWizardPage1(QWidget *parent) :
     QWizardPage(parent),
     ui(new Ui::CamWizardPage1)
@@ -110,7 +112,7 @@ bool CamWizardPage1::runCalibration( cv::Size& imageSize, cv::Mat& cameraMatrix,
 
     distCoeffs = cv::Mat::zeros(8, 1, CV_64FC1);
 
-    cv::vector<cv::vector<cv::Point3f> > objectPoints(1);
+    std::vector<std::vector<cv::Point3f> > objectPoints(1);
     calcBoardCornerPositions( cv::Size(ui->columns->value(), ui->rows->value()), 1,
                               objectPoints[0], ui->useCircleGrid ->isChecked() ? CIRCLES_GRID   : CHESSBOARD);
 

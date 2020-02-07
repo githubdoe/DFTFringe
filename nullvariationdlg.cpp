@@ -1,3 +1,4 @@
+#include <random>
 #include "nullvariationdlg.h"
 #include "ui_nullvariationdlg.h"
 #include "mirrordlg.h"
@@ -128,7 +129,7 @@ QMap<double,int > histo(const QList<double> data, int bins){
         intervals[ *minma.first + histInterval * (i+1)] = 0;
     }
     QVector<double> keys = intervals.keys().toVector();
-    for (unsigned int i = 0; i < data.size(); ++i){
+    for (int i = 0; i < (int) data.size(); ++i){
         for (int j = 0; j < bins; ++j){
             if (data[i]<= keys[j]) {
                 ++intervals[keys[j]];

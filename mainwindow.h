@@ -21,7 +21,7 @@
 #include <QMainWindow>
 #include <QtWidgets>
 #include <QtCore>
-#include "IgramArea.h"
+#include "igramarea.h"
 #include "dfttools.h"
 #include "dftarea.h"
 #include "profileplot.h"

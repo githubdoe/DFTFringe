@@ -1,4 +1,5 @@
 #include "myplotpicker.h"
+#include <math.h>
 #include <qevent.h>
 #include <qwhatsthis.h>
 #include <qwt_plot.h>
@@ -89,4 +90,3 @@ QString myPlotPicker::find(const QPointF &p)const{
 
     return s;
 }
-

@@ -24,6 +24,7 @@
 #include "plotcolor.h"
 #include "utils.h"
 #include "opencv2/core/core.hpp"
+#include <opencv2/imgproc.hpp>
 class wftNameScaleDraw: public QwtScaleDraw
 {
 public:
@@ -111,8 +112,7 @@ public:
 };
 
 wftStats::wftStats(mirrorDlg *md):
-     wftPlot(new QwtPlot(0)), zernPlot(new QwtPlot(0)), wftHistogram(new QwtPlot(0)),m_showWftNames(false),md(md),
-     m_doInputs(true), m_doZernGroup(false), zernFrom(0),zernTo(5)
+    m_showWftNames(false), m_doInputs(true), m_doZernGroup(false), zernFrom(0),zernTo(5),wftPlot(new QwtPlot(0)), zernPlot(new QwtPlot(0)),wftHistogram(new QwtPlot(0)),md(md)
 {
 }
 
@@ -545,5 +545,3 @@ QwtPlot *wftStats::makeZernPlot(){
     //zernPlot->show();
     return zernPlot;
 }
-
-

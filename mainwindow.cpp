@@ -34,11 +34,12 @@
 #include "usercolormapdlg.h"
 #include <qlayout.h>
 #include <opencv/cv.h>
+#include <opencv2/imgproc.hpp>
 #include "simulationsview.h"
 #include "outlinehelpdocwidget.h"
 #include "bathastigdlg.h"
 #include "settingsigram.h"
-#include "Circleoutline.h"
+#include "circleoutline.h"
 #include "cameracalibwizard.h"
 #include "astigstatsdlg.h"
 #include "astigscatterplot.h"
@@ -48,11 +49,13 @@
 #include "colorchannel.h"
 
 #ifndef _WIN32
-    #include <unistd.h>
-    #define Sleep(x) usleep(1000 * x)
+#   include <unistd.h>
+#   define Sleep(x) usleep(1000 * x)
+#   define Beep(a, b) do { } while(0)
 #endif
+
 using namespace QtConcurrent;
-vector<wavefront*> g_wavefronts;
+std::vector<wavefront*> g_wavefronts;
 int g_currentsurface = 0;
 QScrollArea *gscrollArea;
 MainWindow *MainWindow::me = 0;
@@ -1064,12 +1067,7 @@ void MainWindow::batchProcess(QStringList fileList){
         }
 
         QApplication::processEvents();
-#ifdef Q_OS_WIN
         Sleep(uint(1000));
-#else
-        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
-        nanosleep(&ts, NULL);
-#endif
         ui->SelectOutSideOutline->setChecked(true);
         if (!batchIgramWizard::autoCb->isChecked()){
             while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
@@ -1086,12 +1084,7 @@ void MainWindow::batchProcess(QStringList fileList){
 
         m_igramArea->nextStep();
         QApplication::processEvents();
-#ifdef Q_OS_WIN
         Sleep(uint(1000));
-#else
-        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
-        nanosleep(&ts, NULL);
-#endif
         m_batchMakeSurfaceReady = false;
         if (!batchIgramWizard::autoCb->isChecked() && !m_skipItem){
             while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {

@@ -18,6 +18,7 @@
 #include "simulationsview.h"
 #include "ui_simulationsview.h"
 #include "opencv/cv.h"
+#include <opencv2/imgproc.hpp>
 #include "opencv/highgui.h"
 #include "mirrordlg.h"
 #include "zernikeprocess.h"
@@ -450,5 +451,3 @@ void SimulationsView::on_FFTSizeSB_valueChanged(int val)
     if (!Settings2::getInstance()->m_general->useStarTestMake())
         m_guiTimer.start(1000);
 }
-
-

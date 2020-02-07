@@ -21,7 +21,7 @@
 #include <QWidget>
 #include "opencv/cv.h"
 #include "opencv/highgui.h"
-#include "IgramArea.h"
+#include "igramarea.h"
 #include "dfttools.h"
 #include <QImage>
 #include "vortexdebug.h"

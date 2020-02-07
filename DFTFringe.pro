@@ -326,6 +326,9 @@ unix {
      LIBS += -lGLU
      LIBS += -lopencv_calib3d
      LIBS += -lopencv_features2d
+     LIBS += -lopencv_videoio
+     LIBS += -lopencv_imgcodecs
+     LIBS += -lqwt-qt5
      message("using linux")
      contains(CONFIG,debug) { message("no extra debug libraries") }
 }

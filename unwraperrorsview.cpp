@@ -1,6 +1,7 @@
 #include "unwraperrorsview.h"
 #include "ui_unwraperrorsview.h"
 #include <opencv/cv.h>
+#include <opencv2/imgproc.hpp>
 #include <opencv/highgui.h>
 #include <QSettings>
 #include <QFile>
@@ -9,6 +10,7 @@
 #include <QImageWriter>
 #include <QApplication>
 #include <QDesktopWidget>
+
 using namespace cv;
 unwrapErrorsView::unwrapErrorsView(const wavefront &wf, QWidget *parent) :
     QDialog(parent),

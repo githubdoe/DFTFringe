@@ -20,6 +20,7 @@
 #include <cmath>
 #include <QWidget>
 #include <opencv/cv.h>
+#include <opencv2/imgproc.hpp>
 #include <QtWidgets/QMessageBox>
 #include <QDebug>
 #include "mainwindow.h"
@@ -65,9 +66,9 @@
 #include "circleutils.h"
 #include "circle.h"
 #include "utils.h"
-#include "wavefrontFilterDlg.h"
+#include "wavefrontfilterdlg.h"
 #include "reportdlg.h"
-#include "Circleoutline.h"
+#include "circleoutline.h"
 #include <math.h>
 #include "transformwavefrontdlg.h"
 #include "psi_dlg.h"
@@ -3118,4 +3119,3 @@ void SurfaceManager::tiltAnalysis(){
    yTilt->attach(pl1);
    pl1->show();
 }
-

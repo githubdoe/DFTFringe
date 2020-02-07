@@ -484,7 +484,7 @@ void astigStatsDlg::on_bestFitCB_clicked(bool checked)
 {
     plot();
 }
-#include <Qlist>
+#include <QList>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

@@ -19,7 +19,7 @@
 #define GRAPHICSUTILITIES_H
 
 #include <QtCore>
-#include "Circleoutline.h"
+#include "circleoutline.h"
 #include <iostream>
 #include <fstream>
 
