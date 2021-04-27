@@ -109,15 +109,15 @@ void userColorMapDlg::setColorMap(){
 
     QList<colorStop> stopList;
     if (ui->cb00->isChecked()){
-        stops[0].pos = .01;
-        stopList << stops[0];
+        //stops[0].pos = .01;
+        //stopList << stops[0];
     }
     for (int i = 0; i < 12; ++i){
         QCheckBox * cb = findChild<QCheckBox *>(QString().sprintf("cb%02d",i));
         if (cb && cb->isChecked()) {
             colorStop s(((m_reverse)? stops[10 - i].pos : stops[i].pos), stops[i].color);
             stopList << s;
-
+            //qDebug() << stops[i].pos << stops[i].color;
             }
     }
 
@@ -281,8 +281,8 @@ void userColorMapDlg::on_pb10_clicked()
     QColor c = QColorDialog::getColor(stops[10].color);
     stops[10].color = c;
     QString s("background-color: #" + QString::number(c.rgb(), 16).toUpper());
-    ui->pb09->setStyleSheet(s);
-    ui->pb09->update();
+    ui->pb10->setStyleSheet(s);
+    ui->pb10->update();
     QSettings set;
     set.setValue("userColorStopColor09",c.name());
     setColorMap();
@@ -418,6 +418,7 @@ void userColorMapDlg::on_loadPb_clicked()
     if (!vdlg.exec()){
         return;
     }
+
     QString fileName = vdlg.m_selection;
 
     QFile inputFile(fileName);

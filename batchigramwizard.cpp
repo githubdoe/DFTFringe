@@ -174,7 +174,6 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
                         "border-radius: 10px;"
                         "border-color: darkgray;"
                         "font: bold 14px;"
-                        "min-width: 10em;"
                         "padding: 6px;"
                         "background: qlineargradient(x1:0, y1:0, x2:1, y2:1,"
                         "stop:0 white, stop: 0.8 lawngreen, stop:1 black);"

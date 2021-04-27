@@ -25,6 +25,7 @@
 #include <QAbstractTableModel>
 #include <opencv/cv.h>
 #include <vector>
+#include <QVector>
 
 #define Z_TERMS 48
 

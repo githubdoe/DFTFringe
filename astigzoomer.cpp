@@ -2,6 +2,7 @@
 #include <qwt_scale_map.h>
 #include <qwt_plot.h>
 #include <qwt_plot_marker.h>
+#include <QtMath>
 
 astigZoomer::astigZoomer( QWidget *canvas, QwtPlot * plot ):
     QwtPlotZoomer( canvas ),mPlot(plot)
@@ -31,7 +32,7 @@ QwtText astigZoomer::trackerTextF( const QPointF &p ) const
 
             double delx = cx - xMap.transform(pm.x());
             double dely = cy - yMap.transform(pm.y());
-            double r = sqrt(delx * delx + dely * dely);
+            double r = qSqrt(delx * delx + dely * dely);
             if (r < 4) {
                 s = mark->title().text();
                 break;

@@ -37,7 +37,7 @@ dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMa
         addColorStop(0.0,QColor(00,00,00));
         addColorStop(1.,QColor(255,255,255));
         break;
-    case 6:
+    case 6:  //openFringe map
         for (double v = 0.; v <= .999; v += .1){
             double theta = 2. * M_PI * v;
             int b = scale * (141 + 110 * cos(theta));
@@ -48,12 +48,15 @@ dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMa
             //qDebug() << v << c;
         }
         break;
-    case 5:
+    case 5:  // User map
     {
-        QColor color1 = dftColorMap::userStops[0].color;
-        QColor color2 = dftColorMap::userStops.back().color;
-        setColorInterval(color1,color2);
+
+        //QColor color1 = dftColorMap::userStops[0].color;
+        //QColor color2 = dftColorMap::userStops.back().color;
+
+        //setColorInterval(color1,color2);
         foreach(colorStop s, dftColorMap::userStops){
+            //qDebug() << s.color;
             s.color.setRed(s.color.red() * scale);
             s.color.setGreen(s.color.green() * scale);
             s.color.setBlue(s.color.blue() * scale);
@@ -126,6 +129,9 @@ dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMa
         pos = 10.0/12.0;  addColorStop(pos, QColor(255,189,0));
         pos = 11.0/12.0;  addColorStop(pos, QColor(189,0,0));
         pos = 1.;        addColorStop(pos, QColor(255,66,0));
+//        foreach(colorStop s, userStops){
+//            qDebug() << "tropical"<<  s.pos << s.color;
+//        }
         break;
 
     case 0://HotCold

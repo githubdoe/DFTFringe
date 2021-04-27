@@ -19,7 +19,10 @@ public:
     explicit foucaultView(QWidget *parent = 0, SurfaceManager *sm = 0);
     ~foucaultView();
     void setSurface(wavefront * wf);
+
+    bool saveOnlyFoucault();
     bool needsDrawing;
+    QImage m_foucultQimage;
 public slots:
     void on_makePb_clicked();
 private slots:
@@ -61,6 +64,8 @@ private slots:
     void on_lateralOffset_valueChanged(int arg1);
 
     void on_SaveImageCB_clicked(bool checked);
+
+    void on_saveOnlyFouccault_clicked(bool checked);
 
 private:
     Ui::foucaultView *ui;

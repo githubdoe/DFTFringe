@@ -49,6 +49,8 @@ public:
     double fringeSpacing;
     bool flipv;
     bool fliph;
+    double m_clearAperature;
+    double aperatureReduction;
     static QString m_projectPath;
     void on_roc_Changed(const double newVal);
     void on_diameter_Changed(const double diam);
@@ -100,6 +102,10 @@ private slots:
 
     void on_buttonBox_helpRequested();
 
+    void on_ReducApp_clicked(bool checked);
+
+    void on_reduceValue_valueChanged(double arg1);
+
 signals:
     void diameterChanged(double);
     void rocChanged(double);
@@ -109,12 +115,15 @@ signals:
     void obstructionChanged();
     void newPath(QString);
     void recomputeZerns();
+    void aperatureChanged();
 
 private:
     Ui::mirrorDlg *ui;
     static mirrorDlg *m_Instance;
-
+    bool m_aperatureReductionValueChanged;
     QTimer spacingChangeTimer;
+    void setclearAp();
+
 
 };
 

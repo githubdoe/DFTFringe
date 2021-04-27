@@ -259,7 +259,7 @@ void ContourPlot::ruler(){
         int half = m_wf->data.rows/2.;
         double pixelsPermm =(m_wf->m_outside.m_radius/(m_wf->diameter/2));
         QPainterPath radials;
-        for (int ang = 0; ang <= 360; ang += 30){
+        for (int ang = 0; ang <= 360; ang += m_radialDeg){
 
             double radians= ( ang * M_PI ) / 180. ;
             double sina = sin(radians);
@@ -276,10 +276,11 @@ void ContourPlot::ruler(){
 
         QwtPlotShapeItem *item = new QwtPlotShapeItem( "");
         item->setShape(radials);
-        item->setPen(Qt::gray,1);
+        item->setPen(m_rulerPen);
         item->attach(this);
-        for (int r = 10 ; r < m_wf->diameter/2; r+= 10){
-            int rsize =  2 * r * pixelsPermm;
+        double rad = m_wf->diameter/2;
+        for (double r = .1 ; r < 1.; r+= .1){
+            int rsize =  2 * r * rad * pixelsPermm;
             QwtPlotShapeItem *item = new QwtPlotShapeItem( "");
             QRectF rect;
             QPointF p(half, half);
@@ -288,8 +289,8 @@ void ContourPlot::ruler(){
             QPainterPath ppath;
             ppath.addEllipse( rect );
             item->setShape( ppath);
-            QPen pen( Qt::gray, 1 );
-            if (r % 50 == 0){
+            QPen pen = m_rulerPen;
+            if (r == .5){
                 pen = QPen(Qt::black,2);
                 QwtPlotMarker *label = new QwtPlotMarker();
                 label->setLineStyle(QwtPlotMarker::NoLine);
@@ -311,12 +312,12 @@ void ContourPlot::ruler(){
         QwtPlotMarker *yAxis = new QwtPlotMarker();
         yAxis->setLineStyle(QwtPlotMarker::VLine);
         yAxis->setXValue(m_wf->data.cols/2);
-        yAxis->setLinePen(Qt::black);
+        yAxis->setLinePen(Qt::black,2);
         yAxis->attach(this);
         QwtPlotMarker *xAxis = new QwtPlotMarker();
         xAxis->setLineStyle(QwtPlotMarker::HLine);
         xAxis->setYValue(m_wf->data.rows/2);
-        xAxis->setLinePen(Qt::black);
+        xAxis->setLinePen(Qt::black,2);
         xAxis->attach(this);
 
 
@@ -406,13 +407,13 @@ void ContourPlot::setSurface(wavefront * wf) {
     QString name;
     int l = path.length();
     if (l >= 2){
-        name = path[l-2] + "/" + path[l-1];
+        name = path[l-1];
     }
     else
         name = wf->name;
+    name = name.replace(".wft","");
 
-
-    setFooter(name + QString().sprintf(" %6.3lfrms %d X %d",wf->std, wf->data.cols, wf->data.rows));
+    setFooter(name + QString().sprintf(" %6.3lf rms %d X %d",wf->std, wf->data.cols, wf->data.rows));
 
     plotLayout()->setAlignCanvasToScales(true);
     showContoursChanged(contourRange);
@@ -444,8 +445,8 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     contourRange = settings.value("contourRange", .1).toDouble();
     m_contourPen = QColor(settings.value("ContourLineColor", "white").toString());
     m_do_fill = settings.value("contourShowFill", true).toBool();
-
-
+    m_rulerPen = QPen(QColor(settings.value("ContourRulerColor", "grey").toString()));
+    m_radialDeg = settings.value("contourRulerRadialDeg", 30).toInt();
     m_linkProfile = settings.value("linkProfilePlot", true).toBool();
     plotLayout()->setAlignCanvasToScales( true );
     initPlot();

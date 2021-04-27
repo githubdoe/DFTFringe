@@ -11,7 +11,10 @@ class nullVariationDlg;
 class nullVariationDlg : public QDialog
 {
     Q_OBJECT
-
+private:
+    Ui::nullVariationDlg *ui;
+    QwtPlot *histo_plot;
+    QTimer m_guiTimer;
 public:
     explicit nullVariationDlg(QWidget *parent = 0);
     ~nullVariationDlg();
@@ -37,10 +40,7 @@ private slots:
 
     void on_sampleSizeSb_valueChanged(int arg1);
 
-private:
-    Ui::nullVariationDlg *ui;
-    QwtPlot *histo_plot;
-    QTimer m_guiTimer;
+
 };
 
 #endif // NULLVARIATIONDLG_H

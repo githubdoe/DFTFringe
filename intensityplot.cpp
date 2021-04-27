@@ -39,6 +39,8 @@
 #include <opencv/highgui.h>
 #include <qevent.h>
 #include <qwt_scale_draw.h>
+#include "opencv2/opencv.hpp"
+
 #define PITORAD  M_PI/180.
 static double i_angle;
 
@@ -191,13 +193,13 @@ void intensityPlot::populate()
     detachItems( QwtPlotItem::Rtti_PlotCurve);
     double rad = m_img.cols;
     setAxisScale( xBottom, 0, rad );
-    QColor colors[] = {Qt::blue, Qt::green, Qt::red};
+    QColor colors[] = {Qt::red, Qt::green, Qt::blue};
 
     // Insert new curves
     for (int chan = 0; chan < 3; ++chan){
-        if (chan == 0 && !m_showBlue) continue;
+        if (chan == 0 && !m_showRed) continue;
         if (chan == 1 && !m_showGreen) continue;
-        if (chan == 2 && !m_showRed) continue;
+        if (chan == 2 && !m_showBlue) continue;
         QwtPlotCurve *cprofile = new QwtPlotCurve( "" );
         cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
         cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );

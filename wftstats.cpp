@@ -24,6 +24,8 @@
 #include "plotcolor.h"
 #include "utils.h"
 #include "opencv2/core/core.hpp"
+#include "opencv2/opencv.hpp"
+
 class wftNameScaleDraw: public QwtScaleDraw
 {
 public:

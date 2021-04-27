@@ -44,6 +44,7 @@
 #include "settings2.h"
 #include "mirrordlg.h"
 #include <qwt_plot_textlabel.h>
+#include "surfaceanalysistools.h"
 extern double outputLambda;
 
 #define PITORAD  M_PI/180.;
@@ -325,10 +326,11 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     QPolygonF points;
 
     double steps = 1./wf->m_outside.m_radius;
-    double radius = wf->diameter/2.;
     mirrorDlg &md = *mirrorDlg::get_Instance();
+    double radius = md.m_clearAperature/2.;
     double obs_radius = md.obs/2.;
 
+//    qDebug() << "Clear" << radius;
     for (double rad = -1.; rad < 1; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
@@ -394,7 +396,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
 void ProfilePlot::populate()
 {
     m_plot->detachItems(QwtPlotItem::Rtti_PlotItem);
-    compass->setGeometry(QRect(70,5,70,70));
+    compass->setGeometry(QRect(80,80,70,70));
     QString tmp("nanometers");
     if (m_showNm == 1.)
         tmp = QString().sprintf("waves of %6.1lf nm",outputLambda);
@@ -406,7 +408,7 @@ void ProfilePlot::populate()
     grid->enableYMin(true);
     grid->attach( m_plot);
     grid->setPen( Qt::gray, 0.0, Qt::DotLine );
-    grid->setMajorPen( Qt::black,0.0,Qt::DotLine);
+    grid->setMajorPen( Qt::blue,0.0,Qt::DotLine);
     if (m_wf == 0)
         return;
     QSettings settings;
@@ -443,18 +445,23 @@ void ProfilePlot::populate()
     // Insert new curves
     switch (type) {
     case 0:{        // show one
-
-        QwtPlotCurve *cprofile = new QwtPlotCurve( "" );
+        QStringList path = wfs->at(0)->name.split("/");
+        QString name;
+        int l = path.length();
+        if (l >= 2){
+            name = path[l-2] + "/" + path[l-1];
+        }
+        else
+            name = wfs->at(0)->name;
+        QwtPlotCurve *cprofile = new QwtPlotCurve( name );
         cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
-        cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
+        //m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
+        //cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
         cprofile->setPen( Qt::black );
         cprofile->attach( m_plot );
         QPolygonF points = createProfile( m_showNm * m_showSurface,m_wf);
+
         cprofile->setSamples( points );
-
-
-
-
 
         break;
     }
@@ -464,7 +471,8 @@ void ProfilePlot::populate()
         for (int i = 0; i < 16; ++i){
             QPolygonF points;
             g_angle = startAngle + i * M_PI/ 16;
-            QwtPlotCurve *cprofile = new QwtPlotCurve( "" );
+
+            QwtPlotCurve *cprofile = new QwtPlotCurve( );
             cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
             cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
             cprofile->setPen( Qt::black );
@@ -480,19 +488,26 @@ void ProfilePlot::populate()
     case 2:{    // show each wave front
 
         m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
-        for (int i = 0; i < wfs->size(); ++i){
-            QStringList path = wfs->at(i)->name.split("/");
-            QString name;
-            int l = path.length();
-            if (l >= 2){
-                name = path[l-2] + "/" + path[l-1];
+        surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
+        QList<int> list = saTools->SelectedWaveFronts();
+        if (list.size() <2){
+            list.clear();
+            for (int i = 0; i < wfs->size(); ++i){
+                list << i;
             }
-            else
-                name = wfs->at(i)->name;
+        }
+        for (int i = 0; i < list.size(); ++i){
+            QStringList path = wfs->at(list[i])->name.split("/");
+            QString name = path.last().replace(".wft","");
+
             QwtPlotCurve *cprofile = new QwtPlotCurve(name );
-            cprofile->setPen(QPen(Settings2::m_profile->getColor(i)));
+            int width = Settings2::m_profile->lineWidth();
+            if (name == m_wf->name.split("/").last().replace(".wft",""))
+                width = Settings2::m_profile->selectedWidth();
+
+            cprofile->setPen(QPen(Settings2::m_profile->getColor(i),width));
             cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
-            cprofile->setSamples( createProfile( m_showNm * m_showSurface,wfs->at(i)));
+            cprofile->setSamples( createProfile( m_showNm * m_showSurface,wfs->at(list[i])));
             cprofile->attach( m_plot );
 
 
@@ -513,6 +528,7 @@ void ProfilePlot::populate()
     mY->setLabel( QString::fromLatin1( "y = 0" ) );
     mY->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
     mY->setLineStyle( QwtPlotMarker::HLine );
+    mY->setLinePen( Qt::blue, 0, Qt::DashDotLine );
     mY->setYValue( 0.0 );
     mY->attach( m_plot);
     double mul = m_showNm * m_showSurface;
@@ -540,7 +556,7 @@ void ProfilePlot::populate()
     mX->setLabelAlignment( Qt::AlignLeft | Qt::AlignBottom );
     mX->setLabelOrientation( Qt::Vertical );
     mX->setLineStyle( QwtPlotMarker::VLine );
-    mX->setLinePen( Qt::black, 0, Qt::DashDotLine );
+    mX->setLinePen( Qt::blue, 0, Qt::DashDotLine );
     mX->setXValue(0 );
     mX->attach( m_plot );
 

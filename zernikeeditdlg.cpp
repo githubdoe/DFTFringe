@@ -5,7 +5,7 @@
 #include "zernikeprocess.h"
 #include "mirrordlg.h"
 #include "myutils.h"
-zernikeEditDlg::zernikeEditDlg(SurfaceManager *sfm, QWidget *parent) :
+zernikeEditDlg::zernikeEditDlg(SurfaceManager * sfm, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::zernikeEditDlg), m_sm(sfm), shouldEnableAll(false)
 {

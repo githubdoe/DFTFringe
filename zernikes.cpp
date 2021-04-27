@@ -173,7 +173,7 @@ double *rpoly_list (double *rho, int npoints, int nmax)
     return (r);
 }
 
-void zern_generator::zpoly_list (void)
+void zern_generator::zpoly_list(void)
 {
     int npoints = m_size * m_size;
     /* Evaluate and return a matrix of zernike polynomials.  The columns

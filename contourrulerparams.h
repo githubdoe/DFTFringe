@@ -14,7 +14,15 @@ class ContourRulerParams : public QDialog
 public:
     explicit ContourRulerParams(QWidget *parent = 0);
     ~ContourRulerParams();
+    int m_radialDeg();
+    QColor m_rulerColor();
 
+private slots:
+    void on_radialAngleSB_valueChanged(int arg1);
+
+    void on_setColorPB_clicked();
+signals:
+    void updateParms();
 private:
     Ui::ContourRulerParams *ui;
 };

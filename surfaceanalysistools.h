@@ -95,13 +95,9 @@ private slots:
 
     void on_SelectNonePB_clicked();
 
-    void on_defocusDial_valueChanged(int value);
-
     void on_checkBox_clicked(bool checked);
 
-    void on_defocusWaves_textChanged(const QString &arg1);
-
-    void on_InvertPB_pressed();
+     void on_InvertPB_pressed();
 
     void on_wavefrontList_customContextMenuRequested(const QPoint &pos);
 
@@ -112,6 +108,12 @@ private slots:
     void on_filterPB_clicked();
 
     void on_surfaceSmoothGausianBlurr_valueChanged(double arg1);
+
+    void on_multiplierwaves_valueChanged(double arg1);
+
+    void on_rocPercent_valueChanged(int value);
+
+    void on_rocHelp_clicked();
 
 private:
     Ui::surfaceAnalysisTools *ui;

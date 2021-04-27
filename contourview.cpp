@@ -35,7 +35,7 @@ contourView::contourView(QWidget *parent, ContourTools *tools) :
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(showContextMenu(QPoint)));
-
+    setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     ps = new pixelStats;
 
     ui->LinkProfileCB->setChecked(set.value("linkProfilePlot", true).toBool());
@@ -51,7 +51,7 @@ void contourView::zoom(){
 }
 
 QImage contourView::getPixstatsImage(){
-    QImage psImage = QImage(ps->size(),QImage::Format_ARGB32 );
+    QImage psImage = QImage(QSize(1000,1000),QImage::Format_ARGB32 );
     QPainter p3(&psImage);
     ps->render(&p3);
 
@@ -137,6 +137,15 @@ void contourView::on_fillContourCB_clicked(bool checked)
     QSettings set;
     ui->widget->showSpectrogram(checked);
 
+}
+
+void contourView::updateRuler(){
+    if (getPlot()->m_wf){
+        QSettings settings;
+        getPlot()->m_rulerPen = QPen(QColor(settings.value("ContourRulerColor", "grey").toString()));
+        getPlot()->m_radialDeg = settings.value("contourRulerRadialDeg",30).toInt();
+        setSurface(getPlot()->m_wf);
+    }
 }
 
 void contourView::on_showRuler_clicked(bool checked)

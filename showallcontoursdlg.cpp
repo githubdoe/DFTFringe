@@ -1,13 +1,15 @@
 #include "showallcontoursdlg.h"
 #include "ui_showallcontoursdlg.h"
 #include <QSettings>
-showAllContoursDlg::showAllContoursDlg(QWidget *parent) :
+#include <QDesktopWidget>
+showAllContoursDlg::showAllContoursDlg( QWidget *parent) :
     QDialog(parent),
     ui(new Ui::showAllContoursDlg)
 {
     QSettings set;
     ui->setupUi(this);
-    ui->Width->setValue(set.value("showContours width", 1000).toInt());
+    QRect rec = QApplication::desktop()->screenGeometry();
+    ui->Width->setValue(rec.width());
 
     ui->columns->setValue(set.value("showContours cols", 4).toInt());
 }

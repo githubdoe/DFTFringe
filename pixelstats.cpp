@@ -524,7 +524,7 @@ void  pixelStats::updateHisto(){
     m_wf->workMask.convertTo(mask, CV_8U);
 
 
-    float hranges[] = { m_wf->min, m_wf->max};
+    float hranges[] = { (float)m_wf->min, (float)m_wf->max};
     const float* ranges[] = { hranges };
     int channels[] = {0, 1};
     cv::calcHist( &values, 1, channels, m_wf->workMask, // do not use mask

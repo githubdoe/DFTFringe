@@ -1,6 +1,7 @@
 #include "settingsgeneral2.h"
 #include "ui_settingsgeneral2.h"
 #include <QSettings>
+#include "contourrulerparams.h"
 extern double outputLambda;
 SettingsGeneral2::SettingsGeneral2(QWidget *parent) :
     QDialog(parent),
@@ -51,6 +52,16 @@ void SettingsGeneral2::on_downSizeCB_clicked(bool checked){
 
 int SettingsGeneral2::memoryThreshold(){
     return ui->memThreshValue->value();
+}
+void SettingsGeneral2::updateContour(){
+    emit updateContourPlot();
+}
+
+void SettingsGeneral2::on_rulerParms_clicked(){
+    ContourRulerParams dlg;
+    connect(&dlg, SIGNAL(updateParms()), this, SLOT(updateContour()));
+    dlg.exec();
+
 }
 
 void SettingsGeneral2::on_outputLambda_valueChanged(double val){

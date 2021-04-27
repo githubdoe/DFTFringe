@@ -28,6 +28,7 @@ DFTTools::DFTTools(QWidget *parent) :
 
     QSettings set;
     ui->dftSizeSB->setValue(set.value("DFTSize", 640).toInt());
+
 }
 void DFTTools::connectTo(QWidget *view){
     connect(view, SIGNAL(updateFilterSize(int)),this, SLOT(setCenterFilterValue(int)));

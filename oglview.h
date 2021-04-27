@@ -19,22 +19,24 @@
 #define OGLVIEW_H
 
 #include <QWidget>
-#include "glwidget.h"
 #include "contourtools.h"
-#include "oglcontrols.h"
 #include "surfaceanalysistools.h"
 #include <QPushButton>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <QColor>
-
+#include "surfacegraph.h"
+#include "surface3dcontrolsdlg.h"
+#include <QCheckBox>
 class OGLView : public QWidget
 {
     Q_OBJECT
+    Surface3dControlsDlg *m_controls;
 public:
     explicit OGLView(QWidget *parent = 0, ContourTools *m_tool = 0,
              surfaceAnalysisTools *surfTools = 0);
-    GLWidget *m_gl;
+    ~OGLView();
+    SurfaceGraph *m_surface;
     QCheckBox *fillCB;
     QPushButton *lightingPb;
     QSpinBox *vscale;
@@ -42,21 +44,13 @@ public:
     QPushButton *orthoPb;
     QPushButton *backgroundPb;
     QColor m_background;
-    bool zoomed;
+
     QSize sizeHint() const;
     int m_spinRate;
-signals:
-    void showAll3d(GLWidget *);
-    void zoomMe(bool);
+
 public slots:
-    void showAll();
-    void saveImage();
-    void setBackground( );
-    void zoom();
-    void showContextMenu(const QPoint &pos);
-    void animate(bool);
-    void spinRate(int);
-    void saveVideo();
+
+    void openLightDlg();
 
 };
 

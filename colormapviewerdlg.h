@@ -45,6 +45,8 @@ private slots:
 
     void on_aboutpb_clicked();
 
+    void on_listWidget_itemClicked(QListWidgetItem *item);
+
 private:
     Ui::colorMapViewerDlg *ui;
 };

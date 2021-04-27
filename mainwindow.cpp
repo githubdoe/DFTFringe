@@ -46,13 +46,16 @@
 #include "regionedittools.h"
 #include "utils.h"
 #include "colorchannel.h"
+#include "opencv2/opencv.hpp"
+
+
 
 #ifndef _WIN32
     #include <unistd.h>
     #define Sleep(x) usleep(1000 * x)
 #endif
 using namespace QtConcurrent;
-vector<wavefront*> g_wavefronts;
+std::vector<wavefront*> g_wavefronts;
 int g_currentsurface = 0;
 QScrollArea *gscrollArea;
 MainWindow *MainWindow::me = 0;
@@ -64,8 +67,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-
-    const QString toolButtonStyle("QToolButton {"
+qDebug() << "here";
+const QString toolButtonStyle("QToolButton {"
                                 "border-style: outset;"
                                 "border-width: 3px;"
                                 "border-radius:7px;"
@@ -77,15 +80,13 @@ MainWindow::MainWindow(QWidget *parent) :
                                     " }");
     QWidget *rw = ui->toolBar->widgetForAction(ui->actionRead_WaveFront);
     //igramArea = new IgramArea(ui->tabWidget->widget(0));
-    rw->setStyleSheet(toolButtonStyle);
-    rw = ui->toolBar->widgetForAction(ui->actionSubtract_wave_front);
-    rw->setStyleSheet(toolButtonStyle);
-    me = this;
 
+    rw = ui->toolBar->widgetForAction(ui->actionSubtract_wave_front);
+    //rw->setStyleSheet(toolButtonStyle);
+    me = this;
+    this->setAttribute(Qt::WA_DeleteOnClose);
     ui->toolBar->setStyleSheet("QToolBar { spacing: 10px;}");
-              ui->toolBar->setStyleSheet("QToolButton {border-style: outset;border-width: 3px;"
-                                         "border-color: darkgray;border-radius:10px;}"
-                                         "QToolButton:hover {background-color: lightblue;}");
+
     ui->SelectOutSideOutline->setChecked(true);
     setCentralWidget(ui->tabWidget);
 
@@ -145,10 +146,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_contourView = new contourView(this, m_contourTools);
     connect(m_contourView, SIGNAL(zoomMe(bool)),this, SLOT(zoomContour(bool)));
     m_ogl = new OGLView(0, m_contourTools, m_surfTools);
-    connect(m_ogl,SIGNAL(zoomMe(bool)), this, SLOT(zoomOgl(bool)));
+
 
     connect(userMapDlg, SIGNAL(colorMapChanged(int)), m_contourView->getPlot(), SLOT(ContourMapColorChanged(int)));
-    connect(userMapDlg, SIGNAL(colorMapChanged(int)),m_ogl->m_gl, SLOT(colorMapChanged(int)));
+    //connect(userMapDlg, SIGNAL(colorMapChanged(int)),m_ogl->m_gl, SLOT(colorMapChanged(int)));
     review = new reviewWindow(this);
     review->s1->addWidget(m_ogl);
 
@@ -157,18 +158,29 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_profilePlot, SIGNAL(profileAngleChanged(double)), m_contourView->getPlot(), SLOT(drawProfileLine(double)));
     connect(m_contourView->getPlot()    , SIGNAL(sigPointSelected(const QPointF&)), m_profilePlot, SLOT(contourPointSelected(const QPointF&)));
     m_mirrorDlg = mirrorDlg::get_Instance();
+    review->s2->addWidget(review->s1);
     review->s2->addWidget(m_profilePlot);
+    m_profilePlot->setStyleSheet( {"border: 3px outset darkgrey;"});
     review->s1->addWidget(m_contourView);
+    QRect rec = QApplication::desktop()->screenGeometry();
+    review->s1->setSizes({INT_MAX, INT_MAX});
+    review->s2->setSizes({ rec.height()/2,  rec.height()/2});
+    review->s2->setStyleSheet(
+        "QSplitter::handle:vertical{ border: 3px outset #004545; background: #ccffff }"
+    );
+    review->s1->setStyleSheet(
+          "QSplitter::handle:horizontal{ border: 3px outset #004545; background: #ccffff }"
+    );
+
     //Surface Manager
     m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView,
-                                          m_ogl->m_gl, metrics);
+                                          m_ogl->m_surface, metrics);
     connect(m_contourView, SIGNAL(showAllContours()), m_surfaceManager, SLOT(showAllContours()));
     connect(m_dftArea, SIGNAL(newWavefront(cv::Mat,CircleOutline,CircleOutline,QString, QVector<std::vector<cv::Point> >)),
             m_surfaceManager, SLOT(createSurfaceFromPhaseMap(cv::Mat,CircleOutline,CircleOutline,QString, QVector<std::vector<cv::Point> >)));
     connect(m_surfaceManager, SIGNAL(diameterChanged(double)),this,SLOT(diameterChanged(double)));
     connect(m_surfaceManager, SIGNAL(showTab(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
     connect(m_surfTools, SIGNAL(updateSelected()), m_surfaceManager, SLOT(backGroundUpdate()));
-    connect(m_ogl, SIGNAL(showAll3d(GLWidget *)), m_surfaceManager, SLOT(showAll3D(GLWidget *)));
     ui->tabWidget->addTab(review, "Results");
 
     ui->tabWidget->addTab(SimulationsView::getInstance(ui->tabWidget), "Star Test, PSF, MTF");
@@ -194,7 +206,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_dftTools,SIGNAL(doDFT()),m_dftArea,SLOT(doDFT()));
     settingsDlg = Settings2::getInstance();
     connect(settingsDlg->m_igram, SIGNAL(igramLinesChanged(outlineParms)), m_igramArea, SLOT(igramOutlineParmsChanged(outlineParms)));
-
+    connect(settingsDlg->m_general, SIGNAL(updateContourPlot()),m_contourView, SLOT(updateRuler()));
 
     QSettings settings;
 
@@ -298,6 +310,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 MainWindow::~MainWindow()
 {
+    qDebug() << "deleteing mainwindow";
+    delete m_ogl;
     delete ui;
 }
 
@@ -714,7 +728,7 @@ void MainWindow::rocChanged(double v){
 
 void MainWindow::on_actionLighting_properties_triggered()
 {
-    m_ogl->m_gl->openLightingDlg();
+    //m_ogl->m_gl->openLightingDlg();
 }
 
 void MainWindow::on_SelectOutSideOutline_clicked(bool checked)
@@ -843,7 +857,7 @@ void MainWindow::on_actionSave_screen_triggered()
 
     if (fName.isEmpty())
         return;
-
+/*  fixme
     QImage image( this->size(), QImage::Format_ARGB32 );
     QPoint wr = m_ogl->m_gl->mapTo(this, m_ogl->pos());
 
@@ -855,7 +869,9 @@ void MainWindow::on_actionSave_screen_triggered()
     painter.drawImage(wr, gl);
     painter.end();
 
+
     image.save( fName, QFileInfo( fName ).suffix().toLatin1() );
+    */
 }
 
 void MainWindow::on_actionWave_Front_Inspector_triggered()
@@ -918,10 +934,10 @@ void MainWindow::on_actionAbout_triggered()
 
     QMessageBox::information(this, "About", QString().sprintf("<html><body><h1>DFTFringe version %s</h1>",APP_VERSION)+
                              "<p>This program was compiled using:<ul><li>"
-                             "Qt version 5.3 </li>"
-                             "<li> Compiled with mingw482_32</li>"
-                             "<li> OpenCV 2.4.10</li>"
-                             "<li> QWTPlot</li></ul></p>"
+                             "Qt version 5.15.2 </li>"
+                             "<li> Compiled with mingw81_64</li>"
+                             "<li> OpenCV 3.14.12</li>"
+                             "<li> QWTPlot6.1.5,  libblas, lapack</li></ul></p>"
                              "<h3>Credits</h3>"
                              "<ul><li>Mike Peck for<ul><li>Researching and explaining FFT algorithm.</li>"
                              "<li>Researching and explaining Unwrap algorithms.</li></li>"
@@ -1165,14 +1181,14 @@ void MainWindow::batchProcess(QStringList fileList){
                     //::reviewFileName = videoFileName;
                 }
                 QImage img = QImage(width,height,QImage::Format_RGB32);
-                QImage d3 = m_ogl->m_gl->grabFrameBuffer().scaled(width/2,height/2);
+                // fixme QImage d3 = m_ogl->m_gl->grabFrameBuffer().scaled(width/2,height/2);
                 QImage dft = m_dftArea->grab().toImage().scaled(width/2, height/2);
                 QImage igram = m_igramArea->grab().toImage().scaled(width/2, height/2);
                 QImage contour = m_contourView->getPlot()->grab().toImage().scaled(width/2, height/2);
                 QPainter painter(&img);
                 painter.drawImage(0,0,igram);
                 painter.drawImage(width/2,0, dft);
-                painter.drawImage(0,height/2, d3);
+                // fixme painter.drawImage(0,height/2, d3);
                 painter.drawImage(width/2,height/2,contour);
                 painter.setPen(Qt::yellow);
                 painter.setBrush(Qt::yellow);
@@ -1193,7 +1209,7 @@ void MainWindow::batchProcess(QStringList fileList){
                 QString fileName = m_surfaceManager->m_wavefronts.back()->name;
                 QFileInfo fileinfo(fileName);
                 QString file = lastPath + "/review/" + fileName + "_review.jpg";
-                cv::imwrite(file.toStdString().c_str(),resized);
+                //cv::imwrite(file.toStdString().c_str(),resized);
             }
             if (batchIgramWizard::deletePreviousWave->isChecked()){
                 QVector<QString> zerns;
@@ -1356,9 +1372,7 @@ void MainWindow::restoreContour(){
 }
 
 void MainWindow::restoreOgl(){
-    //m_ogl->setMinimumHeight(50);
-    m_ogl->zoomed = false;
-    review->s1->insertWidget(0,m_ogl);
+
 }
 
 void MainWindow::restoreProfile(){
@@ -1467,15 +1481,19 @@ void MainWindow::on_actionSave_Zernike_Values_in_CSV_triggered()
     QFile f(fName);
     QTextStream out(&f);
     if (f.open(QIODevice::WriteOnly | QIODevice::Append)) {
+
+        for (int z = 0; z < Z_TERMS; ++z){
+            out << "," <<zernsNames[z];
+        }
+
         QStringList dirs = path.split("/");
         out << endl << endl;
         for (int i = 0; i < m_surfaceManager->m_wavefronts.size(); ++i){
             wavefront* wf = m_surfaceManager->m_wavefronts[i];
             QStringList paths = wf->name.split('/');
             if (paths.size() > 1)
-                out << paths[paths.size()-2] + "/" + paths[paths.size() -1];
+                out << paths[paths.size()-2] + "/" + paths.last();
             else{
-
                 out <<  dirs.back() + "/" + wf->name;
             }
             for (int z = 0; z < Z_TERMS; ++z){
@@ -1559,90 +1577,91 @@ void MainWindow::on_showColorIgram_clicked(bool checked)
 
 void MainWindow::on_useLastOutline_clicked()
 {
-    m_igramArea->useLastOutline();
+    if (!m_igramArea->igramGray.isNull())
+        m_igramArea->useLastOutline();
 }
 
 void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 {
-    QStringList fileNames = SelectWaveFrontFiles();
-    this->setCursor(Qt::WaitCursor);
-    QProgressDialog pd("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
-    pd.setRange(0, fileNames.size());
-    if (fileNames.length()> 0)
-        pd.show();
-    int cnt = 0;
-    QSettings set;
-    QString lastPath = set.value("lastPath",".").toString();
-    int memThreshold = set.value("lowMemoryThreshold",300).toInt();
-    QImage img = m_ogl->m_gl->grabFrameBuffer();
+//    QStringList fileNames = SelectWaveFrontFiles();
+//    this->setCursor(Qt::WaitCursor);
+//    QProgressDialog pd("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
+//    pd.setRange(0, fileNames.size());
+//    if (fileNames.length()> 0)
+//        pd.show();
+//    int cnt = 0;
+//    QSettings set;
+//    QString lastPath = set.value("lastPath",".").toString();
+//    int memThreshold = set.value("lowMemoryThreshold",300).toInt();
+//    QImage img = m_ogl->m_gl->grabFrameBuffer();
 
-    int width = img.width();
-    int height = img.height();
+//    int width = img.width();
+//    int height = img.height();
 
-    try {
-        QString fileName = QFileDialog::getSaveFileName(0, "Save AVI video as:", lastPath,"*.avi" );
-        if (fileName.length() > 0){
-            if (!(fileName.toUpper().endsWith(".AVI")))
-                fileName.append(".avi");
-            cv::VideoWriter video("v",-1,4,cv::Size(width,height),true);
-            if (!video.isOpened()){
-                QString msg = QString().sprintf("could not open %s %dx%d for writing.", fileName.toStdString().c_str(),
-                                                width, height);
-                QMessageBox::warning(0,"warning", msg);
-                return;
-            }
-            foreach (QString name, fileNames){
-                int mem = showmem("loading");
-                statusBar()->showMessage(QString().sprintf("memory %d MB", mem));
-                if (mem< memThreshold + 50){
-                    while (m_surfaceManager->m_wavefronts.size() > 1){
-                        m_surfaceManager->deleteCurrent();
-                    }
-                }
-                QApplication::processEvents();
+//    try {
+//        QString fileName = QFileDialog::getSaveFileName(0, "Save AVI video as:", lastPath,"*.avi" );
+//        if (fileName.length() > 0){
+//            if (!(fileName.toUpper().endsWith(".AVI")))
+//                fileName.append(".avi");
+//            cv::VideoWriter video(fileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
+//            if (!video.isOpened()){
+//                QString msg = QString().sprintf("could not open %s %dx%d for writing.", fileName.toStdString().c_str(),
+//                                                width, height);
+//                QMessageBox::warning(0,"warning", msg);
+//                return;
+//            }
+//            foreach (QString name, fileNames){
+//                int mem = showmem("loading");
+//                statusBar()->showMessage(QString().sprintf("memory %d MB", mem));
+//                if (mem< memThreshold + 50){
+//                    while (m_surfaceManager->m_wavefronts.size() > 1){
+//                        m_surfaceManager->deleteCurrent();
+//                    }
+//                }
+//                QApplication::processEvents();
 
-                if (pd.wasCanceled())
-                    break;
+//                if (pd.wasCanceled())
+//                    break;
 
 
-                pd.setLabelText(name);
-                QApplication::processEvents();
-                wavefront *wf = m_surfaceManager->readWaveFront(name,false);
+//                pd.setLabelText(name);
+//                QApplication::processEvents();
+//                wavefront *wf = m_surfaceManager->readWaveFront(name,false);
 
-                m_surfaceManager->makeMask(wf);
-                m_surfaceManager->generateSurfacefromWavefront(wf);
-                m_surfaceManager->computeMetrics(wf);
+//                m_surfaceManager->makeMask(wf);
+//                m_surfaceManager->generateSurfacefromWavefront(wf);
+//                m_surfaceManager->computeMetrics(wf);
 
-                pd.setValue(++cnt);
+//                pd.setValue(++cnt);
 
-                m_ogl->m_gl->setSurface(wf);
-                delete wf;
-                QApplication::processEvents();
+//                m_ogl->m_gl->setSurface(wf);
+//                delete wf;
+//                QApplication::processEvents();
 
-                QImage img = m_ogl->m_gl->grabFrameBuffer();
-                QPainter painter(&img);
-                painter.setPen(Qt::yellow);
-                painter.setBrush(Qt::yellow);
-                QFileInfo info(name);
-                painter.drawText(20,50, info.baseName());
-                cv::Mat frame = cv::Mat(img.height(), img.width(),CV_8UC4, img.bits(), img.bytesPerLine()).clone();
-                cv::Mat resized;
-                cv::resize(frame, resized, cv::Size(width,height));
-                video.write(resized);
-            }
-        }
-    }
-    catch(std::exception& e) {
-        qDebug() <<  "Exception writing video " << e.what();
-    }
+//                QImage img = m_ogl->m_gl->grabFrameBuffer();
+//                QPainter painter(&img);
+//                painter.setPen(Qt::yellow);
+//                painter.setBrush(Qt::yellow);
+//                QFileInfo info(name);
+//                painter.drawText(20,50, info.baseName());
+//                cv::Mat frame = cv::Mat(img.height(), img.width(),CV_8UC4, img.bits(), img.bytesPerLine()).clone();
+//                cv::Mat resized;
+//                cv::resize(frame, resized, cv::Size(width,height));
+//                video.write(resized);
+//            }
+//        }
+//    }
+//    catch(std::exception& e) {
+//        qDebug() <<  "Exception writing video " << e.what();
+//    }
 
-    this->setCursor(Qt::ArrowCursor);
+//    this->setCursor(Qt::ArrowCursor);
 
 }
 
 void MainWindow::on_actionDebugStuff_triggered()
 {
-    m_ogl->m_gl->swapBuffers();
+    //m_ogl->m_gl->swapBuffers();
 }
 #include "outlinestatsdlg.h"
 void MainWindow::on_actionShow_outline_statistics_triggered()
@@ -1728,6 +1747,10 @@ void MainWindow::on_actionSave_curent_profile_triggered()
 
 void MainWindow::on_actionProcess_PSI_interferograms_triggered()
 {
-    m_dftArea->doPSIstep1();
+   m_dftArea->doPSIstep1();
 
 }
+
+
+
+

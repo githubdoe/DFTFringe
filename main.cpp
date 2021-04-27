@@ -20,9 +20,13 @@
 #include "singleapplication.h"
 #include "messagereceiver.h"
 #include "utils.h"
+#include <QDebug>
+
+
 
 int main(int argc, char *argv[])
 {    // Allow secondary instances
+
     SingleApplication app( argc, argv, true );
 
     MessageReceiver msgReceiver;
@@ -48,12 +52,9 @@ int main(int argc, char *argv[])
     msgReceiver.m_mainWindow = w;
 
 #if defined(_WIN32)
-
-    showmem();
-
-
+    //showmem();
 #endif
     w->show();
-
+    //fclose(logptr);
     return app.exec();
 }

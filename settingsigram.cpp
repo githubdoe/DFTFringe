@@ -44,8 +44,8 @@ settingsIGram::settingsIGram(QWidget *parent) :
     centerColor = QColor(set.value("igramCenterLineColor", "yellow").toString());
     ui->centerLineColorPb->setStyleSheet(colorButtonStyleSheet(centerColor));
     ui->opacitySB->setValue(set.value("igramLineOpacity", 65.).toDouble());
-    edgeWidth = set.value("igramEdgeWidth",3).toInt();
-    centerWidth = set.value("igramCenterWidth",3).toInt();
+    edgeWidth = set.value("igramEdgeWidth",5).toInt();
+    centerWidth = set.value("igramCenterWidth",5).toInt();
     ui->spinBox->setValue(edgeWidth);
     ui->centerSpinBox->setValue(centerWidth);
     ui->zoomBoxWidthSb->setValue(set.value("igramZoomBoxWidth", 200).toDouble());

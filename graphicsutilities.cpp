@@ -57,11 +57,11 @@ CircleOutline readCircle(std::ifstream &file){
 
     ++dp;
     int size = *(int *)dp; //= *(reinterpret_cast<int *>(buf));
-
     if (size > 20)
        return     CircleOutline();
     // ignore the ellipse point section
     for (int i = 0; i < size; ++i) {
+
         file.read(buf,8);
         file.read(buf,8);
     }

@@ -22,6 +22,10 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     ui->lpiSb->setValue(set.value("ronchiLPI", 100).toDouble());
     connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_makePb_clicked()));
     ui->rocOffsetSb->setSuffix(" inch");
+    ui->useMM->setChecked(set.value("simUseMM",false).toBool());
+    if (ui->useMM->isChecked()){
+        on_useMM_clicked(true);
+    }
 
 }
 foucaultView *foucaultView::get_Instance(SurfaceManager *sm){
@@ -47,6 +51,11 @@ void foucaultView::setSurface(wavefront *wf){
     ui->rocOffsetSlider->blockSignals(true);
     ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
     ui->rocOffsetSlider->blockSignals(false);
+    double step = getStep();
+    double offset = (ui->rocOffsetSlider->value()) * step;
+    ui->rocOffsetSb->blockSignals(true);
+    ui->rocOffsetSb->setValue(offset);
+    ui->rocOffsetSb->blockSignals(false);
     on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
 }
@@ -60,6 +69,7 @@ void foucaultView::on_makePb_clicked()
         QMessageBox::warning(0,"warning","Foucaualt is not suppported for flat surfaces");
         return;
     }
+    qDebug() << "slider" << ui->rocOffsetSlider->value();
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
     double pad = 1.1;
@@ -264,9 +274,11 @@ void foucaultView::on_makePb_clicked()
     mulSpectrums(knifeSlit, surf_fft, knifeSurf,0,true);
     idft(knifeSurf, knifeSurf, DFT_SCALE);
 
-    QImage foucault = showMag(knifeSurf, false,"", false, gamma);
+    m_foucultQimage = showMag(knifeSurf, false,"", false, gamma);
+
     startx = size - m_wf->data.cols;
-    foucault = foucault.copy(startx,startx,m_wf->data.cols, m_wf->data.cols);
+    QImage foucault = m_foucultQimage.copy(startx,startx,m_wf->data.cols, m_wf->data.cols);
+    qDebug() << "foucult" << foucault.size();
 /*
     cv::Mat iMat(foucault.height(), foucault.width(), CV_8UC3, foucault.bits(), foucault.bytesPerLine());
     cv::Mat flipped;
@@ -345,7 +357,8 @@ void foucaultView::on_useMM_clicked(bool checked)
     if ( !checked)
         mul = 1./25.4;
 
-
+    QSettings set;
+    set.setValue("simUseMM", checked);
     QString suffix = (checked) ? " mm" : " in";
     ui->rocOffsetSb->setValue( ui->rocOffsetSb->value() * mul);
     ui->rocOffsetSb->setSuffix(suffix);
@@ -364,12 +377,19 @@ void foucaultView::on_useMM_clicked(bool checked)
 
     m_guiTimer.start(500);
 
-
 }
-
+bool inscan = false;
 void foucaultView::on_scanPb_clicked()
 {
-
+    if (inscan == true){
+        inscan = false;
+        qDebug() << "abort scan";
+        return;
+    }
+    qDebug() << "scan running";
+    inscan = true;
+    ui->scanPb->setText("Abort");
+    qApp->processEvents();
     double steps = ui->scanSteps->value();
     double start = ui->scanStart->value();
     double end = ui->scanEndOffset->value();
@@ -396,12 +416,26 @@ void foucaultView::on_scanPb_clicked()
         QPainter p3(&fvImage);
         fv->render(&p3);
         if (ui->SaveImageCB->isChecked()){
-            QString fvpng = QString().sprintf("%s//%06d.jpg",imageDir.toStdString().c_str(), cnt++);
-            fvImage.save(fvpng);
+            QString num = QString().sprintf("%6.4lf",v).replace(".","_");
+            num.replace("-","n");
+            QString fvpng = QString().sprintf("%s//%06d_%s.png",imageDir.toStdString().c_str(), cnt++, num.toStdString().c_str());
+            qDebug() << "fn"<< fvpng;
+            if (ui->saveOnlyFouccault->isChecked()){
+                fv->m_foucultQimage.save(fvpng);
+            }
+            else {
+                fvImage.save(fvpng);
+            }
         }
         qApp->processEvents();
+        if (inscan == false) {
+            qDebug() << "asked to abort";
+            break;
+        }
 
     }
+    ui->scanPb->setText("Scan");
+    inscan = false;
 }
 
 void foucaultView::on_h1x_clicked()
@@ -497,4 +531,12 @@ void foucaultView::on_SaveImageCB_clicked(bool checked)
                                                  | QFileDialog::DontResolveSymlinks);
     if (!dir.isEmpty())
         imageDir = dir;
+}
+bool foucaultView::saveOnlyFoucault(){
+    return ui->saveOnlyFouccault->isChecked();
+}
+
+void foucaultView::on_saveOnlyFouccault_clicked(bool checked)
+{
+
 }

@@ -69,8 +69,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton">
+       <property name="toolTip">
+        <string>Show all selected wavefronts</string>
+       </property>
        <property name="text">
-        <string>Show All Wavefronts</string>
+        <string>Show Selected Wavefronts</string>
        </property>
       </widget>
      </item>

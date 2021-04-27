@@ -16,7 +16,7 @@ QT       += core gui
 QT       += opengl widgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-QT += opengl
+QT += datavisualization
 TARGET = DFTFringe
 TEMPLATE = app
 
@@ -31,13 +31,15 @@ SOURCES += main.cpp\
     graphicsutilities.cpp \
     dfttools.cpp \
     dftarea.cpp \
+    mikespsirinterface.cpp \
     profileplot.cpp \
+    surface3dcontrolsdlg.cpp \
+    surfacegraph.cpp \
+    surfacelightingproxy.cpp \
     wavefront.cpp \
     contourplot.cpp \
     contourtools.cpp \
-    glwidget.cpp \
     dftcolormap.cpp \
-    oglcontrols.cpp \
     surfaceanalysistools.cpp \
     prefsdlg.cpp \
     surfacemanager.cpp \
@@ -123,7 +125,11 @@ SOURCES += main.cpp\
     outlineplots.cpp \
     transformwavefrontdlg.cpp \
     showallcontoursdlg.cpp \
-    psi_dlg.cpp
+    psi_dlg.cpp \
+    psiphasedisplay.cpp \
+    outlinedialog.cpp \
+    psitiltoptions.cpp \
+    contourrulerparams.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
@@ -134,12 +140,13 @@ HEADERS  += mainwindow.h \
     dfttools.h \
     dftarea.h \
     profileplot.h \
+    surface3dcontrolsdlg.h \
+    surfacegraph.h \
+    surfacelightingproxy.h \
     wavefront.h \
     contourplot.h \
     contourtools.h \
-    glwidget.h \
     dftcolormap.h \
-    oglcontrols.h \
     surfaceanalysistools.h \
     prefsdlg.h \
     surfacemanager.h \
@@ -230,20 +237,25 @@ HEADERS  += mainwindow.h \
     outlineplots.h \
     transformwavefrontdlg.h \
     showallcontoursdlg.h \
-    psi_dlg.h
+    psi_dlg.h \
+    psiphasedisplay.h \
+    outlinedialog.h \
+    mikespsiinterface.h \
+    psitiltoptions.h \
+    contourrulerparams.h
 FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
     profilearea.ui \
     profileplot.ui \
     contourtools.ui \
-    oglcontrols.ui \
+    surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
     prefsdlg.ui \
+    metricsdisplay.ui \
     zernikedlg.ui \
     mirrordlg.ui \
     wavefrontnulldlg.ui \
-    metricsdisplay.ui \
     reviewwindow.ui \
     rotationdlg.ui \
     surfacepropertiesdlg.ui \
@@ -301,22 +313,41 @@ FORMS    += mainwindow.ui \
     outlineplots.ui \
     transformwavefrontdlg.ui \
     showallcontoursdlg.ui \
-    psi_dlg.ui
+    psi_dlg.ui \
+    psiphasedisplay.ui \
+    outlinedialog.ui \
+    psitiltoptions.ui \
+    contourrulerparams.ui
 
 win32 {
       CONFIG( debug, debug|release ) {
         # debug
-        LIBS += C:/qwt-6.1.2/lib/qwtd.dll
+        LIBS += D:\\qwt-6.1.5\\lib\\qwtd.dll
       } else {
         # release
-        LIBS += C:/build-qwt-Desktop_Qt_5_3_MinGW_32bit-Release/lib/qwt.dll
+        LIBS += D:\\qwt-6.1.5\\lib\\qwt.dll
       }
-      INCLUDEPATH += C:\\qwt-6.1.2\\src
-      INCLUDEPATH += c:\\opencv\\build\\include
-      LIBS += C:/opencv/build-mingw/bin/*.dll
-      message("using win32")
-      }
+      INCLUDEPATH += D:\\qwt-6.1.5\\src
 
+      #message("using win32")include
+}
+
+
+INCLUDEPATH += D:\armadillo\armadillo-9.200.6\include
+
+INCLUDEPATH += D:\opencv\opencv-3.4.12\build\install\include
+
+LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_core3412.dll
+LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_highgui3412.dll
+LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgcodecs3412.dll
+LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgproc3412.dll
+LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_features2d3412.dll
+LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
+
+
+LIBS += D:\armadillo\bin\libarmadillo.dll
+LIBS += D:\lapack\build64\bin\liblapack.dll
+LIBS += D:\lapack\build64\bin\libblas.dll
 unix {
      INCLUDEPATH += /usr/include/qwt
      iLIBS += -lqwt-qt5
@@ -339,7 +370,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 4.0
+VERSION = 5.0
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
@@ -448,3 +479,9 @@ DISTFILES += \
     res/Help/badStandSummary.png
 
     TRANSLATIONS    = dftfringe_fr.ts
+
+
+
+
+INCLUDEPATH += $$PWD/../../../../opencv/build-mingw/include
+DEPENDPATH += $$PWD/../../../../opencv/build-mingw/include

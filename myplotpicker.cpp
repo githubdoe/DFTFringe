@@ -7,6 +7,7 @@
 #include <qwt_plot_marker.h>
 #include <qwt_plot_canvas.h>
 #include <qdebug.h>
+#include <QtMath>
 myPlotPicker::myPlotPicker(QwtPlot * plot) :
     QwtPlotPicker(plot->canvas()),m_plot(plot)
 {
@@ -79,7 +80,7 @@ QString myPlotPicker::find(const QPointF &p)const{
 
             double delx = cx - xMap.transform(pm.x());
             double dely = cy - yMap.transform(pm.y());
-            double r = sqrt(delx * delx + dely * dely);
+            double r = qSqrt(delx * delx + dely * dely);
             if (r < 4) {
                 s = mark->title().text();
                 break;

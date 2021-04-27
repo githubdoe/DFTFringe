@@ -28,6 +28,9 @@ public:
     int memoryThreshold();
 signals:
     void outputLambdaChanged(double val);
+    void updateContourPlot();
+public slots:
+    void updateContour();
 private slots:
     void on_checkBox_clicked(bool checked);
     void on_starTestMakeCb_clicked(bool checked);
@@ -39,6 +42,7 @@ private slots:
     void on_applyOffsets_clicked(bool checked);
     void on_outputLambda_valueChanged(double val);
     void on_apply_clicked();
+    void on_rulerParms_clicked();
 private:
     Ui::SettingsGeneral2 *ui;
     bool m_useSVD;

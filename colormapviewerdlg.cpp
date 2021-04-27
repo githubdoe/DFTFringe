@@ -49,7 +49,10 @@ void colorMapViewerDlg::genList(QString path){
     QStringList nameFilter("*.cmp");
     QDir directory(path);
     QStringList cmpFiles = directory.entryList(nameFilter);
-
+    qDebug() << cmpFiles;
+    cmpFiles.sort(Qt::CaseInsensitive);
+    qDebug() << "";
+    qDebug() << cmpFiles;
     foreach(QString s, cmpFiles){
         QPixmap p(BarLength,BarWidth);
         QwtLinearColorMap cm;
@@ -85,12 +88,12 @@ void colorMapViewerDlg::on_browsePb_clicked()
 {
     QString dir = QFileDialog::getExistingDirectory(0, tr("Open Directory")
                                                     ,gpath,
-                                                    QFileDialog::ShowDirsOnly
-                                                    | QFileDialog::DontResolveSymlinks);
+                                                    QFileDialog::DontResolveSymlinks|QFileDialog::DontUseNativeDialog);
     if (dir == "")
         return;
     gpath = dir;
     ui->path->setText(gpath);
+    ui->listWidget->clear();
     genList(gpath);
 }
 
@@ -109,4 +112,13 @@ void colorMapViewerDlg::on_buttonBox_accepted()
 void colorMapViewerDlg::on_aboutpb_clicked()
 {
 
+}
+
+
+
+void colorMapViewerDlg::on_listWidget_itemClicked(QListWidgetItem *item)
+{
+    m_selection = ui->path->text() + "/" + item->text();
+    on_buttonBox_accepted();
+    done(1);
 }

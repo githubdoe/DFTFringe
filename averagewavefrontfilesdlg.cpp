@@ -7,6 +7,8 @@
 #include "rejectedwavefrontsdlg.h"
 #include <QFileInfo>
 #include "utils.h"
+#include <opencv2/imgproc.hpp>
+
 void showData(const std::string &txt, Mat mat, bool useLog);
 averageWaveFrontFilesDlg::averageWaveFrontFilesDlg(QStringList list, SurfaceManager *m, QWidget *parent) :
     QDialog(parent),

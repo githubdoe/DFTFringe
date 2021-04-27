@@ -59,7 +59,7 @@
      <x>0</x>
      <y>0</y>
      <width>1065</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFiles">
@@ -150,15 +150,15 @@
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="outlineTools">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
    <property name="minimumSize">
     <size>
-     <width>372</width>
-     <height>735</height>
+     <width>475</width>
+     <height>790</height>
     </size>
    </property>
    <property name="whatsThis">
@@ -260,7 +260,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
      <item>
       <widget class="QGroupBox" name="groupBox">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -384,10 +384,16 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
      </item>
      <item>
       <widget class="QGroupBox" name="groupBox_4">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="title">
         <string>Auto Trace outline</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,2">
+       <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,1">
         <property name="bottomMargin">
          <number>7</number>
         </property>
@@ -409,7 +415,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
           <item>
            <widget class="QPushButton" name="autoOutline">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -482,7 +488,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
             </property>
             <property name="minimumSize">
              <size>
-              <width>70</width>
+              <width>134</width>
               <height>30</height>
              </size>
             </property>
@@ -514,6 +520,12 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
      </item>
      <item>
       <widget class="QGroupBox" name="groupBox_2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="maximumSize">
         <size>
          <width>16777215</width>
@@ -584,7 +596,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>70</width>
+            <width>134</width>
             <height>0</height>
            </size>
           </property>
@@ -630,7 +642,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>70</width>
+            <width>134</width>
             <height>0</height>
            </size>
           </property>
@@ -670,7 +682,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>70</width>
+            <width>134</width>
             <height>0</height>
            </size>
           </property>
@@ -719,7 +731,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>70</width>
+            <width>134</width>
             <height>0</height>
            </size>
           </property>
@@ -762,7 +774,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>70</width>
+            <width>134</width>
             <height>0</height>
            </size>
           </property>
@@ -811,7 +823,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>70</width>
+            <width>134</width>
             <height>0</height>
            </size>
           </property>
@@ -854,7 +866,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>44</width>
+            <width>76</width>
             <height>0</height>
            </size>
           </property>
@@ -905,7 +917,7 @@ em;
        <item>
         <widget class="QPushButton" name="pushButton_8">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -918,7 +930,7 @@ em;
        <item>
         <widget class="QPushButton" name="pushButton_5">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -938,14 +950,14 @@ em;
        <item>
         <widget class="QCheckBox" name="checkBox">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>70</width>
+           <width>134</width>
            <height>0</height>
           </size>
          </property>

@@ -65,12 +65,14 @@
 #include "circleutils.h"
 #include "circle.h"
 #include "utils.h"
-#include "wavefrontFilterDlg.h"
+#include "wavefrontfilterdlg.h"
 #include "reportdlg.h"
 #include "Circleoutline.h"
 #include <math.h>
 #include "transformwavefrontdlg.h"
 #include "psi_dlg.h"
+#include "opencv2/opencv.hpp"
+
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -367,7 +369,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         mirrorDlg *md = mirrorDlg::get_Instance();
         zp.unwrap_to_zernikes(*wf);
         // check for swapped conic value
-        if (!m_ignoreInverse && md->cc * wf->InputZerns[8] < 0.){
+        if (!m_ignoreInverse && (md->cc != 0.0) && md->cc * wf->InputZerns[8] < 0.){
             bool reverse = false;
             if (m_askAboutReverse){
                 if (QMessageBox::Yes == QMessageBox::question(0,"should invert?","Wavefront seems inverted.  Do you want to invert it?"))
@@ -472,7 +474,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
 SurfaceManager *SurfaceManager::m_instance = 0;
 SurfaceManager *SurfaceManager::get_instance(QObject *parent, surfaceAnalysisTools *tools,
                                              ProfilePlot *profilePlot, contourView *contourPlot,
-                                             GLWidget *glPlot, metricsDisplay *mets){
+                                             SurfaceGraph *glPlot, metricsDisplay *mets){
     if (m_instance == 0){
         m_instance = new SurfaceManager(parent, tools, profilePlot, contourPlot, glPlot, mets);
     }
@@ -481,15 +483,19 @@ SurfaceManager *SurfaceManager::get_instance(QObject *parent, surfaceAnalysisToo
 
 SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
                                ProfilePlot *profilePlot, contourView *contourView,
-                               GLWidget *glPlot, metricsDisplay *mets): QObject(parent),
+                               SurfaceGraph *glPlot, metricsDisplay *mets): QObject(parent),
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
-    m_oglPlot(glPlot), m_metrics(mets),
+    m_SurfaceGraph(glPlot), m_metrics(mets),
     m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
     outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), workToDo(0), m_wftStats(0)
 {
+
     okToUpdateSurfacesOnGenerateComplete = true;
     m_simView = SimulationsView::getInstance(0);
+
     pd = new QProgressDialog();
+    pd->reset();
+
     connect (this,SIGNAL(progress(int)), pd, SLOT(setValue(int)));
 
     m_profilePlot->setWavefronts(&m_wavefronts);
@@ -553,7 +559,7 @@ void DrawPoly(cv::Mat &data, QVector<std::vector<cv::Point> > poly){
 
         }
         const Point* ppt[1] = { points[0]};
-        int npt[] = { poly[n].size() };
+        int npt[] = {(int) (poly[n].size()) };
 
         fillPoly( data, ppt, npt, 1, Scalar(0), 8 );
 
@@ -667,7 +673,7 @@ void SurfaceManager::sendSurface(wavefront* wf){
 
     m_contourView->setSurface(wf);
     m_profilePlot->setSurface(wf);
-    m_oglPlot->setSurface(wf);
+    m_SurfaceGraph->setSurface(wf);
     m_simView->setSurface(wf);
     foucaultView::get_Instance()->setSurface(wf);
 
@@ -842,7 +848,10 @@ void SurfaceManager::defocusChanged(){
     wavefront *wf = m_wavefronts[m_currentNdx];
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
+    bool old_ignore = m_ignoreInverse;
+    m_ignoreInverse = true;
     generateSurfacefromWavefront(wf);
+    m_ignoreInverse = old_ignore;
     m_profilePlot->setDefocusValue(val);
     m_waveFrontTimer->start(2000);
 
@@ -864,52 +873,52 @@ void SurfaceManager::computeZerns()
 }
 
 void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulled){
-    std::ofstream file((fname.toStdString().c_str()));
+        std::ofstream file((fname.toStdString().c_str()));
 
-    if (!file.is_open()) {
-        QMessageBox::warning(0, tr("Write wave front"),
-                             tr("Cannot write file %1: ")
-                             .arg(fname));
-        return;
-    }
-    file << wf->data.cols << std::endl << wf->data.rows << std::endl;
-    for (int row = wf->data.rows - 1; row >=0; --row){
-        for (int col = 0; col < wf->data.cols ; ++col){
-            if (saveNulled)
-                file << wf->workData(row,col) << std::endl;
-            else {
-                file << wf->data(row,col) << std::endl;
+        if (!file.is_open()) {
+            QMessageBox::warning(0, tr("Write wave front"),
+                                 tr("Cannot write file %1: ")
+                                 .arg(fname));
+            return;
+        }
+        file << wf->data.cols << std::endl << wf->data.rows << std::endl;
+        for (int row = wf->data.rows - 1; row >=0; --row){
+            for (int col = 0; col < wf->data.cols ; ++col){
+                if (saveNulled)
+                    file << wf->workData(row,col) << std::endl;
+                else {
+                    file << wf->data(row,col) << std::endl;
 
+                }
             }
         }
-    }
-    int offsetOutside = 0;
-    QSettings set;
-    if (set.value("applyOffsets", false).toBool()){
-        offsetOutside = outsideOffset;
-    }
+        int offsetOutside = 0;
+        QSettings set;
+        if (set.value("applyOffsets", false).toBool()){
+            offsetOutside = outsideOffset;
+        }
 
-    file << "outside ellipse " <<
-                   wf->m_outside.m_center.x()
-         << " " << wf->m_outside.m_center.y()
-         << " " << wf->m_outside.m_radius + offsetOutside
-         << " "  << wf->m_outside.m_radius << std:: endl;
+        file << "outside ellipse " <<
+                       wf->m_outside.m_center.x()
+             << " " << wf->m_outside.m_center.y()
+             << " " << wf->m_outside.m_radius + offsetOutside
+             << " "  << wf->m_outside.m_radius << std:: endl;
 
 
-    if (wf->m_inside.m_radius > 0){
-        file << "obstruction ellipse " << wf->m_inside.m_center.x()
-         << " " << wf->m_inside.m_center.y()
-         << " " << wf->m_inside.m_radius + ((set.value("applyOffsets", false).toBool()) ? insideOffset: 0)
-         << " " << wf->m_inside.m_radius << std:: endl;
-    }
+        if (wf->m_inside.m_radius > 0){
+            file << "obstruction ellipse " << wf->m_inside.m_center.x()
+             << " " << wf->m_inside.m_center.y()
+             << " " << wf->m_inside.m_radius + ((set.value("applyOffsets", false).toBool()) ? insideOffset: 0)
+             << " " << wf->m_inside.m_radius << std:: endl;
+        }
 
-    file << "DIAM " << wf->diameter << std::endl;
-    file << "ROC " << wf->roc << std::endl;
-    file << "Lambda " << wf->lambda << std::endl;
-    mirrorDlg &md = *mirrorDlg::get_Instance();
-    if (md.isEllipse()){
-        file << "ellipse_vertical_axis " << md.m_verticalAxis;
-    }
+        file << "DIAM " << wf->diameter << std::endl;
+        file << "ROC " << wf->roc << std::endl;
+        file << "Lambda " << wf->lambda << std::endl;
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        if (md.isEllipse()){
+            file << "ellipse_vertical_axis " << md.m_verticalAxis;
+        }
 }
 
 void SurfaceManager::SaveWavefronts(bool saveNulled){
@@ -1408,6 +1417,7 @@ void SurfaceManager::backGroundUpdate(){
         makeMask(i);
         generateSurfacefromWavefront(i);
     }
+    m_ignoreInverse = false;
     loadComplete();
 }
 
@@ -1740,7 +1750,8 @@ void SurfaceManager::invert(QList<int> list){
         m_wavefronts[list[i]]->data *= -1;
         m_wavefronts[list[i]]->dirtyZerns = true;
         m_wavefronts[list[i]]->wasSmoothed = false;
-        m_askAboutReverse = true;
+        m_ignoreInverse = true;
+
     }
     m_waveFrontTimer->start(500);
 }
@@ -1999,7 +2010,7 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     QPainter painter( &contour );
 
     QString html = "<html><head/><body><h1>Test Stand Astig Analysis</h1>"
-            "<h3>Step 2. Stand induced astig at each rotation position:</h3>";
+            "<h3>Stand induced astig at each rotation position:</h3>";
     html.append( "<table  style='ds margin-top:0px; margin-bottom:0px; margin-left:10px; margin-right:10px;'"
                  " width='70%' cellspacing='1' cellpadding='1'>"
 
@@ -2031,7 +2042,12 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
                 QString().number(fittedcircle.b,'f',3) + "</td><td>" + QString().number(sqrt(fittedcircle.a * fittedcircle.a + fittedcircle.b * fittedcircle.b),'f',3) + "</td></tr>");
     html.append("<tr><b><td><b>STD</b></td><td><ALIGN ='right'>" + QString().number(standXStd[0],'f',3) + "</td><td>" +
                 QString().number(standyStd[0],'f',3) + "</td><td>" + QString().number(standStd[0],'f',3) + "</td></tr>");
-    html.append("</table>");
+    html.append("</table><br><p>The Table above shows the computed stand astig at each rotation.<br>"
+                "If the variation for the astig values is small then "
+                "The stand removal was good.  Idealy the STD (standard deviation) should be"
+                " less than .1 which means less than .1 wave pv on the surface of the mirror"
+                "</p>");
+
 
     int cnt = 0;
     QString imagesHtml = "<table  style='ds margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;'"
@@ -2106,7 +2122,9 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     }
 
     mirrorAstigRadius /= list.size();
-    imagesHtml.append("</table>");
+    imagesHtml.append("</table><p>");
+
+
     //display average of all stand zernwavefronts
     wavefront * wf2 = new wavefront(*inputs[0]);
     wf2->data = wf2->workData = standavgZernMat ;
@@ -2245,6 +2263,8 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     html.append("<p> <img src='" + imageName + "' /></p>");
     html.append("<p font-size:12pt> The plot above shows the astig of each input file plotted as colored dots."
                 "The large green circle is the average distance all these points are from the center."
+                "For it to be meaningful you should have pairs of rotations at both 0-90 and 45-135."
+                "That is 90 deg pairs for some angles at 45 deg of 0 deg.<br>"
                 " In a perfect world each dot would have be on the circle. "
                 " If any dots are far from the circle look for a problem at that rotation angle.</p>"
                "<p font-size:12pt>It shows the stand only astig ploted as plus signs.<br>"
@@ -2253,7 +2273,9 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
                 "variabilty of the mean.</p>"
                 "<p font-size:12pt>If the variation for the astig values is small then "
                 "The stand removal was good.  Idealy the STD (standard deviation) should be"
-                " less than .1 which means less than .1 wave pv on the surface of the mirror</p><br>"
+                " less than .1 which means less than .1 wave pv on the surface of the mirror"
+                "<br>The colored plus signs are what is calculated for test stand induced astig."
+                "at each rotation angle.</p><br>"
 
 
                 "<table><tr><td><img src='mydata://StandCotourZerns.png' /></td><td><img src='mydata://StandCotourMat.png' /></td></tr></table>"
@@ -2543,13 +2565,14 @@ void SurfaceManager::saveAllContours(){
         return;
     m_allContours.save( fName );
 }
+#ifdef NOTNOW
 void SurfaceManager::showAll3D(GLWidget *gl)
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
     int width = 500;
     int height = 500;
 
-    int rows =  ceil((double)m_wavefronts.size()/4.);
+    int rows =  ceil((double)m_wavefronts.size()/3.);
     int columns = min(m_wavefronts.size(),int(ceil((double)m_wavefronts.size()/rows)));
     const QSizeF size(columns * (width + 10), rows * (height + 10));
     const QRect imageRect = QRect(0,0,size.width(),size.height());
@@ -2557,13 +2580,16 @@ void SurfaceManager::showAll3D(GLWidget *gl)
     m_allContours.fill( QColor( Qt::white ).rgb() );
     QPainter painter(&m_allContours);
     QFont serifFont("Times", 18, QFont::Bold);
-    for (int i = 0; i < m_wavefronts.size(); ++i)
+    surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
+    QList<int> list = saTools->SelectedWaveFronts();
+    for (int i = 0; i < list.size(); ++i)
     {
-        wavefront * wf = m_wavefronts[i];
+        wavefront * wf = m_wavefronts[list[i]];
+
 
         gl->setSurface(wf);
-        //gl->swapBuffers();
-        //gl->setSurface(wf);
+        gl->swapBuffers();
+        gl->setSurface(wf);
         QImage glImage = gl->grabFrameBuffer();
         QPainter p2(&glImage);
         p2.setFont(serifFont);
@@ -2605,23 +2631,28 @@ void SurfaceManager::showAll3D(GLWidget *gl)
     w->show();
     QApplication::restoreOverrideCursor();
 }
+#endif
 #include "showallcontoursdlg.h"
 void SurfaceManager::showAllContours(){
     showAllContoursDlg dlg;
     if (!dlg.exec()) {
         return;
     }
+    QRect rec = QApplication::desktop()->screenGeometry();
     QApplication::setOverrideCursor(Qt::WaitCursor);
     ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot;
     //plot->m_minimal = true;
     int cols = dlg.getColumns();
-    int width = dlg.getWidth()/cols;
+    int width = rec.width()/cols;
     int height = width * .82;
+    surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
+    QList<int> list = saTools->SelectedWaveFronts();
 
-    int rows =  ceil((double)m_wavefronts.size()/cols);
-    int columns = min(m_wavefronts.size(),int(ceil((double)m_wavefronts.size()/rows)));
+    int rows =  ceil((double)list.size()/cols);
+    int columns = min(list.size(),int(ceil((double)list.size()/rows)));
     const QSizeF size(columns * (width + 10), rows * (height + 10));
     const QRect imageRect = QRect(0,0,size.width(),size.height());
+    qDebug() << "save all" << imageRect;
     m_allContours = QImage( imageRect.size(), QImage::Format_ARGB32 );
     m_allContours.fill( QColor( Qt::white ).rgb() );
     QPainter painter( &m_allContours );
@@ -2631,9 +2662,9 @@ void SurfaceManager::showAllContours(){
     renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasFrame );
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend,false);
     renderer.setLayoutFlag( QwtPlotRenderer::FrameWithScales,false );
-    for (int i = 0; i < m_wavefronts.size(); ++i)
+    for (int i = 0; i < list.size(); ++i)
     {
-        wavefront * wf = m_wavefronts[i];
+        wavefront * wf = m_wavefronts[list[i]];
         plot->setSurface(wf);
         plot->replot();
         int y_offset =  height * (i/columns) + 10;
@@ -2665,7 +2696,7 @@ void SurfaceManager::showAllContours(){
     layout->addWidget(scrollArea);
     w->setLayout(layout);
     w->setWindowTitle("Contours of all WaveFronts.");
-    QRect rec = QApplication::desktop()->screenGeometry();
+
     height = 2 * rec.height()/3;
     width = rec.width();
     w->resize(width,height);
@@ -2773,14 +2804,18 @@ void SurfaceManager::report(){
     QString tail = "</body></html>";
     QTextDocument *doc = editor->document();
     QString contourHtml;
-    QImage contWindow =  QImage(m_contourView->size(),QImage::Format_ARGB32 );
-    QPainter p1(&contWindow);
+
     // get the contour plot image
     if (dlg.show_contour){
 
 
         qDebug() << "contour size" << m_contourView->size();
-        m_contourView->resize(600,400);
+        QSize cs = m_contourView->size();
+        qDebug() << "contour"<< cs;
+        if (cs.width() < 200)
+            m_contourView->resize(1000,800);
+        QImage contWindow =  QImage(m_contourView->size(),QImage::Format_ARGB32 );
+        QPainter p1(&contWindow);
         m_contourView->repaint();
         m_contourView->render(&p1);
         if (dlg.reduceContour){
@@ -2796,10 +2831,8 @@ void SurfaceManager::report(){
     // get the 3D image
     if (dlg.show_3D){
         QString threeD("threeD.png");
-        m_oglPlot->resize(600,600);
-        m_oglPlot->repaint();
-        m_oglPlot->swapBuffers();
-        QImage ddd = m_oglPlot->grabFrameBuffer();
+        QImage ddd = m_SurfaceGraph->render();
+
         if (dlg.reduce3D){
             ddd = ddd.scaled(3 * ddd.width()/4, ddd.height()/2,Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
             doc->addResource(QTextDocument::ImageResource,  QUrl(threeD), QVariant(ddd));
@@ -2812,6 +2845,7 @@ void SurfaceManager::report(){
                            threeD + "'</td></tr></table><br>");
         }
     }
+
 
     if (dlg.show_profile){
         //get the profile plot image
@@ -2828,9 +2862,11 @@ void SurfaceManager::report(){
         // add star test if not testing a
         if (!md->isEllipse()){
             SimulationsView *sv = SimulationsView::getInstance(0);
-            if (sv->needs_drawing){
+            qDebug() << "sv size"<< sv->size();
+            sv->resize(1000,800);
+            //if (sv->needs_drawing){
                 sv->on_MakePB_clicked();
-            }
+            //}
             QImage svImage = QImage(sv->size(),QImage::Format_ARGB32 );
             QPainter p3(&svImage);
             sv->render(&p3);

@@ -28,8 +28,6 @@
 #include "wavefront.h"
 #include "contourplot.h"
 #include "contourtools.h"
-#include "glwidget.h"
-#include "oglcontrols.h"
 #include "surfaceanalysistools.h"
 #include "surfacemanager.h"
 #include "zernikedlg.h"
@@ -265,6 +263,7 @@ private slots:
 
     void on_actionProcess_PSI_interferograms_triggered();
 
+
 private:
 
     Ui::MainWindow *ui;
@@ -287,7 +286,6 @@ private:
     contourView *m_contourView;
 
     ContourTools *m_contourTools;
-    OGLControls *m_oglTools;
     surfaceAnalysisTools *m_surfTools;
     outlineHelpDocWidget *m_outlineHelp;
     regionEditTools *m_regionsEdit;

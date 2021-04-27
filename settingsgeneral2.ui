@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>550</width>
     <height>348</height>
    </rect>
   </property>
@@ -15,15 +15,26 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QCheckBox" name="checkBox">
-     <property name="toolTip">
-      <string>Use SVD Least Square Fit to calculate Zernikes. Slower but may be more robust.
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QCheckBox" name="checkBox">
+       <property name="toolTip">
+        <string>Use SVD Least Square Fit to calculate Zernikes. Slower but may be more robust.
 Try it and if you find no difference in wavefront values then you do not need to use it.</string>
-     </property>
-     <property name="text">
-      <string>Use SVD for Zernike fitting</string>
-     </property>
-    </widget>
+       </property>
+       <property name="text">
+        <string>Use SVD for Zernike fitting</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="rulerParms">
+       <property name="text">
+        <string>Contour Ruler Parameters</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QCheckBox" name="showConditionNumbersCb">

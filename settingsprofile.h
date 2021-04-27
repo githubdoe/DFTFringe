@@ -33,6 +33,8 @@ public:
     ~settingsProfile();
     void setColor(int num);
     QColor getColor(int num);
+    int lineWidth();
+    int selectedWidth();
 private slots:
     void on_pushButton_1_pressed();
 

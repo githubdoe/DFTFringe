@@ -44,13 +44,6 @@
    <item row="1" column="0" colspan="3">
     <widget class="QListWidget" name="listWidget"/>
    </item>
-   <item row="3" column="2">
-    <widget class="QPushButton" name="aboutpb">
-     <property name="text">
-      <string>About</string>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
  <resources/>

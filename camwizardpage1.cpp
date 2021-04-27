@@ -1,9 +1,9 @@
 #include "camwizardpage1.h"
 #include "ui_camwizardpage1.h"
 #include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv/cv.h>
 #include <QImageReader>
 #include <QFileDialog>
@@ -17,6 +17,10 @@
 #include <QInputDialog>
 #include "settings2.h"
 using namespace cv;
+namespace cv
+{
+    using std::vector;
+}
 CamWizardPage1::CamWizardPage1(QWidget *parent) :
     QWizardPage(parent),
     ui(new Ui::CamWizardPage1)

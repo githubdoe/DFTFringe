@@ -27,6 +27,8 @@
 #include <math.h>
 
 #include "opencv/cv.h"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/features2d.hpp"
 #include "graphicsutilities.h"
 #include <iostream>
 #include <fstream>
@@ -98,10 +100,10 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     polyndx = 0;
     QSettings set;
     m_zoomBoxWidth = set.value("zoomBoxWidth", 200).toInt();
-    centerPenColor = set.value("igramCenterLineColor", QColor("white").name()).toString();
-    edgePenColor = set.value("igramEdgeLineColor", QColor("green").name()).toString();
-    edgePenWidth = set.value("igramEdgeWidth", 3).toInt();
-    centerPenWidth = set.value("igramCenterWidth", 3).toInt();
+    centerPenColor = set.value("igramCenterLineColor", QColor("yellow").name()).toString();
+    edgePenColor = set.value("igramEdgeLineColor", QColor("white").name()).toString();
+    edgePenWidth = set.value("igramEdgeWidth", 5).toInt();
+    centerPenWidth = set.value("igramCenterWidth", 5).toInt();
     opacity = set.value("igramLineOpacity", 65.).toDouble();
     lineStyle = set.value("igramLineStyle", 1).toInt();
     setMouseTracking(true);
@@ -145,8 +147,21 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     dock->setWidget(outlinePlotWindow);
     outlinePlotWindow->hide();
     MainWindow::me->addDockWidget(Qt::LeftDockWidgetArea,dock);
-
+    connect(mirrorDlg::get_Instance(), SIGNAL(aperatureChanged()), this, SLOT(aperatureChanged()));
+    m_edgeMaskWidth = 0;
 }
+void IgramArea::computeEdgeRadius(){
+    // compute mask inner edge in pixels
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    double pixelsPermm =(m_outside.m_radius/(md.diameter/2.));
+    m_edgeMaskWidth = md.aperatureReduction * pixelsPermm;
+}
+
+void IgramArea::aperatureChanged(){
+    computeEdgeRadius();
+    drawBoundary();
+}
+
 void IgramArea::colorChannelChanged(){
     cv::Mat bestChan = igramToGray(qImageToMat(igramColor));
     igramGray = cvMatToImage(bestChan);
@@ -185,12 +200,12 @@ void IgramArea::DrawSimIgram(void){
     double rad = xcen-border;
     cv::Mat simgram = makeSurfaceFromZerns(border, true);
     cv::flip(simgram,simgram,0);
-
+    cv::cvtColor(simgram, simgram, CV_BGRA2RGBA);
     igramColor = QImage((uchar*)simgram.data,
                         simgram.cols,
                         simgram.rows,
                         simgram.step,
-                        QImage::QImage::Format_RGB32).copy();
+                        QImage::QImage::Format_RGBX8888).copy();
 
     cv::Mat bestChannel = igramToGray(qImageToMat(igramColor));
     igramGray = cvMatToImage(bestChannel);
@@ -274,7 +289,7 @@ Mat IgramArea::igramToGray(cv::Mat roi){
     cv::Mat outMat;
      colorChannel &channel = *colorChannel::get_instance();
     if (channel.useAuto){
-        // use the color plane with the largest mean value
+        // use the color plane with the largest std value
         cv::Scalar mean,std;
         cv::meanStdDev(roi,mean,std);
         double maxStd = 0;
@@ -287,20 +302,20 @@ Mat IgramArea::igramToGray(cv::Mat roi){
     }
     else {
         if (channel.useRed){
-            maxndx = 2;
+            maxndx = 0;
         }
         if (channel.useGreen){
             maxndx = 1;
         }
         if (channel.useBlue){
-            maxndx = 0;
+            maxndx = 2;
         }
     }
     for (int i = 0; i < 3; ++i){
         planes[i] = planes[maxndx];
     }
     m_usingChannel = maxndx;
-    static char *colorNames[] = {"blue","green","red"};
+    static const char *colorNames[] = {"red","green","blue"};
     cv::Mat gray;
     cv::merge(planes, 3, gray);
     emit imageSize(QString().sprintf("%d X %d using %s channel", igramColor.size().width(),
@@ -336,15 +351,14 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
                                              double &resp, int *radius, bool useExisting){
     double cx  = m_outside.m_center.x() * searchOutlineScale;
     double cy = m_outside.m_center.y() * searchOutlineScale;
-    int outradius = m_outside.m_radius * searchOutlineScale;
+
     double maxresp = 0.;
-    double maxrad;
+
     cv::Point2d bestc;
     QVector<QPointF> points;
     QVector<QPointF> meanPoints;
 
     QSettings set;
-    bool showDebug = set.value("DebugShowOutlining", false).toBool();
 
     int limit = 5;
     cv::Rect bounds;
@@ -372,7 +386,7 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
         cv::circle(circlem, insideCenter, rad0, cv::Scalar(50), -1);
 
         double resp;
-        cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
+        cv::Point2d center = cv::phaseCorrelate(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
                                                    noArray(), &resp);
         int x = cx - center.x;
         int y = cy - center.y;
@@ -433,7 +447,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     double cx = gray.cols/2.;
     double cy = gray.rows/2.;
     double maxresp = 0.;
-    double maxrad;
+
 
     cv::Point2d bestc;
     QVector<QPointF> points;
@@ -467,10 +481,10 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
         cv::circle(circlem, cv::Point2f(cx,cy), rad0, cv::Scalar(255),-1);
 
         double resp;
-        cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
+        cv::Point2d center = cv::phaseCorrelate(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
                                                    noArray(), &resp);
         resp = fabs(resp);
-        avg += resp;
+
         // compute location from the shift
         Point2d c(cx - center.x, cy - center.y);
         if (showDebug){
@@ -491,7 +505,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
             goodCnt = 1;
         }
         else {
-            double oldmean = rmean;
+
             rmean = .3 * resp + (1-.3) * rmean;
             rmeanpeak = fmax(rmeanpeak, rmean);
             mpoints << QPointF(rad0/searchOutlineScale,rmean );
@@ -657,7 +671,7 @@ void IgramArea::findCenterHole(){
     int cx = roi.cols/2;
     int cy = roi.rows/2;
     double maxresp = 0.;
-    double maxrad;
+
 
     emit statusBarUpdate("refining center outline",2);
     MainWindow::me->progBar->reset();
@@ -677,7 +691,7 @@ void IgramArea::findCenterHole(){
         cv::circle(key, cv::Point2f(cx,cy), rad, cv::Scalar(0),-1);
 
         double resp;
-        cv::Point2d center = cv::phaseCorrelateRes(cv::Mat_<float>(roi),cv::Mat_<float>(key),
+        cv::Point2d center = cv::phaseCorrelate(cv::Mat_<float>(roi),cv::Mat_<float>(key),
                                                    noArray(), &resp);
 
         int x = cx - center.x;
@@ -750,7 +764,7 @@ void IgramArea::findOutline(){
        return;
     }
 
-    bool showDebug = set.value("DebugShowOutlining", false).toBool();
+
     for (int i = 1; i < 5; ++i){
         QwtPlot *plot = MainWindow::me->m_outlinePlots->getPLot(i);
         plot->detachItems( QwtPlotItem::Rtti_PlotCurve);
@@ -782,8 +796,6 @@ void IgramArea::findOutline(){
         cv::Mat small;
         cv::resize(gray, small, cv::Size(0,0), scale,scale);
 
-        double cx = small.cols/2.;
-        double cy = small.rows/2.;
         double rad = small.rows/2. -2;
         int start = rad;
         int end = 25;
@@ -807,7 +819,6 @@ void IgramArea::findOutline(){
       searchMargin = set.value("outlineScanRange", 40).toInt();
 
     }
-    int dftSize = set.value("DFTSize", 640).toInt();
 
     // now crop to the current best circle + 5 and try full size
     resp = 0;
@@ -873,8 +884,7 @@ void IgramArea::autoTraceOutline(){
     emit statusBarUpdate( "",2);
 }
 void IgramArea::useLastOutline(){
-    if (igramGray.isNull())
-        return;
+
     QSettings set;
 
     if (m_current_boundry == OutSideOutline){
@@ -921,7 +931,6 @@ void IgramArea::adjustCenterandRegions(){
     QSettings set;
     double x = set.value("lastOutsideCx", 0).toDouble();
     double y = set.value("lastOutsideCy",0).toDouble();
-    double rad = set.value("lastOutsideRad", 0).toDouble();
     xoffset = (m_outside.m_center.x()-x);
     yoffset = (m_outside.m_center.y() - y);
 
@@ -957,7 +966,7 @@ void IgramArea::adjustCenterandRegions(){
     }
 }
 
-bool IgramArea::openImage(const QString &fileName, bool autoOutside)
+bool IgramArea::openImage(const QString &fileName, bool autoOutside, bool showBoundary)
 
 {
     foreach(QWidget *widget, QApplication::topLevelWidgets()) {
@@ -967,9 +976,11 @@ bool IgramArea::openImage(const QString &fileName, bool autoOutside)
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QImage loadedImage;
-    if (!loadedImage.load(fileName))
+    if (!loadedImage.load(fileName)) {
+        QMessageBox::warning(NULL,"","Image "+fileName + " could not be read.");
+        QApplication::restoreOverrideCursor();
         return false;
-
+    }
     // convert image to 3 channel image
     if (loadedImage.format() != QImage::Format_RGB888)
         loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
@@ -1056,25 +1067,32 @@ bool IgramArea::openImage(const QString &fileName, bool autoOutside)
     m_polygons.clear();
     m_regionEdit->clear();
     m_regionEdit->hide();
+    qDebug() << "Checking for ouline file";
     // check for an outline file
     QFileInfo finfo(makeOutlineName());
     emit showTab(0);
     qApp->processEvents();
     if (finfo.exists()){
+        qDebug() << "file exists";
         deleteRegions();
+        qDebug() << "del regions";
         loadOutlineFile(finfo.absoluteFilePath());
+        qDebug() << "outline loaded";
     }
     else {
 
         useLastOutline();
         // setup auto outline controls.
     }
-    if (set.value("autoOutline",true).toBool()){
+    if (set.value("autoOutline",false).toBool()){
             findOutline();
         }
-    adjustCenterandRegions();
 
-    drawBoundary();
+    adjustCenterandRegions();
+    if (showBoundary){
+        computeEdgeRadius();
+        drawBoundary();
+    }
 
 
     cropTotalDx = cropTotalDy = 0;
@@ -1198,7 +1216,7 @@ void IgramArea::increaseRegion(int n, double scale){
 
     int xavg = 0;
     int yavg = 0;
-    for (int i = 0; i < m_polygons[n].size(); ++i){
+    for (unsigned int i = 0; i < m_polygons[n].size(); ++i){
         xavg += m_polygons[n][i].x;
         yavg += m_polygons[n][i].y;
     }
@@ -1207,7 +1225,7 @@ void IgramArea::increaseRegion(int n, double scale){
     // find the closest point to the center
     double shortest = 99999;
     int shortestndx;
-    for (int i = 0; i < m_polygons[n].size(); ++i){
+    for (unsigned int i = 0; i < m_polygons[n].size(); ++i){
         int delx = m_polygons[n][i].x - xavg;
         int dely = m_polygons[n][i].y - yavg;
         double del = sqrt(delx * delx + dely * dely);
@@ -1217,7 +1235,7 @@ void IgramArea::increaseRegion(int n, double scale){
         }
     }
 
-    for (int i = 0; i < m_polygons[n].size(); ++i){
+    for (unsigned int i = 0; i < m_polygons[n].size(); ++i){
         m_polygons[n][i].x = scale * (m_polygons[n][i].x - xavg) + xavg;
         m_polygons[n][i].y = scale * (m_polygons[n][i].y - yavg) + yavg;
     }
@@ -1242,7 +1260,7 @@ void IgramArea::increase(int i) {
     }
     drawBoundary();
 }
-void IgramArea::decrease(int i){
+void IgramArea::decrease(){
 
     if (m_current_boundry == OutSideOutline) {
         m_outside.enlarge(-1);
@@ -1664,6 +1682,12 @@ void IgramArea::drawBoundary()
                 painter.setBrush(Qt::NoBrush);
             }
             outside.draw(painter,1.,s2);
+            if (md.m_clearAperature != md.diameter){
+                painter.setPen(QPen(edgePenColor, edgePenWidth, Qt::DotLine));
+                painter.drawEllipse(outside.m_center,
+                                    outside.m_radius - m_edgeMaskWidth,
+                                    outside.m_radius- m_edgeMaskWidth);
+            }
         }
         if (inside.m_radius > 0 && innerPcount > 1){
             painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
@@ -2031,7 +2055,12 @@ void IgramArea::PolyAreaActive(bool checked){
     update();
 
 }
-
+void IgramArea::edgeMaskOutLineActive(bool checked){
+    if (checked)
+       m_current_boundry = EdgeMaskOutline;
+    drawBoundary();
+    update();
+}
 void IgramArea::SideOutLineActive(bool checked){
     if (checked)
        m_current_boundry = OutSideOutline;
@@ -2048,11 +2077,12 @@ void IgramArea::CenterOutlineActive(bool checked){
 void IgramArea::loadOutlineFile(QString fileName){
     std::ifstream file(fileName.toStdString().c_str());
 
-    int fsize = file.tellg();
+    long long int fsize = file.tellg();
     file.seekg( 0, std::ios::end );
     fsize = file.tellg() - fsize;
     file.close();
     file.open(fileName.toStdString().c_str());
+    qDebug() << "ouline opened";
     if (!file.is_open()) {
         QMessageBox::warning(this, tr("Read Outline"),
                              tr("Cannot read file %1: ")
@@ -2061,9 +2091,7 @@ void IgramArea::loadOutlineFile(QString fileName){
     }
 
     m_outside = readCircle(file);
-
     CircleOutline sideLobe = readCircle(file);
-
     emit dftCenterFilter(sideLobe.m_radius);
 
     if ((file.tellg() > 0) && (fsize > file.tellg())) {
@@ -2077,9 +2105,12 @@ void IgramArea::loadOutlineFile(QString fileName){
     else {
         m_center.m_radius = 0;
     }
+
     std::string line;
     m_polygons.clear();
+
     while(std::getline(file, line)){
+
         if (line == "Poly"){
             std::getline(file,line);
             m_polygons.push_back(std::vector< cv::Point>());
@@ -2095,7 +2126,10 @@ void IgramArea::loadOutlineFile(QString fileName){
     m_OutterP1 = m_outside.m_p1.m_p;
     m_OutterP2 = m_outside.m_p2.m_p;
     outterPcount = 2;
-    drawBoundary();
+    if (!igramGray.isNull()){
+        computeEdgeRadius();
+        drawBoundary();
+    }
     m_outsideHist.push(igramGray,m_outside);
     emit enableShiftButtons(true);
 
@@ -2119,8 +2153,8 @@ void IgramArea::readOutlines(){
     loadOutlineFile(fileName);
 }
 QString IgramArea::makeOutlineName(){
-    QSettings settings;
-    lastPath = settings.value("lastPath").toString();
+            QSettings settings;
+            lastPath = settings.value("lastPath").toString();
     QString name = QFileInfo(m_filename).completeBaseName();
     return lastPath + "/" + name + ".oln";
 }

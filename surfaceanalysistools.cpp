@@ -20,8 +20,10 @@
 #include <QDebug>
 #include <QSettings>
 #include <QtAlgorithms>
+#include <QLineEdit>
 #include "mirrordlg.h"
 #include "renamewavefrontdlg.h"
+#include <QMessageBox>
 surfaceAnalysisTools *surfaceAnalysisTools::m_Instance = NULL;
 
 surfaceAnalysisTools * surfaceAnalysisTools::get_Instance(QWidget *parent){
@@ -226,20 +228,7 @@ void surfaceAnalysisTools::nameChanged(QString old, QString newname){
     }
 }
 
-void surfaceAnalysisTools::on_defocusDial_valueChanged(int value)
-{
-    double waves = .0025 * value;
-    ui->defocusWaves->blockSignals(true);
-    ui->defocusWaves->setText(QString().sprintf("%6.2lf", waves));
-    ui->defocusWaves->blockSignals(false);
-    // From Suiter appendix E  mm = F^2 * 8 * waves * wavelength
-    double f = mirrorDlg::get_Instance()->FNumber;
-    double mm = f * f * 8. * waves * .00055;  //mmeters
-    ui->defocusNm->setText(QString().sprintf("%6.3lf", mm));
-    m_defocus = waves;
-    emit defocusChanged();
 
-}
 
 void surfaceAnalysisTools::defocusTimerDone(){
     m_defocusTimer.stop();
@@ -248,21 +237,17 @@ void surfaceAnalysisTools::defocusTimerDone(){
 
 void surfaceAnalysisTools::on_checkBox_clicked(bool checked)
 {
+    if (ui->wavefrontList->count() == 0){
+        ui->checkBox->setChecked(false);
+        return;
+    }
     m_useDefocus = checked;
-    ui->defocusDial->setEnabled(checked);
-    ui->defocusWaves->setEnabled(checked);
+    ui->rocPercent->setEnabled(checked);
+    ui->multiplierwaves->setEnabled(checked);
     emit defocusChanged();
 }
 
-void surfaceAnalysisTools::on_defocusWaves_textChanged(const QString &arg1)
-{
-    m_defocus = arg1.toDouble();
-    double f = mirrorDlg::get_Instance()->FNumber;
-    double mm = f * f * 8. * m_defocus * .00055;  //mmeters
-    ui->defocusNm->setText(QString().sprintf("%6.3lf", mm));
-    emit defocusChanged();
-    //m_defocusTimer.start(1000);
-}
+
 
 void surfaceAnalysisTools::on_InvertPB_pressed()
 {
@@ -279,6 +264,7 @@ void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPo
     ui->wavefrontList->item(t.row())->setSelected(true);	// even a right click will select the item
     ui->wavefrontList->editItem(item);
 }
+
 void surfaceAnalysisTools::ListWidgetEditEnd(QWidget *editor, QAbstractItemDelegate::EndEditHint ){
     QString NewValue = reinterpret_cast<QLineEdit*>(editor)->text();
     QModelIndexList indexes = ui->wavefrontList->selectionModel()->selectedIndexes();
@@ -304,4 +290,36 @@ void surfaceAnalysisTools::on_filterPB_clicked()
 void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_valueChanged(double arg1)
 {
    emit     surfaceSmoothGBValue(arg1);
+}
+
+void surfaceAnalysisTools::on_multiplierwaves_valueChanged(double arg1)
+{
+    m_defocus = arg1 * .01 * ui->rocPercent->value();
+    double f = mirrorDlg::get_Instance()->FNumber;
+    double mm = f * f * 8. * m_defocus * .00055;  //mmeters
+    ui->defocusNm->setText(QString().sprintf("%6.3lf", mm));
+    emit defocusChanged();
+    //m_defocusTimer.start(1000);
+}
+
+void surfaceAnalysisTools::on_rocPercent_valueChanged(int value)
+{
+    double waves = .01 * value * ui->multiplierwaves->value();
+
+    // From Suiter appendix E  mm = F^2 * 8 * waves * wavelength
+    double f = mirrorDlg::get_Instance()->FNumber;
+    double mm = f * f * 8. * waves * .00055;  //mmeters
+    ui->defocusNm->setText(QString().sprintf("%6.3lf", mm));
+    m_defocus = waves;
+    emit defocusChanged();
+}
+
+void surfaceAnalysisTools::on_rocHelp_clicked()
+{
+    QMessageBox::information(this, "ROC offset help.",
+                "<b>Make sure the Zernike defocus term is not checked before using this control.</b> "
+                "<p>Used by mirror makers to adjusted the mirror's desired focal lengh a small"
+                " amount in order to raise the middle or edge of the surface.</p>"
+                " <p>The slider value range is from -1 to +1 and multiplied by the multiplier to generate an offset in waves.</p>"
+                "<p>The resulting focal length offset is displayed in mm at the lower right.</p>");
 }

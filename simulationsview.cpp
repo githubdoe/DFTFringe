@@ -18,7 +18,7 @@
 #include "simulationsview.h"
 #include "ui_simulationsview.h"
 #include "opencv/cv.h"
-#include "opencv/highgui.h"
+#include <opencv2/imgproc.hpp>
 #include "mirrordlg.h"
 #include "zernikeprocess.h"
 #include "dftarea.h"
@@ -193,6 +193,7 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
     cv::merge(in,2,complexIn);
     dft(complexIn,out);
     shiftDFT(out);
+    //cv::flip(out,out,0);      // needs work.
     Mat planes[2];
     split(out, planes);
     magnitude(planes[0], planes[1], planes[0]);
@@ -266,6 +267,7 @@ cv::Mat fitStarTest(cv::Mat img, int size, double gamma){
     cvtColor(tmp,tmp, CV_GRAY2RGB);
     cv::Mat t = tmp(cv::Rect(offset,offset,2 * ee, 2 * ee));
     cv::resize(t,t,cv::Size(size,size),0,0,cv::INTER_AREA);
+    cv::flip(t,t,0);
     return t;
 }
 void etoxplusy(cv::Mat data)
@@ -335,8 +337,10 @@ void SimulationsView::on_MakePB_clicked()
     double gamma = ui->gammaSB->value();
 
     //inside focus star test
-    cv::Mat inside = computeStarTest(nulledSurface(-defocus), ui->FFTSizeSB->value(), ui->centerMagnifySB->value());
-    cv::Mat t = fitStarTest(inside,500,gamma);
+    int wid = width() * .9/3.;
+    qDebug() << "star test"<< width();
+    cv::Mat inside = computeStarTest(nulledSurface(-defocus), ui->FFTSizeSB->value(), 3);
+    cv::Mat t = fitStarTest(inside, wid,gamma);
     cv::putText(t,QString().sprintf("-%5.1lf waves inside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
     wasAliased |= alias;
     if (alias)
@@ -352,8 +356,8 @@ void SimulationsView::on_MakePB_clicked()
     ui->inside->setPixmap(QPixmap::fromImage(indisplay.copy()));
 
     // outside focus star test
-    cv::Mat outside = computeStarTest(nulledSurface(defocus),ui->FFTSizeSB->value(),ui->centerMagnifySB->value());
-    t = fitStarTest(outside,500,gamma);
+    cv::Mat outside = computeStarTest(nulledSurface(defocus),ui->FFTSizeSB->value(),3);
+    t = fitStarTest(outside,wid ,gamma);
     cv::putText(t,QString().sprintf("%5.1lfwaves outside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
     wasAliased |= alias;
     if (alias)
@@ -375,8 +379,8 @@ void SimulationsView::on_MakePB_clicked()
                                        "The error usually shows up as a series of light and dark horizontal bands or dots.");
     }
 
-    cv::Mat focused = computeStarTest(nulledSurface(0), 600,  40);
-    t = fitStarTest(focused, 200,gamma/2);
+    cv::Mat focused = computeStarTest(nulledSurface(0), 600,  ui->centerMagnifySB->value());
+    t = fitStarTest(focused, wid ,gamma/2);
     cv::putText(t,QString().sprintf("Focused").toStdString(),cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
     QImage focusDisplay ((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
     ui->Focused->setPixmap(QPixmap::fromImage(focusDisplay.copy()));

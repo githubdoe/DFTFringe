@@ -19,6 +19,7 @@
 #include "ui_settingsprofile.h"
 #include <QSettings>
 #include <QColorDialog>
+#include <QWidget>
 static inline QString colorButtonStyleSheet(const QColor &bgColor)
 {
     if (bgColor.isValid()) {
@@ -57,6 +58,12 @@ void settingsProfile::setColor(int num){
     btn->setStyleSheet(colorButtonStyleSheet(color));
     QSettings set;
     set.setValue("profile color "+name, color.name());
+}
+int settingsProfile::lineWidth(){
+    return ui->lineWidth->value();
+}
+int settingsProfile::selectedWidth(){
+    return ui->selectedWidth->value();
 }
 
 settingsProfile::~settingsProfile()
@@ -108,3 +115,5 @@ void settingsProfile::on_pushButton_3_pressed()
 {
     setColor(3);
 }
+
+

@@ -2,11 +2,14 @@
 #include "ui_transformwavefrontdlg.h"
 #include "opencv/cv.h"
 #include "opencv/highgui.h"
+#include "surfacemanager.h"
 TransformWaveFrontDlg::TransformWaveFrontDlg( QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TransformWaveFrontDlg)
 {
     ui->setupUi(this);
+    wavefront *wf = SurfaceManager::get_instance()->getCurrent();
+    ui->newWaveLength->setValue(wf->lambda);
 }
 
 TransformWaveFrontDlg::~TransformWaveFrontDlg()

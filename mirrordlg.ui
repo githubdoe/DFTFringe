@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>467</width>
-    <height>325</height>
+    <width>463</width>
+    <height>327</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -125,6 +125,12 @@ Wave Length nm</string>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
          <widget class="QLabel" name="label_9">
+          <property name="acceptDrops">
+           <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string/>
+          </property>
           <property name="text">
            <string>Vertical Axis</string>
           </property>
@@ -134,6 +140,9 @@ Wave Length nm</string>
          <widget class="QLineEdit" name="minorAxisEdit">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The vertical diameter of the Ellipse.&lt;/p&gt;&lt;p&gt; The other diameter which is always the horizontal diameter is specified by the Mirror diameter field. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -147,85 +156,156 @@ Wave Length nm</string>
      <property name="title">
       <string>Mirror </string>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="3" column="2">
-       <widget class="QLabel" name="rocLab">
-        <property name="text">
-         <string>Roc:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3" colspan="2">
-       <widget class="QLineEdit" name="FNumber">
-        <property name="toolTip">
-         <string>Changing this value will compute the Roc value.</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1" colspan="2">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Obstruction:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLabel" name="fnumberLab">
-        <property name="text">
-         <string>FNumber:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3" colspan="2">
-       <widget class="QLineEdit" name="diameter">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Daimeter of mirror or Horizontal axis of ellipse.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3" colspan="2">
-       <widget class="QLineEdit" name="roc">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Positive value of Radius of curvature of mirror or 0 if testing a flat. Will be ignored if Artificial Null is checked.&lt;/p&gt;&lt;p&gt;The Fnumber will be computed from this value and the diameter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="3" colspan="2">
-       <widget class="QLineEdit" name="obs"/>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Diameter:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" colspan="4">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
        <widget class="QCheckBox" name="unitsCB">
         <property name="text">
          <string>Units in mm</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="0" colspan="4">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Conic Constant:</string>
-        </property>
-       </widget>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_9">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Diameter:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="diameter">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Daimeter of clear apature of the mirror or Horizontal axis of ellipse.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
-      <item row="7" column="4">
-       <widget class="QLineEdit" name="cc">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Desired conic Constant.  The actual value will be computed by the analysis.&lt;/p&gt;&lt;p&gt;This value is used in computing the Artiicial Null value.&lt;/p&gt;&lt;p&gt;Set to 0 if testing a flat or a sphere.&lt;/p&gt;&lt;p&gt;Set to -1 if testing a paraboloid.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <item>
+         <widget class="QLabel" name="rocLab">
+          <property name="text">
+           <string>Roc:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="roc">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Positive value of Radius of curvature of mirror or 0 if testing a flat. Will be ignored if Artificial Null is checked.&lt;/p&gt;&lt;p&gt;The Fnumber will be computed from this value and the diameter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QLabel" name="fnumberLab">
+          <property name="text">
+           <string>FNumber:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="FNumber">
+          <property name="toolTip">
+           <string>Changing this value will compute the Roc value.</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Obstruction:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="obs"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Conic Constant:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="cc">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Desired conic Constant.  The actual value will be computed by the analysis.&lt;/p&gt;&lt;p&gt;This value is used in computing the Artiicial Null value.&lt;/p&gt;&lt;p&gt;Set to 0 if testing a flat or a sphere.&lt;/p&gt;&lt;p&gt;Set to -1 if testing a paraboloid.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QCheckBox" name="ReducApp">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable masking the clear apature at the outside edge.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Edge Mask</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="reduceValue">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Width of mask&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_10">
+        <item>
+         <widget class="QLabel" name="clearApLabel">
+          <property name="text">
+           <string>Unmasked Aperature:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="ClearAp">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>

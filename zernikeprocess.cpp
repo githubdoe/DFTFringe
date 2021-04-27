@@ -37,6 +37,98 @@ int Zw[] = {								/*  n    */
     14,14,16,16,18,18,20,20,22,22,24,24,13  // 48
 };
 
+//
+//	Copyright (C) 2019 Michael Peck <mpeck1 -at- ix.netcom.com>
+//
+//	License: MIT <https://opensource.org/licenses/MIT>
+//
+
+// Fill a matrix with Zernike polynomial values
+
+
+
+// [[Rcpp::export]]
+cv::Mat rhoMatrix(){
+
+}
+cv::Mat thetaMatric(){
+
+}
+
+cv::Mat zpmCx(QVector<double> rho, QVector<double> theta, int maxorder) {
+
+  int m, n, n0, mmax = maxorder/2;
+  int i, imax = rho.size();
+  int order, nm, nm1mm1, nm1mp1, nm2m;
+  int ncol = (mmax+1)*(mmax+1);
+  double a0;
+  double cosmtheta[mmax], sinmtheta[mmax];
+  cv::Mat_<double>  zm(imax, ncol);
+
+  //do some rudimentary error checking
+
+  //if (rho.length() != theta.length()) stop("Numeric vectors must be same length");
+  //if ((maxorder % 2) != 0) stop("maxorder must be even");
+
+  //good enough
+
+
+  for (i=0; i<imax; i++) {
+
+    //cache values of cos and sin
+    cosmtheta[0] = std::cos(theta[i]);
+    sinmtheta[0] = std::sin(theta[i]);
+    for (m=1; m<mmax; m++) {
+      cosmtheta[m] = cosmtheta[m-1]*cosmtheta[0] - sinmtheta[m-1]*sinmtheta[0];
+      sinmtheta[m] = sinmtheta[m-1]*cosmtheta[0] + cosmtheta[m-1]*sinmtheta[0];
+    }
+
+    zm(i, 0) = 1.0;                     //piston term
+    zm(i, 3) = 2. * rho[i] * rho[i] - 1.; //defocus
+
+    // now fill in columns with m=n for n>0
+
+    for (m=1; m <= mmax; m++) {
+      zm(i, m*m) = rho[i] * zm(i, (m-1)*(m-1));
+    }
+
+    // non-symmetric terms
+
+    for (order=4; order<=maxorder; order+=2) {
+      for (m=order/2-1; m>0; m--) {
+        n=order-m;
+        nm = order*order/4 + n - m;
+        nm1mm1 = (order-2)*(order-2)/4 + n - m;
+        nm1mp1 = nm - 2;
+        nm2m = nm1mm1 - 2;
+        zm(i, nm) = rho[i]*(zm(i, nm1mm1) + zm(i, nm1mp1)) - zm(i, nm2m);
+      }
+
+      // m=0 (symmetric) term
+      nm = order*order/4 + order;
+      nm1mp1 = nm-2;
+      nm2m = (order-2)*(order-2)/4+order-2;
+      zm(i, nm) = 2.*rho[i]*zm(i, nm1mp1) - zm(i, nm2m);
+    }
+
+    // now multiply each column by normalizing factor and cos, sin
+
+    n0 = 1;
+    for (order=2; order <= maxorder; order+=2) {
+      for(m=order/2; m>0; m--) {
+        n=order-m;
+        a0 = sqrt(2.*(n+1));
+        zm(i, n0+1) = a0*sinmtheta[m-1]*zm(i, n0);
+        zm(i, n0) *= a0*cosmtheta[m-1];
+        n0 += 2;
+      }
+      n = order;
+      zm(i, n0) *= sqrt(n+1.);
+      n0++;
+    }
+  }
+  return zm;
+}
 /*
 Public Function ZernikeW(n As Integer) As Double
 ' N is Zernike number as given by James Wyant
@@ -512,7 +604,7 @@ zernikeProcess::zernikeProcess(QObject *parent) :
 
 // compute zernikes from unwrapped surface
 #define SAMPLE_WIDTH 1
-void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
+void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms)
 {
     int nx = wf.data.cols;
     int ny = wf.data.rows;
@@ -522,7 +614,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
     if (!m_dirty_zerns)
         return;
 
-    Z = cv::Mat(Z_TERMS,1,numType, 0.);
+    Z = cv::Mat(zterms,1,numType, 0.);
 
     /*
     'calculate LSF matrix elements
@@ -536,16 +628,16 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
 
     cv::Mat_<double> A;//(count,Z_TERMS);
     cv::Mat_<double> B;//(count,1);
-    cv::Mat_<double> X(Z_TERMS,1);
+    cv::Mat_<double> X(zterms,1);
     int count = 0;
     if (useSvd){
         count = cv::countNonZero(wf.workMask);
-        A = cv::Mat_<double>::zeros(count,Z_TERMS);
+        A = cv::Mat_<double>::zeros(count,zterms);
         B = cv::Mat_<double>::zeros(count,1);
     }
     else {
-        A = cv::Mat_<double>::zeros(Z_TERMS,Z_TERMS);
-        B = cv::Mat_<double>::zeros(Z_TERMS,1);
+        A = cv::Mat_<double>::zeros(zterms,zterms);
+        B = cv::Mat_<double>::zeros(zterms,1);
     }
 
 
@@ -573,7 +665,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
             if ( rho <= 1. && (wf.mask.at<uchar>(y,x) != 0) && wf.data.at<double>(y,x) != 0.0){
                 double theta = atan2(uy,ux);
                 zpolar.init(rho, theta);
-                for ( int i = 0; i < Z_TERMS; ++i)
+                for ( int i = 0; i < zterms; ++i)
                 {
 
                     if (useSvd){
@@ -583,14 +675,14 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
                     else {
 
                         double t = zpolar.zernike(i, rho, theta);
-                        for (int j = 0; j < Z_TERMS; ++j)
+                        for (int j = 0; j < zterms; ++j)
                         {
                             //Am[ndx] = Am[ndx] + t * zpolar.zernike(j, rho, theta);
                             A(i,j) +=  t * zpolar.zernike(j, rho, theta);
                         }
                         // FN is the OPD at (Xn,Yn)
                         //Bm[i] = Bm[i] + surface.at<double>(y,x) * t;
-                        B(i) += surface.at<double>(y,x) * t;
+                        B(i) +=     surface.at<double>(y,x) * t;
                     }
 
                 }
@@ -613,7 +705,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf)
         double c2 = cv::norm(A,NORM_L2) * cv::norm(Ai,NORM_L2);
         emit statusBarUpdate(QString().sprintf(" Zernike LSF matrix Condition Numbers %6.3lf %6.3lf", conditionNumber, c2),1);
     }
-    wf.InputZerns = std::vector<double>(Z_TERMS,0);
+    wf.InputZerns = std::vector<double>(zterms,0);
     for (int z = 0; z < X.rows; ++z){
         wf.InputZerns[z] = X(z);
     }
@@ -706,10 +798,12 @@ void zernikeProcess::fillVoid(wavefront &wf){
     zernikePolar &zpolar = *zernikePolar::get_Instance();
 
     if (wf.regions.size() > 0){
-        int startx = 9999;
-        int endx = 0;
-        int starty = 9999;
-        int endy = 0;
+        int x = wf.regions[0][0].x;
+        int y = wf.mask.rows - wf.regions[0][0].y;
+        int startx = x;
+        int endx = x;
+        int starty = y;
+        int endy = y;
         for (int n = 0; n < wf.regions.size(); ++n){
 
             for (int i = 0; i < wf.regions[n].size(); ++i){
@@ -751,6 +845,84 @@ void zernikeProcess::fillVoid(wavefront &wf){
         }
     }
 }
+void spectral_color(double &R,double &G,double &B,double wavelength)
+// RGB <0,1> <- lambda l <400,700> [nm]
+{ double t; R=0.0; G=0.0;
+    B=0.0; double gamma = .8;double attenuation = 1;
+
+    if (wavelength >= 380 && wavelength <= 440){
+        attenuation = 0.3 + 0.7 * (wavelength - 380) / (440 - 380);
+        R = pow(((-(wavelength - 440) / (440 - 380)) * attenuation),gamma);
+        G = 0.0;
+        B = pow(1.0 * attenuation, gamma);
+    }
+    else if( wavelength >= 440 && wavelength <= 490){
+        R = 0.0;
+        G = pow(((wavelength - 440) / (490 - 440)), gamma);
+        B = 1.0;
+    }
+    else if (wavelength >= 490 && wavelength <= 510){
+        R = 0.0;
+        G = 1.0;
+        B = pow((-(wavelength - 510) / (510 - 490)), gamma);
+    }
+    else if (wavelength >= 510 && wavelength <= 580){
+        R = pow(((wavelength - 510) / (580 - 510)), gamma);
+        G = 1.0;
+        B = 0.0;
+    }
+    else if (wavelength >= 580 && wavelength <= 645){
+        R = 1.0;
+        G = pow((-(wavelength - 645) / (645 - 580)), gamma);
+        B = 0.0;
+    }
+    else if (wavelength >= 645 && wavelength <= 750){
+        attenuation = 0.3 + 0.7 * (750 - wavelength) / (750 - 645);
+        R = pow((1.0 * attenuation), gamma);
+        G = 0.0;
+        B = 0.0;
+    }
+    qDebug() << R << G << B;
+/*    if ((l>=400.0)&&(l<410.0)) {
+        t=(l-400.0)/(410.0-400.0);
+        r= +(0.33*t)-(0.20*t*t);
+        g = 0.
+        b = 1.) * t;
+    }
+    else if ((l>=410.0)&&(l<475.0)) {
+        t=(l-410.0)/(475.0-410.0);
+        r=0.14 -(0.13*t*t); }
+    else if ((l>=545.0)&&(l<595.0)) {
+        t=(l-545.0)/(595.0-545.0);
+        r= +(1.98*t)-( t*t); }
+    else if ((l>=595.0)&&(l<650.0)) {
+        t=(l-595.0)/(650.0-595.0);
+        r=0.98+(0.06*t)-(0.40*t*t);
+    }
+    else if ((l>=650.0)&&(l<700.0)) {
+        t=(l-650.0)/(700.0-650.0);
+        r=0.65-(0.84*t)+(0.20*t*t);
+    }
+    if ((l>=415.0)&&(l<475.0)) {
+        t=(l-415.0)/(475.0-415.0);
+        g= +(0.80*t*t);
+    }
+    else if ((l>=475.0)&&(l<590.0)) { t=(l-475.0)/(590.0-475.0);
+        g=0.8 +(0.76*t)-(0.80*t*t);
+    }
+    else if ((l>=585.0)&&(l<639.0)) {
+        t=(l-585.0)/(639.0-585.0);
+        g=0.84-(0.84*t) ;
+    } if ((l>=400.0)&&(l<475.0)) {
+        t=(l-400.0)/(475.0-400.0);
+        b= +(2.20*t)-(1.50*t*t);
+    } else if ((l>=475.0)&&(l<560.0)) {
+        t=(l-475.0)/(560.0-475.0);
+        b=0.7 -( t)+(0.30*t*t);
+    }
+    */
+}
+
 
 cv::Mat makeSurfaceFromZerns(int border, bool doColor){
     simIgramDlg &dlg = *simIgramDlg::get_instance();
@@ -764,7 +936,10 @@ cv::Mat makeSurfaceFromZerns(int border, bool doColor){
     double rho;
     double spacing = 1.;
     mirrorDlg *md = mirrorDlg::get_Instance();
+    qDebug() << "fringe spacing" << md->fringeSpacing;
     zernikePolar &zpolar = *zernikePolar::get_Instance();
+    double r,g,b;
+    spectral_color(r,g,b, md->lambda);
     for (int y = 0; y <  wx; ++y)
     {
         double uy = (double)(y - (ycen)) / rad;
@@ -784,25 +959,27 @@ cv::Mat makeSurfaceFromZerns(int border, bool doColor){
                 for (unsigned int z = 0; z < dlg.zernikes.size(); ++z){
                     double val = dlg.zernikes[z];
                     if (z == 8){
-                       val = (dlg.doCorrection) ? md->cc * md->z8 * val * .01 : val;
+                       val = (dlg.doCorrection && md->doNull) ? md->cc * md->z8 * val * .01 : val;
                     }
-                    S1 +=  val * zpolar.zernike(z,rho,theta);
+                    S1 +=  val * zpolar.zernike(z,rho,theta)/((doColor) ? md->fringeSpacing: 1.);
                 }
 
                 if (doColor){
                     int iv = cos(spacing *2 * M_PI * S1) * 100 + 120;
-                    result.at<Vec4b>(y,x)[2] = iv;
-                    result.at<Vec4b>(y,x)[3] = 255;
+                    result.at<Vec4b>(y,x)[0] = iv * b;
+                    result.at<Vec4b>(y,x)[1] = iv * g;
+                    result.at<Vec4b>(y,x)[2] = iv * r;
                 }
                 else {
                     if (S1 == 0.0) S1 += .0000001;
+                    //if (rho < .5) S1 = 0.;
                     result.at<double>(y,x) = S1;
                 }
             }
             else    // outside mirror outline
             {
                 if (doColor){
-                    result.at<Vec4b>(y,x) = Vec4f(0.,00.,100.,0);
+                    result.at<Vec4b>(y,x) = Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
                 }
                 else {
                     result.at<double>(y,x) = 0 ;

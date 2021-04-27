@@ -25,7 +25,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "glwidget.h"
+
 #include "dftarea.h"
 #include "IgramArea.h"
 #include "profileplot.h"
@@ -42,6 +42,7 @@
 #include "contourview.h"
 #include "standastigwizard.h"
 #include <QPointF>
+#include "surfacegraph.h"
 enum configRESPONSE { YES, NO, ASK};
 struct textres {
     QTextEdit *Edit;
@@ -53,11 +54,11 @@ class SurfaceManager : public QObject
 public:
 
     explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
-                   contourView *contourView = 0, GLWidget *glPlot = 0, metricsDisplay *mets = 0);
+                   contourView *contourView = 0, SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
     ~SurfaceManager();
     static SurfaceManager *get_instance(QObject *parent = 0, surfaceAnalysisTools *tools = 0,
                                         ProfilePlot *profilePlot = 0, contourView *contourPlot = 0,
-                                        GLWidget *glPlot = 0, metricsDisplay *mets = 0);
+                                        SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
     static SurfaceManager *m_instance;
     bool loadWavefront(const QString &fileName);
     void sendSurface(wavefront* wf);
@@ -91,7 +92,7 @@ public:
     ProfilePlot *m_profilePlot;
     contourView* m_contourView;
     SimulationsView *m_simView;
-    GLWidget *m_oglPlot;
+    SurfaceGraph *m_SurfaceGraph;
     QImage m_allContours;
     metricsDisplay *m_metrics;
     int m_gbValue;
@@ -183,7 +184,7 @@ public slots:
     void showAllContours();
     void computeStandAstig(define_input *wizPage, QList<rotationDef *>);
     void ObstructionChanged();
-    void showAll3D(GLWidget *);
+
     void loadComplete();
     void memoryLow();
     void defocusChanged();

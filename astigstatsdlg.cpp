@@ -402,13 +402,31 @@ void astigStatsDlg::plot(){
         }
 
         CircleData d(means.size(), xvals, yvals);
-        Circle c = CircleFitByHyper(d);
+
+        Circle c;
+
+        double xmean = 0;
+        double ymean = 0;
+        for (int i = 0; i < means.size(); ++i){
+            xmean += xvals[i];
+            ymean += yvals[i];
+        }
+        double avgRadius = 0;
+        for (int i = 0; i < means.size(); ++i){
+            double xdel = xvals[i] - xmean/means.size();
+            double ydel = yvals[i] - ymean/means.size();
+
+            avgRadius += sqrt(xdel * xdel + ydel * ydel);
+        }
+        Circle fittedcircle2 = Circle(xmean/means.size(), ymean/means.size(),
+                                      avgRadius/means.size() );
+        CircleFitByLevenbergMarquardtFull(d, fittedcircle2, .01, c);
 
         QPolygonF Circle;
 
         QwtPlotCurve *circleCv = new QwtPlotCurve(QString().sprintf("Best Fit astig mag %6.5lf",c.r));
         for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
-            Circle << QPointF(c.a + c.r* cos(rho), c.b + c.r * sin(rho));
+            Circle << QPointF(c.a + c.r* cos(rho), c.b +c.r * sin(rho));
         }
         QwtPlotMarker *avg = new QwtPlotMarker();
 
@@ -423,7 +441,7 @@ void astigStatsDlg::plot(){
         delete[] yvals;
 
     }
-    if (means.size() > 2){
+    if (means.size() > 1){
         ui->bestFitCB->show();
 
     }

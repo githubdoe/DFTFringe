@@ -43,6 +43,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     doNull = settings.value("config doNull", true).toBool();
     ui->nullCB->setChecked(doNull);
     diameter = settings.value("config diameter", 200.).toDouble();
+    aperatureReduction = settings.value("config aperatureReduction", 0.).toDouble();
 
     roc = settings.value("config roc", 2000.).toDouble();
     FNumber = roc/(2. * diameter);
@@ -75,11 +76,11 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     cc = settings.value("config cc", -1.).toDouble();
 
     ui->cc->setText(QString().sprintf("%6.2lf",cc));
+    ui->reduceValue->setValue(aperatureReduction);
+    if (aperatureReduction > 0)
+        ui->reduceValue->setEnabled(true);
 
     ui->unitsCB->setChecked(mm);
-
-
-
 
     ui->FNumber->blockSignals(false);
     ui->flipH->setChecked((settings.value( "flipH", false).toBool()));
@@ -89,7 +90,6 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->fringeSpacingEdit->setText(QString().sprintf("%3.2lf",fringeSpacing));
     ui->fringeSpacingEdit->blockSignals(false);
     m_outlineShape = (outlineShape)settings.value("outlineShape", CIRCLE).toInt();
-    ui->minorAxisEdit->setEnabled(m_outlineShape == ELLIPSE);
     ui->minorAxisEdit->setText(QString::number(settings.value("ellipseMinorAxis", 50.).toDouble()));
     connect(&spacingChangeTimer, SIGNAL(timeout()), this, SLOT(spacingChangeTimeout()));
     if (m_verticalAxis == 0)
@@ -104,6 +104,12 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->cc->blockSignals(false);
     ui->unitsCB->blockSignals(false);
     ui->fringeSpacingEdit->blockSignals(false);
+    bool showEdgeMaskCtrls = settings.value("configAperatureReductionChecked",false).toBool();
+    ui->ReducApp->setChecked(showEdgeMaskCtrls);
+    ui->ClearAp->setVisible(showEdgeMaskCtrls);
+    ui->clearApLabel->setVisible(showEdgeMaskCtrls);
+    m_aperatureReductionValueChanged = false;
+    setclearAp();
 }
 
 mirrorDlg::~mirrorDlg()
@@ -308,7 +314,7 @@ void mirrorDlg::loadFile(QString & fileName){
             file.read(buf,4);
             m_outlineShape = *(outlineShape*)buf;
             ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
-            ui->minorAxisEdit->setEnabled(m_outlineShape == ELLIPSE);
+
         }
         // vertical axis
         if (file.tellg() > 0){
@@ -405,8 +411,9 @@ void mirrorDlg::on_roc_Changed(const double newVal)
 }
 void mirrorDlg::updateZ8(){
 //Z = d^6 / (16 * R^5)
+    double aperature = (ui->ReducApp->isChecked()) ?  diameter- aperatureReduction*2. : diameter;
 
-    z8 = (pow(diameter,4) * 1000000.) /
+    z8 = (pow(aperature,4) * 1000000.) /
             (384. * pow(roc, 3) * lambda);
     ui->z8->blockSignals(true);
     ui->z8->setText(QString().number(z8 * cc));
@@ -497,6 +504,13 @@ void mirrorDlg::on_buttonBox_accepted()
     if (m_obsChanged)
         emit obstructionChanged();
     emit recomputeZerns();
+    if (m_aperatureReductionValueChanged){
+
+        QMessageBox::warning(0, tr("Aperature Reduction value was  changed."),
+                             tr("Aperature Reduction was changed.\n"
+                                "The wave front fill not be correct until it is recomputed from the interferogram."));
+    }
+    m_aperatureReductionValueChanged = false;
 }
 
 
@@ -551,7 +565,6 @@ void mirrorDlg::on_ellipseShape_clicked(bool checked)
     else m_outlineShape = CIRCLE;
     QSettings set;
     set.setValue("outlineShape", m_outlineShape);
-    ui->minorAxisEdit->setEnabled(m_outlineShape == ELLIPSE);
     if (m_verticalAxis == 0){
         m_verticalAxis = diameter;
         ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
@@ -563,4 +576,43 @@ void mirrorDlg::on_buttonBox_helpRequested()
 {
     QString link = qApp->applicationDirPath() + "/res/Help/mirrorConfig.html";
     QDesktopServices::openUrl(QUrl(link));
+}
+
+void mirrorDlg::setclearAp(){
+    m_clearAperature = (diameter - aperatureReduction * 2) * ((mm) ? 1: 1./25.4);
+    ui->ClearAp->setText(QString().sprintf("%6.2lf", m_clearAperature));
+}
+
+void mirrorDlg::on_ReducApp_clicked(bool checked)
+{
+
+    ui->reduceValue->setEnabled(checked);
+    ui->ClearAp->setVisible(checked);
+    ui->clearApLabel->setVisible(checked);
+    updateZ8();
+    QSettings set;
+    set.setValue("configAperatureReductionChecked", checked);
+    if (!checked){
+        aperatureReduction = 0.;
+    }
+    else {
+        aperatureReduction = set.value("config aperatureReduction",0.).toDouble();
+    }
+    ui->reduceValue->setValue(aperatureReduction);
+    m_aperatureReductionValueChanged = true;
+    setclearAp();
+    emit aperatureChanged();
+}
+
+
+
+void mirrorDlg::on_reduceValue_valueChanged(double arg1)
+{
+    aperatureReduction = ((mm) ? 1: 25.4) * arg1;
+    updateZ8();
+    QSettings set;
+    set.setValue("config aperatureReduction", aperatureReduction);
+    setclearAp();
+    m_aperatureReductionValueChanged = true;
+    emit aperatureChanged();
 }

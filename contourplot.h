@@ -64,6 +64,8 @@ public:
     bool m_autoInterval;
     bool m_minimal;
     bool m_linkProfile;
+    QPen m_rulerPen;
+    int m_radialDeg;
 
 
 

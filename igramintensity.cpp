@@ -88,7 +88,7 @@ void igramIntensity::on_pushButton_clicked()
     const QSizeF size = this->size();
     const QRect imageRect = QRect(0,0,size.width(),size.height());
 
-    QImage image( imageRect.size(), QImage::Format_ARGB32 );
+    QImage image( imageRect.size(), QImage::Format_RGB32 );
 
 
     QPainter painter( &image );

@@ -58,6 +58,7 @@ public:
     double m_center_filter;
     cv::Mat vortex(QImage &img,
                double low);
+    QVector<double> getPhases();
 void diffract();
 
     bool success;
@@ -65,8 +66,8 @@ public slots:
     void doPSIstep1();
     bool doPSIstep2();
     void doPSIstep3();
-    void doPSIstep4();
-    void method2();
+    void doPSIstep4(Mat images, QVector<double> phases);
+    void doPSITilt();
     void doDFT();
     void dftSizeChanged(const QString&);
     void dftSizeVal(int);
@@ -77,6 +78,7 @@ public slots:
     void gamma(int);
     void showResizedDlg();
     void outlineDoneSig();
+    void computePhases();
 signals:
     void setDftSizeVal(int);
     void selectDFTTab();
@@ -96,9 +98,10 @@ private:
     CircleOutline m_outside;
     CircleOutline m_center;
     QVector<std::vector<cv::Point> > m_poly;
+    QVector<double> m_psiPhases;
     double m_gamma;
     QStringList m_psiFiles;
-    cv::Mat m_psiPhases;
+
 
     IgramArea *igramArea;
     void paintEvent(QPaintEvent *);
@@ -112,8 +115,8 @@ private:
     int n;  //y border added to dft
     double scale;
     PSI_dlg* m_Psidlg;
-    cv::Mat PSILoadImages(QStringList files);
-    cv::Mat PSILoadFullImages(QStringList files);
+    cv::Mat PSILoadImages();
+    cv::Mat PSILoadFullImages();
     cv::Mat m_psiImages;
     int m_psiRows;
     int m_psiCols;

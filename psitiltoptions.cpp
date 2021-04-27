@@ -6,9 +6,19 @@ PSITiltOptions::PSITiltOptions(QWidget *parent) :
     ui(new Ui::PSITiltOptions)
 {
     ui->setupUi(this);
+    ui->AstigPlot->hide();
+    ui->DefocusPlot->hide();
+    ui->AstigPlot->hide();
 }
 
 PSITiltOptions::~PSITiltOptions()
 {
     delete ui;
+}
+
+
+
+void PSITiltOptions::on_zernLimits_activated(int index)
+{
+
 }

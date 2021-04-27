@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>176</width>
+    <width>211</width>
     <height>582</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>176</width>
+    <width>211</width>
     <height>305</height>
    </size>
   </property>
@@ -49,8 +49,8 @@
       <property name="styleSheet">
        <string notr="true">border-style: outset;
 border-width: 3px; border-radius:15px; border-color: darkgray;
-font: bold 12px;
-min-width: 10em;
+font: bold 20px;
+
 padding: 6px;
 hover {background-color: lightblue;}
 </string>

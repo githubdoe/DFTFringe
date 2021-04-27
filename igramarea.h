@@ -81,7 +81,7 @@
 #include <QDockWidget>
 
 extern QScrollArea *gscrollArea;
-enum {OutSideOutline, CenterOutline, PolyArea};
+enum {OutSideOutline, CenterOutline, PolyArea, EdgeMaskOutline};
 enum zoomMode {NORMALZOOM, EDGEZOOM};
 class regionEditTools;
 class outlinePair{
@@ -115,7 +115,7 @@ public:
     IgramArea(QWidget *parent = 0, void *mwp = 0 );
 
     void *m_mw;
-    bool openImage(const QString &fileName, bool autoOutside = true);
+    bool openImage(const QString &fileName, bool autoOutside = true, bool showBoundary = true);
     bool saveImage(const QString &fileName, const char *fileFormat);
     void setPenColor(const QColor &newColor);
     void setPenWidth(int newWidth);
@@ -134,6 +134,7 @@ public:
     void SideOutLineActive(bool checked);
     void CenterOutlineActive(bool checked);
     void PolyAreaActive(bool checked);
+    void edgeMaskOutLineActive(bool checked);
     void save();    void nextStep();
     bool sideOutlineIsActive;
 
@@ -154,6 +155,8 @@ public:
     void showAliasDialog();
     cv::Mat igramToGray(cv::Mat roi);
     cv::Mat qImageToMat(QImage &roi);
+private slots:
+    void aperatureChanged();
 public slots:
     void gammaChanged(bool, double);
     void generateSimIgram();
@@ -168,7 +171,7 @@ public slots:
     void zoomOut();
     void igramOutlineParmsChanged(outlineParms parms);
     void increase( int i = 1);
-    void decrease(int i = 1);
+    void decrease();
     void zoomFull();
     void toggleHideOutline();
     void edgeMode();
@@ -213,13 +216,15 @@ private:
     QColor centerPenColor;
     QColor edgePenColor;
     bool m_autoSaveOutline;
-    void deleteRegions();
+
     double leftMargin;
     double searchOutlineScale;
     //cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, int pass);
     cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, bool useExisting);
     QString m_outlineMsg;
+    double m_edgeMaskWidth;
 public:
+    void deleteRegions();
     cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, int pass);
     QImage igramColor;
     QImage igramDisplay;    // gray with outlines
@@ -241,6 +246,7 @@ private:
     QPointF lastPoint;
     QPointF zoompt;
     QString m_searchMsg;
+
 
     undoStack m_outsideHist;
     undoStack m_centerHist;
@@ -269,15 +275,17 @@ private:
     int m_usingChannel;
     zoomMode m_zoomMode;
     void increaseRegion(int n, double scale);
-    QImage getBestChannel(QImage &img);
+
     bool m_searching_outside;
     bool m_searching_center;
     int autoOutsideRadiusOffset;
     int autoOutsideXOffset;
     int autoOutsideYOffset;
     void adjustCenterandRegions();
+    void computeEdgeRadius();
 
 public:
+   QImage getBestChannel(QImage &img);
    int m_current_boundry;
 public slots:
    void addregion();
