@@ -476,7 +476,8 @@ DISTFILES += \
     res/Help/PSIHelp.html \
     res/Help/astigsummary.html \
     res/Help/astigSummary.png \
-    res/Help/badStandSummary.png
+    res/Help/badStandSummary.png \
+    res/surface_LeY_icon.ico
 
     TRANSLATIONS    = dftfringe_fr.ts
 
