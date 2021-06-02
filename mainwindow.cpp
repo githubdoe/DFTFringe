@@ -857,21 +857,22 @@ void MainWindow::on_actionSave_screen_triggered()
 
     if (fName.isEmpty())
         return;
-/*  fixme
-    QImage image( this->size(), QImage::Format_ARGB32 );
-    QPoint wr = m_ogl->m_gl->mapTo(this, m_ogl->pos());
 
-    QImage gl = m_ogl->m_gl->grabFrameBuffer();
+    QImage image( this->size(), QImage::Format_ARGB32 );
+    QPoint wr = m_ogl->m_container->mapTo(this, m_ogl->pos());
+
+
+    QImage SurfaceImage = m_ogl->m_surface->render();
 
     QPainter painter( &image );
 
     this->render( &painter);
-    painter.drawImage(wr, gl);
+    painter.drawImage(wr, SurfaceImage);
     painter.end();
 
 
     image.save( fName, QFileInfo( fName ).suffix().toLatin1() );
-    */
+
 }
 
 void MainWindow::on_actionWave_Front_Inspector_triggered()
@@ -1181,14 +1182,14 @@ void MainWindow::batchProcess(QStringList fileList){
                     //::reviewFileName = videoFileName;
                 }
                 QImage img = QImage(width,height,QImage::Format_RGB32);
-                // fixme QImage d3 = m_ogl->m_gl->grabFrameBuffer().scaled(width/2,height/2);
+                QImage d3 = m_ogl->m_surface->render().scaled(width/2,height/2);
                 QImage dft = m_dftArea->grab().toImage().scaled(width/2, height/2);
                 QImage igram = m_igramArea->grab().toImage().scaled(width/2, height/2);
                 QImage contour = m_contourView->getPlot()->grab().toImage().scaled(width/2, height/2);
                 QPainter painter(&img);
                 painter.drawImage(0,0,igram);
                 painter.drawImage(width/2,0, dft);
-                // fixme painter.drawImage(0,height/2, d3);
+                painter.drawImage(0,height/2, d3);
                 painter.drawImage(width/2,height/2,contour);
                 painter.setPen(Qt::yellow);
                 painter.setBrush(Qt::yellow);
@@ -1750,6 +1751,7 @@ void MainWindow::on_actionProcess_PSI_interferograms_triggered()
    m_dftArea->doPSIstep1();
 
 }
+
 
 
 

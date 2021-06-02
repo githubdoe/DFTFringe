@@ -35,6 +35,8 @@ private slots:
 
     void on_range_valueChanged(int value);
 
+    void on_defaultRange_clicked();
+
 private:
     Ui::Surface3dControlsDlg *ui;
 };

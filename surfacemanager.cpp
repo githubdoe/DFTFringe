@@ -1141,7 +1141,7 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
                     "Do you want to make the config match?";
 
 
-            int resp = QMessageBox(QMessageBox::Information,message, "",QMessageBox::Yes|QMessageBox::No |
+            int resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
                                  QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
             switch (resp){
@@ -1169,7 +1169,7 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
                 ") Of the wavefront does not match the config value of " + QString().sprintf("%6.3lf\n",md->diameter) +
                 "Do you want to make the config match?";
         if (diamResp == ASK){
-            int resp = QMessageBox(QMessageBox::Information,message, "",QMessageBox::Yes|QMessageBox::No |
+            int resp = QMessageBox(QMessageBox::Information,"config", message,QMessageBox::Yes|QMessageBox::No |
                                  QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
             switch (resp){
@@ -1199,7 +1199,7 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
                 "Do you want to make the config match?";
         //qDebug() << message;
         if (rocResp == ASK){
-            int resp = QMessageBox(QMessageBox::Information,message, "",QMessageBox::Yes|QMessageBox::No |
+            int resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
                                  QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
             switch (resp){
@@ -2563,75 +2563,10 @@ void SurfaceManager::saveAllContours(){
     tr("Save stats plot"), lastPath + "//allConturs.jpg",filter.join( ";;" ));
     if (fName.isEmpty())
         return;
+
     m_allContours.save( fName );
 }
-#ifdef NOTNOW
-void SurfaceManager::showAll3D(GLWidget *gl)
-{
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    int width = 500;
-    int height = 500;
 
-    int rows =  ceil((double)m_wavefronts.size()/3.);
-    int columns = min(m_wavefronts.size(),int(ceil((double)m_wavefronts.size()/rows)));
-    const QSizeF size(columns * (width + 10), rows * (height + 10));
-    const QRect imageRect = QRect(0,0,size.width(),size.height());
-    m_allContours = QImage( imageRect.size(), QImage::Format_ARGB32 );
-    m_allContours.fill( QColor( Qt::white ).rgb() );
-    QPainter painter(&m_allContours);
-    QFont serifFont("Times", 18, QFont::Bold);
-    surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
-    QList<int> list = saTools->SelectedWaveFronts();
-    for (int i = 0; i < list.size(); ++i)
-    {
-        wavefront * wf = m_wavefronts[list[i]];
-
-
-        gl->setSurface(wf);
-        gl->swapBuffers();
-        gl->setSurface(wf);
-        QImage glImage = gl->grabFrameBuffer();
-        QPainter p2(&glImage);
-        p2.setFont(serifFont);
-        p2.setPen(QPen(QColor(Qt::white)));
-        QStringList l = wf->name.split("/");
-        p2.drawText(10,30,l[l.size()-1] + QString().sprintf("%6.3lf RMS",wf->std));
-
-        int y_offset =  height * (i/columns) + 40;
-        int x_offset = width * (i%columns) + 20;
-        painter.drawImage(x_offset,y_offset, glImage.scaled(width, height,Qt::KeepAspectRatio));
-    }
-
-    //image.save( "tmp.png" );
-    QWidget *w = new QWidget;
-    QVBoxLayout *layout = new QVBoxLayout;
-
-    QScrollArea *scrollArea = new QScrollArea;
-
-    QLabel *l = new QLabel();
-    l->setPixmap(QPixmap::fromImage(m_allContours));
-    l->setScaledContents( true );
-
-    l->setSizePolicy( QSizePolicy::Ignored, QSizePolicy::Ignored );
-
-    scrollArea->setWidget(l);
-    scrollArea->setBackgroundRole(QPalette::Dark);
-    scrollArea->setAutoFillBackground(true);
-    QPushButton *savePb = new QPushButton("Save as Image",w);
-
-    connect(savePb, SIGNAL(pressed()), this, SLOT(saveAllContours()));
-    layout->addWidget(savePb,0,Qt::AlignHCenter);
-    layout->addWidget(scrollArea);
-    w->setLayout(layout);
-    w->setWindowTitle("3D height map of All WaveFronts.");
-    QRect rec = QApplication::desktop()->screenGeometry();
-    height = 2 * rec.height()/3;
-    width = rec.width();
-    w->resize(width,height);
-    w->show();
-    QApplication::restoreOverrideCursor();
-}
-#endif
 #include "showallcontoursdlg.h"
 void SurfaceManager::showAllContours(){
     showAllContoursDlg dlg;

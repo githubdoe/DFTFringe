@@ -261,7 +261,9 @@ qDebug() << "m_colorRange" << m_colorRange << m_maxHeight;
             float x = ((j - sampleCountX/2.) * mmperstep);
 
             float y = data.at<double>(i,j);
-            if (sqrt(x * x + z * z) > (diam/2.)) y = -.15;
+            if ((m_wf->workMask.at<uint8_t>(i,j)) != 255){
+                y = -.15;
+            }
             (*newRow)[index++].setPosition(QVector3D(x, y, z));
         }
         *dataArray << newRow;
@@ -294,10 +296,16 @@ void SurfaceGraph::range(int val){
     setSurface(m_wf);
     qDebug() << "range"<< m_colorRange;
 }
+
+void SurfaceGraph::autoRange(){
+    m_colorRange = .52;
+    fillSurfaceProxy();
+}
+
 void SurfaceGraph::setSurface(wavefront *wf){
         m_wf = wf;
     fillSurfaceProxy();
-    return;
+
 
 }
 void SurfaceGraph::yshiftAutoChanged(bool b){

@@ -402,10 +402,11 @@ void DFTArea::doDFT(){
 
     scale = 1.;
     double h = magIImage.height();
-
-    scale = double(parentWidget()->size().height())/h;
+    QRect rec = QApplication::desktop()->screenGeometry();
+    scale = double(3. * rec.height()/4.)/h;
     if (scale < 1.)
         scale = 1.;
+    qDebug() << "magIImage scale"<< scale << parentWidget()->size();
     magIImage = magIImage.scaled(magIImage.width() * scale, magIImage.height() * scale);
     setMinimumSize(magIImage.size());
 

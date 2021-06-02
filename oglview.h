@@ -44,6 +44,7 @@ public:
     QPushButton *orthoPb;
     QPushButton *backgroundPb;
     QColor m_background;
+    QWidget *m_container;
 
     QSize sizeHint() const;
     int m_spinRate;
@@ -51,6 +52,8 @@ public:
 public slots:
 
     void openLightDlg();
+    void saveImage();
+    void showSelected();
 
 };
 

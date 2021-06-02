@@ -151,13 +151,13 @@ void mirrorDlg::on_saveBtn_clicked()
     file.write((char*)flag,3);
 
     int cnt = m_name.length();
-    qDebug() << "writing mirror name "<< m_name << "into "<<fileName;
+
     file.write((char*)(&cnt),1);
     const ushort *m = m_name.utf16();
     file.write((char*)m,2 * cnt);
     file.write((char *)&doNull, 1); // OpenFringe size of bool was 4 bytes but modern size is 1;
     file.write((char *)zeros, 3);  // fill out to size of 4 bytes;
-    qDebug() << "size of null "<<sizeof(doNull);
+
     file.write((char*)&fringeSpacing,8);
     file.write((char*)&diameter,8);
     file.write((char*)&lambda,8);
@@ -381,6 +381,8 @@ void mirrorDlg::on_diameter_Changed(const double diam)
     ui->diameter->setText(QString().sprintf("%6.2lf",diameter * ((mm) ? 1.: 25.4)));
     ui->FNumber->blockSignals(false);
     ui->diameter->blockSignals(false);
+
+    setclearAp();
     updateZ8();
 
 }
@@ -411,6 +413,7 @@ void mirrorDlg::on_roc_Changed(const double newVal)
 }
 void mirrorDlg::updateZ8(){
 //Z = d^6 / (16 * R^5)
+
     double aperature = (ui->ReducApp->isChecked()) ?  diameter- aperatureReduction*2. : diameter;
 
     z8 = (pow(aperature,4) * 1000000.) /
@@ -423,6 +426,7 @@ void mirrorDlg::updateZ8(){
 
 void mirrorDlg::on_FNumber_textChanged(const QString &arg1)
 {
+
     FNumber = arg1.toDouble();
     roc = FNumber *(2 * diameter);
     ui->roc->blockSignals(true);
@@ -488,6 +492,8 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
 void mirrorDlg::on_buttonBox_accepted()
 {
     QSettings settings;
+    setclearAp();
+    updateZ8();
 
     settings.setValue("config mirror name", ui->name->text());
     settings.setValue("config roc", roc);
@@ -496,6 +502,7 @@ void mirrorDlg::on_buttonBox_accepted()
     settings.setValue("config obstruction", obs);
     settings.setValue("config cc", cc);
     settings.setValue("flipH", ui->flipH->isChecked());
+
     fringeSpacing = ui->fringeSpacingEdit->text().toDouble();
     settings.setValue("config fringe spacing", fringeSpacing);
     //settings.setValue("config unitsMM", mm);
@@ -508,11 +515,10 @@ void mirrorDlg::on_buttonBox_accepted()
 
         QMessageBox::warning(0, tr("Aperature Reduction value was  changed."),
                              tr("Aperature Reduction was changed.\n"
-                                "The wave front fill not be correct until it is recomputed from the interferogram."));
+                                "The wave front will not be correct until it is recomputed from the interferogram."));
     }
     m_aperatureReductionValueChanged = false;
 }
-
 
 
 void mirrorDlg::on_cc_textChanged(const QString &arg1)
@@ -579,6 +585,7 @@ void mirrorDlg::on_buttonBox_helpRequested()
 }
 
 void mirrorDlg::setclearAp(){
+
     m_clearAperature = (diameter - aperatureReduction * 2) * ((mm) ? 1: 1./25.4);
     ui->ClearAp->setText(QString().sprintf("%6.2lf", m_clearAperature));
 }

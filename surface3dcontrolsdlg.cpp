@@ -26,6 +26,7 @@ Surface3dControlsDlg::Surface3dControlsDlg(SurfaceGraph *surfP) :
     QObject::connect(surfP, &SurfaceGraph::yOffsetValue, this, &Surface3dControlsDlg::setYoffsetValue);
     QObject::connect(ui->yshiftAuto, &QCheckBox::clicked, surfP, &SurfaceGraph::yshiftAutoChanged);
     QObject::connect(ui->range, &QSlider::valueChanged, surfP, &SurfaceGraph::range);
+    QObject::connect(ui->defaultRange, &QCheckBox::clicked, surfP, &SurfaceGraph::autoRange);
 }
 
 Surface3dControlsDlg::~Surface3dControlsDlg()
@@ -92,4 +93,11 @@ void Surface3dControlsDlg::on_yshiftAuto_clicked(bool checked)
 void Surface3dControlsDlg::on_range_valueChanged(int value)
 {
 
+}
+
+
+
+void Surface3dControlsDlg::on_defaultRange_clicked()
+{
+    ui->range->setValue(52);
 }

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1065</width>
-    <height>746</height>
+    <height>905</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -158,7 +158,7 @@
    <property name="minimumSize">
     <size>
      <width>475</width>
-     <height>790</height>
+     <height>791</height>
     </size>
    </property>
    <property name="whatsThis">
@@ -385,7 +385,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
      <item>
       <widget class="QGroupBox" name="groupBox_4">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+        <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -415,10 +415,16 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
           <item>
            <widget class="QPushButton" name="autoOutline">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
             </property>
             <property name="styleSheet">
              <string notr="true"> border-style: outset;
@@ -481,14 +487,14 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
           <item>
            <widget class="QPushButton" name="autoOutlineHelp">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
             <property name="minimumSize">
              <size>
-              <width>134</width>
+              <width>74</width>
               <height>30</height>
              </size>
             </property>
@@ -596,7 +602,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>134</width>
+            <width>74</width>
             <height>0</height>
            </size>
           </property>
@@ -642,7 +648,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>134</width>
+            <width>74</width>
             <height>0</height>
            </size>
           </property>
@@ -670,6 +676,9 @@ em;
             <height>30</height>
            </size>
           </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="2" column="2">
@@ -682,7 +691,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>134</width>
+            <width>74</width>
             <height>0</height>
            </size>
           </property>
@@ -731,7 +740,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>134</width>
+            <width>74</width>
             <height>0</height>
            </size>
           </property>
@@ -774,7 +783,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>134</width>
+            <width>74</width>
             <height>0</height>
            </size>
           </property>
@@ -823,7 +832,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>134</width>
+            <width>74</width>
             <height>0</height>
            </size>
           </property>
@@ -866,7 +875,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>76</width>
+            <width>46</width>
             <height>0</height>
            </size>
           </property>
@@ -957,7 +966,7 @@ em;
          </property>
          <property name="minimumSize">
           <size>
-           <width>134</width>
+           <width>74</width>
            <height>0</height>
           </size>
          </property>

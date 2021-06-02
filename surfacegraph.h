@@ -88,6 +88,7 @@ public Q_SLOTS:
     void yOffsetChanged(int val);
     void yshiftAutoChanged(bool b);
     void range(int val);
+    void autoRange();
 
 signals:
     void yOffsetValue(double val);

@@ -141,12 +141,7 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(edgeMode()));
 
     connect(colorChannel::get_instance(),SIGNAL(useChannelsChanged()), this, SLOT(colorChannelChanged()));
-    dock = new QDockWidget();
-    dock->setObjectName("outlinePlots");
-    outlinePlotWindow = new QWidget();
-    dock->setWidget(outlinePlotWindow);
-    outlinePlotWindow->hide();
-    MainWindow::me->addDockWidget(Qt::LeftDockWidgetArea,dock);
+
     connect(mirrorDlg::get_Instance(), SIGNAL(aperatureChanged()), this, SLOT(aperatureChanged()));
     m_edgeMaskWidth = 0;
 }

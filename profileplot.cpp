@@ -329,7 +329,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     mirrorDlg &md = *mirrorDlg::get_Instance();
     double radius = md.m_clearAperature/2.;
     double obs_radius = md.obs/2.;
-
+qDebug() << "clear app radius" << radius;
 //    qDebug() << "Clear" << radius;
     for (double rad = -1.; rad < 1; rad += steps){
         int dx, dy;
