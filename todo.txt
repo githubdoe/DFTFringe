@@ -1,29 +1,3 @@
 
 
-Add mirror flip to output.
 
-
-
-Make the igram done button animate like the standastig compute button.
-
-
-rotate and save not loadable by old versions because outline is different.
-   Outline is same but outer rows of data are zer0.
-
-losing memory even if not calling imagetogray or even vortex.
-
-
-
-Foucault slider does not match roc offset or seem reasonable with the image.
-
-The min/max error color range uses the igram wave length and not the wavelength converted to 550nm.
-
-error color scale format min/max values change when changing wavefronts.
-show all wavefronts picks a funny color scheme.
-
-
-Add spherical null (DPAC mode) to simulations.
-
-Astig stats help is bogus.
-
-Fill void can hang

@@ -1840,99 +1840,94 @@ void IgramArea::resizeImage()
 void IgramArea::paintEvent(QPaintEvent *event)
 
 {
-    QPainter painter(this);
+    QPainter painterThis(this);
+    int pw = parentWidget()->width();
+    int dw = pw/2;
+    int dh = parentWidget()->height();
+
     QRect dirtyRect = event->rect();
     if ((zoomIndex > 1 && m_zoomMode == EDGEZOOM) && (
                 ((m_current_boundry == OutSideOutline) && (outterPcount == 2)) ||
                  ((m_current_boundry != OutSideOutline) && (innerPcount == 2))
             )){
-        painter.fillRect(this->rect(), Qt::gray);
-        int viewW = m_zoomBoxWidth;
+        painterThis.fillRect(this->rect(), Qt::gray);
+        int viewW = 3 * m_zoomBoxWidth / zoomIndex;
         double scale = zoomIndex;
-        int dw = parentWidget()->width()/2;
-        int dh = parentWidget()->height();
 
-        QImage roi(viewW * 2, viewW, igramGray.format());
-        roi.fill(QColor(0,0,0));
+        QImage small(viewW * 4, viewW *2, igramColor.format());
+        small.fill(Qt::gray);
+        QPainter smallPainter(&small);   //  used to assemble the edge samples beore it is enlarged to fill the window.
+        QImage zoomImg(viewW *2,viewW, igramColor.format());
+        QPainter zoomPainter(&zoomImg);
+
+
+
+        painterThis.fillRect(0,0,pw,dw, Qt::gray);
 
         CircleOutline circle((m_current_boundry == OutSideOutline) ? m_OutterP1 : m_innerP1,
                              (m_current_boundry == OutSideOutline) ? m_OutterP2 : m_innerP2);
 
-        //painter.drawImage(dirtyRect, igramDisplay, dirtyRect);
         mirrorDlg &md = *mirrorDlg::get_Instance();
         double e = 1.;
         if (md.isEllipse()){
             e = md.m_verticalAxis/md.diameter;
         }
+
+
         //top ************************************************************
         int topx = circle.m_center.rx()  - viewW;
         int topy = circle.m_center.ry() - circle.m_radius * e - viewW/2;
-        int shifty = 0;
+
         if (topy < 0){
-            shifty = -1 * topy;
+            topy = 0;
         }
 
-        QPainter ptop(&roi);
-        ptop.drawImage(0,shifty, m_withOutlines, topx,topy + shifty,viewW * 2, viewW-shifty);
-        QImage top2 = roi.scaled(scale * roi.width(), scale * roi.height());
-        int w = top2.width();
-        int h = top2.height();
-        painter.drawImage(dw - viewW, dh/2- viewW - 20, top2, w/2 - viewW  ,   (h - viewW)/2, viewW * 2, viewW);
+        qDebug() << "viewW" << viewW << "scale"<< zoomIndex;
+        QImage roi = m_withOutlines.copy(topx,topy, viewW * 2, viewW);
+        smallPainter.drawImage(viewW ,0, roi);
 
         //bottom *************************************************************
-        QImage bottom = roi.copy();
-        bottom.fill(QColor(0,0,0));
-        QPainter pbottom(&bottom);
         topy = (circle.m_center.ry() + circle.m_radius * e - viewW/2);
-        shifty = 0;
+        int shifty = 0;
         if (topy > m_withOutlines.height()){
             shifty = topy - m_withOutlines.height();
         }
-        pbottom.drawImage(0,0-shifty, m_withOutlines, topx, topy - shifty,viewW * 2, viewW-shifty);
-        top2 = bottom.scaled(scale * bottom.width(), scale * bottom.height());
-        w = top2.width();
-        h = top2.height();
-        painter.drawImage(dw - viewW, dh/2+ 20, top2, w/2 - viewW  , (h - viewW)/2, viewW * 2, viewW);
+        roi = m_withOutlines.copy(topx,topy, viewW * 2, viewW);
+        smallPainter.drawImage(viewW,  viewW, roi);
 
         //Left *************************************************************
-        QImage roi2(viewW, 2 * viewW, igramGray.format());
-        roi2.fill(QColor(0,0,0));
-        QPainter p2(&roi2);
         topx = circle.m_center.rx() - circle.m_radius - viewW/2;
         topy = circle.m_center.ry() - viewW;
+        roi = m_withOutlines.copy(topx,topy,viewW,viewW * 2);
         int shiftl = 0;
         if (topx < 0){
             topx *= 1;
             shiftl = topx;
         }
-        p2.drawImage(shiftl,0,m_withOutlines, topx + shiftl,topy ,viewW - shiftl, viewW * 2);
-        top2 = roi2.scaled(scale * roi2.width(), scale * roi2.height());
-        w = top2.width();
-        h = top2.height();
-        painter.drawImage(dw - 2 * viewW - 20, dh/2 - viewW, top2, (w - viewW)/2, h/2 - viewW, viewW, 2 * viewW);
+        smallPainter.drawImage(0,0,roi);
 
 
         // right ************************************************************
         topx = circle.m_center.rx() + circle.m_radius - viewW/2;
-        QImage right(viewW, 2 * viewW, igramGray.format());
-        right.fill(QColor(0,0,0));
-        QPainter pright(&right);
-        topx = circle.m_center.rx() + circle.m_radius - viewW/2;
         topy = circle.m_center.ry() - viewW;
-        shiftl = 0;
+
         if (topx > m_withOutlines.width()){
             topx = topx -  m_withOutlines.width();
             shiftl = topx;
         }
-        pright.drawImage(shiftl,0,m_withOutlines, topx + shiftl, topy ,viewW-shiftl, viewW * 2);
-        top2 = right.scaled(scale * right.width(), scale * right.height());
-        w = top2.width();
-        h = top2.height();
-        painter.drawImage(dw + viewW + 20, dh/2 - viewW, top2, (w - viewW)/2, h/2 - viewW, viewW, 2 * viewW);
+        roi = m_withOutlines.copy(topx,topy, viewW , viewW * 2);
+
+        smallPainter.drawImage(viewW*3,0,roi);
+        smallPainter.setPen(QPen(Qt::gray,2));
+        smallPainter.drawLine(viewW,0,viewW, viewW*2);
+        smallPainter.drawLine(viewW * 3,0,viewW * 3, viewW*2);
+        smallPainter.drawLine(viewW,viewW,viewW * 3, viewW);
+        painterThis.drawImage(0,0, small.scaled(this->size()));
 
     }  else {
-        painter.drawImage(dirtyRect, igramDisplay, dirtyRect);
+       painterThis.drawImage(dirtyRect, igramDisplay, dirtyRect);
     }
+
 
 
 }

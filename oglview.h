@@ -33,6 +33,7 @@ class OGLView : public QWidget
     Q_OBJECT
     Surface3dControlsDlg *m_controls;
 public:
+    QPushButton *m_fullScreenPb;
     explicit OGLView(QWidget *parent = 0, ContourTools *m_tool = 0,
              surfaceAnalysisTools *surfTools = 0);
     ~OGLView();
@@ -48,12 +49,15 @@ public:
 
     QSize sizeHint() const;
     int m_spinRate;
-
+signals:
+    void fullScreen();
 public slots:
-
+    void fullScreenPressed();
     void openLightDlg();
     void saveImage();
     void showSelected();
+    void enableFullScreen();
+    void showContextMenu(const QPoint &pos);
 
 };
 

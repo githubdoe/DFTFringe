@@ -413,7 +413,6 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 
             gaussianRad &= 0xfffffffe;
             ++gaussianRad;
-            qDebug() << "blurr rad" << gaussianRad;
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
                               cv::Size( gaussianRad, gaussianRad ),0,0,BORDER_REFLECT);
     }
@@ -1424,6 +1423,11 @@ void SurfaceManager::backGroundUpdate(){
 
 
 void SurfaceManager::average(QList<int> list){
+    if (list.length() < 2){
+            QMessageBox::warning(0,"Warning", "Select at least two wave fronts to be averaged.");
+            return;
+    }
+    qDebug() << "average these"<< list;
     QList<wavefront *> wflist;
     for (int i = 0; i < list.size(); ++i){
         wflist.append(m_wavefronts[list[i]]);
@@ -1470,25 +1474,30 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
     // normalize the size to the most common size
 
-    QHash<QString,int> sizes;
+    QHash<QString,QList<int>> sizes;
     for (int i = 0; i < wfList.size(); ++i){
         QString size;
         size.sprintf("%d %d",wfList[i]->data.rows, wfList[i]->data.cols);
-        if (*sizes.find(size))
+        if (sizes.find(size)!= sizes.end())
         {
-            ++sizes[size];
+            sizes[size].append( i);
         }
-        else
-            sizes[size] = 1;
+        else {
+            QList<int> l;
+            l << i;
+            sizes[size] = l;
+        }
     }
     int max = 0;
     QString maxkey;
+    qDebug() << "sizes" << sizes;
 
     foreach(QString v, sizes.keys()){
-        int a = sizes[v];
+        int a = sizes[v].length();
         if (a > max) {
             max = a;
             maxkey = v;
+            qDebug() << "max" << v << max;
         }
     }
     int rrows, rcols;
@@ -1497,7 +1506,8 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
     s >> rrows >> rcols;
 
-    cv::Mat mask = wfList[0]->workMask.clone();
+qDebug() << "maxkey" << maxkey << rrows << rcols << sizes[maxkey];
+    cv::Mat mask = wfList[sizes[maxkey][0]]->workMask.clone();
     if (mask.cols != rcols || mask.rows != rrows){
         cv::resize(mask,mask,Size(rrows,rcols));
     }
@@ -1516,11 +1526,6 @@ void SurfaceManager::average(QList<wavefront *> wfList){
         }
         cv::bitwise_and(mask, resizedMask, mask);
 
-        if (wfList[j]->data.rows != rrows || wfList[j]->data.cols != rcols){
-            cv::resize(wfList[j]->data, resizedImage, Size(rrows, rcols));
-        }
-
-
         sum  += resizedImage;
     }
 
@@ -1529,7 +1534,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
 
     wavefront *wf = new wavefront();
-    *wf = *wfList[0];
+    *wf = *wfList[sizes[maxkey][0]];
     wf->data = sum.clone();
     wf->mask = mask;
     wf->workMask = mask.clone();
@@ -2861,6 +2866,10 @@ void SurfaceManager::initWaveFrontLoad(){
     lambdResp = ASK;
 }
 void SurfaceManager::transform(){
+    if (m_wavefronts.length() == 0){
+        QMessageBox::warning(0,"Warning","No wave fronts loaded.");
+        return;
+    }
     TransformWaveFrontDlg dlg;
     connect(&dlg, SIGNAL(flipLR()), this, SLOT(flipHorizontal()));
     connect(&dlg, SIGNAL(flipV()),this,   SLOT(flipVertical()));

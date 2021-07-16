@@ -82,24 +82,49 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool,
     lightingPb = new QPushButton("3D Controls",this);
     QPushButton *saveImagePb = new QPushButton("save Image");
     QPushButton *showSelectedPb = new QPushButton("show selected");
+    m_fullScreenPb = new QPushButton("FullScreen");
     lh->addWidget(lightingPb);
     lh->addWidget(saveImagePb);
     lh->addWidget(showSelectedPb);
+    lh->addWidget(m_fullScreenPb);
     connect(lightingPb, SIGNAL(pressed()), this,SLOT(openLightDlg()));
     connect(saveImagePb, SIGNAL(pressed()), this, SLOT(saveImage()));
     connect(showSelectedPb, SIGNAL(pressed()), this, SLOT(showSelected()));
     connect(m_tool,SIGNAL(ContourMapColorChanged(int)), m_surface, SLOT(setColorMap(int)));
-
+    connect(m_fullScreenPb, SIGNAL(pressed()), this, SLOT(fullScreenPressed()));
     lh->addStretch();
     lv->addWidget(m_container);
     topH->addLayout(lv,10);
     topH->addLayout(rightcontrols,1);
     setLayout(topH);
-
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(showContextMenu(QPoint)));
 }
 OGLView::~OGLView(){
     m_controls->close();
     delete m_controls;
+}
+
+void OGLView::showContextMenu(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = mapToGlobal(pos);
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+
+    myMenu.addAction("FullScreen",  this, SLOT(fullScreenPressed()));
+
+    // Show context menu at handling position
+    myMenu.exec(globalPos);
+}
+void OGLView::fullScreenPressed(){
+    m_fullScreenPb->setEnabled(false);
+    emit fullScreen();
+}
+void OGLView::enableFullScreen(){
+    m_fullScreenPb->setEnabled(true);
 }
 void OGLView::openLightDlg(){
     m_controls->show();

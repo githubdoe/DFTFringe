@@ -11,9 +11,9 @@
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
     <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
+    <verstretch>2</verstretch>
    </sizepolicy>
   </property>
   <property name="minimumSize">
@@ -88,7 +88,6 @@
      <string>View</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="actionLighting_properties"/>
     <addaction name="actionError_Margins"/>
     <addaction name="actionShow_Statistics_of_Loaded_wavefronts"/>
     <addaction name="separator"/>
@@ -422,7 +421,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
             </property>
             <property name="minimumSize">
              <size>
-              <width>0</width>
+              <width>74</width>
               <height>0</height>
              </size>
             </property>

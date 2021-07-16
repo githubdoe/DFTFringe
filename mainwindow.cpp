@@ -146,7 +146,7 @@ const QString toolButtonStyle("QToolButton {"
     m_contourView = new contourView(this, m_contourTools);
     connect(m_contourView, SIGNAL(zoomMe(bool)),this, SLOT(zoomContour(bool)));
     m_ogl = new OGLView(0, m_contourTools, m_surfTools);
-
+    connect(m_ogl, SIGNAL(fullScreen()), this, SLOT(zoomOgl()));
 
     connect(userMapDlg, SIGNAL(colorMapChanged(int)), m_contourView->getPlot(), SLOT(ContourMapColorChanged(int)));
     //connect(userMapDlg, SIGNAL(colorMapChanged(int)),m_ogl->m_gl, SLOT(colorMapChanged(int)));
@@ -726,10 +726,7 @@ void MainWindow::rocChanged(double v){
     m_mirrorDlg->on_roc_Changed(v);
 }
 
-void MainWindow::on_actionLighting_properties_triggered()
-{
-    //m_ogl->m_gl->openLightingDlg();
-}
+
 
 void MainWindow::on_SelectOutSideOutline_clicked(bool checked)
 {
@@ -1373,12 +1370,14 @@ void MainWindow::restoreContour(){
 }
 
 void MainWindow::restoreOgl(){
-
+    m_contourView->setMinimumHeight(0);
+    review->s1->insertWidget(0,m_ogl);
+    m_ogl->enableFullScreen();
 }
 
 void MainWindow::restoreProfile(){
     m_profilePlot->zoomed = false;
-    review->s2->insertWidget(0,m_profilePlot);
+    review->s2->insertWidget(1,m_profilePlot);
 }
 
 void MainWindow::zoomProfile(bool flag){
@@ -1411,12 +1410,9 @@ void MainWindow::zoomContour(bool flag){
     contourFv->showMaximized();
 }
 
-void MainWindow::zoomOgl(bool flag)
+void MainWindow::zoomOgl()
 {
-    if (!flag){
-        oglFv->close();
-        return;
-    }
+
     oglFv = new QWidget(0);
     oglFv->setAttribute( Qt::WA_DeleteOnClose );
     connect(oglFv,SIGNAL(destroyed(QObject*)),this, SLOT(restoreOgl()));

@@ -94,7 +94,7 @@ public slots:
     void restoreContour();
     void restoreProfile();
     void zoomContour(bool flag);
-    void zoomOgl(bool flag);
+    void zoomOgl();
     void zoomProfile(bool flag);
     void imageSize(QString txt);
     void skipBatchItem();
@@ -136,8 +136,6 @@ private slots:
     void on_actionWrite_WaveFront_triggered();
 
     void on_actionSave_Wavefront_triggered();
-
-    void on_actionLighting_properties_triggered();
 
     void on_SelectOutSideOutline_clicked(bool checked);
 

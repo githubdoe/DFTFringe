@@ -238,7 +238,6 @@ void SurfaceGraph::fillSurfaceProxy() {
         min = mean -  3 * std;
     }
     m_maxHeight = 10. *m_colorRange * std;
-qDebug() << "m_colorRange" << m_colorRange << m_maxHeight;
 
     data = data - min;
 
@@ -479,5 +478,5 @@ void SurfaceGraph::setGreenToRedGradient()
 }
 
 QImage SurfaceGraph::render(){
-    return m_graph->renderToImage();
+    return m_graph->renderToImage(0, QSize(1000,1000));
 }

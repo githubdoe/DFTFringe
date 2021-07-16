@@ -10,10 +10,16 @@
     <height>710</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="minimumSize">
    <size>
-    <width>228</width>
-    <height>408</height>
+    <width>100</width>
+    <height>409</height>
    </size>
   </property>
   <property name="windowTitle">

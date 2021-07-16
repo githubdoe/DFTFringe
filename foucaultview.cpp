@@ -83,6 +83,7 @@ void foucaultView::on_makePb_clicked()
     double gamma =     ui->gammaSb->value();
     mirrorDlg *md = mirrorDlg::get_Instance();
     double Radius = md->diameter/2.;
+    double inputWavelength = md->lambda;
     double r2 = Radius * Radius;
     double fl = md->roc / 2.;
     double Fnumber =  .5 * md->roc/md->diameter;	//ROC is twice FL
@@ -94,9 +95,10 @@ void foucaultView::on_makePb_clicked()
 
     double coc_offset_mm = ui->rocOffsetSb->value() * unitMultiplyer;
 
-    double b = (fl * 2) + coc_offset_mm;
-    double pv =   ( sqrt((r2)+(fl * fl * 4.))
-         - (sqrt(r2+ b * b) - coc_offset_mm) )/ (outputLambda * 1.E-6);
+    double b = (md->roc) + coc_offset_mm;
+
+    double pv =   ( sqrt((r2)+(md->roc * md->roc))
+         - (sqrt(r2+ b * b) - coc_offset_mm) )/ (md->lambda* 1.E-6);
 
     std::vector<double> zerns = m_wf->InputZerns;
     std::vector<double> newZerns = zerns;
@@ -112,7 +114,7 @@ void foucaultView::on_makePb_clicked()
     sv->setSurface(m_wf);
 
 
-    surf_fft = sv->computeStarTest(heightMultiply * sv->nulledSurface(z3), size, pad ,true);
+    surf_fft = sv->computeStarTest( heightMultiply * sv->nulledSurface(z3), size, pad ,true);
     //showMag(surf_fft, true, "star ", true, gamma);
     size = surf_fft.cols;
 
