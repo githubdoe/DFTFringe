@@ -791,7 +791,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
                 }
 
-                nulled.at<double>(y,x) = min(sz +nz, .04);
+                nulled.at<double>(y,x) = sz +nz;
             }
         }
     }

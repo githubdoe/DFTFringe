@@ -369,7 +369,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
                                             wf->lambda/outputLambda)  +y_offset * units);
                 }
                 else {
-                points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
+                    points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
                                         wf->lambda/outputLambda)  +y_offset * units);
                 }
             }
