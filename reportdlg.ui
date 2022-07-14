@@ -30,33 +30,6 @@
    </item>
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
-      <widget class="QCheckBox" name="ProfilePlot">
-       <property name="text">
-        <string>Profile Plot</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QCheckBox" name="OGLSurface">
-       <property name="text">
-        <string>3D surface</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QCheckBox" name="reduce3D">
-       <property name="text">
-        <string>Reduce 3D plot 25%</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="0">
       <widget class="QCheckBox" name="starTest">
        <property name="text">
@@ -67,20 +40,33 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QCheckBox" name="doContour">
+     <item row="2" column="1">
+      <widget class="QCheckBox" name="histogram">
        <property name="text">
-        <string>Contour Plot</string>
+        <string>Pixel Histogram</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QCheckBox" name="showIgram">
+       <property name="text">
+        <string>Show Igram if loaded</string>
        </property>
        <property name="checked">
         <bool>true</bool>
        </property>
       </widget>
      </item>
-     <item row="1" column="2">
-      <widget class="QCheckBox" name="reduceContour">
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="ProfilePlot">
        <property name="text">
-        <string>Reduce ContourPlot 25%</string>
+        <string>Profile Plot</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -88,16 +74,6 @@
       <widget class="QCheckBox" name="foucault">
        <property name="text">
         <string>Ronchi and Foucault</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QCheckBox" name="histogram">
-       <property name="text">
-        <string>Pixel Histogram</string>
        </property>
        <property name="checked">
         <bool>true</bool>

@@ -64,8 +64,21 @@ public:
                 return QwtText("");
         if(!QGuiApplication::keyboardModifiers().testFlag(Qt::ShiftModifier))
             return QwtText("");
-        if (pos.x() == lastx && pos.y() == lasty)
-            return QwtText("");
+        if (pos.x() == lastx && pos.y() == lasty){
+                    double v = thePlot->d_spectrogram->data()->value(pos.x(),pos.y());
+          QString t =  QString().sprintf("%lf", v);
+
+          QwtText label(t);
+
+          label.setColor(QColor(255,255,255));
+          label.setBorderPen(QPen(QColor(100,0,0), 3));
+          label.setBorderRadius(5);
+          label.setBackgroundBrush(QColor(65, 177, 225, 150));
+
+          QFont font("MS Shell Dlg 2", 18);
+          label.setFont(font);
+          return QwtText(label);
+        }
         lastx = pos.x();
         lasty = pos.y();
         QColor bg( Qt::white );
@@ -158,8 +171,10 @@ void ContourPlot::showContoursChanged(double val){
     else {
         QwtInterval iz = d_spectrogram->data()->interval( Qt::ZAxis );
         QList<double> contourLevels;
-        for ( double level = iz.minValue(); level <= iz.maxValue(); level += val)
+        for ( double level = iz.minValue(); level <= iz.maxValue() + val; level += val) {
             contourLevels << level;
+        }
+
         d_spectrogram->setContourLevels( contourLevels );
         d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode,true );
         set.setValue("contourShowLines", true);
@@ -200,6 +215,7 @@ void ContourPlot::setZRange(){
             zmin = 0;
         zmax = m_wf->mean + 3 * std;
         m_waveRange = (zmax - zmin);
+
 
     }
     else if (m_zRangeMode == "Min/Max"){
@@ -331,8 +347,10 @@ void ContourPlot::moved(const QPointF pos){
 void ContourPlot::selected(const QPointF& pos){
     if (m_wf==0)
         return;
+
     if(!QGuiApplication::keyboardModifiers().testFlag(Qt::ShiftModifier))
         return;
+
     int half = m_wf->data.rows/2.;
     double delx = pos.x() - half;
     double dely = pos.y() - half;
@@ -342,6 +360,7 @@ void ContourPlot::selected(const QPointF& pos){
         if (m_linkProfile)
             emit sigPointSelected(pos);
         m_lastAngle = angle;
+
     }
 }
 
@@ -359,7 +378,9 @@ void ContourPlot::drawProfileLine(const double angle){
     // line to end
     int endx = half - startx;
     int endy = half - starty;
+        QFont mf("Times", 15, QFont::Bold);
     radials.lineTo(endx,endy);
+    radials.addText(QPoint(30,30), mf,"this is text");
     QwtPlotShapeItem *item = new QwtPlotShapeItem( "");
     item->setShape(radials);
     item->setPen(QColor(50,50,50,100),3,Qt::DashDotDotLine);
@@ -367,6 +388,7 @@ void ContourPlot::drawProfileLine(const double angle){
     QwtPlotShapeItem *itemb = new QwtPlotShapeItem( "");
     itemb->setShape(radials);
     itemb->setPen(QColor(250,250,250,100),10);
+    itemb->setBrush(QBrush(QColor(255,255,255)));
     itemb->attach(this);
     item->attach(this);
     replot();
@@ -486,6 +508,8 @@ void ContourPlot::initPlot(){
         grid->setPen( Qt::gray, 0.0, Qt::DotLine );
         grid->attach( this);
     }
+
+
     showSpectrogram(fill);
 }
 
@@ -498,7 +522,6 @@ void ContourPlot::setTool(ContourTools *tool){
 void ContourPlot::on_line_color_changed(QColor c)
 {
     m_contourPen = c;
-    //qDebug() << c.name();
     d_spectrogram->setDefaultContourPen(QPen(c));
     QSettings settings;
     settings.setValue("ContourLineColor", c.name());
@@ -529,6 +552,7 @@ void ContourPlot::showSpectrogram(bool on )
     QSettings set;
     set.setValue("contourShowFill", on);
     m_do_fill = on;
+
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ImageMode, on );
     d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
 

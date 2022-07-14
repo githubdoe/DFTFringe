@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Wavefront error Histogram in pixels</string>
+   <string>Wavefront error Histogram of pixels</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>

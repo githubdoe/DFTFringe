@@ -37,6 +37,7 @@ public:
     void setSurface(wavefront * wf);
     bool zoomed;
     QImage getPixstatsImage();
+    pixelStats *getPixelstats(){ return ps;}
 signals:
     void lineSpacingChanged(double);
     void showAllContours();

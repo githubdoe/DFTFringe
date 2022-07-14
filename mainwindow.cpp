@@ -272,23 +272,27 @@ void MainWindow::openWaveFrontonInit(QStringList args){
         pd.show();
     m_surfaceManager->initWaveFrontLoad();
     int cnt = 0;
-    QSettings set;
-    int memThreshold = set.value("lowMemoryThreshold",300).toInt();
+
     foreach( QString arg, args){
-        int mem = showmem("loading");
-        statusBar()->showMessage(QString().sprintf("memory %d MB", mem));
-        if (mem< memThreshold){
-            int resp = QMessageBox::warning(0,"low on memory", "Do you want to continue?", QMessageBox::Yes|QMessageBox::No);
-            if (resp == QMessageBox::No)
-               break;
-        }
+        //int mem = showmem("loading");
+
+//        if (mem< memThreshold){
+//            int resp = QMessageBox::warning(0,"low on memory", "Do you want to continue?", QMessageBox::Yes|QMessageBox::No);
+//            if (resp == QMessageBox::No)
+//               break;
+//        }
         qApp->processEvents();
         if (pd.wasCanceled())
             break;
 
         if (arg.toUpper().endsWith(".WFT")){
             pd.setLabelText(arg);
+            try {
             m_surfaceManager->loadWavefront(arg);
+            }
+            catch (int i){
+                break;
+            }
             pd.setValue(++cnt);
 
         }
@@ -793,6 +797,7 @@ void MainWindow::newMirrorDlgPath(QString path){
 void MainWindow::on_actionWavefront_triggered()
 {
     simIgramDlg &dlg = *simIgramDlg::get_instance();
+
     dlg.setWindowTitle("Wavefront terms");
     if (!dlg.exec())
         return;
@@ -805,7 +810,9 @@ void MainWindow::on_actionWavefront_triggered()
 
 
     rad -= border;
-    cv::Mat result = makeSurfaceFromZerns(border);
+    cv::Mat result = zernikeProcess::get_Instance()->makeSurfaceFromZerns(border, false);
+
+
     m_surfaceManager->createSurfaceFromPhaseMap(result,
                                                 CircleOutline(QPointF(xcen,ycen),rad),
                                                 CircleOutline(QPointF(0,0),0),
@@ -856,15 +863,21 @@ void MainWindow::on_actionSave_screen_triggered()
         return;
 
     QImage image( this->size(), QImage::Format_ARGB32 );
-    QPoint wr = m_ogl->m_container->mapTo(this, m_ogl->pos());
 
 
-    QImage SurfaceImage = m_ogl->m_surface->render();
+    QImage SurfaceImage = m_ogl->m_surface->render(1000,1000);
 
     QPainter painter( &image );
 
     this->render( &painter);
-    painter.drawImage(wr, SurfaceImage);
+
+    painter.setPen(QPen(Qt::red,5));
+    QRect widgetRect = m_ogl->m_container->geometry();
+    widgetRect.moveTopLeft(m_ogl->mapToGlobal(QPoint(0,20)));
+
+    painter.drawImage(widgetRect, SurfaceImage);
+
+
     painter.end();
 
 
@@ -930,7 +943,7 @@ void MainWindow::on_actionHelp_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
 
-    QMessageBox::information(this, "About", QString().sprintf("<html><body><h1>DFTFringe version %s</h1>",APP_VERSION)+
+    QMessageBox::information(this, "___________________________________________________________________________About", QString().sprintf("<html><body><h1>DFTFringe version %s</h1>",APP_VERSION)+
                              "<p>This program was compiled using:<ul><li>"
                              "Qt version 5.15.2 </li>"
                              "<li> Compiled with mingw81_64</li>"
@@ -1128,8 +1141,8 @@ void MainWindow::batchProcess(QStringList fileList){
             batchConnections(false);
             break;
         }
-        int mem2 = showmem("after vortex");
-        batchIgramWizard::memStatus->setText(QString().sprintf("mem %d MB", mem));
+
+
 
 
         qApp->processEvents();
@@ -1179,7 +1192,7 @@ void MainWindow::batchProcess(QStringList fileList){
                     //::reviewFileName = videoFileName;
                 }
                 QImage img = QImage(width,height,QImage::Format_RGB32);
-                QImage d3 = m_ogl->m_surface->render().scaled(width/2,height/2);
+                QImage d3 = m_ogl->m_surface->render(1000,1000).scaled(width/2,height/2);
                 QImage dft = m_dftArea->grab().toImage().scaled(width/2, height/2);
                 QImage igram = m_igramArea->grab().toImage().scaled(width/2, height/2);
                 QImage contour = m_contourView->getPlot()->grab().toImage().scaled(width/2, height/2);
@@ -1438,7 +1451,9 @@ void MainWindow::on_actionEdit_Zernike_values_triggered()
 {
     zernikeEditDlg *dlg = new zernikeEditDlg(m_surfaceManager, this);
     dlg->setWindowFlags(Qt::Tool);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
+    connect(dlg, SIGNAL(termCountChanged(int)), metrics, SLOT(resizeRows(int)));
 }
 
 void MainWindow::on_actionCamera_Calibration_triggered()
@@ -1658,8 +1673,11 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 
 void MainWindow::on_actionDebugStuff_triggered()
 {
-    //m_ogl->m_gl->swapBuffers();
+
+    //debugZernRoutines();
 }
+
+
 #include "outlinestatsdlg.h"
 void MainWindow::on_actionShow_outline_statistics_triggered()
 {
@@ -1748,7 +1766,18 @@ void MainWindow::on_actionProcess_PSI_interferograms_triggered()
 
 }
 
+#include "zernikesmoothingdlg.h"
+void MainWindow::on_actionSmooth_current_wave_front_triggered()
+{
 
-
-
+    SurfaceManager &sm = *SurfaceManager::get_instance();
+    if (sm.m_wavefronts.size() == 0){
+        QMessageBox::warning(this, "No Wavefronts", "You must first load a wave front");
+        return;
+    }
+    ZernikeSmoothingDlg *dlg = new ZernikeSmoothingDlg(*sm.m_wavefronts[sm.m_currentNdx]);
+    dlg->resize(1000,1000);
+    dlg->show();
+    return;
+}
 

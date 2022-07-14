@@ -162,21 +162,25 @@ void OGLView::saveImage(){
     if (fName.isEmpty())
         return;
 
-    QImage img = m_surface->render();
+    QImage img = m_surface->render(1000,1000);
     img.save(fName);
 }
 #include <QApplication>
 #include "wavefront.h"
 #include <QDesktopWidget>
-void OGLView::showSelected()
+void OGLView::showSelected()    // show all selected wavefronts as 3D plots
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QRect rec = QApplication::desktop()->screenGeometry();
     int width = rec.width()/3;
     int height = rec.height()/2;
     QVector<wavefront *>  m_wavefronts =SurfaceManager::get_instance()->m_wavefronts;
-    int rows =  ceil((double)m_wavefronts.size()/3.);
-    int columns = min(m_wavefronts.size(),int(ceil((double)m_wavefronts.size()/rows)));
+    surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
+    QList<int> list = saTools->SelectedWaveFronts();
+    int cols = 4;
+    if (list.size() %3 == 0)  cols = 3;
+    int rows =  ceil((double)list.size()/cols);
+    int columns = cols;//min(m_wavefronts.size(),int(ceil((double)m_wavefronts.size()/rows)));
     const QSizeF size(columns * (width + 10), rows * (height + 10));
     const QRect imageRect = QRect(0,0,size.width(),size.height());
 
@@ -184,13 +188,13 @@ void OGLView::showSelected()
     m_allContours.fill( QColor( Qt::gray ).rgb() );
     QPainter painter(&m_allContours);
     QFont serifFont("Times", 18, QFont::Bold);
-    surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
-    QList<int> list = saTools->SelectedWaveFronts();
+
+
     for (int i = 0; i < list.size(); ++i)
     {
         wavefront * wf = m_wavefronts[list[i]];
         m_surface->setSurface(wf);
-        QImage glImage = m_surface->render();
+        QImage glImage = m_surface->render(width,width);
         QPainter p2(&glImage);
         p2.setFont(serifFont);
         p2.setPen(QPen(QColor(Qt::white)));

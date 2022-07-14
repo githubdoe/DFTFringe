@@ -336,11 +336,12 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
 
     wavefront *wf = m_wavefronts[wavefrontNdx];
     generateSurfacefromWavefront(wf);
+
     surfaceGenFinished( wavefrontNdx);
 }
 
 void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
-
+    zernikeProcess &zp = *zernikeProcess::get_Instance();
     if (wf->dirtyZerns){
         if (mirrorDlg::get_Instance()->isEllipse()){
             wf->nulledData = wf->data.clone();
@@ -357,7 +358,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             else {
                 wf->workData = wf->data.clone();
             }
-            wf->InputZerns = std::vector<double>(Z_TERMS, 0);
+            wf->InputZerns = std::vector<double>(zp.m_norms.size(), 0);
             wf->dirtyZerns = false;
 
 
@@ -365,7 +366,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         }
 
         //compute zernike values
-        zernikeProcess &zp = *zernikeProcess::get_Instance();
+
         mirrorDlg *md = mirrorDlg::get_Instance();
         zp.unwrap_to_zernikes(*wf);
         // check for swapped conic value
@@ -390,21 +391,20 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             zp.unwrap_to_zernikes(*wf);
         }
         ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
-
+        ((MainWindow*)parent())-> zernTablemodel->update();
         // fill in void from obstruction of igram.
-        if (wf->m_inside.m_radius > 0 || wf->regions.size() > 0){
+        if ( wf->regions.size() > 0){
             zp.fillVoid(*wf);
             makeMask(wf, false);
         }
         // null out desired terms.
         //cv::Mat tiltremoved = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables, 0,3);
         //wf->data = tiltremoved;
-        zp.unwrap_to_zernikes(*wf);
+        //zp.unwrap_to_zernikes(*wf);
         wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables,0,Z_TERMS   );
         wf->dirtyZerns = false;
-
-
     }
+
     wf->workData = wf->nulledData.clone();
     if (m_GB_enabled){
             expandBorder(wf);
@@ -515,6 +515,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     connect(this, SIGNAL(nameChanged(QString, QString)), m_surfaceTools, SLOT(nameChanged(QString,QString)));
     connect(m_metrics, SIGNAL(recomputeZerns()), this, SLOT(computeZerns()));
     connect(m_surfaceTools, SIGNAL(defocusChanged()), this, SLOT(defocusChanged()));
+    connect(m_surfaceTools, SIGNAL(defocusSetup()), this, SLOT(defocusSetup()));
     connect(this, SIGNAL(currentNdxChanged(int)), m_surfaceTools, SLOT(currentNdxChanged(int)));
     connect(this, SIGNAL(deleteWavefront(int)), m_surfaceTools, SLOT(deleteWaveFront(int)));
     connect(m_surfaceTools, SIGNAL(deleteTheseWaveFronts(QList<int>)), this, SLOT(deleteWaveFronts(QList<int>)));
@@ -646,6 +647,11 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     }
     wf->mask = mask.clone();
     wf->workMask = mask.clone();
+    //int s = wf->workMask.size[0];
+    //cv::circle(wf->workMask, Point(s/2,s), s/4, cv::Scalar(0,0,0), -1);
+    //line(wf->workMask, Point(s/2, 0), Point(s/2,s),cv::Scalar(0,0,0), 10);
+   // line(wf->workMask, Point(0, s/2), Point(s,s/2),cv::Scalar(0,0,0), 10);
+    //line(wf->workMask, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), 10);
     theMask = mask.clone();
 
     // add central obstruction
@@ -835,15 +841,22 @@ void SurfaceManager::computeMetrics(wavefront *wf){
 
 
     ((MainWindow*)(parent()))->zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
-
+    ((MainWindow*)parent())-> zernTablemodel->update();
     ((MainWindow*)(parent()))->updateMetrics(*wf);
 
 }
+void SurfaceManager::defocusSetup(){
+    wavefront *wf = m_wavefronts[m_currentNdx];
+    qDebug() << "wave" << wf->workData.rows;
+    m_profilePlot->setDefocusWaveFront(wf->workData);
+}
+
 void SurfaceManager::defocusChanged(){
 
     double val = m_surfaceTools->m_defocus;
-    if (!m_surfaceTools->m_useDefocus)
-        val = 0.;
+    //if (!m_surfaceTools->m_useDefocus)
+        //val = 0.;
+
     wavefront *wf = m_wavefronts[m_currentNdx];
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
@@ -1276,7 +1289,14 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
     makeMask(m_currentNdx);
 
     m_surface_finished = false;
-    generateSurfacefromWavefront(m_currentNdx);
+    try {
+        generateSurfacefromWavefront(m_currentNdx);
+    }
+    catch (int i){
+        deleteCurrent();
+        throw i;
+    }
+
     return mirrorParamsChanged;
 }
 void SurfaceManager::deleteCurrent(){
@@ -1414,7 +1434,12 @@ void SurfaceManager::backGroundUpdate(){
         m_wavefronts[i]->dirtyZerns = true;
         m_wavefronts[i]->wasSmoothed = false;
         makeMask(i);
-        generateSurfacefromWavefront(i);
+        try {
+            generateSurfacefromWavefront(i);
+        }
+        catch (int i) {
+            break;
+        }
     }
     m_ignoreInverse = false;
     loadComplete();
@@ -2597,8 +2622,10 @@ void SurfaceManager::showAllContours(){
     m_allContours.fill( QColor( Qt::white ).rgb() );
     QPainter painter( &m_allContours );
     QwtPlotRenderer renderer;
-    renderer.setDiscardFlag( QwtPlotRenderer::DiscardBackground );
-    renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasBackground );
+    if (plot->m_do_fill) {
+        renderer.setDiscardFlag( QwtPlotRenderer::DiscardBackground );
+        renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasBackground );
+    }
     renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasFrame );
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend,false);
     renderer.setLayoutFlag( QwtPlotRenderer::FrameWithScales,false );
@@ -2655,14 +2682,17 @@ void SurfaceManager::report(){
 
 
 
-    QPrinter printer(QPrinter::HighResolution);
+    QPrinter printer(QPrinter::ScreenResolution);
     printer.setColorMode( QPrinter::Color );
-    printer.setFullPage( true );
+    printer.setFullPage( false );
     printer.setOutputFileName( dlg.fileName );
     printer.setOutputFormat( QPrinter::PdfFormat );
-    printer.setResolution(85);
-    printer.setPaperSize(QPrinter::A4);
+    qDebug() << "set resolution" << printer.resolution();
+    printer.setPageSize(QPageSize(QPageSize::A4));
+    int width = printer.pageLayout().paintRectPixels(printer.resolution()).width()-200;
 
+    int height = printer.pageLayout().paintRectPixels(printer.resolution()).height();
+    qDebug() << "set resolution" << printer.resolution() << width << height;
     QTextEdit *editor = new QTextEdit;
     editor->resize(printer.pageRect().size());
 
@@ -2679,7 +2709,7 @@ void SurfaceManager::report(){
     QString ROC = (md->isEllipse()) ? "Vertical Axis: " + QString().number(md->m_verticalAxis) : "ROC: " +  QString().number(md->roc,'f',1);
     QString FNumber = (md->isEllipse()) ? "" : "Fnumber: " + QString().number(md->FNumber,'f',1);
     QString BFC = (md->isEllipse()) ? " Flat" : "Best Fit CC: " +metrics->mCC->text();
-    QString html = "<p style=\'font-size:15px'>"
+    QString html = "<p style=\'font-size: 2em'>"
             "<table border='1' width = '100%'><tr><td>" + Diameter + " mm</td><td>" + ROC + " mm</td>"
             "<td>" +FNumber+ "</td></tr>"
             "<tr><td> RMS: " + QString().number(wf->std,'f',3) +
@@ -2745,95 +2775,108 @@ void SurfaceManager::report(){
     QTextDocument *doc = editor->document();
     QString contourHtml;
 
+    QImage page2(printer.pageRect().size(),QImage::Format_ARGB32);
+    QPainter page2Painter(&page2);
     // get the contour plot image
-    if (dlg.show_contour){
 
 
-        qDebug() << "contour size" << m_contourView->size();
-        QSize cs = m_contourView->size();
-        qDebug() << "contour"<< cs;
-        if (cs.width() < 200)
-            m_contourView->resize(1000,800);
-        QImage contWindow =  QImage(m_contourView->size(),QImage::Format_ARGB32 );
+        m_contourView->resize(width,width);
+        QImage contWindow = QImage(width,width,QImage::Format_ARGB32 );
         QPainter p1(&contWindow);
         m_contourView->repaint();
         m_contourView->render(&p1);
-        if (dlg.reduceContour){
-            contWindow = contWindow.scaled(3 * contWindow.width()/4, contWindow.height()/2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-        }
-        QString contour("mydata://contour.png");
-        doc->addResource(QTextDocument::ImageResource,  QUrl(contour), QVariant(contWindow));
-        contourHtml.append( "<p><table style=\"page-break-before:always\" border = \"1\"><tr><th>Contour Plot</th></tr> <tr><td> <img src='" +
-                            contour + "'></td></tr></table></p>");
-
-    }
 
     // get the 3D image
-    if (dlg.show_3D){
         QString threeD("threeD.png");
-        QImage ddd = m_SurfaceGraph->render();
 
-        if (dlg.reduce3D){
-            ddd = ddd.scaled(3 * ddd.width()/4, ddd.height()/2,Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-            doc->addResource(QTextDocument::ImageResource,  QUrl(threeD), QVariant(ddd));
-            contourHtml.append("<table border = \"1\"><tr><th><h2>3D Surface Plot</h2></th></tr> <tr><td> <img src='" +
-                               threeD + "'</td></tr></table><br>");
-        }
-        else {
-        doc->addResource(QTextDocument::ImageResource,  QUrl(threeD), QVariant(ddd));
-        contourHtml.append("<table style=\"page-break-before:always\" border = \"1\"><tr><th><h2>3D Surface Plot</h2></th></tr> <tr><td> <img src='" +
-                           threeD + "'</td></tr></table><br>");
-        }
-    }
+        QImage ddd = m_SurfaceGraph->render(width,width);
+        page2Painter.drawImage(QRect(0,50,width/2-15,width/2), ddd, QRect(0,0,ddd.width(), ddd.height()));
+        page2Painter.drawText(QRect(0,0,width/2, 50), Qt::AlignHCenter,"3D Plot");
+
+        page2Painter.drawImage(QRect(width/2+15,50,width/2-5,width/2-15),contWindow, QRect(0,0,contWindow.width(), contWindow.height()));
+        page2Painter.drawText(QRect(width/2,0,width/2, 50), Qt::AlignHCenter,"contour Plot");
+
+
+    page2Painter.setPen(QPen(Qt::black,3));
+
 
 
     if (dlg.show_profile){
         //get the profile plot image
-        QImage i2 = QImage(((MainWindow*)(parent()))->m_profilePlot->size(),QImage::Format_ARGB32);
+        QImage i2 = QImage(width,width,QImage::Format_ARGB32);
         QPainter p2(&i2);
+        ((MainWindow*)(parent()))->m_profilePlot->resize(width,width/2);
         ((MainWindow*)(parent()))->m_profilePlot->render(&p2);
-        QImage i2Scaled = i2.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-        QString profile("mydata://profile.png");
-        doc->addResource(QTextDocument::ImageResource,  QUrl(profile), QVariant(i2Scaled));
-        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Profile Plot</th></tr> <tr><td> <img src='" +
-                           profile + "'</td></tr></table><br>");
+
+        page2Painter.drawImage(QRect(0,width/2+150,width-15,width),i2, QRect(0,0,i2.width(), i2.height()));
+
+
+        //QImage i2Scaled = i2.scaled(width,width/2,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+//        QString profile("mydata://profile.png");
+//        doc->addResource(QTextDocument::ImageResource,  QUrl(profile), QVariant(i2));
+//        //contourHtml.append("<p style=\"page-break-after: always;\">&nbsp;</p>");
+//        contourHtml.append("<img src='" + profile + "'><br>");
     }
+
+    QString page2Fn("mydata://page2.png");
+    doc->addResource(QTextDocument::ImageResource,  QUrl(page2Fn), QVariant(page2));
+    contourHtml.append("<p style=\"page-break-before: always;\">");
+    contourHtml.append("<img src='" + page2Fn + "'></p>");
+
+    QImage page3(width-200,height,QImage::Format_ARGB32);
+    QPainter page3Painter(&page3);
+    int lastH = 0;
     if (dlg.show_startest){
+
         // add star test if not testing a
         if (!md->isEllipse()){
             SimulationsView *sv = SimulationsView::getInstance(0);
-            qDebug() << "sv size"<< sv->size();
-            sv->resize(1000,800);
-            //if (sv->needs_drawing){
-                sv->on_MakePB_clicked();
-            //}
+            sv->resize(printer.pageRect().size().width(),printer.pageRect().size().width());
+
+            sv->on_MakePB_clicked();
+
+
             QImage svImage = QImage(sv->size(),QImage::Format_ARGB32 );
+
             QPainter p3(&svImage);
             sv->render(&p3);
-            QImage svImageScaled = svImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+            int svWidth = width-250;
+            int svHeight = svWidth / ((double)svImage.width()/(double)svImage.height());
+            lastH = height/2 + 20;
+            page3Painter.drawImage(QRect(0,0,svWidth, height/2), svImage, QRect(0,0,svImage.width(), svImage.height()));
+            page3Painter.drawRect(0,0,svWidth, height/2);
+
+
             QString svpng("mydata://sv.png");
-            doc->addResource(QTextDocument::ImageResource,  QUrl(svpng), QVariant(svImageScaled));
-            contourHtml.append("<table border = \"1\"><tr><th>Star test, PSF and MTF</th></tr> <tr><td> <img src='" +
-                               svpng + "'></td></tr></table><br>");
+            doc->addResource(QTextDocument::ImageResource,  QUrl(svpng), QVariant(page3));
+            if (!dlg.show_foucault){
+                contourHtml.append("<p style=\"page-break-before: always;\">");
+                contourHtml.append(" <img src='" +svpng + "'></p>");
+            }
         }
     }
+
+
     if (dlg.show_foucault)
     {
+
         foucaultView *fv = foucaultView::get_Instance(0);
         fv->on_makePb_clicked();
         QImage fvImage = QImage(fv->size(),QImage::Format_ARGB32 );
         QPainter p3(&fvImage);
         fv->render(&p3);
-        QImage fvImageScaled = fvImage.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+        double scale = fvImage.width()/(double)fvImage.height();
+        page3Painter.drawImage(QRect(0,  lastH ,width - 240, (width - 240)/scale), fvImage, QRect(0,0,fvImage.width(), fvImage.height()));
+
         QString fvpng("mydata://fv.png");
-        doc->addResource(QTextDocument::ImageResource,  QUrl(fvpng), QVariant(fvImageScaled));
-        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Simulated Ronchi and Foucault</th></tr> <tr><td> <img src='" +
-                           fvpng + "'></td></tr></table><br>");
+        doc->addResource(QTextDocument::ImageResource,  QUrl(fvpng), QVariant(page3));
+        contourHtml.append("<p style=\"page-break-before: always;\">");
+        contourHtml.append(" <img src='" + fvpng + "'></p>");
     }
 
     // add igram
     QImage igram = ((MainWindow*)(parent()))->m_igramArea->igramDisplay;
-    if (igram.width() > 0){
+    if (dlg.show_igram && igram.width() > 0){
         QString sigram("mydata://igram.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(sigram),
                          QVariant(igram.scaled(printer.pageRect().size().width()-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
@@ -2842,14 +2885,16 @@ void SurfaceManager::report(){
     }
     if (dlg.show_histogram){
         // add pixel stats window
+        m_contourView->getPixelstats()->resize(width/3,4 * width/3);
         QImage pixStats = m_contourView->getPixstatsImage();
         QString pixStat("mydata://pixStat.png");
         doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
-                         QVariant(pixStats.scaled(printer.pageRect().size().width() -50, 700,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
+                         QVariant(pixStats));
         contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Hitogram and SLope error</th></tr> <tr><td> <img src = '" +
                            pixStat + "'></td></tr></table>");
     }
     editor->setHtml(title + html +zerns + contourHtml+ tail);
+
     editor->print(&printer);
     editor->show();
 }

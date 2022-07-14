@@ -25,10 +25,9 @@ void ReportDlg::on_buttonBox_accepted()
     show_histogram = ui->histogram->isChecked();
     show_startest = ui->starTest->isChecked();
     show_profile = ui->ProfilePlot->isChecked();
-    show_contour = ui->doContour->isChecked();
-    show_3D = ui->OGLSurface->isChecked();
-    reduce3D = ui->reduce3D->isChecked();
-    reduceContour = ui->reduceContour->isChecked();
+    show_igram = ui->showIgram->isChecked();
+
+
     QSettings set;
     fileName = QFileDialog::getSaveFileName((QWidget* )0, "Save PDF report", QString(mirrorDlg::get_Instance()->getProjectPath() +
                                                                                         "/Report.pdf"), "*.pdf");

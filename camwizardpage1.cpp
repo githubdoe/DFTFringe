@@ -153,7 +153,6 @@ void CamWizardPage1::showContextMenu(const QPoint &pos)
 
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Erase",  this, SLOT(eraseItem()));
 
     // Show context menu at handling position
     myMenu.exec(globalPos);

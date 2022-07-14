@@ -123,14 +123,14 @@ public:
     void generateSurfacefromWavefront(int ndx);
     void generateSurfacefromWavefront(wavefront *wf);
     void transform();
-
+    void subtract(wavefront *wf1, wavefront *wf2, bool use_null = true);
 private:
     QProgressDialog *pd;
     QTimer *m_waveFrontTimer;
     QTimer *m_toolsEnableTimer;
     int workToDo;
     int workProgress;
-    void subtract(wavefront *wf1, wavefront *wf2, bool use_null = true);
+
     wftStats *m_wftStats;
     textres Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx);
 
@@ -173,6 +173,7 @@ private slots:
     void changeWavelength(double wavelength);
     void flipHorizontal();
     void flipVertical();
+    void defocusSetup();
 
 public slots:
     void rotateThese(double angle, QList<int> list);

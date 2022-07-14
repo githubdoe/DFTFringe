@@ -47,7 +47,7 @@
           <number>2</number>
          </property>
          <property name="maximum">
-          <number>4000</number>
+          <number>6000</number>
          </property>
          <property name="singleStep">
           <number>100</number>
@@ -138,6 +138,9 @@
         <widget class="QDoubleSpinBox" name="ringPatterSb">
          <property name="toolTip">
           <string>PV Waves</string>
+         </property>
+         <property name="decimals">
+          <number>3</number>
          </property>
         </widget>
        </item>

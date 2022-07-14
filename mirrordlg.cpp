@@ -487,6 +487,12 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
      ui->roc->blockSignals(false);
      ui->minorAxisEdit->blockSignals(true);
      ui->minorAxisEdit->setText(QString().sprintf(("%6.2lf"),m_verticalAxis/div));
+     ui->reduceValue->blockSignals(true);
+     QSettings set;
+     aperatureReduction = set.value("config aperatureReduction",0.).toDouble();
+     ui->reduceValue->setValue(aperatureReduction * ((mm) ? 1. : 1./25.4));
+     ui->reduceValue->blockSignals(false);
+     ui->ClearAp->setText(QString().sprintf("%6.2lf ", m_clearAperature * ((mm) ? 1: 1./25.4)));
 }
 
 void mirrorDlg::on_buttonBox_accepted()
@@ -586,8 +592,8 @@ void mirrorDlg::on_buttonBox_helpRequested()
 
 void mirrorDlg::setclearAp(){
 
-    m_clearAperature = (diameter - aperatureReduction * 2) * ((mm) ? 1: 1./25.4);
-    ui->ClearAp->setText(QString().sprintf("%6.2lf", m_clearAperature));
+    m_clearAperature = (diameter - aperatureReduction * 2) ;
+    ui->ClearAp->setText(QString().sprintf("%6.2lf ", m_clearAperature * ((mm) ? 1: 1./25.4)));
 }
 
 void mirrorDlg::on_ReducApp_clicked(bool checked)

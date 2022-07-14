@@ -36,11 +36,12 @@ class psfPlot : public QwtPlot
 public:
     explicit psfPlot(QWidget *parent = 0);
     ~psfPlot();
-    void setData(cv::Mat wf, QString label, QPen color);
+    void setData(cv::Mat wf, QString label, QPen color, bool doLog);
     void clear();
 
 private:
     Ui::psfPlot *ui;
+
 
 };
 

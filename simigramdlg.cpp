@@ -22,7 +22,7 @@
 #include <QDebug>
 #include <QAbstractTableModel>
 #include "surfacemanager.h"
-
+#include "zernikeprocess.h"
 
 zTableModel::zTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
     :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable)
@@ -30,15 +30,40 @@ zTableModel::zTableModel(QObject *parent, std::vector<bool> *enables, bool editE
     values = new std::vector<double>(Z_TERMS, 0.);
 }
 
+void zTableModel::resizeRows(const int rowCnt){
+    int oldrowcnt = rowCount();
+    emit layoutAboutToBeChanged();
+    values->resize(rowCnt);
 
+
+    if (rowCnt > oldrowcnt){
+        insertRows(oldrowcnt, rowCnt - oldrowcnt);
+    }
+    else
+    {
+        removeRows(oldrowcnt -rowCnt, rowCnt);
+    }
+    emit layoutChanged();
+    update();
+}
 
 void zTableModel::setValues(std::vector<double> *vals){
-
+    int newRowCnt = vals->size();
+    int oldRowCnt = values->size();
+    emit layoutAboutToBeChanged();
+    if (newRowCnt > oldRowCnt){
+        insertRows(oldRowCnt, newRowCnt - oldRowCnt);
+    }
+    else
+    {
+        removeRows(oldRowCnt -newRowCnt, newRowCnt);
+    }
     values = vals;
     QModelIndex topLeft = index(0, 0);
     QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
-
+    emit layoutChanged();
     emit dataChanged(topLeft, bottomRight);
+    update();
 }
 
 void zTableModel::update(){
@@ -78,8 +103,20 @@ QVariant zTableModel::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole)
     {
-        if (index.column() == 0)
-            return zernsNames[index.row()];
+        if (index.column() == 0){
+            if (index.row() < Z_TERMS){
+                return zernsNames[index.row()];
+            }
+
+            else {
+                int row = index.row();
+                int sr = floor(sqrt(row+1));
+
+                return (QString().sprintf("%d %s", index.row(),
+                      ( sr * sr == index.row()+1)? QString().sprintf("Spherical").toStdString().c_str(): ""));
+
+            }
+        }
         if (index.column() == 1){
             return QString().sprintf("%6.3lf",values->at(index.row()));
         }
@@ -121,8 +158,9 @@ simIgramDlg::simIgramDlg(QWidget *parent) :
     ui(new Ui::simIgramDlg)
 {
     ui->setupUi(this);
-    zernikes = std::vector<double>(Z_TERMS,0);
-    enables = std::vector<bool>(Z_TERMS);
+    zernikeProcess &zp = *zernikeProcess::get_Instance();
+    zernikes = std::vector<double>(zp.getNumberOfTerms(),0);
+    enables = std::vector<bool>(zp.getNumberOfTerms());
     QSettings s;
     xtilt = s.value("simxtilt", 30).toDouble();
     zernikes[1] = xtilt;
@@ -158,6 +196,15 @@ simIgramDlg *simIgramDlg::get_instance(){
         m_instance = new simIgramDlg;
     }
     return m_instance;
+}
+void simIgramDlg::setNewTerms(std::vector<double> terms){
+
+    zernikes = terms;
+    tableModel->setValues(&zernikes);
+    ui->correctionPb->setChecked(false);
+    ui->Z8Pb->setChecked(true);
+    doCorrection = false;
+    update();
 }
 void simIgramDlg::showEvent(QShowEvent *){
     QString z8 = "Correction %";
@@ -234,3 +281,5 @@ void simIgramDlg::on_clearAll_pressed()
     tableModel->setValues(&zernikes);
     update();
 }
+
+

@@ -81,7 +81,7 @@ public:
     void setSurface(wavefront *wf);
     void setGraphColors();
     void setLegend(QLabel * legend) {m_legend = legend;}
-    QImage render();
+    QImage render(int width, int height);
 public Q_SLOTS:
     void changeTheme(int theme);
     void setColorMap(int ndx);

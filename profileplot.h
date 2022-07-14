@@ -61,6 +61,7 @@ public:
     bool m_showSlopeError;
     double slopeLimitArcSec;
     void setDefocusValue(double val);
+    void setDefocusWaveFront( cv::Mat_<double> wf);
 signals:
     void zoomMe(bool);
     void profileAngleChanged(const double ang);
@@ -94,6 +95,8 @@ private:
 
 private:
     Ui::ProfilePlot *ui;
+    bool m_defocus_mode;
+    cv::Mat_<double> m_defocus_wavefront;
 };
 
 #endif // PROFILEPLOT_H

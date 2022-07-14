@@ -20,6 +20,7 @@
 #include <qwt_plot_curve.h>
 #include <qwt_plot_legenditem.h>
 #include <qwt_plot_textlabel.h>
+#include <QPushButton>
 psfPlot::psfPlot(QWidget *parent) :
     QwtPlot(parent),
     ui(new Ui::psfPlot)
@@ -48,16 +49,18 @@ void psfPlot::clear(){
 
 }
 
-void psfPlot::setData(cv::Mat wf, QString label, QPen color){
+void psfPlot::setData(cv::Mat wf, QString label, QPen color, bool doLog){
     int nx = wf.cols/2;
     QwtPlotCurve *curve1 = new QwtPlotCurve(label);
     QPolygonF points1;
     double w = sqrt(wf.cols);
-    wf += cv::Scalar::all(1);                    // switch to logarithmic scale
-    cv::log(wf, wf);
-    for (int x = nx; x >0; --x){
+    if (doLog){
+        wf += cv::Scalar::all(1);                    // switch to logarithmic scale
+        cv::log(wf, wf);
+    }
+    for (int x = nx; x < nx + nx/4; ++x){
 
-        points1 << QPointF(nx - x, /*log10*/(wf.at<double>(nx,x)/w));
+        points1 << QPointF(x, /*log10*/(wf.at<double>(nx,x)/w));
     }
     curve1->setPen(color);
     curve1->setSamples(points1);

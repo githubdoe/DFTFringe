@@ -10,10 +10,17 @@ zernikeEditDlg::zernikeEditDlg(SurfaceManager * sfm, QWidget *parent) :
     ui(new Ui::zernikeEditDlg), m_sm(sfm), shouldEnableAll(false)
 {
     ui->setupUi(this);
-    m_zernEnables = std::vector<bool>(Z_TERMS);
+    zernikeProcess &zp = *zernikeProcess::get_Instance();
+    m_noOfTerms = zp.getNumberOfTerms();
+    m_zernEnables = std::vector<bool>(m_noOfTerms);
     tableModel = new ZernTableModel(parent, &m_zernEnables, true);
-    std::vector<double> val(Z_TERMS,0.);
+    std::vector<double> val(m_noOfTerms,0.);
     ui->tableView->setModel(tableModel);
+    QSettings set;
+    m_maxOrder = set.value("Zern maxOrder", 10).toInt();
+    ui->maxOrder->setValue(m_maxOrder);
+    ui->numberOfTerms->setText(QString().sprintf("%d Terms",m_noOfTerms));
+
 }
 
 zernikeEditDlg::~zernikeEditDlg()
@@ -138,12 +145,35 @@ void zernikeEditDlg::on_save_clicked()
 extern std::vector<bool> zernEnables;
 void zernikeEditDlg::on_useCurrent_clicked()
 {
+    if (m_sm->m_wavefronts.size() ==0 ) {
+        QMessageBox::warning(0,"No wave fronts available!", "First load or create a wave front");
+        return;
+    }
     m_zernEnables = zernEnables;
     tableModel->blockSignals(true);
+
     tableModel->setValues(m_sm->m_wavefronts[m_sm->m_currentNdx]->InputZerns,m_sm->m_wavefronts[m_sm->m_currentNdx]->useSANull );
     ui->sizeSb->setValue(m_sm->m_wavefronts[m_sm->m_currentNdx]->data.cols);
     tableModel->blockSignals(false);
     tableModel->update();
 }
 
+
+
+void zernikeEditDlg::on_maxOrder_valueChanged(int arg1)
+{
+    QSettings set;
+
+    if (arg1 % 2 != 0)
+        ++arg1;
+    ui->maxOrder->setValue( arg1);
+    m_maxOrder = arg1;
+    set.setValue("Zern maxOrder", arg1);
+    zernikeProcess &zp = *zernikeProcess::get_Instance();
+    zp.setMaxOrder(arg1);
+    m_noOfTerms = zp.getNumberOfTerms();
+    ui->numberOfTerms->setText(QString().sprintf("%d Terms",m_noOfTerms));
+    tableModel->resizeRows(m_noOfTerms);
+    emit termCountChanged(m_noOfTerms);
+}
 

@@ -23,6 +23,7 @@
 #include <QLabel>
 #include <QList>
 #include <QTimer>
+#include "opencv/cv.h"
 namespace Ui {
 class surfaceAnalysisTools;
 }
@@ -64,6 +65,8 @@ signals:
     void wftNameChanged(int, QString);
     void updateSelected();
     void filterWavefronts(QList<int>);
+    void defocusSetup();
+
 
 
 public slots:
@@ -71,7 +74,7 @@ public slots:
     void deleteWaveFront(int);
     void defocusTimerDone();
     void nameChanged(QString, QString);
-
+    void defocusControlChanged(double);
     void enableControls(bool);
 private slots:
 
@@ -95,8 +98,6 @@ private slots:
 
     void on_SelectNonePB_clicked();
 
-    void on_checkBox_clicked(bool checked);
-
      void on_InvertPB_pressed();
 
     void on_wavefrontList_customContextMenuRequested(const QPoint &pos);
@@ -109,11 +110,9 @@ private slots:
 
     void on_surfaceSmoothGausianBlurr_valueChanged(double arg1);
 
-    void on_multiplierwaves_valueChanged(double arg1);
+    void closeDefocus(int);
 
-    void on_rocPercent_valueChanged(int value);
-
-    void on_rocHelp_clicked();
+    void on_defocus_clicked();
 
 private:
     Ui::surfaceAnalysisTools *ui;

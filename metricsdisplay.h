@@ -40,13 +40,14 @@ public:
     QLabel *mRMS;
     QLabel *mStrehl;
     QLabel *mCC;
-    QTableView* mvalues;
     ZernTableModel * tableModel;
     void setName(QString name);
     void setWavePerFringe(double val, double lambda);
     void setOutputLambda(double val);
 private:
     bool shouldEnableAll;
+public slots:
+   void resizeRows(int);
 private slots:
     void on_recomputePB_clicked();
     void on_DisableAll_clicked();

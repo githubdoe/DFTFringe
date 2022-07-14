@@ -66,7 +66,7 @@ public:
     bool m_linkProfile;
     QPen m_rulerPen;
     int m_radialDeg;
-
+    bool m_do_fill;
 
 
 signals:
@@ -103,7 +103,7 @@ private:
 
 
     QColor m_contourPen;
-    bool m_do_fill;
+
     void ruler();
     double m_min;
     double m_max;

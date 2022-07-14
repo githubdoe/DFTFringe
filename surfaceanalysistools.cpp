@@ -235,18 +235,12 @@ void surfaceAnalysisTools::defocusTimerDone(){
     emit defocusChanged();
 }
 
-void surfaceAnalysisTools::on_checkBox_clicked(bool checked)
-{
-    if (ui->wavefrontList->count() == 0){
-        ui->checkBox->setChecked(false);
-        return;
-    }
-    m_useDefocus = checked;
-    ui->rocPercent->setEnabled(checked);
-    ui->multiplierwaves->setEnabled(checked);
+#include "defocusdlg.h"
+void surfaceAnalysisTools::defocusControlChanged(double val){
+    m_defocus = val;
     emit defocusChanged();
-}
 
+}
 
 
 void surfaceAnalysisTools::on_InvertPB_pressed()
@@ -256,10 +250,10 @@ void surfaceAnalysisTools::on_InvertPB_pressed()
 
 void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPoint &pos)
 {
-
-
     QModelIndex t = ui->wavefrontList->indexAt(pos);
     QListWidgetItem *item = ui->wavefrontList->item(t.row());
+    if (item == 0)
+        return;
     item->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
     ui->wavefrontList->item(t.row())->setSelected(true);	// even a right click will select the item
     ui->wavefrontList->editItem(item);
@@ -292,34 +286,29 @@ void surfaceAnalysisTools::on_surfaceSmoothGausianBlurr_valueChanged(double arg1
    emit     surfaceSmoothGBValue(arg1);
 }
 
-void surfaceAnalysisTools::on_multiplierwaves_valueChanged(double arg1)
+
+
+
+
+
+void surfaceAnalysisTools::on_defocus_clicked()
 {
-    m_defocus = arg1 * .01 * ui->rocPercent->value();
-    double f = mirrorDlg::get_Instance()->FNumber;
-    double mm = f * f * 8. * m_defocus * .00055;  //mmeters
-    ui->defocusNm->setText(QString().sprintf("%6.3lf", mm));
-    emit defocusChanged();
-    //m_defocusTimer.start(1000);
+    if (ui->wavefrontList->count() == 0){
+        return;
+    }
+    m_useDefocus = true;
+    emit defocusSetup();
+
+    defocusDlg *dlg = new defocusDlg();
+    connect(dlg, SIGNAL(defocus(double)), this, SLOT(defocusControlChanged(double)));
+    connect(dlg, SIGNAL(finished(int)), this, SLOT(closeDefocus(int)) );
+    dlg->show();
+
+return;
 }
 
-void surfaceAnalysisTools::on_rocPercent_valueChanged(int value)
-{
-    double waves = .01 * value * ui->multiplierwaves->value();
-
-    // From Suiter appendix E  mm = F^2 * 8 * waves * wavelength
-    double f = mirrorDlg::get_Instance()->FNumber;
-    double mm = f * f * 8. * waves * .00055;  //mmeters
-    ui->defocusNm->setText(QString().sprintf("%6.3lf", mm));
-    m_defocus = waves;
+void surfaceAnalysisTools::closeDefocus(int f){
+    m_useDefocus = false;
+    m_defocus = 0.;
     emit defocusChanged();
-}
-
-void surfaceAnalysisTools::on_rocHelp_clicked()
-{
-    QMessageBox::information(this, "ROC offset help.",
-                "<b>Make sure the Zernike defocus term is not checked before using this control.</b> "
-                "<p>Used by mirror makers to adjusted the mirror's desired focal lengh a small"
-                " amount in order to raise the middle or edge of the surface.</p>"
-                " <p>The slider value range is from -1 to +1 and multiplied by the multiplier to generate an offset in waves.</p>"
-                "<p>The resulting focal length offset is displayed in mm at the lower right.</p>");
 }

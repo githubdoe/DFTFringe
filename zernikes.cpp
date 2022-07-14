@@ -20,7 +20,7 @@
 #include "zernikes.h"
 #include <QDebug>
 #include <QString>
-
+#include "zernikeprocess.h"
 
 void dump_matrix (double *a, int nrows, int ncols,const char *desc)
 {
@@ -38,8 +38,9 @@ void dump_matrix (double *a, int nrows, int ncols,const char *desc)
     }
 }
 
-extern int Zw[];
+
 double computeRMS(int term,  double val){
+
     return val /sqrt( Zw[term]);
 }
 

@@ -20,11 +20,14 @@ public:
     QVector<double> phases();
     bool m_knownPhase;
     bool m_doTiltPSI;
+    bool m_stop;
     void setPhases(QVector<double> phases);
     int maxIter();
     double tolerance();
-    void setStatusText(const QString &txt);
-
+    void setStatusText(const QString &txt, int prog);
+    int getResizeValue();
+    bool shouldResize();
+void plot(QVector<double> phases, int iteration, double sdp);
 signals:
     void computePhase();
 private slots:
@@ -50,8 +53,22 @@ private slots:
 
     void on_showVariationPb_clicked();
 
+    void on_showRadians_clicked(bool checked);
+
+    void on_showPlot_clicked();
+
+    void on_stop_clicked();
+
+    void on_resizeSb_valueChanged(int arg1);
+
+    void on_doResize_clicked(bool checked);
+
 private:
     Ui::PSI_dlg *ui;
+    QVector<double> m_phases;
+    bool m_useRadians;
+    int m_last_itr;
+    double m_last_sdp;
 };
 
 #endif // PSI_DLG_H

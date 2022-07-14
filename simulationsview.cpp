@@ -32,6 +32,8 @@
 #include <QSettings>
 #include "settings2.h"
 #include "utils.h"
+#include <QTextDocument>
+#include <QtMath>
 double M2PI = M_PI * 2.;
 SimulationsView *SimulationsView::m_Instance = 0;
 class arcSecScaleDraw: public QwtScaleDraw
@@ -41,29 +43,76 @@ public:
     double s1;
     arcSecScaleDraw(double mirrorDiameter): m_mirrorDiam(mirrorDiameter)
     {
+        s1 = (1.22 * 550.e-6/m_mirrorDiam) * 57.3 * 3600;
         // From Telescope Optics Rutten & Van Vernrooij page 211.
-        s1 = 206265 * 5.5e-4 / m_mirrorDiam;
+        //s1 = 206265 * 5.5e-4 / m_mirrorDiam;
+        qDebug() << "arcsec" << s1;
     }
     virtual QwtText label( double value ) const
     {
+
         if (value ==0)
             return QString("");
+
+
         return QString().sprintf("%6.2lf",s1 / value);
     }
 };
 SimulationsView::SimulationsView(QWidget *parent) :
     QWidget(parent),
-     needs_drawing(false),ui(new Ui::SimulationsView),m_wf(0)
+     needs_drawing(false),needs_drawing_3D(true),m_arcSecScaleDraw(0),ui(new Ui::SimulationsView),m_wf(0)
 {
     ui->setupUi(this);
+    ui->PSF3DWidget->hide();
+    initMTFPlot();
+
+    //QList<double> ticks;
+    //ticks << 5.<< 2.5  << 1. << .5 << .3;
+
+    //QwtScaleDiv *scaleDivP = new QwtScaleDiv( 20, .3);
+    //scaleDivP->setTicks(QwtScaleDiv::MajorTick, ticks);
+    //ui->MTF->setAxisScaleDiv(QwtPlot::xBottom, *scaleDivP);
+
+    m_PSF_3Dgraph = new Q3DSurface();
+    QWidget *container = QWidget::createWindowContainer(m_PSF_3Dgraph);
+    QHBoxLayout *hLayout = new QHBoxLayout();
+    QVBoxLayout *vLayout = new QVBoxLayout();
+    hLayout->addWidget(container, 1);
+    hLayout->addLayout(vLayout);
+    ui->PSF3DWidget->setLayout(hLayout);
+    vLayout->setAlignment(Qt::AlignTop);
+    ui->MakePB->setEnabled(false);
+
+    QSettings set;
+    m_psf_doLog = false;// set.value("psfDoLog", 1).toBool();
+    ui->doLog->setChecked(m_psf_doLog);
+    ui->FFTSizeSB->blockSignals(true);
+    ui->FFTSizeSB->setValue(set.value("FFTSize", 1000).toInt());
+    ui->FFTSizeSB->blockSignals(false);
+    ui->centerMagnifySB->setValue(set.value("StarTestMagnify", 4).toDouble());
+    ui->gammaSB->setValue(set.value("StarTestGamma", 2.).toDouble());
+    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_MakePB_clicked()));
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(showContextMenu(QPoint)));
+    setContextMenuPolicy(Qt::CustomContextMenu);
+}
+
+SimulationsView::~SimulationsView()
+{
+    delete ui;
+}
+
+void SimulationsView::initMTFPlot(){
+    ui->MTF->detachItems(QwtPlotItem::Rtti_PlotItem);
     ui->MTF->setAxisTitle( QwtPlot::yLeft, "Percent Contrast" );
-    ui->MTF->setAxisTitle(QwtPlot::xBottom,"Fraction of Max spatial frequency");
+
 
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->enableXMin(true);
     grid->setPen( Qt::gray, 0.0, Qt::DotLine );
     grid->attach( ui->MTF);
-
+    m_arcSecScaleDraw  =  new arcSecScaleDraw(mirrorDlg::get_Instance()->diameter);
+    ui->MTF->setAxisScaleDraw(ui->MTF->xBottom, m_arcSecScaleDraw);
     QwtPlotLegendItem *customLegend = new QwtPlotLegendItem();
     customLegend->setAlignment(Qt::AlignLeft | Qt::AlignBottom);
     customLegend->attach(ui->MTF);
@@ -72,32 +121,12 @@ SimulationsView::SimulationsView(QWidget *parent) :
     title.setRenderFlags( Qt::AlignHCenter | Qt::AlignTop );
     t->setText(title);
     t->attach(ui->MTF);
-    //ui->MTF->setAxisScaleDraw(ui->MTF->xBottom, new arcSecScaleDraw(mirrorDlg::get_Instance()->diameter));
-
-    QList<double> ticks;
-    ticks << 5.<< 2.5  << 1. << .5 << .3;
-
-    QwtScaleDiv *scaleDivP = new QwtScaleDiv( 20, .3);
-    scaleDivP->setTicks(QwtScaleDiv::MajorTick, ticks);
-    //ui->MTF->setAxisScaleDiv(QwtPlot::xBottom, *scaleDivP);
-    ui->MakePB->setEnabled(false);
-    QSettings set;
-    ui->FFTSizeSB->blockSignals(true);
-    ui->FFTSizeSB->setValue(set.value("FFTSize", 1000).toInt());
-    ui->FFTSizeSB->blockSignals(false);
-    ui->centerMagnifySB->setValue(set.value("StarTestMagnify", 4).toDouble());
-    ui->gammaSB->setValue(set.value("StarTestGamma", 2.).toDouble());
-    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_MakePB_clicked()));
 }
-
-SimulationsView::~SimulationsView()
-{
-    delete ui;
-}
-
 void SimulationsView::setSurface(wavefront *wf){
     m_wf = wf;
-
+    m_arcSecScaleDraw->s1 = (1.22 * 550.e-6/wf->diameter) * 57.3 * 3600;
+    QString txt = QString().sprintf("diameter %6.1lf with max resolution of %6.2lf arcsec",wf->diameter, m_arcSecScaleDraw->s1);
+   ui->MTF->setAxisTitle(QwtPlot::xBottom,txt);
     if (wf == 0 ){
         needs_drawing = false;
         return;
@@ -105,11 +134,37 @@ void SimulationsView::setSurface(wavefront *wf){
 
     ui->MakePB->setEnabled((wf != 0));
     needs_drawing = true;
+    needs_drawing_3D = true;
 
     if (!isHidden())
         on_MakePB_clicked();
 }
+void SimulationsView::saveImage(QString fileName){
+    QSettings settings;
+    QString path = settings.value("lastPath","").toString();
+    if (fileName == "")
+        fileName = QFileDialog::getSaveFileName(0,
+                                        "File name for image to be saved", path);
+    if (!fileName.endsWith(".jpg"))
+        fileName = fileName + ".jpg";
+    QImage svImage = QImage(size(),QImage::Format_ARGB32 );
+    QPainter p3(&svImage);
+    render(&p3);
+    svImage.save(fileName);
+}
 
+void SimulationsView::showContextMenu(const QPoint &pos)
+{
+
+// Handle global position
+    QPoint globalPos = mapToGlobal(pos);
+    // Create menu and insert some actions
+    QMenu myMenu;
+    myMenu.addAction("Save as image",  this, SLOT(saveImage()));
+
+    // Show context menu at handling position
+    myMenu.exec(globalPos);
+}
 SimulationsView *SimulationsView::getInstance(QWidget *parent){
     if (m_Instance == 0)
     {
@@ -147,11 +202,12 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
     nulled_surface  *= M2PI * md->lambda/outputLambda;
     return nulled_surface;
 }
-
+#ifdef trialVersion
 // create star test using pupil_size which is usually smaller than the wavefront being sampled.
 cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double pad , bool returnComplex){
     alias = false;
     cv::Mat out;
+
 
     int nx = surface.size().width;//pupil_size;
     int ny = surface.size().height;
@@ -169,6 +225,7 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
 
     // apply the mask
     cv::Mat tmp2;
+
     tmp[0].copyTo(tmp2, m_wf->workMask);
     tmp[0] = tmp2.clone();
     tmp[1].copyTo(tmp2, m_wf->workMask);
@@ -177,10 +234,114 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
     // now reduce the wavefront with pad to fit into the fft size;
     // new padSize is fft_size/pad;
 
-    int padSize = pupil_size/pad;
 
-    cv::resize(tmp[0],tmp[0],cv::Size(padSize,padSize),cv::INTER_AREA);
-    cv::resize(tmp[1],tmp[1],cv::Size(padSize,padSize),cv::INTER_AREA);
+        int padSize =  pupil_size;
+
+        dX = (m_wf->diameter/2.)/m_wf->m_outside.m_radius;
+        if (nx > padSize/3.){
+            cv::resize(tmp[0],tmp[0],cv::Size(padSize/3.,padSize/3.),cv::INTER_AREA);
+            cv::resize(tmp[1],tmp[1],cv::Size(padSize/3.,padSize/3.),cv::INTER_AREA);
+        }
+
+
+    cv::Mat in[] = {cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)
+                    ,cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)};
+
+    tmp[0].copyTo(in[0](cv::Rect(0,0,tmp[0].cols,tmp[0].cols)));
+    tmp[1].copyTo(in[1](cv::Rect(0,0,tmp[0].cols,tmp[0].cols)));
+    //showData("xxxxff", in[0].clone());
+    cv::Mat complexIn;
+
+    cv::merge(in,2,complexIn);
+    dft(complexIn,out);
+    shiftDFT(out);
+
+    //cv::flip(out,out,0);      // needs work.
+    Mat planes[2];
+    split(out, planes);
+    magnitude(planes[0], planes[1], planes[0]);
+
+
+    // check for aliasing
+    // compute edge
+    double edge_avg = 0.;
+    double center_avg = 0.;
+    int half = out.size[0] /2;
+    int last = out.size[0] * .3;
+
+    for (int i = 0; i < last; ++i)
+    {
+        edge_avg += planes[0].at<double>(half,i);
+        center_avg += planes[0].at<double>(half, i+half);
+
+    }
+
+    double ddd = center_avg/edge_avg;
+
+    if (ddd < 2)
+    {
+        alias = true;
+/*
+        AfxMessageBox(L"Warning, computed PSF was too large for the selected size of the simulation.\n"
+                        L"Select larger simulation size from the Configuration Menu\n"
+                        L"and try again.\n\n"
+                        L"Note: PSF is also used to compute Foucault, Ronchi, and MTF\n"
+                        L" Computeing MTF may cause this message 3 times\n"
+                        L"Sometime this message is caused by the errors on the surface and so the simulatin may still be usable.\n"
+                        L"The error usually shows up as a series of light and dark horizontal bands.");
+
+        //throw FFT_ERROR();
+        */
+    }
+
+    if (returnComplex)
+        return out;
+    int start = (pupil_size/2)-pupil_size/8;
+
+
+    return (planes[0]);
+
+}
+#endif
+// create star test using pupil_size which is usually smaller than the wavefront being sampled.
+cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double pad , bool returnComplex){
+    alias = false;
+    cv::Mat out;
+
+
+    int nx = surface.size().width;//pupil_size;
+    int ny = surface.size().height;
+
+    cv::Mat tmp[] = {cv::Mat::zeros(Size(nx,ny),CV_64FC1)
+                    ,cv::Mat::zeros(Size(nx,ny),CV_64FC1)};
+
+    for (int y = 0; y < ny; ++y){
+        for (int x = 0; x < nx; ++x){
+            tmp[1].at<double>(y,x) =  cos(surface.at<double>(y,x));
+            tmp[0].at<double>(y,x) = -sin(surface.at<double>(y,x));
+
+        }
+    }
+
+    // apply the mask
+    cv::Mat tmp2;
+
+    tmp[0].copyTo(tmp2, m_wf->workMask);
+    tmp[0] = tmp2.clone();
+    tmp[1].copyTo(tmp2, m_wf->workMask);
+    tmp[1] = tmp2.clone();
+    //pupil_size += 1;
+    // now reduce the wavefront with pad to fit into the fft size;
+    // new padSize is fft_size/pad;
+
+
+        int padSize =  pupil_size/pad;
+        double dftRescale = padSize/(double)nx;
+        dX = (m_wf->diameter/2.)/m_wf->m_outside.m_radius;
+
+        cv::resize(tmp[0],tmp[0],cv::Size(padSize,padSize),cv::INTER_AREA);
+        cv::resize(tmp[1],tmp[1],cv::Size(padSize,padSize),cv::INTER_AREA);
+
 
     cv::Mat in[] = {cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)
                     ,cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)};
@@ -307,21 +468,158 @@ void SimulationsView::mtf(cv::Mat star, QString txt, QColor color){
     int nx = (mtfMag.rows);
     int half = nx/2;
     QwtPlotCurve *curve1 = new QwtPlotCurve(txt);
-    curve1->setPen(QPen(color));
+    curve1->setPen(QPen(QBrush(color),5));
     QPolygonF points1;
 
 
-    for (int x = 0; x < half; ++x){
-        double arc = (double(x)/half);
-        points1 << QPointF(arc, mtfMag.at<double>(x+half,half));
+    for (int x = 1; x < half; ++x){
+
+        double percentRes =  (double(x)/half);
+        points1 << QPointF(percentRes, mtfMag.at<double>(x+half,half));
     }
     curve1->setSamples(points1);
     curve1->attach(ui->MTF);
 }
+void SimulationsView::on_film_clicked()
+{
+    QSettings settings;
+    QString filmDir = settings.value("lastPath","").toString();
 
+    filmDir = QFileDialog::getExistingDirectory(this, tr("Directory where images are to be saved"),
+                                                 filmDir,
+                                                 QFileDialog::ShowDirsOnly
+                                                 | QFileDialog::DontResolveSymlinks);
+    if (filmDir.isEmpty())
+        return;
+    int cnt = 0;
+    for (double wave = .1; wave < 10. ; wave+= .2){
+
+        ui->defocusSB->setValue(wave);
+        QApplication::processEvents();
+        on_MakePB_clicked();
+        QApplication::processEvents();
+        QString name = QString().sprintf("/frame%03d",cnt++);
+
+        saveImage(filmDir+name);
+    }
+}
+int offset = 0;
+int stalkWidth;
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+using namespace cv;
+cv::Mat make_obstructionMask(cv::Mat mask){
+    //return;
+    cv::Mat out = mask.clone();
+    int s = mask.size[0];
+    //for (int y = 0; y < s; y += s/10){
+    //cv::circle(out, Point(s/2 ,s/4), s/20, cv::Scalar(0,0,0), -1);
+    //}
+    line(out, Point(s/2-offset, s/2), Point(s - offset,s/2),cv::Scalar(0,0,0), stalkWidth);
+    //line(out, Point(s/2+offset, s/2), Point(s/2+offset,s),cv::Scalar(0,0,0), 10);
+    //line(out, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), 60);
+    return out;
+}
+
+
+//3D psf
+void SimulationsView::make3DPsf(cv::Mat surface){
+
+    int nx = surface.size[0];
+    int start = nx/2 - nx/4;
+    cv::Mat data = surface.clone()(cv::Rect(start,start,nx/2,nx/2));
+
+
+    if (m_psf_doLog){
+        data += cv::Scalar::all(1); // switch to logarithmic scale
+        cv::log(data, data);
+    }
+    double xmin,xmax;
+    cv::minMaxLoc(data, &xmin,&xmax);
+
+    data/=xmax;
+
+
+    QList<QSurface3DSeries *> list = m_PSF_3Dgraph->seriesList();
+    foreach(QSurface3DSeries* s, list){
+        m_PSF_3Dgraph->removeSeries(s);
+    }
+
+    QSurfaceDataProxy *m_sqrtSinProxy = new QSurfaceDataProxy();
+    QSurface3DSeries *m_sqrtSinSeries = new QSurface3DSeries(m_sqrtSinProxy);
+
+    //draw surface
+    {
+
+        int sampleCountX = data.size[1];
+        int sampleCountZ = data.size[0];
+        int width = sampleCountX;
+        QSurfaceDataArray *dataArray = new QSurfaceDataArray;
+        QSurfaceDataArray *dataArray2 = new QSurfaceDataArray;
+        dataArray->reserve(sampleCountZ);
+        dataArray2->reserve(sampleCountZ);
+        for (int i = 0 ; i < sampleCountZ ; i++) {
+            QSurfaceDataRow *newRow = new QSurfaceDataRow(sampleCountX);
+            QSurfaceDataRow *backRow = new QSurfaceDataRow(sampleCountX);
+            float z = -(sampleCountZ/2. - i);
+            int index = 0;
+            for (int j = 0; j < sampleCountX; j++) {
+                float x = -(sampleCountX/2. -j);
+
+                float y = data.at<double>(i,j);
+                (*newRow)[index].setPosition(QVector3D(x, y, z));
+                (*backRow)[index++].setPosition(QVector3D(x, y, width/2));
+            }
+            *dataArray << newRow;
+            *dataArray2 << backRow;
+        }
+
+        QSurfaceDataProxy *m_sqrtSinProxy2 = new QSurfaceDataProxy();
+        QSurface3DSeries *m_sqrtSinSeries2 = new QSurface3DSeries(m_sqrtSinProxy2);
+
+
+        m_sqrtSinProxy->resetArray(dataArray);
+        m_sqrtSinSeries->setDrawMode(QSurface3DSeries::DrawSurface);
+        m_sqrtSinSeries->setFlatShadingEnabled(false);
+
+        m_sqrtSinProxy2->resetArray(dataArray2);
+        m_sqrtSinSeries2->setDrawMode(QSurface3DSeries::DrawSurfaceAndWireframe);
+        m_sqrtSinSeries2->setFlatShadingEnabled(false);
+
+        QLinearGradient gr;
+        gr.setColorAt(0.0, Qt::darkGray);
+        gr.setColorAt(0.01,Qt::cyan);
+        gr.setColorAt(0.33, Qt::blue);
+        gr.setColorAt(0.67, Qt::lightGray);
+        gr.setColorAt(1.0, Qt::red);
+    m_PSF_3Dgraph->activeTheme()->setType(Q3DTheme::Theme(3));
+
+
+
+        m_PSF_3Dgraph->axisX()->setRange(-width/2, width/2);
+        m_PSF_3Dgraph->axisZ()->setRange(-width/2, width/2);
+
+        m_PSF_3Dgraph->addSeries(m_sqrtSinSeries);
+        m_PSF_3Dgraph->addSeries(m_sqrtSinSeries2);
+        m_PSF_3Dgraph->seriesList().at(0)->setBaseGradient(gr);
+        m_PSF_3Dgraph->seriesList().at(0)->setColorStyle(Q3DTheme::ColorStyleRangeGradient);
+    }
+}
+
+cv::Mat zoomMat(cv::Mat &mat, double zoom){
+    int half = mat.size[0]/2;
+    int w = half/zoom;
+    cv::Mat x = mat.clone()(cv::Rect(half-w,half-w,2 * w, 2 * w));
+
+    return x;
+
+}
 void SimulationsView::on_MakePB_clicked()
 {
     m_guiTimer.stop();
+    /**************************  special test code for PSF  */
+
+
 
     if (m_wf == 0)
         return;
@@ -329,17 +627,42 @@ void SimulationsView::on_MakePB_clicked()
         QMessageBox::warning(0,"warning","Star test simulation is not suppported for flat surfaces");
         return;
     }
+
+    metricsDisplay *metrics = metricsDisplay::get_instance();
+    QTextDocument doc;
+    doc.setHtml(metrics->mStrehl->text());
+    QString strehl = doc.toPlainText();
+    doc.setHtml(metrics->mCC->text());
+    QString bestFit = doc.toPlainText();
+
+    QString caption = QString().sprintf("%s   Diameter: %6.1lf ROC: %6.1lf Best Fit CC: %s Strehl: %s",
+                                        m_wf->name.toStdString().c_str(),
+                                        m_wf->diameter,
+                                        m_wf->roc,
+                                        bestFit.toStdString().c_str(),
+                                        strehl.toStdString().c_str());
+    ui->caption->setText(caption);
     bool wasAliased = false;
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     needs_drawing = false;
     double defocus = ui->defocusSB->value()/2;
     double gamma = ui->gammaSB->value();
-
+    cv::Mat savedMask = m_wf->workMask.clone();
+    double fftSize = ui->FFTSizeSB->value();
     //inside focus star test
     int wid = width() * .9/3.;
-    qDebug() << "star test"<< width();
-    cv::Mat inside = computeStarTest(nulledSurface(-defocus), ui->FFTSizeSB->value(), 3);
+    cv::Mat theObstruction = m_wf->workMask;
+
+    if (0) {  // when true creates an obstruction pattern defined by make_obstructionMask
+        stalkWidth = m_wf->m_outside.m_radius * .2;
+        theObstruction = make_obstructionMask(m_wf->workMask);
+        m_wf->workMask = theObstruction.clone();
+        showData(QString().sprintf("%f",m_wf->diameter).toStdString().c_str(), theObstruction.clone(), false);
+
+    }
+
+    cv::Mat inside = computeStarTest(nulledSurface(-defocus), fftSize, 3);
     cv::Mat t = fitStarTest(inside, wid,gamma);
     cv::putText(t,QString().sprintf("-%5.1lf waves inside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
     wasAliased |= alias;
@@ -356,7 +679,7 @@ void SimulationsView::on_MakePB_clicked()
     ui->inside->setPixmap(QPixmap::fromImage(indisplay.copy()));
 
     // outside focus star test
-    cv::Mat outside = computeStarTest(nulledSurface(defocus),ui->FFTSizeSB->value(),3);
+    cv::Mat outside = computeStarTest(nulledSurface(defocus),fftSize,3);
     t = fitStarTest(outside,wid ,gamma);
     cv::putText(t,QString().sprintf("%5.1lfwaves outside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
     wasAliased |= alias;
@@ -379,46 +702,63 @@ void SimulationsView::on_MakePB_clicked()
                                        "The error usually shows up as a series of light and dark horizontal bands or dots.");
     }
 
-    cv::Mat focused = computeStarTest(nulledSurface(0), 600,  ui->centerMagnifySB->value());
-    t = fitStarTest(focused, wid ,gamma/2);
+    cv::Mat focused = computeStarTest(nulledSurface(0), fftSize,  ui->centerMagnifySB->value());
+    t = fitStarTest(zoomMat(focused,ui->centerMagnifySB->value()), wid ,gamma/2);
+
     cv::putText(t,QString().sprintf("Focused").toStdString(),cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
     QImage focusDisplay ((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
     ui->Focused->setPixmap(QPixmap::fromImage(focusDisplay.copy()));
 
     // make psf plot
     ui->psfView->clear();
-    cv::Mat psf = computeStarTest(nulledSurface(0), 600, 20);
-    ui->psfView->setData(psf, "Actual", QPen(Qt::red));
-    cv::Mat savedMask = m_wf->workMask.clone();
-    // add central obstruction
-    cv::Mat mask = m_wf->workMask.clone();
-    cv::Mat noObstruction = m_wf->workMask.clone();
+
+
+    m_wf->workMask = theObstruction.clone();
+   // showData("xxx", theObstruction.clone(), false);
+
+    cv::Mat psf = computeStarTest(nulledSurface(0), fftSize, fftSize/100);
+    cv::pow(psf,2,psf);
+    psf = zoomMat(psf,2);
+    make3DPsf(psf);
+    ui->psfView->setData(psf, "Actual", QPen(QBrush(Qt::red),3),m_psf_doLog);
+
+
+    // remove obstructions
+    cv::Mat noObstruction = savedMask.clone();
     mirrorDlg *md = mirrorDlg::get_Instance();
     double r = md->obs * (2. * m_wf->m_outside.m_radius)/md->diameter;
     if (r > 0){
 
         circle(noObstruction,Point(noObstruction.cols/2,noObstruction.cols/2),r, Scalar(255),-1);
     }
-
     cv::Mat p = m_wf->workData.clone() * 0.;
+
     m_wf->workMask = noObstruction;
-    cv::Mat perfectPSF = computeStarTest(p, 600, 20);
-    ui->psfView->setData(perfectPSF, "Perfect", QPen(Qt::black));
+    cv::Mat perfectPSF = computeStarTest(p, fftSize, fftSize/100);
+    cv::pow(perfectPSF,2,perfectPSF);
+    perfectPSF = zoomMat(perfectPSF,2);
+    ui->psfView->setData(perfectPSF, "Perfect", QPen(QBrush(Qt::black),3), m_psf_doLog);
 
     //make mtf plot
-    ui->MTF->detachItems( QwtPlotItem::Rtti_PlotCurve);
-    m_wf->workMask = mask;
-    focused = computeStarTest(nulledSurface(0), 512, 2.,true);
-    m_wf->workMask = noObstruction;
-    perfectPSF = computeStarTest(p, 512,2.,true);
-    m_wf->workMask = mask.clone();
+    //ui->MTF->detachItems( QwtPlotItem::Rtti_PlotScale);
+    initMTFPlot();
+    //m_arcSecScaleDraw  =  new arcSecScaleDraw(mirrorDlg::get_Instance()->diameter);
+
+    //ui->MTF->setAxisScaleDraw(ui->MTF->xBottom, m_arcSecScaleDraw);
+
+    m_wf->workMask = theObstruction.clone();
+    focused = computeStarTest(nulledSurface(0), fftSize, 2.,true);
     mtf(focused, "Actual X axis", Qt::red);
+
+    m_wf->workMask = noObstruction.clone();
+    perfectPSF = computeStarTest(p, fftSize,2.,true);
+
     mtf(perfectPSF, "Perfect", Qt::black);
     cv::Mat R90;
     cv::transpose(focused,R90);
     cv::flip(R90,R90,0);
-    mtf(R90, "Actual Y Axis", Qt::blue);
-
+    mtf(R90, "Actual Y Axis", Qt::darkGreen);
+    m_wf->workMask = savedMask.clone();
     ui->MTF->replot();
     ui->MTF->show();
     QApplication::restoreOverrideCursor();
@@ -455,4 +795,27 @@ void SimulationsView::on_FFTSizeSB_valueChanged(int val)
         m_guiTimer.start(1000);
 }
 
+
+void SimulationsView::on_show3D_clicked(bool checked)
+{
+    if (checked)
+    {
+
+        ui->PSF3DWidget->show();
+        ui->psfView->hide();
+    }
+    else {
+        ui->PSF3DWidget->hide();
+        ui->psfView->show();
+    }
+}
+
+
+void SimulationsView::on_doLog_clicked(bool checked)
+{
+    m_psf_doLog = checked;
+    QSettings set;
+    set.setValue("psfDoLog", checked);
+    on_MakePB_clicked();
+}
 

@@ -25,7 +25,9 @@ public:
     QImage m_foucultQimage;
 public slots:
     void on_makePb_clicked();
+
 private slots:
+    void showContextMenu(const QPoint &pos);
 
     void on_gammaSb_valueChanged(double arg1);
 
@@ -67,6 +69,10 @@ private slots:
 
     void on_saveOnlyFouccault_clicked(bool checked);
 
+    void saveRonchiImage();
+
+    void saveFoucaultImage();
+
 private:
     Ui::foucaultView *ui;
     SurfaceManager *m_sm;
@@ -79,6 +85,7 @@ private:
     wavefront *m_wf;
     int lateralOffset;
     void draw_ROC_Scale();
+
 };
 
 #endif // FOUCAULTVIEW_H

@@ -15,10 +15,12 @@ class PSIphaseDisplay : public QDialog
 public:
     explicit PSIphaseDisplay( QVector<double> phases, QWidget *parent = 0);
     ~PSIphaseDisplay();
-
+    void setPhases(QVector<double> phases, int iteration, double sdp);
+    void useRadians(bool use);
 private:
     Ui::PSIphaseDisplay *ui;
-    void plot(QVector<double> phases);
+    void plot(QVector<double> phases, int iter, double sdp);
+    bool m_useRadians;
 };
 
 #endif // PSIPHASEDISPLAY_H

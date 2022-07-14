@@ -72,6 +72,8 @@ private slots:
     void increase();
     void decrease();
 
+    void on_outlineThickness_valueChanged(int arg1);
+
 private:
     Ui::outlineDialog *ui;
     void hideSearchcontrole(bool hide);

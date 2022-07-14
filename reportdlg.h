@@ -18,10 +18,7 @@ public:
     bool show_foucault;
     bool show_histogram;
     bool show_profile;
-    bool show_3D;
-    bool show_contour;
-    bool reduceContour;
-    bool reduce3D;
+    bool show_igram;
     QString fileName;
     QString title;
 

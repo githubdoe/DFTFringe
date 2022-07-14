@@ -30,7 +30,7 @@ contourView::contourView(QWidget *parent, ContourTools *tools) :
     ui->widget->setTool(tools);
     QSettings set;
     ui->doubleSpinBox->setValue(set.value("contourRange", .100).toDouble());
-    ui->fillContourCB->setChecked(set.value("contourFillContour", true).toBool());
+    ui->fillContourCB->setChecked(set.value("contourShowFill", true).toBool());
     ui->showRuler->setChecked(set.value("contourShowRuler",false).toBool());
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
@@ -51,7 +51,8 @@ void contourView::zoom(){
 }
 
 QImage contourView::getPixstatsImage(){
-    QImage psImage = QImage(QSize(1000,1000),QImage::Format_ARGB32 );
+    resize(3000,3000);
+    QImage psImage = QImage(size(),QImage::Format_ARGB32 );
     QPainter p3(&psImage);
     ps->render(&p3);
 

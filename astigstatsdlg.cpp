@@ -284,9 +284,10 @@ void astigStatsDlg::plot(){
 
             // plot marker for the point
 
-            QwtPlotMarker *m = new QwtPlotMarker(data.name.replace(".wft",""));
-            m->setValue(data.p.x(), data.p.y());
-            m->attach(ui->mPlot);
+            //QwtPlotMarker *m = new QwtPlotMarker(data.name.replace(".wft",""));
+//            m->setValue(data.p.x(), data.p.y());
+//            m->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(10,10)));
+//            m->attach(ui->mPlot);
 
         }
         double xmean = xstats.Mean();
@@ -300,7 +301,7 @@ void astigStatsDlg::plot(){
                              QString().sprintf("\n%6.4lf,%6.4lf \nSD: %6.4lf %6.4lf ",xmean, ymean, xstd,ystd));
             curve->setSamples(points);
             curve->setStyle(QwtPlotCurve::Dots);
-            curve->setPen(color,4);
+            curve->setPen(color,10);
             curve->attach(ui->mPlot);
         }
 
@@ -508,7 +509,7 @@ void astigStatsDlg::on_bestFitCB_clicked(bool checked)
 #include <opencv2/imgproc/imgproc.hpp>
 #include <qwt_plot_histogram.h>
 #define SDHEIGHT 250
-QwtPlot *makeSDPlot(cv::Mat hist, double min, double max, double mean, int size){
+QwtPlot *makeSDPlot(cv::Mat hist, double min, double max, double mean, int size, int width, int height){
     // Quantize the hue to 30 levels
     // and the saturation to 32 levels
     int bins = size;
@@ -532,13 +533,13 @@ QwtPlot *makeSDPlot(cv::Mat hist, double min, double max, double mean, int size)
     mmean->attach(pl);
     histPlot->setSamples(histData);
     histPlot->attach(pl);
-    pl->resize(300,200);
+    pl->resize(width, height);
     pl->setPalette( Qt::white );
     pl->replot();
     return pl;
 }
 
-QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y){
+QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width, int height){
     RunningStat xrs;
     RunningStat yrs;
 
@@ -648,14 +649,10 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y){
     yavgc->attach(plot);
     yavgc->setTitle(QString(m_usePolar? "angle ":"y ") + "mean");
     plot->setTitle("accumulating astig");
-    if (PDFMode){
-        plot->resize(750,500);
-    }
-    else {
-        QSettings set;
-        int width = set.value("AstigDistGraphWidth", 950).toInt();
-        plot->resize(width,600);
-    }
+
+
+    plot->resize(width * .8,width * .4);
+
     plot->setAxisTitle(QwtPlot::xBottom, "sample number");
     plot->setAxisTitle(QwtPlot::yLeft, "Zernike astig");
     plot->setCanvasBackground(QColor(252,252,252));
@@ -777,15 +774,19 @@ void astigStatsDlg::on_distribution_clicked()
 
     QVector<QGroupBox *> plots;
     // build the pdf
-    QPrinter printer(QPrinter::HighResolution);
+
+
+    QPrinter printer(QPrinter::ScreenResolution);
     printer.setColorMode( QPrinter::Color );
-    printer.setFullPage( true );
+    printer.setFullPage( false );
+
     printer.setOutputFormat( QPrinter::PdfFormat );
-    printer.setResolution(96);
-    printer.setPaperSize(QPrinter::Imperial8x10);
 
+    printer.setPageSize(QPageSize(QPageSize::A4));
+    int width = printer.pageLayout().paintRectPixels(printer.resolution()).width()-200;
 
-
+    int height = printer.pageLayout().paintRectPixels(printer.resolution()).height();
+    qDebug() << "set resolution" << printer.resolution() << width << height;
     //pbMakePDF->setFixedWidth(100);
 
 
@@ -797,6 +798,7 @@ void astigStatsDlg::on_distribution_clicked()
     QList<QString> doc1Res;
 
     doc->setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
+
     QString html = ("<html><head/><body><h1><center>Astig Variability analisys</center></h1>");
 
     html.append(" <center><h2>   <font color='grey'>" + QDate::currentDate().toString() +
@@ -842,14 +844,14 @@ void astigStatsDlg::on_distribution_clicked()
 
         int bins = 50;
         int histSize[] = {bins};
-        float hranges[] = { xmin - .02, xmax + .02 };
+        float hranges[] = { (float)xmin - .02f, (float)xmax + .02f };
         const float* ranges[] = { hranges };
         int channels[] = {0};
         cv::calcHist( &xsd, 1, channels, cv::Mat(),
                  xhist, 1, histSize, ranges,
                  true, // the histogram is uniform
                  false );
-        float yranges[] = {ymin - .02, ymax + .02};
+        float yranges[] = {(float)ymin - .02f, (float)ymax + .02f};
         const float* yyranges[] = {yranges};
         cv::calcHist( &ysd, 1, channels, cv::Mat(),
                  yhist, 1, histSize, yyranges,
@@ -858,13 +860,19 @@ void astigStatsDlg::on_distribution_clicked()
         //xvalues -= xmin;
         //yvalues -= ymin;
 
-        QwtPlot *avgplot  = avgPlot(xvalues, yvalues);
+        QwtPlot *avgplot  = avgPlot(xvalues, yvalues, width, width);
+
         avgplot->insertLegend( new QwtLegend(), QwtPlot::RightLegend );
-        QwtPlot *xpl = makeSDPlot(xhist, xmin,xmax, xmean.val[0], bins);
+        QwtPlot *xpl = makeSDPlot(xhist, xmin,xmax, xmean.val[0], bins, width * .5, width * .25);
+        xpl->resize(width * .4,width * .25);
         xpl->setAxisTitle(QwtPlot::xBottom, " SD: " + QString().number(xstd.val[0]));
 
         xpl->setTitle(" X "+ QString().number(size) + " samples");
-        QwtPlot *ypl = makeSDPlot(yhist, ymin,ymax, ymean.val[0], bins);
+        QwtPlot *ypl = makeSDPlot(yhist, ymin,ymax, ymean.val[0], bins, width * .5, width * .25);
+
+
+
+
         ypl->setTitle(" Y " + QString().number(size) + " samples");
         ypl->setAxisTitle(QwtPlot::xBottom, " SD: " + QString().number(ystd.val[0]));
 
@@ -872,24 +880,24 @@ void astigStatsDlg::on_distribution_clicked()
                     "</h2></center></p><br><br>");
 
         QPixmap pm = xpl->grab();
+
         QString imageName = Name + "x.png";
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(pm.toImage()));
 
-        html.append("<table><tr><td><img src='" +imageName + "'/></td>");
+        html.append("<table border = 3 width = 100% ><tr><td><img src='" +imageName + "'/></td>");
+
         pm = ypl->grab();
         imageName = Name + "y.png";
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(pm.toImage()));
 
-        html.append("<td><img src='" +imageName + "'/></td></tr></table>");
-        if (PDFMode){
-            avgplot->resize(WIDTH, 450);
-            avgplot->replot();
-        }
+        html.append("<td><img src='" +imageName + "'/></td></tr>");
+
+
         pm = avgplot->grab();
 
         imageName = Name + "avg.png";
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(pm.toImage()));
-        html.append("<p> <img src='" +imageName + "' ></p>");
+        html.append("<tr><td colspan = \"2\"> <img src='" +imageName + "' ></td></tr></table>");
 
     }
 

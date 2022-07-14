@@ -25,7 +25,7 @@ class wavefront
 public:
     wavefront();
     ~wavefront();
-    wavefront(const wavefront &wf);
+    wavefront( wavefront &wf);
     cv::Mat_<double> data;
     cv::Mat_<double> nulledData;
     cv::Mat_<bool> mask;

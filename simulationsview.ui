@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>825</width>
+    <width>828</width>
     <height>516</height>
    </rect>
   </property>
@@ -21,9 +21,16 @@
                         font: normal 12px;
                            padding: 2px; }</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,100,100,1">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="caption">
+       <property name="text">
+        <string>Caption for these plots.                                                               </string>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
@@ -36,6 +43,13 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="film">
+       <property name="text">
+        <string>film</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QLabel" name="label_2">
@@ -108,7 +122,7 @@
         <number>200</number>
        </property>
        <property name="maximum">
-        <number>3000</number>
+        <number>5000</number>
        </property>
        <property name="singleStep">
         <number>100</number>
@@ -190,6 +204,9 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_8">
      <item>
+      <widget class="QWidget" name="PSF3DWidget" native="true"/>
+     </item>
+     <item>
       <widget class="psfPlot" name="psfView" native="true">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -208,6 +225,40 @@
         </sizepolicy>
        </property>
       </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QCheckBox" name="show3D">
+       <property name="text">
+        <string>Display PSF in 3D</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="doLog">
+       <property name="text">
+        <string>Log Display</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>

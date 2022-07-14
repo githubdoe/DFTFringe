@@ -106,6 +106,7 @@ void SurfaceGraph::enableSqrtSinModel(bool enable)
         m_graph->axisX()->setRange(sampleMin, sampleMax);
         m_graph->axisY()->setRange(0.0f, m_yGridHeight);
         m_graph->axisZ()->setRange(sampleMin, sampleMax);
+        qDebug() << "sampleMin" << sampleMin << sampleMax;
         m_graph->axisX()->setLabelAutoRotation(30);
         m_graph->axisY()->setLabelAutoRotation(90);
         m_graph->axisZ()->setLabelAutoRotation(30);
@@ -220,7 +221,7 @@ QString wft = "c:\\TEMP\\Simulated_Wavefront.wft";
 void SurfaceGraph::fillSurfaceProxy() {
 
     if (m_wf == 0) return;
-
+    double diam = m_wf->diameter;
     cv::Mat data;
     m_wf->workData.copyTo(data);
     double min,max;
@@ -235,13 +236,13 @@ void SurfaceGraph::fillSurfaceProxy() {
         min = m_yoffsetValue;
     }
     else {
-        min = mean -  3 * std;
+        min = mean -  1.5 * std;
     }
-    m_maxHeight = 10. *m_colorRange * std;
+    m_maxHeight = 10 * m_colorRange * std;
 
     data = data - min;
 
-    double diam = m_wf->diameter;
+
 
     double mmperstep = (diam/2)/(m_wf->m_outside.m_radius);
     float stepX = mmperstep;
@@ -477,6 +478,6 @@ void SurfaceGraph::setGreenToRedGradient()
     m_graph->seriesList().at(0)->setColorStyle(Q3DTheme::ColorStyleRangeGradient);
 }
 
-QImage SurfaceGraph::render(){
-    return m_graph->renderToImage(0, QSize(1000,1000));
+QImage SurfaceGraph::render(int width, int height){
+    return m_graph->renderToImage(0, QSize(width,height));
 }

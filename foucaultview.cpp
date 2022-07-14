@@ -7,6 +7,7 @@
 #include <QVector>
 #include <QMenu>
 #include "zernikeprocess.h"
+
 extern double outputLambda;
 foucaultView *foucaultView::m_instance = 0;
 
@@ -23,11 +24,18 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_makePb_clicked()));
     ui->rocOffsetSb->setSuffix(" inch");
     ui->useMM->setChecked(set.value("simUseMM",false).toBool());
+
     if (ui->useMM->isChecked()){
         on_useMM_clicked(true);
     }
-
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(showContextMenu(QPoint)));
+    setContextMenuPolicy(Qt::CustomContextMenu);
 }
+
+
+
+
 foucaultView *foucaultView::get_Instance(SurfaceManager *sm){
     if (m_instance == 0){
         m_instance = new foucaultView(0,sm);
@@ -39,6 +47,41 @@ foucaultView::~foucaultView()
 {
     delete ui;
 }
+QString getSaveFileName(QString type){
+    QSettings settings;
+    QString path = settings.value("lastPath","").toString();
+
+    QString fileName = QFileDialog::getSaveFileName(0,
+            QString().sprintf("File name of %d image to be saved", type.toStdString().c_str()),
+                                                 path);
+
+    if (!fileName.endsWith(".jpg"))
+        fileName = fileName + ".jpg";
+    return fileName;
+
+}
+void foucaultView::showContextMenu(const QPoint &pos)
+{
+
+// Handle global position
+    QPoint globalPos = mapToGlobal(pos);
+    // Create menu and insert some actions
+    QMenu myMenu;
+    myMenu.addAction("Save Ronchi image",  this, SLOT(saveRonchiImage()));
+    myMenu.addAction("Save Foucault Image", this,  SLOT(saveFoucaultImage()));
+
+
+    // Show context menu at handling position
+    myMenu.exec(globalPos);
+}
+void foucaultView::saveRonchiImage(){
+    ui->ronchiViewLb->pixmap(Qt::ReturnByValue).save(getSaveFileName("foucault"));
+
+}
+void foucaultView::saveFoucaultImage(){
+    ui->foucaultViewLb->pixmap(Qt::ReturnByValue).save(getSaveFileName("foucault"));
+}
+
 void foucaultView::setSurface(wavefront *wf){
     m_wf = wf;
     mirrorDlg *md = mirrorDlg::get_Instance();

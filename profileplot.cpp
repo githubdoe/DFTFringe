@@ -88,6 +88,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
      offsetType("Middle"),ui(new Ui::ProfilePlot), m_defocusValue(0.)
 {
     zoomed = false;
+    m_defocus_mode = false;
     m_plot = new QwtPlot(this);
     type = 0;
     QHBoxLayout * l1 = new QHBoxLayout();
@@ -165,7 +166,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     }
 
     palette0.setColor( QPalette::Base,
-        palette().color( backgroundRole() ).light( 120 ) );
+        palette().color( backgroundRole() ).lighter( 120 ) );
     palette0.setColor( QPalette::WindowText,
         palette0.color( QPalette::Base ) );
     compass = new QwtCompass( this );
@@ -176,7 +177,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
 
     palette0.setColor( QPalette::Base, Qt::darkBlue );
     palette0.setColor( QPalette::WindowText,
-                       QColor( Qt::darkBlue ).dark( 120 ) );
+                       QColor( Qt::darkBlue ).darker( 120 ) );
     palette0.setColor( QPalette::Text, Qt::white );
 
 
@@ -314,9 +315,16 @@ void ProfilePlot::setSurface(wavefront * wf){
     m_plot->replot();
 }
 
+void ProfilePlot::setDefocusWaveFront( cv::Mat_<double> wf){
+    m_defocus_wavefront = wf.clone();
+}
+
 void ProfilePlot::setDefocusValue(double val){
         m_defocusValue = val;
+        m_defocus_mode = false;
         if (val != 0.){
+            m_defocus_mode = true;
+
             populate();
             m_plot->replot();
         }
@@ -331,7 +339,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     double obs_radius = md.obs/2.;
 
 //    qDebug() << "Clear" << radius;
-    for (double rad = -1.; rad < 1; rad += steps){
+    for (double rad = -1.; rad < 1.; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
         double radx = rad * radius;
@@ -354,17 +362,20 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
 
         if (wf->workMask.at<bool>(dy,dx)){
                 double defocus = 0.;
-                if (m_defocusValue != 0.){
-                    defocus = m_defocusValue * (-1. + 2. * rad * rad);
+
+                if (m_defocus_mode){
+                    defocus = (m_defocusValue)* (-1. + 2. * rad * rad);
+                    points << QPointF(radx,(units * (m_defocus_wavefront((int)dy,(int)dx) + defocus ) *
+                                            wf->lambda/outputLambda)  +y_offset * units);
                 }
-                points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) + defocus) *
+                else {
+                points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
                                         wf->lambda/outputLambda)  +y_offset * units);
+                }
             }
             //else points << QPointF(radx,0.0);
-
-
-
     }
+
     if (m_showSlopeError){
         double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
         double xDel = points[0].x() - points[1].x();

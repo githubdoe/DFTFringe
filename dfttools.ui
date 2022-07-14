@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>211</width>
-    <height>305</height>
+    <height>331</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -38,7 +38,6 @@
       <property name="font">
        <font>
         <pointsize>-1</pointsize>
-        <weight>75</weight>
         <italic>false</italic>
         <bold>true</bold>
        </font>
@@ -125,7 +124,7 @@ hover {background-color: lightblue;}
          <number>100</number>
         </property>
         <property name="maximum">
-         <number>4000</number>
+         <number>6000</number>
         </property>
         <property name="singleStep">
          <number>100</number>
@@ -152,6 +151,28 @@ hover {background-color: lightblue;}
       <property name="text">
        <string>Show Resized Image</string>
       </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="title">
+       <string>Hot Keys</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QPlainTextEdit" name="plainTextEdit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="plainText">
+          <string>Zoom in   +
+Zoom out -
+Fit             f
+Mouse Wheel wiil zoom</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
     <item>

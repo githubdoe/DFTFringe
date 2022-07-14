@@ -218,8 +218,8 @@ define_input::define_input(QWidget *parent)
     basePath = new QLineEdit(settings.value("rotation base path",lastPath).toString());
     basePath->setToolTip("Directory were rotation files are stored.");
     QPushButton *browsePath = new QPushButton("...");
-    CWRb = new QRadioButton("Counter Rotate CW");
-    CCWRb = new QRadioButton("Counter Rotate Counter Clockwise");
+    CWRb = new QRadioButton("Rotate CW");
+    CCWRb = new QRadioButton("Rotate CCW");
     CCWRb->setChecked(true);
     connect(browsePath, SIGNAL(pressed()), this, SLOT(setBasePath()));
 

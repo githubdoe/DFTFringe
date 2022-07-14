@@ -25,6 +25,7 @@ class zTableModel : public QAbstractTableModel
     Q_OBJECT
 public:
     zTableModel(QObject *parent,  std::vector<bool> *enables, bool editEnable = false);
+    void resizeRows(const int rowCnt);
     int rowCount(const QModelIndex &parent = QModelIndex()) const ;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
@@ -66,6 +67,8 @@ public:
     bool doCorrection;
     std::vector<double> zernikes;
     std::vector<bool> enables;
+    void setNewTerms(std::vector<double> terms);
+
 protected:
     void showEvent(QShowEvent *);
 
@@ -81,6 +84,7 @@ private slots:
     void on_clearPiston_pressed();
 
     void on_clearAll_pressed();
+
 
 private:
     Ui::simIgramDlg *ui;

@@ -118,9 +118,9 @@ void outlineDialog::setImage(cv::Mat img){
     QRect rec = QApplication::desktop()->screenGeometry();
     int height = rec.height();
     int width = rec.width();
-    if (img.rows < height || img.cols < width){
+    if (img.rows > height || img.cols > width){
         //qDebug() << "resising" << ui->display->size() << img.cols << img.rows;
-        ui->display->resize(img.cols, img.rows);
+        ui->display->resize(img.rows, img.rows);
     }
     if (m_x == 0){
         m_find = true;
@@ -191,7 +191,7 @@ void outlineDialog::updateOutline(){
         if (maxndx == -1)
             return;
         if (m_findEdgePixels){
-            drawContours(display, contours, maxndx, cv::Scalar(0,255,100), 1, 8);
+            drawContours(display, contours, maxndx, cv::Scalar(0,255,100), 3, 8);
         }
         cv::Scalar color(255,255,0);
         if (m_find){
@@ -217,7 +217,7 @@ void outlineDialog::updateOutline(){
         if (left < 0 || top < 0 || right > src.cols || bottom > src.rows){
             color = cv::Scalar(255,0,0);
         }
-        cv::circle(display, cv::Point2d(x,y), radius, color,2);
+        cv::circle(display, cv::Point2d(x,y), radius, color,ui->outlineThickness->value());
     }
 //    cv::Point2f vtx[4];
 //    maxBox.points(vtx);
@@ -329,10 +329,10 @@ void outlineDialog::on_radiusSBar_valueChanged(int value)
 
 void outlineDialog::on_pushButton_clicked()
 {
-    QString msg("To begin with if the first igram had an outline file or there was a remembered outline from the last processing\n"
-                "  then that will be displayed without any green pixels.\n\n"
+    QString msg("This tries to find the circular mirror in the analysis by various values of blur"
+                " and thresholding to highlight the mirror edge pixels.\n\n"
                 "Yellow circle marks the proposed mirror outline.\n\n"
-                "To enable finding and marking edge pixes green adjust any of the controls.\n"
+                "To enable finding and marking edge pixes  shown in green adjust any of the controls.\n"
                 "Green pixels are thought to be on the edge of the mirror.\n"
                 "The software tries to fit a yellow circle to the green pixels.\n"
                 "Red line indicates that the circle goes off the edge of the image and is not usable.\n\n"
@@ -341,7 +341,16 @@ void outlineDialog::on_pushButton_clicked()
                 "The far right slider mixes the view between the raw image and the thresholded image.\n\n\n"
                 "Press OK to use the displayed outline.\n"
                 "Press cancel to abort the PSI process.");
-    QMessageBox::information(0, "PSI Outline Help.", msg);
+
+    QMessageBox msgHelp;
+    msgHelp.setText(msg);
+    msgHelp.setStyleSheet("QLabel{min-width: 900px;}");
+    msgHelp.setWindowTitle(" outline help");
+    msgHelp.setStandardButtons(QMessageBox::Ok);
+    msgHelp.setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+
+    msgHelp.exec();
+
 }
 
 void outlineDialog::on_checkBox_clicked(bool checked)
@@ -431,3 +440,9 @@ void outlineDialog::wheelEvent(QWheelEvent *e){
     m_rad += del;
     updateOutline();
 }
+
+void outlineDialog::on_outlineThickness_valueChanged(int arg1)
+{
+    updateOutline();
+}
+

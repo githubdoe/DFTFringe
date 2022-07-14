@@ -32,16 +32,19 @@
 ZernTableModel::ZernTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
     :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable), m_nulled(false)
 {
-    values = std::vector<double>(Z_TERMS, 0.);
-}
+    zernikeProcess &zp = *zernikeProcess::get_Instance();
+    values = std::vector<double>(zp.m_norms.size(), 0.);
 
+}
 
 
 void ZernTableModel::setValues(std::vector<double> vals, bool nulled){
     m_nulled = nulled;
     values = vals;
+    m_enables->resize(vals.size(),true);
     QModelIndex topLeft = index(0, 0);
     QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
+    update();
     emit dataChanged(topLeft, bottomRight);
 }
 
@@ -49,8 +52,25 @@ void ZernTableModel::update(){
     QModelIndex topLeft = index(0, 0);
     QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
     emit dataChanged(topLeft, bottomRight);
+
 }
 
+void ZernTableModel::resizeRows(const int rowCnt){
+    int oldrowcnt = rowCount();
+    emit layoutAboutToBeChanged();
+    values.resize(rowCnt);
+    m_enables->resize(rowCnt);
+
+    if (rowCnt > oldrowcnt){
+        insertRows(oldrowcnt, rowCnt - oldrowcnt);
+    }
+    else
+    {
+        removeRows(oldrowcnt -rowCnt, rowCnt);
+    }
+    emit layoutChanged();
+    update();
+}
 int ZernTableModel::rowCount(const QModelIndex & /*parent*/) const
 {
    return values.size();
@@ -82,8 +102,17 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole)
     {
-        if (index.column() == 0)
-            return zernsNames[index.row()];
+        if (index.column() == 0){
+            if (index.row() <= 48)
+                return zernsNames[index.row()];
+            else {
+                int row = index.row();
+                int sr = floor(sqrt(row+1));
+
+                return (QString().sprintf("%d %s", index.row(),
+                      ( sr * sr == index.row()+1)? QString().sprintf("Spherical").toStdString().c_str(): ""));
+            }
+        }
         if (index.column() == 1){
             if (index.row() == 3 && surfaceAnalysisTools::get_Instance()->m_useDefocus){
                 return QString().sprintf("%6.3lf",surfaceAnalysisTools::get_Instance()->m_defocus);
@@ -94,14 +123,17 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
                 double val = values[8] - md.z8 * md.cc;
                 return QString().sprintf("%6.3lf  %6.3lf",val, computeRMS(8, val));
             }
+
             return QString().sprintf("%6.3lf  %6.3lf",values[index.row()], computeRMS(index.row(), values[index.row()]));
         }
     }
     if (role == Qt::CheckStateRole){
+
         if (index.column() == 1){
             if (index.row() == 3 && surfaceAnalysisTools::get_Instance()->m_useDefocus){
-                return true;
+                return Qt::PartiallyChecked;
             }
+
             return m_enables->at(index.row()) ? Qt::Checked : Qt::Unchecked;
         }
     }

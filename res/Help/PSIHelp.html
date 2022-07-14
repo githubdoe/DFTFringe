@@ -33,8 +33,23 @@ p.ex
 <Title>Using PSI analysis</Title>
 </HEAD>
 <BODY>
-A interferograms must have the mirror in the same spot and be same size image with the mirror also being the same size in all the images.
+All interferograms must have the mirror in the same spot and be same size image with the mirror also being the same size in all the images.
 <ol>
-
+<li>If the phase difference is constant and you know it set it into the <b>"phase angle between images field"</b>.
+This will then set the phase for each image after it is loaded. If you do not know it then ignore that field and select
+the <b>"Phase is approximate or unknown radio button"</b>.</li>
+<li>Select "Browse" to add list of interferograms"</li>
+<li>If phase is unknown press the <b>"Compute Phases"</b> button.  That button will show only if you have selected <b>"Pahse is approxiamte or unknown"</b>.
+<li>Phases will be computed and refined by an iterative process that hopefully will converd.</li>
+<li>Review the phase plot graph to see if it is reasonable.  The phase angle and the difference from the previous interferogram is plotted on a spiral."</li>
+<li>Press the <b>"Phase is known"</b> radio button and then press OK to compute the surface."</li>
+<li>A diagrom of the surface will be shown in black and white with a yellow circle that should outline the mirror."
+You can adjust the outline to better fit the mirror."</li>
+<li>Press ok and a surface will be created and added to the surface display.</li>
+</ol>
+<ul>
+<li><a href="https://youtu.be/FMBgeQbWOgU">For additional help see the video here.</a></li>
+<li>Large interferograms can be resized to smaller images to help speed up the process.  Use the resize check box to enable resizing.</li>
+<li>If compute phase fails to converge sometime it will if you use more iterations or a slightly large tolerance.<li>d
 </BODY>
 </HTML>

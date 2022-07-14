@@ -193,7 +193,7 @@ void IgramArea::DrawSimIgram(void){
     double ycen = (double)(wx-1)/2.;
 
     double rad = xcen-border;
-    cv::Mat simgram = makeSurfaceFromZerns(border, true);
+    cv::Mat simgram = zernikeProcess::get_Instance()->makeSurfaceFromZerns(border, true);
     cv::flip(simgram,simgram,0);
     cv::cvtColor(simgram, simgram, CV_BGRA2RGBA);
     igramColor = QImage((uchar*)simgram.data,
@@ -1483,11 +1483,20 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
             }
         }
         else {
+            *Pcount = 1;
             if (m_current_boundry == OutSideOutline)
                 m_OutterP1 = pos;
-            else if (m_current_boundry == CenterOutline)
-                m_innerP1 = pos;
-            *Pcount=1;
+            else if (m_current_boundry == CenterOutline) {
+                m_innerP2 = pos;
+                if (m_outside.m_radius > 0){
+                    int xdel = pos.x() - m_outside.m_center.x();
+                    int ydel = pos.y() - m_outside.m_center.y();
+                    m_innerP1 = QPoint(m_outside.m_center.x() - xdel, m_outside.m_center.y() - ydel);
+                    *Pcount = 2;
+                }
+            }
+
+
         }
 
         drawBoundary();
@@ -1526,6 +1535,14 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
 
         else {
             innerPcount = 2;
+            if (m_outside.m_radius > 0) {
+                int xdel = scaledPos.x() - m_outside.m_center.x();
+                int ydel = scaledPos.y() - m_outside.m_center.y();
+                int leftx = m_outside.m_center.x() - xdel;
+                int lefy = m_outside.m_center.y() - ydel;
+                m_innerP1 = QPoint(leftx,lefy);
+
+            }
             m_innerP2 = scaledPos;
 
         }

@@ -27,6 +27,7 @@
 #include "vortexdebug.h"
 #include <string>
 #include "psi_dlg.h"
+#include "psiphasedisplay.h"
 using namespace cv;
 extern void showData(const std::string& txt, cv::Mat mat, bool useLog = false);
 extern QImage showMag(cv::Mat complexI, bool show = false, const char *title = "FFT", bool doLog = true, double gamma = 0);
@@ -79,6 +80,9 @@ public slots:
     void showResizedDlg();
     void outlineDoneSig();
     void computePhases();
+    void zoomPlus();
+    void zoomMinus();
+    void zoomFit();
 signals:
     void setDftSizeVal(int);
     void selectDFTTab();
@@ -101,7 +105,7 @@ private:
     QVector<double> m_psiPhases;
     double m_gamma;
     QStringList m_psiFiles;
-
+    PSIphaseDisplay *m_PSIphasePlot;
 
     IgramArea *igramArea;
     void paintEvent(QPaintEvent *);
@@ -109,17 +113,19 @@ private:
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
+    bool eventFilter(QObject *obj, QEvent *event);
     double m_smooth;
     vortexDebug    *m_vortexDebugTool;
     int m;  // x border added to dft
     int n;  //y border added to dft
-    double scale;
+
     PSI_dlg* m_Psidlg;
     cv::Mat PSILoadImages();
     cv::Mat PSILoadFullImages();
     cv::Mat m_psiImages;
     int m_psiRows;
     int m_psiCols;
+    double zoom;
 };
 
 

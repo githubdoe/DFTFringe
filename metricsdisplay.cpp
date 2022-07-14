@@ -31,13 +31,19 @@ metricsDisplay::metricsDisplay(QWidget *parent) :
     mROC = ui->metROC;
     mRMS = ui->metRMS;
     mStrehl = ui->metStrehl;
-    mvalues = ui->tableView;
+
     mCC = ui->metConic;
-    tableModel = new ZernTableModel(parent, &zernEnables);
-    std::vector<double> val(Z_TERMS,0.);
+    tableModel = new ZernTableModel(ui->tableView, &zernEnables);
+
     ui->tableView->setModel(tableModel);
 }
+void metricsDisplay::resizeRows(int cnt){
+    tableModel->resizeRows(cnt);
 
+
+
+    qDebug() << "resize metric zern table" << cnt;
+}
 QTableView * metricsDisplay::getZernView(){
     return ui->tableView;
 }
@@ -106,8 +112,9 @@ void metricsDisplay::on_sphericalPb_pressed()
 {
     shouldEnableAll = false;
     on_DisableAll_clicked();
-    for (int i = 0; i < Z_TERMS; ++i){
-        if (QString(zernsNames[i]).contains("Spherical")){
+    for (int i = 0; i < tableModel->rowCount(); ++i){
+        QString txt = tableModel->data(tableModel->index(i,0)).toString();
+        if (txt.contains("Spherical")){
             tableModel->m_enables->at(i) = true;
         }
     }

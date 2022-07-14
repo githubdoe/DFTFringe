@@ -23,6 +23,7 @@ TEMPLATE = app
 CONFIG += ``
 
 SOURCES += main.cpp\
+    defocusdlg.cpp \
     mainwindow.cpp \
     igramarea.cpp \
     circleoutline.cpp \
@@ -33,6 +34,7 @@ SOURCES += main.cpp\
     dftarea.cpp \
     mikespsirinterface.cpp \
     profileplot.cpp \
+    psiresizeimagesdlg.cpp \
     surface3dcontrolsdlg.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
@@ -129,10 +131,12 @@ SOURCES += main.cpp\
     psiphasedisplay.cpp \
     outlinedialog.cpp \
     psitiltoptions.cpp \
-    contourrulerparams.cpp
+    contourrulerparams.cpp \
+    zernikesmoothingdlg.cpp
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
+    defocusdlg.h \
     igramarea.h \
     circleoutline.h \
     gplus.h \
@@ -140,6 +144,8 @@ HEADERS  += mainwindow.h \
     dfttools.h \
     dftarea.h \
     profileplot.h \
+    psiresizeimagesdlg.h \
+    spline.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
     surfacelightingproxy.h \
@@ -242,13 +248,16 @@ HEADERS  += mainwindow.h \
     outlinedialog.h \
     mikespsiinterface.h \
     psitiltoptions.h \
-    contourrulerparams.h
+    contourrulerparams.h \
+    zernikesmoothingdlg.h
 FORMS    += mainwindow.ui \
+    defocusdlg.ui \
     dfttools.ui \
     dftarea.ui \
     profilearea.ui \
     profileplot.ui \
     contourtools.ui \
+    psiresizeimagesdlg.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
     prefsdlg.ui \
@@ -317,7 +326,8 @@ FORMS    += mainwindow.ui \
     psiphasedisplay.ui \
     outlinedialog.ui \
     psitiltoptions.ui \
-    contourrulerparams.ui
+    contourrulerparams.ui \
+    zernikesmoothingdlg.ui
 
 win32 {
       CONFIG( debug, debug|release ) {
@@ -370,12 +380,13 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 5.1
+VERSION = 6.0
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 DISTFILES += \
+    buildingDFTFringe64.txt \
     helptext.txt \
     ColorMaps/Diverging_BrBG.cmp \
     ColorMaps/Diverging_bwr.cmp \

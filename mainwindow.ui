@@ -59,7 +59,7 @@
      <x>0</x>
      <y>0</y>
      <width>1065</width>
-     <height>24</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFiles">
@@ -110,6 +110,7 @@
     <addaction name="actionPrevious_Wave_front"/>
     <addaction name="actionDelete_wave_front"/>
     <addaction name="actionSubtract_wave_front"/>
+    <addaction name="actionSmooth_current_wave_front"/>
     <addaction name="actionWave_Front_Inspector"/>
     <addaction name="actionUser_Color_Map"/>
     <addaction name="actionTest_Stand_Astig_Removal"/>
@@ -163,9 +164,6 @@
    <property name="whatsThis">
     <string/>
    </property>
-   <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
-   </property>
    <property name="allowedAreas">
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
@@ -189,7 +187,7 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>88</width>
+           <width>98</width>
            <height>0</height>
           </size>
          </property>
@@ -234,7 +232,7 @@ padding: 6px;}
          </property>
          <property name="minimumSize">
           <size>
-           <width>88</width>
+           <width>98</width>
            <height>0</height>
           </size>
          </property>
@@ -1470,6 +1468,11 @@ em;
   <action name="actionProcess_PSI_interferograms">
    <property name="text">
     <string>Process PSI interferograms</string>
+   </property>
+  </action>
+  <action name="actionSmooth_current_wave_front">
+   <property name="text">
+    <string>Smooth current wave front</string>
    </property>
   </action>
  </widget>

@@ -262,6 +262,8 @@ private slots:
     void on_actionProcess_PSI_interferograms_triggered();
 
 
+    void on_actionSmooth_current_wave_front_triggered();
+
 private:
 
     Ui::MainWindow *ui;

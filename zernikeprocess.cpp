@@ -37,6 +37,8 @@ int Zw[] = {								/*  n    */
     14,14,16,16,18,18,20,20,22,22,24,24,13  // 48
 };
 
+
+
 //
 //	Copyright (C) 2019 Michael Peck <mpeck1 -at- ix.netcom.com>
 //
@@ -48,12 +50,7 @@ int Zw[] = {								/*  n    */
 
 
 // [[Rcpp::export]]
-cv::Mat rhoMatrix(){
 
-}
-cv::Mat thetaMatric(){
-
-}
 
 cv::Mat zpmCx(QVector<double> rho, QVector<double> theta, int maxorder) {
 
@@ -597,15 +594,17 @@ zernikeProcess *zernikeProcess::get_Instance(){
 }
 
 zernikeProcess::zernikeProcess(QObject *parent) :
-    QObject(parent),m_dirty_zerns(true)
+    QObject(parent),m_gridRowSize(200), m_maxOrder(0),m_needsInit(true),m_dirty_zerns(true)
 {
     md = mirrorDlg::get_Instance();;
+    QSettings set;
+    setMaxOrder(set.value("Zern maxOrder", 12).toInt());
 }
 
 // compute zernikes from unwrapped surface
 #define SAMPLE_WIDTH 1
-void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms)
-{
+void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
+
     int nx = wf.data.cols;
     int ny = wf.data.rows;
 
@@ -614,8 +613,14 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms)
     if (!m_dirty_zerns)
         return;
 
-    Z = cv::Mat(zterms,1,numType, 0.);
-
+    if (wf.m_inside.m_radius > wf.m_outside.m_radius * .20) {
+        initGrid(wf, 12);
+        wf.InputZerns =  ZernFitWavefront(wf);
+        for (int z = 1; z < m_norms.size(); ++z){
+            wf.InputZerns[z] *= m_norms[z];
+        }
+        return;
+    }
     /*
     'calculate LSF matrix elements
     */
@@ -639,7 +644,6 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms)
         A = cv::Mat_<double>::zeros(zterms,zterms);
         B = cv::Mat_<double>::zeros(zterms,1);
     }
-
 
 
     //calculate LSF right hand side
@@ -740,8 +744,11 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
     bool doDefocus = surfaceAnalysisTools::get_Instance()->m_useDefocus;
     double defocus = 0;
-    if (doDefocus)
+    if (doDefocus){
         defocus = surfaceAnalysisTools::get_Instance()->m_defocus;
+
+    }
+
     double ux,uy,sz,nz;
     double rho,theta;
     zernikePolar &zpolar = *zernikePolar::get_Instance();
@@ -773,15 +780,18 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
                 for (int z = start_term; z < Z_TERMS; ++z)
                 {
-                    if ((z == 3) & doDefocus)
+                    if ((z == 3) & doDefocus){
                         nz += defocus * zpolar.zernike(z,rho, theta);
+                        nz -= zerns[z] * zpolar.zernike(z,rho,theta);
 
+                    }
+                    else
                     if (!enables[z])
                         nz -= zerns[z] * zpolar.zernike(z,rho, theta);
 
                 }
 
-                nulled.at<double>(y,x) = sz +nz;
+                nulled.at<double>(y,x) = min(sz +nz, .04);
             }
         }
     }
@@ -835,7 +845,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
                         zpolar.init(rho,theta);
                         double v = 0.;
 
-                        for (int z = 0; z < Z_TERMS; ++z){
+                        for (int z = 0; z < m_norms.size(); ++z){
                             v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
                         }
                         wf.data.at<double>(y,x) = v;
@@ -844,6 +854,11 @@ void zernikeProcess::fillVoid(wavefront &wf){
             }
         }
     }
+}
+int zernikeProcess::getNumberOfTerms(){
+    int terms = m_maxOrder/2+1;
+
+    return terms * terms;
 }
 void spectral_color(double &R,double &G,double &B,double wavelength)
 // RGB <0,1> <- lambda l <400,700> [nm]
@@ -924,15 +939,18 @@ void spectral_color(double &R,double &G,double &B,double wavelength)
 }
 
 
-cv::Mat makeSurfaceFromZerns(int border, bool doColor){
+cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
     simIgramDlg &dlg = *simIgramDlg::get_instance();
     int wx = dlg.size + 2 *  border;
     int wy = wx;
     double rad = (double)(wx-1)/2.;
     double xcen = rad,ycen = rad;
     rad -= border;
-    cv::Mat result = cv::Mat::zeros(wx,wx, (doColor)? CV_8UC4: numType);
+    cv::Mat result = cv::Mat::ones(wx,wx, (doColor)? CV_8UC4: numType);
 
+
+
+    initGrid(wx, rad, (wx-1)/2, (wx-1)/2, m_maxOrder, 0);
     double rho;
     double spacing = 1.;
     mirrorDlg *md = mirrorDlg::get_Instance();
@@ -940,53 +958,44 @@ cv::Mat makeSurfaceFromZerns(int border, bool doColor){
     zernikePolar &zpolar = *zernikePolar::get_Instance();
     double r,g,b;
     spectral_color(r,g,b, md->lambda);
-    for (int y = 0; y <  wx; ++y)
+    if (doColor) {
+        result =  Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
+    }
+    for (int i = 0; i < m_zerns.n_rows; ++i)
     {
-        double uy = (double)(y - (ycen)) / rad;
-        for (int x = 0; x < wy; ++x)
-        {
-            double ux = (double)(x - (xcen )) /rad;
-            rho = sqrt(ux * ux + uy * uy);
 
-            if (rho <= 1.)
-            {
-                double theta = atan2(uy,ux);
-                zpolar.init(rho,theta);
-                double S1 =
-                        dlg.star * cos(10.  *  theta) +
-                        dlg.ring * cos(10 * 2. * rho);
+        double rho = m_rhoTheta.row(0)(i);
+        double theta = m_rhoTheta.row(1)(i);
 
-                for (unsigned int z = 0; z < dlg.zernikes.size(); ++z){
-                    double val = dlg.zernikes[z];
-                    if (z == 8){
-                       val = (dlg.doCorrection && md->doNull) ? md->cc * md->z8 * val * .01 : val;
-                    }
-                    S1 +=  val * zpolar.zernike(z,rho,theta)/((doColor) ? md->fringeSpacing: 1.);
-                }
+        double S1 =
+                dlg.star * cos(10.  *  theta) +
+                dlg.ring * cos(10 * 2. * rho);
 
-                if (doColor){
-                    int iv = cos(spacing *2 * M_PI * S1) * 100 + 120;
-                    result.at<Vec4b>(y,x)[0] = iv * b;
-                    result.at<Vec4b>(y,x)[1] = iv * g;
-                    result.at<Vec4b>(y,x)[2] = iv * r;
-                }
-                else {
-                    if (S1 == 0.0) S1 += .0000001;
-                    //if (rho < .5) S1 = 0.;
-                    result.at<double>(y,x) = S1;
-                }
+        for (unsigned int z = 0; z < dlg.zernikes.size(); ++z){
+            double val = dlg.zernikes[z];
+            if (z == 8){
+                val = (dlg.doCorrection && md->doNull) ? md->cc * md->z8 * val * .01 : val;
             }
-            else    // outside mirror outline
-            {
-                if (doColor){
-                    result.at<Vec4b>(y,x) = Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
-                }
-                else {
-                    result.at<double>(y,x) = 0 ;
-                }
+            S1 +=  val * m_zerns(i,z)/((doColor) ? md->fringeSpacing: 1.);
+
+            int x =  m_col[i];
+            int y =  m_row[i];
+            if (doColor){
+
+                int iv = cos(spacing *2 * M_PI * S1) * 100 + 120;
+                result.at<Vec4b>(y,x)[0] = iv * b;
+                result.at<Vec4b>(y,x)[1] = iv * g;
+                result.at<Vec4b>(y,x)[2] = iv * r;
+            }
+            else {
+                if (S1 == 0.0) S1 += .0000001;
+                //if (rho < .5) S1 = 0.;
+                result.at<double>(y,x) = S1;
             }
         }
+
     }
+
     return result;
 }
 #define TSIZE 450	// number of points in zern generator
@@ -1064,3 +1073,527 @@ void ZernikeSmooth(cv::Mat wf, cv::Mat mask)
     delete[] Bm;
     delete[] tmp;
 }
+
+
+arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double cy,
+                                   double insideRad, const wavefront *wf){
+    bool useMask = false;
+    if (wf != 0){
+        useMask = true;
+        radius = wf->m_outside.m_radius;
+        width = wf->data.rows;
+        cx = wf->m_outside.m_center.x();
+        cy = wf->m_outside.m_center.y();
+        insideRad = wf->m_inside.m_radius;
+    }
+    int rows = width;
+
+    vector<double> rhov;
+    vector<double> thetav;
+     m_row.clear();
+     m_col.clear();
+
+    for (int y = 0; y < rows; ++y){
+        double uy = (y -cy)/radius;
+
+        QApplication::processEvents();
+        for (int x = 0; x< rows; ++x){
+
+            double ux = (x -cx)/radius;
+            double rho = sqrt( ux * ux + uy * uy);
+            double theta = atan2(uy,ux);
+            if ( rho <= 1. && ((useMask) ?  (wf->mask.at<uchar>(y,x) != 0): true)
+                 && ((wf == 0)? true:wf->data.at<double>(y,x) != 0.0)) {
+
+                rhov.push_back(rho);
+                thetav.push_back(theta);
+                 m_row.push_back(y);
+                 m_col.push_back(x);
+
+            }
+
+        }
+    }
+    arma::rowvec r(rhov);
+    arma::rowvec t(thetav);
+
+   return arma::join_cols(r,t);
+}
+
+
+// Fill a matrix witha Zernike polynomial values
+arma::mat zernikeProcess::zpmC(arma::rowvec rho, arma::rowvec theta, int maxorder) {
+
+    int m, n, n0, mmax = maxorder/2;
+    unsigned int i, imax = rho.size();
+    int order, nm, nm1mm1, nm1mp1, nm2m;
+    int ncol = (mmax+1)*(mmax+1);
+    double a0;
+    double cosmtheta[mmax], sinmtheta[mmax];
+    arma::mat zm(imax, ncol);
+
+    m_norms[0] = 1;
+    for (i=0; i<imax; i++) {
+
+      //cache values of cos and sin
+      cosmtheta[0] = std::cos(theta[i]);
+      sinmtheta[0] = std::sin(theta[i]);
+      for (m=1; m<mmax; m++) {
+        cosmtheta[m] = cosmtheta[m-1]*cosmtheta[0] - sinmtheta[m-1]*sinmtheta[0];
+        sinmtheta[m] = sinmtheta[m-1]*cosmtheta[0] + cosmtheta[m-1]*sinmtheta[0];
+      }
+
+      zm(i, 0) = 1.0;                     //piston term
+      zm(i, 3) = 2. * rho[i] * rho[i] - 1.; //defocus
+
+      // now fill in columns with m=n for n>0
+
+      for (m=1; m <= mmax; m++) {
+        zm(i, m*m) = rho[i] * zm(i, (m-1)*(m-1));
+      }
+
+      // non-symmetric terms
+
+      for (order=4; order<=maxorder; order+=2) {
+        for (m=order/2-1; m>0; m--) {
+          n=order-m;
+          nm = order*order/4 + n - m;
+          nm1mm1 = (order-2)*(order-2)/4 + n - m;
+          nm1mp1 = nm - 2;
+          nm2m = nm1mm1 - 2;
+          zm(i, nm) = rho[i]*(zm(i, nm1mm1) + zm(i, nm1mp1)) - zm(i, nm2m);
+        }
+
+        // m=0 (symmetric) term
+        nm = order*order/4 + order;
+        nm1mp1 = nm-2;
+        nm2m = (order-2)*(order-2)/4+order-2;
+        zm(i, nm) = 2.*rho[i]*zm(i, nm1mp1) - zm(i, nm2m);
+      }
+
+      // now multiply each column by normalizing factor and cos, sin
+
+      n0 = 1;
+      for (order=2; order <= maxorder; order+=2) {
+          for(m=order/2; n0 < ncol && m>0; m--) {
+              n=order-m;
+              a0 = m_norms[n0] = sqrt(2.*(n+1));
+              if (n0 < m_norms.size()-2){
+                  m_norms[n0+1] = m_norms[n0];
+                  zm(i, n0+1) = sinmtheta[m-1]*zm(i, n0);
+              }
+              zm(i, n0) *= cosmtheta[m-1];
+              n0 += 2;
+          }
+          n = order;
+          if (n0 < ncol) {
+             m_norms[n0]= sqrt(n+1.);
+          }
+        n0++;
+      }
+    }
+
+    return zm;
+}
+
+arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder) {
+
+  unsigned int nrow = rho.size();
+  int mmax = maxorder/2;
+  int ncol = (mmax+1)*(mmax+1);
+  int i, j, m, nj;
+  double zpnorm = std::sqrt((double) nrow);
+  arma::mat zm(nrow, ncol), annzm(nrow, ncol);
+
+  //do some rudimentary error checking
+
+//  if (rho.size() != theta.size()) stop("Numeric vectors must be same length");
+//  if ((maxorder % 2) != 0) stop("maxorder must be even");
+
+  //good enough
+
+  zm = zpmC(rho, theta, maxorder);
+
+  // for each azimuthal index m find the column indexes
+  // of the zp matrix having that value of m. That
+  // subset is what we need to orthogonalize.
+  // Note this is done separately for "sine" and "cosine" components.
+
+  nj = maxorder/2 + 1;
+  for (m=0; m<mmax; m++) {
+    arma::uvec jsin(nj);
+    arma::uvec jcos(nj);
+    arma::mat Q(nrow, nj);
+    arma::mat R(nj, nj);
+    arma::vec sgn(nj);
+    for (i=0; i<nj; i++) {
+      jcos(i) = (m+i+1)*(m+i+1) - 2*m -1;
+      jsin(i) = jcos(i) + 1;
+    }
+
+    qr_econ(Q, R, zm.cols(jcos));
+    sgn = sign(R.diag());
+
+    annzm.cols(jcos) = zpnorm * Q * diagmat(sgn);
+    if (m > 0) {
+      qr_econ(Q, R, zm.cols(jsin));
+      sgn = sign(R.diag());
+      annzm.cols(jsin) = zpnorm * Q * diagmat(sgn);
+    }
+    --nj;
+  }
+
+  //  highest order only has one term
+
+  j = mmax*mmax;
+
+  annzm.col(j) = zm.col(j) * zpnorm / norm(zm.col(j));
+  annzm.col(j+1) = zm.col(j+1) * zpnorm / norm(zm.col(j+1));
+
+  return annzm;
+}
+void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
+              QVector<QString> RowLable = QVector<QString>(0)){
+    arma::mat theMat = mm;
+    QString transposed(" ");
+
+
+    QString log;
+
+    QString s;
+    QTextStream out(&s);
+
+    out << "<!DOCTYPE html><html><body><H1>" << transposed <<  title << mm.n_rows <<"X" << mm.n_cols << "</H1>";
+
+    log.append(s);
+    if (!colHeading.empty()){
+        log.append("<table><tr>");
+        for (int c = 0; c < colHeading.size(); ++c){
+            log.append("<th>"+colHeading[c] + "</th>");
+        }
+        log.append("</tr>\n");
+    }
+
+    for (int row = 0; row < theMat.n_rows; ++row){
+        log.append("<tr> <td> ");
+        if (!RowLable.empty()){
+
+            if (row < RowLable.size()){
+                log.append(QString().sprintf("<b>%s</b>",RowLable[row].toStdString().c_str()));
+            }
+
+        }
+        log.append("</td>");
+
+        for (int c = 0; c< 10; ++c){
+            log.append(QString().sprintf("<td style=\"text-align:center\" width=\"150\">%6.5lf</td>",theMat(row,c)));
+        }
+        log.append("</tr>\n");
+
+    }
+
+    log.append("</table></body></html>");
+    QTextEdit *display = new QTextEdit();
+    display->resize(2500,1000);
+    display->insertHtml(log);
+
+    display->show();
+
+}
+void zernikeProcess::initGrid(int width, double radius, double cx, double cy, int maxOrder,
+                              double insideRad){
+    // if grid or maxOrder is different then update values.
+    double obsPercent = 0.;
+    if (radius != 0){
+        obsPercent = (double)insideRad/radius;
+    }
+
+    setMaxOrder(maxOrder);
+    if ( m_needsInit || width != m_gridRowSize ||
+            radius != m_radius ||
+            maxOrder != m_maxOrder ||
+         obsPercent != m_obsPercent){
+        m_gridRowSize = width;
+        m_radius = radius;
+        m_obsPercent = obsPercent;
+        m_rhoTheta = rhotheta(width, radius, cx, cy, m_obsPercent);
+
+        if (obsPercent <= 0.) {
+            m_zerns = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
+//            for (int i = 0; i < m_zerns.n_rows; ++i){
+//                if (m_row[i] == 300){
+//                    qDebug()<<  "0obs" << i <<  m_row[i] << m_col [i] << m_zerns(i,1) ;
+//                }
+//            }
+        }
+        else {
+            m_zerns = zapmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
+            arma::mat m_zernsaa = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
+            for (int i = 0; i < m_zerns.n_rows; ++i){
+                if (m_row[i] == 300){
+                    qDebug() << i <<  m_row[i] << m_col [i] << m_zerns(i,1) << m_zernsaa(i,1);
+                }
+            }
+        }
+
+    }
+    m_needsInit = false;
+    return;
+}
+
+// create the rho theta vectors and the Zernike values.
+void zernikeProcess::initGrid(wavefront &wf, int maxOrder){
+    // if grid or maxOrder is different then update values.
+    initGrid(wf.data.rows, wf.m_outside.m_radius, wf.m_outside.m_center.x(),
+             wf.m_outside.m_center.y(), maxOrder, wf.m_inside.m_radius);
+
+    return;
+}
+void zernikeProcess::setMaxOrder(int n){
+
+    if (m_maxOrder != n) {
+        m_maxOrder = n;
+        int cnt = n/2 + 1;
+        cnt *= cnt;
+        m_norms.resize(cnt);
+
+        zernEnables.resize(cnt, true);
+        m_needsInit = true;
+    }
+}
+
+
+std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
+    initGrid(wf, m_maxOrder);
+
+    int ztermCnt = m_zerns.n_cols;
+
+    cv::Mat surface = wf.data;
+
+    Z = cv::Mat(ztermCnt,1,numType, 0.);
+
+    /*
+    'calculate LSF matrix elements
+    */
+
+    Settings2 &settings = *Settings2::getInstance();
+
+    cv::Mat_<double> A;//(count,Z_TERMS);
+    cv::Mat_<double> B;//(count,1);
+    cv::Mat_<double> X(ztermCnt,1);
+    int count = 0;
+
+    A = cv::Mat_<double>::zeros(ztermCnt,ztermCnt);
+    B = cv::Mat_<double>::zeros(ztermCnt,1);
+
+    //calculate LSF right hand side
+
+    double delta = 1./(wf.m_outside.m_radius);
+
+    int sampleCnt = 0;
+    QProgressDialog *prg = new QProgressDialog;
+    prg->setWindowTitle(QString().sprintf("fitting %d samples to %d zernike terms",m_rhoTheta.n_cols,getNumberOfTerms()));
+    prg->setMaximum( m_rhoTheta.n_cols);
+    prg->setValue(0);
+    prg->show();
+    prg->resize(1000,50);
+    for (int i = 0; i < m_rhoTheta.n_cols; ++i) { // for each sample point
+            double rho = m_rhoTheta.row(0)(i);
+
+
+            if (i%5000 == 0) {
+                prg->setValue(i);
+                QApplication::processEvents();
+//                if (prg->wasCanceled()){
+//                    throw 42;
+//                }
+            }
+            if ( rho <= 1. && (wf.mask.at<uchar>( m_row[i], m_col[i]) != 0)){
+
+                for ( int zi = 0; zi < ztermCnt; ++zi)
+                {
+                    double t = m_zerns(i,zi);
+                    //if (zi == 0)
+                       // qDebug() << "z0" << t << "rho:"<<m_rhoTheta.row(0)(i);
+                    for (int zj = 0; zj < ztermCnt; ++zj)
+                    {
+                        //Am[ndx] = Am[ndx] + t * zpolar.zernike(j, rho, theta);
+                        A(zi,zj) +=  t * m_zerns(i,zj);
+                    }
+                    // FN is the OPD at (Xn,Yn)
+                    //Bm[i] = Bm[i] + surface.at<double>(y,x) * t;
+                    B(zi) +=     surface.at<double>( m_row[i], m_col[i]) * t;
+                }
+
+            }
+        }
+qDebug() << "complete";
+
+    cv::solve(A,B,X, DECOMP_QR);
+
+    wf.InputZerns = std::vector<double>(ztermCnt,0);
+    for (int z = 0;  z < X.rows; ++z){
+       if (z < wf.InputZerns.size()){
+            //qDebug() << z << X(z) << wf.InputZerns[z] << (QString().sprintf("% 6.4lf",X(z) - wf.InputZerns[z])).toDouble();
+        }
+       else {
+           //qDebug() << z << X(z);
+       }
+            wf.InputZerns[z] = X(z);
+    }
+
+    delete prg;
+    std::vector<double> r;
+    X.col(0).copyTo(r);
+    return r;
+}
+void make3DPsf(cv::Mat surface){
+
+    QWidget *plotWindow = new QWidget;
+    Q3DSurface *m_PSF_3Dgraph;
+    m_PSF_3Dgraph = new Q3DSurface();
+    QWidget *container = QWidget::createWindowContainer(m_PSF_3Dgraph);
+    QHBoxLayout *hLayout = new QHBoxLayout();
+    QVBoxLayout *vLayout = new QVBoxLayout();
+    hLayout->addWidget(container, 1);
+    hLayout->addLayout(vLayout);
+    plotWindow->setLayout(hLayout);
+
+
+    int nx = surface.size[0];
+    int start = nx/2 - nx/4;
+    cv::Mat data = surface.clone();//(cv::Rect(start,start,nx/2,nx/2));
+
+
+
+    double xmin,xmax;
+    cv::minMaxLoc(data, &xmin,&xmax);
+
+    data/=xmax;
+
+    QSurfaceDataProxy *m_sqrtSinProxy = new QSurfaceDataProxy();
+    QSurface3DSeries *m_sqrtSinSeries = new QSurface3DSeries(m_sqrtSinProxy);
+
+    //draw surfaced
+    {
+
+        int sampleCountX = data.size[1];
+        int sampleCountZ = data.size[0];
+        int width = sampleCountX;
+        QSurfaceDataArray *dataArray = new QSurfaceDataArray;
+        QSurfaceDataArray *dataArray2 = new QSurfaceDataArray;
+        dataArray->reserve(sampleCountZ);
+        dataArray2->reserve(sampleCountZ);
+        for (int i = 0 ; i < sampleCountZ ; i++) {
+            QSurfaceDataRow *newRow = new QSurfaceDataRow(sampleCountX);
+            QSurfaceDataRow *backRow = new QSurfaceDataRow(sampleCountX);
+            float z = -(sampleCountZ/2. - i);
+            int index = 0;
+            for (int j = 0; j < sampleCountX; j++) {
+                float x = -(sampleCountX/2. -j);
+
+                float y = data.at<double>(i,j);
+                (*newRow)[index].setPosition(QVector3D(x, y, z));
+                (*backRow)[index++].setPosition(QVector3D(x, y, width/2));
+            }
+            *dataArray << newRow;
+            *dataArray2 << backRow;
+        }
+
+        QSurfaceDataProxy *m_sqrtSinProxy2 = new QSurfaceDataProxy();
+        QSurface3DSeries *m_sqrtSinSeries2 = new QSurface3DSeries(m_sqrtSinProxy2);
+
+
+        m_sqrtSinProxy->resetArray(dataArray);
+        m_sqrtSinSeries->setDrawMode(QSurface3DSeries::DrawSurface);
+        m_sqrtSinSeries->setFlatShadingEnabled(false);
+
+        m_sqrtSinProxy2->resetArray(dataArray2);
+        m_sqrtSinSeries2->setDrawMode(QSurface3DSeries::DrawSurfaceAndWireframe);
+        m_sqrtSinSeries2->setFlatShadingEnabled(false);
+
+        QLinearGradient gr;
+        gr.setColorAt(0.0, Qt::darkGray);
+        gr.setColorAt(0.01,Qt::cyan);
+        gr.setColorAt(0.33, Qt::blue);
+        gr.setColorAt(0.67, Qt::lightGray);
+        gr.setColorAt(1.0, Qt::red);
+    m_PSF_3Dgraph->activeTheme()->setType(Q3DTheme::Theme(3));
+
+
+
+        m_PSF_3Dgraph->axisX()->setRange(-width/2, width/2);
+        m_PSF_3Dgraph->axisZ()->setRange(-width/2, width/2);
+
+        m_PSF_3Dgraph->addSeries(m_sqrtSinSeries);
+        m_PSF_3Dgraph->addSeries(m_sqrtSinSeries2);
+        m_PSF_3Dgraph->seriesList().at(0)->setBaseGradient(gr);
+        m_PSF_3Dgraph->seriesList().at(0)->setColorStyle(Q3DTheme::ColorStyleRangeGradient);
+    }
+    plotWindow->show();
+}
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include "zernikesmoothingdlg.h"
+using namespace cv;
+void debugZernRoutines(wavefront &wf){
+    int rows = 2;
+    int cols = 4;
+    for (int i = 0; i < 10; ++i) {
+        qDebug() << i << i/cols << i%cols;
+    }
+    return;
+
+    zernikeProcess &zp = *zernikeProcess::get_Instance();
+
+//    QFile inputFile("C:\\Users\\doeas\\Documents\\t.txt");
+//    double xc = 487.;
+//    double yc = 486.;
+//    double rad = 463.;
+//    if (inputFile.open(QIODevice::ReadOnly))
+//    {
+//        QTextStream in(&inputFile);
+//        int row = 0;
+//        vector<double> tmpRow;
+//        vector< vector<double>> data;
+//        while (!in.atEnd())
+//        {
+//            QString line = in.readLine();
+//            QStringList fields = line.simplified().split(" ");
+//            tmpRow.clear();
+//            for (int i = 0; i < fields.size(); ++i){
+//                if (fields[i].contains("NA")){
+//                    tmpRow.push_back(0.0);
+//                }
+//                else {
+//                    tmpRow.push_back(fields[i].toDouble());
+//                }
+//            }
+//            data.push_back(tmpRow);
+//        }
+//        inputFile.close();
+//        qDebug() << "data" << data.size() << data[10].size();
+//        cv::Mat matd(data.size(),data[1].size(), numType,0.);
+//        for(int i=0; i<matd.rows; ++i)
+//            for(int j=0; j<matd.cols; ++j)
+//                matd.at<double>(i, j) = data.at(i).at(j);
+//        make3DPsf(matd);
+
+//        sm->createSurfaceFromPhaseMap(matd,
+//                                      CircleOutline(QPointF(xc,yc),rad),
+//                                      CircleOutline(QPointF(0,0),0),
+//                                      QString("Mikes wavefront"));
+
+
+
+
+        for (int terms = 6; terms < 50; terms += 2) {
+
+            zp.initGrid(wf, terms);
+            zp.ZernFitWavefront(wf);
+            qDebug() << "Max Order" << terms << wf.InputZerns[8]/(sqrt(5.));
+        }
+
+
+    }
+
