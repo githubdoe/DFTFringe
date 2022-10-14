@@ -1,6 +1,7 @@
 #include "unwraperrorsview.h"
 #include "ui_unwraperrorsview.h"
-#include <opencv/cv.h>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc/types_c.h>
 #include <opencv2/imgproc.hpp>
 #include <QSettings>
 #include <QFile>

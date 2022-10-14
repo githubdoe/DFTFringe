@@ -24,6 +24,8 @@
 #include "zernikeprocess.h"
 #include "settings2.h"
 #include "myutils.h"
+#include <opencv2/core/core_c.h>
+#include <opencv2/imgproc/types_c.h>
 #include "opencv2/imgproc/imgproc.hpp"
 #include "utils.h"
 #include "showaliasdlg.h"

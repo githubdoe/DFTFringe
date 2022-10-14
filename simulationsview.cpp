@@ -17,8 +17,10 @@
 ****************************************************************************/
 #include "simulationsview.h"
 #include "ui_simulationsview.h"
-#include "opencv/cv.h"
+#include <opencv2/core/core_c.h>
+#include "opencv2/core.hpp"
 #include <opencv2/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
 #include "mirrordlg.h"
 #include "zernikeprocess.h"
 #include "dftarea.h"

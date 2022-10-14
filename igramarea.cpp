@@ -26,7 +26,10 @@
 #include <QtGlobal>
 #include <math.h>
 
-#include "opencv/cv.h"
+#include "opencv2/core.hpp"
+#include <opencv2/imgproc/types_c.h>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/calib3d.hpp>
 #include "opencv2/imgproc.hpp"
 #include "opencv2/features2d.hpp"
 #include "graphicsutilities.h"

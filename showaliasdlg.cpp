@@ -2,6 +2,7 @@
 #include "ui_showaliasdlg.h"
 #include <QPixmap>
 #include <QtWidgets>
+#include <opencv2/imgproc/types_c.h>
 #include "opencv2/imgproc/imgproc.hpp"
 #include <QSettings>
 class ImageViewer : public QWidget {

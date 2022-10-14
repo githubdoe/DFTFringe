@@ -2,7 +2,7 @@
 #define PSIPHASEDISPLAY_H
 
 #include <QDialog>
-#include "opencv/cv.h"
+#include "opencv2/core.hpp"
 
 namespace Ui {
 class PSIphaseDisplay;

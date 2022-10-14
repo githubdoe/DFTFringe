@@ -26,7 +26,7 @@
 #include "contourtools.h"
 #include <qwt_compass.h>
 #include <qwt_dial.h>
-#include "opencv/cv.h"
+#include "opencv2/core.hpp"
 #include <QRadioButton>
 #include <QCheckBox>
 #include <QDoubleSpinBox>

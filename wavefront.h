@@ -17,7 +17,7 @@
 ****************************************************************************/
 #ifndef WAVEFRONT_H
 #define WAVEFRONT_H
-#include "opencv/cv.h"
+#include <opencv2/core.hpp>
 #include "circleoutline.h"
 #include <QPointF>
 class wavefront

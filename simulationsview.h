@@ -20,7 +20,7 @@
 
 #include <QWidget>
 #include "wavefront.h"
-#include <opencv/cv.h>
+#include <opencv2/core.hpp>
 #include <QTimer>
 #include <QtDataVisualization/Q3DSurface>
 class arcSecScaleDraw;

@@ -23,7 +23,7 @@
 #include <QtGui>
 #include "zernikedlg.h"
 #include <QAbstractTableModel>
-#include <opencv/cv.h>
+#include <opencv2/core.hpp>
 #include <vector>
 #include <QVector>
 

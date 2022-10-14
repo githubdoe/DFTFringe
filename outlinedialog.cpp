@@ -1,3 +1,4 @@
+#include <opencv2/imgproc/types_c.h>
 #include "outlinedialog.h"
 #include "ui_outlinedialog.h"
 #include <QSettings>
