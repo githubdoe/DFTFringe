@@ -567,12 +567,12 @@ void qg_path_follower_vortex (Size size, double *phase, double *qmap,
   while (1) {
 
     // Find the point of highest quality.
-    double m = -HUGE;
+    double m = -std::numeric_limits<double>::max();
     int mndx;
     for (int k=0; k < total; ++k)
       if (qmap[k] > m && ! flags[k])
     m = qmap[mndx = k];
-    if (m == -HUGE) break;
+    if (m == -std::numeric_limits<double>::max()) break;
 
     // Unwrap the first point.
     unwrap_and_insert (mndx, phase[mndx]);
