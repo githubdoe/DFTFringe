@@ -353,33 +353,35 @@ win32 {
       INCLUDEPATH += D:\\qwt-6.1.5\\src
 
       #message("using win32")include
+
+    INCLUDEPATH += D:\armadillo\armadillo-9.200.6\include
+    INCLUDEPATH += D:\opencv\opencv-3.4.12\build\install\include
+    LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_core3412.dll
+    LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_highgui3412.dll
+    LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgcodecs3412.dll
+    LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgproc3412.dll
+    LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_features2d3412.dll
+    LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
+
+
+    LIBS += D:\armadillo\bin\libarmadillo.dll
+    LIBS += D:\lapack\build64\bin\liblapack.dll
+    LIBS += D:\lapack\build64\bin\libblas.dll
 }
 
 
-INCLUDEPATH += D:\armadillo\armadillo-9.200.6\include
-
-INCLUDEPATH += D:\opencv\opencv-3.4.12\build\install\include
-
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_core3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_highgui3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgcodecs3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgproc3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_features2d3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
-
-
-LIBS += D:\armadillo\bin\libarmadillo.dll
-LIBS += D:\lapack\build64\bin\liblapack.dll
-LIBS += D:\lapack\build64\bin\libblas.dll
 unix {
      INCLUDEPATH += /usr/include/qwt
-     iLIBS += -lqwt-qt5
+     INCLUDEPATH += /usr/include/opencv4/
+     LIBS += -lqwt-qt5
      LIBS += -lopencv_core
      LIBS += -lopencv_imgproc
      LIBS += -lopencv_highgui
      LIBS += -lGLU
      LIBS += -lopencv_calib3d
      LIBS += -lopencv_features2d
+     LIBS += -lopencv_imgcodecs
+     LIBS += -larmadillo
      message("using linux")
      contains(CONFIG,debug) { message("no extra debug libraries") }
 }
