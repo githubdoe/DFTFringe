@@ -1154,8 +1154,10 @@ void MainWindow::batchProcess(QStringList fileList){
         if (batchWiz->introPage->shouldFilterWavefront(wf->std)){
 
             m_surfaceManager->deleteCurrent();
+#ifdef Q_OS_WIN
             if (shouldBeep)
                 Beep(300,250);
+#endif
         }
         else{
             QPointF astig(wf->InputZerns[4], wf->InputZerns[5]);
