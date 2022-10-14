@@ -1089,12 +1089,12 @@ void MainWindow::batchProcess(QStringList fileList){
         }
 
         QApplication::processEvents();
-#ifdef Q_OS_WIN
+//#ifdef Q_OS_WIN
         Sleep(uint(1000));
-#else
-        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
-        nanosleep(&ts, NULL);
-#endif
+//#else
+//        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
+//        nanosleep(&ts, NULL);
+//#endif
         ui->SelectOutSideOutline->setChecked(true);
         if (!batchIgramWizard::autoCb->isChecked()){
             while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
@@ -1111,12 +1111,12 @@ void MainWindow::batchProcess(QStringList fileList){
 
         m_igramArea->nextStep();
         QApplication::processEvents();
-#ifdef Q_OS_WIN
+//#ifdef Q_OS_WIN
         Sleep(uint(1000));
-#else
-        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
-        nanosleep(&ts, NULL);
-#endif
+//#else
+//        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
+//        nanosleep(&ts, NULL);
+//#endif
         m_batchMakeSurfaceReady = false;
         if (!batchIgramWizard::autoCb->isChecked() && !m_skipItem){
             while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {
