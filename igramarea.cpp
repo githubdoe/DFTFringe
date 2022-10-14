@@ -21,8 +21,8 @@
 #include <QPrintDialog>
 #endif
 
-#include "IgramArea.h"
-#include "Circleoutline.h"
+#include "igramarea.h"
+#include "circleoutline.h"
 #include <QtGlobal>
 #include <math.h>
 

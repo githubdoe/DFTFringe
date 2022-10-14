@@ -67,7 +67,7 @@
 #include "utils.h"
 #include "wavefrontfilterdlg.h"
 #include "reportdlg.h"
-#include "Circleoutline.h"
+#include "circleoutline.h"
 #include <math.h>
 #include "transformwavefrontdlg.h"
 #include "psi_dlg.h"

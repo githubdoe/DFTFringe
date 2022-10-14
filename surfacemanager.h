@@ -27,7 +27,7 @@
 #include <sstream>
 
 #include "dftarea.h"
-#include "IgramArea.h"
+#include "igramarea.h"
 #include "profileplot.h"
 #include "surfaceanalysistools.h"
 #include <QObject>
@@ -37,7 +37,7 @@
 #include <QTimer>
 #include <QProgressDialog>
 #include "wftstats.h"
-#include "Circleoutline.h"
+#include "circleoutline.h"
 #include "simulationsview.h"
 #include "contourview.h"
 #include "standastigwizard.h"

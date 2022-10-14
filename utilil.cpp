@@ -1,5 +1,5 @@
 
-
+#include <QString>
 #if defined(_WIN32)
 #include <Windows.h>
 #include <QDebug>
@@ -29,5 +29,5 @@ long showmem(QString title){
      return statex.ullAvailVirtual/DIV;
 }
 #else
-int showmem(){return 1000;}
+int showmem(QString title){return 1000;}
 #endif

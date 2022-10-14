@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QWidget>
 #include <QtGui>
-#include "CPoint.h"
+#include "cpoint.h"
 
 class ArbitraryWavWidget : public QWidget
 {
