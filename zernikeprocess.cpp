@@ -610,12 +610,13 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
 
     cv::Mat surface = wf.data;
 
-    if (!m_dirty_zerns)
-        return;
+    //if (!m_dirty_zerns)
+        //return;
 
-    if (wf.m_inside.m_radius > wf.m_outside.m_radius * .20) {
+    Settings2 &settings = *Settings2::getInstance();
+    if (wf.m_inside.m_radius > wf.m_outside.m_radius * settings.m_general->getObs()) {
         initGrid(wf, 12);
-        wf.InputZerns =  ZernFitWavefront(wf);
+        ZernFitWavefront(wf);
         for (int z = 1; z < m_norms.size(); ++z){
             wf.InputZerns[z] *= m_norms[z];
         }
@@ -625,7 +626,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
     'calculate LSF matrix elements
     */
 
-    Settings2 &settings = *Settings2::getInstance();
+
     bool useSvd = false;
     if (settings.m_general->useSVD()){
         useSvd = true;
@@ -727,6 +728,14 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
     cv::Mat unwrapped = wf.data.clone();
 
     double scz8 = md->z8 * md->cc;
+    Settings2 &settings = *Settings2::getInstance();
+
+    if (wf.m_inside.m_radius > wf.m_outside.m_radius * settings.m_general->getObs()) {
+        double E = wf.m_inside.m_radius/wf.m_outside.m_radius;
+        double f = (1 - E * E);
+        f *= f;
+        scz8 =  scz8*f;
+    }
     if (!md->doNull || !wf.useSANull){
         scz8 = 0.;
     }
@@ -897,6 +906,11 @@ void spectral_color(double &R,double &G,double &B,double wavelength)
         G = 0.0;
         B = 0.0;
     }
+    else{
+        R = .5;
+        G = .5;
+        B = .5;
+    }
     qDebug() << R << G << B;
 /*    if ((l>=400.0)&&(l<410.0)) {
         t=(l-400.0)/(410.0-400.0);
@@ -941,6 +955,7 @@ void spectral_color(double &R,double &G,double &B,double wavelength)
 
 cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
     simIgramDlg &dlg = *simIgramDlg::get_instance();
+    double obs = .01 * dlg.getObs();
     int wx = dlg.size + 2 *  border;
     int wy = wx;
     double rad = (double)(wx-1)/2.;
@@ -961,16 +976,27 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
     if (doColor) {
         result =  Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
     }
+    //double obsFactor = 1.;//(1 - obs * obs) * (1 -obs * obs);
     for (int i = 0; i < m_zerns.n_rows; ++i)
     {
 
         double rho = m_rhoTheta.row(0)(i);
         double theta = m_rhoTheta.row(1)(i);
-
+        double edge = .95;
         double S1 =
-                dlg.star * cos(10.  *  theta) +
-                dlg.ring * cos(10 * 2. * rho);
+                dlg.star * cos(dlg.m_star_arms  *  theta) +
+                dlg.ring * cos (dlg.m_ring_count * 2 * M_PI * rho);
 
+        if (dlg.m_doEdge){
+            double edge = dlg.m_edgeRadius;
+            if (rho > edge){
+                double p =  (rho - edge)/(1-edge);
+                double v = pow(p,dlg.m_edgeSharp);
+                double k = -v * dlg.m_edgeMag;
+                S1 += k;
+            }
+
+        }
         for (unsigned int z = 0; z < dlg.zernikes.size(); ++z){
             double val = dlg.zernikes[z];
             if (z == 8){
@@ -982,6 +1008,8 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
             int y =  m_row[i];
             if (doColor){
 
+                if (rho < obs)
+                    continue;
                 int iv = cos(spacing *2 * M_PI * S1) * 100 + 120;
                 result.at<Vec4b>(y,x)[0] = iv * b;
                 result.at<Vec4b>(y,x)[1] = iv * g;
@@ -1329,11 +1357,7 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
         else {
             m_zerns = zapmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
             arma::mat m_zernsaa = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
-            for (int i = 0; i < m_zerns.n_rows; ++i){
-                if (m_row[i] == 300){
-                    qDebug() << i <<  m_row[i] << m_col [i] << m_zerns(i,1) << m_zernsaa(i,1);
-                }
-            }
+
         }
 
     }
@@ -1427,7 +1451,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
 
             }
         }
-qDebug() << "complete";
+
 
     cv::solve(A,B,X, DECOMP_QR);
 
@@ -1439,7 +1463,7 @@ qDebug() << "complete";
        else {
            //qDebug() << z << X(z);
        }
-            wf.InputZerns[z] = X(z);
+       wf.InputZerns[z] = X(z);
     }
 
     delete prg;

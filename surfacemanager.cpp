@@ -406,6 +406,8 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     }
 
     wf->workData = wf->nulledData.clone();
+
+
     if (m_GB_enabled){
             expandBorder(wf);
             // compute blur radius

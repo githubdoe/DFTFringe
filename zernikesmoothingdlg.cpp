@@ -63,7 +63,7 @@ void ZernikeSmoothingDlg::on_maxOrder_valueChanged(int arg1)
 
    // init zp and update zern table view
     m_timer.setSingleShot(true);
-    m_timer.start(500);
+    m_timer.start(1000);
 
 }
 cv::Mat makeSurfaceFromZerns(int width, double rad, zernikeProcess &zp, std::vector<double> theZerns){

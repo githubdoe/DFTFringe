@@ -1440,6 +1440,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         else if (m_current_boundry == CenterOutline){
             Pcount = &innerPcount;
         }
+        qDebug() << "pcount" << *Pcount;
         // if doing ellipse and on the center line
         if (*Pcount == 2 && mirrorDlg::get_Instance()->isEllipse()){
             int middle = (m_OutterP1.x() + m_OutterP2.x())/2;
@@ -1671,10 +1672,11 @@ void IgramArea::drawBoundary()
 
     CircleOutline outside(m_OutterP1,m_OutterP2);
     CircleOutline inside(m_innerP1, m_innerP2);
+
     double s2 = 1.;
     if (!m_hideOutlines){
         painter.setOpacity(opacity * .01);
-        if (outside.m_radius > 0){
+        if (outside.m_radius > 0 && outterPcount > 1){
 
             painter.setPen(QPen(edgePenColor, edgePenWidth, (Qt::PenStyle)lineStyle));
 
@@ -1702,7 +1704,17 @@ void IgramArea::drawBoundary()
             }
         }
         if (inside.m_radius > 0 && innerPcount > 1){
-            painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
+            //painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
+            double percent = inside.m_radius/outside.m_radius * 100;
+            QString label = QString().sprintf("%6.2lf percent", percent);
+            painter.setPen(Qt::black);
+            QFont font("Arial", 8);
+
+            painter.setFont(font);
+            painter.setOpacity(opacity * .05);
+            painter.drawText(inside.m_center.x(), inside.m_center.y()-10, label);//add path
+            painter.setOpacity(opacity * .01);
+
             if (m_searching_center){
                 QColor c(Qt::cyan);
 
@@ -1711,12 +1723,11 @@ void IgramArea::drawBoundary()
                 painter.drawEllipse(inside.m_center,
                                     inside.m_radius,
                                     inside.m_radius);
-
-
             }
             else {
                 painter.setBrush(Qt::NoBrush);
             }
+            painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
             inside.draw(painter,1.);
 
         }
@@ -2044,7 +2055,7 @@ qDebug() << "crop saving" << cx << cy << radx;
     update();
     emit imageSize(QString().sprintf("%d X %d", igramGray.size().width(), igramGray.size() .height()));
     emit upateColorChannels(qImageToMat(igramColor));
-    emit doDFT();
+
 }
 void IgramArea::dftReady(QImage img){
     m_dftThumb->setImage(img);
@@ -2301,10 +2312,12 @@ void IgramArea::nextStep(){
     }
     if (!hasBeenCropped)
         crop();
+    emit doDFT();
     m_current_boundry = OutSideOutline;
     m_regionEdit->hide();
     m_dftThumb->hide();
     emit showTab(1);
+
 }
 #include <QImageWriter>
 void IgramArea::save(){

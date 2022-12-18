@@ -116,6 +116,8 @@ void CircleOutline::draw(QPainter& dc, double scale, double scale2){
         scale2 = scale;
 
     dc.drawEllipse(m_center * scale,m_radius * scale,m_radius* scale2);
+    dc.setPen(QPen(Qt::black, 3,Qt::DotLine));
+    dc.drawEllipse(m_center * scale,m_radius * scale,m_radius* scale2);
     dc.drawLine((m_center.x() -m_radius - 5)* scale, m_center.y()* scale, scale *( m_center.x() + m_radius + 5), scale * m_center.y());
     dc.drawLine(scale * m_center.x(), m_center.y() - m_radius * scale2 - 5, scale * m_center.x(), m_center.y() + m_radius * scale2 + 5);
 }

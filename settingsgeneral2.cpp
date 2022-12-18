@@ -2,6 +2,7 @@
 #include "ui_settingsgeneral2.h"
 #include <QSettings>
 #include "contourrulerparams.h"
+#include <QMessageBox>
 extern double outputLambda;
 SettingsGeneral2::SettingsGeneral2(QWidget *parent) :
     QDialog(parent),
@@ -15,16 +16,15 @@ SettingsGeneral2::SettingsGeneral2(QWidget *parent) :
     m_downsize = set.value("wavefrontShouldDownsize", false).toBool();
     ui->downSizeCB->blockSignals(true);
     ui->wavefrontSizeSb->blockSignals(true);
-    ui->memThreshValue->blockSignals(true);
     ui->downSizeCB->setChecked(m_downsize);
     ui->wavefrontSizeSb->setValue(m_waveFrontSize);
-    ui->memThreshValue->setValue(set.value("lowMemoryThreshold", 300).toInt());
-    ui->memThreshValue->blockSignals(false);
     ui->wavefrontSizeSb->blockSignals(false);
     ui->downSizeCB->blockSignals(false);
     ui->outputLambda->blockSignals(true);
     ui->outputLambda->setValue(set.value("outputLambda", 550.).toDouble());
     ui->outputLambda->blockSignals(false);
+    ui->useAnnular->setChecked(set.value("useAnnular", false).toBool());
+    ui->percenObstruction->setValue(set.value("percentObs", 1.).toDouble());
 
 }
 
@@ -50,9 +50,7 @@ void SettingsGeneral2::on_downSizeCB_clicked(bool checked){
     m_downsize = checked;
 }
 
-int SettingsGeneral2::memoryThreshold(){
-    return ui->memThreshValue->value();
-}
+
 void SettingsGeneral2::updateContour(){
     emit updateContourPlot();
 }
@@ -80,7 +78,11 @@ void SettingsGeneral2::on_AstigDistGraphWidth_valueChanged(int val){
     QSettings set;
     set.setValue("AstigDistGraphWidth", val);
 }
-
+double SettingsGeneral2::getObs(){
+    if (ui->useAnnular->isChecked())
+        return ui->percenObstruction->value() * .01;
+    else return 1.;
+}
 void SettingsGeneral2::on_checkBox_clicked(bool checked)
 {
     m_useSVD = checked;
@@ -112,3 +114,19 @@ void SettingsGeneral2::on_apply_clicked(){
         valsChanged = false;
     }
 }
+
+void SettingsGeneral2::on_useAnnular_clicked(bool checked)
+{
+    QSettings set;
+    set.setValue("useAnnular", checked);
+    if (checked)
+       QMessageBox::warning(0,"_____________________warning______________________", "This is an experimental feature and probably not accurate.");
+}
+
+
+void SettingsGeneral2::on_percenObstruction_valueChanged(double arg1)
+{
+    QSettings set;
+    set.setValue("percendObs", arg1);
+}
+

@@ -10,7 +10,7 @@ QT += network \
       multimediawidgets \
       widgets
 QT += concurrent widgets
-
+QT += charts
 qtHaveModule(printsupport): QT += printsupport
 QT       += core gui
 QT       += opengl widgets
@@ -24,6 +24,7 @@ CONFIG += ``
 
 SOURCES += main.cpp\
     defocusdlg.cpp \
+    edgeplot.cpp \
     mainwindow.cpp \
     igramarea.cpp \
     circleoutline.cpp \
@@ -137,6 +138,7 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     defocusdlg.h \
+    edgeplot.h \
     igramarea.h \
     circleoutline.h \
     gplus.h \
@@ -254,6 +256,7 @@ FORMS    += mainwindow.ui \
     defocusdlg.ui \
     dfttools.ui \
     dftarea.ui \
+    edgeplot.ui \
     profilearea.ui \
     profileplot.ui \
     contourtools.ui \
@@ -380,7 +383,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 6.0
+VERSION = 6.1
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
@@ -464,31 +467,7 @@ DISTFILES += \
     COPYING.txt \
     RevisionHistory.html \
     README.md \
-    res/Help/igram.png \
-    res/Help/igramScreen.png \
-    res/Help/manyrotations.png \
-    res/Help/MirrorConfig.png \
-    res/Help/help.html \
-    res/Help/mirrorConfig.html \
-    res/Help/smoothing.htm \
-    res/Help/Gaussian10.png \
-    res/Help/oneIgramanalysis.png \
-    res/Help/BathInterferometry.odt \
-    res/Help/analysis.png \
-    res/Help/dft.png \
-    res/Help/igramSettingsLens.png \
-    res/Help/lineGrid.png \
-    res/Help/artificialNull.htm \
-    res/Help/fringecontrol.htm \
-    res/Help/lensDistort.html \
-    res/Help/unwrap_errors.html \
-    res/Help/chessGrid.png \
-    res/Help/circles.png \
-    res/Help/PSIHelp.html \
-    res/Help/astigsummary.html \
-    res/Help/astigSummary.png \
-    res/Help/badStandSummary.png \
-    res/surface_LeY_icon.ico
+
 
     TRANSLATIONS    = dftfringe_fr.ts
 

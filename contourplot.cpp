@@ -380,7 +380,7 @@ void ContourPlot::drawProfileLine(const double angle){
     int endy = half - starty;
         QFont mf("Times", 15, QFont::Bold);
     radials.lineTo(endx,endy);
-    radials.addText(QPoint(30,30), mf,"this is text");
+
     QwtPlotShapeItem *item = new QwtPlotShapeItem( "");
     item->setShape(radials);
     item->setPen(QColor(50,50,50,100),3,Qt::DashDotDotLine);

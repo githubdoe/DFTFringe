@@ -13,5 +13,4 @@ install QWT source
 instal Qwt into path
 build libblas
 build lpack
-build qwt
 build DFTFringe using Qt creator using it's .pro file.

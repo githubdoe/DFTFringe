@@ -1093,6 +1093,12 @@ void DFTArea::showResizedDlg(){
             return;
     QSettings set;
     int size = set.value("DFTSize", 640).toInt();
+//    if (size > igramArea->igramGray.width()){
+//        QString msg;
+//        msg = "The DFT size must be smaller than " + QString::number(size);
+//        QMessageBox::warning(0, "________________DFT size too Large_____________", msg);
+//        return;
+//    }
     showAliasDlg dlg(size);
     dlg.setImage(igramArea->igramGray);
     if (dlg.exec()){

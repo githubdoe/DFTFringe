@@ -61,13 +61,20 @@ public:
     double xastig;
     double yastig;
     double star;
+    double m_star_arms;
     double ring;
+    double m_ring_count;
     double noise;
     int size;
     bool doCorrection;
     std::vector<double> zernikes;
     std::vector<bool> enables;
     void setNewTerms(std::vector<double> terms);
+    double getObs();
+    bool m_doEdge;
+    double m_edgeRadius;
+    double m_edgeMag;
+    double m_edgeSharp;
 
 protected:
     void showEvent(QShowEvent *);
@@ -86,11 +93,14 @@ private slots:
     void on_clearAll_pressed();
 
 
+    void on_rollTheEdge_clicked(bool checked);
+
+    void on_EditEdge_clicked();
+
 private:
     Ui::simIgramDlg *ui;
     static simIgramDlg *m_instance;
     zTableModel *tableModel;
-
 };
 
 #endif // SIMIGRAMDLG_H

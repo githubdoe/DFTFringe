@@ -70,6 +70,8 @@ showAliasDlg::showAliasDlg(int size, QWidget *parent) :
     resizedView = new ImageViewer;
     ui->resizedScrollArea->setWidget(resizedView);
     resizedValue = size;
+    QRect rec = QGuiApplication::screens()[0]->geometry();
+    resize(3 * rec.width()/4, 3 * rec.height()/4);
 
 }
 
@@ -80,7 +82,9 @@ showAliasDlg::~showAliasDlg()
  void showAliasDlg::setImage(QImage &img){
 
      m_img = img.copy();
+     ui->resizedSB->blockSignals(true);
      ui->resizedSB->setMaximum(img.width());
+     ui->resizedSB->blockSignals(false);
      contrast();
 
      ui->originalLb->setText( QString().sprintf("Original %dx%d", img.width(),img.height()));
@@ -102,8 +106,6 @@ void showAliasDlg::contrast(){
 }
 void showAliasDlg::downSize(){
    cv::Mat small = gray.clone();
-
-
    cv::resize(small, small, cv::Size(resizedValue,resizedValue) , CV_INTER_NN);
    cv::resize(small,small, cv::Size(gray.cols, gray.rows), CV_INTER_NN);
    //cv::GaussianBlur(small,small, cv::Size(5, 5),0,0);
@@ -150,5 +152,5 @@ void showAliasDlg::on_pushButton_2_pressed()
                 " the scroll wheel and pan with the left mouse button.\n\n There is a trade off between resolution and memory usage.\n"
                 "You can reduce the size of the wavefront if you reduce the size of the igram.  However that might cause the fringes to be"
                 "too narrow.\n  Inspect the resized igram to make sure the fringes stay at least 3 pixels wide everwhere.");
-    QMessageBox::information(this, "Show Resized Interferogram Help", msg);
+    QMessageBox::information(this, "__________________Show Resized Interferogram Help_________________________________", msg);
 }

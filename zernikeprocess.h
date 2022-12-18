@@ -69,17 +69,17 @@ public:
     void initGrid(int width, double radius, double cx, double cy, int maxOrder, double inside = 0);
     void unwrap_to_zernikes(zern_generator *zg, cv::Mat wf, cv::Mat mask);
     cv::Mat makeSurfaceFromZerns(int border, bool doColor);
-    arma::mat rhotheta( int width, double radius, double cx, double cy,
-                                       double insideRad, const wavefront *wf = 0);
-    arma::mat zpmC(arma::rowvec rho, arma::rowvec theta, int maxorder);
-    arma::mat zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder=12);
+    //arma::mat rhotheta( int width, double radius, double cx, double cy,
+                                       //double insideRad, const wavefront *wf = 0);
+    //arma::mat zpmC(arma::rowvec rho, arma::rowvec theta, int maxorder);
+    //arma::mat zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder=12);
     void fillVoid(wavefront &wf);
     void setMaxOrder(int n);
     int getNumberOfTerms();
     int m_abc;
     mirrorDlg *md;
     MainWindow *mw;
-    arma::mat m_zerns;
+    //arma::mat m_zerns;
     QVector<double> m_norms;
 signals:
 void statusBarUpdate(QString, int);

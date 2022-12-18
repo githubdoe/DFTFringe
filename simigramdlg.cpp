@@ -23,7 +23,7 @@
 #include <QAbstractTableModel>
 #include "surfacemanager.h"
 #include "zernikeprocess.h"
-
+#include "edgeplot.h"
 zTableModel::zTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
     :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable)
 {
@@ -154,7 +154,7 @@ Qt::ItemFlags zTableModel::flags(const QModelIndex & index) const
 
 simIgramDlg *simIgramDlg::m_instance = 0;
 simIgramDlg::simIgramDlg(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent),m_doEdge(false),m_edgeRadius(.85),m_edgeMag(.5),m_edgeSharp(3),
     ui(new Ui::simIgramDlg)
 {
     ui->setupUi(this);
@@ -163,6 +163,9 @@ simIgramDlg::simIgramDlg(QWidget *parent) :
     enables = std::vector<bool>(zp.getNumberOfTerms());
     QSettings s;
     xtilt = s.value("simxtilt", 30).toDouble();
+    m_edgeMag = s.value("edgeMag", .5).toDouble();
+    m_edgeRadius = s.value("edgePercent", .85).toDouble();
+    m_edgeSharp = s.value("edgeSharp",3).toDouble();
     zernikes[1] = xtilt;
     correction = s.value("simCorrection", 98.).toDouble();
 
@@ -196,6 +199,9 @@ simIgramDlg *simIgramDlg::get_instance(){
         m_instance = new simIgramDlg;
     }
     return m_instance;
+}
+double simIgramDlg::getObs(){
+    return ui->obsPercent->value();
 }
 void simIgramDlg::setNewTerms(std::vector<double> terms){
 
@@ -231,9 +237,11 @@ void simIgramDlg::on_buttonBox_accepted()
     s.setValue("simXastig", xastig);
     yastig = zernikes[5];
     s.setValue("simYastig",yastig);
+    m_star_arms = ui->starArms->value();
     star = ui->starPatternSb->value();
     s.setValue("simStar", star);
     ring = ui->ringPatterSb->value();
+    m_ring_count = ui->ringCount->value();
     s.setValue("simRing",ring);
     s.setValue("simDefocus",defocus);
     size = ui->sizeSB->value();
@@ -282,4 +290,31 @@ void simIgramDlg::on_clearAll_pressed()
     update();
 }
 
+
+
+void simIgramDlg::on_rollTheEdge_clicked(bool checked)
+{
+
+    m_doEdge = checked;
+}
+
+
+void simIgramDlg::on_EditEdge_clicked()
+{
+
+    EdgePlot  dlg;
+    dlg.resize(1500,800);
+    if (dlg.exec()){
+        m_doEdge = true;
+        m_edgeMag = dlg.m_mag;
+        m_edgeRadius = dlg.m_percent;
+        m_edgeSharp = dlg.m_sharp;
+        ui->rollTheEdge->setChecked(true);
+        QSettings s;
+        s.setValue("edgeMag", m_edgeMag);
+        s.setValue("edgePercent", m_edgeRadius);
+        s.setValue("edgeSharp",m_edgeSharp);
+    }
+
+}
 

@@ -369,6 +369,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
                                             wf->lambda/outputLambda)  +y_offset * units);
                 }
                 else {
+
                     points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
                                         wf->lambda/outputLambda)  +y_offset * units);
                 }
@@ -477,7 +478,22 @@ void ProfilePlot::populate()
         break;
     }
     case 1: {   // show 16 diameters
+
+        if (true){
+            QString t = "Average of all 16 diameters";
+            QwtText title(t);
+            title.setRenderFlags( Qt::AlignHCenter | Qt::AlignBottom );
+
+            QFont font;
+            font.setPointSize(12);
+            title.setFont( font );
+            title.setColor(Qt::blue);
+            QwtPlotTextLabel *titleItem = new QwtPlotTextLabel();
+            titleItem->setText( title );
+            titleItem->attach( m_plot );
+        }
         double startAngle = g_angle;
+        QPolygonF sum;
 
         for (int i = 0; i < 16; ++i){
             QPolygonF points;
@@ -488,10 +504,27 @@ void ProfilePlot::populate()
             cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
             cprofile->setPen( Qt::black );
             points = createProfile( m_showNm * m_showSurface,m_wf);
+            if (i == 0) {
+                sum = points;
+            }
+            else {
+                for(int j = 0; j < fmin(sum.length(),points.length());++j){
+                    sum[j].ry()  += points[j].y();
+                }
+            }
             cprofile->setSamples( points);
             cprofile->attach( m_plot );
         }
-
+        QPolygonF avg;
+        foreach(QPointF p, sum){
+            avg << QPointF(p.x(),p.y()/16);
+        }
+        QwtPlotCurve *cprofileavg = new QwtPlotCurve( "average");
+        cprofileavg->setRenderHint( QwtPlotItem::RenderAntialiased );
+        cprofileavg->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
+        cprofileavg->setPen( QPen(Qt::blue,5) );
+        cprofileavg->setSamples( avg);
+        cprofileavg->attach( m_plot );
         g_angle = startAngle;
         break;
 

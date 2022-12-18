@@ -464,7 +464,7 @@ void MainWindow::createActions()
 
     }
 }
-
+//Crop button
 void MainWindow::on_pushButton_5_clicked()
 {
     m_igramArea->crop();
@@ -743,7 +743,7 @@ void MainWindow::on_SelectObsOutline_clicked(bool checked)
     m_igramArea->CenterOutlineActive(checked);
     m_regionsEdit->hide();
 }
-
+//Outline Done button
 void MainWindow::on_pushButton_clicked()
 {
     if (!m_inBatch)
