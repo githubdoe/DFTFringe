@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ArbitraryWavefrontHelp</class>
+ <widget class="QDialog" name="ArbitraryWavefrontHelp">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>405</width>
+    <height>232</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Help/Tips</string>
+  </property>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>361</width>
+     <height>161</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>This is for creating your desired shaped wavefront with the mouse.
+
+- Click in the graph to create new points
+- Right click on a point to delete
+- Drag a round or square handle to move
+- Scroll mouse to zoom vertical scale
+- Window can be enlarged by dragging outer edge
+- &quot;Size:&quot; is resolution of created wavefront in pixels
+- Mirror null will be added when you hit Ok button</string>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>180</y>
+     <width>75</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
