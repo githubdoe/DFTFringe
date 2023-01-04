@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>405</width>
-    <height>232</height>
+    <width>393</width>
+    <height>198</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>10</y>
+     <y>0</y>
      <width>361</width>
      <height>161</height>
     </rect>
@@ -30,8 +30,7 @@
 - Drag a round or square handle to move
 - Scroll mouse to zoom vertical scale
 - Window can be enlarged by dragging outer edge
-- &quot;Size:&quot; is resolution of created wavefront in pixels
-- Mirror null will be added when you hit Ok button</string>
+- Zernike terms will be added later</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
@@ -40,8 +39,8 @@
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>300</x>
-     <y>180</y>
+     <x>290</x>
+     <y>150</y>
      <width>75</width>
      <height>24</height>
     </rect>

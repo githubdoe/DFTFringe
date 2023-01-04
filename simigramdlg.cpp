@@ -23,6 +23,7 @@
 #include <QAbstractTableModel>
 #include "surfacemanager.h"
 #include "zernikeprocess.h"
+#include "arbitrarywavefrontdlg.h"
 
 zTableModel::zTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
     :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable)
@@ -155,6 +156,7 @@ Qt::ItemFlags zTableModel::flags(const QModelIndex & index) const
 simIgramDlg *simIgramDlg::m_instance = 0;
 simIgramDlg::simIgramDlg(QWidget *parent) :
     QDialog(parent),
+    m_doArbitrary(false),
     ui(new Ui::simIgramDlg)
 {
     ui->setupUi(this);
@@ -282,4 +284,25 @@ void simIgramDlg::on_clearAll_pressed()
     update();
 }
 
+
+
+void simIgramDlg::on_editArbitrary_clicked()
+{
+    ArbitraryWavefrontDlg * dlg = ArbitraryWavefrontDlg::get_instance();
+    mirrorDlg* md = mirrorDlg::get_Instance();
+    if (md->diameter>0)
+        dlg->setDiameter(md->diameter);
+    dlg->setModal(true);
+    dlg->exec();
+    if (dlg->bOkPressed == false)
+        return;
+    m_doArbitrary=true;
+    ui->includeArbitrary->setChecked(true);
+}
+
+
+void simIgramDlg::on_includeArbitrary_clicked(bool checked)
+{
+    m_doArbitrary = checked;
+}
 

@@ -23,6 +23,10 @@ TEMPLATE = app
 CONFIG += ``
 
 SOURCES += main.cpp\
+    arbitrarywavefrontdlg.cpp \
+    arbitrarywavefronthelp.cpp \
+    arbitrarywavwidget.cpp \
+    cpoint.cpp \
     defocusdlg.cpp \
     mainwindow.cpp \
     igramarea.cpp \
@@ -136,6 +140,11 @@ SOURCES += main.cpp\
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
+    arbitrarywavefrontdlg.h \
+    arbitrarywavefronthelp.h \
+    arbitrarywavwidget.h \
+    bezier.h \
+    cpoint.h \
     defocusdlg.h \
     igramarea.h \
     circleoutline.h \
@@ -251,6 +260,7 @@ HEADERS  += mainwindow.h \
     contourrulerparams.h \
     zernikesmoothingdlg.h
 FORMS    += mainwindow.ui \
+    arbitrarywavefronthelp.ui \
     defocusdlg.ui \
     dfttools.ui \
     dftarea.ui \

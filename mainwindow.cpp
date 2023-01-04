@@ -47,7 +47,6 @@
 #include "utils.h"
 #include "colorchannel.h"
 #include "opencv2/opencv.hpp"
-#include "arbitrarywavefrontdlg.h"
 
 
 
@@ -819,8 +818,6 @@ void MainWindow::on_actionWavefront_triggered()
                                                 CircleOutline(QPointF(0,0),0),
                                                 QString("Simulated_Wavefront"));
 }
-
-
 
 void MainWindow::on_actionIgram_triggered()
 {
@@ -1783,10 +1780,4 @@ void MainWindow::on_actionSmooth_current_wave_front_triggered()
 }
 
 
-void MainWindow::on_actionArbitrary_Wavefront_triggered()
-{
-    ArbitraryWavefrontDlg dlg;
-    dlg.setModal(true);
-    dlg.exec();
-}
 

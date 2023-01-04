@@ -68,6 +68,7 @@ public:
     std::vector<double> zernikes;
     std::vector<bool> enables;
     void setNewTerms(std::vector<double> terms);
+    bool m_doArbitrary;
 
 protected:
     void showEvent(QShowEvent *);
@@ -85,6 +86,10 @@ private slots:
 
     void on_clearAll_pressed();
 
+
+    void on_editArbitrary_clicked();
+
+    void on_includeArbitrary_clicked(bool checked);
 
 private:
     Ui::simIgramDlg *ui;

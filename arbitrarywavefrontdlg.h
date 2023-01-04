@@ -20,19 +20,26 @@ public:
     ~ArbitraryWavefrontDlg();
     ArbitraryWavWidget * pww;
 
+    static ArbitraryWavefrontDlg* get_instance();
     void setNull(double _mirror_null);
     void setDiameter(double _mirror_diam); // unit: mm      see md.diameter
+    int getSize(); // qty of pixels for wavefront
 
     QSize sizeHint() const override;
 
     bool bOkPressed=false;
+    
+    void prepare(int size);
+    double getValue(double rho); // return a wave height value for this diameter (rho = radius from 0.0 to 1.0)
 
 
 
 protected:
     void showEvent(QShowEvent * event) override;
-    QComboBox * cmbMode;
-    QComboBox * cmbUnit;
+    QComboBox * m_cmbMode;
+    QComboBox * m_cmbUnit;
+    QLineEdit * m_txtSize;
+    static ArbitraryWavefrontDlg *m_instance;
 
 private slots:
     void onCancelPressed();

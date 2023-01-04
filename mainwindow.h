@@ -264,8 +264,6 @@ private slots:
 
     void on_actionSmooth_current_wave_front_triggered();
 
-    void on_actionArbitrary_Wavefront_triggered();
-
 private:
 
     Ui::MainWindow *ui;

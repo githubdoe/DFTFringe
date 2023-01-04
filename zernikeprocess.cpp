@@ -24,6 +24,8 @@
 #include "simigramdlg.h"
 #include "settings2.h"
 #include "myutils.h"
+#include "arbitrarywavefrontdlg.h"
+
 std::vector<bool> zernEnables;
 std::vector<double> zNulls;
 double BestSC = -1.;
@@ -961,6 +963,11 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
     if (doColor) {
         result =  Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
     }
+
+    ArbitraryWavefrontDlg * dlg_arbitrary = ArbitraryWavefrontDlg::get_instance();
+    if (dlg.m_doArbitrary)
+        dlg_arbitrary->prepare(dlg.size);
+
     for (int i = 0; i < m_zerns.n_rows; ++i)
     {
 
@@ -970,6 +977,10 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
         double S1 =
                 dlg.star * cos(10.  *  theta) +
                 dlg.ring * cos(10 * 2. * rho);
+
+        if (dlg.m_doArbitrary)
+            S1 += dlg_arbitrary->getValue(rho);
+
 
         for (unsigned int z = 0; z < dlg.zernikes.size(); ++z){
             double val = dlg.zernikes[z];

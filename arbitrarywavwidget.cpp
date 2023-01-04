@@ -8,12 +8,32 @@ ArbitraryWavWidget::ArbitraryWavWidget(QWidget *parent)
     mirror_radius = 12*25;  // 24 inch mirror by default
     wave_height=0.3;  // by default we start at +/- .25 waves of vertical scale
     ww_unit=in; // default inches
-    double bez_dist = mirror_radius/bez_distance_ratio;
-    pts.append(CPoint(0,0, bez_dist));
-    pts.append(CPoint(25.4,0.125, bez_dist));
+    double bez_dist = mirror_radius/2;
+    pts.append(CPoint(0,0, bez_dist)); // mandatory
+    //pts.append(CPoint(mirror_radius,0.125, bez_dist)); // optional starting points
     // debugging test pts[1].setLeft(pts[1].x()-3, pts[1].y()-.3,0.1);
     bDragging=false;
     bDraggingBevierPoint = false;
+}
+
+void ArbitraryWavWidget::setRadius(double radius) {
+    if (radius == mirror_radius)
+        return;
+
+    mirror_radius = radius;
+    double bez_dist = mirror_radius/2;
+    pts.clear();
+    pts.append(CPoint(0,0, bez_dist)); // mandatory
+    //pts.append(CPoint(mirror_radius,0.125, bez_dist)); // optional starting points
+    bDragging=false;
+    bDraggingBevierPoint = false;
+
+}
+
+void ArbitraryWavWidget::showPrepare() {
+    // for testing - display the prepared data in this graph widget
+    bDrawCalculatedPoints=true;
+    update(); // redraw
 }
 
 void ArbitraryWavWidget::setMode(int _mode) {
@@ -505,6 +525,124 @@ void ArbitraryWavWidget::paintEvent(QPaintEvent * /*event*/) {
     }
 
 
+    if (bDrawCalculatedPoints) {
+        // for testing purposes - draw the prepare() data
+        QPen redPen(Qt::red, 1.5, Qt::SolidLine);
+        painter.setPen(redPen);
+        for (int i=0; i<wf_array_size; i++) {
+            int ix = transx(index_to_radius(i));
+            int iy = transy(wf_array[i]);
+            painter.drawPoint(ix,iy);
+        }
+    }
 
 
+}
+int ArbitraryWavWidget::radius_to_index(double r) {
+    if (mirror_radius==0)
+        return 0;
+    return (int)(r/mirror_radius*(wf_array_size-1)+0.5);
+}
+
+double ArbitraryWavWidget::rho_to_index(double r) {
+    // rho is radius but value goes from 0 to 1.00
+    // return value is a double on purpose!  This is important
+    double index =  (r*(wf_array_size-1)+0.5);
+    if (index < 0) return 0;
+    //if (index >= wf_array_size) return wf_array_size-1;
+    return index;
+}
+
+double ArbitraryWavWidget::index_to_radius(int i) { // used only for testing
+    if (wf_array_size==0)
+        return 0;
+    return mirror_radius*i/wf_array_size;
+}
+void ArbitraryWavWidget::prepare(int size) {
+    // create an array of doubles of size "size" and fill it with our wave heights for our drawn shape.
+    // The index into this array will be the radius.
+    if (size != wf_array_size || wf_array == 0) {
+        // create array
+        if (wf_array !=0)
+            delete wf_array;
+        wf_array_size = size;
+        wf_array = new double[size];
+    }
+
+    const double empty_val = -1000000;
+    for (int i=0; i< wf_array_size; ++i)
+        wf_array[i]= empty_val; // this is to keep track of which elements have been set to something
+
+    Bezier::Point bez_pts[4];
+    for(int i=1; i<pts.size(); i++) { // start at 1 and we will grab 2 points at a time
+        CPoint p1 = pts.at(i-1);
+        CPoint p4 = pts.at(i);
+        QPointF p2 = p1.getRight();
+        QPointF p3 = p4.getLeft();
+
+        bez_pts[0]= Bezier::Point(p1.x(), p1.y());
+        bez_pts[1]= Bezier::Point(p2.x(), p2.y());
+        bez_pts[2]= Bezier::Point(p3.x(), p3.y());
+        bez_pts[3]= Bezier::Point(p4.x(), p4.y());
+
+        Bezier::Bezier<3> bez(bez_pts,4);
+        const double t_increment = .005;
+        for (double t=0; t<=(1+t_increment/2); t+=t_increment) {
+            Bezier::Point p = bez.valueAt(t);
+            int index = radius_to_index(p.x);
+            if (index<0 || index >= wf_array_size)
+                continue;
+            wf_array[index] = p.y;
+        }
+    }
+    
+    // fill in leading points with first filled value
+    int first_valid_entry;
+    for(first_valid_entry=0; first_valid_entry<wf_array_size; first_valid_entry++)
+        if (wf_array[first_valid_entry] != empty_val)
+            break;
+    for (int i=0; i < first_valid_entry; i++)
+        wf_array[i] = wf_array[first_valid_entry];
+    
+    // now fill in trailing points with last filled value
+    int last_valid_entry;
+    for(last_valid_entry=wf_array_size-1; last_valid_entry>=0; last_valid_entry--)
+        if (wf_array[last_valid_entry] != empty_val)
+            break;
+    for (int i=last_valid_entry+1; i < wf_array_size; i++)
+        wf_array[i] = wf_array[last_valid_entry];
+    
+    // now fill in gaps with interpolated values
+    for (int i=0; i<wf_array_size; i++) {
+        if (wf_array[i] != empty_val)
+            continue;
+        // found an empty starting at "i"
+        int j;
+        for (j=i; j<wf_array_size; j++)
+            if (wf_array[j] != empty_val)
+                break;
+        i--;
+        // okay i is first valid, j is valid.  everything between is invalid.
+        for (int k=i+1; k<j; k++) {
+            double portion = 1.0*(k-i)/(j-i);  // portion is value from 0 to 1.00 where 0 means
+                                         // use all of point at [i] and 1 means use all of
+                                         // point at [j] and .5 means use half of each
+            wf_array[k] = (1-portion)*wf_array[i] + portion*wf_array[j];
+        }// done with this section.  Filled in.
+        i=j;
+    }
+}
+double ArbitraryWavWidget::getValue(double rho) { // rho is the radius of our mirror from 0.0 to 1.0 where 0 is the center and 1.0 is the edge
+    // using the array created in prepare() find the nearest entries in our array on either side of rho and return a linear interpolated wave height
+    double index = rho_to_index(rho); // returned value is a double - we need to get the values on either side of this one
+    int i1 = floor(index);
+    int i2 = i1 + 1;
+    if (i2 >= (wf_array_size-1)) {
+        i2 = wf_array_size-1;
+        i1 = i2 - 1;
+    }
+    double p1 = wf_array[i1];
+    double p2 = wf_array[i2];
+    double portion = index-i1;
+    return p1*(1-portion)+p2*portion; // this formula will work fine even if index isn't between i1 and i2.  It will interpolate outwards.
 }

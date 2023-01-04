@@ -129,7 +129,6 @@
     </property>
     <addaction name="actionIgram"/>
     <addaction name="actionWavefront"/>
-    <addaction name="actionArbitrary_Wavefront"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">

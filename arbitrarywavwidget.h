@@ -16,7 +16,6 @@ public:
     QSize minimumSizeHint() const override;
     QList<CPoint> pts;
     double mirror_null;
-    double mirror_radius; // mm
     enum e_units {mm, cm, in};
     e_units ww_unit = in;
     //struct ipnt {int x; int y;};
@@ -30,6 +29,10 @@ public:
     double transy(int y);
     double transRatio(); // y/x scaling
     void setMode(int _mode);
+    void prepare(int size);
+    double getValue(double rho); // return a wave height value for this diameter (rho = radius from 0.0 to 1.0)
+    void showPrepare(); // for testing only
+    void setRadius(double radius);
 
 private:
     int height;
@@ -45,8 +48,13 @@ private:
     int dragging_point_index;
     bool bDragging_bev_left;
     bool bDissuadeOverhangs = true;
+    bool bDrawCalculatedPoints = false; // this is for testing purposes only - to examine the data created in prepare()
     int mode=0;  // 0=bezier 1=cubic 2=quadratic
     const double bez_distance_ratio = 15; // take radius of mirror, divide by this number and that's the distance out that the initial bezier control points appear
+    double * wf_array=0;
+    int wf_array_size=0;
+    double mirror_radius; // mm
+
 protected:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent * event) override;
@@ -58,6 +66,10 @@ protected:
     int findPoint(QPoint p1);
     void doCurve(QPainter &painter, int left_point_x, int left_point_y, int right_point_x, int right_point_y);
     void fixOverhangs(int index);
+    
+    int radius_to_index(double r);
+    double rho_to_index(double r);
+    double index_to_radius(int i); // used only for testing
 
 signals:
 

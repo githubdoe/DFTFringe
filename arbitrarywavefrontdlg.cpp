@@ -8,7 +8,7 @@
 #include "qpushbutton.h"
 #include <QLineEdit>
 
-
+ArbitraryWavefrontDlg *ArbitraryWavefrontDlg::m_instance = 0;
 
 ArbitraryWavefrontDlg::ArbitraryWavefrontDlg(QWidget *parent) :
     QDialog(parent),
@@ -27,8 +27,8 @@ ArbitraryWavefrontDlg::ArbitraryWavefrontDlg(QWidget *parent) :
 
     QSpacerItem * spacer1 = new QSpacerItem(25,25);
 
-    QLabel * lblSize = new QLabel("Size:");
-    QLineEdit * txtSize = new QLineEdit("600");
+    //QLabel * lblSize = new QLabel("Size:");
+    m_txtSize = new QLineEdit("600");
 
     layoutRight->setAlignment(Qt::AlignTop);
 
@@ -36,23 +36,23 @@ ArbitraryWavefrontDlg::ArbitraryWavefrontDlg(QWidget *parent) :
     layoutRight->addWidget(butHelp);
 
     layoutRight->addLayout(layoutSize);
-    layoutSize->addWidget(lblSize);
-    layoutSize->addWidget(txtSize);
+    //layoutSize->addWidget(lblSize);
+    //layoutSize->addWidget(m_txtSize);
 
-    cmbMode = new QComboBox();
-    cmbMode->addItem("Bezier",0);
-    cmbMode->addItem("Cubic",1);
-    cmbMode->setCurrentIndex(0);
-    layoutRight->addWidget(cmbMode);
-    cmbMode->setVisible(false);
+    m_cmbMode = new QComboBox();
+    m_cmbMode->addItem("Bezier",0);
+    m_cmbMode->addItem("Cubic",1);
+    m_cmbMode->setCurrentIndex(0);
+    layoutRight->addWidget(m_cmbMode);
+    m_cmbMode->setVisible(false);
 
-    cmbUnit = new QComboBox();
-    cmbUnit->addItem("inch",0);
-    cmbUnit->addItem("cm",1);
-    cmbUnit->addItem("mm",2);
-    cmbUnit->setCurrentIndex(0); // default
-    layoutRight->addWidget(cmbUnit);
-    cmbUnit->show();
+    m_cmbUnit = new QComboBox();
+    m_cmbUnit->addItem("inch",0);
+    m_cmbUnit->addItem("cm",1);
+    m_cmbUnit->addItem("mm",2);
+    m_cmbUnit->setCurrentIndex(0); // default
+    layoutRight->addWidget(m_cmbUnit);
+    m_cmbUnit->show();
 
     layoutRight->addSpacerItem(spacer1);
 
@@ -79,14 +79,26 @@ ArbitraryWavefrontDlg::ArbitraryWavefrontDlg(QWidget *parent) :
     connect(butOk, &QPushButton::pressed, this, &ArbitraryWavefrontDlg::onOkPressed );
     connect(butClose, &QPushButton::pressed, this, &ArbitraryWavefrontDlg::onCancelPressed );
     connect(butHelp, &QPushButton::pressed, this, &ArbitraryWavefrontDlg::onHelpPressed );
-    connect(cmbMode, &QComboBox::currentTextChanged, this, &ArbitraryWavefrontDlg::onModeChange );
-    connect(cmbUnit, &QComboBox::currentTextChanged, this, &ArbitraryWavefrontDlg::onUnitChange );
+    connect(m_cmbMode, &QComboBox::currentTextChanged, this, &ArbitraryWavefrontDlg::onModeChange );
+    connect(m_cmbUnit, &QComboBox::currentTextChanged, this, &ArbitraryWavefrontDlg::onUnitChange );
 
 }
 
 QSize ArbitraryWavefrontDlg::sizeHint() const {
     return QSize(800,400);
 }
+
+int ArbitraryWavefrontDlg::getSize() {
+    return atoi( m_txtSize->text().toStdString().c_str());
+}
+    
+ArbitraryWavefrontDlg* ArbitraryWavefrontDlg::get_instance(){
+    if (m_instance == 0){
+        m_instance = new ArbitraryWavefrontDlg();
+    }
+    return m_instance;
+}    
+
 
 void ArbitraryWavefrontDlg::showEvent(QShowEvent * event) {
     QDialog::showEvent(event);
@@ -112,6 +124,8 @@ void ArbitraryWavefrontDlg::onCancelPressed() {
 
 void ArbitraryWavefrontDlg::onOkPressed() {
     bOkPressed=true;
+    //prepare(1000); // test
+    //pww->showPrepare(); // test
     close();
 }
 
@@ -124,11 +138,11 @@ void ArbitraryWavefrontDlg::onHelpPressed() {
 
 
 void ArbitraryWavefrontDlg::onModeChange() {
-    pww->setMode(cmbMode->currentIndex());
+    pww->setMode(m_cmbMode->currentIndex());
 }
 
 void ArbitraryWavefrontDlg::onUnitChange() {
-    int unit = cmbUnit->currentIndex();
+    int unit = m_cmbUnit->currentIndex();
     switch (unit) {
     case 0:
         pww->ww_unit = ArbitraryWavWidget::in;
@@ -148,5 +162,12 @@ void ArbitraryWavefrontDlg::setNull(double _mirror_null){
     pww->mirror_null = _mirror_null;
 }
 void ArbitraryWavefrontDlg::setDiameter(double _mirror_diam){
-    pww->mirror_radius = _mirror_diam/2;
+    pww->setRadius(_mirror_diam/2);
+}
+
+void ArbitraryWavefrontDlg::prepare(int size) {
+    pww->prepare(size);
+}
+double ArbitraryWavefrontDlg::getValue(double rho) {
+    return pww->getValue(rho);
 }
