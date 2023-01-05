@@ -1,5 +1,4 @@
 #include "arbitrarywavefrontdlg.h"
-#include "ui_arbitrarywavefrontdlg.h"
 #include <QtGui>
 #include <QDebug>
 #include "qboxlayout.h"
@@ -8,11 +7,12 @@
 #include "qpushbutton.h"
 #include <QLineEdit>
 
+
+
 ArbitraryWavefrontDlg *ArbitraryWavefrontDlg::m_instance = 0;
 
 ArbitraryWavefrontDlg::ArbitraryWavefrontDlg(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ArbitraryWavefrontDlg)
+    QDialog(parent)
 
 {
 
