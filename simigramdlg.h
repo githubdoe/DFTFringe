@@ -70,11 +70,15 @@ public:
     std::vector<double> zernikes;
     std::vector<bool> enables;
     void setNewTerms(std::vector<double> terms);
+
     double getObs();
     bool m_doEdge;
     double m_edgeRadius;
     double m_edgeMag;
     double m_edgeSharp;
+
+    bool m_doArbitrary;
+
 
 protected:
     void showEvent(QShowEvent *);
@@ -92,10 +96,14 @@ private slots:
 
     void on_clearAll_pressed();
 
-
     void on_rollTheEdge_clicked(bool checked);
 
     void on_EditEdge_clicked();
+
+    void on_editArbitrary_clicked();
+
+    void on_includeArbitrary_clicked(bool checked);
+
 
 private:
     Ui::simIgramDlg *ui;

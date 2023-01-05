@@ -24,6 +24,8 @@
 #include "surfacemanager.h"
 #include "zernikeprocess.h"
 #include "edgeplot.h"
+#include "arbitrarywavefrontdlg.h"
+
 zTableModel::zTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
     :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable)
 {
@@ -155,6 +157,7 @@ Qt::ItemFlags zTableModel::flags(const QModelIndex & index) const
 simIgramDlg *simIgramDlg::m_instance = 0;
 simIgramDlg::simIgramDlg(QWidget *parent) :
     QDialog(parent),m_doEdge(false),m_edgeRadius(.85),m_edgeMag(.5),m_edgeSharp(3),
+    m_doArbitrary(false),
     ui(new Ui::simIgramDlg)
 {
     ui->setupUi(this);
@@ -292,6 +295,7 @@ void simIgramDlg::on_clearAll_pressed()
 
 
 
+
 void simIgramDlg::on_rollTheEdge_clicked(bool checked)
 {
 
@@ -315,6 +319,26 @@ void simIgramDlg::on_EditEdge_clicked()
         s.setValue("edgePercent", m_edgeRadius);
         s.setValue("edgeSharp",m_edgeSharp);
     }
+
+}
+void simIgramDlg::on_editArbitrary_clicked()
+{
+    ArbitraryWavefrontDlg * dlg = ArbitraryWavefrontDlg::get_instance();
+    mirrorDlg* md = mirrorDlg::get_Instance();
+    if (md->diameter>0)
+        dlg->setDiameter(md->diameter);
+    dlg->setModal(true);
+    dlg->exec();
+    if (dlg->bOkPressed == false)
+        return;
+    m_doArbitrary=true;
+    ui->includeArbitrary->setChecked(true);
+}
+
+
+void simIgramDlg::on_includeArbitrary_clicked(bool checked)
+{
+    m_doArbitrary = checked;
 
 }
 

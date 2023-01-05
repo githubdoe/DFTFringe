@@ -59,7 +59,7 @@
      <x>0</x>
      <y>0</y>
      <width>1065</width>
-     <height>19</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFiles">
@@ -419,7 +419,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
             </property>
             <property name="minimumSize">
              <size>
-              <width>74</width>
+              <width>82</width>
               <height>0</height>
              </size>
             </property>
@@ -491,7 +491,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
             </property>
             <property name="minimumSize">
              <size>
-              <width>74</width>
+              <width>82</width>
               <height>30</height>
              </size>
             </property>
@@ -599,7 +599,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -645,7 +645,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -688,7 +688,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -737,7 +737,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -780,7 +780,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -829,7 +829,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -872,7 +872,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>46</width>
+            <width>50</width>
             <height>0</height>
            </size>
           </property>
@@ -963,7 +963,7 @@ em;
          </property>
          <property name="minimumSize">
           <size>
-           <width>74</width>
+           <width>82</width>
            <height>0</height>
           </size>
          </property>
@@ -1473,6 +1473,11 @@ em;
   <action name="actionSmooth_current_wave_front">
    <property name="text">
     <string>Smooth current wave front</string>
+   </property>
+  </action>
+  <action name="actionArbitrary_Wavefront">
+   <property name="text">
+    <string>Arbitrary Wavefront</string>
    </property>
   </action>
  </widget>

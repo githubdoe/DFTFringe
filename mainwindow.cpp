@@ -819,8 +819,6 @@ void MainWindow::on_actionWavefront_triggered()
                                                 QString("Simulated_Wavefront"));
 }
 
-
-
 void MainWindow::on_actionIgram_triggered()
 {
     m_igramArea->generateSimIgram();
@@ -1780,4 +1778,6 @@ void MainWindow::on_actionSmooth_current_wave_front_triggered()
     dlg->show();
     return;
 }
+
+
 
