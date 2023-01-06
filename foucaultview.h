@@ -73,6 +73,8 @@ private slots:
 
     void saveFoucaultImage();
 
+    void on_overlayProfile_stateChanged(int arg1);
+
 private:
     Ui::foucaultView *ui;
     SurfaceManager *m_sm;

@@ -464,6 +464,13 @@
        </layout>
       </item>
       <item>
+       <widget class="QCheckBox" name="overlayProfile">
+        <property name="text">
+         <string>overlay profile</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

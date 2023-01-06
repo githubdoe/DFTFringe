@@ -102,7 +102,38 @@ void foucaultView::setSurface(wavefront *wf){
     on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
 }
+QVector<QPoint> scaleProfile(QPolygonF points, int width, int pad, bool vertical = false){
+    double left = points[0].x();
+    double right = points.back().x();
+    double max = 0;
+    double min=  1000000;
+    foreach(QPointF p, points){
+        if (p.y() < min)
+            min = p.y();
+        if (p.y() > max)
+            max = p.y();
+    }
+    double xdel = right - left;
+    double xscale = width/xdel;
+    double ydel = max - min;
+    double yscale =  (width/8)/ydel;
+    QVector<QPoint> results;
+    foreach(QPointF p, points){
+        int x,y;
+        if (vertical){
+            y = xscale * (p.x()) + width/2;
+            x = -(p.y() * yscale) + width/2;
+        }
+        else {
+            x = xscale * (p.x()) + width/2;
+            y = -(p.y() * yscale) + width/2;
+        }
+        results << QPoint(x,y);
+    }
+    qDebug() << "profile points" << results;
 
+    return results;
+}
 void foucaultView::on_makePb_clicked()
 {
     m_guiTimer.stop();
@@ -156,8 +187,9 @@ void foucaultView::on_makePb_clicked()
     m_wf->InputZerns = newZerns;
     sv->setSurface(m_wf);
 
-
+    cv::Mat surf_fftRonchi;
     surf_fft = sv->computeStarTest( heightMultiply * sv->nulledSurface(z3), size, pad ,true);
+    surf_fftRonchi = sv->computeStarTest( heightMultiply * sv->nulledSurface(4 * z3), size, pad ,true);
     //showMag(surf_fft, true, "star ", true, gamma);
     size = surf_fft.cols;
 
@@ -282,7 +314,7 @@ void foucaultView::on_makePb_clicked()
     shiftDFT(knifeSlit);
     cv::Mat knifeSurf;
 
-    mulSpectrums(knifeSlit, surf_fft, knifeSurf,0,true);
+    mulSpectrums(knifeSlit, surf_fftRonchi, knifeSurf,0,true);
     idft(knifeSurf, knifeSurf, DFT_SCALE);
     shiftDFT(knifeSurf);
 
@@ -299,10 +331,23 @@ void foucaultView::on_makePb_clicked()
     painter.drawPixmap(0, 0, rp);
     painter.setPen(QPen(QColor(Qt::white)));
     painter.setFont(QFont("Arial", 15));
-    QString zoffsetStr = QString().sprintf("%6.3lf %s", ui->rocOffsetSb->value(),
+    QString zoffsetStr = QString().sprintf("%6.3lf %s", 4 * ui->rocOffsetSb->value(),
                                            ui->useMM->isChecked()? "mm" : "in");
     painter.drawText(20, 40, zoffsetStr);
+    QVector<QPoint> profilePoints;
+    if (ui->overlayProfile->isChecked()){
+        // overlay profile onto ronchi plot
+        QPolygonF  profile = m_sm->m_profilePlot->createProfile(1.,m_wf);
+        profilePoints= scaleProfile(profile, rp.width(),pad, true);
+        painter.setPen(QPen(QColor(Qt::yellow),3));
+        painter.drawLines(profilePoints);
+        profilePoints= scaleProfile(profile, rp.width(),pad, false);
+        painter.drawLines(profilePoints);
+    }
+
     painter.restore();
+
+
     ui->ronchiViewLb->setPixmap(rp);
 
     merge(vknife, 2, complexIn);
@@ -337,7 +382,28 @@ void foucaultView::on_makePb_clicked()
 */
     foucault = foucault.mirrored(true, false);
     s = ui->foucaultViewLb->size();
-    ui->foucaultViewLb->setPixmap(QPixmap::fromImage(foucault.scaledToWidth(s.width())));
+
+    QPixmap rpf = QPixmap::fromImage(foucault.scaledToWidth(s.width()));
+
+    QPainter painterf(&rpf);
+    painterf.save();
+    painterf.drawPixmap(0, 0, rpf);
+    painterf.setPen(QPen(QColor(Qt::white)));
+    painterf.setFont(QFont("Arial", 15));
+    zoffsetStr = QString().sprintf("%6.3lf %s", ui->rocOffsetSb->value(),
+                                   ui->useMM->isChecked()? "mm" : "in");
+    painterf.drawText(20, 40, zoffsetStr);
+    if (ui->overlayProfile->isChecked()){
+        // overlay profile onto ronchi plot
+        painterf.setPen(QPen(QColor(Qt::yellow),3));
+        painterf.drawLines(profilePoints);
+    }
+
+    painterf.restore();
+
+
+    ui->foucaultViewLb->setPixmap(rpf);
+    //ui->foucaultViewLb->setPixmap(QPixmap::fromImage(foucault.scaledToWidth(s.width())));
 
 
 
@@ -585,3 +651,9 @@ void foucaultView::on_saveOnlyFouccault_clicked(bool checked)
 {
 
 }
+
+void foucaultView::on_overlayProfile_stateChanged(int arg1)
+{
+    on_makePb_clicked();
+}
+
