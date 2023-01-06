@@ -362,7 +362,9 @@ void ArbitraryWavWidget::paintEvent(QPaintEvent * /*event*/) {
     else if (wave_height/.125 > 6)
         vertical_spacing=0.25;
 
-    painter.setFont(QFont("Arial",10));
+    QFont font = QFont("Arial",10);
+    font.setPixelSize(15);
+    painter.setFont(font);
     while(y < wave_height) {
         if (y==0)
             painter.setPen(blackPen);
