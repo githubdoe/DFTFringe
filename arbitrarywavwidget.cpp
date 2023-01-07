@@ -14,6 +14,12 @@ ArbitraryWavWidget::ArbitraryWavWidget(QWidget *parent)
     // debugging test pts[1].setLeft(pts[1].x()-3, pts[1].y()-.3,0.1);
     bDragging=false;
     bDraggingBevierPoint = false;
+
+    // the following are just initial values that will not let the transx() and transy() functions get a divide by zero
+    pos_y0=1;
+    graph_height=2;
+    graph_left = 1;
+    pos_edge = 2;
 }
 
 void ArbitraryWavWidget::setRadius(double radius) {
@@ -63,14 +69,7 @@ QSize ArbitraryWavWidget::minimumSizeHint() const {
 }
 
 void ArbitraryWavWidget::resizeEvent(QResizeEvent * /*event*/) {
-    QSize sz = size();
-    height = sz.height();
-    width = sz.width();
 
-    graph_left=45; // where actual lines are being drawn - this is also pixels reserved for y axis labels on left side
-    graph_height=height-22; // pixels reserved for actual graph - height-graph_height is reserved for x axis labels at bottom
-    pos_y0 = graph_height/2;
-    pos_edge = width - (width-graph_left)*0.05; // .05 means 5% reserved to go beyond edge of mirror
 }
 
 // these next 4 functions: transx translates distance in mm to position in our graph and back
@@ -340,13 +339,31 @@ void ArbitraryWavWidget::paintEvent(QPaintEvent * /*event*/) {
     QPen grayPen(Qt::gray, 1, Qt::SolidLine);
     QPen blackPen(Qt::black, 1, Qt::SolidLine);
     QPen bluePen(Qt::blue, 1.5, Qt::SolidLine);
+    QFont font = QFont("Arial",10);
+    painter.setFont(font);
 
-    //painter.drawLine(1,1,100,100);
+    //
+    // calculate some "constants" that we need to know: the size of the graph, the size of the margins and so on.
+    // Note that most of these are also used in transx() and transy() functions which are called on mouse
+    // operations as well as this function paintEvent().  That way we can think of and store most
+    // points as (radius, wave_height) and let the 4 transx(), transy() functions translate to and from pixel positions
+    //
 
+    QSize sz = size();
+    height = sz.height();
+    width = sz.width();
 
+    QFontMetrics fm(font);
+    const int y_axis_font_width = fm.horizontalAdvance("-1.125");
+    const int x_axis_font_width = fm.horizontalAdvance("9999 mm");
+    const int font_height = fm.height();
+    graph_left = y_axis_font_width+3; // space needed left of graph for vertical axis labels plus some extra pixels
+    graph_height = height
+            - (font_height+2); // space needed below graph for x axis labels
+    pos_y0 = graph_height/2;
+    pos_edge = width - (width-graph_left)*0.05; // .05 means 5% reserved to go beyond edge of mirror
 
-    //qDebug() << "h: " << height << " w: " << width;
-    // border
+    // draw border
     painter.drawLine(0,0,0,height-1);
     painter.drawLine(0,height-1,width-1,height-1);
     painter.drawLine(width-1,height-1,width-1,0);
@@ -362,30 +379,35 @@ void ArbitraryWavWidget::paintEvent(QPaintEvent * /*event*/) {
     else if (wave_height/.125 > 6)
         vertical_spacing=0.25;
 
-    QFont font = QFont("Arial");
 
-    painter.setFont(font);
+
     while(y < wave_height) {
         if (y==0)
             painter.setPen(blackPen);
         else
             painter.setPen(grayPen);
 
+        //
+        // upper horizontal lines (+y) and lables
+        //
+
         iy = transy(y);
         painter.drawLine(graph_left, iy, pos_edge, iy);
 
         // text
-        QRect rect1(2,iy-8, graph_left, 20);
+        QRect rect1(2,iy-font_height/2, graph_left, font_height);
         painter.drawText(rect1,QString{ "%1" }.arg(y, 0, 'f', 3));
+
+        //
+        // now do lower horizontal lines (-y) and labels (y=0 line drawn twice)
+        //
 
         iy = transy(-y);
         painter.drawLine(graph_left, iy, pos_edge, iy);
 
         // text
-        QRect rect2(2,iy-8, graph_left, 20);
+        QRect rect2(2,iy-font_height/2, graph_left, font_height);
         painter.drawText(rect2,QString{ "%1" }.arg(-y, 0, 'f', 3));
-
-
 
         y += vertical_spacing;
     }
@@ -443,7 +465,7 @@ void ArbitraryWavWidget::paintEvent(QPaintEvent * /*event*/) {
             break;
         }
 
-        QRect rect2(ix-25,graph_height+1, 50, 20);
+        QRect rect2(ix-x_axis_font_width/2, graph_height+1, x_axis_font_width, font_height);
         painter.drawText(rect2, Qt::AlignCenter, s);
 
         x+=spacing;
