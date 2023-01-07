@@ -65,14 +65,13 @@ ArbitraryWavefrontDlg::ArbitraryWavefrontDlg(QWidget *parent) :
     butClose->show();
 
     pww->ww_unit = ArbitraryWavWidget::in; // default unit
-    layoutAll->addWidget(pww);
-    layoutAll->addLayout(layoutRight);
+    layoutAll->addWidget(pww,10);
+    layoutAll->addLayout(layoutRight,1);
+    QRect rec = QGuiApplication::screens()[0]->geometry();
+    resize(rec.width()/2,rec.height()/2);
     pww->show();
 
-    layoutAll->setSizeConstraint(QLayout::SetMinimumSize);
-
     setLayout(layoutAll);
-    setMinimumSize(800,300); // does nothing!
 
     setWindowTitle("Arbitrary Wavefront Simulation");
 
