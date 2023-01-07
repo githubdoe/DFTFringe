@@ -75,6 +75,8 @@ private slots:
 
     void on_overlayProfile_stateChanged(int arg1);
 
+    void on_RonchiX_valueChanged(double arg1);
+
 private:
     Ui::foucaultView *ui;
     SurfaceManager *m_sm;

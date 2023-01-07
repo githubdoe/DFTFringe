@@ -464,6 +464,35 @@
        </layout>
       </item>
       <item>
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Ronchi ROC Multiplier</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="RonchiX">
+        <property name="toolTip">
+         <string>Ronchi Roc multiplier </string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.500000000000000</double>
+        </property>
+        <property name="value">
+         <double>3.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="overlayProfile">
         <property name="text">
          <string>overlay profile</string>

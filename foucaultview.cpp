@@ -24,7 +24,9 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_makePb_clicked()));
     ui->rocOffsetSb->setSuffix(" inch");
     ui->useMM->setChecked(set.value("simUseMM",false).toBool());
-
+    ui->RonchiX->blockSignals(true);
+    ui->RonchiX->setValue(set.value("RonchiROCFactor", 3).toDouble());
+    ui->RonchiX->blockSignals(false);
     if (ui->useMM->isChecked()){
         on_useMM_clicked(true);
     }
@@ -102,7 +104,8 @@ void foucaultView::setSurface(wavefront *wf){
     on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
 }
-QVector<QPoint> scaleProfile(QPolygonF points, int width, int pad, bool vertical = false){
+QVector<QPoint> scaleProfile(QPolygonF points, int width, int pad,
+                             double angle = 0.){
     double left = points[0].x();
     double right = points.back().x();
     double max = 0;
@@ -116,19 +119,21 @@ QVector<QPoint> scaleProfile(QPolygonF points, int width, int pad, bool vertical
     double xdel = right - left;
     double xscale = width/xdel;
     double ydel = max - min;
-    double yscale =  (width/8)/ydel;
+    double yscale =  (width/2);
     QVector<QPoint> results;
+    double cosangle = cos(angle);
+    double sinangle = sin(angle);
     foreach(QPointF p, points){
-        int x,y;
-        if (vertical){
-            y = xscale * (p.x()) + width/2;
-            x = -(p.y() * yscale) + width/2;
-        }
-        else {
-            x = xscale * (p.x()) + width/2;
-            y = -(p.y() * yscale) + width/2;
-        }
+        double x,y;
+        x = p.x() * xscale;
+        y = p.y() * -yscale;
+        double xx = x * cosangle - y * sinangle;
+        double yy  = x * sinangle + y * cosangle;
+        x  = xx + width/2;
+        y  = yy + width/2;
+
         results << QPoint(x,y);
+
     }
     qDebug() << "profile points" << results;
 
@@ -189,7 +194,8 @@ void foucaultView::on_makePb_clicked()
 
     cv::Mat surf_fftRonchi;
     surf_fft = sv->computeStarTest( heightMultiply * sv->nulledSurface(z3), size, pad ,true);
-    surf_fftRonchi = sv->computeStarTest( heightMultiply * sv->nulledSurface(4 * z3), size, pad ,true);
+    surf_fftRonchi = sv->computeStarTest( heightMultiply *
+            sv->nulledSurface(ui->RonchiX->value() * z3), size, pad ,true);
     //showMag(surf_fft, true, "star ", true, gamma);
     size = surf_fft.cols;
 
@@ -331,18 +337,17 @@ void foucaultView::on_makePb_clicked()
     painter.drawPixmap(0, 0, rp);
     painter.setPen(QPen(QColor(Qt::white)));
     painter.setFont(QFont("Arial", 15));
-    QString zoffsetStr = QString().sprintf("%6.3lf %s", 4 * ui->rocOffsetSb->value(),
+    QString zoffsetStr = QString().sprintf("%6.3lf %s", ui->RonchiX->value() * ui->rocOffsetSb->value(),
                                            ui->useMM->isChecked()? "mm" : "in");
     painter.drawText(20, 40, zoffsetStr);
     QVector<QPoint> profilePoints;
     if (ui->overlayProfile->isChecked()){
         // overlay profile onto ronchi plot
         QPolygonF  profile = m_sm->m_profilePlot->createProfile(1.,m_wf);
-        profilePoints= scaleProfile(profile, rp.width(),pad, true);
+        profilePoints= scaleProfile(profile, rp.width(),pad, M_PI/4.);
         painter.setPen(QPen(QColor(Qt::yellow),3));
         painter.drawLines(profilePoints);
-        profilePoints= scaleProfile(profile, rp.width(),pad, false);
-        painter.drawLines(profilePoints);
+
     }
 
     painter.restore();
@@ -655,5 +660,13 @@ void foucaultView::on_saveOnlyFouccault_clicked(bool checked)
 void foucaultView::on_overlayProfile_stateChanged(int arg1)
 {
     on_makePb_clicked();
+}
+
+
+void foucaultView::on_RonchiX_valueChanged(double arg1)
+{
+    QSettings set;
+    set.setValue("RonchiROCFactor", arg1);
+     m_guiTimer.start(450);
 }
 
