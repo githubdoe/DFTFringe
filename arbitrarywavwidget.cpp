@@ -13,7 +13,7 @@ ArbitraryWavWidget::ArbitraryWavWidget(QWidget *parent)
     //pts.append(CPoint(mirror_radius,0.125, bez_dist)); // optional starting points
     // debugging test pts[1].setLeft(pts[1].x()-3, pts[1].y()-.3,0.1);
     bDragging=false;
-    bDraggingBevierPoint = false;
+    bDraggingBezierPoint = false;
 
     // the following are just initial values that will not let the transx() and transy() functions get a divide by zero
     pos_y0=1;
@@ -32,7 +32,7 @@ void ArbitraryWavWidget::setRadius(double radius) {
     pts.append(CPoint(0,0, bez_dist)); // mandatory
     //pts.append(CPoint(mirror_radius,0.125, bez_dist)); // optional starting points
     bDragging=false;
-    bDraggingBevierPoint = false;
+    bDraggingBezierPoint = false;
 
 }
 
@@ -49,7 +49,6 @@ void ArbitraryWavWidget::setMode(int _mode) {
 
 ArbitraryWavWidget::~ArbitraryWavWidget(){
     pts.empty();
-    qDebug() << "wav widget destructor";
 }
 
 bool comparePoints(const QPointF &a, const QPointF &b) {
@@ -122,8 +121,8 @@ void ArbitraryWavWidget::mousePressEvent(QMouseEvent *event) {
                      (abs(p1.y() - transy(p2.y())) < 8) ) {
                     // found it
                     dragging_point_index = i;
-                    bDragging_bev_left = true;
-                    bDraggingBevierPoint=true;
+                    bDragging_bez_left = true;
+                    bDraggingBezierPoint=true;
                     return;
                 }
 
@@ -132,8 +131,8 @@ void ArbitraryWavWidget::mousePressEvent(QMouseEvent *event) {
                      (abs(p1.y() - transy(p2.y())) < 8) ) {
                     // found it
                     dragging_point_index = i;
-                    bDragging_bev_left = false; // it's the right point
-                    bDraggingBevierPoint=true;
+                    bDragging_bez_left = false; // it's the right point
+                    bDraggingBezierPoint=true;
                     return;
                 }
             }
@@ -152,12 +151,17 @@ void ArbitraryWavWidget::mousePressEvent(QMouseEvent *event) {
             double desired_length = fabs(myPoint.x() - leftPoint.x()) / 2;
             myPoint.lx = myPoint.x() - desired_length;
             // right handle of prev point
-            leftPoint.setRight(leftPoint.x()+desired_length, leftPoint.ry,transRatio());
+            leftPoint.setRight(leftPoint.x()+desired_length*0.95, leftPoint.ry,transRatio());
+            // the 0.95 is a special thing above.  If I don't do this then on all
+            // new points created, the bezier here has equal distance from the two
+            // end points to the nearest bezier control point.  Equal in X exactly.
+            // And equal in y exactly because y distance is always zero (horizontal control
+            // points).  This messes up Sorin's algorithm to test for backwards slopes.
         }
         if (dragging_point_index == pts.size()-1) {
             // added point is last point in list
             CPoint &myPoint = pts[dragging_point_index];
-            myPoint.rx = myPoint.x() + 10; // last point - just make handle 10mm out.  Always
+            myPoint.rx = myPoint.x() + 10; // last point - just make handle 10mm out.  Always.  Not used anyway.
         } else {
             // more points to the right
             CPoint &myPoint = pts[dragging_point_index];
@@ -181,7 +185,7 @@ void ArbitraryWavWidget::mousePressEvent(QMouseEvent *event) {
     }
 }
 void ArbitraryWavWidget::mouseMoveEvent(QMouseEvent *event) {
-    if (bDragging == false && bDraggingBevierPoint == false )
+    if (bDragging == false && bDraggingBezierPoint == false )
         return;
 
     if ( (event->buttons() & Qt::LeftButton) == 0)
@@ -189,8 +193,10 @@ void ArbitraryWavWidget::mouseMoveEvent(QMouseEvent *event) {
 
     // update position of point
     QPoint ip = event->pos();
+    pts[dragging_point_index].save();
 
     if (bDragging) {
+        // user is moving primary point (not one of those side points)
         pts[dragging_point_index].setX(transx(ip.x()));
         pts[dragging_point_index].setY(transy(ip.y()));
 
@@ -201,80 +207,146 @@ void ArbitraryWavWidget::mouseMoveEvent(QMouseEvent *event) {
         if (ip.x() < graph_left)
             pts[dragging_point_index].setX(0); // don't allow points to go outside graph area on left side
 
+        if (testInflections(dragging_point_index) || testInflections(dragging_point_index-1)) {
+            // backwards slope - abort
+            pts[dragging_point_index].restore();
+            return;
+        }
 
-        //qDebug() << "x " << ip.x() << " y " << ip.y() << " tx " << transx(ip.x()) << " ty " << transy(ip.y());
         sortPoints();// this messes up which point is being dragged so re-locate the point
         int i = findPoint(event->pos());
         if (i>=0) {
             dragging_point_index=i;
-            fixOverhangs(i);
         }
     }
-    if (bDraggingBevierPoint) {
+    if (bDraggingBezierPoint) {
+        // user is moving a side point - a control point
         double x = transx(ip.x());
         double y = transy(ip.y());
         if (dragging_point_index == 0)
             y = pts[0].y(); // first point (pts[0]) bez control point forced to be horizontal
-        if (bDragging_bev_left)
+        if (bDragging_bez_left) {
+            pts[dragging_point_index-1].save();
             pts[dragging_point_index].setLeft(x,y,transRatio());
-        else
+
+            if (testInflections(dragging_point_index-1) || testInflections(dragging_point_index)) {
+                // backwards slope - abort
+                pts[dragging_point_index].restore();
+                pts[dragging_point_index-1].restore();
+                return;
+            }
+        }
+        else {
+            // dragging right point
+            if (dragging_point_index>0)
+                pts[dragging_point_index-1].save();
             pts[dragging_point_index].setRight(x,y,transRatio());
-        fixOverhangs(dragging_point_index);
+            bool bAbort = testInflections(dragging_point_index);
+            if (dragging_point_index>0 && bAbort == false)
+                bAbort = testInflections(dragging_point_index-1);
+            if (bAbort) {
+                // backwards slope - abort
+                pts[dragging_point_index].restore();
+                if (dragging_point_index>0)
+                    pts[dragging_point_index-1].restore();
+                return;
+            }
+        }
+
     }
 
     update(); // redraw
 }
 
-void ArbitraryWavWidget::fixOverhangs(int index) {
-    if (bDissuadeOverhangs == false)
-        return;
-    if (index < 0 || index >= pts.size())
-        return;
 
-    if (index>0) {
-        // left handle of point to fix
-        CPoint &myPoint = pts[index];
-        CPoint &leftPoint = pts[index-1];
-        double max_combined_length = fabs(myPoint.x() - leftPoint.x()) * 2;
-        double combined_length = myPoint.x()-myPoint.lx +
-                                leftPoint.rx - leftPoint.x();
-        if (combined_length > max_combined_length) {
-            // scale back both bez handles in x distance
-            double scaleback = max_combined_length/combined_length;
-            myPoint.setLeft(myPoint.x() - (myPoint.x() - myPoint.lx)*scaleback, myPoint.ly, transRatio());
-            leftPoint.setRight(leftPoint.x() + (leftPoint.rx-leftPoint.x())*scaleback, leftPoint.ry, transRatio());
-        }
+bool ArbitraryWavWidget::testInflections(int index) {
+    // test inflection slopes for bez to the right of this cpoint and return true if slope goes backwards
+    if (index < 0 || index >= (pts.size()-1)) {
+        // probably this is the last point.  No bezier to the right of this point
+        return false; // no problems
     }
-    if (index == pts.size()-1) {
-        // point is last point in list - don't mess with right handle
-    } else {
-        // more points to the right
-        CPoint &myPoint = pts[index];
-        CPoint &nextPoint = pts[index+1];
-        double max_combined_length = fabs(nextPoint.x() - myPoint.x()) * 2;
-        double combined_length = nextPoint.x()-nextPoint.lx +
-                                myPoint.rx - myPoint.x();
-        if (combined_length > max_combined_length) {
-            // scale back both bez handles in x distance
-            double scaleback = max_combined_length/combined_length;
-            myPoint.setRight(myPoint.x() + (myPoint.rx - myPoint.x())*scaleback, myPoint.ry, transRatio());
-            nextPoint.setLeft(nextPoint.x() - (nextPoint.x()-nextPoint.lx)*scaleback, nextPoint.ly, transRatio());
-        }
+    QPointF p1 = pts[index];
+    QPointF p2 = pts[index].getRight();
+    QPointF p3 = pts[index+1].getLeft();
+    QPointF p4 = pts[index+1];
+
+    // sorin code starts here
+    double a0x, a1x, a2x, a0y, a1y, a2y;
+    double d0x, d1x, d0y, d1y;
+    double e0x, e0y;
+
+    a0x = p2.x() - p1.x();
+    a0y = p2.y() - p1.y();
+    a1x = p3.x() - p2.x();
+    a1y = p3.y() - p2.y();
+    a2x = p4.x() - p3.x();
+    a2y = p4.y() - p3.y();
+
+    d0x = a1x - a0x;
+    d0y = a1y - a0y;
+    d1x = a2x - a1x;
+    d1y = a2y - a1y;
+
+    e0x = d1x - d0x;
+    e0y = d1y - d0y;
+
+    double p = d0x * e0y - d0y * e0x;
+    double q = a0x * e0y - a0y * e0x;
+    double o = a0x * d0y - a0y * d0x;
+
+    double delta = q * q - 4 * p * o;
+
+    double t1, t2;
+
+    if(delta<0) {
+        //no inflection points
+        return true;
     }
+    if (p==0) {
+        return true; // it could be that this is okay or maybe not.  We can't
+                     // tell.  About half the time it's not okay so just don't allow this.  User can
+                     // move the mouse a tiny bit and if it's okay then it will probably work.  This
+                     // could create jerky movements but in practice it's fine.
+    }
+    t1 = (-q + sqrt(delta)) / (2 * p);
+    t2 = (-q - sqrt(delta)) / (2 * p);
+    // sorin code ends here - now calculate tangent at t1,t2.  If x is negative then at t increases, we are going backwards which is bad
+
+    Bezier::Point bez_pts[4];
+
+    bez_pts[0]= Bezier::Point(p1.x(), p1.y());
+    bez_pts[1]= Bezier::Point(p2.x(), p2.y());
+    bez_pts[2]= Bezier::Point(p3.x(), p3.y());
+    bez_pts[3]= Bezier::Point(p4.x(), p4.y());
+
+    bool bT1Within = (t1>=0 && t1 <= 1);
+    bool bT2Within = (t2>=0 && t2 <= 1);
+
+    Bezier::Bezier<3> bez(bez_pts,4);
+
+    Bezier::Tangent tan1 = bez.tangentAt(t1,false);
+    Bezier::Tangent tan2 = bez.tangentAt(t2,false);
+
+    //qDebug() << "t1within " << t1 << " t1x " << tan1.x << " t1y " << tan1.y << " t2within " << t2 << " t2x " << tan2.x << " t2y " << tan2.y;
 
 
 
+    if (bT1Within && bez.tangentAt(t1,false).x <= 0)
+        return true; // backwards slope
+
+    if (bT2Within && bez.tangentAt(t2,false).x <= 0)
+        return true; // backwards slope
+
+    return false; // no problems
 }
 
 void ArbitraryWavWidget::mouseReleaseEvent(QMouseEvent * event) {
     bDragging = false;
-    bDraggingBevierPoint = false;
+    bDraggingBezierPoint = false;
     int index = findPoint(event->pos());
-    fixOverhangs(index);
 }
 
 void ArbitraryWavWidget::wheelEvent(QWheelEvent *event) {
-    //qDebug() << "wheel event" << event->angleDelta().y();
     if (event->angleDelta().y() > 0) {
         // scroll up.  zoom in.
         wave_height /= 1.1;
@@ -431,7 +503,6 @@ void ArbitraryWavWidget::paintEvent(QPaintEvent * /*event*/) {
         pix_dist = transx(spacing*count);
     }
     spacing *= count;
-    qDebug() << "spacing: " << spacing;
 
     // left edge of graph
     int ix;

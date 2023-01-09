@@ -44,9 +44,9 @@ private:
     double wave_height; // .25 means the graph only goes up to +.25 waves and down to -.25 waves
     void sortPoints();
     bool bDragging;
-    bool bDraggingBevierPoint;
+    bool bDraggingBezierPoint;
     int dragging_point_index;
-    bool bDragging_bev_left;
+    bool bDragging_bez_left;
     bool bDissuadeOverhangs = true;
     bool bDrawCalculatedPoints = false; // this is for testing purposes only - to examine the data created in prepare()
     int mode=0;  // 0=bezier 1=cubic 2=quadratic
@@ -66,7 +66,7 @@ protected:
     int findPoint(QPoint p1);
     void doCurve(QPainter &painter, int left_point_x, int left_point_y, int right_point_x, int right_point_y);
     void fixOverhangs(int index);
-    
+    bool testInflections(int index); // test inflection slopes for bez to the right of this cpoint and return true if inflections changed
     int radius_to_index(double r);
     double rho_to_index(double r);
     double index_to_radius(int i); // used only for testing

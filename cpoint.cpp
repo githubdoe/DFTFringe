@@ -99,3 +99,22 @@ void CPoint::setRight(double _x, double _y, double graph_ratio) {
     lx = x() - distLeft*cos;
     ly = y() - distLeft*cos*slope*graph_ratio;
 }
+void CPoint::save() {
+    // save all our data in secondary storage
+    x1 = x();
+    y1 = y();
+    x2 = lx;
+    y2 = ly;
+    x3 = rx;
+    y3 = ry;
+}
+
+void CPoint::restore() {
+    // restore all our data from secondary storage
+    setX(x1);
+    setY(y1);
+    lx = x2;
+    ly = y2;
+    rx = x3;
+    ry = y3;
+}
