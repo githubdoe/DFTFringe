@@ -151,12 +151,7 @@ void ArbitraryWavWidget::mousePressEvent(QMouseEvent *event) {
             double desired_length = fabs(myPoint.x() - leftPoint.x()) / 2;
             myPoint.lx = myPoint.x() - desired_length;
             // right handle of prev point
-            leftPoint.setRight(leftPoint.x()+desired_length*0.95, leftPoint.ry,transRatio());
-            // the 0.95 is a special thing above.  If I don't do this then on all
-            // new points created, the bezier here has equal distance from the two
-            // end points to the nearest bezier control point.  Equal in X exactly.
-            // And equal in y exactly because y distance is always zero (horizontal control
-            // points).  This messes up Sorin's algorithm to test for backwards slopes.
+            leftPoint.setRight(leftPoint.x()+desired_length, leftPoint.ry,transRatio());
         }
         if (dragging_point_index == pts.size()-1) {
             // added point is last point in list
@@ -303,13 +298,12 @@ bool ArbitraryWavWidget::testInflections(int index) {
         return true;
     }
     if (p==0) {
-        return true; // it could be that this is okay or maybe not.  We can't
-                     // tell.  About half the time it's not okay so just don't allow this.  User can
-                     // move the mouse a tiny bit and if it's okay then it will probably work.  This
-                     // could create jerky movements but in practice it's fine.
+        t1=-o/q;
+        t2=t1;
+    } else {
+        t1 = (-q + sqrt(delta)) / (2 * p);
+        t2 = (-q - sqrt(delta)) / (2 * p);
     }
-    t1 = (-q + sqrt(delta)) / (2 * p);
-    t2 = (-q - sqrt(delta)) / (2 * p);
     // sorin code ends here - now calculate tangent at t1,t2.  If x is negative then at t increases, we are going backwards which is bad
 
     Bezier::Point bez_pts[4];
