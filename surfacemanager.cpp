@@ -2892,7 +2892,7 @@ void SurfaceManager::report(){
         QString pixStat("mydata://pixStat.png");
         doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
                          QVariant(pixStats));
-        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Hitogram and SLope error</th></tr> <tr><td> <img src = '" +
+        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Histogram and SLope error</th></tr> <tr><td> <img src = '" +
                            pixStat + "'></td></tr></table>");
     }
     editor->setHtml(title + html +zerns + contourHtml+ tail);
