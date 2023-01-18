@@ -462,7 +462,7 @@ void ArbitraryWavWidget::paintEvent(QPaintEvent * /*event*/) {
 
         // text
         QRect rect1(2,iy-font_height/2, graph_left, font_height);
-        painter.drawText(2,iy-font_height/2,QString{ "%1" }.arg(y, 0, 'f', 3));
+        painter.drawText(rect1,QString{ "%1" }.arg(y, 0, 'f', 3));
 
         //
         // now do lower horizontal lines (-y) and labels (y=0 line drawn twice)
