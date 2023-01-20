@@ -11,9 +11,23 @@ CPoint::CPoint(double _x, double _y, double bez_dist) : QPointF(_x,_y) {
     ly = _y;
     rx = _x + bez_dist;
     ry = _y;
-
+}
+CPoint::CPoint(QJsonObject &obj):
+    QPointF(obj["x"].toDouble(),obj["y"].toDouble()){
+    lx = obj["lx"].toDouble();
+    ly = obj["ly"].toDouble();
+    rx = obj["rx"].toDouble();
+    ry = obj["ry"].toDouble();
 }
 
+void CPoint::toJson(QJsonObject &obj){
+    obj["x"] = x();
+    obj["y"] = y();
+    obj["lx"] = lx;
+    obj["ly"] = ly;
+    obj["rx"] = rx;
+    obj["ry"] = ry;
+}
 void CPoint::setX(qreal _x) {
     double dx = _x - x();
     QPointF::setX(_x);

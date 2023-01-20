@@ -1,7 +1,7 @@
 #ifndef CPOINT_H
 #define CPOINT_H
 #include <QtGui>
-
+#include <QJsonObject>
 class CPoint // aka "control point"
         : public QPointF
 {
@@ -11,6 +11,7 @@ class CPoint // aka "control point"
 public:
     CPoint(double _x, double _y);
     CPoint(double _x, double _y, double bez_dist);
+    CPoint(QJsonObject &obj);
     double lx,ly,rx,ry; // left and right bezier control points
     void save();  // save all our data in secondary storage
     void restore(); // restore all our data from secondary storage
@@ -24,6 +25,7 @@ public:
     void setRight(double x, double y, double graph_ratio);
     void setX(qreal _x);
     void setY(qreal _y);
+    void toJson(QJsonObject &obj);
     int inflection1; // can be -1,0,1 Slope of inflection point or 0 if indeterminate.  For bezier to the right of this cpoint.
     int inflection2; // slope of second inflection point for bezier to the right of this cpoint
 private:

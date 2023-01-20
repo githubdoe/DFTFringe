@@ -24,8 +24,8 @@
 #include "surfacemanager.h"
 #include "zernikeprocess.h"
 #include "edgeplot.h"
-#include "arbitrarywavefrontdlg.h"
-
+//#include "arbitrarywavefrontdlg.h"
+#include "userdrawnprofiledlg.h"
 zTableModel::zTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
     :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable)
 {
@@ -323,7 +323,7 @@ void simIgramDlg::on_EditEdge_clicked()
 }
 void simIgramDlg::on_editArbitrary_clicked()
 {
-    ArbitraryWavefrontDlg * dlg = ArbitraryWavefrontDlg::get_instance();
+    UserDrawnProfileDlg * dlg = UserDrawnProfileDlg::get_instance();
     mirrorDlg* md = mirrorDlg::get_Instance();
     if (md->diameter>0)
         dlg->setDiameter(md->diameter);

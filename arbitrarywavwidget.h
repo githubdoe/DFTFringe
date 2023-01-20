@@ -33,7 +33,9 @@ public:
     double getValue(double rho); // return a wave height value for this diameter (rho = radius from 0.0 to 1.0)
     void showPrepare(); // for testing only
     void setRadius(double radius);
-
+    void setYscale(double value);
+    void saveJson();
+    void readJson();
 private:
     int height;
     int width;
@@ -72,6 +74,7 @@ protected:
     double index_to_radius(int i); // used only for testing
 
 signals:
+    void yScaleChanged(double scale);
 
 };
 

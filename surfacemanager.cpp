@@ -2689,14 +2689,16 @@ void SurfaceManager::report(){
     printer.setFullPage( false );
     printer.setOutputFileName( dlg.fileName );
     printer.setOutputFormat( QPrinter::PdfFormat );
-    qDebug() << "set resolution" << printer.resolution();
+    QRect printer_rect = printer.pageLayout().paintRectPixels(printer.resolution());
+    qDebug() << "printer rect" << printer_rect;
     printer.setPageSize(QPageSize(QPageSize::A4));
-    int width = printer.pageLayout().paintRectPixels(printer.resolution()).width()-200;
+    int width = printer_rect.width()-200;
 
-    int height = printer.pageLayout().paintRectPixels(printer.resolution()).height();
-    qDebug() << "set resolution" << printer.resolution() << width << height;
+    int height = printer_rect.height();
+
     QTextEdit *editor = new QTextEdit;
-    editor->resize(printer.pageRect().size());
+
+    editor->resize(width,height);
 
     mirrorDlg *md = mirrorDlg::get_Instance();
     wavefront *wf = m_wavefronts[m_currentNdx];
@@ -2782,8 +2784,8 @@ void SurfaceManager::report(){
     // get the contour plot image
 
 
-        m_contourView->resize(width,width);
-        QImage contWindow = QImage(width,width,QImage::Format_ARGB32 );
+        m_contourView->resize(2000,2000);
+        QImage contWindow = QImage(2000,2000,QImage::Format_ARGB32 );
         QPainter p1(&contWindow);
         m_contourView->repaint();
         m_contourView->render(&p1);
@@ -2892,7 +2894,7 @@ void SurfaceManager::report(){
         QString pixStat("mydata://pixStat.png");
         doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
                          QVariant(pixStats));
-        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Histogram and SLope error</th></tr> <tr><td> <img src = '" +
+        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Hidtogram and SLope error</th></tr> <tr><td> <img src = '" +
                            pixStat + "'></td></tr></table>");
     }
     editor->setHtml(title + html +zerns + contourHtml+ tail);

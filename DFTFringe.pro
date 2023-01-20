@@ -23,7 +23,6 @@ TEMPLATE = app
 CONFIG += ``
 
 SOURCES += main.cpp\
-    arbitrarywavefrontdlg.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
     cpoint.cpp \
@@ -43,6 +42,7 @@ SOURCES += main.cpp\
     surface3dcontrolsdlg.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
+    userdrawnprofiledlg.cpp \
     wavefront.cpp \
     contourplot.cpp \
     contourtools.cpp \
@@ -141,7 +141,6 @@ SOURCES += main.cpp\
     punwrap.cpp
 
 HEADERS  += mainwindow.h \
-    arbitrarywavefrontdlg.h \
     arbitrarywavefronthelp.h \
     arbitrarywavwidget.h \
     bezier.h \
@@ -160,6 +159,7 @@ HEADERS  += mainwindow.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
     surfacelightingproxy.h \
+    userdrawnprofiledlg.h \
     wavefront.h \
     contourplot.h \
     contourtools.h \
@@ -275,6 +275,7 @@ FORMS    += mainwindow.ui \
     surfaceanalysistools.ui \
     prefsdlg.ui \
     metricsdisplay.ui \
+    userdrawnprofiledlg.ui \
     zernikedlg.ui \
     mirrordlg.ui \
     wavefrontnulldlg.ui \

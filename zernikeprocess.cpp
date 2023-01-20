@@ -24,8 +24,8 @@
 #include "simigramdlg.h"
 #include "settings2.h"
 #include "myutils.h"
-#include "arbitrarywavefrontdlg.h"
-
+//#include "arbitrarywavefrontdlg.h"
+#include "userdrawnprofiledlg.h"
 std::vector<bool> zernEnables;
 std::vector<double> zNulls;
 double BestSC = -1.;
@@ -980,7 +980,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
     }
 
 
-    ArbitraryWavefrontDlg * dlg_arbitrary = ArbitraryWavefrontDlg::get_instance();
+    UserDrawnProfileDlg * dlg_arbitrary = UserDrawnProfileDlg::get_instance();
     if (dlg.m_doArbitrary)
         dlg_arbitrary->prepare(dlg.size);
 

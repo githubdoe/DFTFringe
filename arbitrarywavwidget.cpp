@@ -1,7 +1,10 @@
 #include "arbitrarywavwidget.h"
 #include "bezier.h"
-
-
+#include <QJsonDocument>
+#include <QJsonValue>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QFileDialog>
 ArbitraryWavWidget::ArbitraryWavWidget(QWidget *parent)
     : QWidget{parent} {
     mirror_null = 0;
@@ -101,7 +104,77 @@ int ArbitraryWavWidget::findPoint(QPoint p1) {
     }
     return -1; // not found
 }
+void ArbitraryWavWidget::readJson(){
 
+    QSettings set;
+
+    QString last_path = set.value("userProfilePath", ".").toString();
+    QString fileName = QFileDialog::getOpenFileName((QWidget* )0, "Save PDF",
+            last_path + "/userProfile.json","*.json");
+
+    if (fileName.isEmpty())
+        return;
+
+
+    QFile loadFile(fileName);
+
+    if (!loadFile.open(QIODevice::ReadOnly)) {
+        qWarning("Couldn't open save file.");
+        return;
+    }
+
+    QFileInfo info(fileName);
+    QString lastPath = info.absolutePath();
+    set.setValue("userProfilePath",lastPath);
+    QByteArray saveData = loadFile.readAll();
+
+    QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
+
+    QJsonArray bzpoints = loadDoc["bzpoints"].toArray();
+    pts.clear();
+    for (int ndx = 0; ndx < bzpoints.size(); ++ndx){
+        QJsonObject jpt = bzpoints[ndx].toObject();
+        CPoint cpt(jpt);
+        pts << cpt;
+    }
+    update();
+}
+void ArbitraryWavWidget::saveJson(){
+
+    QSettings set;
+
+    QString last_path = set.value("userProfilePath", ".").toString();
+    QString fileName = QFileDialog::getSaveFileName((QWidget* )0, "Save PDF",
+            last_path + "/userProfile.json","*.json");
+
+    if (fileName.isEmpty())
+        return;
+
+
+
+    QJsonArray data;
+    foreach( CPoint pt, pts){
+        QJsonObject jpoint;
+        pt.toJson(jpoint);
+        data.append(jpoint);
+
+    }
+    QJsonObject jobj;
+    jobj["bzpoints"] = data;
+    QJsonDocument json = QJsonDocument(jobj);
+
+    QFile saveFile(fileName);
+
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        qWarning("Couldn't open save file.");
+        return;
+    }
+    QFileInfo info(saveFile);
+    qDebug() << info.absoluteFilePath();
+    saveFile.write(json.toJson());
+    saveFile.close();
+
+}
 void ArbitraryWavWidget::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         dragging_point_index = findPoint(event->pos());
@@ -350,9 +423,14 @@ void ArbitraryWavWidget::wheelEvent(QWheelEvent *event) {
         wave_height *= 1.1;
     }
     update(); // redraw
+    emit yScaleChanged(wave_height);
     event->accept();
 }
 
+void ArbitraryWavWidget::setYscale(double value){
+    wave_height = value;
+    update();
+}
 void ArbitraryWavWidget::doCurve(QPainter &painter, int left_point_x, int left_point_y, int right_point_x, int right_point_y) {
     // do a cubic double curve (an S curve) such that slope is zero at each end
     // Formula is basically in the form of y=jerk*x^3 for each of the 2 curves
