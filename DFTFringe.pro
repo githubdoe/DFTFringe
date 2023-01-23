@@ -37,8 +37,10 @@ SOURCES += main.cpp\
     dfttools.cpp \
     dftarea.cpp \
     mikespsirinterface.cpp \
+    oglrendered.cpp \
     profileplot.cpp \
     psiresizeimagesdlg.cpp \
+    reportpage2.cpp \
     surface3dcontrolsdlg.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
@@ -153,8 +155,10 @@ HEADERS  += mainwindow.h \
     graphicsutilities.h \
     dfttools.h \
     dftarea.h \
+    oglrendered.h \
     profileplot.h \
     psiresizeimagesdlg.h \
+    reportpage2.h \
     spline.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
@@ -267,10 +271,12 @@ FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
     edgeplot.ui \
+    oglrendered.ui \
     profilearea.ui \
     profileplot.ui \
     contourtools.ui \
     psiresizeimagesdlg.ui \
+    reportpage2.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
     prefsdlg.ui \

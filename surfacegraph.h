@@ -48,7 +48,8 @@ public:
     explicit SurfaceGraph(Q3DSurface *surface);
     ~SurfaceGraph();
 
-
+    QLabel * m_legend;
+    Q3DSurface *m_graph;
     void enableSqrtSinModel(bool enable);
 
     //! [0]
@@ -82,6 +83,7 @@ public:
     void setGraphColors();
     void setLegend(QLabel * legend) {m_legend = legend;}
     QImage render(int width, int height);
+    QSize Size();
 public Q_SLOTS:
     void changeTheme(int theme);
     void setColorMap(int ndx);
@@ -93,7 +95,7 @@ public Q_SLOTS:
 signals:
     void yOffsetValue(double val);
 private:
-    Q3DSurface *m_graph;
+
     QSurfaceDataProxy *m_mirrorSurfaceProxy;
     QSurfaceDataProxy *m_colorLabelProxy;
     QSurface3DSeries *m_wavefrontSeries;
@@ -133,7 +135,7 @@ private:
     void setAxisXRange(float min, float max);
     void setAxisZRange(float min, float max);
     void fillSurfaceProxy();
-    QLabel * m_legend;
+
     double m_colorRange;
 };
 

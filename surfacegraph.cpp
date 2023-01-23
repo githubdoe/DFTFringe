@@ -175,7 +175,7 @@ void SurfaceGraph::setGraphColors(){
     QLinearGradient gr;
     int height = m_graph->height();
     int width = widthf + 60;
-    int border = 20;
+    int border = 40;
     QLinearGradient grl(0, 0, 1, height - 2 * border);
     QVector< double> pos = m_colorMap->colorStops();
     m_gradientScale =  m_maxHeight/m_yGridHeight;
@@ -201,13 +201,13 @@ void SurfaceGraph::setGraphColors(){
     QPainter pmp(&pm);
     pmp.setBrush(QBrush(grl));
     pmp.setPen(Qt::NoPen);
-    pmp.drawRect(border, border, 35, height - 2 * border);
+    pmp.drawRect(5, border, 35, height - 2 * border);
     pmp.setPen(Qt::black);
     int step = (height - 2 * border) / 5;
     for (int i = 0; i < 6; i++) {
         int yPos = height -i * step -border;
         pmp.drawLine(border, yPos, 55, yPos);
-        pmp.drawText(60, yPos + 2, QString("%1 ").arg(pround(i/5. * m_maxHeight,1.5),0,'f',2));
+        pmp.drawText(border/2 + 40, yPos + 2, QString("%1 ").arg(pround(i/5. * m_maxHeight,1.5),0,'f',2));
     }
 
 
@@ -477,7 +477,9 @@ void SurfaceGraph::setGreenToRedGradient()
     m_graph->seriesList().at(0)->setBaseGradient(gr);
     m_graph->seriesList().at(0)->setColorStyle(Q3DTheme::ColorStyleRangeGradient);
 }
-
+QSize SurfaceGraph::Size(){
+    return  m_graph->size();
+}
 QImage SurfaceGraph::render(int width, int height){
     return m_graph->renderToImage(0, QSize(width,height));
 }
