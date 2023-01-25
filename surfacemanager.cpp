@@ -2688,8 +2688,11 @@ void SurfaceManager::showAllContours(){
 // This makes the zern table fit just right in the PDF width
 //  However The images first be scaled to fit in the PDF width or they will be cropped.
 //  Also they must be made larger to begin with so that they have good resolution.
-
+#include "pdfcalibrationdlg.h"
 void SurfaceManager::report(){
+    PdfCalibrationDLg caldlg;
+    caldlg.exec();
+    int right_crop = caldlg.m_rightCrop;
     if (m_wavefronts.size() == 0){
         QMessageBox::warning(0, tr(""),
                              tr("No wave front loaded to create a report for."));
@@ -2864,8 +2867,12 @@ void SurfaceManager::report(){
     QRectF r = TrialPainter->viewport();
     TrialPainter->end();
 
-    QImage SurfaceImage =m_SurfaceGraph->render(1000, 1000);
+    QImage SurfaceImage =m_SurfaceGraph->render(right_crop, right_crop);
+    QLabel *myLabel2 = new QLabel;
 
+    myLabel2->setPixmap(QPixmap::fromImage(zernsImage));
+    myLabel2->setWindowTitle("3d Surface");
+    myLabel2->show();
     QImage legend(lsize, QImage::Format_ARGB32);
     m_SurfaceGraph->m_legend->render(&legend);
     oglw.getLegend()->setPixmap(QPixmap::fromImage(legend ));
@@ -2874,7 +2881,7 @@ void SurfaceManager::report(){
     QImage surfaceandLegend(surfSize * 1.25, QImage::Format_ARGB32);
     QPainter painterSurfaceandLegend(&surfaceandLegend);
     oglw.render(&painterSurfaceandLegend);
-    editor->resize(1000,1000);
+    editor->resize(right_crop,right_crop);
     QTextCursor cursor = editor->textCursor();
     QTextDocument *document = editor->document();
     document->addResource(QTextDocument::ImageResource, QUrl("image"), SurfaceImage);

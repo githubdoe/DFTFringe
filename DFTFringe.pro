@@ -38,6 +38,7 @@ SOURCES += main.cpp\
     dftarea.cpp \
     mikespsirinterface.cpp \
     oglrendered.cpp \
+    pdfcalibrationdlg.cpp \
     profileplot.cpp \
     psiresizeimagesdlg.cpp \
     reportpage2.cpp \
@@ -156,6 +157,7 @@ HEADERS  += mainwindow.h \
     dfttools.h \
     dftarea.h \
     oglrendered.h \
+    pdfcalibrationdlg.h \
     profileplot.h \
     psiresizeimagesdlg.h \
     reportpage2.h \
@@ -272,6 +274,7 @@ FORMS    += mainwindow.ui \
     dftarea.ui \
     edgeplot.ui \
     oglrendered.ui \
+    pdfcalibrationdlg.ui \
     profilearea.ui \
     profileplot.ui \
     contourtools.ui \
