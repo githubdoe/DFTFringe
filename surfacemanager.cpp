@@ -72,7 +72,8 @@
 #include "transformwavefrontdlg.h"
 #include "psi_dlg.h"
 #include "opencv2/opencv.hpp"
-
+#include "reportpage2.h"
+#include "oglrendered.h"
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -2672,37 +2673,57 @@ void SurfaceManager::showAllContours(){
     w->show();
     QApplication::restoreOverrideCursor();
 }
-#include "oglrendered.h"
+
+// This builds the report using a couple of techniques
+// First the zern table at the top is formated using html into a QTextEdit.
+// The first images are arranged on a singe page as QLabels and Widget layouts
+// because it is easier to let the layout system figure out the geometry to do so.
+// Doing so in the HTML support of the QTextEdit was not easy since it's HTML support
+// for the tags needed did not exist.
+// Turning it all into a pdf uses the QPrinter class which paints those things onto the page
+// just like a QPainter does.
+// Each image is obtained from the widget that hold it using the render function of the widget.
+
+// The other way is to use the TextEdit for all and use it's print to PDFprinter function.
+// This makes the zern table fit just right in the PDF width
+//  However The images first be scaled to fit in the PDF width or they will be cropped.
+//  Also they must be made larger to begin with so that they have good resolution.
+
 void SurfaceManager::report(){
     if (m_wavefronts.size() == 0){
         QMessageBox::warning(0, tr(""),
                              tr("No wave front loaded to create a report for."));
         return;
     }
-    ReportDlg dlg;
+
+    // The actual PDF printer.
+    QPrinter printer(QPrinter::QPrinter::HighResolution);
+
+
+    //setup printer
+    printer.setColorMode( QPrinter::Color );
+    printer.setFullPage( false );
+    printer.setOutputFormat( QPrinter::PdfFormat );
+    printer.setPageSize(QPageSize(QPageSize::A4));
+
+
+    QSettings set;
+    int dpi = set.value("Printer PDI", 310).toInt();
+    ReportDlg dlg(&printer);
+    dlg.setDPI(dpi);
     if (!dlg.exec())
         return;
 
-    QPrinter printer(QPrinter::QPrinter::HighResolution);
-
-   // QPrinter printer(QPrinter::QPrinter::HighResolution);
-    printer.setColorMode( QPrinter::Color );
-    printer.setFullPage( false );
+    set.setValue("Printer PDI",printer.resolution());
     printer.setOutputFileName( dlg.fileName );
-    printer.setOutputFormat( QPrinter::PdfFormat );
-    printer.setPageSize(QPageSize(QPageSize::A4));
-    printer.setResolution(300);
+    int width = printer.width();
+    int height = printer.height();
+
     QRect printer_rect = printer.pageLayout().paintRectPixels(printer.resolution());
-    qDebug() << "printer rect" << printer_rect << printer.resolution();
-
-
-    int width = printer_rect.width();
-
-    int height = printer_rect.height();
-
-
+    qDebug() << "printer rect" << printer_rect << printer.resolution() << width << height;
+    QPainter PDFPainter;//(&printer);  //Paints stuff to pdf printer
     QTextEdit *editor = new QTextEdit;
-
+    //editor->resize(width/2,height/2);
 
 
     mirrorDlg *md = mirrorDlg::get_Instance();
@@ -2795,23 +2816,28 @@ void SurfaceManager::report(){
 
 
     QString contourHtml;
-    int imwidth = width/2 - 100;
 
-    QPainter PDFPainter(&printer);
+
 
     // use the screen size as a guide to how big to size the editor.
     QRect rec = QGuiApplication::screens()[0]->geometry();
-    QImage zernsImage(rec.width()/2,rec.height(),QImage::Format_ARGB32);
+    QImage zernsImage(width,height,QImage::Format_ARGB32);
     QPainter zernsPainter(&zernsImage);
 
-    editor->resize(rec.width()/2, rec.height());
-    editor->render(&zernsPainter);
-    PDFPainter.drawImage(0,0,zernsImage);
-//    QLabel *myLabel = new QLabel;
-//    myLabel->setPixmap(QPixmap::fromImage(zernsImage));
-//    myLabel->setWindowTitle("test window");
-//    myLabel->show();
-    printer.newPage();
+    //editor->resize(width, height);
+    qDebug() << "sizes" << width << height << editor->size();
+
+//editor->print(&printer);
+
+
+    //PDFPainter.drawImage(0,0,zernsImage);
+    //return;
+    QLabel *myLabel = new QLabel;
+    myLabel->setPixmap(QPixmap::fromImage(zernsImage));
+    myLabel->setWindowTitle("test window");
+    //myLabel->show();
+    //editor->show();
+
     oglRendered oglw;
 
     QSize cs1 =  ((MainWindow*)(parent()))->review->size();
@@ -2822,17 +2848,67 @@ void SurfaceManager::report(){
     ((MainWindow*)(parent()))->review->render(&reviewPainter);
     // Add OGL back into review image  Use size of surface graph
     QSize surfSize = m_SurfaceGraph->Size();
-
     QSize lsize = m_SurfaceGraph->m_legend->size();
     lsize.setHeight(lsize.height() + 100);
-    QImage SurfaceImage =m_SurfaceGraph->render(surfSize.width(), surfSize.height());
+
+    // reneder surface into this sized image This size must be as large as the surface or it will crop.
+    // the size should also be the size of the printed document width
+    // figuring that out is the puzzle
+
+    // so make the size of the surface the size we want somehow.
+
+    // First try with 1000,1000 made a nice textedit. But the pdf on the low res laptop cropped the surface
+    // image.
+
+    QPainter *TrialPainter = new QPainter(&printer);
+    QRectF r = TrialPainter->viewport();
+    TrialPainter->end();
+
+    QImage SurfaceImage =m_SurfaceGraph->render(1000, 1000);
+
     QImage legend(lsize, QImage::Format_ARGB32);
     m_SurfaceGraph->m_legend->render(&legend);
     oglw.getLegend()->setPixmap(QPixmap::fromImage(legend ));
-
     oglw.getModel()->setPixmap(QPixmap::fromImage(SurfaceImage));
-    oglw.render(&PDFPainter);
 
+    QImage surfaceandLegend(surfSize * 1.25, QImage::Format_ARGB32);
+    QPainter painterSurfaceandLegend(&surfaceandLegend);
+    oglw.render(&painterSurfaceandLegend);
+    editor->resize(1000,1000);
+    QTextCursor cursor = editor->textCursor();
+    QTextDocument *document = editor->document();
+    document->addResource(QTextDocument::ImageResource, QUrl("image"), SurfaceImage);
+    cursor.movePosition(QTextCursor::End);
+    cursor.insertImage("image");
+
+    editor->show();
+editor->print(&printer);
+return;
+    // move oglw into reportPage2
+    ReportPage2 *page2 = new ReportPage2();
+    page2->Surface()->setPixmap(QPixmap::fromImage(surfaceandLegend));
+
+    // get the contour plot image
+        //m_contourView->resize(imwidth,imwidth);
+        QSize stmp = m_contourView->size() * 1.25;
+        QImage contourImg(stmp, QImage::Format_ARGB32);
+        QPainter contourPainter(&contourImg);
+        m_contourView->repaint();
+        m_contourView->render(&contourPainter);
+        page2->Contour()->setPixmap(QPixmap::fromImage(contourImg));
+
+     //get the profile plot image
+        QImage profile = QImage(m_profilePlot->size(),QImage::Format_ARGB32);
+        QPainter p2(&profile);
+        ((MainWindow*)(parent()))->m_profilePlot->render(&p2);
+        page2->Profile()->setPixmap(QPixmap::fromImage(profile));
+
+//        QLabel *myLabel = new QLabel;
+//        myLabel->setPixmap(QPixmap::fromImage(contourImg));
+//        myLabel->setWindowTitle("test window");
+//        myLabel->show();
+
+          page2->render(&PDFPainter, QPoint(0,height/2 - height/10));
     //reviewPainter.drawImage(oglRect,SurfaceImage, QRectF(10,50, 900,900));
 
     int smallerW = cs1.width() * .9;
@@ -2844,17 +2920,17 @@ void SurfaceManager::report(){
 
     // get the 3D image
 
-        QImage ddd = m_SurfaceGraph->render(imwidth, imwidth);
-        PDFPainter.drawImage(QPoint( 10, 300), ddd);
-        PDFPainter.drawText(QRect(10,5,imwidth/2, 250), Qt::AlignHCenter,"3D ddddPlot");
-    printer.newPage();
-    // get the contour plot image
-        QSize stmp = m_contourView->size();
-        m_contourView->resize(imwidth,imwidth);
-        m_contourView->repaint();
-        m_contourView->render(&PDFPainter,QPoint(imwidth + 50,300));
-        m_contourView->resize(stmp);
-        PDFPainter.drawText(QRect(imwidth,5,imwidth, 250), Qt::AlignHCenter,"contour Plot");
+//        QImage ddd = m_SurfaceGraph->render(imwidth, imwidth);
+//        PDFPainter.drawImage(QPoint( 10, 300), ddd);
+//        PDFPainter.drawText(QRect(10,5,imwidth/2, 250), Qt::AlignHCenter,"3D ddddPlot");
+//    printer.newPage();
+//    // get the contour plot image
+//        QSize stmp = m_contourView->size();
+//        m_contourView->resize(imwidth,imwidth);
+//        m_contourView->repaint();
+//        m_contourView->render(&PDFPainter,QPoint(imwidth + 50,300));
+//        m_contourView->resize(stmp);
+//        PDFPainter.drawText(QRect(imwidth,5,imwidth, 250), Qt::AlignHCenter,"contour Plot");
 
 
     return;
