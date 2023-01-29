@@ -51,14 +51,14 @@ void contourView::zoom(){
 }
 
 QImage contourView::getPixstatsImage(){
-    resize(3000,3000);
-    QImage psImage = QImage(size(),QImage::Format_ARGB32 );
+    //resize(3000,2000);
+    QImage psImage = QImage(1500,2000,QImage::Format_ARGB32 );
     QPainter p3(&psImage);
+    ps->resize(1000,2000);
     ps->render(&p3);
 
     return psImage;
 }
-
 
 
 void contourView::setSurface(wavefront *wf){

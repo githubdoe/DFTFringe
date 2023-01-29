@@ -15,24 +15,41 @@ public:
     explicit ReportDlg(QPrinter *printer, QWidget *parent = 0);
     ~ReportDlg();
     bool show_startest;
-    bool show_foucault;
-    bool show_histogram;
-    bool show_profile;
+     bool show_profile;
     bool show_igram;
     QString fileName;
     QString title;
     QPrinter *m_printer;
-    void setDPI(int);
-    int getDPI();
+    double contourWidth;
+    double surfaceWidth;
+    double profileWidth;
+    double ronchiWidth;
+    double igramWidth;
+    double histoWidth;
+    double startestWidth;
+
 
 
 private slots:
 
     void on_buttonBox_accepted();
 
-    void on_DPI_valueChanged(int arg1);
+    void on_contourWidth_valueChanged(double arg1);
 
-private:
+    void on_igramWidth_valueChanged(double arg1);
+
+    void on_SurfaceWidth_valueChanged(double arg1);
+
+    void on_profileWidth_valueChanged(double arg1);
+
+    void on_ronchiWidth_valueChanged(double arg1);
+
+    void on_pixelHistoWidth_valueChanged(double arg1);
+
+    void on_startestWidth_valueChanged(double arg1);
+
+
+public:
     Ui::ReportDlg *ui;
 };
 

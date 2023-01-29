@@ -520,8 +520,9 @@ cv::Mat make_obstructionMask(cv::Mat mask){
     //cv::circle(out, Point(s/2 ,s/4), s/20, cv::Scalar(0,0,0), -1);
     //}
     //line(out, Point(s/2-offset, s/2), Point(s - offset,s/2),cv::Scalar(0,0,0), stalkWidth);
-    line(out, Point(s/2+offset, s/2), Point(s/2+offset,s),cv::Scalar(0,0,0), stalkWidth);
-    line(out, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), stalkWidth);
+    cv::rectangle(out, Point(s/2-s/20, 0), Point(s/2+s/20, s/2),
+                  cv::Scalar(0,0,0), -1);
+    ///line(out, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), stalkWidth);
     return out;
 }
 
@@ -659,7 +660,7 @@ void SimulationsView::on_MakePB_clicked()
     cv::Mat theObstruction = m_wf->workMask;
 
     if (0) {  // when true creates an obstruction pattern defined by make_obstructionMask
-        stalkWidth = m_wf->m_outside.m_radius * .5;
+        stalkWidth = m_wf->m_outside.m_radius * .1;
         theObstruction = make_obstructionMask(m_wf->workMask);
         m_wf->workMask = theObstruction.clone();
         showData(QString().sprintf("%f",m_wf->diameter).toStdString().c_str(), theObstruction.clone(), false);

@@ -6,36 +6,49 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>590</width>
-    <height>337</height>
+    <width>638</width>
+    <height>376</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Report Page2</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="3,2">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="10,7">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="surface">
        <property name="text">
-        <string>TextLabel</string>
+        <string>Surface</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLabel" name="contour">
        <property name="text">
-        <string>TextLabel</string>
+        <string>contour</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>
    <item>
     <widget class="QLabel" name="profile">
      <property name="text">
-      <string>TextLabel</string>
+      <string>profile</string>
      </property>
     </widget>
    </item>

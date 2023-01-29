@@ -15,6 +15,11 @@ Surface3dControlsDlg::Surface3dControlsDlg(SurfaceGraph *surfP) :
     ui->lightYSlider->setValue(set.value("ySurfLightParam", 99).toInt());
     ui->ambientSlider->setValue(set.value("ambientLightParam", 71).toInt());
     ui->yScaleSlider->setValue(set.value("yMaxNdx", 8).toInt());
+    ui->yOffsetSlider->setValue(set.value("3DyOffsetSlider", 0).toInt());
+    int range = set.value("3DRangeSlider", 52).toInt();
+    ui->range->setValue(range);
+    m_surf->range(range);
+
     ui->yScaleValue->setText(QString().number(maxHeightSelections[ui->yScaleSlider->value()]));
     ui->yshiftAuto->setChecked( set.value("yShiftAuto", 1).toBool());
     QObject::connect(ui->lightXSlider, &QSlider::valueChanged, surfP, &SurfaceGraph::lightX);
@@ -64,15 +69,16 @@ void Surface3dControlsDlg::on_lightYSlider_valueChanged(int value)
 void Surface3dControlsDlg::on_yScaleSlider_valueChanged(int value)
 {
     QSettings set;
-    qDebug() << "height" << value;
     set.setValue("yMaxNdx",value);
     ui->yScaleValue->setText(QString().number(maxHeightSelections[value]));
+
 }
 
 
 void Surface3dControlsDlg::on_yOffsetSlider_valueChanged(int value)
 {
-
+    QSettings set;
+    set.setValue("3DyOffsetSlider", value);
 }
 
 void Surface3dControlsDlg::on_yshiftAuto_clicked(bool checked)
@@ -92,7 +98,8 @@ void Surface3dControlsDlg::on_yshiftAuto_clicked(bool checked)
 
 void Surface3dControlsDlg::on_range_valueChanged(int value)
 {
-
+    QSettings set;
+    set.setValue("3DRangeSlider", value);
 }
 
 

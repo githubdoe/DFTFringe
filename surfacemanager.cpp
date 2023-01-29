@@ -2673,31 +2673,24 @@ void SurfaceManager::showAllContours(){
     w->show();
     QApplication::restoreOverrideCursor();
 }
+void showImage(QImage img, QString title){
+    QLabel *myLabel = new QLabel;
+    myLabel->setPixmap(QPixmap::fromImage(img.scaled(1000,1000)));
+    myLabel->setWindowTitle(title);
+    myLabel->show();
+}
 
-// This builds the report using a couple of techniques
-// First the zern table at the top is formated using html into a QTextEdit.
-// The first images are arranged on a singe page as QLabels and Widget layouts
-// because it is easier to let the layout system figure out the geometry to do so.
-// Doing so in the HTML support of the QTextEdit was not easy since it's HTML support
-// for the tags needed did not exist.
-// Turning it all into a pdf uses the QPrinter class which paints those things onto the page
-// just like a QPainter does.
-// Each image is obtained from the widget that hold it using the render function of the widget.
-
-// The other way is to use the TextEdit for all and use it's print to PDFprinter function.
-// This makes the zern table fit just right in the PDF width
-//  However The images first be scaled to fit in the PDF width or they will be cropped.
-//  Also they must be made larger to begin with so that they have good resolution.
 #include "pdfcalibrationdlg.h"
+#include "ui_reportdlg.h"
 void SurfaceManager::report(){
-    PdfCalibrationDLg caldlg;
-    caldlg.exec();
-    int right_crop = caldlg.m_rightCrop;
+
+
     if (m_wavefronts.size() == 0){
         QMessageBox::warning(0, tr(""),
                              tr("No wave front loaded to create a report for."));
         return;
     }
+
 
     // The actual PDF printer.
     QPrinter printer(QPrinter::QPrinter::HighResolution);
@@ -2705,19 +2698,19 @@ void SurfaceManager::report(){
 
     //setup printer
     printer.setColorMode( QPrinter::Color );
-    printer.setFullPage( false );
     printer.setOutputFormat( QPrinter::PdfFormat );
     printer.setPageSize(QPageSize(QPageSize::A4));
 
-
-    QSettings set;
-    int dpi = set.value("Printer PDI", 310).toInt();
     ReportDlg dlg(&printer);
-    dlg.setDPI(dpi);
+
     if (!dlg.exec())
         return;
 
-    set.setValue("Printer PDI",printer.resolution());
+    int finalWidth =  QGuiApplication::screens()[0]->geometry().width()/2.5;
+
+    printer.setFullPage( true );
+    QMargins marg = printer.pageLayout().marginsPixels(printer.resolution());
+
     printer.setOutputFileName( dlg.fileName );
     int width = printer.width();
     int height = printer.height();
@@ -2802,211 +2795,102 @@ void SurfaceManager::report(){
                          QString((zernEnables[i]) ? QString("") : QString("Disabled")) + "</td></tr>");
         }
         zerns.append("</table></td></tr></table></p>");
-        //qDebug() << zerns;
+
     }
     QString tail = "</body></html>";
     QTextDocument *doc = editor->document();
 
-    editor->setHtml(title + html +zerns + tail);
-
-
-
-    QFontMetrics fm(m_contourView->font());
-    const int yfontsize = fm.height();
-    const int x_font_width = fm.horizontalAdvance("average");
-    const int zernswidth = 200 * x_font_width/7;
-    qDebug() << "textwidth" << x_font_width;
-
-
-    QString contourHtml;
-
-
-
-    // use the screen size as a guide to how big to size the editor.
-    QRect rec = QGuiApplication::screens()[0]->geometry();
-    QImage zernsImage(width,height,QImage::Format_ARGB32);
-    QPainter zernsPainter(&zernsImage);
-
-    //editor->resize(width, height);
-    qDebug() << "sizes" << width << height << editor->size();
-
-//editor->print(&printer);
-
-
-    //PDFPainter.drawImage(0,0,zernsImage);
-    //return;
-    QLabel *myLabel = new QLabel;
-    myLabel->setPixmap(QPixmap::fromImage(zernsImage));
-    myLabel->setWindowTitle("test window");
-    //myLabel->show();
-    //editor->show();
-
     oglRendered oglw;
 
-    QSize cs1 =  ((MainWindow*)(parent()))->review->size();
-    cs1 *= 1.2;
-    QImage reviewImage = QImage(cs1,QImage::Format_ARGB32);
-    // need to reduce size of review image after adding ogl back into it.
-    QPainter reviewPainter(&reviewImage);
-    ((MainWindow*)(parent()))->review->render(&reviewPainter);
-    // Add OGL back into review image  Use size of surface graph
-    QSize surfSize = m_SurfaceGraph->Size();
-    QSize lsize = m_SurfaceGraph->m_legend->size();
-    lsize.setHeight(lsize.height() + 100);
-
-    // reneder surface into this sized image This size must be as large as the surface or it will crop.
-    // the size should also be the size of the printed document width
-    // figuring that out is the puzzle
-
-    // so make the size of the surface the size we want somehow.
-
-    // First try with 1000,1000 made a nice textedit. But the pdf on the low res laptop cropped the surface
-    // image.
-
-    QPainter *TrialPainter = new QPainter(&printer);
-    QRectF r = TrialPainter->viewport();
-    TrialPainter->end();
-
-    QImage SurfaceImage =m_SurfaceGraph->render(right_crop, right_crop);
-    QLabel *myLabel2 = new QLabel;
-
-    myLabel2->setPixmap(QPixmap::fromImage(zernsImage));
-    myLabel2->setWindowTitle("3d Surface");
-    myLabel2->show();
-    QImage legend(lsize, QImage::Format_ARGB32);
-    m_SurfaceGraph->m_legend->render(&legend);
-    oglw.getLegend()->setPixmap(QPixmap::fromImage(legend ));
-    oglw.getModel()->setPixmap(QPixmap::fromImage(SurfaceImage));
-
-    QImage surfaceandLegend(surfSize * 1.25, QImage::Format_ARGB32);
-    QPainter painterSurfaceandLegend(&surfaceandLegend);
-    oglw.render(&painterSurfaceandLegend);
-    editor->resize(right_crop,right_crop);
-    QTextCursor cursor = editor->textCursor();
-    QTextDocument *document = editor->document();
-    document->addResource(QTextDocument::ImageResource, QUrl("image"), SurfaceImage);
-    cursor.movePosition(QTextCursor::End);
-    cursor.insertImage("image");
-
-    editor->show();
-editor->print(&printer);
-return;
-    // move oglw into reportPage2
-    ReportPage2 *page2 = new ReportPage2();
-    page2->Surface()->setPixmap(QPixmap::fromImage(surfaceandLegend));
-
-    // get the contour plot image
-        //m_contourView->resize(imwidth,imwidth);
-        QSize stmp = m_contourView->size() * 1.25;
-        QImage contourImg(stmp, QImage::Format_ARGB32);
-        QPainter contourPainter(&contourImg);
-        m_contourView->repaint();
-        m_contourView->render(&contourPainter);
-        page2->Contour()->setPixmap(QPixmap::fromImage(contourImg));
-
-     //get the profile plot image
-        QImage profile = QImage(m_profilePlot->size(),QImage::Format_ARGB32);
-        QPainter p2(&profile);
-        ((MainWindow*)(parent()))->m_profilePlot->render(&p2);
-        page2->Profile()->setPixmap(QPixmap::fromImage(profile));
-
-//        QLabel *myLabel = new QLabel;
-//        myLabel->setPixmap(QPixmap::fromImage(contourImg));
-//        myLabel->setWindowTitle("test window");
-//        myLabel->show();
-
-          page2->render(&PDFPainter, QPoint(0,height/2 - height/10));
-    //reviewPainter.drawImage(oglRect,SurfaceImage, QRectF(10,50, 900,900));
-
-    int smallerW = cs1.width() * .9;
-
-    //PDFPainter.drawImage(0,0,reviewImage.scaledToWidth(smallerW, Qt::SmoothTransformation));
-
-    printer.newPage();
 
 
-    // get the 3D image
+//    QLabel *myLabel2 = new QLabel;
+//    myLabel2->setPixmap(QPixmap::fromImage(surfaceandLegend.scaled(finalWidth,finalWidth,
+//                                                                   Qt::KeepAspectRatio,
+//                                                               Qt::SmoothTransformation)));
+//    myLabel2->setWindowTitle("3d Surface and legend");
+//    myLabel2->show();
+    // add surface 3D graph
+    QString imagesHtml;
 
-//        QImage ddd = m_SurfaceGraph->render(imwidth, imwidth);
-//        PDFPainter.drawImage(QPoint( 10, 300), ddd);
-//        PDFPainter.drawText(QRect(10,5,imwidth/2, 250), Qt::AlignHCenter,"3D ddddPlot");
-//    printer.newPage();
-//    // get the contour plot image
-//        QSize stmp = m_contourView->size();
-//        m_contourView->resize(imwidth,imwidth);
-//        m_contourView->repaint();
-//        m_contourView->render(&PDFPainter,QPoint(imwidth + 50,300));
-//        m_contourView->resize(stmp);
-//        PDFPainter.drawText(QRect(imwidth,5,imwidth, 250), Qt::AlignHCenter,"contour Plot");
+    //get the profile plot image
+   if (dlg.ui->showProfile->isChecked()){
+       QImage profile = QImage(m_profilePlot->size(),QImage::Format_ARGB32);
+       QPainter p2(&profile);
+       ((MainWindow*)(parent()))->m_profilePlot->render(&p2);
 
+         QString review("mydata://review.png");
+         doc->addResource(QTextDocument::ImageResource,  QUrl(review),
+              QVariant(profile.scaledToWidth(dlg.profileWidth * finalWidth , Qt::SmoothTransformation)));
+             imagesHtml.append("<br>");
+             imagesHtml.append("<img src='" + review + "'>");
+   }
 
-    return;
-    if (dlg.show_profile){
-        //get the profile plot image
-        QImage i2 = QImage(width,width,QImage::Format_ARGB32);
-        QPainter p2(&i2);
-        ((MainWindow*)(parent()))->m_profilePlot->resize(width,width/2);
-        ((MainWindow*)(parent()))->m_profilePlot->render(&p2);
+   // get the contour plot image
+   if (dlg.ui->showContour->isChecked()){
+       QSize stmp = m_contourView->size();
+       QImage contourImg(stmp, QImage::Format_ARGB32);
+       QPainter contourPainter(&contourImg);
+       m_contourView->repaint();
+       m_contourView->render(&contourPainter);
 
-        PDFPainter.drawImage(QRect(0,width/2+150,width-15,width),i2, QRect(0,0,i2.width(), i2.height()));
+       QString contour("mydata://contour.png");
+       doc->addResource(QTextDocument::ImageResource,  QUrl(contour),
+            QVariant(contourImg.scaledToWidth(dlg.contourWidth * finalWidth, Qt::SmoothTransformation)));
+       imagesHtml.append("<p ><br>&nbsp;</p>");
+       imagesHtml.append("<img src='" + contour + "'>");
+   }
 
+    // 3D Surface
+    if (dlg.ui->show3D->isChecked()){
+        // assemble the surface metrics from the OG 3D view and the color map legend
+        // put into the OGLW window that will provide the titles and placement.
+        QImage SurfaceImage =m_SurfaceGraph->render(1000, 1000);
+        QSize lsize = m_SurfaceGraph->m_legend->size();
+        QImage legend(lsize, QImage::Format_ARGB32);
+        m_SurfaceGraph->m_legend->render(&legend);
 
-        //QImage i2Scaled = i2.scaled(width,width/2,Qt::KeepAspectRatio,Qt::SmoothTransformation);
-//        QString profile("mydata://profile.png");
-//        doc->addResource(QTextDocument::ImageResource,  QUrl(profile), QVariant(i2));
-//        //contourHtml.append("<p style=\"page-break-after: always;\">&nbsp;</p>");
-//        contourHtml.append("<img src='" + profile + "'><br>");
+        oglw.getLegend()->setPixmap(QPixmap::fromImage(legend.scaledToHeight(900 )));
+        oglw.getModel()->setPixmap(QPixmap::fromImage(SurfaceImage));
+        oglw.show();    // show on stack to get metrics.
+        QFontMetrics fm =    oglw.fontMetrics();
+        QRect tw = fm.boundingRect("Waves 550 nm Waves");
+        QRect lg = oglw.getLegend()->geometry();
+        QRect sg = oglw.getModel()->geometry();
+
+        int surfw = sg.width() + tw.width();
+        int surfh = sg.height();
+        QImage surfaceandLegend(surfw,surfh, QImage::Format_ARGB32);
+        QPainter painterSurfaceandLegend(&surfaceandLegend);
+        oglw.render(&painterSurfaceandLegend);
+        QString surfPath("mydata://surface.png");
+        doc->addResource(QTextDocument::ImageResource,  QUrl(surfPath),
+                         QVariant(surfaceandLegend.scaledToWidth(dlg.surfaceWidth * finalWidth, Qt::SmoothTransformation)));
+        imagesHtml.append("<p ><br>&nbsp;</p>");
+        imagesHtml.append("<img src='" + surfPath + "'>");
     }
-
-    //QLabel *myLabel = new QLabel;
-    //myLabel->setPixmap(QPixmap::fromImage(page2));
-    //myLabel->setWindowTitle("test window");
-    //myLabel->show();
-    return;
-
-
-    // make second page which shows 3D contour and profile plots
-    // 3d and contour plots and profile were painted to image page2
-    //QString page2Fn("mydata://page2.png");
-    //doc->addResource(QTextDocument::ImageResource,  QUrl(page2Fn), QVariant(page2));
-    contourHtml.append("<p style=\"page-break-before: always;\">");
-    //contourHtml.append("<img src=\"" + page2Fn + "\" width=\"100%\"></p>");
-
-    QImage page3(width-200,height,QImage::Format_ARGB32);
-    QPainter page3Painter(&page3);
     int lastH = 0;
-    if (dlg.show_startest){
+    if (dlg.ui->showStarTest->isChecked()){
 
         // add star test if not testing a
         if (!md->isEllipse()){
             SimulationsView *sv = SimulationsView::getInstance(0);
             sv->resize(width,width);
-
             sv->on_MakePB_clicked();
-
-
             QImage svImage = QImage(sv->size(),QImage::Format_ARGB32 );
 
             QPainter p3(&svImage);
             sv->render(&p3);
-            int svWidth = width-250;
-            int svHeight = svWidth / ((double)svImage.width()/(double)svImage.height());
-            lastH = height/2 + 20;
-            page3Painter.drawImage(QRect(0,0,svWidth, height/2), svImage, QRect(0,0,svImage.width(), svImage.height()));
-            page3Painter.drawRect(0,0,svWidth, height/2);
-
-
             QString svpng("mydata://sv.png");
-            doc->addResource(QTextDocument::ImageResource,  QUrl(svpng), QVariant(page3));
-            if (!dlg.show_foucault){
-                contourHtml.append("<p style=\"page-break-before: always;\">");
-                contourHtml.append(" <img src='" +svpng + "'></p>");
-            }
+            doc->addResource(QTextDocument::ImageResource,  QUrl(svpng),
+                  QVariant(svImage.scaledToWidth(dlg.startestWidth * finalWidth,
+                                                 Qt::SmoothTransformation)));
+                imagesHtml.append("<p ><br>&nbsp;</p>");
+                imagesHtml.append(" <img src='" +svpng + "'></p>");
         }
     }
 
-
-    if (dlg.show_foucault)
+    if (dlg.ui->showRonchi->isChecked())
     {
 
         foucaultView *fv = foucaultView::get_Instance(0);
@@ -3014,38 +2898,44 @@ return;
         QImage fvImage = QImage(fv->size(),QImage::Format_ARGB32 );
         QPainter p3(&fvImage);
         fv->render(&p3);
-        double scale = fvImage.width()/(double)fvImage.height();
-        page3Painter.drawImage(QRect(0,  lastH ,width - 240, (width - 240)/scale), fvImage, QRect(0,0,fvImage.width(), fvImage.height()));
 
         QString fvpng("mydata://fv.png");
-        doc->addResource(QTextDocument::ImageResource,  QUrl(fvpng), QVariant(page3));
-        contourHtml.append("<p style=\"page-break-before: always;\">");
-        contourHtml.append(" <img src='" + fvpng + "'></p>");
+        doc->addResource(QTextDocument::ImageResource,  QUrl(fvpng),
+                         QVariant(fvImage.scaledToWidth(dlg.ronchiWidth * finalWidth)));
+        imagesHtml.append("<br>");
+        imagesHtml.append(" <img src='" + fvpng + "'></p>");
     }
 
     // add igram
     QImage igram = ((MainWindow*)(parent()))->m_igramArea->igramDisplay;
-    if (dlg.show_igram && igram.width() > 0){
+    if (dlg.ui->showIgram->isChecked() && igram.width() > 0){
+
         QString sigram("mydata://igram.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(sigram),
-                         QVariant(igram.scaled(width-50,800,Qt::KeepAspectRatio,Qt::SmoothTransformation)));
-        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>typical interferogram</th></tr> <tr><td> <img src='" +
+                         QVariant(igram.scaledToWidth(dlg.igramWidth * finalWidth,
+                                                      Qt::SmoothTransformation)));
+        imagesHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>typical interferogram</th></tr> <tr><td> <img src='" +
                            sigram + "'></td></tr></table><br>");
     }
-    if (dlg.show_histogram){
+    if (dlg.ui->showHistogram->isChecked()){
         // add pixel stats window
         m_contourView->getPixelstats()->resize(width/3,4 * width/3);
         QImage pixStats = m_contourView->getPixstatsImage();
         QString pixStat("mydata://pixStat.png");
         doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
-                         QVariant(pixStats));
-        contourHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Hidtogram and SLope error</th></tr> <tr><td> <img src = '" +
+                         QVariant(pixStats.scaledToWidth(dlg.histoWidth * finalWidth,
+                                                          Qt::SmoothTransformation)));
+        imagesHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Hidtogram and SLope error</th></tr> <tr><td> <img src = '" +
                            pixStat + "'></td></tr></table>");
     }
-    editor->setHtml(title + html +zerns + contourHtml+ tail);
-
+    editor->setHtml(title + html +zerns + imagesHtml +  tail);
     editor->print(&printer);
-    editor->show();
+    if (dlg.ui->showPDF->isChecked()){
+        QDesktopServices::openUrl(QUrl(dlg.fileName));
+     }
+
+
+
 }
 #include "unwraperrorsview.h"
 void SurfaceManager::showUnwrap(){
