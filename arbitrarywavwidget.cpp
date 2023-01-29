@@ -391,13 +391,6 @@ bool ArbitraryWavWidget::testInflections(int index) {
 
     Bezier::Bezier<3> bez(bez_pts,4);
 
-    Bezier::Tangent tan1 = bez.tangentAt(t1,false);
-    Bezier::Tangent tan2 = bez.tangentAt(t2,false);
-
-    //qDebug() << "t1within " << t1 << " t1x " << tan1.x << " t1y " << tan1.y << " t2within " << t2 << " t2x " << tan2.x << " t2y " << tan2.y;
-
-
-
     if (bT1Within && bez.tangentAt(t1,false).x <= 0)
         return true; // backwards slope
 
@@ -407,10 +400,9 @@ bool ArbitraryWavWidget::testInflections(int index) {
     return false; // no problems
 }
 
-void ArbitraryWavWidget::mouseReleaseEvent(QMouseEvent * event) {
+void ArbitraryWavWidget::mouseReleaseEvent(QMouseEvent */* event */) {
     bDragging = false;
     bDraggingBezierPoint = false;
-    int index = findPoint(event->pos());
 }
 
 void ArbitraryWavWidget::wheelEvent(QWheelEvent *event) {

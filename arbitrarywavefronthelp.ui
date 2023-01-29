@@ -6,33 +6,46 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>533</width>
-    <height>253</height>
+    <width>976</width>
+    <height>398</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Help/Tips</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="10,1">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1">
    <item>
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>This is for creating your desired shaped wavefront with the mouse.
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="minimumSize">
+        <size>
+         <width>630</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>This is for creating your desired shaped wavefront with the mouse.
 
 - Click in the graph to create new points
 - Right click on a point to delete
 - Drag a round or square handle to move
 - Scroll mouse to zoom vertical scale
 - Window can be enlarged by dragging outer edge
-- Zernike terms will be added later</string>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+- Zernike terms will be added later
+
+After simulation, the profile may look different from what you drew for 4 reasons:
+- Best fit defocus is removed unless you check that in zernike terms and recalculate
+- Zernike terms in this simulation panel are added on top of the drawing.  In fact you probably want to set Z8 to 100%
+- the mirror null is subtracted out in profile view (by the way, Foucault shadows don't subtract this)
+- If asked, it's critical you don't let DFTF invert the wavefront
+</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
