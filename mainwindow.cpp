@@ -579,8 +579,14 @@ void MainWindow::on_shiftRight_clicked()
 {
     m_igramArea->shiftRight();
 }
-
+int MainWindow::getCurrentTab(){
+    return ui->tabWidget->currentIndex();
+}
+void MainWindow::setTab(int ndx){
+    ui->tabWidget->setCurrentIndex(ndx);
+}
 void MainWindow::selectDftTab(){
+
     ui->tabWidget->setCurrentIndex(1);
 }
 
@@ -811,8 +817,6 @@ void MainWindow::on_actionWavefront_triggered()
 
     rad -= border;
     cv::Mat result = zernikeProcess::get_Instance()->makeSurfaceFromZerns(border, false);
-
-
     m_surfaceManager->createSurfaceFromPhaseMap(result,
                                                 CircleOutline(QPointF(xcen,ycen),rad),
                                                 CircleOutline(QPointF(0,0),0),

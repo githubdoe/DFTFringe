@@ -21,7 +21,8 @@
 #include "math.h"
 #include "pixelstats.h"
 #include <QSettings>
-
+#include <QGuiApplication>
+#include <QScreen>
 contourView::contourView(QWidget *parent, ContourTools *tools) :
     QWidget(parent),
     ui(new Ui::contourView), zoomed(false), tools(tools)
@@ -52,9 +53,10 @@ void contourView::zoom(){
 
 QImage contourView::getPixstatsImage(){
     //resize(3000,2000);
-    QImage psImage = QImage(1500,2000,QImage::Format_ARGB32 );
+        int height = QGuiApplication::screens()[0]->geometry().height() * .75;
+    QImage psImage = QImage(height, height,QImage::Format_ARGB32 );
     QPainter p3(&psImage);
-    ps->resize(1000,2000);
+    ps->resize(height * .7, height);
     ps->render(&p3);
 
     return psImage;

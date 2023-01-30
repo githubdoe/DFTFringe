@@ -41,7 +41,6 @@ SOURCES += main.cpp\
     pdfcalibrationdlg.cpp \
     profileplot.cpp \
     psiresizeimagesdlg.cpp \
-    reportpage2.cpp \
     surface3dcontrolsdlg.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
@@ -160,7 +159,6 @@ HEADERS  += mainwindow.h \
     pdfcalibrationdlg.h \
     profileplot.h \
     psiresizeimagesdlg.h \
-    reportpage2.h \
     spline.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
@@ -279,7 +277,6 @@ FORMS    += mainwindow.ui \
     profileplot.ui \
     contourtools.ui \
     psiresizeimagesdlg.ui \
-    reportpage2.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
     prefsdlg.ui \
@@ -403,7 +400,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 6.1
+VERSION = 6.2
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"

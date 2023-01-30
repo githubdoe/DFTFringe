@@ -16,7 +16,7 @@ public:
     ~oglRendered();
     QLabel *getModel();
     QLabel *getLegend();
-private:
+public:
     Ui::oglRendered *ui;
 };
 

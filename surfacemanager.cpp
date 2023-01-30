@@ -72,8 +72,8 @@
 #include "transformwavefrontdlg.h"
 #include "psi_dlg.h"
 #include "opencv2/opencv.hpp"
-#include "reportpage2.h"
 #include "oglrendered.h"
+#include "ui_oglrendered.h"
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -2846,11 +2846,11 @@ void SurfaceManager::report(){
         // assemble the surface metrics from the OG 3D view and the color map legend
         // put into the OGLW window that will provide the titles and placement.
         QImage SurfaceImage =m_SurfaceGraph->render(1000, 1000);
-        QSize lsize = m_SurfaceGraph->m_legend->size();
+        QSize lsize = m_SurfaceGraph->m_legend->pixmap()->size();
         QImage legend(lsize, QImage::Format_ARGB32);
         m_SurfaceGraph->m_legend->render(&legend);
 
-        oglw.getLegend()->setPixmap(QPixmap::fromImage(legend.scaledToHeight(900 )));
+        oglw.getLegend()->setPixmap(QPixmap::fromImage(legend.scaledToWidth(oglw.ui->legend->size().width())));
         oglw.getModel()->setPixmap(QPixmap::fromImage(SurfaceImage));
         oglw.show();    // show on stack to get metrics.
         QFontMetrics fm =    oglw.fontMetrics();
@@ -2870,6 +2870,7 @@ void SurfaceManager::report(){
         imagesHtml.append("<img src='" + surfPath + "'>");
     }
     int lastH = 0;
+    // star test
     if (dlg.ui->showStarTest->isChecked()){
 
         // add star test if not testing a
@@ -2889,21 +2890,25 @@ void SurfaceManager::report(){
                 imagesHtml.append(" <img src='" +svpng + "'></p>");
         }
     }
-
+    // Ronchi and Foucault
     if (dlg.ui->showRonchi->isChecked())
     {
-
+        int currentTab = ((MainWindow*)(parent()))->getCurrentTab();
+        ((MainWindow*)(parent()))->setTab(4);
         foucaultView *fv = foucaultView::get_Instance(0);
-        fv->on_makePb_clicked();
-        QImage fvImage = QImage(fv->size(),QImage::Format_ARGB32 );
-        QPainter p3(&fvImage);
-        fv->render(&p3);
+        fv->resize(finalWidth * 2., finalWidth * 2. );
+        qApp->processEvents();
+
+        QImage *fvImage = fv->render();
 
         QString fvpng("mydata://fv.png");
         doc->addResource(QTextDocument::ImageResource,  QUrl(fvpng),
-                         QVariant(fvImage.scaledToWidth(dlg.ronchiWidth * finalWidth)));
-        imagesHtml.append("<br>");
-        imagesHtml.append(" <img src='" + fvpng + "'></p>");
+                         QVariant((*fvImage).scaledToWidth(dlg.ronchiWidth * finalWidth)));
+
+        imagesHtml.append(" <br><img src='" + fvpng + "'>");
+        imagesHtml.append("<h2>Ronchi and Foucault images simulated from analysis data.</h2>");
+        delete fvImage;
+        ((MainWindow*)(parent()))->setTab(currentTab);
     }
 
     // add igram
@@ -2925,7 +2930,7 @@ void SurfaceManager::report(){
         doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
                          QVariant(pixStats.scaledToWidth(dlg.histoWidth * finalWidth,
                                                           Qt::SmoothTransformation)));
-        imagesHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Hidtogram and SLope error</th></tr> <tr><td> <img src = '" +
+        imagesHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Histogram and SLope error</th></tr> <tr><td> <img src = '" +
                            pixStat + "'></td></tr></table>");
     }
     editor->setHtml(title + html +zerns + imagesHtml +  tail);
@@ -2934,7 +2939,7 @@ void SurfaceManager::report(){
         QDesktopServices::openUrl(QUrl(dlg.fileName));
      }
 
-
+    delete editor;
 
 }
 #include "unwraperrorsview.h"

@@ -72,10 +72,21 @@ void foucaultView::showContextMenu(const QPoint &pos)
     myMenu.addAction("Save Ronchi image",  this, SLOT(saveRonchiImage()));
     myMenu.addAction("Save Foucault Image", this,  SLOT(saveFoucaultImage()));
 
-
     // Show context menu at handling position
     myMenu.exec(globalPos);
 }
+QImage *foucaultView::render(){
+    on_makePb_clicked();
+    QSize imsize = ui->foucaultViewLb->size();
+    imsize.setWidth(imsize.width()*2.1);
+    QImage *result = new QImage(imsize, QImage::Format_ARGB32 );
+
+    ui->ronchiViewLb->render(result,QPoint(0,0));
+    ui->foucaultViewLb->render(result, QPoint(imsize.width()/2,0));
+
+    return result;
+}
+
 void foucaultView::saveRonchiImage(){
     ui->ronchiViewLb->pixmap(Qt::ReturnByValue).save(getSaveFileName("foucault"));
 
@@ -530,7 +541,7 @@ void foucaultView::on_scanPb_clicked()
         QImage fvImage = QImage(fv->size(),QImage::Format_ARGB32 );
 
         QPainter p3(&fvImage);
-        fv->render(&p3);
+        fv->QWidget::render(&p3);
         if (ui->SaveImageCB->isChecked()){
             QString num = QString().sprintf("%6.4lf",v).replace(".","_");
             num.replace("-","n");

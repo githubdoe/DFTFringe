@@ -98,6 +98,8 @@ public slots:
     void zoomProfile(bool flag);
     void imageSize(QString txt);
     void skipBatchItem();
+    int  getCurrentTab();
+    void setTab(int ndx);
 signals:
     void load(SurfaceManager *);
     //void load(QStringList, SurfaceManager *);

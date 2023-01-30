@@ -68,7 +68,7 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool,
     QVBoxLayout *rightcontrols = new QVBoxLayout();
 
     QLabel *colorLedgend = new QLabel(this);
-    //colorLedgend->setPixmap(pm);
+
     m_surface->setLegend(colorLedgend);
 
     QGroupBox *heightMapGroupBox = new QGroupBox(QStringLiteral("Waves 550nm"));

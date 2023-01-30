@@ -13,22 +13,9 @@
   <property name="windowTitle">
    <string>Building PDF</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1000">
+  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,100">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0,0">
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0">
      <item>
       <widget class="QLabel" name="Title">
        <property name="text">
@@ -37,24 +24,7 @@
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Waves 550nm</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_4"/>
      </item>
     </layout>
    </item>
@@ -80,17 +50,28 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="legend">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>L</string>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="1,100">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Waves 550nm</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="legend">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>L</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>

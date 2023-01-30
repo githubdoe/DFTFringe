@@ -65,7 +65,7 @@
        <item>
         <widget class="QDoubleSpinBox" name="contourWidth">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;p&gt;Usefull ranges are .8 - 1.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="minimum">
           <double>0.100000000000000</double>
@@ -105,7 +105,7 @@
        <item>
         <widget class="QDoubleSpinBox" name="igramWidth">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;p&gt;Usefull ranges are .8 - 1.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="minimum">
           <double>0.100000000000000</double>
@@ -146,7 +146,7 @@
        <item>
         <widget class="QDoubleSpinBox" name="SurfaceWidth">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;p&gt;Usefull ranges are .8 - 1.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;d</string>
          </property>
          <property name="minimum">
           <double>0.100000000000000</double>
@@ -186,7 +186,7 @@
        <item>
         <widget class="QDoubleSpinBox" name="profileWidth">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;p&gt;Usefull ranges are .8 - 1.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="minimum">
           <double>0.100000000000000</double>
@@ -230,7 +230,7 @@
        <item>
         <widget class="QDoubleSpinBox" name="ronchiWidth">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;p&gt;Usefull ranges are .8 - 1.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="minimum">
           <double>0.100000000000000</double>
@@ -270,7 +270,7 @@
        <item>
         <widget class="QDoubleSpinBox" name="startestWidth">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;p&gt;Usefull ranges are .8 - 1.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="minimum">
           <double>0.100000000000000</double>
@@ -312,7 +312,7 @@
      <item>
       <widget class="QDoubleSpinBox" name="pixelHistoWidth">
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If images are cropped on the right size reduce this number. &lt;br/&gt;If images are too small increase this number.&lt;/p&gt;&lt;p&gt;Usefull ranges are .8 - 1.1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="minimum">
         <double>0.100000000000000</double>

@@ -170,7 +170,7 @@ double pround(double x, double precision)
 void SurfaceGraph::setGraphColors(){
     QFont fnt = m_graph->property("font").value<QFont>();
     QFontMetrics fm(fnt);
-    int widthf=fm.horizontalAdvance("x.xxx");
+    int widthf=fm.horizontalAdvance("XXXXXX");
 
     QLinearGradient gr;
     int height = m_graph->height();
@@ -209,7 +209,6 @@ void SurfaceGraph::setGraphColors(){
         pmp.drawLine(border, yPos, 55, yPos);
         pmp.drawText(border/2 + 40, yPos + 2, QString("%1 ").arg(pround(i/5. * m_maxHeight,1.5),0,'f',2));
     }
-
 
     m_legend->setPixmap(pm);
 

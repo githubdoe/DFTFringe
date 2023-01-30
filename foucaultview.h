@@ -26,6 +26,8 @@ public:
 public slots:
     void on_makePb_clicked();
 
+    QImage *render();
+
 private slots:
     void showContextMenu(const QPoint &pos);
 
