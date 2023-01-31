@@ -106,8 +106,8 @@ void showAliasDlg::contrast(){
 }
 void showAliasDlg::downSize(){
    cv::Mat small = gray.clone();
-   cv::resize(small, small, cv::Size(resizedValue,resizedValue) , CV_INTER_NN);
-   cv::resize(small,small, cv::Size(gray.cols, gray.rows), CV_INTER_NN);
+   cv::resize(small, small, cv::Size(resizedValue,resizedValue) , cv::INTER_NEAREST);
+   cv::resize(small,small, cv::Size(gray.cols, gray.rows), cv::INTER_NEAREST);
    //cv::GaussianBlur(small,small, cv::Size(5, 5),0,0);
    resizedView->setImage(small);
 }

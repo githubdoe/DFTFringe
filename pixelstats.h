@@ -2,7 +2,7 @@
 #define PIXELSTATS_H
 
 #include <QWidget>
-#include "opencv/cv.h"
+#include <opencv2/opencv.hpp>
 #include "wavefront.h"
 #include <qwt_plot.h>
 #include <QScrollArea>

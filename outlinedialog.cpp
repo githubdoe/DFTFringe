@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include <QShortcut>
 #include <QMouseEvent>
+#include <opencv2/imgproc.hpp>
+
 outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
     m_x(x),m_y(y),m_rad(rad),
     QDialog(parent), m_xoffset(0), m_yoffset(0), m_radiusOffset(0),
@@ -114,7 +116,7 @@ void outlineDialog::updateDisplay(cv::Mat img){
 void outlineDialog::setImage(cv::Mat img){
     cv::Mat tmp;
     img.convertTo(tmp, CV_8UC1);
-    cv::cvtColor(tmp,m_igram, CV_GRAY2RGB);
+    cv::cvtColor(tmp,m_igram, cv::COLOR_GRAY2RGB);
     QRect rec = QApplication::desktop()->screenGeometry();
     int height = rec.height();
     int width = rec.width();
@@ -147,12 +149,12 @@ void outlineDialog::updateOutline(){
             cv::blur( src, src, cv::Size(m_blurrSize,m_blurrSize) );
         cv::Mat src2;
 
-        cv::cvtColor(src, src2, CV_BGR2GRAY);
+        cv::cvtColor(src, src2, cv::COLOR_BGR2GRAY);
         cv::Mat bimage = src2 >= (m_threshold);
 
         cv::Mat bicolor;
         bimage.convertTo(bicolor, CV_8UC3);
-        cv::cvtColor(bimage, bicolor, CV_GRAY2BGR);
+        cv::cvtColor(bimage, bicolor, cv::COLOR_GRAY2BGR);
 
         double alpha = 1. - m_contrast;
         double beta = 1-alpha;
@@ -160,7 +162,7 @@ void outlineDialog::updateOutline(){
 
         //src = src * m_contrast;
 
-        cv::findContours(bimage, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+        cv::findContours(bimage, contours, cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
 
         cv::Mat cimage; //= m_igram.clone();
         m_igram.convertTo(cimage,CV_8UC1);

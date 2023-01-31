@@ -30,7 +30,10 @@
 #include <QLabel>
 #include "mikespsiinterface.h"
 #include <QShortcut>
+#include <opencv2/core/core_c.h>
 using namespace cv;
+
+double HUGE=1e37;
 
 
 cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
@@ -385,7 +388,7 @@ void showData(const std::string& txt, cv::Mat mat, bool useLog){
     cv::namedWindow(txt, WINDOW_NORMAL);
     normalize(tmp, tmp,0,255,CV_MINMAX);
     tmp.convertTo(tmp,CV_8U);
-    cvtColor(tmp,tmp, CV_GRAY2RGB);
+    cvtColor(tmp,tmp, cv::COLOR_GRAY2RGB);
     cv::imshow(txt, tmp);
     cv::waitKey(1);
 }
@@ -414,7 +417,7 @@ QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, doub
 
     cv::Mat tmp = magI.clone();
     cv::waitKey(1);
-    cvtColor(magI,magI, CV_GRAY2RGB);
+    cvtColor(magI,magI, cv::COLOR_GRAY2RGB);
     if (show){
         imshow(title, magI);
         waitKey(1);

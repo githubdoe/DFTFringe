@@ -27,7 +27,7 @@
 #include <qwt_interval_symbol.h>
 #include <qwt_plot_intervalcurve.h>
 #include <qwt_scale_engine.h>
-#include "opencv/cv.h"
+#include <opencv2/opencv.hpp>
 wftExaminer::wftExaminer( wavefront *wf,QWidget *parent) :
     QDialog(parent),m_wf(wf),
     curve(0),maskCurve(0),ui(new Ui::wftExaminer)

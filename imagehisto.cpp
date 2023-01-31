@@ -16,7 +16,7 @@
 
 ****************************************************************************/
 #include "imagehisto.h"
-
+#include <opencv2/core/core_c.h>
 #include <iostream>
 
 using namespace cv;

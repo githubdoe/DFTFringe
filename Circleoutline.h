@@ -23,7 +23,7 @@
 #include "gplus.h"
 #include <QVector>
 #include <QPointF>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 void fillCircle(cv::Mat &m, double cx, double cy, double rad, void *color);
 class CircleOutline: public boundary
 {

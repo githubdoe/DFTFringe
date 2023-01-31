@@ -17,14 +17,14 @@
 ****************************************************************************/
 #include "rotationdlg.h"
 #include "ui_rotationdlg.h"
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 #include <qsettings.h>
 RotationDlg::RotationDlg( QList<int> list, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RotationDlg), list(list)
 {
     ui->setupUi(this);
-    int interpModes[] = {CV_INTER_NN, CV_INTER_LINEAR, CV_INTER_LANCZOS4, CV_INTER_CUBIC, CV_INTER_AREA};
+    int interpModes[] = {cv::INTER_NEAREST, cv::INTER_LINEAR, cv::INTER_LANCZOS4, cv::INTER_CUBIC, cv::INTER_AREA};
     QString names[] = {"Nearest Neighbor", "Linear", "Lanczos","Cubic","Area"};
     for (int i = 0; i < 5; ++i){
         ui->interp->addItem(names[i],interpModes[i]);

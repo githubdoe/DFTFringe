@@ -96,7 +96,7 @@ SOURCES += main.cpp\
     squareimage.cpp \
     bathastigdlg.cpp \
     zernikeeditdlg.cpp \
-    settingsgeneral2.cpp \
+    settingsGeneral2.cpp \
     nullmarginhelpdlg.cpp \
     plotcolor.cpp \
     cameracalibwizard.cpp \
@@ -147,7 +147,7 @@ HEADERS  += mainwindow.h \
     cpoint.h \
     defocusdlg.h \
     edgeplot.h \
-    igramarea.h \
+    IgramArea.h \
     circleoutline.h \
     gplus.h \
     graphicsutilities.h \
@@ -215,7 +215,7 @@ HEADERS  += mainwindow.h \
     squareimage.h \
     bathastigdlg.h \
     zernikeeditdlg.h \
-    settingsgeneral2.h \
+    settingsGeneral2.h \
     nullmarginhelpdlg.h \
     plotcolor.h \
     cameracalibwizard.h \
@@ -313,7 +313,7 @@ FORMS    += mainwindow.ui \
     foucaultview.ui \
     bathastigdlg.ui \
     zernikeeditdlg.ui \
-    settingsgeneral2.ui \
+    settingsGeneral2.ui \
     nullmarginhelpdlg.ui \
     cameracalibwizard.ui \
     camwizardpage1.ui \
@@ -354,8 +354,6 @@ win32 {
       INCLUDEPATH += D:\\qwt-6.1.5\\src
 
       #message("using win32")include
-}
-
 
 INCLUDEPATH += D:\armadillo\armadillo-9.200.6\include
 
@@ -372,15 +370,23 @@ LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
 LIBS += D:\armadillo\bin\libarmadillo.dll
 LIBS += D:\lapack\build64\bin\liblapack.dll
 LIBS += D:\lapack\build64\bin\libblas.dll
+}
+
+
+
 unix {
      INCLUDEPATH += /usr/include/qwt
-     iLIBS += -lqwt-qt5
+     INCLUDEPATH += /usr/include/opencv4
+     LIBS += -lqwt-qt5
      LIBS += -lopencv_core
      LIBS += -lopencv_imgproc
      LIBS += -lopencv_highgui
      LIBS += -lGLU
      LIBS += -lopencv_calib3d
      LIBS += -lopencv_features2d
+     LIBS += -lopencv_imgproc
+     LIBS += -lopencv_imgcodecs
+     LIBS += -larmadillo
      message("using linux")
      contains(CONFIG,debug) { message("no extra debug libraries") }
 }
