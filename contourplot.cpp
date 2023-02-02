@@ -29,13 +29,13 @@
 #include <qwt_plot_renderer.h>
 #include <qwt_plot_grid.h>
 #include "contourplot.h"
-#include "opencv/cv.h"
+#include <opencv2/opencv.hpp>
 #include "wavefront.h"
 #include <QtGui/qevent.h>
 #include <qwt_plot_rescaler.h>
 #include <QtGui>
-#include <opencv/cv.h>
-#include "opencv/highgui.h"
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include "dftcolormap.h"
 #include <QDebug>
 #include <math.h>

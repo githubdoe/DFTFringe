@@ -21,7 +21,7 @@
 #include <QWidget>
 #include <qwt_plot.h>
 #include "wavefront.h"
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 #include <qwt_plot_legenditem.h>
 #include <qwt_legend.h>
 #include <qwt_plot_legenditem.h>

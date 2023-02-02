@@ -17,7 +17,7 @@
 ****************************************************************************/
 #ifndef VORTEX_H
 #define VORTEX_H
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 void vortex(cv::Mat &dft, const char *ext,
            double low, double smooth,

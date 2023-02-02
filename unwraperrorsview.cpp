@@ -1,6 +1,6 @@
 #include "unwraperrorsview.h"
 #include "ui_unwraperrorsview.h"
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <QSettings>
 #include <QFile>
@@ -44,7 +44,7 @@ void unwrapErrorsView::createUnwrapErrors(){
     Mat xxx;
     flip(errorView, xxx, 0);
 
-    cv::cvtColor(xxx,xxx, CV_GRAY2RGB);
+    cv::cvtColor(xxx,xxx, cv::COLOR_GRAY2RGB);
     QRect rec = QApplication::desktop()->screenGeometry();
     int height = rec.height();
 

@@ -1,7 +1,7 @@
 #include "psiphasedisplay.h"
 #include "ui_psiphasedisplay.h"
 #include "math.h"
-#include "opencv/highgui.h"
+#include <opencv2/highgui/highgui.hpp>
 #include <qdebug.h>
 #include <qimage.h>
 #include <qpainter.h>

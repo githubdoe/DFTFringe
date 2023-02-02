@@ -17,8 +17,8 @@
 ****************************************************************************/
 #ifndef PUNWRAP_H
 #define PUNWRAP_H
-#include "opencv/cv.h"
-#include "opencv/highgui.h"
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
 void unwrap(double *pphase, double *unwrapped, char *mask, int nx, int ny);
 
 

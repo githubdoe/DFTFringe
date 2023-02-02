@@ -1,4 +1,4 @@
-#include "settingsgeneral2.h"
+#include "settingsGeneral2.h"
 #include "ui_settingsgeneral2.h"
 #include <QSettings>
 #include "contourrulerparams.h"
