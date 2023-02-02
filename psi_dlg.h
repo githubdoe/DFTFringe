@@ -55,8 +55,6 @@ private slots:
 
     void on_showRadians_clicked(bool checked);
 
-    void on_showPlot_clicked();
-
     void on_stop_clicked();
 
     void on_resizeSb_valueChanged(int arg1);

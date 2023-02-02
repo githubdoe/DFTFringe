@@ -346,11 +346,6 @@ void PSI_dlg::plot(QVector<double> phases, int iteration, double sdp){
     update();
 
 }
-void PSI_dlg::on_showPlot_clicked()
-{
-    plot(m_phases, 0,1.);
-}
-
 
 void PSI_dlg::on_stop_clicked()
 {

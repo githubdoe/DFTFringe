@@ -104,15 +104,6 @@ void foucaultView::setSurface(wavefront *wf){
     m_sag = mul * (rad * rad) /( 4 * FL);
     m_sag = round(100 * m_sag)/100.;
     m_temp_sag = m_sag;
-    ui->rocOffsetSlider->blockSignals(true);
-    ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
-    ui->rocOffsetSlider->blockSignals(false);
-    double step = getStep();
-    double offset = (ui->rocOffsetSlider->value()) * step;
-    ui->rocOffsetSb->blockSignals(true);
-    ui->rocOffsetSb->setValue(offset);
-    ui->rocOffsetSb->blockSignals(false);
-    on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
 }
 QVector<QPoint> scaleProfile(QPolygonF points, int width, int pad,
@@ -679,5 +670,28 @@ void foucaultView::on_RonchiX_valueChanged(double arg1)
     QSettings set;
     set.setValue("RonchiROCFactor", arg1);
      m_guiTimer.start(450);
+}
+
+
+void foucaultView::on_pushButton_clicked()
+{
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    double rad = md->diameter/2.;
+    double FL = md->roc/2.;
+    double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
+    m_sag = mul * (rad * rad) /( 4 * FL);
+    m_sag = round(100 * m_sag)/100.;
+    m_temp_sag = m_sag;
+    ui->rocOffsetSlider->blockSignals(true);
+    ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
+    ui->rocOffsetSlider->blockSignals(false);
+    double step = getStep();
+    double offset = (ui->rocOffsetSlider->value()) * step;
+    ui->rocOffsetSb->blockSignals(true);
+    ui->rocOffsetSb->setValue(offset);
+    ui->rocOffsetSb->blockSignals(false);
+    on_autoStepSize_clicked(ui->autoStepSize->isChecked());
+    needsDrawing = true;
+    on_makePb_clicked();
 }
 

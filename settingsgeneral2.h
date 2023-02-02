@@ -36,7 +36,6 @@ private slots:
     void on_showConditionNumbersCb_clicked(bool checked);
     void on_wavefrontSizeSb_valueChanged(int arg1);
     void on_downSizeCB_clicked(bool checked);
-    void on_memThreshValue_valueChanged(int val);
     void on_AstigDistGraphWidth_valueChanged(int val);
     void on_applyOffsets_clicked(bool checked);
     void on_outputLambda_valueChanged(double val);

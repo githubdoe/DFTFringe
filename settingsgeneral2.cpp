@@ -69,10 +69,6 @@ void SettingsGeneral2::on_outputLambda_valueChanged(double val){
 
 }
 
-void SettingsGeneral2::on_memThreshValue_valueChanged(int val){
-    QSettings set;
-    set.setValue("lowMemoryThreshold", val);
-}
 
 void SettingsGeneral2::on_AstigDistGraphWidth_valueChanged(int val){
     QSettings set;

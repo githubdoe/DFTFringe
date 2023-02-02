@@ -2936,7 +2936,7 @@ void SurfaceManager::report(){
     editor->setHtml(title + html +zerns + imagesHtml +  tail);
     editor->print(&printer);
     if (dlg.ui->showPDF->isChecked()){
-        QDesktopServices::openUrl(QUrl(dlg.fileName));
+        QDesktopServices::openUrl(QUrl::fromLocalFile(dlg.fileName));
      }
 
     delete editor;

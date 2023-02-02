@@ -79,6 +79,8 @@ private slots:
 
     void on_RonchiX_valueChanged(double arg1);
 
+    void on_pushButton_clicked();
+
 private:
     Ui::foucaultView *ui;
     SurfaceManager *m_sm;
