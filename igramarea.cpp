@@ -26,7 +26,7 @@
 #include <QtGlobal>
 #include <math.h>
 
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/features2d.hpp"
 #include "graphicsutilities.h"

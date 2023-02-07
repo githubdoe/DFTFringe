@@ -26,8 +26,9 @@ int xsize,ysize;
 double* qmap = NULL;
 double* phase;
 double* unwrapped;
-
-double _HUGE=1e37;
+#ifdef Q_OS_UNIX
+double HUGE=1e37;
+#endif
 
 #include <stdlib.h>
 #include <math.h>
@@ -118,12 +119,12 @@ void qg_path_follower (int nx, int ny, double *phase, double *qmap,
     while (1) {
 
         // Find the point of highest quality.
-        double m = -_HUGE;
+        double m = -HUGE;
         int mndx;
         for (int k=0; k < size; ++k)
             if (qmap[k] > m && ! flags[k])
                 m = qmap[mndx = k];
-        if (m == -_HUGE) break;
+        if (m == -HUGE) break;
 
         // Unwrap the first point.
         unwrap_and_insert (mndx, phase[mndx]);

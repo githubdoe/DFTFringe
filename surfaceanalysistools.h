@@ -23,7 +23,7 @@
 #include <QLabel>
 #include <QList>
 #include <QTimer>
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
 namespace Ui {
 class surfaceAnalysisTools;
 }

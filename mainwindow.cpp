@@ -33,7 +33,7 @@
 #include "simigramdlg.h"
 #include "usercolormapdlg.h"
 #include <qlayout.h>
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
 #include "simulationsview.h"
 #include "outlinehelpdocwidget.h"
 #include "bathastigdlg.h"
@@ -1159,9 +1159,12 @@ void MainWindow::batchProcess(QStringList fileList){
         if (batchWiz->introPage->shouldFilterWavefront(wf->std)){
 
             m_surfaceManager->deleteCurrent();
-            if (shouldBeep)
-                continue;
-                //Beep(300,250);
+            if (shouldBeep) {
+#ifdef Q_OS_WIN
+                // only beeps if we are in windows
+                Beep(300,250);
+#endif
+            }
         }
         else{
             QPointF astig(wf->InputZerns[4], wf->InputZerns[5]);

@@ -13,7 +13,7 @@
 #include "QLayout"
 #include "plotcolor.h"
 #include "qwt_legend.h"
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
 #include <random>
 
 nullVariationDlg::nullVariationDlg(QWidget *parent) :

@@ -2,7 +2,7 @@
 #define PSI_DLG_H
 
 #include <QDialog>
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
 class PSITiltOptions;
 namespace Ui {
 class PSI_dlg;

@@ -36,7 +36,11 @@
 #include <qwt_symbol.h>
 #include <qwt_math.h>
 #include <math.h>
+#ifdef Q_OS_UNIX
 #include <opencv2/highgui/highgui.hpp>
+#else
+#include <opencv/highgui.h>
+#endif
 #include <qevent.h>
 #include <qwt_scale_draw.h>
 #include "opencv2/opencv.hpp"

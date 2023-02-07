@@ -17,7 +17,7 @@
 ****************************************************************************/
 #include "simulationsview.h"
 #include "ui_simulationsview.h"
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
 #include <opencv2/imgproc.hpp>
 #include "mirrordlg.h"
 #include "zernikeprocess.h"
@@ -34,8 +34,9 @@
 #include "utils.h"
 #include <QTextDocument>
 #include <QtMath>
+#ifdef Q_OS_UNIX
 #include <opencv2/core/core_c.h>
-
+#endif
 double M2PI = M_PI * 2.;
 SimulationsView *SimulationsView::m_Instance = 0;
 class arcSecScaleDraw: public QwtScaleDraw

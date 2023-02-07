@@ -17,7 +17,7 @@
 ****************************************************************************/
 #include "colorchanneldisplay.h"
 #include "ui_colorchanneldisplay.h"
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
 
 ColorChannelDisplay::ColorChannelDisplay(QWidget *parent) :
     QDialog(parent),

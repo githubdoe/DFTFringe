@@ -1,8 +1,7 @@
-
+#include <QDebug>
 
 #if defined(_WIN32)
 #include <Windows.h>
-#include <QDebug>
 #define WIDTH 12
 #define DIV 1048576ull
 
@@ -29,6 +28,5 @@ long showmem(QString title){
      return statex.ullAvailVirtual/DIV;
 }
 #else
-#include <QDebug>
 int showmem(QString){return 1000;}
 #endif

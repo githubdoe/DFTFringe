@@ -19,7 +19,7 @@
 #define INTENSITYPLOT_H
 #include <QWidget>
 #include <qwt_plot.h>
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
 
 class intensityPlot:  public QwtPlot
 {

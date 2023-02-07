@@ -19,8 +19,12 @@
 #define DFTAREA_H
 
 #include <QWidget>
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
+#ifdef Q_OS_UNIX
 #include <opencv2/highgui/highgui.hpp>
+#else
+#include <opencv/highgui.h>
+#endif
 #include "IgramArea.h"
 #include "dfttools.h"
 #include <QImage>

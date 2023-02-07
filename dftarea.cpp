@@ -32,8 +32,10 @@
 #include <QShortcut>
 #include <opencv2/core/core_c.h>
 using namespace cv;
-
+#ifdef Q_OS_UNIX
 double HUGE=1e37;
+#endif
+
 
 
 cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,

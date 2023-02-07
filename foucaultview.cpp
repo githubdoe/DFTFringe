@@ -1,8 +1,12 @@
 #include "foucaultview.h"
 #include "ui_foucaultview.h"
 #include "mirrordlg.h"
-#include <opencv2/opencv.hpp>
+#include "opencv_win_linux.h"
+#ifdef Q_OS_UNIX
 #include <opencv2/highgui/highgui.hpp>
+#else
+#include <opencv/highgui.h>
+#endif
 #include "simulationsview.h"
 #include <QVector>
 #include <QMenu>
