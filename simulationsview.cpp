@@ -34,7 +34,7 @@
 #include "utils.h"
 #include <QTextDocument>
 #include <QtMath>
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
 #include <opencv2/core/core_c.h>
 #endif
 double M2PI = M_PI * 2.;

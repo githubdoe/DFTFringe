@@ -6,7 +6,7 @@
 #include <QMessageBox>
 #include <QShortcut>
 #include <QMouseEvent>
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
 #include <opencv2/imgproc.hpp>
 #endif
 

@@ -20,7 +20,7 @@
 
 #include <QWidget>
 #include "opencv_win_linux.h"
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
 #include <opencv2/highgui/highgui.hpp>
 #else
 #include <opencv/highgui.h>

@@ -16,7 +16,7 @@
 
 ****************************************************************************/
 #include "imagehisto.h"
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
 #include <opencv2/core/core_c.h>
 #endif
 #include <iostream>

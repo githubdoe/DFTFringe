@@ -33,7 +33,7 @@
 #include <QtNetwork/QLocalSocket>
 #include <qmutex.h>
 
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
     #include <signal.h>
     #include <unistd.h>
 #endif
@@ -79,7 +79,7 @@ void SingleApplicationPrivate::genBlockServerName( int timeout )
             appData.addData( QStandardPaths::standardLocations( QStandardPaths::HomeLocation ).join("").toUtf8() );
         }
 #endif
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
         QString username;
         QProcess process;
         process.start( "whoami" );
@@ -99,7 +99,7 @@ void SingleApplicationPrivate::genBlockServerName( int timeout )
 
 void SingleApplicationPrivate::startPrimary( bool resetMemory )
 {
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
     // Handle any further termination signals to ensure the
     // QSharedMemory block is deleted even if the process crashes
     crashHandler();
@@ -134,7 +134,7 @@ void SingleApplicationPrivate::startPrimary( bool resetMemory )
 
 void SingleApplicationPrivate::startSecondary()
 {
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
     // Handle any further termination signals to ensure the
     // QSharedMemory block is deleted even if the process crashes
     crashHandler();
@@ -179,7 +179,7 @@ void SingleApplicationPrivate::connectToPrimary( int msecs, char connectionType 
     }
 }
 
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
     void SingleApplicationPrivate::crashHandler()
     {
         // This guarantees the program will work even with multiple
@@ -357,7 +357,7 @@ SingleApplication::SingleApplication( int &argc, char *argv[], bool allowSeconda
     // Guarantee thread safe behaviour with a shared memory block. Also by
     // explicitly attaching it and then deleting it we make sure that the
     // memory is deleted even if the process had crashed on Unix.
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
     d->memory = new QSharedMemory( d->blockServerName );
     d->memory->attach();
     delete d->memory;

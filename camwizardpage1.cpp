@@ -16,7 +16,7 @@
 #include <QSettings>
 #include <QInputDialog>
 #include "settings2.h"
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
 #include <opencv2/core/types_c.h>
 #include <opencv2/core/core_c.h>
 #endif

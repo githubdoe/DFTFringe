@@ -1,5 +1,5 @@
-#ifdef Q_OS_UNIX
-#include "opencv_win_linux.h"
+#ifndef Q_OS_WIN
+#include <opencv2/opencv.hpp>
 #else
 #include <opencv/cv.h>
 #endif

@@ -1,7 +1,7 @@
 #include "psiphasedisplay.h"
 #include "ui_psiphasedisplay.h"
 #include "math.h"
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
 #include <opencv2/highgui/highgui.hpp>
 #else
 #include <opencv/highgui.h>

@@ -20,7 +20,7 @@
 #include "opencv_win_linux.h"
 #include <qsettings.h>
 
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
 #define CV_INTER_NN cv::INTER_NEAREST
 #define CV_INTER_LINEAR cv::INTER_LINEAR
 #define CV_INTER_LANCZOS4 cv::INTER_LANCZOS4

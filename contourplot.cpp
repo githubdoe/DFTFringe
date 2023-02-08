@@ -34,7 +34,7 @@
 #include <QtGui/qevent.h>
 #include <qwt_plot_rescaler.h>
 #include <QtGui>
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
 #include <opencv2/highgui/highgui.hpp>
 #else
 #include "opencv/highgui.h"
