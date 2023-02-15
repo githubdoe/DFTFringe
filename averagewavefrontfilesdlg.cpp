@@ -3,7 +3,7 @@
 #include "surfacemanager.h"
 #include "mainwindow.h"
 #include "wavefrontaveragefilterdlg.h"
-#include <opencv/cv.h>
+#include "opencv_win_linux.h"
 #include "rejectedwavefrontsdlg.h"
 #include <QFileInfo>
 #include "utils.h"

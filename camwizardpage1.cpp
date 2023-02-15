@@ -4,7 +4,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv/cv.h>
+#include "opencv_win_linux.h"
 #include <QImageReader>
 #include <QFileDialog>
 #include <vector>
@@ -16,6 +16,12 @@
 #include <QSettings>
 #include <QInputDialog>
 #include "settings2.h"
+#ifndef Q_OS_WIN
+#include <opencv2/core/types_c.h>
+#include <opencv2/core/core_c.h>
+#endif
+
+
 using namespace cv;
 namespace cv
 {
@@ -122,9 +128,9 @@ bool CamWizardPage1::runCalibration( cv::Size& imageSize, cv::Mat& cameraMatrix,
 
     //Find intrinsic and extrinsic camera parameters
     double rms = cv::calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix,
-                                 distCoeffs, rvecs, tvecs, CV_CALIB_ZERO_TANGENT_DIST|
-                                 CV_CALIB_FIX_PRINCIPAL_POINT|CV_CALIB_FIX_ASPECT_RATIO|
-                                 CV_CALIB_FIX_K4|CV_CALIB_FIX_K5);
+                                 distCoeffs, rvecs, tvecs, cv::CALIB_ZERO_TANGENT_DIST|
+                                 cv::CALIB_FIX_PRINCIPAL_POINT|cv::CALIB_FIX_ASPECT_RATIO|
+                                 cv::CALIB_FIX_K4|cv::CALIB_FIX_K5);
 
     ui->Results->append( "\nRe-projection error reported by calibrateCamera: " + QString().number( rms) + "\n");
 
@@ -218,7 +224,7 @@ void CamWizardPage1::on_compute_clicked()
         bool found = false;
         if (ui->useCircleGrid->isChecked()){
             cv::Mat gray;
-            cvtColor(view, gray, CV_BGR2GRAY);
+            cvtColor(view, gray, cv::COLOR_BGR2GRAY);
             //cv::threshold(gray,gray, 200, 255, cv::THRESH_BINARY);
             cv::Mat dial;
             cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
@@ -280,7 +286,7 @@ void CamWizardPage1::on_compute_clicked()
                 qApp->processEvents();
                 pointBuf.clear();
                 found = cv::findChessboardCorners( viewGray.clone(), sizex, pointBuf,
-                CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
+                cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_FAST_CHECK | cv::CALIB_CB_NORMALIZE_IMAGE);
                 if (found){
                     size = sizex;
                     ui->columns->setValue(size.width);

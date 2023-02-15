@@ -1,8 +1,12 @@
 #include "foucaultview.h"
 #include "ui_foucaultview.h"
 #include "mirrordlg.h"
-#include "opencv/cv.h"
-#include "opencv/highgui.h"
+#include "opencv_win_linux.h"
+#ifndef Q_OS_WIN
+#include <opencv2/highgui/highgui.hpp>
+#else
+#include <opencv/highgui.h>
+#endif
 #include "simulationsview.h"
 #include <QVector>
 #include <QMenu>
@@ -88,11 +92,11 @@ QImage *foucaultView::render(){
 }
 
 void foucaultView::saveRonchiImage(){
-    ui->ronchiViewLb->pixmap(Qt::ReturnByValue).save(getSaveFileName("foucault"));
+    ui->ronchiViewLb->pixmap()->save(getSaveFileName("foucault"));
 
 }
 void foucaultView::saveFoucaultImage(){
-    ui->foucaultViewLb->pixmap(Qt::ReturnByValue).save(getSaveFileName("foucault"));
+    ui->foucaultViewLb->pixmap()->save(getSaveFileName("foucault"));
 }
 
 void foucaultView::setSurface(wavefront *wf){

@@ -2,7 +2,7 @@
 #define OUTLINEPLOTS_H
 
 #include <QDockWidget>
-#include "Qwt_plot.h"
+#include "qwt_plot.h"
 namespace Ui {
 class outlinePlots;
 }

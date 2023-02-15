@@ -57,7 +57,7 @@ public:
     void connectToPrimary( int msecs, char connectionType );
     void cleanUp();
 
-#ifdef Q_OS_UNIX
+#ifndef Q_OS_WIN
     void crashHandler();
     static void terminate( int signum );
     static QList<SingleApplicationPrivate*> sharedMem;

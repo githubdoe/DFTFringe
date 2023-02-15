@@ -26,7 +26,7 @@
 #include <QtGlobal>
 #include <math.h>
 
-#include "opencv/cv.h"
+#include "opencv_win_linux.h"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/features2d.hpp"
 #include "graphicsutilities.h"
@@ -195,7 +195,7 @@ void IgramArea::DrawSimIgram(void){
     double rad = xcen-border;
     cv::Mat simgram = zernikeProcess::get_Instance()->makeSurfaceFromZerns(border, true);
     cv::flip(simgram,simgram,0);
-    cv::cvtColor(simgram, simgram, CV_BGRA2RGBA);
+    cv::cvtColor(simgram, simgram, cv::COLOR_BGRA2RGBA);
     igramColor = QImage((uchar*)simgram.data,
                         simgram.cols,
                         simgram.rows,
@@ -243,7 +243,7 @@ void IgramArea::doGamma(double gammaV){
         pow(mm,gammaV,mm);
         mm *= 255;
         //if (needToConvertBGR)
-            //cvtColor(mm,mm,CV_BGRA2RGBA);
+            //cvtColor(mm,mm,cv::COLOR_BGRA2RGBA);
         needToConvertBGR = false;
         mm.convertTo(mm,CV_8UC3);
 
@@ -267,7 +267,7 @@ Mat IgramArea::qImageToMat(QImage &img){
             iMat = cv::Mat(img.height(), img.width(), CV_8UC4, img.bits(), img.bytesPerLine());
             cv::Mat cvtMat;
             qDebug() << "removing alpha channel";
-            cv::cvtColor(iMat, cvtMat, CV_BGRA2BGR);
+            cv::cvtColor(iMat, cvtMat, cv::COLOR_BGRA2BGR);
             return cvtMat;
         break;
     }
@@ -459,7 +459,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     double rmeanpeak = 0;
     double avg;
     if (showDebug){
-        cv::namedWindow("outline debug",CV_WINDOW_NORMAL);
+        cv::namedWindow("outline debug",cv::WINDOW_NORMAL);
         cv::moveWindow("outline debug", 10,10);
     }
     double oldDel;
@@ -586,7 +586,7 @@ void IgramArea::findCenterHole(){
     QImage img = igramGray;
     cv::Mat igram(img.height(), img.width(), CV_8UC3, img.bits(), img.bytesPerLine());
     cv::Mat gray;
-    cvtColor(igram, gray, CV_BGR2GRAY);
+    cvtColor(igram, gray, cv::COLOR_BGR2GRAY);
     double scale = 250./img.height();
     if (scale > 1.)
         scale = 1.;
@@ -632,7 +632,7 @@ void IgramArea::findCenterHole(){
 
     // phase 2 search for full size hole
     if (showDebug){
-        cv::namedWindow("outline debug",CV_WINDOW_NORMAL);
+        cv::namedWindow("outline debug",cv::WINDOW_NORMAL);
         cv::moveWindow("outline debug", 10,10);
     }
     QVector<QPointF> points;
@@ -772,7 +772,7 @@ void IgramArea::findOutline(){
     QImage img = igramGray;
     cv::Mat igram(img.height(), img.width(), CV_8UC3, img.bits(), img.bytesPerLine());
     cv::Mat gray;
-    cvtColor(igram, gray, CV_BGR2GRAY);
+    cvtColor(igram, gray, cv::COLOR_BGR2GRAY);
     gray = toSobel(gray);
 
     double scale = 1.;
@@ -1656,7 +1656,7 @@ void drawCircle(QPointF& p1, QPointF& p2, QPainter& painter)
 QImage IgramArea::getBestChannel(QImage &img){
     cv::Mat gray = igramToGray(qImageToMat(img));
     cv::Mat bestChan;
-    cv::cvtColor(gray,bestChan, CV_GRAY2BGR);
+    cv::cvtColor(gray,bestChan, cv::COLOR_GRAY2BGR);
     return QImage((uchar*)bestChan.data, bestChan.cols,
                           bestChan.rows, bestChan.step, QImage::Format_RGB888).copy();
 }

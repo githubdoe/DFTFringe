@@ -65,7 +65,7 @@
 #include <QtCore>
 #include <QtGui>
 #include <QLabel>
-#include <qscrollarea>
+#include <QScrollArea>
 #include "Circleoutline.h"
 #include <list>
 

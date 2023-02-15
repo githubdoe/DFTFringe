@@ -30,6 +30,7 @@
 #include <QLabel>
 #include "mikespsiinterface.h"
 #include <QShortcut>
+#include <opencv2/core/core_c.h>
 using namespace cv;
 
 
@@ -385,7 +386,7 @@ void showData(const std::string& txt, cv::Mat mat, bool useLog){
     cv::namedWindow(txt, WINDOW_NORMAL);
     normalize(tmp, tmp,0,255,CV_MINMAX);
     tmp.convertTo(tmp,CV_8U);
-    cvtColor(tmp,tmp, CV_GRAY2RGB);
+    cvtColor(tmp,tmp, cv::COLOR_GRAY2RGB);
     cv::imshow(txt, tmp);
     cv::waitKey(1);
 }
@@ -414,7 +415,7 @@ QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, doub
 
     cv::Mat tmp = magI.clone();
     cv::waitKey(1);
-    cvtColor(magI,magI, CV_GRAY2RGB);
+    cvtColor(magI,magI, cv::COLOR_GRAY2RGB);
     if (show){
         imshow(title, magI);
         waitKey(1);
@@ -565,12 +566,12 @@ void qg_path_follower_vortex (Size size, double *phase, double *qmap,
   while (1) {
 
     // Find the point of highest quality.
-    double m = -HUGE;
+    double m = -HUGE_VAL;
     int mndx;
     for (int k=0; k < total; ++k)
       if (qmap[k] > m && ! flags[k])
     m = qmap[mndx = k];
-    if (m == -HUGE) break;
+    if (m == -HUGE_VAL) break;
 
     // Unwrap the first point.
     unwrap_and_insert (mndx, phase[mndx]);

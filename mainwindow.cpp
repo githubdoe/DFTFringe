@@ -33,7 +33,7 @@
 #include "simigramdlg.h"
 #include "usercolormapdlg.h"
 #include <qlayout.h>
-#include <opencv/cv.h>
+#include "opencv_win_linux.h"
 #include "simulationsview.h"
 #include "outlinehelpdocwidget.h"
 #include "bathastigdlg.h"
@@ -49,6 +49,7 @@
 #include "opencv2/opencv.hpp"
 
 
+int ms=1000;
 
 #ifndef _WIN32
     #include <unistd.h>
@@ -1118,7 +1119,7 @@ void MainWindow::batchProcess(QStringList fileList){
 #ifdef Q_OS_WIN
         Sleep(uint(1000));
 #else
-        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
+        ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
         nanosleep(&ts, NULL);
 #endif
         m_batchMakeSurfaceReady = false;
@@ -1158,8 +1159,12 @@ void MainWindow::batchProcess(QStringList fileList){
         if (batchWiz->introPage->shouldFilterWavefront(wf->std)){
 
             m_surfaceManager->deleteCurrent();
-            if (shouldBeep)
+            if (shouldBeep) {
+#ifdef Q_OS_WIN
+                // only beeps if we are in windows
                 Beep(300,250);
+#endif
+            }
         }
         else{
             QPointF astig(wf->InputZerns[4], wf->InputZerns[5]);

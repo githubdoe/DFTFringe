@@ -19,7 +19,7 @@
 #define IMAGEHISTO_H
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv/cv.h"
+#include "opencv_win_linux.h"
 class imageHisto
 {
 public:

@@ -16,7 +16,7 @@
 
 ****************************************************************************/
 #include "zernikeprocess.h"
-#include <opencv/cv.h>
+#include "opencv_win_linux.h"
 #include <cmath>
 #include "mainwindow.h"
 #include <QDebug>

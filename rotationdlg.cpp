@@ -17,8 +17,17 @@
 ****************************************************************************/
 #include "rotationdlg.h"
 #include "ui_rotationdlg.h"
-#include <opencv/cv.h>
+#include "opencv_win_linux.h"
 #include <qsettings.h>
+
+#ifndef Q_OS_WIN
+#define CV_INTER_NN cv::INTER_NEAREST
+#define CV_INTER_LINEAR cv::INTER_LINEAR
+#define CV_INTER_LANCZOS4 cv::INTER_LANCZOS4
+#define CV_INTER_CUBIC cv::INTER_CUBIC
+#define CV_INTER_AREA cv::INTER_AREA
+#endif
+
 RotationDlg::RotationDlg( QList<int> list, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RotationDlg), list(list)

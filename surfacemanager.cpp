@@ -19,7 +19,7 @@
 #include <limits>
 #include <cmath>
 #include <QWidget>
-#include <opencv/cv.h>
+#include "opencv_win_linux.h"
 #include <QtWidgets/QMessageBox>
 #include <QDebug>
 #include "mainwindow.h"
@@ -58,7 +58,7 @@
 #include <QTabWidget>
 #include <QPrintDialog>
 #include <QSplitter>
-#include "settingsgeneral2.h"
+#include "settingsGeneral2.h"
 #include "foucaultview.h"
 #include "myutils.h"
 #include "contourview.h"
