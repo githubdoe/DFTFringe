@@ -474,7 +474,7 @@ void DFTArea::doDFT(){
     QSettings set;
 
     if (set.value("showDFTHelp", true).toBool()){
-        if (QMessageBox::Yes == QMessageBox::question(0,"Did you know you can use the Scroll wheel to zoom this image?.","Selct yes to not display this message again."))
+        if (QMessageBox::Yes == QMessageBox::question(0,"Did you know you can use the Scroll wheel to zoom this image?.","Select yes to not display this message again."))
         {
             set.setValue("showDFTHelp",false);
         }
