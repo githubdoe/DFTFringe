@@ -352,12 +352,12 @@ FORMS    += mainwindow.ui \
 win32 {
       CONFIG( debug, debug|release ) {
         # debug
-        LIBS += D:\\qwt-6.1.5\\lib\\qwtd.dll
+        LIBS += D:\\qwt-6.1.6\\lib\\qwtd.dll
       } else {
         # release
-        LIBS += D:\\qwt-6.1.5\\lib\\qwt.dll
+        LIBS += D:\\qwt-6.1.6\\lib\\qwt.dll
       }
-      INCLUDEPATH += D:\\qwt-6.1.5\\src
+      INCLUDEPATH += D:\\qwt-6.1.6\\src
 
       #message("using win32")include
 
@@ -365,12 +365,12 @@ INCLUDEPATH += D:\armadillo\armadillo-9.200.6\include
 
 INCLUDEPATH += D:\opencv\opencv-3.4.12\build\install\include
 
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_core3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_highgui3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgcodecs3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgproc3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_features2d3412.dll
-LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
+LIBS += D:\opencv\build\bin\libopencv_core460.dll
+LIBS += D:\opencv\build\bin\libopencv_highgui460.dll
+LIBS += D:\opencv\build\bin\libopencv_imgcodecs460.dll
+LIBS += D:\opencv\build\bin\libopencv_imgproc460.dll
+LIBS += D:\opencv\build\bin\libopencv_features2d460.dll
+LIBS += D:\opencv\build\bin\libopencv_calib3d460.dll
 
 
 LIBS += D:\armadillo\bin\libarmadillo.dll

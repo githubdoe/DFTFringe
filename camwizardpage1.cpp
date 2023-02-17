@@ -4,7 +4,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui.hpp>
-#include "opencv_win_linux.h"
+#include <opencv2/opencv.hpp>
 #include <QImageReader>
 #include <QFileDialog>
 #include <vector>
@@ -16,10 +16,8 @@
 #include <QSettings>
 #include <QInputDialog>
 #include "settings2.h"
-#ifndef Q_OS_WIN
 #include <opencv2/core/types_c.h>
 #include <opencv2/core/core_c.h>
-#endif
 
 
 using namespace cv;

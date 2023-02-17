@@ -6,7 +6,7 @@
 #include "mirrordlg.h"
 #include <QFileDialog>
 #include <QPrinter>
-#include "opencv_win_linux.h"
+#include <opencv2/opencv.hpp>
 #include <QApplication>
 #include <QMessageBox>
 #include "myutils.h"

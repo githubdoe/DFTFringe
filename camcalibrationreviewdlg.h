@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include <vector>
-#include "opencv_win_linux.h"
+#include <opencv2/opencv.hpp>
 
 namespace Ui {
 class CamCalibrationReviewDlg;

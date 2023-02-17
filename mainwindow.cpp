@@ -33,7 +33,7 @@
 #include "simigramdlg.h"
 #include "usercolormapdlg.h"
 #include <qlayout.h>
-#include "opencv_win_linux.h"
+#include <opencv2/opencv.hpp>
 #include "simulationsview.h"
 #include "outlinehelpdocwidget.h"
 #include "bathastigdlg.h"

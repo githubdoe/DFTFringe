@@ -19,7 +19,7 @@
 #include <limits>
 #include <cmath>
 #include <QWidget>
-#include "opencv_win_linux.h"
+#include <opencv2/opencv.hpp>
 #include <QtWidgets/QMessageBox>
 #include <QDebug>
 #include "mainwindow.h"

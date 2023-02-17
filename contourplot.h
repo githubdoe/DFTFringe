@@ -20,7 +20,7 @@
 
 #include <qwt_plot.h>
 #include <qwt_plot_spectrogram.h>
-#include "opencv_win_linux.h"
+#include <opencv2/opencv.hpp>
 #include "wavefront.h"
 #include "contourtools.h"
 #include "usercolormapdlg.h"
