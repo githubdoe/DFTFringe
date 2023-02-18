@@ -33,10 +33,8 @@
 #include <QtNetwork/QLocalSocket>
 #include <qmutex.h>
 
-#ifndef Q_OS_WIN
-    #include <signal.h>
-    #include <unistd.h>
-#endif
+#include <signal.h>
+#include <unistd.h>
 
 #ifdef Q_OS_WIN
     #include <windows.h>

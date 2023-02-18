@@ -6,9 +6,7 @@
 #include <QMessageBox>
 #include <QShortcut>
 #include <QMouseEvent>
-#ifndef Q_OS_WIN
 #include <opencv2/imgproc.hpp>
-#endif
 
 outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
     m_x(x),m_y(y),m_rad(rad),
