@@ -1,0 +1,7 @@
+.qmake.stash
+Makefile
+*.o
+moc_*
+qrc_*
+ui_*
+DFTFringe
