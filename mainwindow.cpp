@@ -33,7 +33,7 @@
 #include "simigramdlg.h"
 #include "usercolormapdlg.h"
 #include <qlayout.h>
-#include "opencv_win_linux.h"
+#include <opencv2/opencv.hpp>
 #include "simulationsview.h"
 #include "outlinehelpdocwidget.h"
 #include "bathastigdlg.h"
@@ -49,12 +49,6 @@
 #include "opencv2/opencv.hpp"
 
 
-int ms=1000;
-
-#ifndef _WIN32
-    #include <unistd.h>
-    #define Sleep(x) usleep(1000 * x)
-#endif
 using namespace QtConcurrent;
 std::vector<wavefront*> g_wavefronts;
 int g_currentsurface = 0;
@@ -1094,12 +1088,7 @@ void MainWindow::batchProcess(QStringList fileList){
         }
 
         QApplication::processEvents();
-#ifdef Q_OS_WIN
-        Sleep(uint(1000));
-#else
-        struct timespec ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
-        nanosleep(&ts, NULL);
-#endif
+        QObject().thread()->msleep(1000);
         ui->SelectOutSideOutline->setChecked(true);
         if (!batchIgramWizard::autoCb->isChecked()){
             while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
@@ -1116,12 +1105,8 @@ void MainWindow::batchProcess(QStringList fileList){
 
         m_igramArea->nextStep();
         QApplication::processEvents();
-#ifdef Q_OS_WIN
-        Sleep(uint(1000));
-#else
-        ts = { 1000 / 1000, (ms % 1000) * 1000 * 1000 };
-        nanosleep(&ts, NULL);
-#endif
+        QObject().thread()->msleep(1000);
+
         m_batchMakeSurfaceReady = false;
         if (!batchIgramWizard::autoCb->isChecked() && !m_skipItem){
             while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {
@@ -1160,10 +1145,7 @@ void MainWindow::batchProcess(QStringList fileList){
 
             m_surfaceManager->deleteCurrent();
             if (shouldBeep) {
-#ifdef Q_OS_WIN
-                // only beeps if we are in windows
-                Beep(300,250);
-#endif
+                QApplication::beep();
             }
         }
         else{
@@ -1172,7 +1154,8 @@ void MainWindow::batchProcess(QStringList fileList){
             batchWiz->addRms(wf->name, QPointF(ndx,wf->std));
 
 
-            Sleep(1000);
+            QObject().thread()->msleep(1000);
+
             if (batchIgramWizard::saveFile->isChecked()){
                 QSettings settings;
                 QString lastPath = settings.value("lastPath","").toString();
@@ -1345,7 +1328,8 @@ void MainWindow::startJitter(){
         m_igramArea->increase(rad);
         m_igramArea->shiftoutline(QPointF(x,y));
         qApp->processEvents();
-        Sleep(1000);
+        QObject().thread()->msleep(1000);
+
 
         m_igramArea->nextStep();
 
@@ -1359,7 +1343,7 @@ void MainWindow::startJitter(){
         dlg->status(wf->name);
         m_surfTools->nameChanged(m_surfaceManager->m_currentNdx, wf->name);
         qApp->processEvents();
-        Sleep(500);
+        QObject().thread()->msleep(500);
     }
     dlg->getProgressBar()->reset();
     stopJittering = false;

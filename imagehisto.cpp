@@ -16,9 +16,7 @@
 
 ****************************************************************************/
 #include "imagehisto.h"
-#ifndef Q_OS_WIN
 #include <opencv2/core/core_c.h>
-#endif
 #include <iostream>
 
 using namespace cv;
