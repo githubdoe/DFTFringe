@@ -1,7 +1,18 @@
+# files generated during linux and windows build
 .qmake.stash
 Makefile
 *.o
 moc_*
 qrc_*
 ui_*
+
+# linux build files
 DFTFringe
+
+# windows build files
+Makefile.Debug
+Makefile.Release
+object_script.DFTFringe.Debug
+object_script.DFTFringe.Release
+release
+
