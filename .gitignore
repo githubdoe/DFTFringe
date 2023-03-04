@@ -9,10 +9,14 @@ ui_*
 # linux build files
 DFTFringe
 
-# windows build files
+# windows build files (cmd)
 Makefile.Debug
 Makefile.Release
 object_script.DFTFringe.Debug
 object_script.DFTFringe.Release
 release
+
+# windows QTcreator generated file
+DFTFringe.pro.user
+
 
