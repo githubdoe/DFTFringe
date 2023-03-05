@@ -130,7 +130,7 @@ jobs:
       - name: install qmake
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         run: aqt install-qt windows desktop 5.15.2 win64_mingw81 --archives qtbase qtsvg
-      - name: qmaje
+      - name: qmake
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         run: cd qwt-6.1.6 ; ..\5.15.2\mingw81_64\bin\qmake.exe
       - name: build
