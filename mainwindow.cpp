@@ -940,12 +940,29 @@ void MainWindow::on_actionHelp_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
 
-    QMessageBox::information(this, "___________________________________________________________________________About", QString().sprintf("<html><body><h1>DFTFringe version %s</h1>",APP_VERSION)+
+    QMessageBox::information(this, "___________________________________________________________________________About", 
+                            QString().sprintf("<html><body><h1>DFTFringe version %s</h1>",APP_VERSION)+
                              "<p>This program was compiled using:<ul><li>"
-                             "Qt version 5.15.2 </li>"
-                             "<li> Compiled with mingw81_64</li>"
-                             "<li> OpenCV 3.14.12</li>"
-                             "<li> QWTPlot6.1.5,  libblas, lapack</li></ul></p>"
+                             "Qt version " + QT_VERSION_STR + " </li>"
+                    #if defined(__GNUC__) && defined(__VERSION__)
+                        #if defined(__clang__)
+                             "<li> Compiled with clang " + __VERSION__ + "</li>"
+                        #elif defined(__llvm__)
+                             "<li> Compiled with llvm-gcc " + __VERSION__ + "</li>"
+                        #elif defined(__MINGW64__)
+                             "<li> Compiled with MinGW-w64 64bit " + QString::number(__MINGW64_VERSION_MAJOR) + "." + QString::number(__MINGW64_VERSION_MINOR) + " GCC " + __VERSION__ +"</li>"
+                        #elif defined(__MINGW32__)
+                             "<li> Compiled with MinGW32 " + QString::number(__MINGW32_VERSION_MAJOR) + "." + QString::number(__MINGW32_VERSION_MINOR) + " GCC " + __VERSION__ +"</li>"
+                        #else
+                             "<li> Compiled with GCC " + __VERSION__ + "</li>"
+                        #endif
+                    #elif defined(_MSC_FULL_VER)
+                             "<li> Compiled with Microsoft Visual Studio " + QString::number(_MSC_FULL_VER) + "</li>"
+                    #else
+                             "<li> Compiled with unknown compiler (please report to add support)</li>"
+                    #endif
+                             "<li> OpenCV " + CV_VERSION + "</li>"
+                             "<li> QWT " + QWT_VERSION_STR + ", armadillo " + QString::fromStdString(arma::arma_version::as_string()) + ", Lapack, BLAS</li></ul></p>"
                              "<h3>Credits</h3>"
                              "<ul><li>Mike Peck for<ul><li>Researching and explaining FFT algorithm.</li>"
                              "<li>Researching and explaining Unwrap algorithms.</li></li>"
