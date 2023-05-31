@@ -1,0 +1,332 @@
+name: build-windows
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  cache-mingw-from-QT:
+    runs-on: windows-latest
+    steps:
+      # this will restore/cache everything in /Tools depending on cache hit/miss
+      - name: Cache minGW
+        id: cache-minGW
+        uses: actions/cache@v3
+        with:
+          path: Tools
+          key: ${{ runner.os }}-mingw810_64
+
+      # all what follows is only run on cache miss
+      - name: install aqtinstall tool
+        if: steps.cache-minGW.outputs.cache-hit != 'true'
+        run: pip install aqtinstall
+      - name: install correct minGW version 
+        if: steps.cache-minGW.outputs.cache-hit != 'true'
+        run: aqt install-tool windows desktop tools_mingw qt.tools.win64_mingw810
+        # path is Tools\mingw810_64\bin
+
+  build-openCV-with-QT:
+    runs-on: windows-latest
+    needs: cache-mingw-from-QT
+    steps:
+      # this will restore/cache everything depending on cache hit/miss
+      - name: Cache QT and openCV
+        uses: actions/cache/@v3
+        id: cache-openCV-QT
+        with:
+          path: |
+            build_openCV\install\x64\mingw\bin\*.dll
+            build_openCV\install\include\*
+            5.15.2\mingw81_64\bin\*
+            5.15.2\mingw81_64\include\*
+            5.15.2\mingw81_64\lib\*
+            5.15.2\mingw81_64\mkspecs\*
+            5.15.2\mingw81_64\plugins\platforms\*
+            5.15.2\mingw81_64\plugins\imageformats\*
+          key: ${{ runner.os }}-openCV-4.6.0-QT-5.15.2
+
+      # all what follows is only run on cache miss
+
+      # restore cached minGW
+      - uses: actions/cache/restore@v3
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        id: cache-minGW
+        with:
+          path: Tools
+          key: ${{ runner.os }}-mingw810_64
+          fail-on-cache-miss: true
+      - name: add minGW to path
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        shell: bash
+        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+      - name: install aqtinstall tool
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        run: pip install aqtinstall
+      - name: install QT
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        run: aqt install-qt windows desktop 5.15.2 win64_mingw81 -m qtcharts qtdatavis3d
+      - uses: actions/checkout@v3
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        with: 
+          repository: 'opencv/opencv'
+          ref: '4.6.0'
+          path: './openCV'
+      - name: cmake generate
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        run: cmake -G "MinGW Makefiles" -S openCV -B build_openCV -D WITH_QT=ON -D WITH_OPENGL=ON -D Qt5_DIR=:./5.15.2/mingw81_64/lib/cmake/Qt5
+      - name: cmake generate again
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        run: cmake -G "MinGW Makefiles" -S openCV -B build_openCV
+      - name: cmake build
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        run: cmake --build ./build_openCV -j4
+      - name: cmake install
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        run: cmake --install ./build_openCV
+
+  build-QWT:
+    runs-on: windows-latest
+    needs: cache-mingw-from-QT
+    steps:
+      # this will restore/cache everything depending on cache hit/miss
+      - name: cache QWT
+        uses: actions/cache/@v3
+        id: cache-QWT
+        with:
+          path: |
+            qwt-6.1.6\src
+            qwt-6.1.6\lib\*.dll
+          key: ${{ runner.os }}-QWT-6.1.6
+
+      # all what follows is only run on cache miss
+
+      # restore cached minGW
+      - uses: actions/cache/restore@v3
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        id: cache-minGW
+        with:
+          path: Tools
+          key: ${{ runner.os }}-mingw810_64
+          fail-on-cache-miss: true
+      - name: add minGW to path
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        shell: bash
+        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+      - name: install wget
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        run: choco install -y wget
+      - name: download QWT
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        # I specified the mirror because one of the random mirrors did not work during my tests
+        run: wget -O qwt-6.1.6.zip https://sourceforge.net/projects/qwt/files/qwt/6.1.6/qwt-6.1.6.zip/download?use_mirror=pilotfiber
+      - name: extract archive
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        run: 7z x qwt-6.1.6.zip
+      - name: install aqtinstall tool
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        run: pip install aqtinstall
+      - name: install qmake
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        run: aqt install-qt windows desktop 5.15.2 win64_mingw81 --archives qtbase qtsvg
+      - name: qmake
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        run: cd qwt-6.1.6 ; ..\5.15.2\mingw81_64\bin\qmake.exe
+      - name: build
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        run: cd qwt-6.1.6 ; mingw32-make -j4
+
+  build-armadillo:
+    runs-on: windows-latest
+    needs: cache-mingw-from-QT
+    steps:
+      # this will restore/cache everything depending on cache hit/miss
+      - name: Cache armadillo build
+        id: cache-armadillo
+        uses: actions/cache@v3
+        with:
+          path: |
+            build_armadillo\libarmadillo.dll
+            build_armadillo\tmp\include
+          key: ${{ runner.os }}-armadillo-11.4.0
+
+      # all what follows is only run on cache miss
+
+      # restore cached minGW
+      - uses: actions/cache/restore@v3
+        if: steps.cache-armadillo.outputs.cache-hit != 'true'
+        id: cache-minGW
+        with:
+          path: Tools
+          key: ${{ runner.os }}-mingw810_64
+          fail-on-cache-miss: true
+      - name: add minGW to path
+        if: steps.cache-armadillo.outputs.cache-hit != 'true'
+        shell: bash
+        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+      - name: install wget
+        if: steps.cache-armadillo.outputs.cache-hit != 'true'
+        run: choco install -y wget
+      - name: download armadillo
+        if: steps.cache-armadillo.outputs.cache-hit != 'true'
+        # I specified the mirror because one of the random mirrors did not work during my tests
+        run: wget -O armadillo-11.4.4.tar.xz http://sourceforge.net/projects/arma/files/armadillo-11.4.4.tar.xz/download?use_mirror=versaweb
+      # Extract in two step. First step write to stdo and second step read from stdi.
+      # This avoids intermediate file creation
+      # It must run in CMD because powershell corrupts pipes
+      - name: extract archive
+        if: steps.cache-armadillo.outputs.cache-hit != 'true'
+        run: 7z x -so armadillo-11.4.4.tar.xz | 7z x -si -ttar
+        shell: cmd
+      - name: cmake generate
+        if: steps.cache-armadillo.outputs.cache-hit != 'true'
+        run: cmake -G "MinGW Makefiles" -S armadillo-11.4.4 -B build_armadillo
+      - name: cmake build
+        if: steps.cache-armadillo.outputs.cache-hit != 'true'
+        run: cmake --build ./build_armadillo -j4
+
+  build-lapack:
+    runs-on: windows-latest
+    needs: cache-mingw-from-QT
+    steps:
+      # this will restore/cache everything depending on cache hit/miss
+      - name: Cache lapack build
+        id: cache-lapack
+        uses: actions/cache@v3
+        with:
+          path: |
+            build_lapack\lib\liblapack.a
+            build_lapack\lib\libblas.a
+          key: ${{ runner.os }}-lapack-3.11.0
+
+      # all what follows is only run on cache miss
+
+      # restore cached minGW
+      - uses: actions/cache/restore@v3
+        if: steps.cache-lapack.outputs.cache-hit != 'true'
+        id: cache-minGW
+        with:
+          path: Tools
+          key: ${{ runner.os }}-mingw810_64
+          fail-on-cache-miss: true
+      - name: add minGW to path
+        if: steps.cache-lapack.outputs.cache-hit != 'true'
+        shell: bash
+        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+      - uses: actions/checkout@v3 
+        if: steps.cache-lapack.outputs.cache-hit != 'true'
+        with: 
+          repository: 'Reference-LAPACK/lapack'
+          ref: 'v3.11.0'
+          path: './lapack'
+      # remove test compiler because https://github.com/Reference-LAPACK/lapack/issues/305 not needed to create DLL
+      - name: cmake generate
+        if: steps.cache-lapack.outputs.cache-hit != 'true'
+        run: cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D TEST_FORTRAN_COMPILER=OFF
+      - name: cmake build
+        if: steps.cache-lapack.outputs.cache-hit != 'true'
+        run: cmake --build ./build_lapack -j4
+
+
+  build-DFTFringe:
+    runs-on: windows-latest
+    needs: [cache-mingw-from-QT, build-lapack, build-armadillo, build-QWT, build-openCV-with-QT]
+    steps:
+      # restore cached minGW
+      - uses: actions/cache/restore@v3
+        id: cache-minGW
+        with:
+          path: Tools
+          key: ${{ runner.os }}-mingw810_64
+          fail-on-cache-miss: true
+      - name: add minGW to path
+        shell: bash
+        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+      # restore cached lapack
+      - uses: actions/cache/restore@v3
+        id: cache-lapack
+        with:
+          path: |
+            build_lapack\lib\liblapack.a
+            build_lapack\lib\libblas.a
+          key: ${{ runner.os }}-lapack-3.11.0
+          fail-on-cache-miss: true
+      # restore cached armadillo
+      - uses: actions/cache/restore@v3
+        id: cache-armadillo
+        with:
+          path: |
+            build_armadillo\libarmadillo.dll
+            build_armadillo\tmp\include
+          key: ${{ runner.os }}-armadillo-11.4.0
+          fail-on-cache-miss: true
+      # restore cached QWT
+      - uses: actions/cache/restore@v3
+        id: cache-QWT
+        with:
+          path: |
+            qwt-6.1.6\src
+            qwt-6.1.6\lib\*.dll
+          key: ${{ runner.os }}-QWT-6.1.6
+          fail-on-cache-miss: true
+      # restore cached openCV and QT
+      - uses: actions/cache/restore@v3
+        id: cache-openCV-QT
+        with:
+          path: |
+            build_openCV\install\x64\mingw\bin\*.dll
+            build_openCV\install\include\*
+            5.15.2\mingw81_64\bin\*
+            5.15.2\mingw81_64\include\*
+            5.15.2\mingw81_64\lib\*
+            5.15.2\mingw81_64\mkspecs\*
+            5.15.2\mingw81_64\plugins\platforms\*
+            5.15.2\mingw81_64\plugins\imageformats\*
+          key: ${{ runner.os }}-openCV-4.6.0-QT-5.15.2
+          fail-on-cache-miss: true
+      
+      - uses: actions/checkout@v3
+        with: 
+          path: 'DFTFringe'
+
+      - run: cd DFTFringe ; ..\5.15.2\mingw81_64\bin\qmake.exe
+      - run: cd DFTFringe ; mingw32-make -j4
+      - name: copy needed dlls
+        run: |
+          mkdir artifactFolder
+          Copy-Item DFTFringe\res -Destination artifactFolder\res -Recurse
+          Copy-Item DFTFringe\ColorMaps -Destination artifactFolder\ColorMaps -Recurse
+          Copy-Item DFTFringe\release\DFTFringe.exe -Destination artifactFolder
+          mkdir artifactFolder\platforms
+          Copy-Item 5.15.2\mingw81_64\plugins\platforms\qwindows.dll -Destination artifactFolder\platforms
+          Copy-Item 5.15.2\mingw81_64\plugins\imageformats -Destination artifactFolder\imageformats -Recurse
+          Copy-Item build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll -Destination artifactFolder
+          Copy-Item build_openCV\install\x64\mingw\bin\libopencv_core460.dll -Destination artifactFolder
+          Copy-Item build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll -Destination artifactFolder
+          Copy-Item build_openCV\install\x64\mingw\bin\libopencv_flann460.dll -Destination artifactFolder
+          Copy-Item build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll -Destination artifactFolder
+          Copy-Item build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll -Destination artifactFolder
+          Copy-Item build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll -Destination artifactFolder
+          Copy-Item qwt-6.1.6\lib\qwt.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\Qt5Charts.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\Qt5Core.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\Qt5DataVisualization.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\Qt5Gui.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\Qt5Network.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\Qt5PrintSupport.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\Qt5Widgets.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\libgcc_s_seh-1.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\libstdc++-6.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\libwinpthread-1.dll -Destination artifactFolder
+          Copy-Item Tools\mingw810_64\bin\libquadmath-0.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\Qt5OpenGL.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\QT5Test.dll -Destination artifactFolder
+          Copy-Item 5.15.2\mingw81_64\bin\Qt5Svg.dll -Destination artifactFolder
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: DFTFringe-build-artifact
+          path: |
+            artifactFolder
