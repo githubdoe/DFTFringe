@@ -1,22 +1,28 @@
-# files generated during linux and windows build
+# General build
 .qmake.stash
 Makefile
 *.o
 moc_*
 qrc_*
 ui_*
+build
 
-# linux build files
+# Linux build
 DFTFringe
 
-# windows build files (cmd)
+# Windows build
 Makefile.Debug
 Makefile.Release
 object_script.DFTFringe.Debug
 object_script.DFTFringe.Release
 release
 
-# windows QTcreator generated file
+# Mac related
+.DS_Store
+Desktop.ini
+._*
+.Spotlight-V100
+.Trashes
+
+# Qt Creator related
 DFTFringe.pro.user
-
-
