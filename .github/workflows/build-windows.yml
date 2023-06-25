@@ -25,7 +25,11 @@ jobs:
       - name: install correct minGW version 
         if: steps.cache-minGW.outputs.cache-hit != 'true'
         run: aqt install-tool windows desktop tools_mingw qt.tools.win64_mingw810
-        # path is Tools\mingw810_64\bin
+        # path is Tools\mingw810_64\bin\
+      - name: install QT installer framework
+        if: steps.cache-minGW.outputs.cache-hit != 'true'
+        run: aqt install-tool windows desktop tools_ifw
+        # path is Tools\QtInstallerFramework\4.6\bin\
 
   build-openCV-with-QT:
     runs-on: windows-latest
@@ -292,6 +296,7 @@ jobs:
 
       - run: cd DFTFringe ; ..\5.15.2\mingw81_64\bin\qmake.exe
       - run: cd DFTFringe ; mingw32-make -j4
+
       - name: copy needed dlls
         run: |
           mkdir artifactFolder
@@ -323,10 +328,15 @@ jobs:
           Copy-Item 5.15.2\mingw81_64\bin\Qt5OpenGL.dll -Destination artifactFolder
           Copy-Item 5.15.2\mingw81_64\bin\QT5Test.dll -Destination artifactFolder
           Copy-Item 5.15.2\mingw81_64\bin\Qt5Svg.dll -Destination artifactFolder
+          Copy-Item artifactFolder -Destination DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data -Recurse
+
+      - name: make installer using QT installer framework
+        run: Tools\QtInstallerFramework\4.6\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller
+        #TODO version in name
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
           name: DFTFringe-build-artifact
           path: |
-            artifactFolder
+            DFTFringeInstaller.exe
