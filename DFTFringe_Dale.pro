@@ -418,6 +418,9 @@ DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 DISTFILES += \
     buildingDFTFringe64.txt \
     helptext.txt \
+    ColorMaps/Dale1.cmp \
+    ColorMaps/Dale2.cmp \
+    ColorMaps/Dale3.cmp \
     ColorMaps/Diverging_BrBG.cmp \
     ColorMaps/Diverging_bwr.cmp \
     ColorMaps/Diverging_coolwarm.cmp \
