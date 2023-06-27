@@ -5,4 +5,5 @@
     <Version>a.b.c</Version>
     <ReleaseDate>2010-01-01</ReleaseDate>
     <Default>true</Default>
+    <Script>installscript.qs</Script>
 </Package>
