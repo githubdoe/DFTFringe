@@ -5,6 +5,7 @@ on:
       - master
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   cache-mingw-from-QT:
@@ -323,6 +324,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: DFTFringe-build-artifact
+          name: DFTFringe-windows-build-artifact
           path: |
             DFTFringeInstaller.exe

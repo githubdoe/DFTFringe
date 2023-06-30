@@ -1,0 +1,62 @@
+name: make-release
+
+on:
+  push:
+    tags:
+      # all tags prefixed with v will trigger this action. Filter out good naming later
+      # github doesn't support regex here but only basic filtering syntax
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  # Check is based on the official semver regex (prefixed with a v for tag name) https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+  # "v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+  check-semver:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Tag
+        shell: python
+        run: |
+          import re
+          if re.match("^refs/tags/v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$", "${{ github.event.ref }}"):
+            exit(0)
+          else:
+            print("This tag doesn't match semantic versionning. See https://semver.org/")
+            exit(1)
+
+  # acually build the artifacts that will be uploaded to release
+  call-build-windows:
+    needs: check-semver
+    uses: ./.github/workflows/build-windows.yml
+  # linux build is mainly here to check it builds. We have no acrtifact now.
+  call-build-linux:
+    needs: check-semver
+    uses: ./.github/workflows/build-linux.yml
+
+  download-and-publish-artifacts:
+    runs-on: ubuntu-latest
+    needs: call-build-windows
+    steps:
+      # get artifact uploaded from build workflow
+      - uses: actions/download-artifact@v3
+        with:
+          name: DFTFringe-windows-build-artifact
+      # create the GitHub release and upload the artifacts
+      - name: publish Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: |
+            - edit this changelog
+            - test the installer one last time
+            - make the actual release from this draft
+          # the release will be drafted so it needs to be manually published after release notes editions
+          draft: true
+          #generate_release_notes: true // TODO to be investigated to be sure we never forget something
+          files: |
+            DFTFringeInstaller.exe
+
+  # TODO 
+  # modify other actions to take the tag version OR sha depending on caller
+
