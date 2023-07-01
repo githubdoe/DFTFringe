@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>DFTFringe</Name>
+    <Version>a.b.c</Version>
+    <Title>DFTFringe Installer</Title>
+    <Publisher>githubdoe</Publisher>
+    <StartMenuDir>DFTFringe</StartMenuDir>
+    <TargetDir>@HomeDir@/DFTFringe</TargetDir>
+</Installer>

@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<style> zxc;
+p
+{
+width:600px; 
+word-wrap:break-word;
+}VBc 
+p.ex
+{
+width:500px; 
+word-wrap:break-word;
+}
+td {
+vertical-align: top;
+}
+</style>
+<H1>Test Stand and system astig removal sanity check.</H1>
+<h3>Good attempt</h3>
+<p>The procedure to remove system induced astig can be fought with errors. This will try to explain what to look for in the stand astig removal report to verify that it has worked correctly. The first thing to look at is the plot of astig values for both the mirror and test stand at each mirror rotation angle. When a mirror with astig is rotated on a stand it produces a constant astig in addition to the mirror astig the measured astig value will change at each rotation but it will be on a circle centered about the stand induced astig. The radius of the circle will be the magnitude of the astig on the mirror alone.  That circle is display in green on the plot. It looks like this. </p>
+<a style='text-decoration: none; color: red;'>
+<img src='Forced.png' style='width: 600px'>
+<div style='width: 600px; text-align: center;'>Plot showing execution worked well.</div>
+</a>
+<p>The above image shows a successful execution. The colored dots of each mirror rotation are all close to the green circle and all stand astig values are clustered close together near the center of the circle. Deviations from the desired could be caused by air current.q44															3wsz                                                                                                                      From this we can also see that the test stand induced an X astig Wyant Zernike coefficient of about .4</p>
+<h3>Failed attempt</h3>
+<p>Here is a plot from a failed attempt.</P>
+<a style='text-decoration: none; color: red;'>
+<img src='ForcedWithErrors.png' style='width: 600px'>
+<div style='width: 600px; text-align: center;'>Failed Attempt.</div>
+</a>
+<p>The above image is a failed attempt. Notice that the mirror astig values (colored dots) are not close to the green circle and the stand astig values are not clustered at the middle of the circle.</p>
+<h3>Diagnosing a failed attempt.</h3>
+<p>One cause of a failed attempt would be if you made a mistake and counter rotated a wave front in the wrong direction.</p>
+<p>
+Lets look at the stand induced wave front in the next part of the report to see where the problem might be. In this case the upper left diagram shows forces different than all the rest. That means it might have been derotation in the wrong direction (which it was.)</p>
+<a style='text-decoration: none; color: red;'>
+<img src='FailedAstigRemovalStandCountours.png' style='width: 600px'>
+<div style='width: 600px; text-align: center;'>Contours of stand stand induced wave front at each rotation.</div>
+</a>
+</BODY>
+</HTML>

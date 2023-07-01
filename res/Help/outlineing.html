@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+
+<style> 
+p
+{
+    width:800px; 
+    word-wrap:break-word;
+}
+p.ex
+{
+    width:500px; 
+    word-wrap:break-word;
+}
+td {
+
+    vertical-align: top;
+}
+</style>
+
+<h3>
+	How DFTFringe selects an outline when loading an interferogram.</h3>
+<ul>
+<li>If there is an .oln file with the same name as the interferogram image then it will use the outlines in that file.</li>
+<li>If auto outline is not selected and there was no .oln file found then it will use the outline of the last processed igram.</li>
+<li>If auto outline is selected and there was no .oln file found it will try to outline the mirror.</li>
+</ul>
+<H3>
+	IF auto outline is selected when loading an interferogram</H3>
+
+<ul>
+   <li>If .oln file exists.</li>
+   <ul>
+      <li>If "scan around existing outline" is checked then it will use the outline in the .oln file as a guide.  It will
+       scan on either side of the outline by the number of pixels selected in the +/- pixel control.</li>
+	  <li>If "scan around existing outline" is not checked then it use the outline in the .oln file and not look for a better outline.</li>
+   </ul>
+</ul>
+
+<ul>
+	<li>If no .oln file is found.</li>
+<p class = "ex">
+	<ul>
+	<li>If "scan around existing outline" is checked then it will use the outline from the last analysis done.  It will
+	scan on either side of the outline by the number of pixels selected in the +/- pixel control.</li>
+	<li>If "scan around existing outline" is not checked then it will try to find the mirror in the interferogram and create an outline.</li>
+</ul></p></ul>
+</p>
+<h1>
+	Automatic Outline of mirror </h1>
+<p class = "ex">
+	DFTFringe can outline the mirror and a central hole in the mirror in the interferogram for you.  There are a few parameters the user can set that will help the process.  In addition there are displays that can show the user how the process worked.
+<h3> User settings and controls.</h3>
+<p>
+	<a href = autoOutlineDisplays.png><img src = autoOutlineDisplays.png></a></p>
+	
+<p class = "ex">
+	When loading a single interferogram the user can control how the Auto outline works. See image above.
+	
+		<table border = 1><tr><th>Control</th><th>Description</th></tr>
+		
+		<tr><td align = "center middle"><img src = autooutline.png></td><td><b>Outline on load.</b><br>Enable auto outline feature on load. When set the Igram will be scanned for mirror and traced if no .oln is found for the loaded image.</td></tr>
+		
+		<tr><td><img src = autooutlineButton.png></td><td><b>Auto Outline.</b><br>When pressed creates an outline of the current outline type ( Mirror outside or center hole).</tr>
+		
+		<tr><td><img src  = useExsistingOutline.png></td><td><b>Use existing outline.</b><br>When checked use an existing outline instead of full scan of image.</td></tr>
+		
+		<tr><td><img src = pixelScanRange.png></td><td><b>Final pass scan range.</b><br>Sets the range of the final search from the reference outline or software found outline. In this case it will scan from 5 pixels outside to 5 pixels inside the existing outline.Or scan the same distance from an approximation of the mirror if no outline was specified.</td></tr>
+		
+		<tr><td>Scan response plots on left side of display.</td><td>A display on the left side shows the search results (Search response to each radius tried. See algorithm description below.)</td><tr></table>
+	
+	</p>
+	
+<p><a href = autoOutlineOffsets.png><img src = autoOutlineOffsets.png></a></p>
+<p class = "ex">
+	Many times the auto outline is not exact but can be compenstated for using the radius and position offsets found in the preference settings. Shown above. </p>
+<p>
+<a href = outlineDebug.png><img src = outlineDebug.png width = "250"></a>
+</p>
+<p class = "ex">
+	The user can also use the preferences debug setting shown above to enable a live view of the search process. The view usually needs to be resized by the user.  It may looked clipped but if the mouse is moved inside of it it will correct itself to a full view.  It displays in real time as each radius is tried for a match.  (see algorithm description below.)
+	It will draw a circle on the igram at the radius and location of the best match for that radius.</p>
+	
+<h3>Central Hole outline tips.</h3>
+<p class = "ex">
+	The central hole outline is not as curcial to be perfect match as the outside outline is.  It purpose is to tell the software where not to analyze.  It creates an ignore region.  As such then it can be made a little bigger than the actual center hole. </p>
+<p class = "ex">
+	The program can have a hard time to find the center hole correctly.  The user might have to manually help it along.  Once it is found the best strategy is to not have it searched for on new interferograms taken at the same camera zoom settings.  DFTFringe will place the outline in relation to the outside outline for all subsequent outlines.</p>
+
+
+<h2>
+	Outline Algorithm</h2>
+<p class = "ex">
+ The code looks for a light colored disk on a dark background in the interferogram as in the image below.</p>
+ <p>
+<a href = whiteDisk.png><img src = whiteDisk.png></a> </p>
+<p class = "ex">
+	The mirror with fringes is an approximation of a light disk on a dark background. The algorithm tries different sized disks and records their location and match quality (response.)  It tries decreasing disk diameters starting with diameters equal to the height of the interferogam - 2. (The mirror most have at least a one pixel border in the interferogram.)  The algorithm will return a location for the best match of that disk and a quality of the match from 0 to 1.  With a 1 for the exact match.  Since an interferogram is never a white disk the match response value will be less than 1. It will scan through all the possible diameters and save the location and diameter for the best match.</p>
+	
+<p class = "ex"> 
+	Scanning all possible diameters in an interferogram would take a very long time.  The program reduces that time with two different techniques.  The first is to reduce the size of the interferogram by a quarter size.  Do a scan of all possible diameters and saves the best match.  Then use that diameter and location as an estimate of the mirror location. 
+
+	After getting the estimate of the mirror location and size it scans once more with an image cropped to just bigger than the mirror.  It tries a sequence of disks just bigger and smaller than the estimated size.  The range of the sequence can be adjustable by the user. A value of 20 to 40 pixels being a good range.</p>
+	
+<p class = "ex"> 
+  The second method uses an existing outline as an estimate of the mirror's location and diameter. Then it too tries a sequence of disks just bigger and smaller than the estimated size.</p>
+  
+<H3>
+	Algorithm Optimizations</H3>
+	
+<p class = "ex">
+	The algorithm can shorten the search through all diameter ranges by looking for a peak in the strengh of the match and then stopping before reaching the last diameter to try. This can save a lot of time.  It is difficult to know when a good peak has been found and so sometime it does not recognize that a peak has occured.  In that case it will try all the diameters specifed by the user.  It may be necessary to increase the range if that fails to create a good peak.</p>
+	
+<p class = "ex">
+	To help the user monitor the process, a plot of the response or quality of the match to each radius tried is ploted and displayed.  Here is an example of a good peak.</p>
+
+<p class = "ex"> 
+	<a href = goodPeak.png><img src = goodPeak.png></a></p>
+	
+<p class = "ex">
+	Here you see it starts the guess with a radius of 600 and decreased the radius until it saw the peak match response around 570 and then a rapid decrease where it then stopped at radius 563.  That was a good scan with a strong peak so the outline should be very accurate. </p>
+
+
+
+</BODY>
+</HTML>
