@@ -295,6 +295,27 @@ jobs:
         with:
           path: 'DFTFringe'
 
+      # Update the 2 strings automatically
+      # MY_AUTOMATED_VERSION_STRING
+      # MY_AUTOMATED_DATE_STRING
+      # TODO must work on tags but also on PR and manual builds (using github.sha ?)
+      - name: Find and Replace MY_AUTOMATED_VERSION_STRING
+        run: |
+          echo "${{github.event_name}}"
+          echo "${{github.ref_name}}"
+          echo "${{github.sha}}"
+          (Get-Content DFTFringe/DFTFringeInstaller/config/config.xml).replace('MY_AUTOMATED_VERSION_STRING', '${{github.ref_name}}') | Set-Content DFTFringe/DFTFringeInstaller/config/config.xml
+          (Get-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml).replace('MY_AUTOMATED_VERSION_STRING', '${{github.ref_name}}') | Set-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml
+          (Get-Content DFTFringe/DFTFringe.pro).replace('MY_AUTOMATED_VERSION_STRING', '${{github.ref_name}}') | Set-Content DFTFringe/DFTFringe.pro
+      - name: Put current date into a variable
+        run: |
+          $NOW=& Get-Date -format yyyy-MM-dd
+          echo "NOW=$NOW" >> $env:GITHUB_ENV
+      - name: Find and Replace MY_AUTOMATED_DATE_STRING
+        run: |
+          echo "${{env.NOW}}"
+          (Get-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml).replace('MY_AUTOMATED_DATE_STRING', '${{env.NOW}}') | Set-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml
+          
       - run: cd DFTFringe ; ..\5.15.2\mingw81_64\bin\qmake.exe
       - run: cd DFTFringe ; mingw32-make -j4
 
@@ -318,12 +339,11 @@ jobs:
         run: .\5.15.2\mingw81_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
 
       - name: make installer using QT installer framework
-        run: Tools\QtInstallerFramework\4.6\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller
-        #TODO version in name
+        run: Tools\QtInstallerFramework\4.6\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{github.ref_name}}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
           name: DFTFringe-windows-build-artifact
           path: |
-            DFTFringeInstaller.exe
+            DFTFringeInstaller_${{github.ref_name}}.exe

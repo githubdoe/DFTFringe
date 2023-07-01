@@ -53,10 +53,7 @@ jobs:
             - make the actual release from this draft
           # the release will be drafted so it needs to be manually published after release notes editions
           draft: true
-          #generate_release_notes: true // TODO to be investigated to be sure we never forget something
+          # an automated release note is generated based on PRs to master
+          generate_release_notes: true
           files: |
-            DFTFringeInstaller.exe
-
-  # TODO 
-  # modify other actions to take the tag version OR sha depending on caller
-
+            DFTFringeInstaller_${{github.ref_name}}.exe
