@@ -237,6 +237,23 @@ jobs:
     runs-on: windows-latest
     needs: [cache-mingw-from-QT, build-lapack, build-armadillo, build-QWT, build-openCV-with-QT]
     steps:
+
+      # because problem matcher will not work when chechout in a subfolder,
+      # checkout at root and then copy everything in folder.
+      # Match will be done in build folder, and file at root will be used to link the match
+      # Note xheckouting twive is not wokring.
+      # This copy is done before adding any more file into folders
+      - uses: actions/checkout@v3
+      #  with:
+      #    path: 'DFTFringe'
+      
+      # copy all files for problem matcher to work
+      - name: copy files into build folder (problem matcher workaround)
+        run: |
+          mkdir ".\DFTFringe"
+          Copy-Item ".\*" -Destination ".\DFTFringe" -Exclude @("DFTFringe") -Recurse
+
+
       # restore cached minGW
       - uses: actions/cache/restore@v3
         id: cache-minGW
@@ -290,9 +307,8 @@ jobs:
           key: ${{ runner.os }}-openCV-4.6.0-QT-5.15.2
           fail-on-cache-miss: true
 
-      - uses: actions/checkout@v3
-        with:
-          path: 'DFTFringe'
+      # this enables the problem matcher
+      - uses: ammaraskar/gcc-problem-matcher@master
 
       - run: cd DFTFringe ; ..\5.15.2\mingw81_64\bin\qmake.exe
       - run: cd DFTFringe ; mingw32-make -j4
