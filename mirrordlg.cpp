@@ -53,6 +53,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->cc->blockSignals(true);
     ui->unitsCB->blockSignals(true);
     ui->fringeSpacingEdit->blockSignals(true);
+
     if (!doNull){
         ui->roc->hide();
         ui->rocLab->hide();
@@ -76,9 +77,13 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     cc = settings.value("config cc", -1.).toDouble();
 
     ui->cc->setText(QString().sprintf("%6.2lf",cc));
-    ui->reduceValue->setValue(aperatureReduction);
+    bool showEdgeMaskCtrls = settings.value("configAperatureReductionChecked",false).toBool();
+    ui->ReducApp->setChecked(showEdgeMaskCtrls);
     if (aperatureReduction > 0)
         ui->reduceValue->setEnabled(true);
+
+    ui->reduceValue->setValue(aperatureReduction);
+
 
     ui->unitsCB->setChecked(mm);
 
@@ -104,8 +109,6 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->cc->blockSignals(false);
     ui->unitsCB->blockSignals(false);
     ui->fringeSpacingEdit->blockSignals(false);
-    bool showEdgeMaskCtrls = settings.value("configAperatureReductionChecked",false).toBool();
-    ui->ReducApp->setChecked(showEdgeMaskCtrls);
     ui->ClearAp->setVisible(showEdgeMaskCtrls);
     ui->clearApLabel->setVisible(showEdgeMaskCtrls);
     m_aperatureReductionValueChanged = false;

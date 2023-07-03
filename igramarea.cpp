@@ -1959,6 +1959,21 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
 
 }
+void IgramArea::saveRegions(){
+    QString text;
+    QTextStream regions(&text);
+
+    for (int i = 0; i < m_polygons.size(); ++i){
+        regions << "Poly";
+        for(int j = 0; j < m_polygons[i].size(); ++j){
+            regions << " " << QString().number(m_polygons[i][j].x) << ","<<
+                       QString().number(m_polygons[i][j].y);
+        }
+        regions << "\n";
+    }
+    QSettings set;
+    set.setValue("lastRegions", text);
+}
 
 void IgramArea::createActions()
 {
@@ -1986,7 +2001,7 @@ void IgramArea::crop() {
     set.setValue("lastOutsideRad", radx);
     set.setValue("lastOutsideCx",cx);
     set.setValue("lastOutsideCy",cy);
-qDebug() << "crop saving" << cx << cy << radx;
+
     int width = igramGray.width();
     int height = igramGray.height();
     int right = width - (radx + cx);
@@ -2018,19 +2033,16 @@ qDebug() << "crop saving" << cx << cy << radx;
 
     x = igramGray.width()/2;
     y = igramGray.height()/2;
-    QString text;
-    QTextStream regions(&text);
+
     for (int i = 0; i < m_polygons.size(); ++i){
-        regions << "Poly";
         for(int j = 0; j < m_polygons[i].size(); ++j){
-            regions << " " << QString().number(m_polygons[i][j].x) << ","<<
-                       QString().number(m_polygons[i][j].y);
             m_polygons[i][j].x -=crop_dx;
             m_polygons[i][j].y -= crop_dy;
         }
-        regions << "\n";
+
     }
-    set.setValue("lastRegions", text);
+    saveRegions();
+
     m_outside.translate(QPointF(-crop_dx,-crop_dy));
     cx = m_outside.m_center.x() + crop_dx;
     cy = m_outside.m_center.y() + crop_dy;
@@ -2248,6 +2260,7 @@ void IgramArea::deleteOutline(){
         }
         m_polygons.clear();
         syncRegions();
+        saveRegions();
     }
     else if (m_current_boundry == CenterOutline){
         m_centerHist.clear();
