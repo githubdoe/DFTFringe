@@ -311,7 +311,9 @@ jobs:
       - uses: ammaraskar/gcc-problem-matcher@master
 
       - run: cd DFTFringe ; ..\5.15.2\mingw81_64\bin\qmake.exe
+      - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
       - run: cd DFTFringe ; mingw32-make -j4
+      - run: echo "::remove-matcher owner=uic-problem-matcher::"
 
       - name: copy needed dlls not found by windeployqt
         run: |
