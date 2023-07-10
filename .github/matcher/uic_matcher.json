@@ -1,0 +1,16 @@
+{
+    "problemMatcher": [
+        {
+            "owner": "uic-problem-matcher",
+            "pattern": [
+                {
+                    // match things like : generatetargetdlg.ui: Warning: The name 'layoutWidget' (QWidget) is already in use, defaulting to 'layoutWidget1'.
+                    "regexp": "^(.*\\.ui): (Warning):(.*)$",
+                    "file": 1,
+                    "severity": 2,
+                    "message": 3
+                }
+            ]
+        }
+    ]
+}
