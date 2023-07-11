@@ -67,6 +67,7 @@ void SingleApplicationPrivate::genBlockServerName( int timeout )
     // User level block requires a user specific data in the hash
     if( options & SingleApplication::Mode::User ) {
 #ifdef Q_OS_WIN
+        Q_UNUSED(timeout);
         TCHAR username[UNLEN + 1];
         // Specifies size of the buffer on input
         DWORD usernameLength = sizeof( username );
@@ -76,8 +77,7 @@ void SingleApplicationPrivate::genBlockServerName( int timeout )
         } else {
             appData.addData( QStandardPaths::standardLocations( QStandardPaths::HomeLocation ).join("").toUtf8() );
         }
-#endif
-#ifndef Q_OS_WIN
+#else
         QString username;
         QProcess process;
         process.start( "whoami" );

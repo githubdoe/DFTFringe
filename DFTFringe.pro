@@ -120,7 +120,6 @@ SOURCES += main.cpp\
     astigscatterplot.cpp \
     wavefrontfilterdlg.cpp \
     myplotpicker.cpp \
-    testplotclass.cpp \
     rmsplot.cpp \
     regionedittools.cpp \
     reportdlg.cpp \
@@ -244,7 +243,6 @@ HEADERS  += mainwindow.h \
     astigscatterplot.h \
     wavefrontfilterdlg.h \
     myplotpicker.h \
-    testplotclass.h \
     rmsplot.h \
     regionedittools.h \
     reportdlg.h \

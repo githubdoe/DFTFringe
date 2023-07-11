@@ -455,7 +455,7 @@ void astigStatsDlg::plot(){
     ui->mPlot->replot();
 }
 
-void astigStatsDlg::showItem(QVariant item, bool on, int ndx){
+void astigStatsDlg::showItem(QVariant item, bool on, int /*ndx*/){
     qDebug() << "item " << item;
     QwtPlotItem *t = qvariant_cast<QwtPlotItem *>(item);
     t->setVisible(on);
@@ -499,7 +499,7 @@ void astigStatsDlg::on_zernikePB_pressed()
 }
 
 
-void astigStatsDlg::on_bestFitCB_clicked(bool checked)
+void astigStatsDlg::on_bestFitCB_clicked(bool /*checked*/)
 {
     plot();
 }
@@ -539,7 +539,7 @@ QwtPlot *makeSDPlot(cv::Mat hist, double min, double max, double mean, int size,
     return pl;
 }
 
-QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width, int height){
+QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width){
     RunningStat xrs;
     RunningStat yrs;
 
@@ -860,7 +860,7 @@ void astigStatsDlg::on_distribution_clicked()
         //xvalues -= xmin;
         //yvalues -= ymin;
 
-        QwtPlot *avgplot  = avgPlot(xvalues, yvalues, width, width);
+        QwtPlot *avgplot  = avgPlot(xvalues, yvalues, width);
 
         avgplot->insertLegend( new QwtLegend(), QwtPlot::RightLegend );
         QwtPlot *xpl = makeSDPlot(xhist, xmin,xmax, xmean.val[0], bins, width * .5, width * .25);

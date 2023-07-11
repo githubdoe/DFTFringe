@@ -38,8 +38,7 @@
 #include "surfacemanager.h"
 
 using namespace QtDataVisualization;
-OGLView::OGLView(QWidget *parent, ContourTools *m_tool,
-                 surfaceAnalysisTools *surfTools) :
+OGLView::OGLView(QWidget *parent, ContourTools *m_tool) :
     QWidget(parent), m_spinRate(5)
 {
 

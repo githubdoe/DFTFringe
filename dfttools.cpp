@@ -73,10 +73,10 @@ void DFTTools::setDFTSize(int val){
     ui->dftSizeSB->setValue(val);
 }
 
-void DFTTools::on_dftSizeSB_valueChanged(int arg1)
-{    QSettings set;
-     set.setValue("DFTSize", ui->dftSizeSB->value());
-
+void DFTTools::on_dftSizeSB_valueChanged(int value)
+{    
+    QSettings set;
+    set.setValue("DFTSize", value);
 }
 
 void DFTTools::on_showResized_pressed()

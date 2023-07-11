@@ -545,7 +545,7 @@ void mirrorDlg::spacingChangeTimeout(){
     set.setValue("config fringe spacing", fringeSpacing);
 }
 
-void mirrorDlg::on_fringeSpacingEdit_textChanged(const QString &arg1)
+void mirrorDlg::on_fringeSpacingEdit_textChanged(const QString & /*text*/)
 {
     spacingChangeTimer.start(1000);
 }

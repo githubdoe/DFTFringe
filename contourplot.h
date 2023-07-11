@@ -77,7 +77,6 @@ signals:
 
 public Q_SLOTS:
   void selected(const QPointF& pos);
-  void moved(const QPointF);
 
 
 public Q_SLOTS:

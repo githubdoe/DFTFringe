@@ -156,12 +156,12 @@ void generateTargetDlg::on_fullScreen_clicked(bool checked)
 
 
 
-void generateTargetDlg::on_rows_valueChanged(int arg1)
+void generateTargetDlg::on_rows_valueChanged(int /*arg1*/)
 {
     on_generate_clicked();
 }
 
-void generateTargetDlg::on_useChecker_toggled(bool checked)
+void generateTargetDlg::on_useChecker_toggled(bool /*checked*/)
 {
     on_generate_clicked();
 }
@@ -171,9 +171,8 @@ void generateTargetDlg::on_lineGridRb_clicked()
     on_generate_clicked();
 }
 
-void generateTargetDlg::on_usePixels_clicked(bool checked)
+void generateTargetDlg::on_usePixels_clicked(bool /*checked*/)
 {
-
     double mul = 1.;
     switch (m_units){
     case MM:
@@ -193,7 +192,7 @@ void generateTargetDlg::on_usePixels_clicked(bool checked)
     m_units = PIXELS;
 }
 
-void generateTargetDlg::on_useInches_clicked(bool checked)
+void generateTargetDlg::on_useInches_clicked(bool /*checked*/)
 {
     double mul = 1.;
     switch (m_units){
@@ -213,7 +212,7 @@ void generateTargetDlg::on_useInches_clicked(bool checked)
 
 }
 
-void generateTargetDlg::on_useMm_clicked(bool checked)
+void generateTargetDlg::on_useMm_clicked(bool /*checked*/)
 {
     double mul = 1.;
     switch (m_units){

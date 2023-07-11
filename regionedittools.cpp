@@ -25,13 +25,13 @@ void regionEditTools::deleteRegion(int r){
     delete ui->listWidget->takeItem(r);
 }
 
-void regionEditTools::on_freeform_clicked(bool checked)
+void regionEditTools::on_freeform_clicked(bool /*checked*/)
 {
     m_doFreeform = true;
     m_doLine = false;
 }
 
-void regionEditTools::on_line_clicked(bool checked)
+void regionEditTools::on_line_clicked(bool /*checked*/)
 {
     m_doLine = true;
     m_doFreeform = false;

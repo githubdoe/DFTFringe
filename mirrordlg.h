@@ -89,7 +89,7 @@ private slots:
 
     void on_cc_textChanged(const QString &arg1);
 
-    void on_fringeSpacingEdit_textChanged(const QString &arg1);
+    void on_fringeSpacingEdit_textChanged(const QString &text);
 
     void on_name_editingFinished();
 

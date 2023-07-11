@@ -115,7 +115,7 @@ public:
     IgramArea(QWidget *parent = 0, void *mwp = 0 );
 
     void *m_mw;
-    bool openImage(const QString &fileName, bool autoOutside = true, bool showBoundary = true);
+    bool openImage(const QString &fileName, bool showBoundary = true);
     bool saveImage(const QString &fileName, const char *fileFormat);
     void setPenColor(const QColor &newColor);
     void setPenWidth(int newWidth);
@@ -219,13 +219,12 @@ private:
 
     double leftMargin;
     double searchOutlineScale;
-    //cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, int pass);
-    cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, bool useExisting);
+    cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, int *radius, int pass);
+    cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end, int step, int *radius, bool useExisting);
     QString m_outlineMsg;
     double m_edgeMaskWidth;
 public:
     void deleteRegions();
-    cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, int pass);
     QImage igramColor;
     QImage igramDisplay;    // gray with outlines
     QImage igramGray;       // the unlined gray igram.

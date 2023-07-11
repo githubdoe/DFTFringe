@@ -339,9 +339,6 @@ void ContourPlot::ruler(){
 
     }
 }
-void ContourPlot::moved(const QPointF pos){
-
-}
 
 void ContourPlot::selected(const QPointF& pos){
     if (m_wf==0)

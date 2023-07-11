@@ -51,13 +51,12 @@ bool LenseTableModel::setHeaderData(int section, Qt::Orientation orientation, co
 }
 
 
-int LenseTableModel::rowCount(const QModelIndex &parent) const
+int LenseTableModel::rowCount(const QModelIndex & /*parent*/) const
 {
-
     return m_data->size();
 }
 
-int LenseTableModel::columnCount(const QModelIndex &parent) const
+int LenseTableModel::columnCount(const QModelIndex & /*parent*/) const
 {
     return 9;
 }

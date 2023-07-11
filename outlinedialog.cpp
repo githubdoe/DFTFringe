@@ -426,7 +426,7 @@ void outlineDialog::mouseMoveEvent(QMouseEvent *event)
     lastPoint = pos;
 }
 
-void outlineDialog::mouseReleaseEvent(QMouseEvent *event)
+void outlineDialog::mouseReleaseEvent(QMouseEvent * /*event*/)
 {
 
     setCursor(Qt::ArrowCursor);
@@ -443,7 +443,7 @@ void outlineDialog::wheelEvent(QWheelEvent *e){
     updateOutline();
 }
 
-void outlineDialog::on_outlineThickness_valueChanged(int arg1)
+void outlineDialog::on_outlineThickness_valueChanged(int /*arg1*/)
 {
     updateOutline();
 }

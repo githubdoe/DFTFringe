@@ -54,7 +54,7 @@ private:
     Zoomer *zoomer;
     Ui::astigStatsDlg *ui;
     QVector<wavefront*> m_wavefronts;
-    QwtPlot *avgPlot(cv::Mat x, cv::Mat y, int width, int height);
+    QwtPlot *avgPlot(cv::Mat x, cv::Mat y, int width);
     QTextEdit *editor;
     QwtPlotPicker *d_picker;
     bool PDFMode;

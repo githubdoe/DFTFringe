@@ -64,7 +64,7 @@ signals:
     void invert(QList<int>);
     void wftNameChanged(int, QString);
     void updateSelected();
-    void filterWavefronts(QList<int>);
+    void filterWavefronts();
     void defocusSetup();
 
 
