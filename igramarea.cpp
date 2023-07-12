@@ -150,6 +150,7 @@ void IgramArea::computeEdgeRadius(){
     mirrorDlg &md = *mirrorDlg::get_Instance();
     double pixelsPermm =(m_outside.m_radius/(md.diameter/2.));
     m_edgeMaskWidth = md.aperatureReduction * pixelsPermm;
+
 }
 
 void IgramArea::aperatureChanged(){
@@ -1696,8 +1697,9 @@ void IgramArea::drawBoundary()
                 painter.setBrush(Qt::NoBrush);
             }
             outside.draw(painter,1.,s2);
-            if (md.m_clearAperature != md.diameter){
+            if ( md.m_aperatureReductionEnabled && md.m_clearAperature != md.diameter){
                 painter.setPen(QPen(edgePenColor, edgePenWidth, Qt::DotLine));
+                computeEdgeRadius();
                 painter.drawEllipse(outside.m_center,
                                     outside.m_radius - m_edgeMaskWidth,
                                     outside.m_radius- m_edgeMaskWidth);
@@ -2112,7 +2114,7 @@ void IgramArea::loadOutlineFile(QString fileName){
     fsize = file.tellg() - fsize;
     file.close();
     file.open(fileName.toStdString().c_str());
-    qDebug() << "ouline opened";
+
     if (!file.is_open()) {
         QMessageBox::warning(this, tr("Read Outline"),
                              tr("Cannot read file %1: ")
@@ -2121,11 +2123,16 @@ void IgramArea::loadOutlineFile(QString fileName){
     }
 
     m_outside = readCircle(file);
+    m_OutterP1 = m_outside.m_p1.m_p;
+    m_OutterP2 = m_outside.m_p2.m_p;
+    outterPcount = 2;
     CircleOutline sideLobe = readCircle(file);
     emit dftCenterFilter(sideLobe.m_radius);
+    char b = file.peek();
+
 
     if ((file.tellg() > 0) && (fsize > file.tellg())) {
-        if (file.peek() != 'P'){
+        if ((b != 'P') && (b != 'E')){
             m_center = readCircle(file);
             m_innerP1 = m_center.m_p1.m_p;
             m_innerP2 = m_center.m_p2.m_p;
@@ -2152,10 +2159,43 @@ void IgramArea::loadOutlineFile(QString fileName){
 
             }
         }
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        if (line == "Edge Mask width"){
+            std::getline(file,line);
+            double edge = QString::fromStdString(line).toDouble();
+            // if outline edge mask is different than current ask user
+            if (edge != md.aperatureReduction){
+               QString text(
+
+                 "Do you want change the config value to match?\n"
+                 "If no then the config value will be used instead.");
+
+               QMessageBox mb;
+               mb.setText(QString().sprintf("Outline mask value of %6.1lf is differnt than config value of %6.1lf.",
+                 edge, md.aperatureReduction) );
+               mb.setInformativeText(text);
+               mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
+               mb.setWindowTitle("  Config difference.");
+
+                int resp = mb.exec();
+
+                switch (resp){
+                    case QMessageBox::Yes:
+                        md.changeEdgeMaskvalues(edge);
+
+                    break;
+                    case QMessageBox::No:
+                        md.changeEdgeMaskvalues(md.aperatureReduction);
+                        break;
+                }
+            }
+
+        }
+        else{ // just enable edge mask check box to use the current value.
+            md.changeEdgeMaskvalues(md.aperatureReduction);
+        }
     }
-    m_OutterP1 = m_outside.m_p1.m_p;
-    m_OutterP2 = m_outside.m_p2.m_p;
-    outterPcount = 2;
+
     if (!igramGray.isNull()){
         computeEdgeRadius();
         drawBoundary();
@@ -2225,6 +2265,11 @@ void IgramArea::writeOutlines(QString fileName){
             file << std::endl;
         }
     }
+    if (m_edgeMaskWidth != 0){
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        file << "\nEdge Mask width" << std::endl << md.aperatureReduction << std::endl;
+    }
+
     file.flush();
     file.close();
 

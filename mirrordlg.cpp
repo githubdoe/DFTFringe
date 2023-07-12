@@ -44,6 +44,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->nullCB->setChecked(doNull);
     diameter = settings.value("config diameter", 200.).toDouble();
     aperatureReduction = settings.value("config aperatureReduction", 0.).toDouble();
+    m_aperatureReductionEnabled = settings.value("configAperatureReductionChecked",false).toBool();
 
     roc = settings.value("config roc", 2000.).toDouble();
     FNumber = roc/(2. * diameter);
@@ -77,9 +78,9 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     cc = settings.value("config cc", -1.).toDouble();
 
     ui->cc->setText(QString().sprintf("%6.2lf",cc));
-    bool showEdgeMaskCtrls = settings.value("configAperatureReductionChecked",false).toBool();
-    ui->ReducApp->setChecked(showEdgeMaskCtrls);
-    if (aperatureReduction > 0)
+
+    ui->ReducApp->setChecked( m_aperatureReductionEnabled);
+    if (  m_aperatureReductionEnabled)
         ui->reduceValue->setEnabled(true);
 
     ui->reduceValue->setValue(aperatureReduction);
@@ -109,8 +110,8 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->cc->blockSignals(false);
     ui->unitsCB->blockSignals(false);
     ui->fringeSpacingEdit->blockSignals(false);
-    ui->ClearAp->setVisible(showEdgeMaskCtrls);
-    ui->clearApLabel->setVisible(showEdgeMaskCtrls);
+    ui->ClearAp->setVisible( m_aperatureReductionEnabled);
+    ui->clearApLabel->setVisible( m_aperatureReductionEnabled);
     m_aperatureReductionValueChanged = false;
     setclearAp();
 }
@@ -481,6 +482,7 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
 {
     mm = checked;
     double div = ((mm) ? 1: 25.4);
+
     ui->roc->blockSignals(true);
     ui->diameter->blockSignals(true);
      ui->diameter->setText(QString().sprintf("%6.2lf",diameter/div));
@@ -493,6 +495,7 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
      ui->reduceValue->blockSignals(true);
      QSettings set;
      aperatureReduction = set.value("config aperatureReduction",0.).toDouble();
+
      ui->reduceValue->setValue(aperatureReduction * ((mm) ? 1. : 1./25.4));
      ui->reduceValue->blockSignals(false);
      ui->ClearAp->setText(QString().sprintf("%6.2lf ", m_clearAperature * ((mm) ? 1: 1./25.4)));
@@ -601,7 +604,7 @@ void mirrorDlg::setclearAp(){
 
 void mirrorDlg::on_ReducApp_clicked(bool checked)
 {
-
+    m_aperatureReductionEnabled = checked;
     ui->reduceValue->setEnabled(checked);
     ui->ClearAp->setVisible(checked);
     ui->clearApLabel->setVisible(checked);
@@ -609,7 +612,7 @@ void mirrorDlg::on_ReducApp_clicked(bool checked)
     QSettings set;
     set.setValue("configAperatureReductionChecked", checked);
     if (!checked){
-        aperatureReduction = 0.;
+        //aperatureReduction = 0.;
     }
     else {
         aperatureReduction = set.value("config aperatureReduction",0.).toDouble();
@@ -621,7 +624,13 @@ void mirrorDlg::on_ReducApp_clicked(bool checked)
 }
 
 
+void mirrorDlg::changeEdgeMaskvalues(double val){
+    m_aperatureReductionEnabled = true;
+    ui->ReducApp->setChecked(true);
+    ui->reduceValue->setValue(val);
+    ui->reduceValue->setEnabled(true);
 
+}
 void mirrorDlg::on_reduceValue_valueChanged(double arg1)
 {
     aperatureReduction = ((mm) ? 1: 25.4) * arg1;
