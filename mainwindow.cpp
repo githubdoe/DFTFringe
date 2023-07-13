@@ -62,17 +62,17 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-qDebug() << "here";
-const QString toolButtonStyle("QToolButton {"
-                                "border-style: outset;"
-                                "border-width: 3px;"
-                                "border-radius:7px;"
-                                "border-color: darkgray;"
-                                "font: bold 12px;"
-                                "min-width: 10em;"
-                                "padding: 6px;}"
-                            "QToolButton:hover {background-color: lightblue;"
-                                    " }");
+
+    const QString toolButtonStyle("QToolButton {"
+                                    "border-style: outset;"
+                                    "border-width: 3px;"
+                                    "border-radius:7px;"
+                                    "border-color: darkgray;"
+                                    "font: bold 12px;"
+                                    "min-width: 10em;"
+                                    "padding: 6px;}"
+                                "QToolButton:hover {background-color: lightblue;"
+                                        " }");
     QWidget *rw = ui->toolBar->widgetForAction(ui->actionRead_WaveFront);
     //igramArea = new IgramArea(ui->tabWidget->widget(0));
 

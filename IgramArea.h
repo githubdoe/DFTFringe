@@ -223,6 +223,7 @@ private:
     cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, bool useExisting);
     QString m_outlineMsg;
     double m_edgeMaskWidth;
+    void saveRegions();
 public:
     void deleteRegions();
     cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, double &resp, int *radius, int pass);

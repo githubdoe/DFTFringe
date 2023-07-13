@@ -150,6 +150,7 @@ void IgramArea::computeEdgeRadius(){
     mirrorDlg &md = *mirrorDlg::get_Instance();
     double pixelsPermm =(m_outside.m_radius/(md.diameter/2.));
     m_edgeMaskWidth = md.aperatureReduction * pixelsPermm;
+
 }
 
 void IgramArea::aperatureChanged(){
@@ -1696,8 +1697,9 @@ void IgramArea::drawBoundary()
                 painter.setBrush(Qt::NoBrush);
             }
             outside.draw(painter,1.,s2);
-            if (md.m_clearAperature != md.diameter){
+            if ( md.m_aperatureReductionEnabled && md.m_clearAperature != md.diameter){
                 painter.setPen(QPen(edgePenColor, edgePenWidth, Qt::DotLine));
+                computeEdgeRadius();
                 painter.drawEllipse(outside.m_center,
                                     outside.m_radius - m_edgeMaskWidth,
                                     outside.m_radius- m_edgeMaskWidth);
@@ -1959,6 +1961,21 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
 
 }
+void IgramArea::saveRegions(){
+    QString text;
+    QTextStream regions(&text);
+
+    for (int i = 0; i < m_polygons.size(); ++i){
+        regions << "Poly";
+        for(int j = 0; j < m_polygons[i].size(); ++j){
+            regions << " " << QString().number(m_polygons[i][j].x) << ","<<
+                       QString().number(m_polygons[i][j].y);
+        }
+        regions << "\n";
+    }
+    QSettings set;
+    set.setValue("lastRegions", text);
+}
 
 void IgramArea::createActions()
 {
@@ -1986,7 +2003,7 @@ void IgramArea::crop() {
     set.setValue("lastOutsideRad", radx);
     set.setValue("lastOutsideCx",cx);
     set.setValue("lastOutsideCy",cy);
-qDebug() << "crop saving" << cx << cy << radx;
+
     int width = igramGray.width();
     int height = igramGray.height();
     int right = width - (radx + cx);
@@ -2018,19 +2035,16 @@ qDebug() << "crop saving" << cx << cy << radx;
 
     x = igramGray.width()/2;
     y = igramGray.height()/2;
-    QString text;
-    QTextStream regions(&text);
+
     for (int i = 0; i < m_polygons.size(); ++i){
-        regions << "Poly";
         for(int j = 0; j < m_polygons[i].size(); ++j){
-            regions << " " << QString().number(m_polygons[i][j].x) << ","<<
-                       QString().number(m_polygons[i][j].y);
             m_polygons[i][j].x -=crop_dx;
             m_polygons[i][j].y -= crop_dy;
         }
-        regions << "\n";
+
     }
-    set.setValue("lastRegions", text);
+    saveRegions();
+
     m_outside.translate(QPointF(-crop_dx,-crop_dy));
     cx = m_outside.m_center.x() + crop_dx;
     cy = m_outside.m_center.y() + crop_dy;
@@ -2100,7 +2114,7 @@ void IgramArea::loadOutlineFile(QString fileName){
     fsize = file.tellg() - fsize;
     file.close();
     file.open(fileName.toStdString().c_str());
-    qDebug() << "ouline opened";
+
     if (!file.is_open()) {
         QMessageBox::warning(this, tr("Read Outline"),
                              tr("Cannot read file %1: ")
@@ -2109,11 +2123,16 @@ void IgramArea::loadOutlineFile(QString fileName){
     }
 
     m_outside = readCircle(file);
+    m_OutterP1 = m_outside.m_p1.m_p;
+    m_OutterP2 = m_outside.m_p2.m_p;
+    outterPcount = 2;
     CircleOutline sideLobe = readCircle(file);
     emit dftCenterFilter(sideLobe.m_radius);
+    char b = file.peek();
+
 
     if ((file.tellg() > 0) && (fsize > file.tellg())) {
-        if (file.peek() != 'P'){
+        if ((b != 'P') && (b != 'E')){
             m_center = readCircle(file);
             m_innerP1 = m_center.m_p1.m_p;
             m_innerP2 = m_center.m_p2.m_p;
@@ -2140,10 +2159,46 @@ void IgramArea::loadOutlineFile(QString fileName){
 
             }
         }
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        if (line == "Edge Mask width"){
+            std::getline(file,line);
+            double edge = QString::fromStdString(line).toDouble();
+            // if outline edge mask is different than current ask user
+            if (edge != md.aperatureReduction){
+                QString text(
+                            "Do you want to change the mirror config value to match the value in the outline file?\n"
+                            "If no then the current mirror config value will be used instead."
+);
+
+                QMessageBox mb;
+                mb.setText(QString().sprintf("Edge mask value in outline file for this interferogram is %6.1lf and is different than mirror config value of %6.1lf.",
+                                             edge, md.aperatureReduction) );
+                mb.setInformativeText(text);
+                mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
+                mb.setWindowTitle("Existing Interferogram outline file and Mirror Config difference.");
+                int width = QGuiApplication::screens()[0]->geometry().width() * .5;
+                QSpacerItem* horizontalSpacer = new QSpacerItem(width, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+                QGridLayout* layout = (QGridLayout*)mb.layout();
+                layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
+                int resp = mb.exec();
+
+                switch (resp){
+                case QMessageBox::Yes:
+                    md.changeEdgeMaskvalues(edge);
+
+                    break;
+                case QMessageBox::No:
+                    md.changeEdgeMaskvalues(md.aperatureReduction);
+                    break;
+                }
+            }
+
+        }
+        else{ // just enable edge mask check box to use the current value.
+            md.changeEdgeMaskvalues(md.aperatureReduction);
+        }
     }
-    m_OutterP1 = m_outside.m_p1.m_p;
-    m_OutterP2 = m_outside.m_p2.m_p;
-    outterPcount = 2;
+
     if (!igramGray.isNull()){
         computeEdgeRadius();
         drawBoundary();
@@ -2213,6 +2268,11 @@ void IgramArea::writeOutlines(QString fileName){
             file << std::endl;
         }
     }
+    if (m_edgeMaskWidth != 0){
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        file << "\nEdge Mask width" << std::endl << md.aperatureReduction << std::endl;
+    }
+
     file.flush();
     file.close();
 
@@ -2248,6 +2308,7 @@ void IgramArea::deleteOutline(){
         }
         m_polygons.clear();
         syncRegions();
+        saveRegions();
     }
     else if (m_current_boundry == CenterOutline){
         m_centerHist.clear();
