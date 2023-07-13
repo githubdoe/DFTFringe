@@ -2165,28 +2165,31 @@ void IgramArea::loadOutlineFile(QString fileName){
             double edge = QString::fromStdString(line).toDouble();
             // if outline edge mask is different than current ask user
             if (edge != md.aperatureReduction){
-               QString text(
+                QString text(
+                            "Do you want to change the mirror config value to match the value in the outline file?\n"
+                            "If no then the current mirror config value will be used instead."
+);
 
-                 "Do you want change the config value to match?\n"
-                 "If no then the config value will be used instead.");
-
-               QMessageBox mb;
-               mb.setText(QString().sprintf("Outline mask value of %6.1lf is differnt than config value of %6.1lf.",
-                 edge, md.aperatureReduction) );
-               mb.setInformativeText(text);
-               mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
-               mb.setWindowTitle("  Config difference.");
-
+                QMessageBox mb;
+                mb.setText(QString().sprintf("Edge mask value in outline file for this interferogram is %6.1lf and is different than mirror config value of %6.1lf.",
+                                             edge, md.aperatureReduction) );
+                mb.setInformativeText(text);
+                mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
+                mb.setWindowTitle("Existing Interferogram outline file and Mirror Config difference.");
+                int width = QGuiApplication::screens()[0]->geometry().width() * .5;
+                QSpacerItem* horizontalSpacer = new QSpacerItem(width, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+                QGridLayout* layout = (QGridLayout*)mb.layout();
+                layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
                 int resp = mb.exec();
 
                 switch (resp){
-                    case QMessageBox::Yes:
-                        md.changeEdgeMaskvalues(edge);
+                case QMessageBox::Yes:
+                    md.changeEdgeMaskvalues(edge);
 
                     break;
-                    case QMessageBox::No:
-                        md.changeEdgeMaskvalues(md.aperatureReduction);
-                        break;
+                case QMessageBox::No:
+                    md.changeEdgeMaskvalues(md.aperatureReduction);
+                    break;
                 }
             }
 
