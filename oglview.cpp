@@ -198,7 +198,7 @@ void OGLView::showSelected()    // show all selected wavefronts as 3D plots
         p2.setFont(serifFont);
         p2.setPen(QPen(QColor(Qt::white)));
         QStringList l = wf->name.split("/");
-        p2.drawText(10,40,l[l.size()-1] + QString().sprintf("%6.3lf RMS",wf->std));
+        p2.drawText(10,40,l[l.size()-1] + QString("%1 RMS").arg(wf->std, 6, 'f', 3));
         int y_offset =  height * (i/columns) + 40;
         int x_offset = width * (i%columns) + 20;
         painter.drawImage(x_offset,y_offset, glImage.scaled(width, height,Qt::KeepAspectRatio));

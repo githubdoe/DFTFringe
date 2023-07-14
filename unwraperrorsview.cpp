@@ -40,7 +40,7 @@ void unwrapErrorsView::createUnwrapErrors(){
         }
     }
 
-    ui->count->setText(QString().sprintf("%d",cnt));
+    ui->count->setText(QString("%1").arg(cnt));
     Mat xxx;
     flip(errorView, xxx, 0);
 

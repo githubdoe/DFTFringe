@@ -289,7 +289,7 @@ public:
         st *= st;
         const double  e = 2.7182818285;
         double strl = pow(e,-st);
-        return QString().sprintf("%6.3lf",strl);
+        return QString("%1").arg(strl, 6, 'f', 3);
     }
 };
 
@@ -698,7 +698,7 @@ void SurfaceManager::ObstructionChanged(){
 void SurfaceManager::centerMaskValue(int val){
     insideOffset = val;
     double mmPerPixel = getCurrent()->diameter/(2 *( m_wavefronts[m_currentNdx]->m_outside.m_radius-1));
-    m_surfaceTools->m_centerMaskLabel->setText(QString().sprintf("%6.2lf mm",mmPerPixel* val));
+    m_surfaceTools->m_centerMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
     makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
     wf->dirtyZerns = true;
@@ -711,7 +711,7 @@ void SurfaceManager::centerMaskValue(int val){
 void SurfaceManager::outsideMaskValue(int val){
     outsideOffset = val;
     double mmPerPixel = m_wavefronts[m_currentNdx]->diameter/(2 * (m_wavefronts[m_currentNdx]->m_outside.m_radius));
-    m_surfaceTools->m_edgeMaskLabel->setText(QString().sprintf("%6.2lf mm",mmPerPixel* val));
+    m_surfaceTools->m_edgeMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
     makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
     wf->dirtyZerns = true;
@@ -765,7 +765,7 @@ void SurfaceManager::waveFrontClickedSlot(int ndx)
 {
 
     m_currentNdx = ndx;
-    QString msg = QString().sprintf(" %dx%d ",m_wavefronts[ndx]->data.cols, m_wavefronts[ndx]->data.rows);
+    QString msg = QString(" %1x%2 ").arg(m_wavefronts[ndx]->data.cols).arg(m_wavefronts[ndx]->data.rows);
     ((MainWindow*)parent())->statusBar()->showMessage(msg);
     sendSurface(m_wavefronts[ndx]);
 }
@@ -797,7 +797,7 @@ void SurfaceManager::surfaceSmoothGBValue(double value){
     m_gbValue = value;
     mirrorDlg *md = mirrorDlg::get_Instance();
 
-    m_surfaceTools->setBlurText(QString().sprintf("%6.2lf mm", .01 * value * md->diameter));
+    m_surfaceTools->setBlurText(QString("%1 mm").arg( .01 * value * md->diameter, 6, 'f', 2));
     if (m_wavefronts.size() == 0)
         return;
 
@@ -820,7 +820,7 @@ void SurfaceManager::surfaceSmoothGBEnabled(bool b){
 
     mirrorDlg *md = ((MainWindow*)parent())->m_mirrorDlg;
     double mmPerPixel = md->diameter/(2 * rad);
-    m_surfaceTools->setBlurText(QString().sprintf("%6.2lf mm",m_gbValue* mmPerPixel));
+    m_surfaceTools->setBlurText(QString("%1 mm").arg(m_gbValue* mmPerPixel, 6, 'f', 2));
     if (m_wavefronts.size() == 0)
         return;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
@@ -1148,8 +1148,8 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
     if (lambda != md->lambda){
         if (lambdResp == ASK){
             QString message("The interferogram wavelength (");
-            message += QString().sprintf("%6.3lf", lambda) +
-                    ") Of the wavefront does not match the config value of " + QString().sprintf("%6.3lf\n",md->lambda) +
+            message += QString("%1").arg( lambda, 6, 'f', 3) +
+                    ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->lambda, 6, 'f', 3) +
                     "Do you want to make the config match?";
 
 
@@ -1177,8 +1177,8 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
     if (roundl(diam * 10) != roundl(md->diameter* 10))
     {
         QString message("The mirror diameter (");
-        message += QString().sprintf("%6.3lf",diam) +
-                ") Of the wavefront does not match the config value of " + QString().sprintf("%6.3lf\n",md->diameter) +
+        message += QString("%1").arg(diam, 6, 'f', 3) +
+                ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->diameter, 6, 'f', 3) +
                 "Do you want to make the config match?";
         if (diamResp == ASK){
             int resp = QMessageBox(QMessageBox::Information,"config", message,QMessageBox::Yes|QMessageBox::No |
@@ -1206,8 +1206,8 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
     if (roundl(roc * 10.) != roundl(md->roc * 10.))
     {
         QString message("The mirror roc (");
-        message += QString().sprintf("%6.3lf",roc) +
-                ") Of the wavefront does not match the config value of " + QString().sprintf("%6.3lf\n",md->roc) +
+        message += QString("%1").arg(roc, 6, 'f', 3) +
+                ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->roc, 6, 'f', 3) +
                 "Do you want to make the config match?";
         //qDebug() << message;
         if (rocResp == ASK){
@@ -2133,14 +2133,14 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
         wf->useSANull = false;
         wf->min = smin;
         wf->max =  smax;
-        wf->name = QString().sprintf("%06.2lf",list[i]->angle);
+        wf->name = QString("%1").arg(list[i]->angle, 6, 'f', 2, QLatin1Char('0'));
 
         cp->setSurface(wf);
         cp->resize(Width,Height);
         cp->replot();
         contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( cp, &painter, QRect(0,0,Width,Height) );
-        QString imageName = QString().sprintf("mydata://zern%s.png",wf->name.toStdString().c_str());
+        QString imageName = QString("mydata://zern%1.png").arg(wf->name.toStdString().c_str());
         imageName.replace("-","CCW");
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         results.res.append (imageName);
@@ -2349,9 +2349,9 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
             if (!found){
                 if (QMessageBox::Yes ==
                   QMessageBox::question(0, tr("Error"),
-                                     QString().sprintf("No 90 deg pair for %s and angle %6.2lf",
-                                                       lookat[i]->fname.toStdString().c_str(),
-                                                       lookat[i]->angle))){
+                                     QString("No 90 deg pair for %1 and angle %2").arg(
+                                                       lookat[i]->fname.toStdString().c_str()).arg(
+                                                       lookat[i]->angle, 6, 'f', 2))){
                         wizPage->runpb->setText("compute");
                         wizPage->runpb->setEnabled(true);
                         return;
@@ -2427,8 +2427,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         plot->replot();
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
 
-        QString imageName = QString().sprintf("mydata://%s.png",list[i]->fname.toStdString().c_str());
-        QString angle = QString().sprintf("%6.2lf Deg",-list[i]->angle);
+        QString imageName = QString("mydata://%1.png").arg(list[i]->fname.toStdString().c_str());
+        QString angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);
         html.append("<tr><td><p align='center'> <img src='" +imageName + "' /><br><b>" + angle + "</b></p></td>");
@@ -2451,8 +2451,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
 
         contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
-        angle = QString().sprintf("%6.2lf Deg",-list[i]->angle);
-        imageName = QString().sprintf("mydata://CR%s%s.png",list[i]->fname.toStdString().c_str(),angle.toStdString().c_str());
+        angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
+        imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname.toStdString().c_str()).arg(angle.toStdString().c_str());
 
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);
@@ -2736,10 +2736,10 @@ void SurfaceManager::report(){
             "<table border='1' width = '100%'><tr><td>" + Diameter + " mm</td><td>" + ROC + " mm</td>"
             "<td>" +FNumber+ "</td></tr>"
             "<tr><td> RMS: " + QString().number(wf->std,'f',3) +
-                QString().sprintf(" waves at %6.1lf nm</td><td>Strehl: ",outputLambda) + metrics->mStrehl->text() +
+                QString(" waves at %1 nm</td><td>Strehl: ").arg(outputLambda, 6, 'f', 1) + metrics->mStrehl->text() +
             "</td><td>" + BFC + "</td></tr>"
             "<tr><td>" + ((md->isEllipse()) ? "":"Desired Conic: " + QString::number(md->cc)) + "</td><td>" +
-            ((md->doNull) ? QString().sprintf("SANull: %6.4lf",md->z8 * md->cc) : "No software Null") + "</td>"
+            ((md->doNull) ? QString("SANull: %1").arg(md->z8 * md->cc, 6, 'f', 4) : "No software Null") + "</td>"
             "<td>Waves per fringe: " + QString::number(md->fringeSpacing) + "<br>Interferogram Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
             "</table></p>";
 
@@ -2763,8 +2763,8 @@ void SurfaceManager::report(){
             }
 
 
-            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf </td><td>%6.3lf</td></tr></table>",
-                             val, computeRMS(i,val)) + "</td><td>" +
+            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString("%1 </td><td>%2</td></tr></table>").arg(
+                             val, 6, 'f', 3).arg(computeRMS(i,val), 6, 'f', 3) + "</td><td>" +
                          QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
             if (i == 5){
                 double x = wf->InputZerns[4];
@@ -2773,8 +2773,8 @@ void SurfaceManager::report(){
                 double angle = atan2(y,x)/2;
 
                 zerns.append("<tr><td>astig Polar</td><td><table width = '100%'><tr><td>"
-                             + QString().sprintf("%6.3lf </td><td>%6.3lf Deg.</td></tr></table>",
-                                 mag, angle * (180.0 / M_PI)) + "</td><td>" +
+                             + QString("%1 </td><td>%1 Deg.</td></tr></table>").arg(
+                                 mag, 6, 'f', 3).arg(angle * (180.0 / M_PI), 6, 'f', 3) + "</td><td>" +
                              QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
             }
         }
@@ -2787,8 +2787,8 @@ void SurfaceManager::report(){
 
         for (int i = half; i < Z_TERMS; ++i){
             double val = wf->InputZerns[i];
-            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf</td><td>%6.3lf</td></tr></table>"
-                                                                                                                             ,val, computeRMS(i,val)) + "</td><td>" +
+            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString("%1</td><td>%1</td></tr></table>").arg(
+                                                                                                                             val, 6, 'f', 3).arg(computeRMS(i,val), 6, 'f', 3) + "</td><td>" +
                          QString((zernEnables[i]) ? QString("") : QString("Disabled")) + "</td></tr>");
         }
         zerns.append("</table></td></tr></table></p>");
@@ -3168,7 +3168,7 @@ void SurfaceManager::tiltAnalysis(){
    pl1->insertLegend( new QwtLegend() , QwtPlot::TopLegend);
    pl1->setAxisTitle( QwtPlot::yLeft, "astig" );
    pl1->setAxisTitle(QwtPlot::xBottom, "tilt");
-   pl1->setTitle(QString().sprintf("tilt vs Astig %d samples", xvals.length()));
+   pl1->setTitle(QString("tilt vs Astig %1 samples").arg(xvals.length()));
    QwtPlotGrid *grid = new QwtPlotGrid();
    grid->attach(pl1);
    QwtPlotCurve *xTilt = new QwtPlotCurve("X");

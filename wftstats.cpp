@@ -69,7 +69,7 @@ public:
         st *= st;
         const double  e = 2.7182818285;
         double strl = pow(e,-st);
-        return QString().sprintf("%6.3lf",strl);
+        return QString("%1").arg(strl, 6, 'f', 3);
     }
 };
 
@@ -425,7 +425,7 @@ QwtPlot *wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx){
     grid->setMinorPen( Qt::gray, 0 , Qt::DotLine );
     grid->enableYMin(true);
     grid->attach(wftPlot);
-    QwtPlotCurve *runingavg = new QwtPlotCurve(QString().sprintf("RMS of Running Average of wavefronts"));
+    QwtPlotCurve *runingavg = new QwtPlotCurve(QString("RMS of Running Average of wavefronts"));
     runingavg->setSamples(avgPoints);
     runingavg->setRenderHint( QwtPlotItem::RenderAntialiased, true );
     runingavg->setPen(Qt::blue,2);
@@ -436,7 +436,7 @@ QwtPlot *wftStats::makeWftPlot(QVector<wavefront *> &wavefronts, int ndx){
                                        12,12,13,13,14,14,15,15,16,16,17};
 
         for (int zern = zernToCombinedNx[zernFrom]; zern <= zernToCombinedNx[zernTo]; ++zern){
-            QwtPlotCurve *zcurve = new QwtPlotCurve(QString().sprintf("%s",zNames[zern].toStdString().c_str()));
+            QwtPlotCurve *zcurve = new QwtPlotCurve(zNames[zern]);
             QPolygonF points;
             int cnt = 0;
             foreach(double v, zerns[zern]){

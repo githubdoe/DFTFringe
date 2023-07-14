@@ -696,7 +696,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
                 if (useSvd){
                     B(sampleCnt++) = surface.at<double>(y,x);
                     if (sampleCnt > count){
-                        QMessageBox::warning(0,"Critical Error", QString().sprintf("Zernike computation sampleCnt > count %d %d",sampleCnt,count));
+                        QMessageBox::warning(0,"Critical Error", QString("Zernike computation sampleCnt > count %1 %2").arg(sampleCnt).arg(count));
                         return ;
                     }
                 }
@@ -710,7 +710,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
 
         double conditionNumber = 1./cv::invert(A,Ai,DECOMP_SVD);
         double c2 = cv::norm(A,NORM_L2) * cv::norm(Ai,NORM_L2);
-        emit statusBarUpdate(QString().sprintf(" Zernike LSF matrix Condition Numbers %6.3lf %6.3lf", conditionNumber, c2),1);
+        emit statusBarUpdate(QString(" Zernike LSF matrix Condition Numbers %1 %2").arg(conditionNumber, 6, 'f', 3).arg(c2, 6, 'f', 3),1);
     }
     wf.InputZerns = std::vector<double>(zterms,0);
     for (int z = 0; z < X.rows; ++z){
@@ -1322,14 +1322,14 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
         if (!RowLable.empty()){
 
             if (row < RowLable.size()){
-                log.append(QString().sprintf("<b>%s</b>",RowLable[row].toStdString().c_str()));
+                log.append(QString("<b>%1</b>").arg(RowLable[row].toStdString().c_str()));
             }
 
         }
         log.append("</td>");
 
         for (int c = 0; c< 10; ++c){
-            log.append(QString().sprintf("<td style=\"text-align:center\" width=\"150\">%6.5lf</td>",theMat(row,c)));
+            log.append(QString("<td style=\"text-align:center\" width=\"150\">%1</td>").arg(theMat(row,c), 6, 'f', 5));
         }
         log.append("</tr>\n");
 
@@ -1431,7 +1431,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
 
     int sampleCnt = 0;
     QProgressDialog *prg = new QProgressDialog;
-    prg->setWindowTitle(QString().sprintf("fitting %d samples to %d zernike terms",m_rhoTheta.n_cols,getNumberOfTerms()));
+    prg->setWindowTitle(QString("fitting %1 samples to %2 zernike terms").arg(m_rhoTheta.n_cols).arg(getNumberOfTerms()));
     prg->setMaximum( m_rhoTheta.n_cols);
     prg->setValue(0);
     prg->show();
@@ -1473,7 +1473,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
     wf.InputZerns = std::vector<double>(ztermCnt,0);
     for (int z = 0;  z < X.rows; ++z){
        if (z < wf.InputZerns.size()){
-            //qDebug() << z << X(z) << wf.InputZerns[z] << (QString().sprintf("% 6.4lf",X(z) - wf.InputZerns[z])).toDouble();
+            //qDebug() << z << X(z) << wf.InputZerns[z] << (QString("%1").arg(X(z) - wf.InputZerns[z], 6, 'f', 4)).toDouble();
         }
        else {
            //qDebug() << z << X(z);

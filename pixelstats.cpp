@@ -189,15 +189,15 @@ void CanvasPicker::move( const QPoint &pos )
     d_selectedMarker->setXValue(x);
     if (idx ==0){
         g_lb = d_selectedMarker->xValue();
-        d_selectedMarker->setLabel( QString().sprintf("%lf", x) ) ;
+        d_selectedMarker->setLabel( QString("%1").arg(x, 0, 'f') ) ;
 
     }
     else {
         g_ub = d_selectedMarker->xValue();
-        d_selectedMarker->setLabel( QString().sprintf("%lf", x) ) ;
+        d_selectedMarker->setLabel( QString("%1").arg(x, 0, 'f') ) ;
     }
     g_centerMarker->setXValue( (g_ub + g_lb)/2.);
-    g_centerMarker->setLabel(QString().sprintf("PV %lf", (g_ub -g_lb)));
+    g_centerMarker->setLabel(QString("PV %0").arg(g_ub -g_lb, 0, 'f'));
 
     /*
        Enable QwtPlotCanvas::ImmediatePaint, so that the canvas has been
@@ -243,6 +243,7 @@ void CanvasPicker::shiftCurveCursor()
         if ( it == curveList.end() ) // not found
             it = curveList.begin();
 
+        const bool up = true;
         if ( up )
         {
             ++it;
@@ -540,7 +541,7 @@ void  pixelStats::updateHisto(){
     muY->setLinePen( Qt::red, 1 );
 
     double ub = g_ub;
-    muY->setLabel( QString().sprintf("%lf", ub) ) ;
+    muY->setLabel( QString("%1").arg(ub, 0 , 'f') ) ;
     muY->setXValue(ub );
     muY->attach( ui->histo);
     histPlot->setSamples(histData);
@@ -554,12 +555,12 @@ void  pixelStats::updateHisto(){
     mlY->setLinePen( Qt::blue, 1 );
 
     double lb = g_lb;
-    mlY->setLabel( QString().sprintf("%lf", lb) ) ;
+    mlY->setLabel( QString("%1").arg(lb, 0 , 'f') ) ;
     mlY->setXValue(lb );
     mlY->attach( ui->histo);
 
     QwtPlotMarker *lab = g_centerMarker = new QwtPlotMarker();
-    lab->setLabel(QString().sprintf("PV %lf", (ub -lb)));
+    lab->setLabel(QString("PV %1").arg(ub -lb, 0, 'f'));
     lab->setLineStyle( QwtPlotMarker::VLine );
     lab->setLinePen(Qt::black,0, Qt::DotLine);
     lab->setXValue((ub+lb)/2.);

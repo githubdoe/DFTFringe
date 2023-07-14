@@ -118,7 +118,7 @@ astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
         QStringList items;
         items << name;
         for (int z = 0; z < Z_TERMS; ++z){
-            items << QString().sprintf("%6.5lf",m_wavefronts[i]->InputZerns[z]);
+            items << QString("%1").arg(m_wavefronts[i]->InputZerns[z], 6,'f',5);
         }
         m_zerns << items;
     }
@@ -298,7 +298,7 @@ void astigStatsDlg::plot(){
         double rad = sqrt(xstd * xstd + ystd * ystd);
         if (!ui->onlyAverages->isChecked()){
             QwtPlotCurve *curve = new QwtPlotCurve(name.replace(".wft","") +
-                             QString().sprintf("\n%6.4lf,%6.4lf \nSD: %6.4lf %6.4lf ",xmean, ymean, xstd,ystd));
+                             QString("\n%1,%2 \nSD: %3 %4 ").arg(xmean, 6,'f',4).arg(ymean, 6,'f',4).arg(xstd, 6,'f',4).arg(ystd, 6,'f',4));
             curve->setSamples(points);
             curve->setStyle(QwtPlotCurve::Dots);
             curve->setPen(color,10);
@@ -316,7 +316,7 @@ void astigStatsDlg::plot(){
         meanm->setValue(xmean,ymean);
         meanm->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(10,10)));
         QStringList paths = name.split("/");
-        meanm->setTitle(paths[paths.size()-1].replace(".wft","")+ " " + QString().sprintf("\n%6.4lf,%6.4lf",xmean, ymean));
+        meanm->setTitle(paths[paths.size()-1].replace(".wft","")+ " " + QString("\n%1,%2").arg(xmean, 6,'f',4).arg(ymean, 6,'f',4));
         meanm->setLabel(paths[paths.size()-1].replace(".wft",""));
         meanm->setLabelAlignment(Qt::AlignBottom);
         meanm->setItemAttribute(QwtPlotItem::Legend, false);
@@ -327,7 +327,7 @@ void astigStatsDlg::plot(){
 
 
             QPolygonF Circle;
-            QString sd= QString().sprintf("SD %6.4lf",rad);
+            QString sd= QString("SD %1").arg(rad, 6,'f',4);
             QwtPlotCurve *circleCv = new QwtPlotCurve();
             for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
                 Circle << QPointF(xmean + rad* cos(rho), ymean + rad * sin(rho));
@@ -425,7 +425,7 @@ void astigStatsDlg::plot(){
 
         QPolygonF Circle;
 
-        QwtPlotCurve *circleCv = new QwtPlotCurve(QString().sprintf("Best Fit astig mag %6.5lf",c.r));
+        QwtPlotCurve *circleCv = new QwtPlotCurve(QString("Best Fit astig mag %1").arg(c.r, 6,'f',5));
         for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
             Circle << QPointF(c.a + c.r* cos(rho), c.b +c.r * sin(rho));
         }
@@ -449,7 +449,7 @@ void astigStatsDlg::plot(){
     else {
         ui->bestFitCB->hide();
     }
-    ui->mPlot->setTitle(QString().sprintf("Summary of %d samples", m_zerns.size()));
+    ui->mPlot->setTitle(QString("Summary of %1 samples").arg(m_zerns.size()));
     zoomer->setZoomBase();
 
     ui->mPlot->replot();

@@ -108,7 +108,7 @@ void generateTargetDlg::on_generate_clicked()
         --hcnt;
         --vcnt;
     }
-    putText(chessBoard, QString().sprintf("%d X %d", hcnt, vcnt).toStdString().c_str(),
+    putText(chessBoard, QString("%1 X %2").arg(hcnt).arg(vcnt).toStdString().c_str(),
             Point(40,20),1,1,cv::Scalar(100, 100,100));
     //pyrDown(chessBoard,chessBoard);
     imshow("Grid pattern", chessBoard);

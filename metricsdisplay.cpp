@@ -55,11 +55,11 @@ metricsDisplay *metricsDisplay::get_instance(QWidget *parent){
     return m_instance;
 }
 void metricsDisplay::setWavePerFringe(double val, double lambda){
-    ui->wavesPerFringe->setText(QString().sprintf("Waves Per Fringe: %2.1lf",val));
-    ui->lambda->setText(QString().sprintf("Igram laser wavelength: %6.2lf nm",lambda));
+    ui->wavesPerFringe->setText(QString("Waves Per Fringe: %1").arg(val, 2, 'f', 1));
+    ui->lambda->setText(QString("Igram laser wavelength: %1 nm").arg(lambda, 6, 'f', 2));
     mirrorDlg *md = mirrorDlg::get_Instance();
-    QString donull = (md->doNull) ? (QString().sprintf("SANull: %6.4lf",md->z8 * md->cc)) : "";
-    ui->desiredConicLb->setText(QString().sprintf("Desired Conic: %6.2lf ", md->cc) + donull);
+    QString donull = (md->doNull) ? (QString("SANull: %1").arg(md->z8 * md->cc, 6, 'f', 4)) : "";
+    ui->desiredConicLb->setText(QString("Desired Conic: %1 ").arg( md->cc, 6, 'f', 2) + donull);
     ui->zernTitle->setText( "Zernike Values @ interferogram wavelength");
     if (md->isEllipse()){
         ui->desiredConicLb->setText("");
@@ -67,7 +67,7 @@ void metricsDisplay::setWavePerFringe(double val, double lambda){
     }
 }
 void metricsDisplay::setOutputLambda(double val){
-    ui->label_5->setText(QString().sprintf("Wavefront RMS at %6.1lf nm", val));
+    ui->label_5->setText(QString("Wavefront RMS at %1 nm").arg(val, 6, 'f', 1));
 }
 
 void metricsDisplay::setName(QString name){

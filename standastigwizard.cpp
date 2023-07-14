@@ -298,7 +298,7 @@ void define_input::browse(){
         CounterRotationDlg dlg( fileName,rot, true);
         dlg.setCCW(CCWRb->isChecked());
         if (dlg.exec()) {
-            QString b = QString().sprintf("%s,%s,%s", fileName.toStdString().c_str(),(dlg.isClockwise()) ? "CW" : "CCW",
+            QString b = QString("%1,%2,%3").arg(fileName.toStdString().c_str()).arg((dlg.isClockwise()) ? "CW" : "CCW").arg(
                                           dlg.getRotation().toStdString().c_str());
             new QListWidgetItem(b,listDisplay);
             rotationDef *rd = new rotationDef(fileName, (dlg.isClockwise() ? 1 : -1) * dlg.getRotation().toDouble());

@@ -314,8 +314,8 @@ Mat IgramArea::igramToGray(cv::Mat roi){
     static const char *colorNames[] = {"red","green","blue"};
     cv::Mat gray;
     cv::merge(planes, 3, gray);
-    emit imageSize(QString().sprintf("%d X %d using %s channel", igramColor.size().width(),
-                                     igramColor.size() .height(), colorNames[maxndx]));
+    emit imageSize(QString("%1 X %2 using %3 channel").arg(igramColor.size().width()).arg(
+                                     igramColor.size().height()).arg(colorNames[maxndx]));
     return gray;
 
 }
@@ -372,7 +372,7 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
 
     for (int rad0 = start; rad0 != end;  rad0 += step){
         MainWindow::me->progBar->setValue(++cnt);
-        MainWindow::me->progBar->setFormat(QString().sprintf("Radius %d",rad0));
+        MainWindow::me->progBar->setFormat(QString("Radius %1").arg(rad0));
         // create a light gray image
         cv::Point insideCenter(cx, cy);
         cv::Mat circlem = cv::Mat::zeros(gray.size(), gray.type());
@@ -465,7 +465,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     double downcnt = 0.;
     for (int rad0 = start; rad0 >= end;  rad0 += step){
         MainWindow::me->progBar->setValue(++cnt);
-        MainWindow::me->progBar->setFormat(QString().sprintf("Radius: %d",rad0));
+        MainWindow::me->progBar->setFormat(QString("Radius: %1").arg(rad0));
         qApp->processEvents();
 
         if (rad0 < 0)
@@ -486,7 +486,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
             cv::circle(t, c, rad0, cv::Scalar(255), 1);
             cv::imshow("outline debug",t);
             cv::waitKey(100);
-            emit statusBarUpdate(QString().sprintf(" rad %d Resp %6.3lf", rad0, resp),3);
+            emit statusBarUpdate(QString(" rad %1 Resp %2").arg(rad0).arg(resp, 6, 'f', 3),3);
         }
 
 
@@ -546,7 +546,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     QwtPlot *plot = MainWindow::me->m_outlinePlots->getPLot(pass);
     plot->show();
     plot->detachItems( QwtPlotItem::Rtti_PlotCurve);
-    plot->setTitle(QString().sprintf("Outside pass %d",pass));
+    plot->setTitle(QString("Outside pass %1").arg(pass));
     plot->setAxisTitle(QwtPlot::xBottom, "Radius");
     plot->setAxisTitle(QwtPlot::yLeft, "strength");
     QwtPlotCurve  *curve = new QwtPlotCurve();
@@ -676,7 +676,7 @@ void IgramArea::findCenterHole(){
     double rmean;
     for (int rad = start; rad < end; ++rad){
         MainWindow::me->progBar->setValue(rad);
-        MainWindow::me->progBar->setFormat(QString().sprintf("Radius: %d",rad));
+        MainWindow::me->progBar->setFormat(QString("Radius: %1").arg(rad));
         qApp->processEvents();
         cv::Mat key = cv::Mat::ones(roi.rows, roi.cols, roi.type());
         key = cv::Scalar(250);
@@ -802,7 +802,7 @@ void IgramArea::findOutline(){
 
         radius /= scale;
         //searchMargin = 5./scale;
-        emit statusBarUpdate(QString().sprintf("margin %d %d", searchMargin, radius),3);
+        emit statusBarUpdate(QString("margin %1 %2").arg(searchMargin).arg(radius),3);
     }
     else {
       bestc = Point2d(m_outside.m_center.x(), m_outside.m_center.y());
@@ -943,7 +943,7 @@ void IgramArea::adjustCenterandRegions(){
         foreach(QString str, regionsList){
             if (str == "")
                 continue;
-            m_regionEdit->addRegion(QString().sprintf("Region %d",++r));
+            m_regionEdit->addRegion(QString("Region %1").arg(++r));
             QStringList vals = str.split(" ");
             std::vector< cv::Point> region;
             for (int i = 1; i < vals.size(); ++i){
@@ -1099,7 +1099,7 @@ void IgramArea::syncRegions(){
 
     m_regionEdit->clear();
     for (int n = 0; n < m_polygons.size(); ++n){
-        m_regionEdit->addRegion(QString().sprintf("Region %d", n+1));
+        m_regionEdit->addRegion(QString("Region %1").arg( n+1));
     }
 }
 
@@ -1359,7 +1359,7 @@ void IgramArea::deleteregion(int r){
 }
 
 void IgramArea::addregion(){
-    m_regionEdit->addRegion( QString().sprintf("Region %d",m_polygons.size()+1));
+    m_regionEdit->addRegion( QString("Region %1").arg(m_polygons.size()+1));
     m_polygons.append(std::vector< cv::Point>());
     polyndx = m_polygons.size()-1;
 }
@@ -1702,7 +1702,7 @@ void IgramArea::drawBoundary()
         if (inside.m_radius > 0 && innerPcount > 1){
             //painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
             double percent = inside.m_radius/outside.m_radius * 100;
-            QString label = QString().sprintf("%6.2lf percent", percent);
+            QString label = QString("%1 percent").arg(percent, 6, 'f', 2);
             painter.setPen(Qt::black);
             QFont font("Arial", 8);
 
@@ -1750,14 +1750,14 @@ void IgramArea::drawBoundary()
                     painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
                 }
                 QPointF p(m_polygons[n][0].x -10, m_polygons[n][0].y - 10);
-                painter.drawText(p,QString().sprintf("%d",n+1));
+                painter.drawText(p,QString("%1").arg(n+1));
                 if (m_polygons[n].size() > 1){
                     for (int j = 0; j < m_polygons[n].size()-1; ++j){
                         painter.drawLine(m_polygons[n][j].x, m_polygons[n][j].y,
                                          m_polygons[n][j+1].x, m_polygons[n][j+1].y);
                     }
                     QPointF p(m_polygons[n][0].x -10, m_polygons[n][0].y - 10);
-                    painter.drawText(p,QString().sprintf("%d",n+1));
+                    painter.drawText(p,QString("%1").arg(n+1));
                 }
                 if (regionMode){
 
@@ -1790,10 +1790,13 @@ void IgramArea::drawBoundary()
     if (outterPcount == 2){
         QString vert = "";
         if (mirrorDlg::get_Instance()->isEllipse()){
-            vert = QString().sprintf("Vertical Axis: %6.1f", outside.m_radius * s2);
+            vert = QString("Vertical Axis: %1").arg(outside.m_radius * s2, 6, 'f', 1);
         }
-        msg = QString().sprintf("Outside: x=%6.1lf y=%6.1lf, Radius= %6.1lf  %s",
-                                outside.m_center.x(),outside.m_center.y(), outside.m_radius,vert.toStdString().c_str());
+        msg = QString("Outside: x=%1 y=%2, Radius= %3  %4").arg(
+                                outside.m_center.x(), 6 , 'f', 1).arg(
+                                    outside.m_center.y(), 6, 'f', 1).arg(
+                                        outside.m_radius, 6, 'f', 1).arg(
+                                            vert.toStdString().c_str());
 
     }
     m_outside = outside;
@@ -1801,8 +1804,11 @@ void IgramArea::drawBoundary()
         m_center = inside;
 
 
-        msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
-                                 inside.m_center.x(),inside.m_center.y(),inside.m_radius, scale);
+        msg2 = QString("center= %1,%2 radius = %3 scale =%4").arg(
+                                 inside.m_center.x(), 6, 'f', 1).arg(
+                                    inside.m_center.y(), 6, 'f', 1).arg(
+                                        inside.m_radius, 6, 'f', 2).arg(
+                                            scale, 6, 'f', 2);
     }
     if (m_current_boundry != PolyArea)
         emit statusBarUpdate(msg+msg2,1);
@@ -2061,7 +2067,9 @@ void IgramArea::crop() {
     hasBeenCropped = true;
     scale = fitScale = (double)parentWidget()->height()/(double)igramGray.height();
     update();
-    emit imageSize(QString().sprintf("%d X %d", igramGray.size().width(), igramGray.size() .height()));
+    emit imageSize(QString("%1 X %2").arg(
+        igramGray.size().width()).arg(
+            igramGray.size() .height()));
     emit upateColorChannels(qImageToMat(igramColor));
 
 }
@@ -2145,7 +2153,7 @@ void IgramArea::loadOutlineFile(QString fileName){
         if (line == "Poly"){
             std::getline(file,line);
             m_polygons.push_back(std::vector< cv::Point>());
-            m_regionEdit->addRegion(QString().sprintf("Region %d", m_polygons.size()));
+            m_regionEdit->addRegion(QString("Region %1").arg( m_polygons.size()));
             QStringList data = QString::fromStdString(line).split(" ");
             for (int i = 0; i < data.size()-1; ++i){
                 QStringList vals = data[i].split(",");
@@ -2165,8 +2173,8 @@ void IgramArea::loadOutlineFile(QString fileName){
 );
 
                 QMessageBox mb;
-                mb.setText(QString().sprintf("Edge mask value in outline file for this interferogram is %6.1lf and is different than mirror config value of %6.1lf.",
-                                             edge, md.aperatureReduction) );
+                mb.setText(QString("Edge mask value in outline file for this interferogram is %1 and is different than mirror config value of %2.").arg(
+                                             edge, 6, 'f', 1).arg(md.aperatureReduction, 6, 'f', 1) );
                 mb.setInformativeText(text);
                 mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
                 mb.setWindowTitle("Existing Interferogram outline file and Mirror Config difference.");
@@ -2200,11 +2208,16 @@ void IgramArea::loadOutlineFile(QString fileName){
     m_outsideHist.push(igramGray,m_outside);
     emit enableShiftButtons(true);
 
-    QString msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
-                             m_outside.m_center.x(),m_outside.m_center.y(),m_outside.m_radius, scale);
+    QString msg2 = QString("center= %1,%2 radius = %3 scale =%4").arg(
+                             m_outside.m_center.x(), 6, 'f', 1).arg(
+                                m_outside.m_center.y(), 6, 'f', 1).arg(
+                                    m_outside.m_radius, 6, 'f', 2).arg(
+                                        scale, 6, 'f', 2);
     if (m_center.m_radius > 0){
-        msg2 += QString().sprintf(" center outline: center= %6.1lf,%6.1lf radius = %6.2lf",
-                                  m_center.m_center.x(), m_center.m_center.y(), m_center.m_radius);
+        msg2 += QString(" center outline: center= %1,%2 radius = %3").arg(
+                                  m_center.m_center.x(), 6, 'f', 1).arg(
+                                    m_center.m_center.y(), 6, 'f', 1).arg(
+                                        m_center.m_radius, 6, 'f', 2);
     }
     emit statusBarUpdate(msg2,1);
 }

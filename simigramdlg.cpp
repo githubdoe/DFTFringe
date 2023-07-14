@@ -114,13 +114,13 @@ QVariant zTableModel::data(const QModelIndex &index, int role) const
                 int row = index.row();
                 int sr = floor(sqrt(row+1));
 
-                return (QString().sprintf("%d %s", index.row(),
-                      ( sr * sr == index.row()+1)? QString().sprintf("Spherical").toStdString().c_str(): ""));
+                return (QString("%1 %2").arg(index.row()).arg(
+                      ( sr * sr == index.row()+1)? QString("Spherical").toStdString().c_str(): ""));
 
             }
         }
         if (index.column() == 1){
-            return QString().sprintf("%6.3lf",values->at(index.row()));
+            return QString("%1").arg(values->at(index.row()), 6, 'f', 3);
         }
     }
 

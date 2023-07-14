@@ -171,12 +171,12 @@ bool CamWizardPage1::runCalibrationAndSave(cv::Size imageSize, cv::Mat&  cameraM
     bool ok = runCalibration(imageSize, cameraMatrix, distCoeffs, imagePoints, rvecs, tvecs,
                              reprojErrs, totalAvgErr);
     if (!ok){
-        QString msg = QString().sprintf("Calibration failed. avg re projection error = %lf", totalAvgErr);
+        QString msg = QString("Calibration failed. avg re projection error = %1").arg(totalAvgErr, 0, 'f');
 
        QMessageBox::warning(0,"warning", msg);
        return !ok;
     }
-    ui->Results->append(QString().sprintf("total average error %lf\n",totalAvgErr));
+    ui->Results->append(QString("total average error %1\n").arg(totalAvgErr, 0, 'f'));
     ui->Results->append(ok ? QString("Calibration succeeded") : QString("Calibration failed"));
 
     return ok;
@@ -280,7 +280,7 @@ void CamWizardPage1::on_compute_clicked()
                 sizex.width = size.width + deltas[i].width;
                 sizex.height = size.height +  deltas[i].height;
 
-                ui->Results->append(QString().sprintf("trying %dX%d", sizex.width,sizex.height));
+                ui->Results->append(QString("trying %1X%2").arg(sizex.width).arg(sizex.height));
                 qApp->processEvents();
                 pointBuf.clear();
                 found = cv::findChessboardCorners( viewGray.clone(), sizex, pointBuf,

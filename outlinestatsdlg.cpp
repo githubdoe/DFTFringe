@@ -29,9 +29,9 @@ protected:
     int ndx = p.x();
     //qDebug() << "tracker"<< cx << cy << p;
     if (ndx > 0 && ndx < m_outlines.m_names.size()){
-        QString msg = QString().sprintf("%s \n%6.1lf,%6.1lf",
-                                        m_outlines.m_names[ndx].split("/").back().toStdString().c_str(),
-                                        m_outlines.xvals[ndx], m_outlines.yvals[ndx]);
+        QString msg = QString("%1 \n%2,%3").arg(
+                                        m_outlines.m_names[ndx].split("/").back().toStdString().c_str()).arg(
+                                        m_outlines.xvals[ndx], 6, 'f', 1).arg(m_outlines.yvals[ndx], 6, 'f', 1);
         QwtText text(msg);
         text.setColor( Qt::black );
         text.setFont(QFont("Arial",12));
@@ -158,7 +158,7 @@ void outlineStatsDlg::plot(){
     ui->mirrorRadiusHistogramPlot->setAxisTitle(QwtPlot::yLeft, "sample count");
     ui->mirrorCenterPlot->setAxisTitle(QwtPlot::yLeft, "Position");
     ui->mirrorRadiusPlot->setAxisTitle(QwtPlot::yLeft, "radius");
-    ui->mirrorCenterPlot->setAxisTitle(QwtPlot::xBottom, QString().sprintf(" %d samples", m_names.size()));
+    ui->mirrorCenterPlot->setAxisTitle(QwtPlot::xBottom, QString(" %1 samples").arg(m_names.size()));
     xpos->setSamples(sn,xvals);
     xpos->setStyle(QwtPlotCurve::Dots);
     xpos->setPen(Qt::red,4);

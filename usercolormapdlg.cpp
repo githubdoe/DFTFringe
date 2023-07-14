@@ -58,19 +58,18 @@ std::cout <<" main2";
 
     stops.clear();
 
-    QString sx = QString().sprintf("userColorStopColor%02d",10);
     for (int i = 0; i < 11; ++i){
-        double pos = set.value(QString().sprintf("userColorStopPos%02d", i), (double)i * .1).toDouble();
+        double pos = set.value(QString("userColorStopPos%1").arg(i, 2, 10, QLatin1Char('0')), (double)i * .1).toDouble();
 
-        QColor c = QColor(set.value(QString().sprintf("userColorStopColor%02d", i), plotColors[i%10]).toString());
+        QColor c = QColor(set.value(QString("userColorStopColor%1").arg(i, 2, 10, QLatin1Char('0')), plotColors[i%10]).toString());
 
         stops << colorStop(pos,c);
 
-        QCheckBox * cb = findChild<QCheckBox *>(QString().sprintf("cb%02d",i));
+        QCheckBox * cb = findChild<QCheckBox *>(QString("cb%1").arg(i, 2, 10, QLatin1Char('0')));
         if (cb) {
-            cb->setChecked(set.value(QString().sprintf("userColorStopEnable%02d",i), 1).toBool());
+            cb->setChecked(set.value(QString("userColorStopEnable%1").arg(i, 2, 10, QLatin1Char('0')), 1).toBool());
         }
-        QPushButton * pb = findChild<QPushButton *>(QString().sprintf("pb%02d",i));
+        QPushButton * pb = findChild<QPushButton *>(QString("pb%1").arg(i, 2, 10, QLatin1Char('0')));
         if (pb){
             QString s ="background-color: #" + QString::number(stops[i].color.rgb(), 16).toUpper();
             pb->setStyleSheet(s);
@@ -113,7 +112,7 @@ void userColorMapDlg::setColorMap(){
         //stopList << stops[0];
     }
     for (int i = 0; i < 12; ++i){
-        QCheckBox * cb = findChild<QCheckBox *>(QString().sprintf("cb%02d",i));
+        QCheckBox * cb = findChild<QCheckBox *>(QString("cb%1").arg(i, 2, 10, QLatin1Char('0')));
         if (cb && cb->isChecked()) {
             colorStop s(((m_reverse)? stops[10 - i].pos : stops[i].pos), stops[i].color);
             stopList << s;
@@ -401,7 +400,7 @@ void userColorMapDlg::on_savePb_clicked()
     for(int i = 0; i < stops.size(); ++i){
 
         file << i << "," << stops[i].pos << "," << stops[i].color.name().toStdString().c_str() << ",";
-        QString s = QString().sprintf("cb%02d",i);
+        QString s = QString("cb%1").arg(i, 2, 10, QLatin1Char('0'));
         QCheckBox *cb = findChild<QCheckBox *>(s);
         if (cb && cb->isChecked())
             file << "checked";
@@ -432,15 +431,15 @@ void userColorMapDlg::on_loadPb_clicked()
           int ndx = parms[0].toInt();
           colorStop s(parms[1].toDouble(), QColor(parms[2]));
           stops[parms[0].toInt()] = s;
-          QPushButton * pb = findChild<QPushButton *>(QString().sprintf("pb%02d",ndx));
+          QPushButton * pb = findChild<QPushButton *>(QString("pb%1").arg(ndx, 2, 10, QLatin1Char('0')));
           if (pb && ndx < 12){
               QString s ="background-color: #" + QString::number(stops[ndx].color.rgb(), 16).toUpper();
               pb->setStyleSheet(s);
               pb->update();
               QSettings set;
-              set.setValue(QString().sprintf("userColorStopColor%02d",ndx), QColor(parms[2]).name());
+              set.setValue(QString("userColorStopColor%1").arg(ndx, 2, 10, QLatin1Char('0')), QColor(parms[2]).name());
           }
-          QCheckBox * cb = findChild<QCheckBox *>(QString().sprintf("cb%02d",ndx));
+          QCheckBox * cb = findChild<QCheckBox *>(QString("cb%1").arg(ndx, 2, 10, QLatin1Char('0')));
           if (cb) {
               cb->setChecked(parms[3] == "checked");
 
