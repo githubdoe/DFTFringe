@@ -144,7 +144,7 @@ void averageWaveFrontFilesDlg::on_addFiles_clicked()
 
 }
 
-void averageWaveFrontFilesDlg::on_buttonBox_clicked(QAbstractButton *button)
+void averageWaveFrontFilesDlg::on_buttonBox_clicked(QAbstractButton * /*button*/)
 {
 
 }

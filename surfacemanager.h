@@ -78,7 +78,6 @@ public:
     void downSizeWf(wavefront *wf);
     void process(int wavefront_index, SurfaceManager *sm);
     wavefront *readWaveFront(QString fileName, bool mirrorParamsChanged);
-    wavefront *xxx(QString name, bool t);
     inline wavefront *getCurrent(){
         if (m_wavefronts.size() == 0)
             return 0;
@@ -155,12 +154,12 @@ private slots:
     void surfaceSmoothGBEnabled(bool b);
     void surfaceSmoothGBValue(double value);
     void computeZerns();
-    void surfaceGenFinished(int ndx);
+    void surfaceGenFinished();
     void backGroundUpdate();
     void deleteWaveFronts(QList<int> list);
     void average(QList<int> list);
     void transfrom(QList<int> list);
-    void filter(QList<int> list);
+    void filter();
     void saveAllContours();
     void enableTools();
     void averageComplete(wavefront *wft);

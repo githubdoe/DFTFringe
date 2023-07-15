@@ -91,7 +91,7 @@ void EdgePlot::on_percentRho_valueChanged(int value)
 }
 
 
-void EdgePlot::on_power_valueChanged(int value)
+void EdgePlot::on_power_valueChanged(int /*value*/)
 {
     Update();
 }

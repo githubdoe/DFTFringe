@@ -338,7 +338,7 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
     wavefront *wf = m_wavefronts[wavefrontNdx];
     generateSurfacefromWavefront(wf);
 
-    surfaceGenFinished( wavefrontNdx);
+    surfaceGenFinished();
 }
 
 void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
@@ -525,7 +525,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     connect(m_surfaceTools, SIGNAL(average(QList<int>)),this, SLOT(average(QList<int>)));
     connect(m_surfaceTools, SIGNAL(doxform(QList<int>)),this, SLOT(transfrom(QList<int>)));
     connect(m_surfaceTools, SIGNAL(invert(QList<int>)),this,SLOT(invert(QList<int>)));
-    connect(m_surfaceTools, SIGNAL(filterWavefronts(QList<int>)),this,SLOT(filter(QList<int>)));
+    connect(m_surfaceTools, SIGNAL(filterWavefronts()),this,SLOT(filter()));
     connect(this, SIGNAL(enableControls(bool)),m_surfaceTools, SLOT(enableControls(bool)));
     connect(mirrorDlg::get_Instance(),SIGNAL(recomputeZerns()), this, SLOT(computeZerns()));
     connect(mirrorDlg::get_Instance(),SIGNAL(obstructionChanged()), this, SLOT(ObstructionChanged()));
@@ -1065,9 +1065,6 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     m_surfaceTools->select(m_currentNdx);
     emit showTab(2);
 }
-wavefront *SurfaceManager::xxx(QString name, bool t){
-    return readWaveFront(name, false);
-}
 
 wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsChanged){
     std::ifstream file(fileName.toStdString().c_str());
@@ -1401,7 +1398,7 @@ void SurfaceManager::enableTools(){
 
 }
 
-void SurfaceManager::surfaceGenFinished(int ndx) {
+void SurfaceManager::surfaceGenFinished() {
     if (workToDo > 0)
         emit progress(++workProgress);
 
@@ -1789,7 +1786,7 @@ void SurfaceManager::invert(QList<int> list){
     m_waveFrontTimer->start(500);
 }
 
-void SurfaceManager::filter(QList<int> list){
+void SurfaceManager::filter(){
     wavefrontFilterDlg dlg;
     dlg.setRemoveFileMode();
     connect(&dlg, SIGNAL(waveWasSelected(QString)),this, SLOT(wavefrontDClicked(QString)));

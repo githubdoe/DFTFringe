@@ -92,7 +92,7 @@ bool intensityPlot::eventFilter( QObject *object, QEvent *event )
 }
 
 intensityPlot::intensityPlot(QWidget *parent):
- m_showRed(true), m_showGreen(true),    m_showBlue(true)
+    QwtPlot(parent), m_showRed(true), m_showGreen(true),    m_showBlue(true)
 
 {
     setTitle( "intensity profiles" );

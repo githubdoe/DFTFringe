@@ -140,7 +140,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_contourView = new contourView(this, m_contourTools);
     connect(m_contourView, SIGNAL(zoomMe(bool)),this, SLOT(zoomContour(bool)));
-    m_ogl = new OGLView(0, m_contourTools, m_surfTools);
+    m_ogl = new OGLView(0, m_contourTools);
     connect(m_ogl, SIGNAL(fullScreen()), this, SLOT(zoomOgl()));
 
     connect(userMapDlg, SIGNAL(colorMapChanged(int)), m_contourView->getPlot(), SLOT(ContourMapColorChanged(int)));
@@ -1025,8 +1025,8 @@ void MainWindow::batchConnections(bool flag){
     }
     else {
         m_inBatch = false;
-        disconnect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
         connect(m_dftTools, SIGNAL(makeSurface()), m_dftArea, SLOT(makeSurface()));
+        disconnect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
         disconnect(batchIgramWizard::saveZerns, SIGNAL(pressed()), this, SLOT(saveBatchZerns()));
     }
 }

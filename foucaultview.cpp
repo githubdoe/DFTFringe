@@ -106,7 +106,7 @@ void foucaultView::setSurface(wavefront *wf){
     m_temp_sag = m_sag;
     needsDrawing = true;
 }
-QVector<QPoint> scaleProfile(QPolygonF points, int width, int pad,
+QVector<QPoint> scaleProfile(QPolygonF points, int width,
                              double angle = 0.){
     double left = points[0].x();
     double right = points.back().x();
@@ -346,7 +346,7 @@ void foucaultView::on_makePb_clicked()
     if (ui->overlayProfile->isChecked()){
         // overlay profile onto ronchi plot
         QPolygonF  profile = m_sm->m_profilePlot->createProfile(1.,m_wf);
-        profilePoints= scaleProfile(profile, rp.width(),pad, M_PI/4.);
+        profilePoints= scaleProfile(profile, rp.width(), M_PI/4.);
         painter.setPen(QPen(QColor(Qt::yellow),3));
         painter.drawLines(profilePoints);
 
@@ -417,7 +417,7 @@ void foucaultView::on_makePb_clicked()
     QApplication::restoreOverrideCursor();
 }
 
-void foucaultView::on_gammaSb_valueChanged(double arg1)
+void foucaultView::on_gammaSb_valueChanged(double /*arg1*/)
 {
       m_guiTimer.start(500);
 }
@@ -429,7 +429,7 @@ void foucaultView::on_lpiSb_valueChanged(double arg1)
       //m_guiTimer.start(500);
 }
 
-void foucaultView::on_movingSourceRb_clicked(bool checked)
+void foucaultView::on_movingSourceRb_clicked(bool /*unused*/)
 {
      m_guiTimer.start(500);
 }
@@ -654,12 +654,12 @@ bool foucaultView::saveOnlyFoucault(){
     return ui->saveOnlyFouccault->isChecked();
 }
 
-void foucaultView::on_saveOnlyFouccault_clicked(bool checked)
+void foucaultView::on_saveOnlyFouccault_clicked(bool /*checked*/)
 {
 
 }
 
-void foucaultView::on_overlayProfile_stateChanged(int arg1)
+void foucaultView::on_overlayProfile_stateChanged(int /*arg1*/)
 {
     on_makePb_clicked();
 }

@@ -425,22 +425,22 @@ void CamWizardPage1::on_saveParams_clicked()
 
 }
 
-void CamWizardPage1::on_rows_valueChanged(int arg1)
+void CamWizardPage1::on_rows_valueChanged(int /*arg1*/)
 {
     saveSettings();
 }
 
-void CamWizardPage1::on_columns_valueChanged(int arg1)
+void CamWizardPage1::on_columns_valueChanged(int /*arg1*/)
 {
     saveSettings();
 }
 
-void CamWizardPage1::on_useCircleGrid_clicked(bool checked)
+void CamWizardPage1::on_useCircleGrid_clicked(bool /*checked*/)
 {
     saveSettings();
 }
 
-void CamWizardPage1::on_radioButton_2_clicked(bool checked)
+void CamWizardPage1::on_radioButton_2_clicked(bool /*checked*/)
 {
     saveSettings();
 }

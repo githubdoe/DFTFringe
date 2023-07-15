@@ -35,7 +35,7 @@ private slots:
 
     void on_lpiSb_valueChanged(double arg1);
 
-    void on_movingSourceRb_clicked(bool checked);
+    void on_movingSourceRb_clicked(bool /*unused*/);
 
     void on_radioButton_2_clicked();
 

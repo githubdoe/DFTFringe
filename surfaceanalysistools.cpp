@@ -276,7 +276,7 @@ void surfaceAnalysisTools::on_pushButton_clicked()
 
 void surfaceAnalysisTools::on_filterPB_clicked()
 {
-    emit filterWavefronts(SelectedWaveFronts());
+    emit filterWavefronts();
 }
 
 
@@ -307,7 +307,7 @@ void surfaceAnalysisTools::on_defocus_clicked()
 return;
 }
 
-void surfaceAnalysisTools::closeDefocus(int f){
+void surfaceAnalysisTools::closeDefocus(int /*result*/){
     m_useDefocus = false;
     m_defocus = 0.;
     emit defocusChanged();

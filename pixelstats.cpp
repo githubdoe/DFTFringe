@@ -56,7 +56,7 @@ CanvasPicker::CanvasPicker( QwtPlot *plot ):
         "- 7, 8, 9, 4, 6, 1, 2, 3:\tMove selected point";
     canvas->setWhatsThis( text );
 
-    shiftCurveCursor( true );
+    shiftCurveCursor();
 }
 
 QwtPlot *CanvasPicker::plot()
@@ -73,7 +73,6 @@ bool CanvasPicker::event( QEvent *ev )
 {
     if ( ev->type() == QEvent::User )
     {
-        showCursor( true );
         return true;
     }
     return QObject::event( ev );
@@ -88,12 +87,10 @@ bool CanvasPicker::eventFilter( QObject *object, QEvent *event )
     {
         case QEvent::FocusIn:
         {
-            showCursor( true );
             break;
         }
         case QEvent::FocusOut:
         {
-            showCursor( false );
             break;
         }
         case QEvent::Paint:
@@ -170,16 +167,12 @@ void CanvasPicker::select( const QPoint &pos )
         }
     }
 
-    showCursor( false );
     d_selectedMarker = NULL;
 
 
     if ( mark && dist < 10 ) // 10 pixels tolerance
     {
-
         d_selectedMarker = mark;
-
-        showCursor( true );
     }
 }
 
@@ -217,20 +210,12 @@ void CanvasPicker::move( const QPoint &pos )
     plot()->replot();
     plotCanvas->setPaintAttribute( QwtPlotCanvas::ImmediatePaint, false );
 
-    showCursor( true );
     emit(markerMoved());
 }
 
-// Hightlight the selected point
-void CanvasPicker::showCursor( bool showIt )
-{
-    if ( !d_selectedMarker )
-        return;
-
-}
 
 // Select the next/previous curve
-void CanvasPicker::shiftCurveCursor( bool up )
+void CanvasPicker::shiftCurveCursor()
 {
     QwtPlotItemIterator it;
 
@@ -272,10 +257,8 @@ void CanvasPicker::shiftCurveCursor( bool up )
         }
     }
 
-    showCursor( false );
     d_selectedPoint = 0;
     d_selectedCurve = static_cast<QwtPlotCurve *>( *it );
-    showCursor( true );
     */
 }
 
@@ -598,7 +581,7 @@ void pixelStats::bounds_valueChanged()
     updateSurface();
 }
 
-void pixelStats::on_fit_clicked(bool checked)
+void pixelStats::on_fit_clicked(bool /*checked*/)
 {
     scrollArea->setWidgetResizable(true);
 
@@ -616,7 +599,7 @@ void pixelStats::on_radioButton_2_clicked()
 
 }
 
-void pixelStats::on_minmaxloc_clicked(bool checked)
+void pixelStats::on_minmaxloc_clicked(bool /*checked*/)
 {
     updateSurface();
 }

@@ -16,7 +16,7 @@ defocusDlg::~defocusDlg()
 
 
 
-void defocusDlg::on_multiplier_valueChanged(int arg1)
+void defocusDlg::on_multiplier_valueChanged(int /*arg1*/)
 {
     on_defocusSlider_valueChanged(ui->defocusSlider->value());
 }

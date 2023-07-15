@@ -66,7 +66,7 @@ void ZernikeSmoothingDlg::on_maxOrder_valueChanged(int arg1)
     m_timer.start(1000);
 
 }
-cv::Mat makeSurfaceFromZerns(int width, double rad, zernikeProcess &zp, std::vector<double> theZerns){
+cv::Mat makeSurfaceFromZerns(int width, zernikeProcess &zp, std::vector<double> theZerns){
     int wx = width;
 
     cv::Mat result = cv::Mat::zeros(wx,wx,  numType);
@@ -98,7 +98,7 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
 
    tableModel->setValues(&theZerns);
 
-    cv::Mat result = makeSurfaceFromZerns(m_wf.data.cols, m_wf.m_outside.m_radius, *m_zp, theZerns);
+    cv::Mat result = makeSurfaceFromZerns(m_wf.data.cols, *m_zp, theZerns);
 
     QStringList l = m_wf.name.split("/");
     l.back().replace(".wft","");

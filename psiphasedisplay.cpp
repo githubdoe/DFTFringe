@@ -23,8 +23,8 @@ PSIphaseDisplay::~PSIphaseDisplay()
 {
     delete ui;
 }
-void PSIphaseDisplay::useRadians(bool use){
-
+void PSIphaseDisplay::useRadians(bool /*use*/){
+    // TODO PSIphaseDisplay doesn't take into account m_useRadians from psi_dlg (JST 2023/07/11)
 }
 void PSIphaseDisplay::setPhases(QVector<double> phases, int iteration, double sdp){
     plot(phases, iteration, sdp);

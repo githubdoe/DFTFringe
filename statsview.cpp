@@ -368,7 +368,7 @@ void statsView::on_checkBox_4_toggled(bool checked)
 
 void statsView::on_zernFromSP_valueChanged(int arg1)
 {
-    m_stats->zernFrom = ui->zernFromSP->text().toInt();
+    m_stats->zernFrom = arg1;
     m_stats->zernTo = ui->zernToSP->text().toInt();
     getWavefronts();
     replot();
@@ -378,7 +378,7 @@ void statsView::on_zernFromSP_valueChanged(int arg1)
 void statsView::on_zernToSP_valueChanged(int arg1)
 {
     m_stats->zernFrom = ui->zernFromSP->text().toInt();
-    m_stats->zernTo = ui->zernToSP->text().toInt();
+    m_stats->zernTo = arg1;
     getWavefronts();
     replot();
     sresize();

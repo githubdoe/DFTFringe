@@ -186,7 +186,7 @@ void DFTArea::zoomFit(){
     zoom = double(this->size().height())/magIImage.size().height();
     update();
 }
-bool DFTArea::eventFilter(QObject *obj, QEvent *event) {
+bool DFTArea::eventFilter(QObject * /*obj*/, QEvent *event) {
   if (event->type() == QEvent::Wheel) {
 
       QWheelEvent *w = (QWheelEvent *)event;

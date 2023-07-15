@@ -343,8 +343,7 @@ cv::Mat toSobel(cv::Mat roi){
     //cv::waitKey(1);
     return grad;
 }
-cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,int step,
-                                             double &resp, int *radius, bool useExisting){
+cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,int step, int *radius, bool useExisting){
     double cx  = m_outside.m_center.x() * searchOutlineScale;
     double cy = m_outside.m_center.y() * searchOutlineScale;
 
@@ -436,8 +435,7 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
 
     return bestc;
 }
-cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,int step,
-                                       double &resp, int *radius, int pass){
+cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,int step, int *radius, int pass){
     QSettings set;
     bool showDebug = set.value("DebugShowOutlining", false).toBool();
     double cx = gray.cols/2.;
@@ -601,7 +599,6 @@ void IgramArea::findCenterHole(){
     int end = m_outside.m_radius/2 * scale;
     cv::Rect bounds;
     Point2d firstPassCenter;
-    double resp;
     int radius;
     int x,y;
     Point2d bestc;
@@ -620,8 +617,7 @@ void IgramArea::findCenterHole(){
     }
     else {
 
-        bestc = findBestCenterOutline(small, start,end, 1,
-                                                  resp, &radius, useExisting);
+        bestc = findBestCenterOutline(small, start,end, 1, &radius, useExisting);
 
         x = bestc.x/scale;
        y = bestc.y/scale;
@@ -777,7 +773,6 @@ void IgramArea::findOutline(){
     gray = toSobel(gray);
 
     double scale = 1.;
-    double resp = 0;
     int radius;
     cv::Point2d bestc;
 
@@ -797,7 +792,7 @@ void IgramArea::findOutline(){
         int end = 25;
 
         emit statusBarUpdate("searching for outside mirror phase 1.",2);
-        bestc= findBestOutsideOutline(small, start, end, -2, resp, &radius, 1);
+        bestc= findBestOutsideOutline(small, start, end, -2, &radius, 1);
         if (bestc.x == 0){
             QMessageBox::warning(NULL,"Failed","Could not find mirror outline.");
             return;
@@ -817,7 +812,6 @@ void IgramArea::findOutline(){
     }
 
     // now crop to the current best circle + 5 and try full size
-    resp = 0;
 
     int left = bestc.x - (radius +searchMargin + 10);
     if (left < 0)
@@ -842,7 +836,7 @@ void IgramArea::findOutline(){
 
     cv::Mat showRect = roi.clone();
     cv::rectangle(showRect, centerBound, Scalar(255,255,255), 3);
-    bestc = findBestOutsideOutline(roi, radius + searchMargin, radius -searchMargin, -1, resp, &radius, 2);
+    bestc = findBestOutsideOutline(roi, radius + searchMargin, radius -searchMargin, -1, &radius, 2);
 
     m_searching_outside = false;
     shiftoutline(QPointF(set.value("autoOutlineXOffset", 0).toInt(),
@@ -962,7 +956,7 @@ void IgramArea::adjustCenterandRegions(){
     }
 }
 
-bool IgramArea::openImage(const QString &fileName, bool autoOutside, bool showBoundary)
+bool IgramArea::openImage(const QString &fileName, bool showBoundary)
 
 {
     foreach(QWidget *widget, QApplication::topLevelWidgets()) {
