@@ -64,7 +64,7 @@ public:
         dx = m_rad  - xx * cos(i_angle);
         dy = m_rad  - xx * sin(i_angle);
         if (dy >= m_plane.rows || dx >= m_plane.cols || dy < 0 || dx < 0){
-            //qDebug() << QString("profile Warning index out of range %1 %1").arg(dx).arg(dy);
+            //qDebug() << QString("profile Warning index out of range %1 %2").arg(dx).arg(dy);
             return 0.0;
         }
         double v = m_plane.at<uchar>(dy,dx);

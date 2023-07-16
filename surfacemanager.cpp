@@ -2773,7 +2773,7 @@ void SurfaceManager::report(){
                 double angle = atan2(y,x)/2;
 
                 zerns.append("<tr><td>astig Polar</td><td><table width = '100%'><tr><td>"
-                             + QString("%1 </td><td>%1 Deg.</td></tr></table>").arg(
+                             + QString("%1 </td><td>%2 Deg.</td></tr></table>").arg(
                                  mag, 6, 'f', 3).arg(angle * (180.0 / M_PI), 6, 'f', 3) + "</td><td>" +
                              QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
             }
@@ -2787,7 +2787,7 @@ void SurfaceManager::report(){
 
         for (int i = half; i < Z_TERMS; ++i){
             double val = wf->InputZerns[i];
-            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString("%1</td><td>%1</td></tr></table>").arg(
+            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString("%1</td><td>%2</td></tr></table>").arg(
                                                                                                                              val, 6, 'f', 3).arg(computeRMS(i,val), 6, 'f', 3) + "</td><td>" +
                          QString((zernEnables[i]) ? QString("") : QString("Disabled")) + "</td></tr>");
         }

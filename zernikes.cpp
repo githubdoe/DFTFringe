@@ -26,7 +26,7 @@ void dump_matrix (double *a, int nrows, int ncols,const char *desc)
 {
     int i, j;
     qDebug() << "###############";
-    qDebug() << QString("%1").arg(desc);
+    qDebug() << QString(desc);
     qDebug() << "###############";
     qDebug() << QString("%1, %2\n").arg(nrows).arg(ncols);
     for (i=0; i < nrows; i++)
