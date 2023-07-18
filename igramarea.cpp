@@ -1962,8 +1962,8 @@ void IgramArea::saveRegions(){
     for (int i = 0; i < m_polygons.size(); ++i){
         regions << "Poly";
         for(int j = 0; j < m_polygons[i].size(); ++j){
-            regions << " " << QString().number(m_polygons[i][j].x) << ","<<
-                       QString().number(m_polygons[i][j].y);
+            regions << " " << QString().number(m_polygons[i][j].x+cropTotalDx) << ","<<
+                       QString().number(m_polygons[i][j].y+cropTotalDy);
         }
         regions << "\n";
     }
@@ -2030,6 +2030,7 @@ void IgramArea::crop() {
     x = igramGray.width()/2;
     y = igramGray.height()/2;
 
+
     for (int i = 0; i < m_polygons.size(); ++i){
         for(int j = 0; j < m_polygons[i].size(); ++j){
             m_polygons[i][j].x -=crop_dx;
@@ -2037,7 +2038,6 @@ void IgramArea::crop() {
         }
 
     }
-    saveRegions();
 
     m_outside.translate(QPointF(-crop_dx,-crop_dy));
     cx = m_outside.m_center.x() + crop_dx;
@@ -2262,6 +2262,7 @@ void IgramArea::writeOutlines(QString fileName){
             file << std::endl;
         }
     }
+    saveRegions(); // save regions to registry also
     if (m_edgeMaskWidth != 0){
         mirrorDlg &md = *mirrorDlg::get_Instance();
         file << "\nEdge Mask width" << std::endl << md.aperatureReduction << std::endl;

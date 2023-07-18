@@ -848,7 +848,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
                     if (x < 0 || y < 0 || x >= wf.data.cols || y >= wf.data.rows){
                         continue;
                     }
-                    if (wf.mask.at<bool>(y,x) == 0.){
+                    if (wf.mask.at<uchar>(y,x) == 0.){
                         ux = (double)(x - midx)/rad;
                         uy = (double)(y - midy)/rad;
                         rho = sqrt(ux * ux + uy * uy);

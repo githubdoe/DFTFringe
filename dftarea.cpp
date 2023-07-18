@@ -311,6 +311,17 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
         for (unsigned int i = 0; i < igramArea->m_polygons[n].size(); ++i){
             int x = round((igramArea->m_polygons[n][i].x - left) * scaleFactor);
             int y = round((igramArea->m_polygons[n][i].y - top) * scaleFactor);
+
+            // make sure x and y values of regions are inside our matrix
+            if (x < 0)
+                x=0;
+            if (x >= roi.cols)
+                x=roi.cols-1;
+            if (y < 0)
+                y=0;
+            if (y >= roi.rows)
+                y = roi.rows-1;
+
             m_poly.back().push_back(cv::Point(x,y));
         }
     }
