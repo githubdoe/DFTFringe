@@ -30,7 +30,7 @@ protected:
     //qDebug() << "tracker"<< cx << cy << p;
     if (ndx > 0 && ndx < m_outlines.m_names.size()){
         QString msg = QString("%1 \n%2,%3").arg(
-                                        m_outlines.m_names[ndx].split("/").back().toStdString().c_str()).arg(
+                                        m_outlines.m_names[ndx].split("/").back()).arg(
                                         m_outlines.xvals[ndx], 6, 'f', 1).arg(m_outlines.yvals[ndx], 6, 'f', 1);
         QwtText text(msg);
         text.setColor( Qt::black );

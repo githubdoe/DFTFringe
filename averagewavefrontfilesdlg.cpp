@@ -70,7 +70,7 @@ void averageWaveFrontFilesDlg::on_process_clicked()
             double stdVal = std.val[0]* md->lambda/outputLambda;
             if (stdVal > filterRMS){
                 QFileInfo info(name);
-                QString item = QString("%1 RMS:%2").arg(info.baseName().toStdString().c_str()).arg(stdVal, 0, 'f');
+                QString item = QString("%1 RMS:%2").arg(info.baseName()).arg(stdVal, 0, 'f');
                 rejects << item;
                 ui->fileList->item(i)->setForeground(Qt::red);
                 qApp->processEvents();

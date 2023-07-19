@@ -1217,7 +1217,7 @@ cv::Mat DFTArea::PSILoadFullImages(){
         }
         else {
             if ((datam.cols != m_psiCols) || (datam.rows != m_psiRows)){
-                QString msg = QString("igram %1 (%2,%3)is not the same size as %4 (%5,%6)").arg(m_psiFiles[cnt].toStdString().c_str()).arg(datam.rows).arg(datam.cols).arg( m_psiFiles[0].toStdString().c_str()).arg(m_psiRows).arg(m_psiCols);
+                QString msg = QString("igram %1 (%2,%3)is not the same size as %4 (%5,%6)").arg(m_psiFiles[cnt]).arg(datam.rows).arg(datam.cols).arg(m_psiFiles[0]).arg(m_psiRows).arg(m_psiCols);
                 QMessageBox::warning(0, "Failed", msg);
                  QApplication::restoreOverrideCursor();
                  return data;

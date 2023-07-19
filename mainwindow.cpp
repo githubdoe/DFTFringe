@@ -1626,7 +1626,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 //                fileName.append(".avi");
 //            cv::VideoWriter video(fileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
 //            if (!video.isOpened()){
-//                QString msg = QString("could not open %1 %2x%3 for writing.").arg(fileName.toStdString().c_str()).arg(
+//                QString msg = QString("could not open %1 %2x%3 for writing.").arg(fileName).arg(
 //                                                width).arg(height);
 //                QMessageBox::warning(0,"warning", msg);
 //                return;

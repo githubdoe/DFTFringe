@@ -642,11 +642,11 @@ void SimulationsView::on_MakePB_clicked()
     QString bestFit = doc.toPlainText();
 
     QString caption = QString("%1   Diameter: %2 ROC: %3 Best Fit CC: %4 Strehl: %5").arg(
-                                        m_wf->name.toStdString().c_str()).arg(
+                                        m_wf->name).arg(
                                         m_wf->diameter, 6, 'f', 1).arg(
                                         m_wf->roc, 6, 'f', 1).arg(
-                                        bestFit.toStdString().c_str()).arg(
-                                        strehl.toStdString().c_str());
+                                        bestFit).arg(
+                                        strehl);
     ui->caption->setText(caption);
     bool wasAliased = false;
 
@@ -711,7 +711,7 @@ void SimulationsView::on_MakePB_clicked()
     cv::Mat focused = computeStarTest(nulledSurface(0), fftSize,  ui->centerMagnifySB->value());
     t = fitStarTest(zoomMat(focused,ui->centerMagnifySB->value()), wid ,gamma/2);
 
-    cv::putText(t,QString("Focused").toStdString(),cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
+    cv::putText(t,"Focused",cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
     QImage focusDisplay ((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
     ui->Focused->setPixmap(QPixmap::fromImage(focusDisplay.copy()));
 

@@ -142,7 +142,7 @@ void mirrorDlg::on_saveBtn_clicked()
     if (fileName.isEmpty())
         return;
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".ini"); }
-    std::ofstream file((fileName.toStdString().c_str()),std::ios_base::out|std::ios_base::binary);
+    std::ofstream file(fileName.toStdString().c_str(),std::ios_base::out|std::ios_base::binary);
     if (!file.is_open()) {
         QMessageBox::warning(0, tr("Save mirror config."),
                              tr("Cannot write file %1: ")

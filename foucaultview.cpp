@@ -54,7 +54,7 @@ QString getSaveFileName(QString type){
     QString path = settings.value("lastPath","").toString();
 
     QString fileName = QFileDialog::getSaveFileName(0,
-            QString("File name of %1 image to be saved").arg(type.toStdString().c_str()),
+            QString("File name of %1 image to be saved").arg(type),
                                                  path);
 
     if (!fileName.endsWith(".jpg"))
@@ -536,7 +536,7 @@ void foucaultView::on_scanPb_clicked()
         if (ui->SaveImageCB->isChecked()){
             QString num = QString("%1").arg(v, 6, 'f', 4).replace(".","_");
             num.replace("-","n");
-            QString fvpng = QString("%1//%2_%3.png").arg(imageDir.toStdString().c_str()).arg(cnt++, 6, 10, QLatin1Char('0')).arg(num.toStdString().c_str());
+            QString fvpng = QString("%1//%2_%3.png").arg(imageDir).arg(cnt++, 6, 10, QLatin1Char('0')).arg(num);
             qDebug() << "fn"<< fvpng;
             if (ui->saveOnlyFouccault->isChecked()){
                 fv->m_foucultQimage.save(fvpng);

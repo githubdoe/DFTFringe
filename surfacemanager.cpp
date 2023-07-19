@@ -1647,10 +1647,8 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
     pd->setRange(0, list.size());
     for (int i = 0; i < list.size(); ++i) {
         wavefront *oldWf = m_wavefronts[list[i]];
-        QString newName;
         QStringList l = oldWf->name.split('.');
-        newName.sprintf("%s_%s%05.1lf",l[0].toStdString().c_str(), (angle >= 0) ? "CW":"CCW", fabs(angle) );
-        newName += ".wft";
+        QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0'));
         wavefront *wf = new wavefront();
         *wf = *m_wavefronts[list[0]];
         //emit nameChanged(wf->name, newName);
@@ -2140,7 +2138,7 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
         cp->replot();
         contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( cp, &painter, QRect(0,0,Width,Height) );
-        QString imageName = QString("mydata://zern%1.png").arg(wf->name.toStdString().c_str());
+        QString imageName = QString("mydata://zern%1.png").arg(wf->name);
         imageName.replace("-","CCW");
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         results.res.append (imageName);
@@ -2427,7 +2425,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         plot->replot();
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
 
-        QString imageName = QString("mydata://%1.png").arg(list[i]->fname.toStdString().c_str());
+        QString imageName = QString("mydata://%1.png").arg(list[i]->fname);
         QString angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);
@@ -2452,7 +2450,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
         angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
-        imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname.toStdString().c_str()).arg(angle.toStdString().c_str());
+        imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname).arg(angle);
 
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);

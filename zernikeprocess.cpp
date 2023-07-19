@@ -1322,7 +1322,7 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
         if (!RowLable.empty()){
 
             if (row < RowLable.size()){
-                log.append(QString("<b>%1</b>").arg(RowLable[row].toStdString().c_str()));
+                log.append(QString("<b>%1</b>").arg(RowLable[row]));
             }
 
         }
