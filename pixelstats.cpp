@@ -197,7 +197,7 @@ void CanvasPicker::move( const QPoint &pos )
         d_selectedMarker->setLabel( QString("%1").arg(x, 0, 'f') ) ;
     }
     g_centerMarker->setXValue( (g_ub + g_lb)/2.);
-    g_centerMarker->setLabel(QString("PV %0").arg(g_ub -g_lb, 0, 'f'));
+    g_centerMarker->setLabel(QString("PV %1").arg(g_ub -g_lb, 0, 'f'));
 
     /*
        Enable QwtPlotCanvas::ImmediatePaint, so that the canvas has been
