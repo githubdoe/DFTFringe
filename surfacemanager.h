@@ -77,7 +77,7 @@ public:
     void averageWavefrontFiles(QStringList files);
     void downSizeWf(wavefront *wf);
     void process(int wavefront_index, SurfaceManager *sm);
-    wavefront *readWaveFront(QString fileName, bool mirrorParamsChanged);
+    wavefront *readWaveFront(QString fileName);
     inline wavefront *getCurrent(){
         if (m_wavefronts.size() == 0)
             return 0;

@@ -63,20 +63,20 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
 
-    const QString toolButtonStyle("QToolButton {"
-                                    "border-style: outset;"
-                                    "border-width: 3px;"
-                                    "border-radius:7px;"
-                                    "border-color: darkgray;"
-                                    "font: bold 12px;"
-                                    "min-width: 10em;"
-                                    "padding: 6px;}"
-                                "QToolButton:hover {background-color: lightblue;"
-                                        " }");
-    QWidget *rw = ui->toolBar->widgetForAction(ui->actionRead_WaveFront);
+    //const QString toolButtonStyle("QToolButton {"
+    //                                "border-style: outset;"
+    //                                "border-width: 3px;"
+    //                                "border-radius:7px;"
+    //                                "border-color: darkgray;"
+    //                                "font: bold 12px;"
+    //                                "min-width: 10em;"
+    //                                "padding: 6px;}"
+    //                            "QToolButton:hover {background-color: lightblue;"
+    //                                    " }");
+    //QWidget *rw = ui->toolBar->widgetForAction(ui->actionRead_WaveFront);
     //igramArea = new IgramArea(ui->tabWidget->widget(0));
 
-    rw = ui->toolBar->widgetForAction(ui->actionSubtract_wave_front);
+    //rw = ui->toolBar->widgetForAction(ui->actionSubtract_wave_front);
     //rw->setStyleSheet(toolButtonStyle);
     me = this;
     this->setAttribute(Qt::WA_DeleteOnClose);
@@ -1646,7 +1646,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 
 //                pd.setLabelText(name);
 //                QApplication::processEvents();
-//                wavefront *wf = m_surfaceManager->readWaveFront(name,false);
+//                wavefront *wf = m_surfaceManager->readWaveFront(name);
 
 //                m_surfaceManager->makeMask(wf);
 //                m_surfaceManager->generateSurfacefromWavefront(wf);

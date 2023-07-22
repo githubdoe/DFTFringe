@@ -468,10 +468,6 @@ void DFTArea::doDFT(){
     magIImage = showMag(complexI,false,"", true, m_gamma);
 
 
-    QRect rec = QApplication::desktop()->screenGeometry();
-
-
-
     magIImage = magIImage.scaled(magIImage.width() , magIImage.height() );
     setMinimumSize(magIImage.size());
 

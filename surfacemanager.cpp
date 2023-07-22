@@ -628,14 +628,12 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
             yavg /= wf->regions[n].size();
             // find the closest point to the center
             double shortest = 99999;
-            int shortestndx;
             for (int i = 0; i < wf->regions[n].size(); ++i){
                 int delx = wf->regions[n][i].x - xavg;
                 int dely = wf->regions[n][i].y - yavg;
                 double del = sqrt(delx * delx + dely * dely);
                 if (del < shortest){
                     shortest = del;
-                    shortestndx = i;
                 }
             }
             double scale = 1.1 * (shortest+2)/shortest;
@@ -1066,7 +1064,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     emit showTab(2);
 }
 
-wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsChanged){
+wavefront * SurfaceManager::readWaveFront(QString fileName){
     std::ifstream file(fileName.toStdString().c_str());
     if (!file) {
         QString b = "Can not read file " + fileName + " " +strerror(errno);
@@ -1169,9 +1167,6 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
         if ( lambdResp == YES || messageResult == QMessageBox::Yes){
             md->newLambda(QString::number(lambda));
         }
-        else {
-            mirrorParamsChanged = true;
-        }
     }
 
     if (roundl(diam * 10) != roundl(md->diameter* 10))
@@ -1198,7 +1193,6 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
         }
         else {
             diam = md->diameter;
-            mirrorParamsChanged = true;
         }
 
     }
@@ -1273,7 +1267,7 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         deleteCurrent();
     }
 
-        wf = readWaveFront(fileName, mirrorParamsChanged);
+        wf = readWaveFront(fileName);
         m_wavefronts << wf;
 
         wf->name = fileName;
@@ -2704,7 +2698,6 @@ void SurfaceManager::report(){
     int finalWidth =  QGuiApplication::screens()[0]->geometry().width()/2.5;
 
     printer.setFullPage( true );
-    QMargins marg = printer.pageLayout().marginsPixels(printer.resolution());
 
     printer.setOutputFileName( dlg.fileName );
     int width = printer.width();
@@ -2850,7 +2843,6 @@ void SurfaceManager::report(){
         oglw.show();    // show on stack to get metrics.
         QFontMetrics fm =    oglw.fontMetrics();
         QRect tw = fm.boundingRect("Waves 550 nm Waves");
-        QRect lg = oglw.getLegend()->geometry();
         QRect sg = oglw.getModel()->geometry();
 
         int surfw = sg.width() + tw.width();

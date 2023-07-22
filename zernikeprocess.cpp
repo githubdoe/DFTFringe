@@ -1118,7 +1118,7 @@ void ZernikeSmooth(cv::Mat wf, cv::Mat mask)
 
 
 arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double cy,
-                                   double insideRad, const wavefront *wf){
+                                   const wavefront *wf){
     bool useMask = false;
     if (wf != 0){
         useMask = true;
@@ -1126,7 +1126,6 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
         width = wf->data.rows;
         cx = wf->m_outside.m_center.x();
         cy = wf->m_outside.m_center.y();
-        insideRad = wf->m_inside.m_radius;
     }
     int rows = width;
 
@@ -1170,7 +1169,6 @@ arma::mat zernikeProcess::zpmC(arma::rowvec rho, arma::rowvec theta, int maxorde
     unsigned int i, imax = rho.size();
     int order, nm, nm1mm1, nm1mp1, nm2m;
     int ncol = (mmax+1)*(mmax+1);
-    double a0;
     double cosmtheta[mmax], sinmtheta[mmax];
     arma::mat zm(imax, ncol);
 
@@ -1219,7 +1217,6 @@ arma::mat zernikeProcess::zpmC(arma::rowvec rho, arma::rowvec theta, int maxorde
       for (order=2; order <= maxorder; order+=2) {
           for(m=order/2; n0 < ncol && m>0; m--) {
               n=order-m;
-              a0 = m_norms[n0] = sqrt(2.*(n+1));
               if (n0 < m_norms.size()-2){
                   m_norms[n0+1] = m_norms[n0];
                   zm(i, n0+1) = sinmtheta[m-1]*zm(i, n0);
@@ -1358,7 +1355,7 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
         m_gridRowSize = width;
         m_radius = radius;
         m_obsPercent = obsPercent;
-        m_rhoTheta = rhotheta(width, radius, cx, cy, m_obsPercent);
+        m_rhoTheta = rhotheta(width, radius, cx, cy);
 
         if (obsPercent <= 0.) {
             m_zerns = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);

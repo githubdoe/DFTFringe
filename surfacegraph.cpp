@@ -223,9 +223,8 @@ void SurfaceGraph::fillSurfaceProxy() {
     double diam = m_wf->diameter;
     cv::Mat data;
     m_wf->workData.copyTo(data);
-    double min,max;
+    double min;
     min = m_wf->min;
-    max = m_wf->max;
     double mean = m_wf->mean;
     double std = m_wf->std;
 

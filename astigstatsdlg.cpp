@@ -703,7 +703,6 @@ void astigStatsDlg::usePolar(bool flag){
 
 void astigStatsDlg::on_distribution_clicked()
 {
-    bool first = true;
     if (distributionWindow == 0){
         distributionWindow = new QWidget();
         toolLayout = new QHBoxLayout;
@@ -735,9 +734,7 @@ void astigStatsDlg::on_distribution_clicked()
         layout->addWidget(editor);
     }
     else {
-        first = false;
         editor->clear();
-
     }
 
     if (PDFMode){
