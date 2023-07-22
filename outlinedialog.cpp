@@ -225,7 +225,7 @@ void outlineDialog::updateOutline(){
 //    maxBox.points(vtx);
 //    for( int j = 0; j < 4; j++ )
 //        line(display, vtx[j], vtx[(j+1)%4], cv::Scalar(0,255,0), 1, CV_AA);
-    ui->status->setText( QString().sprintf("x,y %6.1lf,%6.1lf radius:%6.1lf ",x,y,radius));
+    ui->status->setText( QString("x,y %1,%2 radius:%3 ").arg(x, 6, 'f', 1).arg(y, 6, 'f', 1).arg(radius, 6, 'f', 1));
 
     updateDisplay(display);
 }

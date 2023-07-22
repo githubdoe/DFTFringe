@@ -355,10 +355,10 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     Mat  complexI;
     merge(planes, 2, complexI);         // Add to the expanded another plane with zeros
     if (scaleFactor == 1.){
-        tools->imageSize(QString().sprintf("DFT Size will be %d", width));
+        tools->imageSize(QString("DFT Size will be %1").arg(width));
     }
     else
-        tools->imageSize(QString().sprintf("Image is resized from %d to %d pixels",width, complexI.cols));
+        tools->imageSize(QString("Image is resized from %1 to %2 pixels").arg(width).arg(complexI.cols));
     return complexI;
 }
 
@@ -930,19 +930,19 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     }
     catch (std::bad_alloc &e){
         showmem();
-        qDebug() << QString().sprintf("Error %s", e.what());
+        qDebug() << QString("Error %1").arg(e.what());
        //cv::Mat phase = cv::Mat::zeros(Size(100,100), numType);
 
        return cv::Mat();
     }
     catch ( std::exception &e){
 
-        qDebug() << QString().sprintf(" some Error %s", e.what());
+        qDebug() << QString(" some Error %1").arg(e.what());
        cv::Mat phase = cv::Mat::zeros(Size(0,0), numType);
        return phase;
     }
     catch (...){
-        qDebug() << QString().sprintf(" Unknown error ");
+        qDebug() << QString(" Unknown error ");
        cv::Mat phase = cv::Mat::zeros(Size(100,100), numType);
        return phase;
     }
@@ -1125,7 +1125,7 @@ void dumpMat(cv::Mat m, QString title = ""){
     for (int r = 0; r < m.rows; ++r){
         QString msg;
         for (int c = 0; c < m.cols; ++c){
-          msg = msg + QString().sprintf("% 6.2e",m.at<double>(r,c)) + " ";
+          msg = msg + QString("%1 ").arg(m.at<double>(r,c), 6, 'e', 2);
           if ( c > 8){
               msg = msg + "...";
               break;
@@ -1199,7 +1199,7 @@ cv::Mat DFTArea::PSILoadFullImages(){
         QApplication::processEvents();
         QImage loadedImage;
         if (!loadedImage.load(name)){
-            QString msg =  QString().sprintf("Failed to load %s",name.toStdString().c_str());
+            QString msg = QString("Failed to load %1").arg(name);
             QMessageBox::warning(0, "load image failed", msg);
             continue;
         }
@@ -1228,9 +1228,7 @@ cv::Mat DFTArea::PSILoadFullImages(){
         }
         else {
             if ((datam.cols != m_psiCols) || (datam.rows != m_psiRows)){
-                QString msg = QString().sprintf("igram %s (%d,%d)is not the same size as %s (%d,%d)",
-                  m_psiFiles[cnt].toStdString().c_str(),datam.rows,datam.cols, m_psiFiles[0].toStdString().c_str(),
-                        m_psiRows,m_psiCols);
+                QString msg = QString("igram %1 (%2,%3)is not the same size as %4 (%5,%6)").arg(m_psiFiles[cnt]).arg(datam.rows).arg(datam.cols).arg(m_psiFiles[0]).arg(m_psiRows).arg(m_psiCols);
                 QMessageBox::warning(0, "Failed", msg);
                  QApplication::restoreOverrideCursor();
                  return data;
@@ -1620,17 +1618,16 @@ QVector<double> DFTArea::getPhases(){
         m_Psidlg->setPhases(a);
         m_Psidlg->plot(a, i, sdp);
         // repeat until convergence
-        m_Psidlg->setStatusText(QString().sprintf("iteration %d  sdp %lf", i, sdp),i);
+        m_Psidlg->setStatusText(QString("iteration %1  sdp %2").arg(i).arg(sdp, 0, 'f'),i);
         if (i > 1 && (sdp < ptol)) {
 
             break;
         }
         phases_last = phases;
-        emit statusBarUpdate(QString().sprintf("%d %lf",i, sdp),2);
+        emit statusBarUpdate(QString("%1 %2").arg(i).arg(sdp, 0, 'f'),2);
     }
     if (i == maxiter && (sdp > ptol)){
-        QString msg = QString().sprintf("The calculated phases did not converge within the maximum number"
-                             " of iterations (%d). \nThey proabably are not valid.",maxiter);
+        QString msg = QString("The calculated phases did not converge within the maximum number of iterations (%1). \nThey proabably are not valid.").arg(maxiter);
         QMessageBox::warning(0, "No convegence", msg );
         phases = trials[bestIteration];
         i = bestIteration;
@@ -1645,7 +1642,7 @@ QVector<double> DFTArea::getPhases(){
     for (int i = 0; i < phases.n_cols; ++i){
         a << phases(i);
     }
-    m_Psidlg->setStatusText(QString().sprintf("iteration %d  sdp %lf Compute Phases complete. ", i, sdp),maxiter);
+    m_Psidlg->setStatusText(QString("iteration %1  sdp %2 Compute Phases complete. ").arg(i).arg(sdp, 0, 'f'),maxiter);
 
     return a;
 }

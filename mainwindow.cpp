@@ -491,7 +491,7 @@ void MainWindow::createDockWindows(){
     m_contourTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     m_dftTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     metrics = metricsDisplay::get_instance(this);
-    metrics->setWindowTitle(QString().sprintf("metrics      DFTFringe %s",APP_VERSION));
+    metrics->setWindowTitle(QString("metrics      DFTFringe %s").arg(APP_VERSION));
     zernTablemodel = metrics->tableModel;
     addDockWidget(Qt::LeftDockWidgetArea, m_outlineHelp);
     addDockWidget(Qt::LeftDockWidgetArea, m_outlinePlots);
@@ -517,14 +517,14 @@ void MainWindow::createDockWindows(){
 }
 void MainWindow::updateMetrics(wavefront& wf){
     metrics->setName(wf.name);
-    metrics->mDiam->setText(QString().sprintf("%6.3lf",wf.diameter));
-    metrics->mROC->setText(QString().sprintf("%6.3lf",wf.roc));
+    metrics->mDiam->setText(QString("%1").arg(wf.diameter, 6, 'f', 3));
+    metrics->mROC->setText(QString("%1").arg(wf.roc, 6, 'f', 3));
     const double  e = 2.7182818285;
-    metrics->mRMS->setText(QString().sprintf("<b><FONT FONT SIZE = 12>%6.3lf</b>",wf.std));
+    metrics->mRMS->setText(QString("<b><FONT FONT SIZE = 12>%1</b>").arg(wf.std, 6, 'f', 3));
     double st =(2. *M_PI * wf.std);
     st *= st;
     double Strehl = pow(e, -st);
-    metrics->mStrehl->setText(QString().sprintf("<b><FONT FONT SIZE = 12>%6.3lf</b>",Strehl));
+    metrics->mStrehl->setText(QString("<b><FONT FONT SIZE = 12>%1</b>").arg(Strehl, 6, 'f', 3));
 
 
     double z8 = zernTablemodel->values[8];
@@ -538,7 +538,7 @@ void MainWindow::updateMetrics(wavefront& wf){
 
     metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing, m_mirrorDlg->lambda);
     if (m_mirrorDlg->doNull)
-        metrics->mCC->setText(QString().sprintf("<FONT FONT SIZE = 7>%6.3lf",BestSC));
+        metrics->mCC->setText(QString("<FONT FONT SIZE = 7>%1").arg(BestSC, 6 ,'f', 3));
     else {
         metrics->mCC->setText("NA");
     }
@@ -941,7 +941,7 @@ void MainWindow::on_actionAbout_triggered()
 {
 
     QMessageBox::information(this, "___________________________________________________________________________About", 
-                            QString().sprintf("<html><body><h1>DFTFringe version %s</h1>",APP_VERSION)+
+                            QString("<html><body><h1>DFTFringe version %1</h1>").arg(APP_VERSION)+
                              "<p>This program was compiled using:<ul><li>"
                              "Qt version " + QT_VERSION_STR + " </li>"
                     #if defined(__GNUC__) && defined(__VERSION__)
@@ -1214,10 +1214,11 @@ void MainWindow::batchProcess(QStringList fileList){
                 double cx = set.value("lastOutsideCx",0).toDouble();
                 double cy = set.value("lastOutsideCy",0.).toDouble();
                 wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
-                QString txt = QString().sprintf("%s RMS: %6.3lf outline center x,y: %6.1lf, %6.1lf",
-                                                info.baseName().toStdString().c_str(),
-                                                wf->std,
-                                                cx,cy);
+                QString txt = QString("%1 RMS: %2 outline center x,y: %3, %4").arg(
+                                                info.baseName().toStdString().c_str()).arg(
+                                                wf->std, 6, 'f', 3).arg(
+                                                cx, 6, 'f', 1).arg(
+                                                cy, 6, 'f', 1);
                 painter.drawText(20,height/2 + 15, txt);
                 cv::Mat frame = cv::Mat(img.height(), img.width(),CV_8UC4, img.bits(), img.bytesPerLine()).clone();
                 cv::Mat resized;
@@ -1356,7 +1357,7 @@ void MainWindow::startJitter(){
         m_dftArea->makeSurface();
         qApp->processEvents();
         wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
-        wf->name = QString().sprintf("x:_%d_Y:_%d_radius:_%d",x,y,rad);
+        wf->name = QString("x:_%1_Y:_%2_radius:_%3").arg(x).arg(y).arg(rad);
         dlg->status(wf->name);
         m_surfTools->nameChanged(m_surfaceManager->m_currentNdx, wf->name);
         qApp->processEvents();
@@ -1625,14 +1626,14 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 //                fileName.append(".avi");
 //            cv::VideoWriter video(fileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
 //            if (!video.isOpened()){
-//                QString msg = QString().sprintf("could not open %s %dx%d for writing.", fileName.toStdString().c_str(),
-//                                                width, height);
+//                QString msg = QString("could not open %1 %2x%3 for writing.").arg(fileName).arg(
+//                                                width).arg(height);
 //                QMessageBox::warning(0,"warning", msg);
 //                return;
 //            }
 //            foreach (QString name, fileNames){
 //                int mem = showmem("loading");
-//                statusBar()->showMessage(QString().sprintf("memory %d MB", mem));
+//                statusBar()->showMessage(QString("memory %1 MB").arg(mem));
 //                if (mem< memThreshold + 50){
 //                    while (m_surfaceManager->m_wavefronts.size() > 1){
 //                        m_surfaceManager->deleteCurrent();

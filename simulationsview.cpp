@@ -56,7 +56,7 @@ public:
             return QString("");
 
 
-        return QString().sprintf("%6.2lf",s1 / value);
+        return QString("%1").arg(s1 / value, 6, 'f', 2);
     }
 };
 SimulationsView::SimulationsView(QWidget *parent) :
@@ -126,7 +126,7 @@ void SimulationsView::initMTFPlot(){
 void SimulationsView::setSurface(wavefront *wf){
     m_wf = wf;
     m_arcSecScaleDraw->s1 = (1.22 * 550.e-6/wf->diameter) * 57.3 * 3600;
-    QString txt = QString().sprintf("diameter %6.1lf with max resolution of %6.2lf arcsec",wf->diameter, m_arcSecScaleDraw->s1);
+    QString txt = QString("diameter %1 with max resolution of %2 arcsec").arg(wf->diameter, 6, 'f', 1).arg(m_arcSecScaleDraw->s1, 6, 'f', 2);
    ui->MTF->setAxisTitle(QwtPlot::xBottom,txt);
     if (wf == 0 ){
         needs_drawing = false;
@@ -503,7 +503,7 @@ void SimulationsView::on_film_clicked()
         QApplication::processEvents();
         on_MakePB_clicked();
         QApplication::processEvents();
-        QString name = QString().sprintf("/frame%03d",cnt++);
+        QString name = QString("/frame%1").arg(cnt++, 3 ,10, QLatin1Char('0'));
 
         saveImage(filmDir+name);
     }
@@ -641,12 +641,12 @@ void SimulationsView::on_MakePB_clicked()
     doc.setHtml(metrics->mCC->text());
     QString bestFit = doc.toPlainText();
 
-    QString caption = QString().sprintf("%s   Diameter: %6.1lf ROC: %6.1lf Best Fit CC: %s Strehl: %s",
-                                        m_wf->name.toStdString().c_str(),
-                                        m_wf->diameter,
-                                        m_wf->roc,
-                                        bestFit.toStdString().c_str(),
-                                        strehl.toStdString().c_str());
+    QString caption = QString("%1   Diameter: %2 ROC: %3 Best Fit CC: %4 Strehl: %5").arg(
+                                        m_wf->name).arg(
+                                        m_wf->diameter, 6, 'f', 1).arg(
+                                        m_wf->roc, 6, 'f', 1).arg(
+                                        bestFit).arg(
+                                        strehl);
     ui->caption->setText(caption);
     bool wasAliased = false;
 
@@ -664,13 +664,13 @@ void SimulationsView::on_MakePB_clicked()
         stalkWidth = m_wf->m_outside.m_radius * .1;
         theObstruction = make_obstructionMask(m_wf->workMask);
         m_wf->workMask = theObstruction.clone();
-        showData(QString().sprintf("%f",m_wf->diameter).toStdString().c_str(), theObstruction.clone(), false);
+        showData(QString("%1").arg(m_wf->diameter, 0, 'f').toStdString().c_str(), theObstruction.clone(), false);
 
     }
 
     cv::Mat inside = computeStarTest(nulledSurface(-defocus), fftSize, 3);
     cv::Mat t = fitStarTest(inside, wid,gamma);
-    cv::putText(t,QString().sprintf("-%5.1lf waves inside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
+    cv::putText(t,QString("-%1 waves inside").arg(2 * defocus, 5, 'f', 1).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
     wasAliased |= alias;
     if (alias)
     {
@@ -687,7 +687,7 @@ void SimulationsView::on_MakePB_clicked()
     // outside focus star test
     cv::Mat outside = computeStarTest(nulledSurface(defocus),fftSize,3);
     t = fitStarTest(outside,wid ,gamma);
-    cv::putText(t,QString().sprintf("%5.1lfwaves outside",2 * defocus).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
+    cv::putText(t,QString("%1waves outside").arg(2 * defocus, 5, 'f', 1).toStdString(),cv::Point(50,30),1,1,cv::Scalar(255, 255,255));
     wasAliased |= alias;
     if (alias)
     {
@@ -711,7 +711,7 @@ void SimulationsView::on_MakePB_clicked()
     cv::Mat focused = computeStarTest(nulledSurface(0), fftSize,  ui->centerMagnifySB->value());
     t = fitStarTest(zoomMat(focused,ui->centerMagnifySB->value()), wid ,gamma/2);
 
-    cv::putText(t,QString().sprintf("Focused").toStdString(),cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
+    cv::putText(t,"Focused",cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
     QImage focusDisplay ((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
     ui->Focused->setPixmap(QPixmap::fromImage(focusDisplay.copy()));
 

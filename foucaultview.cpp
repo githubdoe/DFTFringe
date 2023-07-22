@@ -54,7 +54,7 @@ QString getSaveFileName(QString type){
     QString path = settings.value("lastPath","").toString();
 
     QString fileName = QFileDialog::getSaveFileName(0,
-            QString().sprintf("File name of %d image to be saved", type.toStdString().c_str()),
+            QString("File name of %1 image to be saved").arg(type),
                                                  path);
 
     if (!fileName.endsWith(".jpg"))
@@ -243,11 +243,11 @@ void foucaultView::on_makePb_clicked()
 
     double slitWidthHalf = pixels_per_thou * ui->slitWidthSb->value() * 1000 * ((ui->useMM->isChecked()) ? 1./25.4 : 1.);
     if (slitWidthHalf < .75){
-        QString msg = QString().sprintf("warning the slit width of %6.5lf may too small. Using one pixel slit instead", ui->slitWidthSb->value());
+        QString msg = QString("warning the slit width of %1 may too small. Using one pixel slit instead").arg(ui->slitWidthSb->value(), 6, 'f', 5);
         QMessageBox::warning(0,"warning", msg);
 
     }
-    QString parms = QString().sprintf(" Pixel width %6.5lf slit size in pixels %d", pixwidth, (int)(2 * slitWidthHalf));
+    QString parms = QString(" Pixel width %1 slit size in pixels %2").arg(pixwidth, 6, 'f', 5).arg((int)(2 * slitWidthHalf));
     ui->pixeParms->setText(parms);
     // compute offset so that line is at center
     for (int y = 0; y < size; ++y)
@@ -339,8 +339,8 @@ void foucaultView::on_makePb_clicked()
     painter.drawPixmap(0, 0, rp);
     painter.setPen(QPen(QColor(Qt::white)));
     painter.setFont(QFont("Arial", 15));
-    QString zoffsetStr = QString().sprintf("%6.3lf %s", ui->RonchiX->value() * ui->rocOffsetSb->value(),
-                                           ui->useMM->isChecked()? "mm" : "in");
+    QString zoffsetStr = QString("%1 %2").arg(ui->RonchiX->value() * ui->rocOffsetSb->value(), 6, 'f', 3)
+                                           .arg(ui->useMM->isChecked()? "mm" : "in");
     painter.drawText(20, 40, zoffsetStr);
     QVector<QPoint> profilePoints;
     if (ui->overlayProfile->isChecked()){
@@ -397,8 +397,8 @@ void foucaultView::on_makePb_clicked()
     painterf.drawPixmap(0, 0, rpf);
     painterf.setPen(QPen(QColor(Qt::white)));
     painterf.setFont(QFont("Arial", 15));
-    zoffsetStr = QString().sprintf("%6.3lf %s", ui->rocOffsetSb->value(),
-                                   ui->useMM->isChecked()? "mm" : "in");
+    zoffsetStr = QString("%1 %2").arg(ui->rocOffsetSb->value(), 6 , 'f', 3)
+                                   .arg(ui->useMM->isChecked()? "mm" : "in");
     painterf.drawText(20, 40, zoffsetStr);
     if (ui->overlayProfile->isChecked()){
         // overlay profile onto ronchi plot
@@ -534,9 +534,9 @@ void foucaultView::on_scanPb_clicked()
         QPainter p3(&fvImage);
         fv->QWidget::render(&p3);
         if (ui->SaveImageCB->isChecked()){
-            QString num = QString().sprintf("%6.4lf",v).replace(".","_");
+            QString num = QString("%1").arg(v, 6, 'f', 4).replace(".","_");
             num.replace("-","n");
-            QString fvpng = QString().sprintf("%s//%06d_%s.png",imageDir.toStdString().c_str(), cnt++, num.toStdString().c_str());
+            QString fvpng = QString("%1//%2_%3.png").arg(imageDir).arg(cnt++, 6, 10, QLatin1Char('0')).arg(num);
             qDebug() << "fn"<< fvpng;
             if (ui->saveOnlyFouccault->isChecked()){
                 fv->m_foucultQimage.save(fvpng);
@@ -603,7 +603,7 @@ void foucaultView::draw_ROC_Scale(){
     double step = getStep();
     for (int i = 0; i< 17; ++i){
         double val =  (i - 8) * step * 5;  // label slider every 5 steps.
-        findChild<QLabel *>(QString().sprintf("l%d",i))->setText(QString::number(val));
+        findChild<QLabel *>(QString("l%1").arg(i))->setText(QString::number(val));
     }
 }
 

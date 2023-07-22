@@ -38,7 +38,7 @@ settingsProfile::settingsProfile(QWidget *parent) :
     QSettings set;
     ui->pushButton_1->setStyleSheet(colorButtonStyleSheet(set.value("profile color pushButton_1", QColor(0,0,0).name()).toString()));
     for (int i = 2 ; i < 10; ++i){
-        name = QString().sprintf("pushButton_%d",i);
+        name = QString("pushButton_%1").arg(i);
         QPushButton *btn = findChild<QPushButton *>(name);
         QColor color = QColor(Qt::GlobalColor( 7 + i%7 ) );
         color = QColor(set.value("profile color "+name, color).toString());
@@ -46,13 +46,13 @@ settingsProfile::settingsProfile(QWidget *parent) :
     }
 }
 QColor settingsProfile::getColor(int num){
-    QString name = QString().sprintf("pushButton_%d",1 + num%7);
+    QString name = QString("pushButton_%1").arg(1 + num%7);
     QPushButton *btn = findChild<QPushButton *>(name);
     return btn->palette().color(QPalette::Background);
 }
 
 void settingsProfile::setColor(int num){
-    QString name = QString().sprintf("pushButton_%d",num);
+    QString name = QString("pushButton_%1").arg(num);
     QPushButton *btn = findChild<QPushButton *>(name);
     QColor color = QColorDialog::getColor( btn->palette().color(QPalette::Background));
     btn->setStyleSheet(colorButtonStyleSheet(color));

@@ -87,7 +87,7 @@ showAliasDlg::~showAliasDlg()
      ui->resizedSB->blockSignals(false);
      contrast();
 
-     ui->originalLb->setText( QString().sprintf("Original %dx%d", img.width(),img.height()));
+     ui->originalLb->setText( QString("Original %1x%2").arg(img.width()).arg(img.height()));
      downSize();
 
  }

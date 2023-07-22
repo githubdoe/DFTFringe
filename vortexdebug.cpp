@@ -40,7 +40,7 @@ void vortexDebug::on_showInput_clicked(bool checked)
 void vortexDebug::on_smooth_valueChanged(int value)
 {
     m_smooth = value;
-    ui->label->setText(QString().sprintf("%d",value));
+    ui->label->setText(QString("%1").arg(value));
 
 }
 
