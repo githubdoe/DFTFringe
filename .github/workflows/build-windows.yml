@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
   workflow_call:
 
+env:
+  armadillo_version: 12.6.0
+
 jobs:
   cache-mingw-from-QT:
     runs-on: windows-latest
@@ -154,7 +157,7 @@ jobs:
           path: |
             build_armadillo\libarmadillo.dll
             build_armadillo\tmp\include
-          key: ${{ runner.os }}-armadillo-12.6.0
+          key: ${{ runner.os }}-armadillo-${{env.armadillo_version}}
 
       # all what follows is only run on cache miss
 
