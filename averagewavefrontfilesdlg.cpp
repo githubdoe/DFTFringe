@@ -43,7 +43,6 @@ void averageWaveFrontFilesDlg::on_process_clicked()
     bool first = true;
     abort = false;
     QStringList rejects;
-    bool configChanged = false;
     int count = ui->fileList->count();
     if (count == 0)
         return;
