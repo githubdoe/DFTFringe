@@ -456,7 +456,6 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     double firstResp;
     double rmean;
     double rmeanpeak = 0;
-    double avg;
     if (showDebug){
         cv::namedWindow("outline debug",cv::WINDOW_NORMAL);
         cv::moveWindow("outline debug", 10,10);
@@ -1873,7 +1872,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
     QPainter painterThis(this);
     int pw = parentWidget()->width();
     int dw = pw/2;
-    int dh = parentWidget()->height();
 
     QRect dirtyRect = event->rect();
     if ((zoomIndex > 1 && m_zoomMode == EDGEZOOM) && (
@@ -1882,7 +1880,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
             )){
         painterThis.fillRect(this->rect(), Qt::gray);
         int viewW = 3 * m_zoomBoxWidth / zoomIndex;
-        double scale = zoomIndex;
 
         QImage small(viewW * 4, viewW *2, igramColor.format());
         small.fill(Qt::gray);

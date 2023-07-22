@@ -340,12 +340,11 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
     // new padSize is fft_size/pad;
 
 
-        int padSize =  pupil_size/pad;
-        double dftRescale = padSize/(double)nx;
-        dX = (m_wf->diameter/2.)/m_wf->m_outside.m_radius;
+    int padSize =  pupil_size/pad;
+    dX = (m_wf->diameter/2.)/m_wf->m_outside.m_radius;
 
-        cv::resize(tmp[0],tmp[0],cv::Size(padSize,padSize),cv::INTER_AREA);
-        cv::resize(tmp[1],tmp[1],cv::Size(padSize,padSize),cv::INTER_AREA);
+    cv::resize(tmp[0],tmp[0],cv::Size(padSize,padSize),cv::INTER_AREA);
+    cv::resize(tmp[1],tmp[1],cv::Size(padSize,padSize),cv::INTER_AREA);
 
 
     cv::Mat in[] = {cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)

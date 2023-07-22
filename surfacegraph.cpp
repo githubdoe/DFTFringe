@@ -224,7 +224,6 @@ void SurfaceGraph::fillSurfaceProxy() {
     cv::Mat data;
     m_wf->workData.copyTo(data);
     double min,max;
-    int id1,id2;
     min = m_wf->min;
     max = m_wf->max;
     double mean = m_wf->mean;
@@ -244,10 +243,8 @@ void SurfaceGraph::fillSurfaceProxy() {
 
 
     double mmperstep = (diam/2)/(m_wf->m_outside.m_radius);
-    float stepX = mmperstep;
 
     int steps = 1;
-    float stepZ = stepX;
     sampleCountZ = data.rows;
     sampleCountX = data.cols;
     QSurfaceDataArray *dataArray = new QSurfaceDataArray;

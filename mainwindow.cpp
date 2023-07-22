@@ -1078,7 +1078,6 @@ void MainWindow::batchProcess(QStringList fileList){
     int last = fileList.size()-1;
 
     int ndx = 0;
-    VideoWriter *vw;
     int cnt = 0;
     int width, height;
     QString videoFileName;

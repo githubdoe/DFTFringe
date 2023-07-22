@@ -1660,7 +1660,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         m_currentNdx = m_wavefronts.size()-1;
         m_surfaceTools->select(m_currentNdx);
         //wf->mask = cv::Mat::zeros(wf->data.size(), CV_8UC1);
-        uchar ones = 0xff;
+        //uchar ones = 0xff;
         //fillCircle(wf->mask, wf->m_outside.m_center.x(), wf->m_outside.m_center.y(),
                    //wf->m_outside.m_radius, &ones);
 
@@ -2864,7 +2864,6 @@ void SurfaceManager::report(){
         imagesHtml.append("<p ><br>&nbsp;</p>");
         imagesHtml.append("<img src='" + surfPath + "'>");
     }
-    int lastH = 0;
     // star test
     if (dlg.ui->showStarTest->isChecked()){
 
@@ -3173,7 +3172,6 @@ void SurfaceManager::tiltAnalysis(){
    QwtPlotCurve *yTilt = new QwtPlotCurve("y");
    xTilt->setStyle(QwtPlotCurve::Dots);
    yTilt->setStyle(QwtPlotCurve::Dots);
-   QwtPlotCurve *xTLine = new QwtPlotCurve("X fit");
    xTilt->setPen(Qt::red,4);
    yTilt->setPen(Qt::blue,4);
    xTilt->setSamples(xvals.toVector());

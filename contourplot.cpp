@@ -82,8 +82,6 @@ public:
         lasty = pos.y();
         QColor bg( Qt::white );
         bg.setAlpha( 200 );
-        int x = thePlot->invTransform(QwtPlot::xBottom, pos.x());
-        int y = thePlot->invTransform(QwtPlot::yLeft, pos.y());
         double v = thePlot->d_spectrogram->data()->value(pos.x(),pos.y());
         int half = thePlot->m_wf->data.rows/2.;
         double delx = pos.x() - half;

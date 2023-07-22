@@ -36,8 +36,6 @@ outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
     ui->display->setBackgroundRole(QPalette::Dark);
     ui->display->setAutoFillBackground(true);
     QRect rec = QApplication::desktop()->screenGeometry();
-    int height = rec.height();
-    int width = rec.width();
     ui->showEdgePixelsCB->blockSignals(true);
     ui->showEdgePixelsCB->setChecked(false);
     ui->showEdgePixelsCB->blockSignals(false);
