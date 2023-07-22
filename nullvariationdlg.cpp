@@ -160,8 +160,8 @@ void nullVariationDlg::calculate()
 
     //qDebug() << "z8 compared to z " << center << ((1.5) * pow(diam+d_tol,4) * 1.E6 /(384. * lambda * pow(roc,3)) - center) << diamPV;
 
-    ui->diamPV->setText(QString("%1    %2%%").arg(diamPV, 6, 'f', 4).arg(100. * diamPV/center, 6, 'f', 2));
-    ui->rocPV->setText(QString( "%1    %2%%").arg(rocPV, 6, 'f', 4).arg(100. * rocPV /center, 6, 'f', 2));
+    ui->diamPV->setText(QString("%1    %2%").arg(diamPV, 6, 'f', 4).arg(100. * diamPV/center, 6, 'f', 2));
+    ui->rocPV->setText(QString( "%1    %2%").arg(rocPV, 6, 'f', 4).arg(100. * rocPV /center, 6, 'f', 2));
 
     double big1 = ((1.5) * pow(diam+d_tol,4) * 1.E6 /(384. * lambda * pow(roc-roc_tol,3)));
     double big2 = ((1.5) * pow(diam-d_tol,4) * 1.E6 /(384. * lambda * pow(roc+roc_tol,3)));

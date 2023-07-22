@@ -429,7 +429,7 @@ void ProfilePlot::populate()
 
     if (m_wf->m_outside.m_radius > 0 && settings.value("GBlur", false).toBool()){
         double val = .01 * (m_wf->diameter) * smoothing;
-        QString t = QString("Surface Smoothing diameter %1%% of surface diameter %2 mm").arg(smoothing, 6, 'f', 2).arg( val, 6, 'f', 1 );
+        QString t = QString("Surface Smoothing diameter %1% of surface diameter %2 mm").arg(smoothing, 6, 'f', 2).arg( val, 6, 'f', 1 );
         QwtText title(t);
         title.setRenderFlags( Qt::AlignHCenter | Qt::AlignTop );
 

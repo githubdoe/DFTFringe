@@ -12,7 +12,7 @@ long showmem(QString /*title*/){
     statex.dwLength = sizeof (statex);
     GlobalMemoryStatusEx (&statex);
          return statex.ullAvailVirtual/DIV;
-    qDebug() <<QString("%1%% in use.").arg(statex.dwMemoryLoad, WIDTH);
+    qDebug() <<QString("%1% in use.").arg(statex.dwMemoryLoad, WIDTH);
 
      qDebug() <<QString("%1 free  MB of physical memory.").arg(
               statex.ullAvailPhys/DIV, WIDTH);
