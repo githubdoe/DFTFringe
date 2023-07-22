@@ -73,8 +73,9 @@ public:
 };
 
 // Create a histogram of mirror radius values of igrams
-QVector<int> radiusHisto(const std::vector<double> data, double *minRad, int &bins){
+QVector<int> radiusHisto(const QVector<double>& dataQVect, double *minRad, int &bins){
 
+    const std::vector<double> data = std::vector<double>(dataQVect.begin(), dataQVect.end());
     auto result = std::minmax_element (data.begin(),data.end());
     double min = *minRad = *result.first;
     double max = *result.second;
@@ -89,8 +90,7 @@ QVector<int> radiusHisto(const std::vector<double> data, double *minRad, int &bi
 
                 break;
             }
-        bound += 1;
-
+            bound += 1;
         }
     }
     return h;
@@ -175,7 +175,7 @@ void outlineStatsDlg::plot(){
     double minRad;
     int bins;
 
-    QVector<int> radhisto = radiusHisto(radVals.toStdVector(), &minRad, bins);
+    QVector<int> radhisto = radiusHisto(radVals, &minRad, bins);
 
     ui->mirrorRadiusHistogramPlot->setTitle("Radius histogram");
     for (int i = 0; i < radhisto.size(); ++i){

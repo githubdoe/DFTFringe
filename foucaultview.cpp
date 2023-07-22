@@ -88,11 +88,13 @@ QImage *foucaultView::render(){
 }
 
 void foucaultView::saveRonchiImage(){
-    ui->ronchiViewLb->pixmap()->save(getSaveFileName("foucault"));
+    const QPixmap pm = ui->ronchiViewLb->pixmap(Qt::ReturnByValue);
+    pm.save(getSaveFileName("foucault"));
 
 }
 void foucaultView::saveFoucaultImage(){
-    ui->foucaultViewLb->pixmap()->save(getSaveFileName("foucault"));
+    const QPixmap pm = ui->foucaultViewLb->pixmap(Qt::ReturnByValue);
+    pm.save(getSaveFileName("foucault"));
 }
 
 void foucaultView::setSurface(wavefront *wf){

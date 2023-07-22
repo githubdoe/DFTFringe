@@ -170,7 +170,7 @@ void OGLView::saveImage(){
 void OGLView::showSelected()    // show all selected wavefronts as 3D plots
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     int width = rec.width()/3;
     int height = rec.height()/2;
     QVector<wavefront *>  m_wavefronts =SurfaceManager::get_instance()->m_wavefronts;

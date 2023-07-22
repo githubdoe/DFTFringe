@@ -157,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
     review->s2->addWidget(m_profilePlot);
     m_profilePlot->setStyleSheet( {"border: 3px outset darkgrey;"});
     review->s1->addWidget(m_contourView);
-    QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     review->s1->setSizes({INT_MAX, INT_MAX});
     review->s2->setSizes({ rec.height()/2,  rec.height()/2});
     review->s2->setStyleSheet(
@@ -1045,7 +1045,7 @@ void MainWindow::saveBatchZerns(){
     QTextStream out(&f);
     if (f.open(QIODevice::WriteOnly | QIODevice::Append)) {
         QStringList dirs = path.split("/");
-        out << endl << endl;
+        out << Qt::endl << Qt::endl;
 
         foreach(QVector<QString>   zerns, batchZerns){
             out << dirs[dirs.size()-1] + "/" + zerns[0];
@@ -1053,7 +1053,7 @@ void MainWindow::saveBatchZerns(){
 
                 out << "," << zerns[i];
             }
-            out << endl;
+            out << Qt::endl;
         }
     }
 }
@@ -1508,7 +1508,7 @@ void MainWindow::on_actionSave_Zernike_Values_in_CSV_triggered()
         }
 
         QStringList dirs = path.split("/");
-        out << endl << endl;
+        out << Qt::endl << Qt::endl;
         for (int i = 0; i < m_surfaceManager->m_wavefronts.size(); ++i){
             wavefront* wf = m_surfaceManager->m_wavefronts[i];
             QStringList paths = wf->name.split('/');
@@ -1520,7 +1520,7 @@ void MainWindow::on_actionSave_Zernike_Values_in_CSV_triggered()
             for (int z = 0; z < Z_TERMS; ++z){
                 out << "," << wf->InputZerns[z];
             }
-            out << endl;
+            out << Qt::endl;
         }
     }
 }
@@ -1764,7 +1764,7 @@ void MainWindow::on_actionSave_curent_profile_triggered()
     if (f.open(QIODevice::WriteOnly )){
             QPolygonF points = m_profilePlot->createProfile(m_profilePlot->m_showNm * m_profilePlot->m_showSurface,m_profilePlot->m_wf);
             foreach (QPointF pt, points) {
-                out << pt.x() << " " << pt.y() << endl;
+                out << pt.x() << " " << pt.y() << Qt::endl;
             }
     }
 }

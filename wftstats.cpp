@@ -155,7 +155,7 @@ void wftStats::computeZernStats( int ndx){
         }
         zerns << zpoints;
 
-        std::vector<double > zvec = zpoints.toStdVector();
+        std::vector<double> zvec = std::vector<double>(zpoints.begin(), zpoints.end());
         cv::Mat aSampleOfZerns(zvec);
         std::sort( zvec.begin(), zvec.end() ); // sort the Zvalues
         double median;
@@ -258,8 +258,7 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
     int last = wavefronts.length();
     QHash<QString,int> sizes;
     for (int i = 0; i < last; ++i){
-        QString size;
-        size.sprintf("%d %d",wavefronts[i]->workData.rows, wavefronts[i]->workData.cols);
+        QString size = QString("%1 %2").arg(wavefronts[i]->workData.rows).arg(wavefronts[i]->workData.cols);
         if (*sizes.find(size))
         {
             ++sizes[size];

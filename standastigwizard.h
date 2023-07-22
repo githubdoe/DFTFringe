@@ -43,7 +43,7 @@ class standAstigWizard : public QWizard
     Q_OBJECT
 
 public:
-    explicit standAstigWizard(SurfaceManager *sm, QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    explicit standAstigWizard(SurfaceManager *sm, QWidget *parent = 0, Qt::WindowFlags flags = Qt::Widget);
     static QString AstigReportTitle;
     static QString AstigReportPdfName;
     ~standAstigWizard();

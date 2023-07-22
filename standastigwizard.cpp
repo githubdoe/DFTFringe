@@ -24,7 +24,7 @@
 #include "surfacemanager.h"
 QString AstigReportTitle = "";
 QString AstigReportPdfName = "stand.pdf";
-standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent,Qt::WindowFlags flags) :
+standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent, Qt::WindowFlags flags) :
     QWizard(parent,flags),
     ui(new Ui::standAstigWizard)
 {

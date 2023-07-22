@@ -246,7 +246,7 @@ psitiltReturn tiltpsiC(const arma::mat& images, const arma::rowvec& phases_init,
     pt = join_cols(phases, zcs);
     dpt = norm(pt - pt_last, 2);
     if (trace) {
-      qDebug() << "Iteration " << i << " sse = " << sse(i) << " dpt = " << dpt << endl;
+      qDebug() << "Iteration " << i << " sse = " << sse(i) << " dpt = " << dpt << Qt::endl;
     }
     if (dpt < ptol) break;
     Phi = pxls(images, phases, zcs, coords);

@@ -64,13 +64,13 @@ void EdgePlot::Update(){
 
     m_chart->createDefaultAxes();
 
-    m_chart->axisX()->setRange(-1,105);
+    m_chart->axes(Qt::Horizontal).first()->setRange(-1,105);
 
-    m_chart->axisY()->setRange(-10,10);
+    m_chart->axes(Qt::Vertical).first()->setRange(-10,10);
 
 
-    m_chart->axisX()->setTitleText("start edge at percent of radius of mirror");
-    m_chart->axisY()->setTitleText("waves");
+    m_chart->axes(Qt::Horizontal).first()->setTitleText("start edge at percent of radius of mirror");
+    m_chart->axes(Qt::Vertical).first()->setTitleText("waves");
 }
 void EdgePlot::on_height_valueChanged(int value)
 {

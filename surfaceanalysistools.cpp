@@ -116,10 +116,10 @@ void surfaceAnalysisTools::on_spinBox_2_valueChanged(int arg1)
 
      QListWidgetItem *item = ui->wavefrontList->currentItem();
      if (item)
-         item->setTextColor(Qt::gray);
+         item->setForeground(Qt::gray);
      ui->wavefrontList->setCurrentRow(ndx,QItemSelectionModel::Current);
      item = ui->wavefrontList->currentItem();
-     item->setTextColor(Qt::black);
+     item->setForeground(Qt::black);
      lastCurrentItem = ui->wavefrontList->currentRow();
 
 
@@ -135,7 +135,7 @@ void surfaceAnalysisTools::on_wavefrontList_clicked(const QModelIndex &index)
 
     QListWidgetItem *item = ui->wavefrontList->item(lastCurrentItem);
     if (item)
-        item->setTextColor(Qt::gray);
+        item->setForeground(Qt::gray);
 
     QModelIndexList indexes = ui->wavefrontList->selectionModel()->selectedIndexes();
 
@@ -166,7 +166,7 @@ void surfaceAnalysisTools::on_deleteWave_clicked()
     QModelIndexList indexes = ui->wavefrontList->selectionModel()->selectedIndexes();
 
     QList<int> indexList = SelectedWaveFronts();
-    qSort(indexList.begin(), indexList.end(), qGreater<int>());
+    std::sort(indexList.begin(), indexList.end(), std::greater<int>());
     emit deleteTheseWaveFronts(indexList);
 }
 

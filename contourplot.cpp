@@ -496,7 +496,7 @@ void ContourPlot::initPlot(){
     const QFontMetrics fm( axisWidget( QwtPlot::yLeft )->font() );
     if (!m_minimal){
         QwtScaleDraw *sd = axisScaleDraw( QwtPlot::yLeft );
-        sd->setMinimumExtent( fm.width( "100.00" ) );
+        sd->setMinimumExtent( fm.horizontalAdvance( "100.00" ) );
 
         QwtPlotGrid *grid = new QwtPlotGrid();
         grid->enableXMin(true);
@@ -573,7 +573,7 @@ void ContourPlot::setAlpha( int alpha )
 void ContourPlot::printPlot()
 {
     QPrinter printer( QPrinter::HighResolution );
-    printer.setOrientation( QPrinter::Landscape );
+    printer.setPageOrientation( QPageLayout::Landscape );
     printer.setOutputFileName( "spectrogram.pdf" );
 
     QPrintDialog dialog( &printer );

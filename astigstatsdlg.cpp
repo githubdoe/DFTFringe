@@ -680,7 +680,7 @@ void astigStatsDlg::on_savePdf(){
     printer.setOutputFileName( fileName );
     printer.setOutputFormat( QPrinter::PdfFormat );
     printer.setResolution(96);
-    printer.setPaperSize(QPrinter::Imperial8x10);
+    printer.setPageSize(QPageSize(QPageSize::Imperial8x10));
 
     QTextDocument *doc = editor->document();
     doc->print(&printer);
@@ -792,12 +792,12 @@ void astigStatsDlg::on_distribution_clicked()
 
     if (PDFMode){
 
-        editor->resize(printer.pageRect().size());
+        editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
     }
     QTextDocument *doc = editor->document();
     QList<QString> doc1Res;
 
-    doc->setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
+    doc->setPageSize(printer.pageLayout().paintRectPixels(printer.resolution()).size()); // This is necessary if you want to hide the page number
 
     QString html = ("<html><head/><body><h1><center>Astig Variability analisys</center></h1>");
 
@@ -962,13 +962,13 @@ void astigStatsDlg::on_savePB_clicked()
     QTextStream out(&f);
     if (f.open(QIODevice::WriteOnly | QIODevice::Append)) {
 
-        out << endl << endl;
+        out << Qt::endl << Qt::endl;
         foreach (QStringList l, m_zerns){
             out << l[0];
             for (int i = 1; i < l.size(); ++i){
                 out << "," << l[i];
             }
-            out << endl;
+            out << Qt::endl;
         }
     }
 
