@@ -154,7 +154,7 @@ jobs:
           path: |
             build_armadillo\libarmadillo.dll
             build_armadillo\tmp\include
-          key: ${{ runner.os }}-armadillo-11.4.0
+          key: ${{ runner.os }}-armadillo-12.6.0
 
       # all what follows is only run on cache miss
 
@@ -176,17 +176,17 @@ jobs:
       - name: download armadillo
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
         # I specified the mirror because one of the random mirrors did not work during my tests
-        run: wget -O armadillo-11.4.4.tar.xz http://sourceforge.net/projects/arma/files/armadillo-11.4.4.tar.xz/download?use_mirror=versaweb
+        run: wget -O armadillo-12.6.0.tar.xz http://sourceforge.net/projects/arma/files/armadillo-12.6.0.tar.xz/download?use_mirror=versaweb
       # Extract in two step. First step write to stdo and second step read from stdi.
       # This avoids intermediate file creation
       # It must run in CMD because powershell corrupts pipes
       - name: extract archive
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
-        run: 7z x -so armadillo-11.4.4.tar.xz | 7z x -si -ttar
+        run: 7z x -so armadillo-12.6.0.tar.xz | 7z x -si -ttar
         shell: cmd
       - name: cmake generate
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
-        run: cmake -G "MinGW Makefiles" -S armadillo-11.4.4 -B build_armadillo
+        run: cmake -G "MinGW Makefiles" -S armadillo-12.6.0 -B build_armadillo
       - name: cmake build
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
         run: cmake --build ./build_armadillo -j4
@@ -281,7 +281,7 @@ jobs:
           path: |
             build_armadillo\libarmadillo.dll
             build_armadillo\tmp\include
-          key: ${{ runner.os }}-armadillo-11.4.0
+          key: ${{ runner.os }}-armadillo-12.6.0
           fail-on-cache-miss: true
       # restore cached QWT
       - uses: actions/cache/restore@v3
