@@ -36,9 +36,9 @@ typedef struct {arma::vec x; bool convergence; int iter;} lmreturn;
  *
 */
 
-lmreturn mylevmar(arma::vec (*res_fun)(const arma::vec&, const QMap<char*, arma::mat>&, double abar, double bbar),
-             arma::mat (*jac_fun)(const arma::vec&, const QMap<char *, arma::mat>&, double bbar),
-             unsigned int m, int n, arma::vec x0, QMap<char *, arma::mat> adata, double abar, double bbar,
+lmreturn mylevmar(arma::vec (*res_fun)(const arma::vec&, const QMap<const char*, arma::mat>&, double abar, double bbar),
+             arma::mat (*jac_fun)(const arma::vec&, const QMap<const char *, arma::mat>&, double bbar),
+             unsigned int m, int n, arma::vec x0, QMap<const char *, arma::mat> adata, double abar, double bbar,
              int itmax = 100, arma::vec control= {1.e-3, 2., sqrt(arma::datum::eps), sqrt(arma::datum::eps)}) {
 
   int k=0;
@@ -127,7 +127,7 @@ arma::mat pxls(const arma::mat& im, const arma::rowvec& phases, const arma::mat&
 
 // [[Rcpp::export]]
 
-arma::vec res_frame(const arma::vec& pars, const QMap<char*, arma::mat> & adata, double abar, double bbar) {
+arma::vec res_frame(const arma::vec& pars, const QMap<const char*, arma::mat> & adata, double abar, double bbar) {
   arma::vec img = adata["img"];
   arma::mat coords = adata["coords"];
 
@@ -140,7 +140,7 @@ arma::vec res_frame(const arma::vec& pars, const QMap<char*, arma::mat> & adata,
 
 // [[Rcpp::export]]
 
-arma::mat jac_frame(const arma::vec& pars, const QMap<char*, arma::mat> & adata, double bbar) {
+arma::mat jac_frame(const arma::vec& pars, const QMap<const char*, arma::mat> & adata, double bbar) {
   arma::vec img = adata["img"];
   arma::mat coords = adata["coords"];
 
@@ -207,7 +207,7 @@ psitiltReturn tiltpsiC(const arma::mat& images, const arma::rowvec& phases_init,
   arma::vec t0(np-1);
   arma::vec sse = arma::zeros<arma::vec>(maxiter);
   double abar, bbar;
-  QMap<char*,arma::mat> adata;
+  QMap<const char*,arma::mat> adata;
   adata["coords"] = coords;
   arma::vec pars(np);
   arma::mat pt_last = join_cols(phases, zcs);
