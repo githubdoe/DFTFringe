@@ -1,502 +1,143 @@
-#-------------------------------------------------
+#    ____  _____ _____ _____     _
+#   |    \|   __|_   _|   __|___|_|___ ___ ___
+#   |  |  |   __| | | |   __|  _| |   | . | -_|
+#   |____/|__|    |_| |__|  |_| |_|_|_|_  |___|
+#                                     |___|
 #
-# Project created by QtCreator 2014-08-11T00:35:19
-#
-#-------------------------------------------------
 
-QT += network \
-      xml \
-      multimedia \
-      multimediawidgets \
-      widgets
-QT += concurrent widgets
-QT += charts
-qtHaveModule(printsupport): QT += printsupport
-QT       += core gui
-QT       += opengl widgets
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-QT += datavisualization
 TARGET = DFTFringe
-TEMPLATE = app
 
-CONFIG += ``
-
-SOURCES += main.cpp\
-    arbitrarywavefronthelp.cpp \
-    arbitrarywavwidget.cpp \
-    cpoint.cpp \
-    defocusdlg.cpp \
-    edgeplot.cpp \
-    mainwindow.cpp \
-    igramarea.cpp \
-    circleoutline.cpp \
-    gplus.cpp \
-    Boundary.cpp \
-    graphicsutilities.cpp \
-    dfttools.cpp \
-    dftarea.cpp \
-    mikespsirinterface.cpp \
-    oglrendered.cpp \
-    pdfcalibrationdlg.cpp \
-    profileplot.cpp \
-    psiresizeimagesdlg.cpp \
-    surface3dcontrolsdlg.cpp \
-    surfacegraph.cpp \
-    surfacelightingproxy.cpp \
-    userdrawnprofiledlg.cpp \
-    wavefront.cpp \
-    contourplot.cpp \
-    contourtools.cpp \
-    dftcolormap.cpp \
-    surfaceanalysistools.cpp \
-    prefsdlg.cpp \
-    surfacemanager.cpp \
-    zernikedlg.cpp \
-    zernikeprocess.cpp \
-    mirrordlg.cpp \
-    zernikes.cpp \
-    metricsdisplay.cpp \
-    reviewwindow.cpp \
-    wavefrontloader.cpp \
-    rotationdlg.cpp \
-    wftstats.cpp \
-    surfacepropertiesdlg.cpp \
-    imagehisto.cpp \
-    colorchanneldisplay.cpp \
-    intensityplot.cpp \
-    igramintensity.cpp \
-    dftthumb.cpp \
-    vortexdebug.cpp \
-    simigramdlg.cpp \
-    punwrap.cpp \
-    wftexaminer.cpp \
-    savewavedlg.cpp \
-    usercolormapdlg.cpp \
-    colormapviewerdlg.cpp \
-    oglview.cpp \
-    settingsigram.cpp \
-    settings2.cpp \
-    settingsdft.cpp \
-    settingsdebug.cpp \
-    contourview.cpp \
-    simulationsview.cpp \
-    psfplot.cpp \
-    standastigwizard.cpp \
-    counterrotationdlg.cpp \
-    renamewavefrontdlg.cpp \
-    subtractwavefronatsdlg.cpp \
-    helpdlg.cpp \
-    settingsprofile.cpp \
-    batchigramwizard.cpp \
-    outlinehelpdocwidget.cpp \
-    statsview.cpp \
-    jitteroutlinedlg.cpp \
-    nullvariationdlg.cpp \
-    ccswappeddlg.cpp \
-    foucaultview.cpp \
-    squareimage.cpp \
-    bathastigdlg.cpp \
-    zernikeeditdlg.cpp \
-    settingsGeneral2.cpp \
-    nullmarginhelpdlg.cpp \
-    plotcolor.cpp \
-    cameracalibwizard.cpp \
-    camwizardpage1.cpp \
-    camcalibrationreviewdlg.cpp \
-    generatetargetdlg.cpp \
-    lensetablemodel.cpp \
-    unwraperrorsview.cpp \
-    lensdialog.cpp \
-    singleapplication.cpp \
-    messagereceiver.cpp \
-    myutils.cpp \
-    pixelstats.cpp \
-    utilil.cpp \
-    circlefit.cpp \
-    astigstatsdlg.cpp \
-    averagewavefrontfilesdlg.cpp \
-    astigzoomer.cpp \
-    astigscatterplot.cpp \
-    wavefrontfilterdlg.cpp \
-    myplotpicker.cpp \
-    rmsplot.cpp \
-    regionedittools.cpp \
-    reportdlg.cpp \
-    videosetupdlg.cpp \
-    showaliasdlg.cpp \
-    colorchannel.cpp \
-    wavefrontaveragefilterdlg.cpp \
-    rejectedwavefrontsdlg.cpp \
-    outlinestatsdlg.cpp \
-    filteroutlinesdlg.cpp \
-    outlineplots.cpp \
-    transformwavefrontdlg.cpp \
-    showallcontoursdlg.cpp \
-    psi_dlg.cpp \
-    psiphasedisplay.cpp \
-    outlinedialog.cpp \
-    psitiltoptions.cpp \
-    contourrulerparams.cpp \
-    zernikesmoothingdlg.cpp
-    punwrap.cpp
-
-HEADERS  += mainwindow.h \
-    arbitrarywavefronthelp.h \
-    arbitrarywavwidget.h \
-    bezier.h \
-    cpoint.h \
-    defocusdlg.h \
-    edgeplot.h \
-    IgramArea.h \
-    circleoutline.h \
-    gplus.h \
-    graphicsutilities.h \
-    dfttools.h \
-    dftarea.h \
-    oglrendered.h \
-    pdfcalibrationdlg.h \
-    profileplot.h \
-    psiresizeimagesdlg.h \
-    spline.h \
-    surface3dcontrolsdlg.h \
-    surfacegraph.h \
-    surfacelightingproxy.h \
-    userdrawnprofiledlg.h \
-    wavefront.h \
-    contourplot.h \
-    contourtools.h \
-    dftcolormap.h \
-    surfaceanalysistools.h \
-    prefsdlg.h \
-    surfacemanager.h \
-    zernikedlg.h \
-    zernikeprocess.h \
-    mirrordlg.h \
-    zernikes.h \
-    metricsdisplay.h \
-    reviewwindow.h \
-    vortex.h \
-    wavefrontstats.h \
-    wavefrontloader.h \
-    rotationdlg.h \
-    wftstats.h \
-    surfacepropertiesdlg.h \
-    punwrap.h \
-    imagehisto.h \
-    colorchanneldisplay.h \
-    intensityplot.h \
-    igramintensity.h \
-    dftthumb.h \
-    vortexdebug.h \
-    simigramdlg.h \
-    wftexaminer.h \
-    savewavedlg.h \
-    usercolormapdlg.h \
-    colormapviewerdlg.h \
-    oglview.h \
-    settingsigram.h \
-    settings2.h \
-    settingsdft.h \
-    settingsdebug.h \
-    contourview.h \
-    simulationsview.h \
-    psfplot.h \
-    standastigwizard.h \
-    counterrotationdlg.h \
-    renamewavefrontdlg.h \
-    subtractwavefronatsdlg.h \
-    helpdlg.h \
-    settingsprofile.h \
-    batchigramwizard.h \
-    outlinehelpdocwidget.h \
-    statsview.h \
-    jitteroutlinedlg.h \
-    nullvariationdlg.h \
-    ccswappeddlg.h \
-    foucaultview.h \
-    squareimage.h \
-    bathastigdlg.h \
-    zernikeeditdlg.h \
-    settingsGeneral2.h \
-    nullmarginhelpdlg.h \
-    plotcolor.h \
-    cameracalibwizard.h \
-    camwizardpage1.h \
-    camcalibrationreviewdlg.h \
-    generatetargetdlg.h \
-    lensetablemodel.h \
-    unwraperrorsview.h \
-    lensdialog.h \
-    singleapplication.h \
-    singleapplication_p.h \
-    messagereceiver.h \
-    boundary.h \
-    myutils.h \
-    pixelstats.h \
-    utils.h \
-    circleutils.h \
-    circle.h \
-    astigstatsdlg.h \
-    averagewavefrontfilesdlg.h \
-    astigzoomer.h \
-    astigscatterplot.h \
-    wavefrontfilterdlg.h \
-    myplotpicker.h \
-    rmsplot.h \
-    regionedittools.h \
-    reportdlg.h \
-    videosetupdlg.h \
-    showaliasdlg.h \
-    colorchannel.h \
-    wavefrontaveragefilterdlg.h \
-    rejectedwavefrontsdlg.h \
-    outlinestatsdlg.h \
-    filteroutlinesdlg.h \
-    outlineplots.h \
-    transformwavefrontdlg.h \
-    showallcontoursdlg.h \
-    psi_dlg.h \
-    psiphasedisplay.h \
-    outlinedialog.h \
-    mikespsiinterface.h \
-    psitiltoptions.h \
-    contourrulerparams.h \
-    zernikesmoothingdlg.h
-FORMS    += mainwindow.ui \
-    arbitrarywavefronthelp.ui \
-    defocusdlg.ui \
-    dfttools.ui \
-    dftarea.ui \
-    edgeplot.ui \
-    oglrendered.ui \
-    pdfcalibrationdlg.ui \
-    profilearea.ui \
-    profileplot.ui \
-    contourtools.ui \
-    psiresizeimagesdlg.ui \
-    surface3dcontrolsdlg.ui \
-    surfaceanalysistools.ui \
-    prefsdlg.ui \
-    metricsdisplay.ui \
-    userdrawnprofiledlg.ui \
-    zernikedlg.ui \
-    mirrordlg.ui \
-    wavefrontnulldlg.ui \
-    reviewwindow.ui \
-    rotationdlg.ui \
-    surfacepropertiesdlg.ui \
-    colorchanneldisplay.ui \
-    igramintensity.ui \
-    dftthumb.ui \
-    vortexdebug.ui \
-    simigramdlg.ui \
-    wftexaminer.ui \
-    savewavedlg.ui \
-    usercolormapdlg.ui \
-    colormapviewerdlg.ui \
-    settingsigram.ui \
-    settings2.ui \
-    settingsdft.ui \
-    settingsdebug.ui \
-    contourview.ui \
-    simulationsview.ui \
-    psfplot.ui \
-    standastigwizard.ui \
-    counterrotationdlg.ui \
-    renamewavefrontdlg.ui \
-    subtractwavefronatsdlg.ui \
-    helpdlg.ui \
-    settingsprofile.ui \
-    batchigramwizard.ui \
-    outlinehelpdocwidget.ui \
-    statsview.ui \
-    jitteroutlinedlg.ui \
-    nullvariationdlg.ui \
-    ccswappeddlg.ui \
-    foucaultview.ui \
-    bathastigdlg.ui \
-    zernikeeditdlg.ui \
-    settingsGeneral2.ui \
-    nullmarginhelpdlg.ui \
-    cameracalibwizard.ui \
-    camwizardpage1.ui \
-    camcalibrationreviewdlg.ui \
-    generatetargetdlg.ui \
-    unwraperrorsview.ui \
-    lensdialog.ui \
-    pixelstats.ui \
-    astigstatsdlg.ui \
-    averagewavefrontfilesdlg.ui \
-    wavefrontfilterdlg.ui \
-    regionedittools.ui \
-    reportdlg.ui \
-    videosetupdlg.ui \
-    showaliasdlg.ui \
-    wavefrontaveragefilterdlg.ui \
-    rejectedwavefrontsdlg.ui \
-    outlinestatsdlg.ui \
-    filteroutlinesdlg.ui \
-    outlineplots.ui \
-    transformwavefrontdlg.ui \
-    showallcontoursdlg.ui \
-    psi_dlg.ui \
-    psiphasedisplay.ui \
-    outlinedialog.ui \
-    psitiltoptions.ui \
-    contourrulerparams.ui \
-    zernikesmoothingdlg.ui
-
-win32 {
-      CONFIG( debug, debug|release ) {
-        # debug
-        LIBS += ..\\qwt-6.1.6\\lib\\qwtd.dll
-      } else {
-        # release
-        LIBS += ..\\qwt-6.1.6\\lib\\qwt.dll
-      }
-      INCLUDEPATH += ..\\qwt-6.1.6\\src
-
-      #message("using win32")include
-
-INCLUDEPATH += ..\build_armadillo\tmp\include
-
-INCLUDEPATH += ..\build_openCV\install\include\
-
-LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_core460.dll
-LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll
-LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll
-LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll
-LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll
-LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll
-
-
-LIBS += ..\build_armadillo\libarmadillo.dll
-LIBS += ..\build_lapack\lib\liblapack.a
-LIBS += ..\build_lapack\lib\libblas.a
-}
-
-
-
-unix {
-     INCLUDEPATH += /usr/include/qwt
-     INCLUDEPATH += /usr/include/opencv4
-     LIBS += -lqwt-qt5
-     LIBS += -lopencv_core
-     LIBS += -lopencv_imgproc
-     LIBS += -lopencv_highgui
-     LIBS += -lGLU
-     LIBS += -lopencv_calib3d
-     LIBS += -lopencv_features2d
-     LIBS += -lopencv_imgproc
-     LIBS += -lopencv_imgcodecs
-     LIBS += -larmadillo
-     message("using linux")
-     contains(CONFIG,debug) { message("no extra debug libraries") }
-}
-
-OTHER_FILES += \
-    todo.txt
-
-RESOURCES += \
-    DFTResources.qrc
-RC_FILE = DFTFringe.rc
-QMAKE_CXXFLAGS += -std=c++11
-
-# The application version
 VERSION = MY_AUTOMATED_VERSION_STRING
 
-# Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
-DISTFILES += \
-    buildingDFTFringe64.txt \
-    helptext.txt \
-    ColorMaps/Dale1.cmp \
-    ColorMaps/Dale2.cmp \
-    ColorMaps/Dale3.cmp \
-    ColorMaps/Diverging_BrBG.cmp \
-    ColorMaps/Diverging_bwr.cmp \
-    ColorMaps/Diverging_coolwarm.cmp \
-    ColorMaps/Diverging_PiYG.cmp \
-    ColorMaps/Diverging_PRGn.cmp \
-    ColorMaps/Diverging_PuOr.cmp \
-    ColorMaps/Diverging_RdBu.cmp \
-    ColorMaps/Diverging_RdGy.cmp \
-    ColorMaps/Diverging_RdYlBu.cmp \
-    ColorMaps/Diverging_RdYlGn.cmp \
-    ColorMaps/Diverging_seismic.cmp \
-    ColorMaps/Diverging_Spectral.cmp \
-    ColorMaps/Miscellaneous_brg.cmp \
-    ColorMaps/Miscellaneous_CMRmap.cmp \
-    ColorMaps/Miscellaneous_cubehelix.cmp \
-    ColorMaps/Miscellaneous_flag.cmp \
-    ColorMaps/Miscellaneous_gist_earth.cmp \
-    ColorMaps/Miscellaneous_gist_ncar.cmp \
-    ColorMaps/Miscellaneous_gist_rainbow.cmp \
-    ColorMaps/Miscellaneous_gist_stern.cmp \
-    ColorMaps/Miscellaneous_gnuplot.cmp \
-    ColorMaps/Miscellaneous_gnuplot2.cmp \
-    ColorMaps/Miscellaneous_hsv.cmp \
-    ColorMaps/Miscellaneous_jet.cmp \
-    ColorMaps/Miscellaneous_nipy_spectral.cmp \
-    ColorMaps/Miscellaneous_ocean.cmp \
-    ColorMaps/Miscellaneous_prism.cmp \
-    ColorMaps/Miscellaneous_rainbow.cmp \
-    ColorMaps/Miscellaneous_terrain.cmp \
-    ColorMaps/Perceptually Uniform Sequential_inferno.cmp \
-    ColorMaps/Perceptually Uniform Sequential_magma.cmp \
-    ColorMaps/Perceptually Uniform Sequential_plasma.cmp \
-    ColorMaps/Perceptually Uniform Sequential_viridis.cmp \
-    ColorMaps/Qualitative_Accent.cmp \
-    ColorMaps/Qualitative_Dark2.cmp \
-    ColorMaps/Qualitative_Paired.cmp \
-    ColorMaps/Qualitative_Pastel1.cmp \
-    ColorMaps/Qualitative_Pastel2.cmp \
-    ColorMaps/Qualitative_Set1.cmp \
-    ColorMaps/Qualitative_Set2.cmp \
-    ColorMaps/Qualitative_Set3.cmp \
-    ColorMaps/Sequential (2)_afmhot.cmp \
-    ColorMaps/Sequential (2)_autumn.cmp \
-    ColorMaps/Sequential (2)_bone.cmp \
-    ColorMaps/Sequential (2)_cool.cmp \
-    ColorMaps/Sequential (2)_copper.cmp \
-    ColorMaps/Sequential (2)_gist_heat.cmp \
-    ColorMaps/Sequential (2)_gray.cmp \
-    ColorMaps/Sequential (2)_hot.cmp \
-    ColorMaps/Sequential (2)_pink.cmp \
-    ColorMaps/Sequential (2)_spring.cmp \
-    ColorMaps/Sequential (2)_summer.cmp \
-    ColorMaps/Sequential (2)_winter.cmp \
-    ColorMaps/Sequential_Blues.cmp \
-    ColorMaps/Sequential_BuGn.cmp \
-    ColorMaps/Sequential_BuPu.cmp \
-    ColorMaps/Sequential_GnBu.cmp \
-    ColorMaps/Sequential_Greens.cmp \
-    ColorMaps/Sequential_Greys.cmp \
-    ColorMaps/Sequential_Oranges.cmp \
-    ColorMaps/Sequential_OrRd.cmp \
-    ColorMaps/Sequential_PuBu.cmp \
-    ColorMaps/Sequential_PuBuGn.cmp \
-    ColorMaps/Sequential_PuRd.cmp \
-    ColorMaps/Sequential_Purples.cmp \
-    ColorMaps/Sequential_RdPu.cmp \
-    ColorMaps/Sequential_Reds.cmp \
-    ColorMaps/Sequential_YlGn.cmp \
-    ColorMaps/Sequential_YlGnBu.cmp \
-    ColorMaps/Sequential_YlOrBr.cmp \
-    ColorMaps/Sequential_YlOrRd.cmp \
-    ColorMaps/spring.cmp \
-    COPYING.LESSER.txt \
-    COPYING.txt \
-    RevisionHistory.html \
-    README.md \
+TEMPLATE = app
 
+QT += charts concurrent core datavisualization gui multimedia multimediawidgets network opengl widgets xml
 
-    TRANSLATIONS    = dftfringe_fr.ts
+qtHaveModule(printsupport): QT += printsupport
 
+QMAKE_CXXFLAGS += -std=c++11
 
+# Below are the three platform specific project configurations for WINDOWS, LINUX and MAC
 
+# WINDOWS ##########
+win32 {
+    message("Using WINDOWS project configuration.")
 
-INCLUDEPATH += $$PWD/../../../../opencv/build-mingw/include
-DEPENDPATH += $$PWD/../../../../opencv/build-mingw/include
+    CONFIG( debug, debug|release ) { 
+        LIBS += ..\\qwt-6.1.5\\lib\\qwtd.dll # debug
+    } else {
+        LIBS += ..\\qwt-6.1.5\\lib\\qwt.dll # release
+    }
+
+    # NOTE: RC_FILE is Windows only, breaks Mac (and Linux?) builds if it in their scope.
+    RC_FILE = DFTFringe.rc
+
+    INCLUDEPATH += $$PWD/../../../../opencv/build-mingw/include
+    INCLUDEPATH += ..\\qwt-6.1.5\\src
+    INCLUDEPATH += ..\\armadillo\\armadillo-9.200.6\\include
+    INCLUDEPATH += ..\\opencv\\opencv-3.4.12\\build\\install\\include
+
+    DEPENDPATH += $$PWD/../../../../opencv/build-mingw/include
+
+    LIBS += ..\\armadillo\\bin\\libarmadillo.dll
+    LIBS += ..\\lapack\\build64\\bin\\libblas.dll
+    LIBS += ..\\lapack\\build64\\bin\\liblapack.dll
+    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_calib3d3412.dll
+    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_core3412.dll
+    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_features2d3412.dll
+    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_highgui3412.dll
+    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_imgcodecs3412.dll
+    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_imgproc3412.dll
+}
+
+# LINUX ############
+unix: !mac {
+    message("Using LINUX project configuration.")
+    contains( CONFIG,debug ) { message("no extra debug libraries") }
+
+    INCLUDEPATH += /usr/include/opencv4
+    INCLUDEPATH += /usr/include/qwt
+
+    LIBS += -larmadillo
+    LIBS += -lGLU
+    LIBS += -lopencv_calib3d
+    LIBS += -lopencv_core
+    LIBS += -lopencv_features2d
+    LIBS += -lopencv_highgui
+    LIBS += -lopencv_imgcodecs
+    LIBS += -lopencv_imgproc
+    LIBS += -lopencv_imgproc
+    LIBS += -lqwt-qt5
+}
+
+# MAC ##############
+macx {
+    message("Using MACOS project configuration.")
+    message( ................................ )
+    message("..........PRO FILE: $$_PRO_FILE_")
+    message("......PRO FILE PWD: $$_PRO_FILE_PWD_")
+    message( ................... )
+
+    CONFIG += app_bundle
+    CONFIG += sdk_no_version_check
+    CONFIG += link_pkgconfig
+    CONFIG += silent
+
+    QMAKE_FULL_VERSION=APP_VERSION
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.0
+    QMAKE_APPLE_DEVICE_ARCHS = x86_64 arm64
+
+    CONFIG( debug, debug|release )   { DESTDIR = build/debug }
+    CONFIG( release, debug|release ) { DESTDIR = build/release }
+
+    MOC_DIR = $$DESTDIR/.moc
+    OBJECTS_DIR = $$DESTDIR/.obj #these change between build and release.
+    RCC_DIR = $$DESTDIR/.qrc
+    UI_DIR = $$DESTDIR/.ui
+    QMAKE_MKDIR = /usr/local/bin/mkdir # This tells QMAKE which mkdir command to use.
+    QMAKE_PKG_CONFIG = /opt/homebrew/bin/pkg-config # This tells QMAKE which pkg-config executable to use.
+    PKG_CONFIG_PATH = $$[QT_INSTALL_LIBS]/pkgconfig
+    INCLUDEPATH += -I$$[QT_INSTALL_PLUGINS]
+    LIBS += -L$$[QT_INSTALL_PLUGINS]
+    PKGCONFIG += armadillo opencv Qt5Qwt6
+
+    message(........QT_VERSION: $$[QT_VERSION])
+    message(.QT_INSTALL_PREFIX: $$[QT_INSTALL_PREFIX])
+    message(QT_INSTALL_HEADERS: $$[QT_INSTALL_HEADERS])
+    message(...QT_INSTALL_LIBS: $$[QT_INSTALL_LIBS])
+    message(QT_INSTALL_PLUGINS: $$[QT_INSTALL_PLUGINS])
+    message(...................)
+    message(...........DESTDIR: $$DESTDIR)
+    message(...........MOC_DIR: $$MOC_DIR)
+    message(.......OBJECTS_DIR: $$OBJECTS_DIR)
+    message(...........RCC_DIR: $$RCC_DIR)
+    message(............UI_DIR: $$UI_DIR)
+    message(...................)
+    message(.......QMAKE_MKDIR: $$QMAKE_MKDIR)
+    message(..QMAKE_PKG_CONFIG: $$QMAKE_PKG_CONFIG)
+    message(...PKG_CONFIG_PATH: $$PKG_CONFIG_PATH)
+    message(.......INCLUDEPATH: $$INCLUDEPATH)
+    message(..............LIBS: $$LIBS)
+    message(.........PKGCONFIG: $$PKGCONFIG)
+    message(............CONFIG: $$CONFIG)
+}
+
+# Below are the includes for source files and other resources, sorted alphabetically. ##################################
+# If a filename contains spaces it will need quoting.
+
+OTHER_FILES += todo.txt
+
+RESOURCES += DFTResources.qrc
+
+TRANSLATIONS += dftfringe_fr.ts
+
+SOURCES += arbitrarywavefronthelp.cpp arbitrarywavwidget.cpp astigscatterplot.cpp astigstatsdlg.cpp astigzoomer.cpp averagewavefrontfilesdlg.cpp batchigramwizard.cpp bathastigdlg.cpp Boundary.cpp camcalibrationreviewdlg.cpp cameracalibwizard.cpp camwizardpage1.cpp ccswappeddlg.cpp circlefit.cpp circleoutline.cpp colorchannel.cpp colorchanneldisplay.cpp colormapviewerdlg.cpp contourplot.cpp contourrulerparams.cpp contourtools.cpp contourview.cpp counterrotationdlg.cpp cpoint.cpp defocusdlg.cpp dftarea.cpp dftcolormap.cpp dftthumb.cpp dfttools.cpp edgeplot.cpp filteroutlinesdlg.cpp foucaultview.cpp generatetargetdlg.cpp gplus.cpp graphicsutilities.cpp helpdlg.cpp igramarea.cpp igramintensity.cpp imagehisto.cpp intensityplot.cpp jitteroutlinedlg.cpp lensdialog.cpp lensetablemodel.cpp main.cpp mainwindow.cpp messagereceiver.cpp metricsdisplay.cpp mikespsirinterface.cpp mirrordlg.cpp myplotpicker.cpp myutils.cpp nullmarginhelpdlg.cpp nullvariationdlg.cpp oglrendered.cpp oglview.cpp outlinedialog.cpp outlinehelpdocwidget.cpp outlineplots.cpp outlinestatsdlg.cpp pdfcalibrationdlg.cpp pixelstats.cpp plotcolor.cpp prefsdlg.cpp profileplot.cpp psfplot.cpp psi_dlg.cpp psiphasedisplay.cpp psiresizeimagesdlg.cpp psitiltoptions.cpp punwrap.cpp regionedittools.cpp rejectedwavefrontsdlg.cpp renamewavefrontdlg.cpp reportdlg.cpp reviewwindow.cpp rmsplot.cpp rotationdlg.cpp savewavedlg.cpp settings2.cpp settingsdebug.cpp settingsdft.cpp settingsGeneral2.cpp settingsigram.cpp settingsprofile.cpp showaliasdlg.cpp showallcontoursdlg.cpp simigramdlg.cpp simulationsview.cpp singleapplication.cpp squareimage.cpp standastigwizard.cpp statsview.cpp subtractwavefronatsdlg.cpp surface3dcontrolsdlg.cpp surfaceanalysistools.cpp surfacegraph.cpp surfacelightingproxy.cpp surfacemanager.cpp surfacepropertiesdlg.cpp transformwavefrontdlg.cpp unwraperrorsview.cpp usercolormapdlg.cpp userdrawnprofiledlg.cpp utilil.cpp videosetupdlg.cpp vortexdebug.cpp wavefront.cpp wavefrontaveragefilterdlg.cpp wavefrontfilterdlg.cpp wavefrontloader.cpp wftexaminer.cpp wftstats.cpp zernikedlg.cpp zernikeeditdlg.cpp zernikeprocess.cpp zernikes.cpp zernikesmoothingdlg.cpp
+
+HEADERS += arbitrarywavefronthelp.h arbitrarywavwidget.h astigscatterplot.h astigstatsdlg.h astigzoomer.h averagewavefrontfilesdlg.h batchigramwizard.h bathastigdlg.h bezier.h boundary.h camcalibrationreviewdlg.h cameracalibwizard.h camwizardpage1.h ccswappeddlg.h circle.h circleoutline.h circleutils.h colorchannel.h colorchanneldisplay.h colormapviewerdlg.h contourplot.h contourrulerparams.h contourtools.h contourview.h counterrotationdlg.h cpoint.h defocusdlg.h dftarea.h dftcolormap.h dftthumb.h dfttools.h edgeplot.h filteroutlinesdlg.h foucaultview.h generatetargetdlg.h gplus.h graphicsutilities.h helpdlg.h IgramArea.h igramintensity.h imagehisto.h intensityplot.h jitteroutlinedlg.h lensdialog.h lensetablemodel.h mainwindow.h messagereceiver.h metricsdisplay.h mikespsiinterface.h mirrordlg.h myplotpicker.h myutils.h nullmarginhelpdlg.h nullvariationdlg.h oglrendered.h oglview.h outlinedialog.h outlinehelpdocwidget.h outlineplots.h outlinestatsdlg.h pdfcalibrationdlg.h pixelstats.h plotcolor.h prefsdlg.h profileplot.h psfplot.h psi_dlg.h psiphasedisplay.h psiresizeimagesdlg.h psitiltoptions.h punwrap.h regionedittools.h rejectedwavefrontsdlg.h renamewavefrontdlg.h reportdlg.h reviewwindow.h rmsplot.h rotationdlg.h savewavedlg.h settings2.h settingsdebug.h settingsdft.h settingsGeneral2.h settingsigram.h settingsprofile.h showaliasdlg.h showallcontoursdlg.h simigramdlg.h simulationsview.h singleapplication_p.h singleapplication.h spline.h squareimage.h standastigwizard.h statsview.h subtractwavefronatsdlg.h surface3dcontrolsdlg.h surfaceanalysistools.h surfacegraph.h surfacelightingproxy.h surfacemanager.h surfacepropertiesdlg.h transformwavefrontdlg.h unwraperrorsview.h usercolormapdlg.h userdrawnprofiledlg.h utils.h videosetupdlg.h vortex.h vortexdebug.h wavefront.h wavefrontaveragefilterdlg.h wavefrontfilterdlg.h wavefrontloader.h wavefrontstats.h wftexaminer.h wftstats.h zernikedlg.h zernikeeditdlg.h zernikeprocess.h zernikes.h zernikesmoothingdlg.h
+
+FORMS += arbitrarywavefronthelp.ui astigstatsdlg.ui averagewavefrontfilesdlg.ui batchigramwizard.ui bathastigdlg.ui camcalibrationreviewdlg.ui cameracalibwizard.ui camwizardpage1.ui ccswappeddlg.ui colorchanneldisplay.ui colormapviewerdlg.ui contourrulerparams.ui contourtools.ui contourview.ui counterrotationdlg.ui defocusdlg.ui dftarea.ui dftthumb.ui dfttools.ui edgeplot.ui filteroutlinesdlg.ui foucaultview.ui generatetargetdlg.ui helpdlg.ui igramintensity.ui jitteroutlinedlg.ui lensdialog.ui mainwindow.ui metricsdisplay.ui mirrordlg.ui nullmarginhelpdlg.ui nullvariationdlg.ui oglrendered.ui outlinedialog.ui outlinehelpdocwidget.ui outlineplots.ui outlinestatsdlg.ui pdfcalibrationdlg.ui pixelstats.ui prefsdlg.ui profilearea.ui profileplot.ui psfplot.ui psi_dlg.ui psiphasedisplay.ui psiresizeimagesdlg.ui psitiltoptions.ui regionedittools.ui rejectedwavefrontsdlg.ui renamewavefrontdlg.ui reportdlg.ui reviewwindow.ui rotationdlg.ui savewavedlg.ui settings2.ui settingsdebug.ui settingsdft.ui settingsGeneral2.ui settingsigram.ui settingsprofile.ui showaliasdlg.ui showallcontoursdlg.ui simigramdlg.ui simulationsview.ui standastigwizard.ui statsview.ui subtractwavefronatsdlg.ui surface3dcontrolsdlg.ui surfaceanalysistools.ui surfacepropertiesdlg.ui transformwavefrontdlg.ui unwraperrorsview.ui usercolormapdlg.ui userdrawnprofiledlg.ui videosetupdlg.ui vortexdebug.ui wavefrontaveragefilterdlg.ui wavefrontfilterdlg.ui wavefrontnulldlg.ui wftexaminer.ui zernikedlg.ui zernikeeditdlg.ui zernikesmoothingdlg.ui
+
+DISTFILES += buildingDFTFringe64.txt ColorMaps/Dale1.cmp ColorMaps/Dale2.cmp ColorMaps/Dale3.cmp ColorMaps/Diverging_BrBG.cmp ColorMaps/Diverging_bwr.cmp ColorMaps/Diverging_coolwarm.cmp ColorMaps/Diverging_PiYG.cmp ColorMaps/Diverging_PRGn.cmp ColorMaps/Diverging_PuOr.cmp ColorMaps/Diverging_RdBu.cmp ColorMaps/Diverging_RdGy.cmp ColorMaps/Diverging_RdYlBu.cmp ColorMaps/Diverging_RdYlGn.cmp ColorMaps/Diverging_seismic.cmp ColorMaps/Diverging_Spectral.cmp ColorMaps/Miscellaneous_brg.cmp ColorMaps/Miscellaneous_CMRmap.cmp ColorMaps/Miscellaneous_cubehelix.cmp ColorMaps/Miscellaneous_flag.cmp ColorMaps/Miscellaneous_gist_earth.cmp ColorMaps/Miscellaneous_gist_ncar.cmp ColorMaps/Miscellaneous_gist_rainbow.cmp ColorMaps/Miscellaneous_gist_stern.cmp ColorMaps/Miscellaneous_gnuplot.cmp ColorMaps/Miscellaneous_gnuplot2.cmp ColorMaps/Miscellaneous_hsv.cmp ColorMaps/Miscellaneous_jet.cmp ColorMaps/Miscellaneous_nipy_spectral.cmp ColorMaps/Miscellaneous_ocean.cmp ColorMaps/Miscellaneous_prism.cmp ColorMaps/Miscellaneous_rainbow.cmp ColorMaps/Miscellaneous_terrain.cmp "ColorMaps/Perceptually Uniform Sequential_inferno.cmp" "ColorMaps/Perceptually Uniform Sequential_magma.cmp" "ColorMaps/Perceptually Uniform Sequential_plasma.cmp" "ColorMaps/Perceptually Uniform Sequential_viridis.cmp" ColorMaps/Qualitative_Accent.cmp ColorMaps/Qualitative_Dark2.cmp ColorMaps/Qualitative_Paired.cmp ColorMaps/Qualitative_Pastel1.cmp ColorMaps/Qualitative_Pastel2.cmp ColorMaps/Qualitative_Set1.cmp ColorMaps/Qualitative_Set2.cmp ColorMaps/Qualitative_Set3.cmp "ColorMaps/Sequential (2)_afmhot.cmp" "ColorMaps/Sequential (2)_autumn.cmp" "ColorMaps/Sequential (2)_bone.cmp" "ColorMaps/Sequential (2)_cool.cmp" "ColorMaps/Sequential (2)_copper.cmp" "ColorMaps/Sequential (2)_gist_heat.cmp" "ColorMaps/Sequential (2)_gray.cmp" "ColorMaps/Sequential (2)_hot.cmp" "ColorMaps/Sequential (2)_pink.cmp" "ColorMaps/Sequential (2)_spring.cmp" "ColorMaps/Sequential (2)_summer.cmp" "ColorMaps/Sequential (2)_winter.cmp" ColorMaps/Sequential_Blues.cmp ColorMaps/Sequential_BuGn.cmp ColorMaps/Sequential_BuPu.cmp ColorMaps/Sequential_GnBu.cmp ColorMaps/Sequential_Greens.cmp ColorMaps/Sequential_Greys.cmp ColorMaps/Sequential_Oranges.cmp ColorMaps/Sequential_OrRd.cmp ColorMaps/Sequential_PuBu.cmp ColorMaps/Sequential_PuBuGn.cmp ColorMaps/Sequential_PuRd.cmp ColorMaps/Sequential_Purples.cmp ColorMaps/Sequential_RdPu.cmp ColorMaps/Sequential_Reds.cmp ColorMaps/Sequential_YlGn.cmp ColorMaps/Sequential_YlGnBu.cmp ColorMaps/Sequential_YlOrBr.cmp ColorMaps/Sequential_YlOrRd.cmp ColorMaps/spring.cmp COPYING.LESSER.txt COPYING.txt helptext.txt README.md RevisionHistory.html
+

@@ -81,7 +81,7 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
 
             }
             const Point* ppt[1] = { points[0]};
-            int npt[] = { poly[n].size() };
+            int npt[] = { static_cast<int>(poly[n].size()) };
 
             fillPoly( mask, ppt, npt, 1, Scalar(0), 8 );
         }
