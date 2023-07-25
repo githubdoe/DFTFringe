@@ -120,7 +120,6 @@ QVector<QPoint> scaleProfile(QPolygonF points, int width,
     }
     double xdel = right - left;
     double xscale = width/xdel;
-    double ydel = max - min;
     double yscale =  (width/2);
     QVector<QPoint> results;
     double cosangle = cos(angle);
@@ -164,9 +163,7 @@ void foucaultView::on_makePb_clicked()
     double gamma =     ui->gammaSb->value();
     mirrorDlg *md = mirrorDlg::get_Instance();
     double Radius = md->diameter/2.;
-    double inputWavelength = md->lambda;
     double r2 = Radius * Radius;
-    double fl = md->roc / 2.;
     double Fnumber =  .5 * md->roc/md->diameter;	//ROC is twice FL
     double unitMultiplyer = 1.;
     if (!ui->useMM->isChecked()){
@@ -484,7 +481,6 @@ void foucaultView::on_useMM_clicked(bool checked)
     ui->slitWidthSb->setSuffix(suffix);
     ui->lpiSb->setValue(ui->lpiSb->value() / mul);
     ui->gridGroupBox->setTitle((checked) ? "Ronchi LPmm ": "Ronchi LPI ");
-    double xx = ui->rocStepSize->value();
  //qDebug() << ui->rocStepSize->value() << mul << xx;
     ui->rocStepSize->setValue( mul * ui->rocStepSize->value());
     ui->scanEndOffset->setValue (mul * ui->scanEndOffset->value());
@@ -508,7 +504,6 @@ void foucaultView::on_scanPb_clicked()
     inscan = true;
     ui->scanPb->setText("Abort");
     qApp->processEvents();
-    double steps = ui->scanSteps->value();
     double start = ui->scanStart->value();
     double end = ui->scanEndOffset->value();
     double step = ui->scanSteps->value();

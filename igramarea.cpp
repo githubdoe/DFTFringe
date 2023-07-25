@@ -453,10 +453,8 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     MainWindow::me->progBar->setRange(0, cnt);
     cnt = 0;
     int goodCnt = 0;
-    double firstResp;
     double rmean;
     double rmeanpeak = 0;
-    double avg;
     if (showDebug){
         cv::namedWindow("outline debug",cv::WINDOW_NORMAL);
         cv::moveWindow("outline debug", 10,10);
@@ -493,7 +491,6 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
         points << QPointF(rad0/searchOutlineScale, resp);
         double del;
         if (goodCnt == 0){
-            firstResp = resp;
             rmean = resp;
             oldDel = rmean;
             goodCnt = 1;
@@ -1214,14 +1211,12 @@ void IgramArea::increaseRegion(int n, double scale){
     yavg /= m_polygons[n].size();
     // find the closest point to the center
     double shortest = 99999;
-    int shortestndx;
     for (unsigned int i = 0; i < m_polygons[n].size(); ++i){
         int delx = m_polygons[n][i].x - xavg;
         int dely = m_polygons[n][i].y - yavg;
         double del = sqrt(delx * delx + dely * dely);
         if (del < shortest){
             shortest = del;
-            shortestndx = i;
         }
     }
 
@@ -1873,7 +1868,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
     QPainter painterThis(this);
     int pw = parentWidget()->width();
     int dw = pw/2;
-    int dh = parentWidget()->height();
 
     QRect dirtyRect = event->rect();
     if ((zoomIndex > 1 && m_zoomMode == EDGEZOOM) && (
@@ -1882,7 +1876,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
             )){
         painterThis.fillRect(this->rect(), Qt::gray);
         int viewW = 3 * m_zoomBoxWidth / zoomIndex;
-        double scale = zoomIndex;
 
         QImage small(viewW * 4, viewW *2, igramColor.format());
         small.fill(Qt::gray);
@@ -1918,10 +1911,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
         //bottom *************************************************************
         topy = (circle.m_center.ry() + circle.m_radius * e - viewW/2);
-        int shifty = 0;
-        if (topy > m_withOutlines.height()){
-            shifty = topy - m_withOutlines.height();
-        }
         roi = m_withOutlines.copy(topx,topy, viewW * 2, viewW);
         smallPainter.drawImage(viewW,  viewW, roi);
 
@@ -1929,11 +1918,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
         topx = circle.m_center.rx() - circle.m_radius - viewW/2;
         topy = circle.m_center.ry() - viewW;
         roi = m_withOutlines.copy(topx,topy,viewW,viewW * 2);
-        int shiftl = 0;
-        if (topx < 0){
-            topx *= 1;
-            shiftl = topx;
-        }
         smallPainter.drawImage(0,0,roi);
 
 
@@ -1943,7 +1927,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
         if (topx > m_withOutlines.width()){
             topx = topx -  m_withOutlines.width();
-            shiftl = topx;
         }
         roi = m_withOutlines.copy(topx,topy, viewW , viewW * 2);
 

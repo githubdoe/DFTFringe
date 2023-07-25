@@ -35,9 +35,6 @@ outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
 
     ui->display->setBackgroundRole(QPalette::Dark);
     ui->display->setAutoFillBackground(true);
-    QRect rec = QApplication::desktop()->screenGeometry();
-    int height = rec.height();
-    int width = rec.width();
     ui->showEdgePixelsCB->blockSignals(true);
     ui->showEdgePixelsCB->setChecked(false);
     ui->showEdgePixelsCB->blockSignals(false);
@@ -386,22 +383,14 @@ void outlineDialog::hideSearchcontrole(bool hide){
 }
 void outlineDialog::mousePressEvent(QMouseEvent *event)
 {
-
-
     if (event->button() == Qt::LeftButton) {
         QPointF Raw = event->pos();
-
-        QPointF pos = Raw;
 
         setCursor(Qt::OpenHandCursor);
         dragMode = true;
             //cntrlPressed = event->modifiers() & Qt::ControlModifier;
         lastPoint = Raw;
-        return;
-
     }
-
-
 }
 
 void outlineDialog::mouseMoveEvent(QMouseEvent *event)

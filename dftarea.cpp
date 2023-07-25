@@ -468,11 +468,6 @@ void DFTArea::doDFT(){
     magIImage = showMag(complexI,false,"", true, m_gamma);
 
 
-    double h = magIImage.height();
-    QRect rec = QApplication::desktop()->screenGeometry();
-
-
-
     magIImage = magIImage.scaled(magIImage.width() , magIImage.height() );
     setMinimumSize(magIImage.size());
 
@@ -614,7 +609,7 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
 
     try
     {
-    int startMem = showmem("start Vortex");
+    showmem("start Vortex");
     cv::Mat image = grayComplexMatfromImage(img);
 
     // convert from 32 to 64 bit double values
@@ -1272,7 +1267,6 @@ cv::Mat atan2Mat(cv::Mat y, cv::Mat x){
     double* xptr = x.ptr<double>(0);
     double* yptr = y.ptr<double>(0);
     int last = x.total();
-    int cnt = 0;
     for (int i = 0; i < last; ++i ){
         resptr[i] = atan2(yptr[i],xptr[i]);
         //if (++cnt < 20)
@@ -1291,7 +1285,6 @@ arma::mat zpmCxx(double rho, double theta, int maxorder) {
 
   int order, nm, nm1mm1, nm1mp1, nm2m;
   int ncol = (mmax+1)*(mmax+1);
-  double a0;
   double cosmtheta[mmax], sinmtheta[mmax];
   arma::mat  zm(imax, ncol);
 
@@ -1444,7 +1437,6 @@ qDebug() << "dlg" << dlg.m_x << dlg.m_rad;
         int left = dlg.m_x - dlg.m_rad;
         int right = dlg.m_x + dlg.m_rad;
         int top = dlg.m_y - dlg.m_rad;
-        int bottom = dlg.m_y + dlg.m_rad;
         int width = dlg.m_rad * 2;
         int height = width;
         if (left < 0)

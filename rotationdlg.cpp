@@ -43,7 +43,6 @@ RotationDlg::~RotationDlg()
 void RotationDlg::on_buttonBox_accepted()
 {
     int sign = (ui->CCWCB->isChecked()) ?  -1:1;
-    int interp = ui->interp->currentData().toInt();
     QSettings set;
     set.setValue("rotationAngle" ,ui->angleSB->value());
     set.setValue("rotationSign", sign);

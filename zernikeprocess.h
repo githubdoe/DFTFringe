@@ -114,7 +114,7 @@ public:
     cv::Mat makeSurfaceFromZerns(int border, bool doColor);
 
     arma::mat rhotheta( int width, double radius, double cx, double cy,
-                                       double insideRad, const wavefront *wf = 0);
+                                       const wavefront *wf = 0);
 
     arma::mat zpmC(arma::rowvec rho, arma::rowvec theta, int maxorder);
     arma::mat zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder=12);

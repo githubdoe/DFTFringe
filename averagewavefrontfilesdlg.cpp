@@ -43,7 +43,6 @@ void averageWaveFrontFilesDlg::on_process_clicked()
     bool first = true;
     abort = false;
     QStringList rejects;
-    bool configChanged = false;
     int count = ui->fileList->count();
     if (count == 0)
         return;
@@ -61,7 +60,7 @@ void averageWaveFrontFilesDlg::on_process_clicked()
         QString name = item->text();
         ui->fileList->setCurrentRow(i);
         qApp->processEvents();
-        wavefront *wf = sm->readWaveFront(name,configChanged);
+        wavefront *wf = sm->readWaveFront(name);
         if (useFilter){
             sm->makeMask(wf);
             sm->generateSurfacefromWavefront(wf);

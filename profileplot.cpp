@@ -659,7 +659,6 @@ void ProfilePlot::contourPointSelected(const QPointF &pos){
     double dely = pos.y() - m_wf->data.cols/2;
 
     double angle = atan2(delx,dely);  // swaped x and y to rotate by 90 deg.
-    double angle2 = angle;
     const double twopi = M_PI * 2.;
     // force 0 to 360
     if (angle < 0)

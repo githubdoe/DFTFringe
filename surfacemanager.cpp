@@ -628,14 +628,12 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
             yavg /= wf->regions[n].size();
             // find the closest point to the center
             double shortest = 99999;
-            int shortestndx;
             for (int i = 0; i < wf->regions[n].size(); ++i){
                 int delx = wf->regions[n][i].x - xavg;
                 int dely = wf->regions[n][i].y - yavg;
                 double del = sqrt(delx * delx + dely * dely);
                 if (del < shortest){
                     shortest = del;
-                    shortestndx = i;
                 }
             }
             double scale = 1.1 * (shortest+2)/shortest;
@@ -1066,7 +1064,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     emit showTab(2);
 }
 
-wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsChanged){
+wavefront * SurfaceManager::readWaveFront(QString fileName){
     std::ifstream file(fileName.toStdString().c_str());
     if (!file) {
         QString b = "Can not read file " + fileName + " " +strerror(errno);
@@ -1169,9 +1167,6 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
         if ( lambdResp == YES || messageResult == QMessageBox::Yes){
             md->newLambda(QString::number(lambda));
         }
-        else {
-            mirrorParamsChanged = true;
-        }
     }
 
     if (roundl(diam * 10) != roundl(md->diameter* 10))
@@ -1198,7 +1193,6 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
         }
         else {
             diam = md->diameter;
-            mirrorParamsChanged = true;
         }
 
     }
@@ -1273,7 +1267,7 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         deleteCurrent();
     }
 
-        wf = readWaveFront(fileName, mirrorParamsChanged);
+        wf = readWaveFront(fileName);
         m_wavefronts << wf;
 
         wf->name = fileName;
@@ -1660,7 +1654,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         m_currentNdx = m_wavefronts.size()-1;
         m_surfaceTools->select(m_currentNdx);
         //wf->mask = cv::Mat::zeros(wf->data.size(), CV_8UC1);
-        uchar ones = 0xff;
+        //uchar ones = 0xff;
         //fillCircle(wf->mask, wf->m_outside.m_center.x(), wf->m_outside.m_center.y(),
                    //wf->m_outside.m_radius, &ones);
 
@@ -2704,7 +2698,6 @@ void SurfaceManager::report(){
     int finalWidth =  QGuiApplication::screens()[0]->geometry().width()/2.5;
 
     printer.setFullPage( true );
-    QMargins marg = printer.pageLayout().marginsPixels(printer.resolution());
 
     printer.setOutputFileName( dlg.fileName );
     int width = printer.width();
@@ -2850,7 +2843,6 @@ void SurfaceManager::report(){
         oglw.show();    // show on stack to get metrics.
         QFontMetrics fm =    oglw.fontMetrics();
         QRect tw = fm.boundingRect("Waves 550 nm Waves");
-        QRect lg = oglw.getLegend()->geometry();
         QRect sg = oglw.getModel()->geometry();
 
         int surfw = sg.width() + tw.width();
@@ -2864,7 +2856,6 @@ void SurfaceManager::report(){
         imagesHtml.append("<p ><br>&nbsp;</p>");
         imagesHtml.append("<img src='" + surfPath + "'>");
     }
-    int lastH = 0;
     // star test
     if (dlg.ui->showStarTest->isChecked()){
 
@@ -3173,7 +3164,6 @@ void SurfaceManager::tiltAnalysis(){
    QwtPlotCurve *yTilt = new QwtPlotCurve("y");
    xTilt->setStyle(QwtPlotCurve::Dots);
    yTilt->setStyle(QwtPlotCurve::Dots);
-   QwtPlotCurve *xTLine = new QwtPlotCurve("X fit");
    xTilt->setPen(Qt::red,4);
    yTilt->setPen(Qt::blue,4);
    xTilt->setSamples(xvals.toVector());
