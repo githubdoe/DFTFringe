@@ -3,13 +3,8 @@
 #   |  |  |   __| | | |   __|  _| |   | . | -_|
 #   |____/|__|    |_| |__|  |_| |_|_|_|_  |___|
 #                                     |___|
-<<<<<<< HEAD
-#
-
-=======
 
 
->>>>>>> 56a5107 (Code changes required for the macOS version.)
 TARGET = DFTFringe
 
 VERSION = MY_AUTOMATED_VERSION_STRING
@@ -30,39 +25,15 @@ QMAKE_CXXFLAGS += -std=c++11
 win32 {
     message("Using WINDOWS project configuration.")
 
-    CONFIG( debug, debug|release ) { 
-<<<<<<< HEAD
-        LIBS += ..\\qwt-6.1.5\\lib\\qwtd.dll # debug
-    } else {
-        LIBS += ..\\qwt-6.1.5\\lib\\qwt.dll # release
-=======
+    CONFIG( debug, debug|release ) {
         LIBS += ..\qwt-6.1.6\lib\qwtd.dll # debug
     } else {
         LIBS += ..\qwt-6.1.6\lib\qwt.dll # release
->>>>>>> 56a5107 (Code changes required for the macOS version.)
     }
 
     # NOTE: RC_FILE is Windows only, breaks Mac (and Linux?) builds if it in their scope.
     RC_FILE = DFTFringe.rc
 
-<<<<<<< HEAD
-    INCLUDEPATH += $$PWD/../../../../opencv/build-mingw/include
-    INCLUDEPATH += ..\\qwt-6.1.5\\src
-    INCLUDEPATH += ..\\armadillo\\armadillo-9.200.6\\include
-    INCLUDEPATH += ..\\opencv\\opencv-3.4.12\\build\\install\\include
-
-    DEPENDPATH += $$PWD/../../../../opencv/build-mingw/include
-
-    LIBS += ..\\armadillo\\bin\\libarmadillo.dll
-    LIBS += ..\\lapack\\build64\\bin\\libblas.dll
-    LIBS += ..\\lapack\\build64\\bin\\liblapack.dll
-    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_calib3d3412.dll
-    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_core3412.dll
-    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_features2d3412.dll
-    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_highgui3412.dll
-    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_imgcodecs3412.dll
-    LIBS += ..\\opencv\\opencv-3.4.12\\build\\bin\\libopencv_imgproc3412.dll
-=======
     INCLUDEPATH += ..\qwt-6.1.6\src
     INCLUDEPATH += ..\build_armadillo\tmp\include
     INCLUDEPATH += ..\build_openCV\install\include
@@ -76,7 +47,6 @@ win32 {
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll
->>>>>>> 56a5107 (Code changes required for the macOS version.)
 }
 
 # LINUX ############
