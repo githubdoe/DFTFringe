@@ -123,7 +123,7 @@ void outlineStatsDlg::readFiles(){
 
         int fsize = file.tellg();
         file.seekg( 0, std::ios::end );
-        fsize = file.tellg() - fsize;
+        fsize = int(file.tellg()) - fsize;
         file.close();
         file.open(fileName.toStdString().c_str());
         if (!file.is_open()) {
@@ -268,7 +268,7 @@ void outlineStatsDlg::on_pushButton_clicked()
 
                 int fsize = file.tellg();
                 file.seekg( 0, std::ios::end );
-                fsize = file.tellg() - fsize;
+                fsize = int(file.tellg()) - fsize;
                 file.close();
                 file.open(fileName.toStdString().c_str());
                 if (!file.is_open()) {
