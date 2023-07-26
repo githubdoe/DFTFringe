@@ -108,7 +108,7 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
 {
     m_outlineComplete = false;
     m_PSIstate = 0;
-    QRect rec = QGuiApplication::screens()[0]->geometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
 
     m_Psidlg = new PSI_dlg;
     rec.setLeft(rec.width()/6);

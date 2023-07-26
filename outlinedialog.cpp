@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QShortcut>
 #include <QMouseEvent>
+#include <QScreen>
 #include <opencv2/imgproc.hpp>
 
 outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
@@ -114,7 +115,7 @@ void outlineDialog::setImage(cv::Mat img){
     cv::Mat tmp;
     img.convertTo(tmp, CV_8UC1);
     cv::cvtColor(tmp,m_igram, cv::COLOR_GRAY2RGB);
-    QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     int height = rec.height();
     int width = rec.width();
     if (img.rows > height || img.cols > width){
@@ -423,10 +424,10 @@ void outlineDialog::mouseReleaseEvent(QMouseEvent * /*event*/)
     dragMode = false;
 }
 void outlineDialog::wheelEvent(QWheelEvent *e){
-    if (e->delta() == 0)
+    if (e->angleDelta().y() == 0)
         return;
 
-    int del = e->delta()/120;
+    int del = e->angleDelta().y()/120;
 
     m_rad += del;
     updateOutline();

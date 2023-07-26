@@ -91,7 +91,7 @@ void statsView::getWavefronts(){
         m_stats->computeWftRunningAvg(wavefrontsToUse,0);
 
         while (m_stats->outliers.size()){
-            qSort(m_stats->outliers.begin(), m_stats->outliers.end(), qGreater<int>());
+            std::sort(m_stats->outliers.begin(), m_stats->outliers.end(), std::greater<int>());
             foreach(int i, m_stats->outliers){
                 wavefrontsToUse.removeAt(i);
             }
@@ -243,7 +243,7 @@ void statsView::on_SaveCSV_clicked()
     QTextStream file(&thefile);
     QString dir = info.dir().path();
     dir = dir.right(dir.size() - dir.lastIndexOf("/")-1);
-    file << title(dir) << ",'wavefront RMS'"<< ",,Piston,XTile,Ytilt,Defocus,XAstig,Yastig,Z6,Z7,Spherical,Z9,Z10 " << endl;
+    file << title(dir) << ",'wavefront RMS'"<< ",,Piston,XTile,Ytilt,Defocus,XAstig,Yastig,Z6,Z7,Spherical,Z9,Z10 " << Qt::endl;
     QString out;
     cv::Mat mZerns(m_sm->m_wavefronts.size(),Z_TERMS,numType,0.);
     int row = 0;
@@ -287,7 +287,7 @@ void statsView::on_SaveCSV_clicked()
 
         }
 
-        file << endl;
+        file << Qt::endl;
         ++row;
 
     }
@@ -329,7 +329,7 @@ void statsView::on_savePdf_clicked()
     QPrinter printer(QPrinter::HighResolution);
     printer.setColorMode( QPrinter::Color );
     printer.setFullPage( true );
-    printer.setPaperSize( sizeMM, QPrinter::Millimeter );
+    printer.setPageSize( QPageSize(sizeMM, QPageSize::Millimeter) );
     printer.setDocName( Title );
     printer.setOutputFileName( fname );
     printer.setOutputFormat( QPrinter::PdfFormat );

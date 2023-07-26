@@ -114,7 +114,7 @@ intensityPlot::intensityPlot(QWidget *parent):
     }
 
     palette0.setColor( QPalette::Base,
-        palette().color( backgroundRole() ).light( 120 ) );
+        palette().color( backgroundRole() ).lighter( 120 ) );
     palette0.setColor( QPalette::WindowText,
         palette0.color( QPalette::Base ) );
     QwtCompass *compass = new QwtCompass( this );
@@ -126,7 +126,7 @@ intensityPlot::intensityPlot(QWidget *parent):
 
     palette0.setColor( QPalette::Base, Qt::darkBlue );
     palette0.setColor( QPalette::WindowText,
-                       QColor( Qt::darkBlue ).dark( 120 ) );
+                       QColor( Qt::darkBlue ).darker( 120 ) );
     palette0.setColor( QPalette::Text, Qt::white );
 
     QwtCompassScaleDraw *scaleDraw = new QwtCompassScaleDraw();

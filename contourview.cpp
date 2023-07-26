@@ -53,7 +53,7 @@ void contourView::zoom(){
 
 QImage contourView::getPixstatsImage(){
     //resize(3000,2000);
-        int height = QGuiApplication::screens()[0]->geometry().height() * .75;
+        int height = QGuiApplication::primaryScreen()->geometry().height() * .75;
     QImage psImage = QImage(height, height,QImage::Format_ARGB32 );
     QPainter p3(&psImage);
     ps->resize(height * .7, height);

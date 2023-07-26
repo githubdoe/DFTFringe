@@ -158,13 +158,13 @@ bool ZernTableModel::setData(const QModelIndex & index, const QVariant & value, 
 Qt::ItemFlags ZernTableModel::flags(const QModelIndex & index) const
 {
     if (index.column() == 0)
-        return 0;
+        return Qt::NoItemFlags;
     if (index.column() == 1){
         if (canEdit)
             return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable |  Qt::ItemIsEditable;
         else
             return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled;
     }
-    return 0;
+    return Qt::NoItemFlags;
 }
 

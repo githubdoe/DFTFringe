@@ -1320,10 +1320,10 @@ void IgramArea::wheelEvent (QWheelEvent *e)
         return;
 
     QString result;
-    if (e->delta() == 0)
+    if (e->angleDelta().y() == 0)
         return;
 
-    int del = e->delta()/120;
+    int del = e->angleDelta().y()/120;
 
     if( e->modifiers() & Qt::ControlModifier) {
         setCursor(Qt::SizeAllCursor);
@@ -1341,7 +1341,7 @@ void IgramArea::wheelEvent (QWheelEvent *e)
         drawBoundary();
         return;
     }
-    QPointF pos = e->pos();
+    QPointF pos = e->position();
 
     zoompt = pos/scale;
     zoom(del, zoompt);
@@ -2161,7 +2161,7 @@ void IgramArea::loadOutlineFile(QString fileName){
                 mb.setInformativeText(text);
                 mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
                 mb.setWindowTitle("Existing Interferogram outline file and Mirror Config difference.");
-                int width = QGuiApplication::screens()[0]->geometry().width() * .5;
+                int width = QGuiApplication::primaryScreen()->geometry().width() * .5;
                 QSpacerItem* horizontalSpacer = new QSpacerItem(width, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
                 QGridLayout* layout = (QGridLayout*)mb.layout();
                 layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());

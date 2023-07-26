@@ -1495,8 +1495,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
     QHash<QString,QList<int>> sizes;
     for (int i = 0; i < wfList.size(); ++i){
-        QString size;
-        size.sprintf("%d %d",wfList[i]->data.rows, wfList[i]->data.cols);
+        QString size =  QString("%1 %2").arg(wfList[i]->data.rows).arg(wfList[i]->data.cols);
         if (sizes.find(size)!= sizes.end())
         {
             sizes[size].append( i);
@@ -1892,7 +1891,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     printer.setOutputFileName( "stand.pdf" );
     printer.setOutputFormat( QPrinter::PdfFormat );
     //printer.setResolution(85);
-    printer.setPaperSize(QPrinter::A4);
+    printer.setPageSize(QPageSize(QPageSize::A4));
 
     QPainter painterPDF( &printer );
     cv::Mat xastig = cv::Mat::zeros(list.size(), 1, numType);
@@ -1902,8 +1901,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     cv::Mat standastig = cv::Mat::zeros(list.size(), 1, numType);
     QVector<cv::Mat> standwfs;
     QVector<double> astigMag;
-    editor->resize(printer.pageRect().size());
-    doc->setPageSize(printer.pageRect().size());
+    editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
+    doc->setPageSize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
     cv::Mat standavg = cv::Mat::zeros(inputs[0]->workData.size(), numType);
     cv::Mat standavgZernMat = cv::Mat::zeros(inputs[0]->workData.size(), numType);
     double mirrorXaverage = 0;
@@ -2360,11 +2359,11 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     printer.setOutputFileName( "stand.pdf" );
     printer.setOutputFormat( QPrinter::PdfFormat );
     printer.setResolution(85);
-    printer.setPaperSize(QPrinter::A4);
+    printer.setPageSize(QPageSize(QPageSize::A4));
 
 
     QTextEdit *editor = new QTextEdit;
-    editor->resize(printer.pageRect().size());
+    editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
     const int contourWidth = 2 * 340/3;
     const int contourHeight = 2 * 360/3;
     QImage contour = QImage(contourWidth ,contourHeight, QImage::Format_ARGB32 );
@@ -2397,7 +2396,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
 
     QTextDocument *doc = editor->document();
     QList<QString> doc1Res;
-    doc->setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
+    doc->setPageSize(printer.pageLayout().paintRectPixels(printer.resolution()).size()); // This is necessary if you want to hide the page number
     QList<wavefront *> rotated;
     QList<wavefront *> inputs;
     editor->append("<tr>");
@@ -2595,7 +2594,7 @@ void SurfaceManager::showAllContours(){
     if (!dlg.exec()) {
         return;
     }
-    QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     QApplication::setOverrideCursor(Qt::WaitCursor);
     ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot;
     //plot->m_minimal = true;
@@ -2695,7 +2694,7 @@ void SurfaceManager::report(){
     if (!dlg.exec())
         return;
 
-    int finalWidth =  QGuiApplication::screens()[0]->geometry().width()/2.5;
+    int finalWidth =  QGuiApplication::primaryScreen()->geometry().width()/2.5;
 
     printer.setFullPage( true );
 
@@ -2834,7 +2833,8 @@ void SurfaceManager::report(){
         // assemble the surface metrics from the OG 3D view and the color map legend
         // put into the OGLW window that will provide the titles and placement.
         QImage SurfaceImage =m_SurfaceGraph->render(1000, 1000);
-        QSize lsize = m_SurfaceGraph->m_legend->pixmap()->size();
+        const QPixmap pm = m_SurfaceGraph->m_legend->pixmap(Qt::ReturnByValue);
+        QSize lsize = pm.size();
         QImage legend(lsize, QImage::Format_ARGB32);
         m_SurfaceGraph->m_legend->render(&legend);
 
