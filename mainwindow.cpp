@@ -261,7 +261,7 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 int showmem(QString t);
 void MainWindow::openWaveFrontonInit(QStringList args){
-    QProgressDialog pd("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
+    QProgressDialog pd("    Loading wavefronts in progress.", "Cancel", 0, 100);
     pd.setRange(0, args.size());
     if (args.length()> 0)
         pd.show();

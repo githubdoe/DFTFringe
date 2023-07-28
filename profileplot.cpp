@@ -360,7 +360,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
             continue;
         }
 
-        if (wf->workMask.at<bool>(dy,dx)){
+        if (wf->workMask.at<uint8_t>(dy,dx)){
                 double defocus = 0.;
 
                 if (m_defocus_mode){
