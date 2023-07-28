@@ -768,7 +768,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
         for(int x = 0; x < nx; ++x)
         {
 
-            if (mask.at<bool>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0)
+            if (mask.at<uint8_t>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0)
             {
                 ux = (double)(x - midx)/rad;
                 uy = (double)(y - midy)/rad;
@@ -813,6 +813,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 }
 
 void zernikeProcess::fillVoid(wavefront &wf){
+    // fill in "ignore regions" - interpolate using all our zernike terms
     double ux,uy;
     double rho,theta;
 
@@ -861,6 +862,58 @@ void zernikeProcess::fillVoid(wavefront &wf){
                         }
                         wf.data.at<double>(y,x) = v;
                     }
+                }
+            }
+        }
+    }
+    if (wf.m_inside.isValid()) {
+        // now also fill in region near central mask border - the central obstruction.
+        // So we just fill in slightly outward and all the way to the center (in case we are averaging with another
+        // wavefront later where the center obstruction is in a different position or missing)
+        // Outward we go only 1 pixel in case a rotated wavefront has an unmasked pixel set to zero (maybe we should do the fill before rotating?)
+
+
+        // outer radius of area to fill in
+        double radius_outer_fill = wf.m_inside.m_radius+5; // go out a few pixels
+        double radius_outer_fill2 = radius_outer_fill*radius_outer_fill;
+
+        double in_midx = wf.m_inside.m_center.x();
+        double in_midy = wf.m_inside.m_center.y();
+
+
+        int startx = in_midx - radius_outer_fill;
+        int endx   = in_midx + radius_outer_fill;
+        int starty = in_midy - radius_outer_fill;
+        int endy   = in_midy + radius_outer_fill;
+
+        startx-= 2;
+        endx += 2;
+        starty -=2;
+        endy +=2;
+        double midx = wf.m_outside.m_center.x();
+        double midy = wf.m_outside.m_center.y();
+        double rad = wf.m_outside.m_radius;
+
+        //showData("fill void mask",wf.mask);
+
+        for (int y = starty; y < endy; ++y){
+            for (int x = startx; x < endx; ++x){
+                if (x < 0 || y < 0 || x >= wf.data.cols || y >= wf.data.rows){
+                    continue;
+                }
+
+                if (wf.mask.at<uint8_t>(y,x) == 0){
+                    ux = (double)(x - midx)/rad;
+                    uy = (double)(y - midy)/rad;
+                    rho = sqrt(ux * ux + uy * uy);
+                    theta = atan2(uy,ux);
+                    zpolar.init(rho,theta);
+                    double v = 0.;
+
+                    for (int z = 0; z < m_norms.size(); ++z){
+                        v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
+                    }
+                    wf.data.at<double>(y,x) = v;
                 }
             }
         }
@@ -1080,7 +1133,7 @@ void ZernikeSmooth(cv::Mat wf, cv::Mat mask)
         {
             int xx = x* delta;
             int yy = y * delta;
-            if (mask.at<bool>(x,y))
+            if (mask.at<uint8_t>(x,y))
             {
                 int sndx = x + y* size;
 

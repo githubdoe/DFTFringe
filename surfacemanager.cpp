@@ -48,7 +48,6 @@
 #include "zernikes.h"
 #include <qwt_abstract_scale.h>
 #include <qwt_plot_histogram.h>
-#include "savewavedlg.h"
 #include "simulationsview.h"
 #include "standastigwizard.h"
 #include "subtractwavefronatsdlg.h"
@@ -70,8 +69,6 @@
 #include "Circleoutline.h"
 #include <math.h>
 #include "transformwavefrontdlg.h"
-#include "psi_dlg.h"
-#include "opencv2/opencv.hpp"
 #include "oglrendered.h"
 #include "ui_oglrendered.h"
 cv::Mat theMask;
@@ -114,6 +111,9 @@ double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
         {
             return 0.;
         }
+
+        // some of 4 nearest points may be masked - say by a region mask or an inner or outer edge of mirror
+        // so let's set 4 booleans to see which of the 4 are masked
         bool f00inside = mask.at<uchar>(fy,fx);
         double f01 = mat.at<double>(fy+1, fx);//[fx + (fy + 1) * w];
         bool f01inside = mask.at<uchar>(fy+1,fx);
@@ -124,6 +124,7 @@ double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
 
         // full bilinear
         if (f00inside && f01inside && f10inside && f11inside)
+            // nothing masked.  Do standard bilinear
             return f00 + a *( f10 - f00) + b * (f01 - f00) +
                     a * b * (f00 + f11 - f10 - f01);
         {
@@ -135,10 +136,10 @@ double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
                 return f00 + b * (f01 - f00);
             }
             if (f01inside && f11inside){
-                return f01 + b * (f11 - f01);
+                return f01 + a * (f11 - f01);
             }
-            if (f11inside && f01inside){
-                return f11 + a * (f11 - f10);
+            if (f11inside && f10inside){
+                return f10 + a * (f11 - f10);
             }
 
             // Only one inside
@@ -150,7 +151,7 @@ double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
             // none were inside boundary so go look in the other direction.
             double sum = 0.;
             int cnt = 0;
-            int u = 1;
+            int u = 2;
             for (int del = 1; del <= u; ++del){
                 if (fy+del > h) continue;
                 if (fy -del < 0) continue;
@@ -394,10 +395,8 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
         ((MainWindow*)parent())-> zernTablemodel->update();
         // fill in void from obstruction of igram.
-        if ( wf->regions.size() > 0){
-            zp.fillVoid(*wf);
-            makeMask(wf, false);
-        }
+        zp.fillVoid(*wf);
+        makeMask(wf, true);
         // null out desired terms.
         //cv::Mat tiltremoved = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables, 0,3);
         //wf->data = tiltremoved;
@@ -552,12 +551,12 @@ void SurfaceManager::outputLambdaChanged(double val){
 void DrawPoly(cv::Mat &data, QVector<std::vector<cv::Point> > poly){
     for (int n = 0; n < poly.size(); ++n){
         cv::Point points[1][poly[n].size()];
-        for (int i = 0; i < poly[n].size(); ++i){
+        for (unsigned int i = 0; i < poly[n].size(); ++i){
 
             points[0][i] = cv::Point(poly[n][i].x, data.rows - poly[n][i].y);
 
         }
-        for (int j = 0; j < poly[n].size()-1; ++j){
+        for (unsigned int j = 0; j < poly[n].size()-1; ++j){
             cv::line(data, points[0][j], points[0][j+1], cv::Scalar(0));
 
         }
@@ -594,7 +593,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     double ry = rx * md.m_verticalAxis/md.diameter;
     double ry2 = ry * ry;
     if (!mirrorDlg::get_Instance()->isEllipse()){
-        uchar v = 0x2ff;
+        uchar v = 0xff;
         fillCircle(mask, xm,ym,radm, &v);
     }
     else {
@@ -610,17 +609,18 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
         }
     }
 
-    if (rado > 0) {
+    if (rado > 0 && useInsideCircle) {
         uchar color = 0;
         fillCircle(mask, cx,cy,rado, &color);
     }
 
     // expand the region by 10%
-    if (wf->regions.size() > 0 && useInsideCircle){
+    if (wf->regions.size() > 0 && useInsideCircle && wf->regions_have_been_expanded == false){
+        wf->regions_have_been_expanded = true; // prevents us from expanding the same regions more than once
         for (int n = 0; n < wf->regions.size(); ++ n){
             int xavg = 0;
             int yavg = 0;
-            for (int i = 0; i < wf->regions[n].size(); ++i){
+            for (unsigned int i = 0; i < wf->regions[n].size(); ++i){
                 xavg += wf->regions[n][i].x;
                 yavg += wf->regions[n][i].y;
             }
@@ -628,7 +628,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
             yavg /= wf->regions[n].size();
             // find the closest point to the center
             double shortest = 99999;
-            for (int i = 0; i < wf->regions[n].size(); ++i){
+            for (unsigned int i = 0; i < wf->regions[n].size(); ++i){
                 int delx = wf->regions[n][i].x - xavg;
                 int dely = wf->regions[n][i].y - yavg;
                 double del = sqrt(delx * delx + dely * dely);
@@ -637,7 +637,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
                 }
             }
             double scale = 1.1 * (shortest+2)/shortest;
-            for (int i = 0; i < wf->regions[n].size(); ++i){
+            for (unsigned int i = 0; i < wf->regions[n].size(); ++i){
                 wf->regions[n][i].x = scale * (wf->regions[n][i].x - xavg) + xavg;
                 wf->regions[n][i].y = scale * (wf->regions[n][i].y - yavg) + yavg;
             }
@@ -655,6 +655,10 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     //line(wf->workMask, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), 10);
     theMask = mask.clone();
 
+    /*
+    this commented out code is bad mostly because it assumes the center obstruction is 
+    aligned with the matrix center.  Plus it is redundant.  Plus m is never used anywhere.
+    
     // add central obstruction
     double r = md.obs * (2. * radm)/md.diameter;
     r/= 2.;
@@ -663,7 +667,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
         cv::Mat m = wf->workMask;
         circle(m,Point((m.cols-1)/2,(m.cols-1)/2),r, Scalar(0),-1);
     }
-
+    */
     if (Settings2::showMask())
         showData("surface manager mask",mask);
 
@@ -1140,7 +1144,7 @@ wavefront * SurfaceManager::readWaveFront(QString fileName){
     if (md->isEllipse()){
         wf->m_outside = CircleOutline(QPointF(xm,ym), xm -2);
     }
-    wf->m_inside = CircleOutline(QPoint(xo,yo), rado);
+    wf->m_inside = CircleOutline(QPointF(xo,yo), rado);
 
 
     if (lambda != md->lambda){
@@ -1309,7 +1313,8 @@ void SurfaceManager::deleteCurrent(){
 
         sendSurface(m_wavefronts[m_currentNdx]);
     }
-    else useDemoWaveFront();
+    else
+        useDemoWaveFront();
 
     emit currentNdxChanged(m_currentNdx);
 }
@@ -1379,9 +1384,9 @@ void SurfaceManager::saveAllWaveFrontStats(){
 
     if (m_wavefronts.size() == 0)
         return;
-        statsView * sv = new statsView(this);
-        sv->show();
-        return;
+    statsView * sv = new statsView(this);
+    sv->show();
+    return;
 }
 void SurfaceManager::enableTools(){
 
@@ -1457,6 +1462,18 @@ void SurfaceManager::average(QList<int> list){
 
 #include "ccswappeddlg.h"
 void SurfaceManager::average(QList<wavefront *> wfList){
+    // The mask makes this feature not so straight forward.  The center obstruction might be masked.  There
+    // may be one or more regions that are masked and shouldn't be averaged in.
+    // However we can't just skip a region completely because it will always have very large offset and tilt.
+    // Visually what you see as a wavefront is hiding a huge amount of tilt (and defocus and more).  Unless every
+    // wavefront has the same amount of tilt, then skipping over one wavefront will add many waves of error in the
+    // resulting average.  This would show up as a huge bump/hole in the mirror.
+    //
+    // The solution that Dale came up with works great. He uses all the zernike terms to come up with a smoothed
+    // area of the wavefront.  A prediction of what that area should look like based on all the zernike terms.
+    // If you process an igram with an "ignore region" and set gaussian blur to zero then you can clearly see
+    // the region in 3d view and understand better what I am referring to.
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
     // check that all the cc have the same sign
     bool sign = wfList[0]->InputZerns[8] < 0;
@@ -1531,7 +1548,6 @@ qDebug() << "maxkey" << maxkey << rrows << rcols << sizes[maxkey];
     }
 
     cv::Mat sum = cv::Mat::zeros(rrows,rcols, m_wavefronts[m_currentNdx]->data.type());
-    cv::Mat count = cv::Mat::zeros(rrows,rcols, CV_32S);
     cv::Mat resizedImage;
 
     for (int j = 0; j < wfList.size(); ++j){
@@ -1552,7 +1568,7 @@ qDebug() << "maxkey" << maxkey << rrows << rcols << sizes[maxkey];
 
 
     wavefront *wf = new wavefront();
-    *wf = *wfList[sizes[maxkey][0]];
+    *wf = *wfList[sizes[maxkey][0]];// copy in all the parameters (e.g. m_inside, lambda, diameter) from first wavefront to average
     wf->data = sum.clone();
     wf->mask = mask;
     wf->workMask = mask.clone();
@@ -1597,7 +1613,12 @@ void SurfaceManager::averageWavefrontFiles(QStringList files){
 
 }
 
-cv::Mat rotate(wavefront * wf, double ang){
+cv::Mat rotate(wavefront * wf, cv::Mat_<uint8_t> outerMask, double ang){
+    // returns a rotated matrix ready to be dumped directly into the new_wf->data
+    // does not rotate regions, or inner obstruction circle
+    // This uses the mask in wf->mask to decide if data can be used or not
+    //
+    // outerMask masks only the outer border - beyond the mirror's edge
     double rad = ang * M_PI/180.;
 
     double sina = sin(rad);
@@ -1620,9 +1641,9 @@ cv::Mat rotate(wavefront * wf, double ang){
             double sy = (double)y  - ycen;
             double x1 = sx * cosa - sy * sina + xcen;
             double y1 = sx * sina + sy * cosa + ycen;
-            if (wf->mask.at<uchar>(y,x) != 0)
+            if (outerMask.at<uchar>(y,x) != 0)
             {
-                double v = bilinear(wf->data,wf->mask, x1,y1);
+                double v = bilinear(wf->data,outerMask, x1,y1);
                 if (v == 0.){
                     qDebug() <<"(v == 0)" << x1 << y1 << x << y << wf->data.at<double>(y1,x1);
                 }
@@ -1643,7 +1664,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         QStringList l = oldWf->name.split('.');
         QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0'));
         wavefront *wf = new wavefront();
-        *wf = *m_wavefronts[list[0]];
+        *wf = *oldWf; // copy everything to new wavefront including basic things like diameter,wavelength
         //emit nameChanged(wf->name, newName);
 
         wf->name = newName;
@@ -1675,9 +1696,6 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
 //        qDebug() << "center issue"<< xsum/cnt << ysum/cnt;
 //        cv::imshow("ttt", t);
 //        cv::waitKey(1);
-        cv::Mat rotated = rotate(wf, angle);
-
-        wf->data = rotated.clone();
 
         double sina = sin(rad);
         double cosa = cos(rad);
@@ -1688,7 +1706,11 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         wf->m_inside.m_center.rx() = sx * cosa - sy * sina + wf->m_outside.m_center.x();
         wf->m_inside.m_center.ry() = sx * sina + sy * cosa + wf->m_outside.m_center.y();
 
-        makeMask(m_currentNdx);
+        makeMask(m_currentNdx, false); // do outer mask only at first as it is needed for rotate function
+        cv::Mat rotated = rotate(wf, wf->mask, angle);
+
+        wf->data = rotated.clone();
+        makeMask(m_currentNdx); // now do full mask that includes inner obstruction circle
         wf->dirtyZerns = true;
         wf->wasSmoothed = false;
         m_surface_finished = false;
@@ -2668,7 +2690,6 @@ void showImage(QImage img, QString title){
     myLabel->show();
 }
 
-#include "pdfcalibrationdlg.h"
 #include "ui_reportdlg.h"
 void SurfaceManager::report(){
 

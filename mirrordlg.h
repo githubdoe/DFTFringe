@@ -41,7 +41,7 @@ public:
     double diameter;
     double roc;
     double FNumber;
-    double obs;
+    double obs; // obstruction
     double cc;
     bool doNull;
     double z8;

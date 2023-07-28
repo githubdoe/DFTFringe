@@ -331,8 +331,8 @@ cv::Mat slope(wavefront * wf){
     for (int y = 0; y < wf->data.rows; ++y){
         for (int x = 0; x < wf->data.cols; ++x){
             double avg = 0;
-            if (wf->workMask.at<bool>(y,x) && (x + pixelsPerInch) < wf->workData.cols   &&
-                    wf->workMask.at<bool>(y,x+pixelsPerInch)){
+            if (wf->workMask.at<uint8_t>(y,x) && (x + pixelsPerInch) < wf->workData.cols   &&
+                    wf->workMask.at<uint8_t>(y,x+pixelsPerInch)){
                 for (int i = 0; i < pixelsPerInch; ++i){
                         avg += wf->workData(y,x+i);
                 }
@@ -346,8 +346,8 @@ cv::Mat slope(wavefront * wf){
         for (int y = 0; y < wf->data.rows; ++y){
             double avg = 0;
 
-            if (wf->workMask.at<bool>(y,x) && (y + pixelsPerInch) < wf->workData.rows   &&
-                    wf->workMask.at<bool>(y + pixelsPerInch,x)){
+            if (wf->workMask.at<uint8_t>(y,x) && (y + pixelsPerInch) < wf->workData.rows   &&
+                    wf->workMask.at<uint8_t>(y + pixelsPerInch,x)){
                 for (int i = 0; i < pixelsPerInch; ++i){
                     avg += wf->workData(y+i,x);
                 }
@@ -359,7 +359,7 @@ cv::Mat slope(wavefront * wf){
     for(int y = 0; y < wf->data.rows-1; ++y){
 
          for (int x = 0; x < wf->data.cols-1; ++x){
-            if (wf->workMask.at<bool>(y,x) && x+dist < wf->data.cols && wf->workMask.at<bool>(y,x+1)){
+            if (wf->workMask.at<uint8_t>(y,x) && x+dist < wf->data.cols && wf->workMask.at<uint8_t>(y,x+1)){
                 double h  = avgX.at<double>(y,x ) - avgX.at<double>(y,x+dist);
                 if ( y == half){
 
@@ -371,7 +371,7 @@ cv::Mat slope(wavefront * wf){
             else{
                 gradx.at<double>(y,x) = 0.;
             }
-            if (wf->workMask.at<bool>(y,x) && y+dist < wf->data.rows && wf->workMask.at<bool>(y+1,x)){
+            if (wf->workMask.at<uint8_t>(y,x) && y+dist < wf->data.rows && wf->workMask.at<uint8_t>(y+1,x)){
                 double h = avgY.at<double>(y,x ) - avgY.at<double>(y+dist,x);
                 double slope = atan2(h, wavePerPixel) * radToArcSec;
                 grady.at<double>(y,x) = fabs(slope);
@@ -416,7 +416,7 @@ void pixelStats::updateSurface(){
         for (int x = 0; x < sur.cols; ++x){
             for (int y = 0; y < sur.rows; ++y){
                 double v = m_wf->workData.at<double>(y,x);
-                if (m_wf->workMask.at<bool>(y,x)){
+                if (m_wf->workMask.at<uint8_t>(y,x)){
                     if (v > ub){
                         sur.at<cv::Vec3b>(y,x) =cv::Vec3b(255,0,0);
                     }
@@ -440,7 +440,7 @@ void pixelStats::updateSurface(){
             for (int x = 0; x < sur.cols; ++x){
                 for (int y = 0; y < sur.rows; ++y){
                     double v = mag.at<double>(y,x);
-                    if (m_wf->workMask.at<bool>(y,x)){
+                    if (m_wf->workMask.at<uint8_t>(y,x)){
                         if (fabs(v) > slopeLimitArcSec){
                             int c = 255 -125 * (fabs(v)-slopeLimitArcSec)/vmax;
                             sur.at<cv::Vec3b>(y,x) =cv::Vec3b(c,c,0);
