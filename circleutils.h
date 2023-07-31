@@ -6,7 +6,6 @@
 #include <iomanip>
 #include <cstdlib>
 #include "circle.h"
-using namespace std;
 
 class CircleData
 {
@@ -42,9 +41,9 @@ typedef long long integers;
 const double One=1.0,Two=2.0,Three=3.0,Four=4.0,Five=5.0,Six=6.0,Ten=10.0;
 //const reals One=1.0L,Two=2.0L,Three=3.0L,Four=4.0L,Five=5.0L,Six=6.0L,Ten=10.0L;
 const double Pi=3.141592653589793238462643383L;
-const double REAL_MAX=numeric_limits<double>::max();
-const double REAL_MIN=numeric_limits<double>::min();
-const double REAL_EPSILON=numeric_limits<double>::epsilon();
+const double REAL_MAX=std::numeric_limits<double>::max();
+const double REAL_MIN=std::numeric_limits<double>::min();
+const double REAL_EPSILON=std::numeric_limits<double>::epsilon();
 
 //   next define some frequently used functions:
 

@@ -12,7 +12,6 @@
 #include "qmath.h"
 #include <QDebug>
 #include <QMap>
-using namespace std;
 // create two row vectors containing rho and theta values of the inclosed circular pupil
 // return them as two columns of a mat.
 

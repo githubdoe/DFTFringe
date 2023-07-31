@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <queue>
 #include <cstring>
-using namespace std;
 int xsize,ysize;
 double* qmap = NULL;
 double* phase;
@@ -185,8 +184,8 @@ void dv_quality_map (double *pphase,int width, double *qmap, int nx, int ny)
     for (int y=0; y < ny; ++y) {
       int n = 0;
       // Load elements from window into ex and ey.
-      for (int i = max(x+start, 0); i < min(x+end, nx-1); ++i)
-            for (int j = max(y+start, 0); j < min(y+end, ny-1); ++j) {
+      for (int i = std::max(x+start, 0); i < std::min(x+end, nx-1); ++i)
+            for (int j = std::max(y+start, 0); j < std::min(y+end, ny-1); ++j) {
                 int ndx = j*nx + i;
                 if (0.0 != (dx[ndx]) && 0.0 != (dy[ndx])) {
                     ex[n] = dx[ndx];
@@ -236,8 +235,8 @@ void pc_quality_map (int nx, int ny, double *phase, int width, double *qmap)
 
       int n = 0;
       // Load elements from window into ex and ey.
-      for (int i = max(x+start, 0); i < min(x+end, nx-1); ++i)
-    for (int j = max(y+start, 0); j < min(y+end, ny-1); ++j) {
+      for (int i = std::max(x+start, 0); i < std::min(x+end, nx-1); ++i)
+    for (int j = std::max(y+start, 0); j < std::min(y+end, ny-1); ++j) {
       int ndx = j*nx + i;
       if (0.0 != (phase[ndx])) {
         ep[n] = phase[ndx];
@@ -282,7 +281,7 @@ public:
     }
 };
 
-priority_queue<qual,vector<qual>,comp_qual> To_Do;
+std::priority_queue<qual,std::vector<qual>,comp_qual> To_Do;
 /* input is normalized from 0 to 1 */
 
 #define GRAD(x) (((x) > 0.5) ? ((x)-1.0) : (((x) <= -0.5) ? ((x)+1.0) : (x)))

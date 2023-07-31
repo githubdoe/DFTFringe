@@ -1182,10 +1182,10 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
     }
     int rows = width;
 
-    vector<double> rhov;
-    vector<double> thetav;
-     m_row.clear();
-     m_col.clear();
+    std::vector<double> rhov;
+    std::vector<double> thetav;
+    m_row.clear();
+    m_col.clear();
 
     for (int y = 0; y < rows; ++y){
         double uy = (y -cy)/radius;

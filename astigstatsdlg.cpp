@@ -384,7 +384,7 @@ void astigStatsDlg::plot(){
     // find the limits
     double xmag = std::max(fabs(xmin), fabs(xmax)) * 1.25;
     double ymag = std::max(fabs(ymin), fabs(ymax))*1.25;
-    double maxmag = max(xmag,ymag);
+    double maxmag = std::max(xmag,ymag);
     ui->mPlot->setAxisScale(QwtPlot::xBottom, -maxmag, maxmag);
     ui->mPlot->setAxisScale(QwtPlot::yLeft,   -maxmag, maxmag);
     ui->mPlot->setAxisTitle(QwtPlot::xBottom,"wavefront X astig");
@@ -608,7 +608,7 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width){
     runy->setPen(Qt::black,3);
     runy->attach(plot);
     plot->setAxisScale(QwtPlot::yLeft,
-                      min(xrs.min(), yrs.min()) - .01, max(xrs.max(), yrs.max()) + .1);
+                      std::min(xrs.min(), yrs.min()) - .01, std::max(xrs.max(), yrs.max()) + .1);
     if (m_usePolar){
         plot->enableAxis(QwtPlot::yRight);
         plot->setAxisScale(QwtPlot::yRight, yrs.min() - 7, yrs.max() + 3);

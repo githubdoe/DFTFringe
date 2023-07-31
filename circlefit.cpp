@@ -29,9 +29,9 @@ Circle::Circle(double aa, double bb, double rr)
 
 void Circle::print(void)
 {
-    cout << endl;
-    cout << setprecision(10) << "center (" <<a <<","<< b <<")  radius "
-         << r << "  sigma " << s << "  gradient " << g << "  iter "<< i << "  inner " << j << endl;
+    std::cout << std::endl;
+    std::cout << std::setprecision(10) << "center (" <<a <<","<< b <<")  radius "
+         << r << "  sigma " << s << "  gradient " << g << "  iter "<< i << "  inner " << j << std::endl;
 }
 
 //****************** Sigma ************************************
@@ -279,7 +279,7 @@ Circle CircleFitByHyper (CircleData& data)
     {
         Dy = A1 + x*(A22 + 16.*x*x);
         xnew = x - y/Dy;
-        if ((xnew == x)||(!isfinite(xnew))) break;
+        if ((xnew == x)||(!std::isfinite(xnew))) break;
         ynew = A0 + xnew*(A1 + xnew*(A2 + Four*xnew*xnew));
         if (abs(ynew)>=abs(y))  break;
         x = xnew;  y = ynew;
@@ -503,7 +503,7 @@ Circle CircleFitByPratt (CircleData &data)
     {
         Dy = A1 + x*(A22 + 16.*x*x);
         xnew = x - y/Dy;
-        if ((xnew == x)||(!isfinite(xnew))) break;
+        if ((xnew == x)||(!std::isfinite(xnew))) break;
         ynew = A0 + xnew*(A1 + xnew*(A2 + Four*xnew*xnew));
         if (abs(ynew)>=abs(y))  break;
         x = xnew;  y = ynew;
@@ -631,7 +631,7 @@ Circle CircleFitByTaubin (CircleData& data)
     {
             Dy = A1 + x*(A22 + A33*x);
         xnew = x - y/Dy;
-        if ((xnew == x)||(!isfinite(xnew))) break;
+        if ((xnew == x)||(!std::isfinite(xnew))) break;
         ynew = A0 + xnew*(A1 + xnew*(A2 + xnew*A3));
         if (abs(ynew)>=abs(y))  break;
         x = xnew;  y = ynew;

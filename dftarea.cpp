@@ -265,8 +265,8 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double left = centerX - rad;
     double top = centerY - rad;
     std::vector<Mat > bgr_planes;
-    top = max(top,0.);
-    left = max(left,0.);
+    top = std::max(top,0.);
+    left = std::max(left,0.);
     int width = 2. * (rad);
     int height = width;
     width = min(width, img.width());
