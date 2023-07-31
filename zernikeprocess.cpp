@@ -828,7 +828,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
         int endy = y;
         for (int n = 0; n < wf.regions.size(); ++n){
 
-            for (int i = 0; i < wf.regions[n].size(); ++i){
+            for (std::size_t i = 0; i < wf.regions[n].size(); ++i){
                 int x = wf.regions[n][i].x;
                 int y = wf.mask.rows - wf.regions[n][i].y;
                 startx = fmin(startx, x);
@@ -1037,7 +1037,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
         dlg_arbitrary->prepare(dlg.size);
 
 
-    for (int i = 0; i < m_zerns.n_rows; ++i)
+    for (std::size_t i = 0; i < m_zerns.n_rows; ++i)
     {
 
         double rho = m_rhoTheta.row(0)(i);
@@ -1365,11 +1365,11 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
         log.append("</tr>\n");
     }
 
-    for (int row = 0; row < theMat.n_rows; ++row){
+    for (std::size_t row = 0; row < theMat.n_rows; ++row){
         log.append("<tr> <td> ");
         if (!RowLable.empty()){
 
-            if (row < RowLable.size()){
+            if (row < static_cast<std::size_t>(RowLable.size())){
                 log.append(QString("<b>%1</b>").arg(RowLable[row]));
             }
 
@@ -1478,7 +1478,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
     prg->setValue(0);
     prg->show();
     prg->resize(1000,50);
-    for (int i = 0; i < m_rhoTheta.n_cols; ++i) { // for each sample point
+    for (std::size_t i = 0; i < m_rhoTheta.n_cols; ++i) { // for each sample point
             double rho = m_rhoTheta.row(0)(i);
 
 
@@ -1513,7 +1513,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
     cv::solve(A,B,X, DECOMP_QR);
 
     wf.InputZerns = std::vector<double>(ztermCnt,0);
-    for (int z = 0;  z < X.rows; ++z){
+    for (std::size_t z = 0;  z < static_cast<std::size_t>(X.rows); ++z){
        if (z < wf.InputZerns.size()){
             //qDebug() << z << X(z) << wf.InputZerns[z] << (QString("%1").arg(X(z) - wf.InputZerns[z], 6, 'f', 4)).toDouble();
         }

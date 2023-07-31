@@ -328,7 +328,7 @@ void outlineStatsDlg::on_pushButton_clicked()
                 for (int i = 0; i < polygons.size(); ++ i){
                     if (polygons[i].size() > 0){
                         ofile << "Poly"<<std::endl;
-                        for (int j = 0; j < polygons[i].size(); ++j){
+                        for (std::size_t j = 0; j < polygons[i].size(); ++j){
                             ofile <<(polygons[i][j].x) << "," << (polygons[i][j].y) << " ";
                         }
                         ofile << std::endl;

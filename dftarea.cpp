@@ -71,12 +71,12 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
     if (poly.size()>0){
         for (int n = 0; n < poly.size(); ++n){
             cv::Point points[1][poly[n].size()];
-            for (int i = 0; i < poly[n].size(); ++i){
+            for (std::size_t i = 0; i < poly[n].size(); ++i){
 
                 points[0][i] = cv::Point(poly[n][i].x, poly[n][i].y);
 
             }
-            for (int j = 0; j < poly[n].size()-1; ++j){
+            for (std::size_t j = 0; j < poly[n].size()-1; ++j){
                 cv::line(mask, points[0][j], points[0][j+1], cv::Scalar(0));
 
             }
@@ -1602,7 +1602,7 @@ QVector<double> DFTArea::getPhases(){
 
         // show current
         QVector<double> a;
-        for (int i = 0; i < phases.n_cols; ++i){
+        for (std::size_t i = 0; i < phases.n_cols; ++i){
             a << phases(i);
         }
 
@@ -1631,7 +1631,7 @@ QVector<double> DFTArea::getPhases(){
     Phi = images * arma::pinv(S);
     phi = arma::atan2(-Phi.col(2), Phi.col(1));
     QVector<double> a;
-    for (int i = 0; i < phases.n_cols; ++i){
+    for (std::size_t i = 0; i < phases.n_cols; ++i){
         a << phases(i);
     }
     m_Psidlg->setStatusText(QString("iteration %1  sdp %2 Compute Phases complete. ").arg(i).arg(sdp, 0, 'f'),maxiter);

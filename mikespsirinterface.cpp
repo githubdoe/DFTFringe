@@ -106,7 +106,7 @@ lmreturn mylevmar(arma::vec (*res_fun)(const arma::vec&, const QMap<const char*,
 // pixel-wise least squares with known phases, tilts, etc.
 
 arma::mat pxls(const arma::mat& im, const arma::rowvec& phases, const arma::mat& zcs, const arma::mat& coords) {
-  int nr = im.n_rows;
+  unsigned int nr = im.n_rows;
   unsigned int nf = im.n_cols;
 
   arma::rowvec ph(nf);
