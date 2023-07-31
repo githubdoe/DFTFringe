@@ -1381,7 +1381,7 @@ void DFTArea::doPSIstep4(cv::Mat images, QVector<double> phases){
     try{
         cv::solve(X, A,B,DECOMP_QR);
     }
-    catch (cv::Exception ex) {
+    catch (const cv::Exception &ex) {
         QMessageBox::warning(0,"error", ex.what());
         QApplication::restoreOverrideCursor();
         return;
