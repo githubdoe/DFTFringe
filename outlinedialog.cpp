@@ -242,8 +242,8 @@ void outlineDialog::on_blurSB_valueChanged(int arg1)
 }
 void outlineDialog::on_blurSlider_valueChanged(int value)
 {
-   if (m_findEdgePixels)
-    m_find = true;
+    if (m_findEdgePixels)
+        m_find = true;
     m_blurrSize = value;
     ui->blurSB->blockSignals(true);
     ui->blurSB->setValue(value);
