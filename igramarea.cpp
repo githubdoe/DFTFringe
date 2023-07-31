@@ -453,13 +453,13 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     MainWindow::me->progBar->setRange(0, cnt);
     cnt = 0;
     int goodCnt = 0;
-    double rmean;
+    double rmean = 0;
     double rmeanpeak = 0;
     if (showDebug){
         cv::namedWindow("outline debug",cv::WINDOW_NORMAL);
         cv::moveWindow("outline debug", 10,10);
     }
-    double oldDel;
+    double oldDel = 0;
     double downcnt = 0.;
     for (int rad0 = start; rad0 >= end;  rad0 += step){
         MainWindow::me->progBar->setValue(++cnt);
@@ -1429,6 +1429,10 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         }
         else if (m_current_boundry == CenterOutline){
             Pcount = &innerPcount;
+        }
+        else{
+            qDebug() << "If you read this message something went wrong";
+            Pcount = nullptr;
         }
         qDebug() << "pcount" << *Pcount;
         // if doing ellipse and on the center line

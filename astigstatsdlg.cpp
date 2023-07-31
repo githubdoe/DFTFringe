@@ -564,7 +564,8 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width){
 
     QwtPlotCurve *runx = new QwtPlotCurve(QString((m_usePolar? "mag ":"x "))+ QString("running avg"));
     QwtPlotCurve *runy = new QwtPlotCurve(QString((m_usePolar? "angle ": "y ")) + QString("running avg"));
-    double runAvgx, runAvgy;
+    double runAvgx = 0;
+    double runAvgy = 0;
     double n = runningAvgN;
     double sumx = 0.;
     double sumy = 0;
@@ -579,15 +580,13 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width){
             xz = mag;
             yz = angle * 57.2958;
         }
+
         if (i < n){
             sumx += xz;
             sumy += yz;
             runAvgx = sumx/(i+1);
             runAvgy = sumy/(i+1);
-
-
         }
-
         else{
             runAvgx = (runAvgx * (n-1)/n) + xz/n;
             runAvgy = (runAvgy * (n-1)/n) + yz/n;

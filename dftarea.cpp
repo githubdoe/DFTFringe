@@ -1562,9 +1562,9 @@ QVector<double> DFTArea::getPhases(){
     arma::mat Phi(M, 3);
     arma::vec phi(M);
     arma::vec mod(M);
-    double sdp;
+    double sdp = 0;
     double bestSdp;
-    int bestIteration;
+    int bestIteration = 0;
     int i;
 
     for (i=0; i<maxiter; i++) {

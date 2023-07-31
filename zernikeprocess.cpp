@@ -168,8 +168,8 @@ Dim big As Double, dum As Double, pivinv As Double, temp As Double
     int* indxr = new int[n];
     int* indxc = new int[n];
     double big;
-    int irow;
-    int icol;
+    int irow = 0;
+    int icol = 0;
     double pivinv;
 
     for(int  j = 0; j < n; ++j)
