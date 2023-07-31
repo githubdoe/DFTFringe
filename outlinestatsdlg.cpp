@@ -16,7 +16,7 @@ public:
     QwtPlot * mPlot;
     outlineStatsDlg &m_outlines;
     outlineZoomer(outlineStatsDlg *dlg, QWidget *canvas, QwtPlot * plot ):
-        m_outlines(*dlg),QwtPlotZoomer( canvas ),mPlot(plot)
+        QwtPlotZoomer( canvas ), mPlot(plot), m_outlines(*dlg)
     {
         setRubberBandPen( QColor( Qt::lightGray ) );
         setTrackerMode( QwtPlotPicker::AlwaysOn );

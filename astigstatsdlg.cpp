@@ -101,8 +101,8 @@ protected:
 };
 astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::astigStatsDlg),m_wavefronts(wavefronts), editor(0), PDFMode(false),
-    distributionWindow(0), showSamples(false),runningAvgN(20),
+    ui(new Ui::astigStatsDlg), m_wavefronts(wavefronts), editor(0), PDFMode(false),
+    distributionWindow(0), runningAvgN(20), showSamples(false),
     layout(0), m_usePolar(false)
 {
 

@@ -13,8 +13,8 @@ using namespace cv;
 using namespace std;
 
 generateTargetDlg::generateTargetDlg(QWidget *parent) :
-    QDialog(parent),m_units(INCHES),
-    ui(new Ui::generateTargetDlg)
+    QDialog(parent),
+    ui(new Ui::generateTargetDlg), m_units(INCHES)
 {
     ui->setupUi(this);
     m_dpix = qApp->desktop()->physicalDpiX();

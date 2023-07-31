@@ -2,7 +2,8 @@
 #include "ui_regionedittools.h"
 
 regionEditTools::regionEditTools(QWidget *parent) :
-    QDockWidget(parent),m_doFreeform(true), m_doLine(false),
+    QDockWidget(parent),
+    m_doLine(false), m_doFreeform(true), 
     ui(new Ui::regionEditTools)
 {
     ui->setupUi(this);

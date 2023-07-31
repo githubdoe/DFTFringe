@@ -25,7 +25,7 @@
 #include <QScreen>
 contourView::contourView(QWidget *parent, ContourTools *tools) :
     QWidget(parent),
-    ui(new Ui::contourView), zoomed(false), tools(tools)
+    zoomed(false), ui(new Ui::contourView), tools(tools)
 {
     ui->setupUi(this);
     ui->widget->setTool(tools);
