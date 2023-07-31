@@ -875,7 +875,6 @@ void zernikeProcess::fillVoid(wavefront &wf){
 
         // outer radius of area to fill in
         double radius_outer_fill = wf.m_inside.m_radius+5; // go out a few pixels
-        double radius_outer_fill2 = radius_outer_fill*radius_outer_fill;
 
         double in_midx = wf.m_inside.m_center.x();
         double in_midy = wf.m_inside.m_center.y();
