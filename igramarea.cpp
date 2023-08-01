@@ -2098,7 +2098,7 @@ void IgramArea::CenterOutlineActive(bool checked){
 void IgramArea::loadOutlineFile(QString fileName){
     std::ifstream file(fileName.toStdString().c_str());
 
-    long long int fsize = file.tellg();
+    std::ifstream::pos_type fsize = file.tellg();
     file.seekg( 0, std::ios::end );
     fsize = file.tellg() - fsize;
     file.close();
