@@ -10,7 +10,6 @@
 #include <QDebug>
 #include <QSettings>
 using namespace cv;
-using namespace std;
 
 generateTargetDlg::generateTargetDlg(QWidget *parent) :
     QDialog(parent),m_units(INCHES),

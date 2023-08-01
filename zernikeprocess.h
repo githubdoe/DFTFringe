@@ -25,7 +25,6 @@
 #include "mainwindow.h"
 #include "armadillo"
 #include <stdlib.h>
-using namespace std;
 extern std::vector<bool> zernEnables;
 extern int Zw[];
 extern double BestSC;
@@ -34,12 +33,12 @@ void gauss_jordan(int n, double* Am, double* Bm);
 void ZernikeSmooth(Mat wf, Mat mask);
 
 typedef struct  {
-    vector<bool> enables;
-    vector<double> norms;
+    std::vector<bool> enables;
+    std::vector<double> norms;
     int maxOrder;
     int noOfTerms;
-    vector<int> rowIndex;
-    vector<int> colIndex;
+    std::vector<int> rowIndex;
+    std::vector<int> colIndex;
     arma::mat zernsArSample;
     arma::mat rhoTheta;
     int widthOfMatrix;
@@ -128,8 +127,8 @@ public:
     MainWindow *mw;
     arma::mat m_zerns;
     QVector<double> m_norms;
-    vector<int> m_row;
-    vector<int> m_col;
+    std::vector<int> m_row;
+    std::vector<int> m_col;
 signals:
 void statusBarUpdate(QString, int);
 public slots:
