@@ -286,7 +286,7 @@ void simIgramDlg::on_clearPiston_pressed()
 
 void simIgramDlg::on_clearAll_pressed()
 {
-    for (int i = 0; i < zernikes.size(); ++i){
+    for (std::size_t i = 0; i < zernikes.size(); ++i){
         zernikes[i] = 0;
     }
     tableModel->setValues(&zernikes);

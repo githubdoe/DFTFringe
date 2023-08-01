@@ -71,12 +71,12 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
     if (poly.size()>0){
         for (int n = 0; n < poly.size(); ++n){
             cv::Point points[1][poly[n].size()];
-            for (int i = 0; i < poly[n].size(); ++i){
+            for (std::size_t i = 0; i < poly[n].size(); ++i){
 
                 points[0][i] = cv::Point(poly[n][i].x, poly[n][i].y);
 
             }
-            for (int j = 0; j < poly[n].size()-1; ++j){
+            for (std::size_t j = 0; j < poly[n].size()-1; ++j){
                 cv::line(mask, points[0][j], points[0][j+1], cv::Scalar(0));
 
             }
@@ -1381,7 +1381,7 @@ void DFTArea::doPSIstep4(cv::Mat images, QVector<double> phases){
     try{
         cv::solve(X, A,B,DECOMP_QR);
     }
-    catch (cv::Exception ex) {
+    catch (const cv::Exception &ex) {
         QMessageBox::warning(0,"error", ex.what());
         QApplication::restoreOverrideCursor();
         return;
@@ -1562,9 +1562,9 @@ QVector<double> DFTArea::getPhases(){
     arma::mat Phi(M, 3);
     arma::vec phi(M);
     arma::vec mod(M);
-    double sdp;
+    double sdp = 0;
     double bestSdp;
-    int bestIteration;
+    int bestIteration = 0;
     int i;
 
     for (i=0; i<maxiter; i++) {
@@ -1602,7 +1602,7 @@ QVector<double> DFTArea::getPhases(){
 
         // show current
         QVector<double> a;
-        for (int i = 0; i < phases.n_cols; ++i){
+        for (std::size_t i = 0; i < phases.n_cols; ++i){
             a << phases(i);
         }
 
@@ -1631,7 +1631,7 @@ QVector<double> DFTArea::getPhases(){
     Phi = images * arma::pinv(S);
     phi = arma::atan2(-Phi.col(2), Phi.col(1));
     QVector<double> a;
-    for (int i = 0; i < phases.n_cols; ++i){
+    for (std::size_t i = 0; i < phases.n_cols; ++i){
         a << phases(i);
     }
     m_Psidlg->setStatusText(QString("iteration %1  sdp %2 Compute Phases complete. ").arg(i).arg(sdp, 0, 'f'),maxiter);

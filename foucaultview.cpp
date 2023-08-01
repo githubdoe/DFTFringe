@@ -12,8 +12,8 @@ extern double outputLambda;
 foucaultView *foucaultView::m_instance = 0;
 
 foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
-    QWidget(parent),m_sm(sm),
-    ui(new Ui::foucaultView), heightMultiply(1)
+    QWidget(parent),
+    ui(new Ui::foucaultView), m_sm(sm), heightMultiply(1)
 {
     m_wf = 0;
     lateralOffset = 0;

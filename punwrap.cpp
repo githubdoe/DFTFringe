@@ -116,7 +116,7 @@ void qg_path_follower (int nx, int ny, double *phase, double *qmap,
 
         // Find the point of highest quality.
         double m = -HUGE_VAL;
-        int mndx;
+        int mndx = 0;
         for (int k=0; k < size; ++k)
             if (qmap[k] > m && ! flags[k])
                 m = qmap[mndx = k];

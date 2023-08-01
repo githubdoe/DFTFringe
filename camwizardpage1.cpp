@@ -248,7 +248,7 @@ void CamWizardPage1::on_compute_clicked()
 
                     int horz = 1;
                     int vert = 1;
-                    for (int ndx = 1; ndx < keypoints.size(); ++ndx){
+                    for (std::size_t ndx = 1; ndx < keypoints.size(); ++ndx){
                         float del = keypoints[ndx-1].pt.x - keypoints[ndx].pt.x;
                         if (del > 0) {
                             ++horz;
