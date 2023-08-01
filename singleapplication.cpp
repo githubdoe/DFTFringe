@@ -80,7 +80,7 @@ void SingleApplicationPrivate::genBlockServerName( int timeout )
 #else
         QString username;
         QProcess process;
-        process.start( "whoami" );
+        process.start( "whoami", QStringList() );
         if( process.waitForFinished( timeout ) &&
             process.exitCode() == QProcess::NormalExit) {
             appData.addData( process.readLine() );
