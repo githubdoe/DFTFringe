@@ -670,7 +670,7 @@ void IgramArea::findCenterHole(){
     if (end > roi.cols)
         end = roi.cols;
     if (start < 0) start = 1;
-    double rmean;
+    double rmean = 0.;
     for (int rad = start; rad < end; ++rad){
         MainWindow::me->progBar->setValue(rad);
         MainWindow::me->progBar->setFormat(QString("Radius: %1").arg(rad));
@@ -692,7 +692,12 @@ void IgramArea::findCenterHole(){
         int dely = abs(secondPassCenter.y - firstPassCenter.y);
         resp = fabs(resp);
         points << QPointF(rad, resp);
-        rmean = .3 * resp + (1-.3) * rmean;
+        if(rad == start){
+            rmean = resp;
+        }
+        else{
+            rmean = .3 * resp + (1-.3) * rmean;
+        }
         mpoints << QPointF(rad, rmean);
         if (showDebug){
             cv::Mat t = roi.clone();
@@ -704,7 +709,7 @@ void IgramArea::findCenterHole(){
             continue;
 
         if (resp > maxresp){
-             maxresp = resp;
+            maxresp = resp;
             bestc = c;
             qDebug() << "center refine"<< x << y << resp << delx << dely << rad;
 
