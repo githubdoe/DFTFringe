@@ -2414,7 +2414,7 @@ void IgramArea::writeOutlines(QString fileName){
     for (int i = 0; i < m_polygons.size(); ++ i){
         if (m_polygons[i].size() > 0){
             QJsonArray jPolygon;
-            for (unsigned int j = 0; j < m_polygons[i].size(); ++j){
+            for (std::size_t j = 0; j < m_polygons[i].size(); ++j){
                 QJsonObject jpoint;
                 jpoint["x"] = m_polygons[i][j].x+cropTotalDx;
                 jpoint["y"] = m_polygons[i][j].y+cropTotalDy;
