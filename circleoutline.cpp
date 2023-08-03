@@ -148,7 +148,7 @@ void CircleOutline::enlarge(int del) {
     m_p2.m_p.rx()+= del;
 }
 
-CircleOutline::CircleOutline(QJsonObject &obj) :
+CircleOutline::CircleOutline(const QJsonObject &obj) :
     CircleOutline(QPointF(obj["center_x"].toDouble(), obj["center_y"].toDouble()), obj["radius_x"].toDouble()) {}
 
 void CircleOutline::toJson(QJsonObject &obj){
