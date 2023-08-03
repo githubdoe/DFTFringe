@@ -146,9 +146,11 @@ public:
     void hideOutline(bool checked);
     bool m_hideOutlines;
     void loadOutlineFile(QString filename);
+    void loadJsonOutlineFile(QString filename);
     void undo();
     void redo();
     void writeOutlines(QString fileName);
+    void writeOutlinesold(QString fileName);
     QString makeOutlineName();
     void shiftoutline(QPointF p);
     void setZoomMode(zoomMode mode);

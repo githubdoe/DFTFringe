@@ -28,25 +28,27 @@
 
 #include <opencv2/opencv.hpp>
 #include "opencv2/imgproc.hpp"
-#include "opencv2/features2d.hpp"
 #include "graphicsutilities.h"
 #include <iostream>
 #include <fstream>
 #include <QMessageBox>
 #include "zernikeprocess.h"
-#include "zernikedlg.h"
 #include "mainwindow.h"
 #include <qsettings.h>
-#include "imagehisto.h"
 #include "simigramdlg.h"
 #include "settings2.h"
 #include "myutils.h"
 #include <fstream>
 #include "regionedittools.h"
-#include "dftarea.h"
 #include "colorchannel.h"
 #include "outlineplots.h"
 #include "qwt_scale_draw.h"
+#include <QJsonDocument>
+#include <QJsonValue>
+#include <QJsonArray>
+#include <QJsonObject>
+
+
 QVBoxLayout *debugLayout = 0;
 void undoStack::clear() {
     m_stack.clear();
@@ -368,7 +370,7 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
     if (cnt < 0) cnt *= -1;
     MainWindow::me->progBar->setRange(0,cnt);
     cnt = 0;
-    double rmean;
+    double rmean = 0;
 
     for (int rad0 = start; rad0 != end;  rad0 += step){
         MainWindow::me->progBar->setValue(++cnt);
@@ -453,13 +455,13 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     MainWindow::me->progBar->setRange(0, cnt);
     cnt = 0;
     int goodCnt = 0;
-    double rmean;
+    double rmean = 0;
     double rmeanpeak = 0;
     if (showDebug){
         cv::namedWindow("outline debug",cv::WINDOW_NORMAL);
         cv::moveWindow("outline debug", 10,10);
     }
-    double oldDel;
+    double oldDel = 0;
     double downcnt = 0.;
     for (int rad0 = start; rad0 >= end;  rad0 += step){
         MainWindow::me->progBar->setValue(++cnt);
@@ -670,7 +672,7 @@ void IgramArea::findCenterHole(){
     if (end > roi.cols)
         end = roi.cols;
     if (start < 0) start = 1;
-    double rmean;
+    double rmean = 0;
     for (int rad = start; rad < end; ++rad){
         MainWindow::me->progBar->setValue(rad);
         MainWindow::me->progBar->setFormat(QString("Radius: %1").arg(rad));
@@ -936,6 +938,7 @@ void IgramArea::adjustCenterandRegions(){
     QStringList regionsList = set.value("lastRegions", "").toString().split("\n");
     if (regionsList.size() > 1){
         m_polygons.clear();
+        m_regionEdit->clear();
         int r = 0;
         foreach(QString str, regionsList){
             if (str == "")
@@ -956,6 +959,7 @@ void IgramArea::adjustCenterandRegions(){
 bool IgramArea::openImage(const QString &fileName, bool showBoundary)
 
 {
+    cropTotalDx = cropTotalDy = 0;
     foreach(QWidget *widget, QApplication::topLevelWidgets()) {
       if(widget->objectName() == "MainWindow")
         widget->setWindowTitle(fileName);
@@ -979,10 +983,10 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
         Mat distortion =Mat::zeros(1,5, CV_64FC1);
         camera.at<double>(0,0) = parms[6].toDouble();
         camera.at<double>(1,1) = camera.at<double>(0,0);
-        double width = camera.at<double>(0,2) = parms[7].toDouble();
-        double height = camera.at<double>(1,2) = parms[8].toDouble();
-        width *= 2;
-        height *= 2;
+        //double width = camera.at<double>(0,2) = parms[7].toDouble();
+        //double height = camera.at<double>(1,2) = parms[8].toDouble();
+        //width *= 2;
+        //height *= 2;
 
         for (int i = 0; i < 5; ++i){
             distortion.at<double>(0,i) = parms[1 + i].toDouble();
@@ -1065,17 +1069,19 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
         qDebug() << "del regions";
         loadOutlineFile(finfo.absoluteFilePath());
         qDebug() << "outline loaded";
+        saveRegions();  // if you don't do this and then user runs findOutline then it will load regions from previous igram processed
     }
     else {
 
         useLastOutline();
+        adjustCenterandRegions();
         // setup auto outline controls.
     }
     if (set.value("autoOutline",false).toBool()){
             findOutline();
+            adjustCenterandRegions();
         }
 
-    adjustCenterandRegions();
     if (showBoundary){
         computeEdgeRadius();
         drawBoundary();
@@ -1093,7 +1099,7 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
     return true;
 }
 void IgramArea::syncRegions(){
-
+    // copy m_polygons to region editor
     m_regionEdit->clear();
     for (int n = 0; n < m_polygons.size(); ++n){
         m_regionEdit->addRegion(QString("Region %1").arg( n+1));
@@ -1430,6 +1436,8 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         else if (m_current_boundry == CenterOutline){
             Pcount = &innerPcount;
         }
+        else
+            Pcount = &outterPcount;
         qDebug() << "pcount" << *Pcount;
         // if doing ellipse and on the center line
         if (*Pcount == 2 && mirrorDlg::get_Instance()->isEllipse()){
@@ -1564,8 +1572,8 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
             QPointF del = scaledPos - lastPoint;
 
             if (cntrlPressed){
-                for (unsigned int j = 0; j < m_polygons.size(); ++j){
-                    for (unsigned int i = 0; i < m_polygons[j].size(); ++i){
+                for (int j = 0; j < m_polygons.size(); ++j){
+                    for (unsigned long int i = 0; i < m_polygons[j].size(); ++i){
                         m_polygons[j][i].x += del.x();
                         m_polygons[j][i].y += del.y();
                     }
@@ -1573,7 +1581,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
             }
             else
             {
-                for (unsigned int i = 0; i < m_polygons[polyndx].size(); ++i){
+                for (unsigned long int i = 0; i < m_polygons[polyndx].size(); ++i){
                     m_polygons[polyndx][i].x += del.x();
                     m_polygons[polyndx][i].y += del.y();
                 }
@@ -1747,7 +1755,7 @@ void IgramArea::drawBoundary()
                 QPointF p(m_polygons[n][0].x -10, m_polygons[n][0].y - 10);
                 painter.drawText(p,QString("%1").arg(n+1));
                 if (m_polygons[n].size() > 1){
-                    for (int j = 0; j < m_polygons[n].size()-1; ++j){
+                    for (unsigned int j = 0; j < m_polygons[n].size()-1; ++j){
                         painter.drawLine(m_polygons[n][j].x, m_polygons[n][j].y,
                                          m_polygons[n][j+1].x, m_polygons[n][j+1].y);
                     }
@@ -1945,12 +1953,13 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
 }
 void IgramArea::saveRegions(){
+    // save to registry
     QString text;
     QTextStream regions(&text);
 
     for (int i = 0; i < m_polygons.size(); ++i){
         regions << "Poly";
-        for(int j = 0; j < m_polygons[i].size(); ++j){
+        for(unsigned int j = 0; j < m_polygons[i].size(); ++j){
             regions << " " << QString().number(m_polygons[i][j].x+cropTotalDx) << ","<<
                        QString().number(m_polygons[i][j].y+cropTotalDy);
         }
@@ -2021,7 +2030,7 @@ void IgramArea::crop() {
 
 
     for (int i = 0; i < m_polygons.size(); ++i){
-        for(int j = 0; j < m_polygons[i].size(); ++j){
+        for(unsigned int j = 0; j < m_polygons[i].size(); ++j){
             m_polygons[i][j].x -=crop_dx;
             m_polygons[i][j].y -= crop_dy;
         }
@@ -2091,6 +2100,100 @@ void IgramArea::CenterOutlineActive(bool checked){
     update();
 }
 
+void IgramArea::loadJsonOutlineFile(QString fileName){
+    QFile loadFile(fileName);
+
+    if (!loadFile.open(QIODevice::ReadOnly)) {
+        qWarning("Couldn't open oln file.");
+        return;
+    }
+
+    QByteArray saveData = loadFile.readAll();
+
+    // note that I (gr5) tested what happens if you have non-json in the oln file.  For example missing quotes commas and brackets.
+    // basically you get zeroes.  Zeroes in outlines, zero polygons, etc.  This causes no harm as it's basically like not having
+    // an oln file at all (or some portions of the oln data get lost).  Because of this I decided not to report any json parsing errors.
+    QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
+
+    // outer
+    QJsonObject outside = loadDoc["outside_outline"].toObject();
+    CircleOutline out(outside);
+    m_outside = out;
+    m_outside.translate(QPointF(-cropTotalDx, -cropTotalDy));
+    m_OutterP1 = m_outside.m_p1.m_p;
+    m_OutterP2 = m_outside.m_p2.m_p;
+    outterPcount = 2;
+
+    // center/inner
+    QJsonObject inside = loadDoc["inside_outline"].toObject();
+    CircleOutline in(inside);
+    in.translate(QPointF(-cropTotalDx, -cropTotalDy));
+    m_center = in;
+    if (m_center.m_radius > 0) {
+        m_innerP1 = m_center.m_p1.m_p;
+        m_innerP2 = m_center.m_p2.m_p;
+        innerPcount = 2;
+    }
+
+    // filter
+    double filt = loadDoc["dft_filter_radius"].toDouble();
+    emit dftCenterFilter(filt);
+
+
+    // edge mask
+    QJsonValue jedge = loadDoc["edge_mask_width"];
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    if (jedge.isDouble()) {
+        double edge = jedge.toDouble();
+        // if outline edge mask is different than current ask user
+        if (edge != md.aperatureReduction){
+            QString text(
+                        "Do you want to change the mirror config value to match the value in the outline file?\n"
+                        "If no then the current mirror config value will be used instead."
+                         );
+
+            QMessageBox mb;
+            mb.setText(QString("Edge mask value in outline file for this interferogram is %1 and is different than mirror config value of %2.").arg(
+                                         edge, 6, 'f', 1).arg(md.aperatureReduction, 6, 'f', 1) );
+            mb.setInformativeText(text);
+            mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
+            mb.setWindowTitle("Existing Interferogram outline file and Mirror Config difference.");
+            int width = QGuiApplication::primaryScreen()->geometry().width() * .5;
+            QSpacerItem* horizontalSpacer = new QSpacerItem(width, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+            QGridLayout* layout = (QGridLayout*)mb.layout();
+            layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
+            int resp = mb.exec();
+
+            switch (resp){
+            case QMessageBox::Yes:
+                md.changeEdgeMaskvalues(edge);
+
+                break;
+            case QMessageBox::No:
+                md.changeEdgeMaskvalues(md.aperatureReduction);
+                break;
+            }
+        }
+    }
+    else{ // just enable edge mask check box to use the current value.
+        md.changeEdgeMaskvalues(md.aperatureReduction);
+    }
+
+    // mask polygons regions
+    m_polygons.clear();
+    QJsonArray jregions = loadDoc["regions"].toArray();
+    for (int i=0; i < jregions.size(); ++i) {
+        QJsonArray jpoly = jregions[i].toArray();
+        m_polygons.push_back(std::vector< cv::Point>());
+        m_regionEdit->addRegion(QString("Region %1").arg( m_polygons.size()));
+
+        for (int j=0; j< jpoly.size(); ++j) {
+            QJsonObject jpoint = jpoly[j].toObject();
+            m_polygons.back().push_back(cv::Point(jpoint["x"].toDouble()-cropTotalDx, jpoint["y"].toDouble()-cropTotalDy));
+        }
+    }
+}
+
 void IgramArea::loadOutlineFile(QString fileName){
     std::ifstream file(fileName.toStdString().c_str());
 
@@ -2106,8 +2209,16 @@ void IgramArea::loadOutlineFile(QString fileName){
                              .arg(fileName));
         return;
     }
+    char ch = file.peek();
+    if (ch != 0) {
+        // file seems to be new json format oln file
+        file.close();
+        loadJsonOutlineFile(fileName);
+        return;
+    }
 
-    m_outside = readCircle(file);
+
+    m_outside = readCircle(file, -cropTotalDx, -cropTotalDy);
     m_OutterP1 = m_outside.m_p1.m_p;
     m_OutterP2 = m_outside.m_p2.m_p;
     outterPcount = 2;
@@ -2118,7 +2229,7 @@ void IgramArea::loadOutlineFile(QString fileName){
 
     if ((file.tellg() > 0) && (fsize > file.tellg())) {
         if ((b != 'P') && (b != 'E')){
-            m_center = readCircle(file);
+            m_center = readCircle(file, -cropTotalDx, -cropTotalDy);
             m_innerP1 = m_center.m_p1.m_p;
             m_innerP2 = m_center.m_p2.m_p;
             innerPcount = 2;
@@ -2130,7 +2241,6 @@ void IgramArea::loadOutlineFile(QString fileName){
 
     std::string line;
     m_polygons.clear();
-
     while(std::getline(file, line)){
 
         if (line == "Poly"){
@@ -2140,8 +2250,7 @@ void IgramArea::loadOutlineFile(QString fileName){
             QStringList data = QString::fromStdString(line).split(" ");
             for (int i = 0; i < data.size()-1; ++i){
                 QStringList vals = data[i].split(",");
-                m_polygons.back().push_back(cv::Point(vals[0].toDouble(),vals[1].toDouble()));
-
+                m_polygons.back().push_back(cv::Point(vals[0].toDouble()-cropTotalDx, vals[1].toDouble()-cropTotalDy));
             }
         }
         mirrorDlg &md = *mirrorDlg::get_Instance();
@@ -2222,8 +2331,9 @@ QString IgramArea::makeOutlineName(){
     return lastPath + "/" + name + ".oln";
 }
 
-void IgramArea::writeOutlines(QString fileName){
+void IgramArea::writeOutlinesold(QString fileName){
 
+    // preserving this old way to write OLN files for people to be able to understand the old format
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".oln"); }
     std::ofstream file((fileName.toStdString().c_str()));
     if (!file.is_open()) {
@@ -2252,7 +2362,7 @@ void IgramArea::writeOutlines(QString fileName){
     for (int i = 0; i < m_polygons.size(); ++ i){
         if (m_polygons[i].size() > 0){
             file << "Poly"<<std::endl;
-            for (int j = 0; j < m_polygons[i].size(); ++j){
+            for (unsigned int j = 0; j < m_polygons[i].size(); ++j){
                 file <<(m_polygons[i][j].x+cropTotalDx) << "," << (m_polygons[i][j].y+cropTotalDy) << " ";
             }
             file << std::endl;
@@ -2271,6 +2381,61 @@ void IgramArea::writeOutlines(QString fileName){
     char buf[32];
     ifile.read(buf,32);
     ifile.close();*/
+}
+void IgramArea::writeOutlines(QString fileName){
+
+    if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".oln"); }
+
+    QJsonObject j1, jOutline,jInside;
+
+    // write outside outline
+    CircleOutline outside = m_outside;
+    outside.translate(QPointF(cropTotalDx, cropTotalDy));
+    outside.toJson(jOutline);
+    j1["outside_outline"] = jOutline;
+
+    CircleOutline inside = m_center;
+    inside.translate(QPointF(cropTotalDx,cropTotalDy));
+    inside.toJson(jInside);
+    j1["inside_outline"] = jInside;
+
+    QSettings set;
+    double filterRad = set.value("DFT Center Filter",10).toDouble();
+    j1["dft_filter_radius"]=filterRad;
+
+    if (m_edgeMaskWidth != 0) {
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        j1["edge_mask_width"] = md.aperatureReduction;
+    }
+
+    QJsonArray jRegions;
+    for (int i = 0; i < m_polygons.size(); ++ i){
+        if (m_polygons[i].size() > 0){
+            QJsonArray jPolygon;
+            for (unsigned int j = 0; j < m_polygons[i].size(); ++j){
+                QJsonObject jpoint;
+                jpoint["x"] = m_polygons[i][j].x+cropTotalDx;
+                jpoint["y"] = m_polygons[i][j].y+cropTotalDy;
+                jPolygon.append(jpoint);
+            }
+            jRegions.append(jPolygon);
+        }
+    }
+    j1["regions"] = jRegions;
+
+    QJsonDocument jsondoc = QJsonDocument(j1);
+
+    QFile saveFile(fileName);
+
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        qWarning("Couldn't save .OLN (outline) file.");
+        return;
+    }
+    QFileInfo info(saveFile);
+    qDebug() << info.absoluteFilePath();
+    saveFile.write(jsondoc.toJson());
+    saveFile.close();
+
 }
 
 void IgramArea::saveOutlines(){
@@ -2460,6 +2625,5 @@ void IgramArea::setZoomMode(zoomMode mode){
         zoomIndex = 1;
     zoomFull();
 }
-#include "showaliasdlg.h"
 
 

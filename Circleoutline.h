@@ -24,6 +24,7 @@
 #include <QVector>
 #include <QPointF>
 #include <opencv2/opencv.hpp>
+#include <QJsonObject>
 void fillCircle(cv::Mat &m, double cx, double cy, double rad, void *color);
 class CircleOutline: public boundary
 {
@@ -31,6 +32,9 @@ class CircleOutline: public boundary
         CircleOutline();
         CircleOutline(QPointF center, double rad);
         CircleOutline(QPointF p1, QPointF p2);
+        CircleOutline(QJsonObject &obj);
+        void toJson(QJsonObject &obj);
+
         virtual ~CircleOutline();
         void draw(QPainter& painter, double scale, double scale2 = -1.);
         bool isInside(QPointF& p , int offset = 0);

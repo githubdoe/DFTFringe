@@ -148,5 +148,12 @@ void CircleOutline::enlarge(int del) {
     m_p2.m_p.rx()+= del;
 }
 
+CircleOutline::CircleOutline(QJsonObject &obj) :
+    CircleOutline(QPointF(obj["center_x"].toDouble(), obj["center_y"].toDouble()), obj["radius_x"].toDouble()) {}
 
-
+void CircleOutline::toJson(QJsonObject &obj){
+    obj["center_x"]=m_center.x();
+    obj["center_y"]=m_center.y();
+    obj["radius_x"]=m_radius;
+    obj["radius_y"]=m_radius; // in case some day in the future we allow elliptical outlines the data format is ready to go
+}

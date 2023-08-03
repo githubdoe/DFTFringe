@@ -42,7 +42,7 @@ void writeCircle(std::ofstream& file, CircleOutline& circle){
     }
 }
 
-CircleOutline readCircle(std::ifstream &file){
+CircleOutline readCircle(std::ifstream &file, double x_offset, double y_offset){
     char buf[32 + 4];
     file.read(buf,8*4 + 4);
     if (!file){
@@ -66,8 +66,8 @@ CircleOutline readCircle(std::ifstream &file){
         file.read(buf,8);
     }
     CircleOutline c;
-    c.m_center.rx() = x;
-    c.m_center.ry() = y;
+    c.m_center.rx() = x + x_offset;
+    c.m_center.ry() = y + y_offset;
     c.m_radius = rx;
     c.m_p1.m_p.rx() = c.m_center.x() + c.m_radius;
     c.m_p2.m_p.rx() = c.m_center.x() - c.m_radius;
