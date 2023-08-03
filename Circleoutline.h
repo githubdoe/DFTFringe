@@ -32,7 +32,7 @@ class CircleOutline: public boundary
         CircleOutline();
         CircleOutline(QPointF center, double rad);
         CircleOutline(QPointF p1, QPointF p2);
-        CircleOutline(QJsonObject &obj);
+        CircleOutline(const QJsonObject &obj);
         void toJson(QJsonObject &obj);
 
         virtual ~CircleOutline();

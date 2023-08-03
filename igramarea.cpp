@@ -983,10 +983,6 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
         Mat distortion =Mat::zeros(1,5, CV_64FC1);
         camera.at<double>(0,0) = parms[6].toDouble();
         camera.at<double>(1,1) = camera.at<double>(0,0);
-        //double width = camera.at<double>(0,2) = parms[7].toDouble();
-        //double height = camera.at<double>(1,2) = parms[8].toDouble();
-        //width *= 2;
-        //height *= 2;
 
         for (int i = 0; i < 5; ++i){
             distortion.at<double>(0,i) = parms[1 + i].toDouble();
@@ -2102,7 +2098,7 @@ void IgramArea::CenterOutlineActive(bool checked){
     update();
 }
 
-void IgramArea::loadJsonOutlineFile(const QString &fileName){
+void IgramArea::loadJsonOutlineFile(const QString fileName){
     QFile loadFile(fileName);
 
     if (!loadFile.open(QIODevice::ReadOnly)) {
@@ -2142,7 +2138,7 @@ void IgramArea::loadJsonOutlineFile(const QString &fileName){
 
 
     // edge mask
-    const QJsonValue jedge = loadDoc["edge_mask_width"];
+    const QJsonValue jedge = loadDoc["edge_mask_width_mm"];
     mirrorDlg &md = *mirrorDlg::get_Instance();
     if (jedge.isDouble()) {
         const double edge = jedge.toDouble();
@@ -2171,6 +2167,7 @@ void IgramArea::loadJsonOutlineFile(const QString &fileName){
 
                 break;
             case QMessageBox::No:
+            default: // if they click red X do same thing as "no" button
                 md.changeEdgeMaskvalues(md.aperatureReduction);
                 break;
             }
@@ -2406,7 +2403,7 @@ void IgramArea::writeOutlines(QString fileName){
 
     if (m_edgeMaskWidth != 0) {
         mirrorDlg &md = *mirrorDlg::get_Instance();
-        j1["edge_mask_width"] = md.aperatureReduction;
+        j1["edge_mask_width_mm"] = md.aperatureReduction;
     }
 
     QJsonArray jRegions;

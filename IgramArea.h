@@ -146,7 +146,7 @@ public:
     void hideOutline(bool checked);
     bool m_hideOutlines;
     void loadOutlineFile(QString filename);
-    void loadJsonOutlineFile(QString filename);
+    void loadJsonOutlineFile(const QString filename);
     void undo();
     void redo();
     void writeOutlines(QString fileName);
