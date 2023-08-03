@@ -2102,7 +2102,7 @@ void IgramArea::CenterOutlineActive(bool checked){
     update();
 }
 
-void IgramArea::loadJsonOutlineFile(QString fileName){
+void IgramArea::loadJsonOutlineFile(const QString &fileName){
     QFile loadFile(fileName);
 
     if (!loadFile.open(QIODevice::ReadOnly)) {
