@@ -2137,9 +2137,8 @@ void IgramArea::loadJsonOutlineFile(const QString &fileName){
         innerPcount = 2;
     }
 
-    // filter
-    double filt = loadDoc["dft_filter_radius"].toDouble();
-    emit dftCenterFilter(filt);
+    const double filter = loadDoc["dft_filter_radius"].toDouble();
+    emit dftCenterFilter(filter);
 
 
     // edge mask
