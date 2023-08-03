@@ -2142,10 +2142,10 @@ void IgramArea::loadJsonOutlineFile(const QString &fileName){
 
 
     // edge mask
-    QJsonValue jedge = loadDoc["edge_mask_width"];
+    const QJsonValue jedge = loadDoc["edge_mask_width"];
     mirrorDlg &md = *mirrorDlg::get_Instance();
     if (jedge.isDouble()) {
-        double edge = jedge.toDouble();
+        const double edge = jedge.toDouble();
         // if outline edge mask is different than current ask user
         if (edge != md.aperatureReduction){
             QString text(
