@@ -7,6 +7,14 @@ on:
   workflow_dispatch:
   workflow_call:
 
+env:
+  armadillo_version: 12.6.1
+  QWT_version: 6.1.6
+  openCV_version: 4.6.0
+  QT_version: 5.15.2
+  lapack_version: 3.11.0
+  mingw_version: 810
+
 jobs:
   cache-mingw-from-QT:
     runs-on: windows-latest
@@ -17,7 +25,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: Tools
-          key: ${{ runner.os }}-mingw810_64
+          key: ${{ runner.os }}-mingw${{env.mingw_version}}_64
 
       # all what follows is only run on cache miss
       - name: install aqtinstall tool
@@ -25,8 +33,8 @@ jobs:
         run: pip install aqtinstall
       - name: install correct minGW version
         if: steps.cache-minGW.outputs.cache-hit != 'true'
-        run: aqt install-tool windows desktop tools_mingw qt.tools.win64_mingw810
-        # path is Tools\mingw810_64\bin\
+        run: aqt install-tool windows desktop tools_mingw qt.tools.win64_mingw${{env.mingw_version}}
+        # path is Tools\mingw${{env.mingw_version}}_64\bin\
       - name: install QT installer framework
         if: steps.cache-minGW.outputs.cache-hit != 'true'
         run: aqt install-tool windows desktop tools_ifw
@@ -44,13 +52,13 @@ jobs:
           path: |
             build_openCV\install\x64\mingw\bin\*.dll
             build_openCV\install\include\*
-            5.15.2\mingw81_64\bin\*
-            5.15.2\mingw81_64\include\*
-            5.15.2\mingw81_64\lib\*
-            5.15.2\mingw81_64\mkspecs\*
-            5.15.2\mingw81_64\plugins\platforms\*
-            5.15.2\mingw81_64\plugins\imageformats\*
-          key: ${{ runner.os }}-openCV-4.6.0-QT-5.15.2
+            ${{env.QT_version}}\mingw81_64\bin\*
+            ${{env.QT_version}}\mingw81_64\include\*
+            ${{env.QT_version}}\mingw81_64\lib\*
+            ${{env.QT_version}}\mingw81_64\mkspecs\*
+            ${{env.QT_version}}\mingw81_64\plugins\platforms\*
+            ${{env.QT_version}}\mingw81_64\plugins\imageformats\*
+          key: ${{ runner.os }}-openCV-${{env.openCV_version}}-QT-${{env.QT_version}}
 
       # all what follows is only run on cache miss
 
@@ -60,27 +68,27 @@ jobs:
         id: cache-minGW
         with:
           path: Tools
-          key: ${{ runner.os }}-mingw810_64
+          key: ${{ runner.os }}-mingw${{env.mingw_version}}_64
           fail-on-cache-miss: true
       - name: add minGW to path
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         shell: bash
-        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+        run: echo "${{github.workspace}}\Tools\mingw${{env.mingw_version}}_64\bin" >> $GITHUB_PATH
       - name: install aqtinstall tool
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         run: pip install aqtinstall
       - name: install QT
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
-        run: aqt install-qt windows desktop 5.15.2 win64_mingw81 -m qtcharts qtdatavis3d
+        run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw81 -m qtcharts qtdatavis3d
       - uses: actions/checkout@v3
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         with:
           repository: 'opencv/opencv'
-          ref: '4.6.0'
+          ref: '${{env.openCV_version}}'
           path: './openCV'
       - name: cmake generate
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
-        run: cmake -G "MinGW Makefiles" -S openCV -B build_openCV -D WITH_QT=ON -D WITH_OPENGL=ON -D Qt5_DIR=:./5.15.2/mingw81_64/lib/cmake/Qt5
+        run: cmake -G "MinGW Makefiles" -S openCV -B build_openCV -D WITH_QT=ON -D WITH_OPENGL=ON -D Qt5_DIR=:./${{env.QT_version}}/mingw81_64/lib/cmake/Qt5
       - name: cmake generate again
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         run: cmake -G "MinGW Makefiles" -S openCV -B build_openCV
@@ -101,9 +109,9 @@ jobs:
         id: cache-QWT
         with:
           path: |
-            qwt-6.1.6\src
-            qwt-6.1.6\lib\*.dll
-          key: ${{ runner.os }}-QWT-6.1.6
+            qwt-${{env.QWT_version}}\src
+            qwt-${{env.QWT_version}}\lib\*.dll
+          key: ${{ runner.os }}-QWT-${{env.QWT_version}}
 
       # all what follows is only run on cache miss
 
@@ -113,34 +121,34 @@ jobs:
         id: cache-minGW
         with:
           path: Tools
-          key: ${{ runner.os }}-mingw810_64
+          key: ${{ runner.os }}-mingw${{env.mingw_version}}_64
           fail-on-cache-miss: true
       - name: add minGW to path
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         shell: bash
-        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+        run: echo "${{github.workspace}}\Tools\mingw${{env.mingw_version}}_64\bin" >> $GITHUB_PATH
       - name: install wget
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         run: choco install -y wget
       - name: download QWT
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         # I specified the mirror because one of the random mirrors did not work during my tests
-        run: wget -O qwt-6.1.6.zip https://sourceforge.net/projects/qwt/files/qwt/6.1.6/qwt-6.1.6.zip/download?use_mirror=pilotfiber
+        run: wget -O qwt-${{env.QWT_version}}.zip https://sourceforge.net/projects/qwt/files/qwt/${{env.QWT_version}}/qwt-${{env.QWT_version}}.zip/download?use_mirror=pilotfiber
       - name: extract archive
         if: steps.cache-QWT.outputs.cache-hit != 'true'
-        run: 7z x qwt-6.1.6.zip
+        run: 7z x qwt-${{env.QWT_version}}.zip
       - name: install aqtinstall tool
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         run: pip install aqtinstall
       - name: install qmake
         if: steps.cache-QWT.outputs.cache-hit != 'true'
-        run: aqt install-qt windows desktop 5.15.2 win64_mingw81 --archives qtbase qtsvg
+        run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw81 --archives qtbase qtsvg
       - name: qmake
         if: steps.cache-QWT.outputs.cache-hit != 'true'
-        run: cd qwt-6.1.6 ; ..\5.15.2\mingw81_64\bin\qmake.exe
+        run: cd qwt-${{env.QWT_version}} ; ..\${{env.QT_version}}\mingw81_64\bin\qmake.exe
       - name: build
         if: steps.cache-QWT.outputs.cache-hit != 'true'
-        run: cd qwt-6.1.6 ; mingw32-make -j4
+        run: cd qwt-${{env.QWT_version}} ; mingw32-make -j4
 
   build-armadillo:
     runs-on: windows-latest
@@ -154,7 +162,7 @@ jobs:
           path: |
             build_armadillo\libarmadillo.dll
             build_armadillo\tmp\include
-          key: ${{ runner.os }}-armadillo-11.4.0
+          key: ${{ runner.os }}-armadillo-${{env.armadillo_version}}
 
       # all what follows is only run on cache miss
 
@@ -164,29 +172,29 @@ jobs:
         id: cache-minGW
         with:
           path: Tools
-          key: ${{ runner.os }}-mingw810_64
+          key: ${{ runner.os }}-mingw${{env.mingw_version}}_64
           fail-on-cache-miss: true
       - name: add minGW to path
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
         shell: bash
-        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+        run: echo "${{github.workspace}}\Tools\mingw${{env.mingw_version}}_64\bin" >> $GITHUB_PATH
       - name: install wget
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
         run: choco install -y wget
       - name: download armadillo
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
         # I specified the mirror because one of the random mirrors did not work during my tests
-        run: wget -O armadillo-11.4.4.tar.xz http://sourceforge.net/projects/arma/files/armadillo-11.4.4.tar.xz/download?use_mirror=versaweb
+        run: wget -O armadillo-${{env.armadillo_version}}.tar.xz http://sourceforge.net/projects/arma/files/armadillo-${{env.armadillo_version}}.tar.xz/download?use_mirror=versaweb
       # Extract in two step. First step write to stdo and second step read from stdi.
       # This avoids intermediate file creation
       # It must run in CMD because powershell corrupts pipes
       - name: extract archive
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
-        run: 7z x -so armadillo-11.4.4.tar.xz | 7z x -si -ttar
+        run: 7z x -so armadillo-${{env.armadillo_version}}.tar.xz | 7z x -si -ttar
         shell: cmd
       - name: cmake generate
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
-        run: cmake -G "MinGW Makefiles" -S armadillo-11.4.4 -B build_armadillo
+        run: cmake -G "MinGW Makefiles" -S armadillo-${{env.armadillo_version}} -B build_armadillo
       - name: cmake build
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
         run: cmake --build ./build_armadillo -j4
@@ -203,7 +211,7 @@ jobs:
           path: |
             build_lapack\lib\liblapack.a
             build_lapack\lib\libblas.a
-          key: ${{ runner.os }}-lapack-3.11.0
+          key: ${{ runner.os }}-lapack-${{env.lapack_version}}
 
       # all what follows is only run on cache miss
 
@@ -213,17 +221,17 @@ jobs:
         id: cache-minGW
         with:
           path: Tools
-          key: ${{ runner.os }}-mingw810_64
+          key: ${{ runner.os }}-mingw${{env.mingw_version}}_64
           fail-on-cache-miss: true
       - name: add minGW to path
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         shell: bash
-        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+        run: echo "${{github.workspace}}\Tools\mingw${{env.mingw_version}}_64\bin" >> $GITHUB_PATH
       - uses: actions/checkout@v3
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         with:
           repository: 'Reference-LAPACK/lapack'
-          ref: 'v3.11.0'
+          ref: 'v${{env.lapack_version}}'
           path: './lapack'
       # remove test compiler because https://github.com/Reference-LAPACK/lapack/issues/305 not needed to create DLL
       - name: cmake generate
@@ -260,11 +268,11 @@ jobs:
         id: cache-minGW
         with:
           path: Tools
-          key: ${{ runner.os }}-mingw810_64
+          key: ${{ runner.os }}-mingw${{env.mingw_version}}_64
           fail-on-cache-miss: true
       - name: add minGW to path
         shell: bash
-        run: echo "${{github.workspace}}\Tools\mingw810_64\bin" >> $GITHUB_PATH
+        run: echo "${{github.workspace}}\Tools\mingw${{env.mingw_version}}_64\bin" >> $GITHUB_PATH
       # restore cached lapack
       - uses: actions/cache/restore@v3
         id: cache-lapack
@@ -272,7 +280,7 @@ jobs:
           path: |
             build_lapack\lib\liblapack.a
             build_lapack\lib\libblas.a
-          key: ${{ runner.os }}-lapack-3.11.0
+          key: ${{ runner.os }}-lapack-${{env.lapack_version}}
           fail-on-cache-miss: true
       # restore cached armadillo
       - uses: actions/cache/restore@v3
@@ -281,16 +289,16 @@ jobs:
           path: |
             build_armadillo\libarmadillo.dll
             build_armadillo\tmp\include
-          key: ${{ runner.os }}-armadillo-11.4.0
+          key: ${{ runner.os }}-armadillo-${{env.armadillo_version}}
           fail-on-cache-miss: true
       # restore cached QWT
       - uses: actions/cache/restore@v3
         id: cache-QWT
         with:
           path: |
-            qwt-6.1.6\src
-            qwt-6.1.6\lib\*.dll
-          key: ${{ runner.os }}-QWT-6.1.6
+            qwt-${{env.QWT_version}}\src
+            qwt-${{env.QWT_version}}\lib\*.dll
+          key: ${{ runner.os }}-QWT-${{env.QWT_version}}
           fail-on-cache-miss: true
       # restore cached openCV and QT
       - uses: actions/cache/restore@v3
@@ -299,13 +307,13 @@ jobs:
           path: |
             build_openCV\install\x64\mingw\bin\*.dll
             build_openCV\install\include\*
-            5.15.2\mingw81_64\bin\*
-            5.15.2\mingw81_64\include\*
-            5.15.2\mingw81_64\lib\*
-            5.15.2\mingw81_64\mkspecs\*
-            5.15.2\mingw81_64\plugins\platforms\*
-            5.15.2\mingw81_64\plugins\imageformats\*
-          key: ${{ runner.os }}-openCV-4.6.0-QT-5.15.2
+            ${{env.QT_version}}\mingw81_64\bin\*
+            ${{env.QT_version}}\mingw81_64\include\*
+            ${{env.QT_version}}\mingw81_64\lib\*
+            ${{env.QT_version}}\mingw81_64\mkspecs\*
+            ${{env.QT_version}}\mingw81_64\plugins\platforms\*
+            ${{env.QT_version}}\mingw81_64\plugins\imageformats\*
+          key: ${{ runner.os }}-openCV-${{env.openCV_version}}-QT-${{env.QT_version}}
           fail-on-cache-miss: true
 
       # this enables the problem matcher
@@ -346,7 +354,7 @@ jobs:
           echo "${{env.NOW}}"
           (Get-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml).replace('MY_AUTOMATED_DATE_STRING', '${{env.NOW}}') | Set-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml
           
-      - run: cd DFTFringe ; ..\5.15.2\mingw81_64\bin\qmake.exe
+      - run: cd DFTFringe ; ..\${{env.QT_version}}\mingw81_64\bin\qmake.exe
       #- run: echo "::add-matcher::.github/matcher/uic_matcher.json" # deactivate uic matcher for now to priorize GCC warnings
       - run: cd DFTFringe ; mingw32-make -j4
       #- run: echo "::remove-matcher owner=uic-problem-matcher::" # deactivate uic matcher for now to priorize GCC warnings
@@ -362,14 +370,14 @@ jobs:
           Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\qwt-6.1.6\lib\qwt.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\5.15.2\mingw81_64\bin\Qt5OpenGL.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\qwt-${{env.QWT_version}}\lib\qwt.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\${{env.QT_version}}\mingw81_64\bin\Qt5OpenGL.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\DFTFringe\ColorMaps" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\ColorMaps" -Recurse
           Copy-Item ".\DFTFringe\res" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res" -Recurse
           Copy-Item ".\DFTFringe\RevisionHistory.html" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
 
       - name: automatically add QT dependencies with windeployqt
-        run: .\5.15.2\mingw81_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
+        run: .\${{env.QT_version}}\mingw81_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
 
       - name: make installer using QT installer framework
         run: Tools\QtInstallerFramework\4.6\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{env.WORKFLOW_VERSION}}

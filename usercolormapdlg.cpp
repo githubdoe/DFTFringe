@@ -45,7 +45,7 @@ m_listeWidget->addItem(new QListWidgetItem(QIcon("../ics.jpg"),"Wallpaper"));
 
 userColorMapDlg::userColorMapDlg(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::userColorMapDlg),m_reverse(false)
+    m_reverse(false), ui(new Ui::userColorMapDlg)
 {
     ui->setupUi(this);
 std::cout <<" main2";

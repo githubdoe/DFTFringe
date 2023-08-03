@@ -6,8 +6,9 @@
 extern double outputLambda;
 SettingsGeneral2::SettingsGeneral2(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SettingsGeneral2),m_useSVD(false),
-    m_showConditionNumbers(false), valsChanged(false)
+    valsChanged(false),
+    ui(new Ui::SettingsGeneral2), m_useSVD(false),
+    m_showConditionNumbers(false)
 {
     ui->setupUi(this);
     QSettings set;

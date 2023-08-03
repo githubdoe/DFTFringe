@@ -83,9 +83,11 @@ bool ProfilePlot::eventFilter( QObject *object, QEvent *event )
 }
 
 ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
-    QWidget( parent ), m_wf(0), m_tools(tools),
-     m_showSurface(1.),m_showNm(1.),dragging(false),
-     offsetType("Middle"),ui(new Ui::ProfilePlot), m_defocusValue(0.)
+    QWidget( parent ), 
+    m_wf(0), m_tools(tools),
+    m_showSurface(1.), m_showNm(1.), dragging(false),
+    offsetType("Middle"),
+    m_defocusValue(0.), ui(new Ui::ProfilePlot)
 {
     zoomed = false;
     m_defocus_mode = false;

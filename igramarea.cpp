@@ -1436,8 +1436,10 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         else if (m_current_boundry == CenterOutline){
             Pcount = &innerPcount;
         }
-        else
-            Pcount = &outterPcount;
+        else{
+            qDebug() << "If you read this message something went wrong";
+            Pcount = nullptr;
+        }
         qDebug() << "pcount" << *Pcount;
         // if doing ellipse and on the center line
         if (*Pcount == 2 && mirrorDlg::get_Instance()->isEllipse()){
@@ -1573,7 +1575,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
 
             if (cntrlPressed){
                 for (int j = 0; j < m_polygons.size(); ++j){
-                    for (unsigned long int i = 0; i < m_polygons[j].size(); ++i){
+                    for (unsigned int i = 0; i < m_polygons[j].size(); ++i){
                         m_polygons[j][i].x += del.x();
                         m_polygons[j][i].y += del.y();
                     }
@@ -1755,7 +1757,7 @@ void IgramArea::drawBoundary()
                 QPointF p(m_polygons[n][0].x -10, m_polygons[n][0].y - 10);
                 painter.drawText(p,QString("%1").arg(n+1));
                 if (m_polygons[n].size() > 1){
-                    for (unsigned int j = 0; j < m_polygons[n].size()-1; ++j){
+                    for (std::size_t j = 0; j < m_polygons[n].size()-1; ++j){
                         painter.drawLine(m_polygons[n][j].x, m_polygons[n][j].y,
                                          m_polygons[n][j+1].x, m_polygons[n][j+1].y);
                     }
@@ -1959,7 +1961,7 @@ void IgramArea::saveRegions(){
 
     for (int i = 0; i < m_polygons.size(); ++i){
         regions << "Poly";
-        for(unsigned int j = 0; j < m_polygons[i].size(); ++j){
+        for(std::size_t j = 0; j < m_polygons[i].size(); ++j){
             regions << " " << QString().number(m_polygons[i][j].x+cropTotalDx) << ","<<
                        QString().number(m_polygons[i][j].y+cropTotalDy);
         }
@@ -2030,7 +2032,7 @@ void IgramArea::crop() {
 
 
     for (int i = 0; i < m_polygons.size(); ++i){
-        for(unsigned int j = 0; j < m_polygons[i].size(); ++j){
+        for(std::size_t j = 0; j < m_polygons[i].size(); ++j){
             m_polygons[i][j].x -=crop_dx;
             m_polygons[i][j].y -= crop_dy;
         }
@@ -2362,7 +2364,7 @@ void IgramArea::writeOutlinesold(QString fileName){
     for (int i = 0; i < m_polygons.size(); ++ i){
         if (m_polygons[i].size() > 0){
             file << "Poly"<<std::endl;
-            for (unsigned int j = 0; j < m_polygons[i].size(); ++j){
+            for (std::size_t j = 0; j < m_polygons[i].size(); ++j){
                 file <<(m_polygons[i][j].x+cropTotalDx) << "," << (m_polygons[i][j].y+cropTotalDy) << " ";
             }
             file << std::endl;

@@ -10,9 +10,11 @@
 #include <opencv2/imgproc.hpp>
 
 outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
-    m_x(x),m_y(y),m_rad(rad),
-    QDialog(parent), m_xoffset(0), m_yoffset(0), m_radiusOffset(0),
-    ui(new Ui::outlineDialog), m_find(false), m_hideOutline(false), dragMode(false)
+    QDialog(parent), 
+    m_xoffset(0), m_yoffset(0), m_radiusOffset(0),
+    m_find(false), m_hideOutline(false),
+    m_x(x), m_y(y), m_rad(rad),
+    ui(new Ui::outlineDialog), dragMode(false)
 {
     ui->setupUi(this);
     QSettings set;
@@ -240,8 +242,8 @@ void outlineDialog::on_blurSB_valueChanged(int arg1)
 }
 void outlineDialog::on_blurSlider_valueChanged(int value)
 {
-   if (m_findEdgePixels)
-    m_find = true;
+    if (m_findEdgePixels)
+        m_find = true;
     m_blurrSize = value;
     ui->blurSB->blockSignals(true);
     ui->blurSB->setValue(value);

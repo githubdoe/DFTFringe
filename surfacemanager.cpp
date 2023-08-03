@@ -1971,9 +1971,9 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         double mirrorY = inputs[i]->InputZerns[5];
         xastig.at<double>(i,0) = mirrorX;
         mirrorXaverage += mirrorX;
-        maxXastig = max(maxXastig,mirrorX);
+        maxXastig = std::max(maxXastig,mirrorX);
         mirrorYAverage += mirrorY;
-        maxYastig = max(maxYastig, mirrorY);
+        maxYastig = std::max(maxYastig, mirrorY);
         yastig.at<double>(i,0) = mirrorY;
         qDebug() << "Mirror astigs " << mirrorX << mirrorY;
     }
@@ -2065,10 +2065,10 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     for (int i = 0; i < list.size(); ++i){
         double xval = standxastig.at<double>(i,0);
         double yval = standyastig.at<double>(i,0);
-        maxX = max(maxX, xval);
-        minX = min(minX, xval);
-        maxY = max(maxY, yval);
-        minY = min(minY, yval);
+        maxX = std::max(maxX, xval);
+        minX = std::min(minX, xval);
+        maxY = std::max(maxY, yval);
+        minY = std::min(minY, yval);
 
         double mag = sqrt(pow(xval,2) + pow(yval,2));
 
@@ -2279,11 +2279,11 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
 
     }
 
-    double maxv = max(fabs(mirrorYastig) +  fabs(mirrorAstigRadius),fabs(mirrorXastig ) + fabs(mirrorAstigRadius))  * 1.2;
-    maxv = max(maxX, maxv);
-    maxv = max(fabs(minX), maxv);
-    maxv = max(maxv, maxY);
-    maxv = max(fabs(minY), maxv);
+    double maxv = std::max(fabs(mirrorYastig) +  fabs(mirrorAstigRadius),fabs(mirrorXastig ) + fabs(mirrorAstigRadius))  * 1.2;
+    maxv = std::max(maxX, maxv);
+    maxv = std::max(fabs(minX), maxv);
+    maxv = std::max(maxv, maxY);
+    maxv = std::max(fabs(minY), maxv);
     pl1->setAxisScale(QwtPlot::xBottom, -maxv, maxv);
     pl1->setAxisScale(QwtPlot::yLeft,   -maxv, maxv);
     QColor color(Qt::green);

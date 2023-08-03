@@ -168,8 +168,8 @@ Dim big As Double, dum As Double, pivinv As Double, temp As Double
     int* indxr = new int[n];
     int* indxc = new int[n];
     double big;
-    int irow;
-    int icol;
+    int irow = 0;
+    int icol = 0;
     double pivinv;
 
     for(int  j = 0; j < n; ++j)
@@ -832,7 +832,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
         }
         for (int n = 0; n < wf.regions.size(); ++n){
 
-            for (int i = 0; i < wf.regions[n].size(); ++i){
+            for (std::size_t i = 0; i < wf.regions[n].size(); ++i){
                 int x = wf.regions[n][i].x;
                 int y = wf.mask.rows - wf.regions[n][i].y;
                 startx = fmin(startx, x);
@@ -879,7 +879,6 @@ void zernikeProcess::fillVoid(wavefront &wf){
 
         // outer radius of area to fill in
         double radius_outer_fill = wf.m_inside.m_radius+5; // go out a few pixels
-        double radius_outer_fill2 = radius_outer_fill*radius_outer_fill;
 
         double in_midx = wf.m_inside.m_center.x();
         double in_midy = wf.m_inside.m_center.y();
@@ -1042,7 +1041,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
         dlg_arbitrary->prepare(dlg.size);
 
 
-    for (int i = 0; i < m_zerns.n_rows; ++i)
+    for (std::size_t i = 0; i < m_zerns.n_rows; ++i)
     {
 
         double rho = m_rhoTheta.row(0)(i);
@@ -1186,10 +1185,10 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
     }
     int rows = width;
 
-    vector<double> rhov;
-    vector<double> thetav;
-     m_row.clear();
-     m_col.clear();
+    std::vector<double> rhov;
+    std::vector<double> thetav;
+    m_row.clear();
+    m_col.clear();
 
     for (int y = 0; y < rows; ++y){
         double uy = (y -cy)/radius;
@@ -1370,11 +1369,11 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
         log.append("</tr>\n");
     }
 
-    for (int row = 0; row < theMat.n_rows; ++row){
+    for (std::size_t row = 0; row < theMat.n_rows; ++row){
         log.append("<tr> <td> ");
         if (!RowLable.empty()){
 
-            if (row < RowLable.size()){
+            if (row < static_cast<std::size_t>(RowLable.size())){
                 log.append(QString("<b>%1</b>").arg(RowLable[row]));
             }
 
@@ -1483,7 +1482,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
     prg->setValue(0);
     prg->show();
     prg->resize(1000,50);
-    for (int i = 0; i < m_rhoTheta.n_cols; ++i) { // for each sample point
+    for (std::size_t i = 0; i < m_rhoTheta.n_cols; ++i) { // for each sample point
             double rho = m_rhoTheta.row(0)(i);
 
 
@@ -1518,7 +1517,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
     cv::solve(A,B,X, DECOMP_QR);
 
     wf.InputZerns = std::vector<double>(ztermCnt,0);
-    for (int z = 0;  z < X.rows; ++z){
+    for (std::size_t z = 0;  z < static_cast<std::size_t>(X.rows); ++z){
        if (z < wf.InputZerns.size()){
             //qDebug() << z << X(z) << wf.InputZerns[z] << (QString("%1").arg(X(z) - wf.InputZerns[z], 6, 'f', 4)).toDouble();
         }

@@ -16,7 +16,7 @@ public:
     QwtPlot * mPlot;
     outlineStatsDlg &m_outlines;
     outlineZoomer(outlineStatsDlg *dlg, QWidget *canvas, QwtPlot * plot ):
-        m_outlines(*dlg),QwtPlotZoomer( canvas ),mPlot(plot)
+        QwtPlotZoomer( canvas ), mPlot(plot), m_outlines(*dlg)
     {
         setRubberBandPen( QColor( Qt::lightGray ) );
         setTrackerMode( QwtPlotPicker::AlwaysOn );
@@ -328,7 +328,7 @@ void outlineStatsDlg::on_pushButton_clicked()
                 for (int i = 0; i < polygons.size(); ++ i){
                     if (polygons[i].size() > 0){
                         ofile << "Poly"<<std::endl;
-                        for (int j = 0; j < polygons[i].size(); ++j){
+                        for (std::size_t j = 0; j < polygons[i].size(); ++j){
                             ofile <<(polygons[i][j].x) << "," << (polygons[i][j].y) << " ";
                         }
                         ofile << std::endl;
