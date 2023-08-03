@@ -148,15 +148,13 @@ public:
     measure(QString n, QPointF _p):name(n),p(_p){};
     measure(){};
 };
+
 class RunningStat
     {
     public:
-        RunningStat() : m_n(0),m_min(10000), m_max(-10000) {}
-
-        void Clear()
-        {
-            m_n = 0;
-        }
+        RunningStat() : 
+            m_n(0), m_oldM(NAN), m_oldS(0.), m_min(DBL_MAX), m_max(DBL_MIN) 
+            {}
 
         void Push(double x)
         {
