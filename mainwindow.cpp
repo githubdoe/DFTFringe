@@ -491,7 +491,7 @@ void MainWindow::createDockWindows(){
     m_contourTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     m_dftTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     metrics = metricsDisplay::get_instance(this);
-    metrics->setWindowTitle(QString("metrics      DFTFringe %s").arg(APP_VERSION));
+    metrics->setWindowTitle(QString("metrics      DFTFringe %1").arg(APP_VERSION));
     zernTablemodel = metrics->tableModel;
     addDockWidget(Qt::LeftDockWidgetArea, m_outlineHelp);
     addDockWidget(Qt::LeftDockWidgetArea, m_outlinePlots);
