@@ -826,6 +826,10 @@ void zernikeProcess::fillVoid(wavefront &wf){
         int endx = x;
         int starty = y;
         int endy = y;
+        qDebug() << "regions to fill: " << wf.regions.size();
+        for (int z = 0; z < m_norms.size(); ++z){
+            qDebug() << "zern "<< z << " " << wf.InputZerns[z];
+        }
         for (int n = 0; n < wf.regions.size(); ++n){
 
             for (std::size_t i = 0; i < wf.regions[n].size(); ++i){
