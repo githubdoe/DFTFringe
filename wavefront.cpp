@@ -33,7 +33,8 @@ wavefront::~wavefront()
     nulledData.release();
 
 }
-wavefront::wavefront( wavefront &wf): data(wf.data.clone()),
+wavefront::wavefront( const wavefront &wf): 
+    data(wf.data.clone()),
     nulledData(wf.nulledData.clone()),
     mask(wf.mask.clone()),
     workData(wf.workData.clone()),

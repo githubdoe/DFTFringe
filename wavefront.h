@@ -25,7 +25,11 @@ class wavefront
 public:
     wavefront();
     ~wavefront();
-    wavefront( wavefront &wf);
+    wavefront( const wavefront &wf); // copy constructor doing deep copy of cv::Mat
+    wavefront( wavefront && ) = delete;	// move constructor, deleted because unused
+    wavefront& operator=( const wavefront & ) = default; // copy operator not doing deep copy of cv::mat
+    wavefront& operator=(wavefront &&) = delete; // move operator, deleted because unused
+
     cv::Mat_<double> data;
     cv::Mat_<double> nulledData;
     cv::Mat_<uint8_t> mask;
