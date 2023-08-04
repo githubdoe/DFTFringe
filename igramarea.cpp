@@ -1063,7 +1063,7 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
         qDebug() << "file exists";
         deleteRegions();
         qDebug() << "del regions";
-        loadOutlineFile(finfo.absoluteFilePath());
+        loadOutlineFileOldV6(finfo.absoluteFilePath());
         qDebug() << "outline loaded";
         saveRegions();  // if you don't do this and then user runs findOutline then it will load regions from previous igram processed
     }
@@ -2098,7 +2098,7 @@ void IgramArea::CenterOutlineActive(bool checked){
     update();
 }
 
-void IgramArea::loadJsonOutlineFile(const QString fileName){
+void IgramArea::loadOutlineFile(QString fileName){
     QFile loadFile(fileName);
 
     if (!loadFile.open(QIODevice::ReadOnly)) {
@@ -2192,7 +2192,7 @@ void IgramArea::loadJsonOutlineFile(const QString fileName){
     }
 }
 
-void IgramArea::loadOutlineFile(QString fileName){
+void IgramArea::loadOutlineFileOldV6(QString fileName){
     std::ifstream file(fileName.toStdString().c_str());
 
     long long int fsize = file.tellg();
@@ -2211,7 +2211,7 @@ void IgramArea::loadOutlineFile(QString fileName){
     if (ch != 0) {
         // file seems to be new json format oln file
         file.close();
-        loadJsonOutlineFile(fileName);
+        loadOutlineFile(fileName);
         return;
     }
 
@@ -2320,7 +2320,7 @@ void IgramArea::readOutlines(){
     if (fileName.isEmpty())
         return;
     deleteRegions();
-    loadOutlineFile(fileName);
+    loadOutlineFileOldV6(fileName);
 }
 QString IgramArea::makeOutlineName(){
             QSettings settings;
@@ -2329,7 +2329,7 @@ QString IgramArea::makeOutlineName(){
     return lastPath + "/" + name + ".oln";
 }
 
-void IgramArea::writeOutlinesold(QString fileName){
+void IgramArea::writeOutlinesOldV6(QString fileName){
 
     // preserving this old way to write OLN files for people to be able to understand the old format
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".oln"); }

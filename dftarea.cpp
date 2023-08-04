@@ -1409,7 +1409,7 @@ void DFTArea::doPSIstep4(cv::Mat images, QVector<double> phases){
     QFileInfo finfo( outlineName);
     if (finfo.exists()){
         igramArea->deleteRegions();
-        igramArea->loadOutlineFile(outlineName);
+        igramArea->loadOutlineFileOldV6(outlineName);
     }
     else {
     qDebug() << "use last outline";
