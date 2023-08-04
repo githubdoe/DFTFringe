@@ -1563,14 +1563,14 @@ QVector<double> DFTArea::getPhases(){
     arma::vec phi(M);
     arma::vec mod(M);
     double sdp = 0;
-    double bestSdp;
+    double bestSdp = DBL_MAX;
     int bestIteration = 0;
     int i;
 
     for (i=0; i<maxiter; i++) {
         if (m_Psidlg->m_stop){
-        QMessageBox::warning(0, "Failed","Aborted by user");
-          break;
+            QMessageBox::warning(0, "Failed","Aborted by user");
+            break;
         }
         QApplication::processEvents();
 
