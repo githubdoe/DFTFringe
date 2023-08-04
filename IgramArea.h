@@ -145,12 +145,12 @@ public:
     CircleOutline m_center;
     void hideOutline(bool checked);
     bool m_hideOutlines;
+    void loadOutlineFileOldV6(QString filename);
     void loadOutlineFile(QString filename);
-    void loadJsonOutlineFile(const QString filename);
     void undo();
     void redo();
+    void writeOutlinesOldV6(QString fileName);
     void writeOutlines(QString fileName);
-    void writeOutlinesold(QString fileName);
     QString makeOutlineName();
     void shiftoutline(QPointF p);
     void setZoomMode(zoomMode mode);
