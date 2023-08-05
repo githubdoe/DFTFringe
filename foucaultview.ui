@@ -45,7 +45,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_9">
       <item>
-       <widget class="QGroupBox" name="groupBox">
+       <widget class="QGroupBox" name="groupBox_1">
         <property name="title">
          <string>Source</string>
         </property>
@@ -529,6 +529,7 @@
         <property name="font">
          <font>
           <pointsize>-1</pointsize>
+          <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>

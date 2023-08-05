@@ -517,8 +517,6 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
          </layout>
         </item>
        </layout>
-       <zorder></zorder>
-       <zorder></zorder>
       </widget>
      </item>
      <item>
@@ -1121,7 +1119,6 @@ em;
     <zorder>groupBox</zorder>
     <zorder>igramSize</zorder>
     <zorder>groupBox_3</zorder>
-    <zorder></zorder>
     <zorder>groupBox_4</zorder>
    </widget>
   </widget>
