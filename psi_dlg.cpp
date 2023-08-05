@@ -86,8 +86,8 @@ void PSI_dlg::on_browse_clicked()
                 startAngle = deltaAngle + ui->PhaseList->item(ui->PhaseList->count()-1)->text().toDouble();
             }
             qDebug() << "start and delta" << startAngle << deltaAngle;
-            foreach(QString file, files){
-
+            const int fileCount = files.size();
+            for(int i=0 ; i<fileCount ; i++){
                 double ang2 = startAngle + index++ * deltaAngle;
                 while (ang2 > 360.) ang2 -= 360.;
                 ui->PhaseList->addItem(QString("%1").arg(ang2, 6, 'f', 2));
