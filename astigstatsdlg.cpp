@@ -258,15 +258,16 @@ void astigStatsDlg::plot(){
     double ymax = -1000;
     int colorndx = 0;
     QMap<QString, QPointF> means;
-    foreach(QString name, groups.keys()){
-        int size = groups[name].size();
+    for(auto it = groups.cbegin() ; it != groups.cend() ; it++){
+        QString name = it.key();
+        const int size = it.value().size();
         double *xAstig = new double[size];
         double *yAstig = new double[size];
         RunningStat xstats, ystats;
 
         QColor color = QColor(Qt::GlobalColor( 7 + colorndx%12 ));
         QVector<QPointF> points;
-        foreach (measure data, groups[name]){
+        foreach (const measure &data, it.value()){
             xAstig[i] = data.p.x();
             points << QPointF(data.p.x(), data.p.y());
             xstats.Push(xAstig[i]);
@@ -389,11 +390,9 @@ void astigStatsDlg::plot(){
     if (ui->bestFitCB->isChecked()){
         double *xvals = new double[means.size()];
         double *yvals = new double[means.size()];
-        int i = 0;
-        foreach(QString name, means.keys()){
-            xvals[i] = means[name].x();
-            yvals[i] = means[name].y();
-            ++i;
+        for(const QPointF &value: qAsConst(means)){
+            xvals[i] = value.x();
+            yvals[i] = value.y();
         }
 
         CircleData d(means.size(), xvals, yvals);
@@ -799,10 +798,10 @@ void astigStatsDlg::on_distribution_clicked()
         html.append("<p><img src='" +imageName + "'/></p>");
     }
     // for each group
-    foreach(QString Name, groups.keys()){
-
-        QList<QPointF> items = groups[Name];
-        int size = items.size();
+    for(auto it=groups.cbegin() ; it!=groups.cend() ; it++){
+        const QList<QPointF> items = it.value();
+        const QString Name = it.key();
+        const int size = items.size();
         float *xAstig = new float[size];
         float *yAstig = new float[size];
         for (int i = 0; i < size; ++i){

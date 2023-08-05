@@ -1525,9 +1525,10 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     QString maxkey;
     qDebug() << "sizes" << sizes;
 
-    foreach(QString v, sizes.keys()){
-        int a = sizes[v].length();
+    for(auto it = sizes.cbegin() ; it!=sizes.cend() ; it++){
+        const int a = it.value().length();
         if (a > max) {
+            const QString v = it.key();
             max = a;
             maxkey = v;
             qDebug() << "max" << v << max;

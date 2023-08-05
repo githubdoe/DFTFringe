@@ -117,22 +117,23 @@ void nullVariationDlg::on_diameterDelta_valueChanged(double val)
     set.setValue("nullDiamTol", ((isMm) ? 1. : 25.4) * val);
     calculate();
 }
+
 #include <qmap.h>
 #include <qwt_plot_histogram.h>
+
 QMap<double,int > histo(const QList<double> data, int bins){
     auto minma = std::minmax_element( data.begin(), data.end());
     double range = *minma.second - *minma.first;
     double histInterval = range/bins;
     QMap<double,int> intervals;
-    for (int i = 0; i < bins; ++i)
+    for (int i = 1; i <= bins; ++i)
     {
-        intervals[ *minma.first + histInterval * (i+1)] = 0;
+        intervals[ *minma.first + histInterval * i] = 0;
     }
-    QVector<double> keys = intervals.keys().toVector();
     for (int i = 0; i < data.size(); ++i){
-        for (int j = 0; j < bins; ++j){
-            if (data[i]<= keys[j]) {
-                ++intervals[keys[j]];
+        for(auto it=intervals.begin() ; it!=intervals.end() ; it++){
+            if (data[i]<= it.key()) {
+                it.value()++;
                 break;
             }
         }

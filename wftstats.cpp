@@ -270,11 +270,11 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
     }
     int max = 0;
     QString maxkey;
-    foreach(QString v, sizes.keys()){
-        int a = sizes[v];
+    for(auto it=sizes.cbegin() ; it!=sizes.cend() ; it++){
+        const int a = it.value();
         if (a > max) {
             max = a;
-            maxkey = v;
+            maxkey = it.key();
         }
     }
     int rrows, rcols;
