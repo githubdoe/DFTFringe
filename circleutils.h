@@ -19,7 +19,7 @@ public:
     // constructors
     CircleData();
     CircleData(int N);
-    CircleData(int N, double X[], double Y[]);
+    CircleData(int N, const double X[], const double Y[]);
 
     // routines
     void means(void);
@@ -32,18 +32,10 @@ public:
 };
 
 
-//   Note: long double is an 80-bit format (more accurate, but more memory demanding and slower)
-
-typedef long long integers;
-
 //   next define some frequently used constants:
 
-const double One=1.0,Two=2.0,Three=3.0,Four=4.0,Five=5.0,Six=6.0,Ten=10.0;
-//const reals One=1.0L,Two=2.0L,Three=3.0L,Four=4.0L,Five=5.0L,Six=6.0L,Ten=10.0L;
-const double Pi=3.141592653589793238462643383L;
-const double REAL_MAX=std::numeric_limits<double>::max();
-const double REAL_MIN=std::numeric_limits<double>::min();
-const double REAL_EPSILON=std::numeric_limits<double>::epsilon();
+const double One=1.0,Two=2.0,Three=3.0,Four=4.0;
+
 
 //   next define some frequently used functions:
 
@@ -54,5 +46,5 @@ Circle CircleFitByHyper (CircleData& data);
 Circle CircleFitByKasa (CircleData& data);
 Circle CircleFitByPratt (CircleData& data);
 Circle CircleFitByTaubin (CircleData& data);
-int CircleFitByLevenbergMarquardtFull (CircleData& data, Circle& circleIni, double LambdaIni, Circle& circle);
+int CircleFitByLevenbergMarquardtFull (const CircleData& data, const Circle& circleIni, double LambdaIni, Circle& circle);
 #endif // CIRCLEUTILS_H

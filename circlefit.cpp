@@ -1,11 +1,5 @@
 #include "circleutils.h"
 #include "circle.h"
-double pythag(double a, double b)
-{
-    double absa=std::abs(a),	absb=std::abs(b);
-    if (absa > absb) return absa*std::sqrt(One+SQR(absb/absa));
-    else return (absb == 0.0 ? 0.0 : absb*std::sqrt(One+SQR(absa/absb)));
-}
 
 
 /************************************************************************
@@ -87,7 +81,7 @@ CircleData::CircleData(int N)
 }
 
 // Constructor with assignment of each field
-CircleData::CircleData(int N, double dataX[], double dataY[])
+CircleData::CircleData(int N, const double dataX[], const double dataY[])
 {
     n=N;
     X = new double[n];
@@ -169,7 +163,7 @@ CircleData::~CircleData()
         delete[] Y;
 }
 
-double Sigma (CircleData& data, Circle& circle)
+double Sigma (const CircleData& data, const Circle& circle)
 {
     double sum=0.,dx,dy;
 
@@ -656,8 +650,8 @@ Circle CircleFitByTaubin (CircleData& data)
 }
 
 
-int CircleFitByLevenbergMarquardtFull (CircleData& data, Circle& circleIni, double LambdaIni, Circle& circle)
-/*                                     <------------------ Input ------------------->  <-- Output -->
+int CircleFitByLevenbergMarquardtFull (const CircleData& data, const Circle& circleIni, double LambdaIni, Circle& circle)
+/*                                     <---------------------------- Input ---------------------------->  <-- Output -->
 
        Geometric circle fit to a given set of data points (in 2D)
 
