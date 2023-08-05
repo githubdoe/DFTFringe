@@ -234,7 +234,6 @@ void astigStatsDlg::plot(){
     QMap<QString, QList<measure> > groups;
 
     foreach(QStringList data, m_zerns){
-        QString name = data[0];
         QStringList paths = data[0].split("/");
         if (paths.size() == 1){
             paths.insert(0,defaultPath);
@@ -264,8 +263,6 @@ void astigStatsDlg::plot(){
         double *xAstig = new double[size];
         double *yAstig = new double[size];
         RunningStat xstats, ystats;
-
-        QMap<QString, QColor> avgColors;
 
         QColor color = QColor(Qt::GlobalColor( 7 + colorndx%12 ));
         QVector<QPointF> points;
@@ -325,7 +322,6 @@ void astigStatsDlg::plot(){
 
 
             QPolygonF Circle;
-            QString sd= QString("SD %1").arg(rad, 6,'f',4);
             QwtPlotCurve *circleCv = new QwtPlotCurve();
             for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
                 Circle << QPointF(xmean + rad* cos(rho), ymean + rad * sin(rho));
@@ -551,8 +547,6 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width){
     QVector<QPointF> yavgPoints;
     QVector<QPointF> xPoints;
     QVector<QPointF> yPoints;
-    QVector<QPointF> xdel;
-    QVector<QPointF> ydel;
     QVector<QPointF> runningAvgx;
     QVector<QPointF> runningAvgy;
     QwtPlotCurve *xavgc = new QwtPlotCurve();
@@ -744,11 +738,9 @@ void astigStatsDlg::on_distribution_clicked()
     QString lastPath = settings.value("lastPath",".").toString();
     QStringList tmp = lastPath.split("/");
     QString defaultPath = tmp.last();
-    QVector<QwtPlot *> avgPlots;
 
     QMap<QString, QList<QPointF> > groups;
     foreach(QStringList data, m_zerns){
-        QString name = data[0];
         QStringList paths = data[0].split("/");
         if (paths.size() == 1){
             paths.insert(0,defaultPath);
@@ -766,9 +758,7 @@ void astigStatsDlg::on_distribution_clicked()
 
     }
 
-    QVector<QGroupBox *> plots;
     // build the pdf
-
 
     QPrinter printer(QPrinter::ScreenResolution);
     printer.setColorMode( QPrinter::Color );
@@ -789,7 +779,6 @@ void astigStatsDlg::on_distribution_clicked()
         editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
     }
     QTextDocument *doc = editor->document();
-    QList<QString> doc1Res;
 
     doc->setPageSize(printer.pageLayout().paintRectPixels(printer.resolution()).size()); // This is necessary if you want to hide the page number
 
@@ -917,10 +906,10 @@ void astigStatsDlg::on_sdCB_clicked()
 void astigStatsDlg::on_help_clicked()
 {
     HelpDlg dlg;
-    QString html;
     QString path = qApp->applicationDirPath() + "/res/Help/astigsummary.html";
     QDesktopServices::openUrl(QUrl(path));
-    /*QFile file(path);
+    /*QString html;
+    QFile file(path);
     file.open(QFile::ReadOnly | QFile::Text);
     QTextStream stream(&file);
     html.append(stream.readAll());

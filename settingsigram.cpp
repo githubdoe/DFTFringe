@@ -65,7 +65,6 @@ settingsIGram::settingsIGram(QWidget *parent) :
         QPixmap pix(80,14);
         pix.fill(Qt::white);
 
-        QBrush brush(Qt::black);
         QPen pen(Qt::black ,2.5,(Qt::PenStyle)aaa);
 
         QPainter painter(&pix);

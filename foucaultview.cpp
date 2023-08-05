@@ -514,7 +514,6 @@ void foucaultView::on_scanPb_clicked()
     foucaultView *fv = foucaultView::get_Instance(0);
     int cnt = 0;
     QSettings settings;
-    QString lastPath = settings.value("lastPath","").toString();
     for (double v = start; v <= end; v += step){
 
         ui->rocOffsetSb->setValue(v);

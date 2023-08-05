@@ -964,8 +964,6 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
         QSettings settings;
         QString path = settings.value("lastPath").toString();
         QFile fn(path);
-        QFileInfo info(fn.fileName());
-        QString dd = info.dir().absolutePath();
 
         QString dir = QFileDialog::getExistingDirectory(0, tr("Open Directory")
                                                         ,path,
@@ -2043,8 +2041,6 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     grid->setMajorPen(Qt::darkGray, 1);
     grid->setMinorPen(Qt::gray, 1,Qt::DotLine);
 
-    QVector<QwtPlot *> astigPlots;
-
     QwtPlotRenderer renderer;
     //renderer.setDiscardFlag( QwtPlotRenderer::DiscardBackground );
     renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasBackground );
@@ -2399,9 +2395,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     ContourPlot *plot =new ContourPlot(0,0,true);//m_contourPlot;
     plot->m_minimal = true;
     QList<int> unrotatedNdxs;
-    QList<int> rotatedNdxs;
-
-
+    
     QString html = ("<html><head/><body><h1><center>Test Stand Astig Removal</center></h1>"
                     "<h2><center>" + AstigReportTitle);
            html.append("    <font color='grey'>" + QDate::currentDate().toString() +

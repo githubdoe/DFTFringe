@@ -163,8 +163,6 @@ QList<int> surfaceAnalysisTools::SelectedWaveFronts(){
 
 void surfaceAnalysisTools::on_deleteWave_clicked()
 {
-    QModelIndexList indexes = ui->wavefrontList->selectionModel()->selectedIndexes();
-
     QList<int> indexList = SelectedWaveFronts();
     std::sort(indexList.begin(), indexList.end(), std::greater<int>());
     emit deleteTheseWaveFronts(indexList);

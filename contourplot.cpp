@@ -256,13 +256,12 @@ void ContourPlot::contourZeroOffsetChanged(const QString & val){
 void ContourPlot::drawCanvas(QPainter* p)
 {
     QwtPlot::drawCanvas( p );  // <<---
-
-    QStaticText txt("number");
-
 }
+
 #include <QPainterPath>
 #include <qwt_plot_shapeitem.h>
 #include <qwt_plot_marker.h>
+
 void ContourPlot::ruler(){
 
     detachItems(QwtPlotItem::Rtti_PlotShape);
@@ -372,7 +371,6 @@ void ContourPlot::drawProfileLine(const double angle){
     // line to end
     int endx = half - startx;
     int endy = half - starty;
-        QFont mf("Times", 15, QFont::Bold);
     radials.lineTo(endx,endy);
 
     QwtPlotShapeItem *item = new QwtPlotShapeItem( "");

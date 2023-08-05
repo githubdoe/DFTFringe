@@ -1080,7 +1080,6 @@ void MainWindow::batchProcess(QStringList fileList){
     int ndx = 0;
     int cnt = 0;
     int width, height;
-    QString videoFileName;
     foreach(QString fn, fileList){
 
         QApplication::processEvents();
@@ -1176,7 +1175,6 @@ void MainWindow::batchProcess(QStringList fileList){
                 QSettings settings;
                 QString lastPath = settings.value("lastPath","").toString();
                 QString fileName = m_surfaceManager->m_wavefronts.back()->name;
-                QFileInfo fileinfo(fileName);
                 QString file = lastPath + "/" + fileName + ".wft";
                 m_surfaceManager->writeWavefront(file, m_surfaceManager->m_wavefronts.back(), false);
             }
@@ -1223,10 +1221,6 @@ void MainWindow::batchProcess(QStringList fileList){
                 cv::Mat resized;
                 cv::resize(frame, resized, cv::Size(width,height));
 
-                QString lastPath = settings.value("lastPath","").toString();
-                QString fileName = m_surfaceManager->m_wavefronts.back()->name;
-                QFileInfo fileinfo(fileName);
-                QString file = lastPath + "/review/" + fileName + "_review.jpg";
                 //cv::imwrite(file.toStdString().c_str(),resized);
             }
             if (batchIgramWizard::deletePreviousWave->isChecked()){
