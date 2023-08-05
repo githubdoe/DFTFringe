@@ -58,12 +58,6 @@
     </widget>
    </item>
   </layout>
-  <zorder>mirrorRadiusPlot</zorder>
-  <zorder>mirrorCenterPlot</zorder>
-  <zorder>mirrorRadiusHistogramPlot</zorder>
-  <zorder>buttonBox</zorder>
-  <zorder>mirrorRadiusPlot</zorder>
-  <zorder>horizontalLayoutWidget</zorder>
  </widget>
  <customwidgets>
   <customwidget>
