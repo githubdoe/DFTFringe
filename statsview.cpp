@@ -176,7 +176,6 @@ void statsView::on_saveImg_clicked()
     QSettings settings;
     QString path = settings.value("projectPath").toString();
     QFile fn(path);
-    QFileInfo info(fn.fileName());
     QString csvName = path + "/stats.pdf";
     QString name = QFileInfo(csvName).absoluteFilePath() + "/stats.png";
     const QList<QByteArray> imageFormats = QImageWriter::supportedImageFormats();
@@ -244,7 +243,6 @@ void statsView::on_SaveCSV_clicked()
     QString dir = info.dir().path();
     dir = dir.right(dir.size() - dir.lastIndexOf("/")-1);
     file << title(dir) << ",'wavefront RMS'"<< ",,Piston,XTile,Ytilt,Defocus,XAstig,Yastig,Z6,Z7,Spherical,Z9,Z10 " << Qt::endl;
-    QString out;
     cv::Mat mZerns(m_sm->m_wavefronts.size(),Z_TERMS,numType,0.);
     int row = 0;
     mirrorDlg *md = mirrorDlg::get_Instance();
@@ -254,7 +252,6 @@ void statsView::on_SaveCSV_clicked()
     double sperAvg = 0.;
     QPolygonF coma;
     QPolygonF otherTerm;
-    QVector<int> trueNdx;
     for (int i = 0; i < wavefrontsToUse.size(); ++i)
     {
         wavefront *wf = wavefrontsToUse[ i ];
@@ -323,7 +320,6 @@ void statsView::on_savePdf_clicked()
 
     const QRectF topRect( 10.0, 10.0, size.width()-50, size.height()/2 );
 
-    const QString fmt("pdf");
     fname.replace(".csv",".pdf");
 
     QPrinter printer(QPrinter::HighResolution);

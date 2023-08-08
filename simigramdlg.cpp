@@ -186,7 +186,6 @@ simIgramDlg::simIgramDlg(QWidget *parent) :
     zernikes[2] = ytilt;
     size = s.value("simSize", 601).toDouble();
     ui->sizeSB->setValue(size);
-    QString z8 = "Correction %";
     if (mirrorDlg::get_Instance()->cc == 0.){
         ui->correctionPb->setChecked(false);
     }
@@ -216,9 +215,6 @@ void simIgramDlg::setNewTerms(std::vector<double> terms){
     update();
 }
 void simIgramDlg::showEvent(QShowEvent *){
-    QString z8 = "Correction %";
-
-
 }
 
 simIgramDlg::~simIgramDlg()

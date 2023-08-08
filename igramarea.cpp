@@ -448,7 +448,6 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     cv::Point2d bestc;
     QVector<QPointF> points;
     QVector<QPointF> mpoints;
-    QVector<QPointF> delpoints;
     int cnt = end - start;
     if (cnt < 0)
         cnt *=-1;
@@ -1326,7 +1325,6 @@ void IgramArea::wheelEvent (QWheelEvent *e)
     if (igramGray.isNull())
         return;
 
-    QString result;
     if (e->angleDelta().y() == 0)
         return;
 

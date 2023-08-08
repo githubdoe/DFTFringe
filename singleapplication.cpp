@@ -78,7 +78,6 @@ void SingleApplicationPrivate::genBlockServerName( int timeout )
             appData.addData( QStandardPaths::standardLocations( QStandardPaths::HomeLocation ).join("").toUtf8() );
         }
 #else
-        QString username;
         QProcess process;
         process.start( "whoami", QStringList() );
         if( process.waitForFinished( timeout ) &&

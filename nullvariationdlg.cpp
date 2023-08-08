@@ -235,7 +235,6 @@ void nullVariationDlg::on_ComputeSim_clicked()
         //qDebug() << points;
         QMap<double, int> his = histo(histData,100);
         //qDebug() << his;
-        QVector<QwtIntervalSample> histoData;
         QList<double> keys = his.keys();
         double bound = 0;
         points.clear();
