@@ -59,7 +59,7 @@ void myPlotPicker::select(const QPointF &p){
     QString s = find(p);
     if (s == "")
         return;
-    emit selected(s);
+    emit plotSelected(s);
 }
 QString myPlotPicker::find(const QPointF &p)const{
 
