@@ -69,7 +69,6 @@ public:
     QLabel *status2;
     QLabel *status3;
     ProfilePlot *m_profilePlot;
-    uint zernEnableUpdateTime;
     ZernTableModel *zernTablemodel;
     metricsDisplay *metrics;
     reviewWindow *review;
