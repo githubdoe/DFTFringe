@@ -70,7 +70,7 @@ void PSI_dlg::on_browse_clicked()
     if (dialog.exec()){
 
 
-            QFileInfo a(dialog.selectedFiles().first());
+            QFileInfo a(dialog.selectedFiles().constFirst());
             QString ext = a.completeSuffix();
             set.setValue("igramExt", ext);
             set.setValue("lastPath",a.absoluteFilePath());
