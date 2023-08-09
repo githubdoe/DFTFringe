@@ -644,7 +644,7 @@ void SimulationsView::on_MakePB_clicked()
                                         m_wf->name).arg(
                                         m_wf->diameter, 6, 'f', 1).arg(
                                         m_wf->roc, 6, 'f', 1).arg(
-                                        bestFit).arg(
+                                        bestFit).arg(  // clazy:exclude=qstring-arg
                                         strehl);
     ui->caption->setText(caption);
     bool wasAliased = false;
