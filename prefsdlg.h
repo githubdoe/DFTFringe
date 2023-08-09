@@ -28,7 +28,7 @@ class prefsDlg : public QDialog
 {
     Q_OBJECT
 signals:
-    void saveGeometry();
+    void prefsDlgSaveGeometry();
 
 public:
     explicit prefsDlg(QWidget *parent = 0);

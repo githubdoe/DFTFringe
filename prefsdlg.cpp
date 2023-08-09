@@ -32,5 +32,5 @@ prefsDlg::~prefsDlg()
 
 void prefsDlg::on_pushButton_clicked()
 {
-    emit saveGeometry();
+    emit prefsDlgSaveGeometry();
 }
