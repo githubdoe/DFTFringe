@@ -280,7 +280,7 @@ void MainWindow::openWaveFrontonInit(QStringList args){
         if (pd.wasCanceled())
             break;
 
-        if (arg.toUpper().endsWith(".WFT")){
+        if (arg.endsWith(".wft", Qt::CaseInsensitive)){
             pd.setLabelText(arg);
             try {
             m_surfaceManager->loadWavefront(arg);
