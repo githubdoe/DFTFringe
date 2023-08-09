@@ -1674,7 +1674,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
     for (int i = 0; i < list.size(); ++i) {
         wavefront *oldWf = m_wavefronts[list[i]];
         QStringList l = oldWf->name.split('.');
-        QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0'));
+        QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0')); // clazy:exclude=qstring-arg
         wavefront *wf = new wavefront();
         *wf = *oldWf; // copy everything to new wavefront including basic things like diameter,wavelength
         //emit nameChanged(wf->name, newName);
@@ -2473,7 +2473,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
         angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
-        imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname).arg(angle);
+        imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname).arg(angle); // clazy:exclude=qstring-arg
 
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);

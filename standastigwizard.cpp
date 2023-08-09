@@ -303,7 +303,7 @@ void define_input::browse(){
         CounterRotationDlg dlg( fileName,rot, true);
         dlg.setCCW(CCWRb->isChecked());
         if (dlg.exec()) {
-            QString b = QString("%1,%2,%3").arg(fileName).arg((dlg.isClockwise()) ? "CW" : "CCW").arg(
+            QString b = QString("%1,%2,%3").arg(fileName).arg((dlg.isClockwise()) ? "CW" : "CCW").arg( // clazy:exclude=qstring-arg
                                           dlg.getRotation());
             new QListWidgetItem(b,listDisplay);
             rotationDef *rd = new rotationDef(fileName, (dlg.isClockwise() ? 1 : -1) * dlg.getRotation().toDouble());
