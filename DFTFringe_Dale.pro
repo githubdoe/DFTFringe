@@ -39,7 +39,6 @@ SOURCES += main.cpp\
     graphicsutilities.cpp \
     dfttools.cpp \
     dftarea.cpp \
-    mikespsirinterface.cpp \
     oglrendered.cpp \
     pdfcalibrationdlg.cpp \
     profileplot.cpp \
@@ -260,7 +259,6 @@ HEADERS  += mainwindow.h \
     psi_dlg.h \
     psiphasedisplay.h \
     outlinedialog.h \
-    mikespsiinterface.h \
     psitiltoptions.h \
     contourrulerparams.h \
     zernikesmoothingdlg.h \
