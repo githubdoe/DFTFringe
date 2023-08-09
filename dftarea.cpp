@@ -28,7 +28,6 @@
 #include "utils.h"
 #include "showaliasdlg.h"
 #include <QLabel>
-#include "mikespsiinterface.h"
 #include <QShortcut>
 #include <opencv2/core/core_c.h>
 using namespace cv;
