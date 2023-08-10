@@ -390,9 +390,11 @@ void astigStatsDlg::plot(){
     if (ui->bestFitCB->isChecked()){
         double *xvals = new double[means.size()];
         double *yvals = new double[means.size()];
+        int i = 0;
         for(const QPointF &value: qAsConst(means)){
             xvals[i] = value.x();
             yvals[i] = value.y();
+            ++i;
         }
 
         CircleData d(means.size(), xvals, yvals);
