@@ -30,12 +30,12 @@ void unwrapErrorsView::createUnwrapErrors(){
                 double v2 = m_wf.data.at<double>(y,x+1);
                 double v3 = m_wf.data.at<double>(y+1,x);
                 if ((fabs(v1 - v2) > .5) || (fabs(v1 - v3) > .5)){
-                    errorView.at<char>(y,x) = 255;
+                    errorView.at<uint8_t>(y,x) = 255;
                     ++cnt;
                 }
             }
             else {
-                errorView.at<char>(y,x) = 100;
+                errorView.at<uint8_t>(y,x) = 100;
             }
 
         }
