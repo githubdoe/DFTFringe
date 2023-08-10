@@ -52,7 +52,7 @@ public:
     int m_rad;
     iSurfaceData(cv::Mat plane):
         QwtSyntheticPointData( plane.cols ),
-      m_plane(plane), m_rad(plane.cols/2),m_angle(90)
+      m_plane(plane), m_rad(plane.cols/2)
     {
 
     }
@@ -75,7 +75,7 @@ public:
 
 
 private:
-    double m_angle;
+    
 };
 
 bool intensityPlot::eventFilter( QObject *object, QEvent *event )
