@@ -275,11 +275,10 @@ void astigStatsDlg::plot(){
             ymax = std::max(ymax, yAstig);
             
             // plot marker for the point
-
-            //QwtPlotMarker *m = new QwtPlotMarker(data.name.replace(".wft",""));
-//            m->setValue(xAstig, yAstig);
-//            m->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(10,10)));
-//            m->attach(ui->mPlot);
+            QwtPlotMarker *m = new QwtPlotMarker(data.name.replace(".wft",""));
+            m->setValue(xAstig, yAstig);
+            m->setSymbol(new QwtSymbol(QwtSymbol::Rect, color,color, QSize(10,10)));
+            m->attach(ui->mPlot);
 
         }
         double xmean = xstats.Mean();
@@ -292,7 +291,9 @@ void astigStatsDlg::plot(){
             QwtPlotCurve *curve = new QwtPlotCurve(name.replace(".wft","") +
                              QString("\n%1,%2 \nSD: %3 %4 ").arg(xmean, 6,'f',4).arg(ymean, 6,'f',4).arg(xstd, 6,'f',4).arg(ystd, 6,'f',4));
             curve->setSamples(points);
-            curve->setStyle(QwtPlotCurve::Dots);
+            // Do not actually draw the curve as QwtPlotMarker has been used to draw the dots. 
+            // This is made like this to have igram name when hovering over QwtPlotMarker.
+            curve->setStyle(QwtPlotCurve::NoCurve);
             curve->setPen(color,10);
             curve->attach(ui->mPlot);
         }
