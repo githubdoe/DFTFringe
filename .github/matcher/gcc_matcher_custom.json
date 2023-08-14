@@ -1,0 +1,19 @@
+// problem matcher from https://github.com/ammaraskar/gcc-problem-matcher/blob/master/gcc_matcher.json
+// modified to ignore /usr path to not match libraries warnings
+{
+    "problemMatcher": [
+        {
+            "owner": "gcc-problem-matcher-custom",
+            "pattern": [
+                {
+                    "regexp": "^(?!\\/usr\\/)(.*?):(\\d+):(\\d*):?\\s+(?:fatal\\s+)?(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            ]
+        }
+    ]
+}
