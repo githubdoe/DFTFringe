@@ -226,7 +226,6 @@ void astigStatsDlg::plot(){
     ui->mPlot->insertLegend( l, QwtPlot::TopLegend );
     l->setDefaultItemMode( QwtLegendData::Checkable );
     connect(l, SIGNAL(checked(QVariant,bool,int)), this, SLOT(showItem(QVariant ,bool,int)));
-    int i = 0;
 
     //QMap<QString, QColor> colorAssign;
 
@@ -259,28 +258,26 @@ void astigStatsDlg::plot(){
     int colorndx = 0;
     QMap<QString, QPointF> means;
     foreach(QString name, groups.keys()){
-        int size = groups[name].size();
-        double *xAstig = new double[size];
-        double *yAstig = new double[size];
         RunningStat xstats, ystats;
 
         QColor color = QColor(Qt::GlobalColor( 7 + colorndx%12 ));
         QVector<QPointF> points;
         foreach (measure data, groups[name]){
-            xAstig[i] = data.p.x();
-            points << QPointF(data.p.x(), data.p.y());
-            xstats.Push(xAstig[i]);
-            xmin = std::min(xmin, data.p.x());
-            xmax = std::max(xmax, data.p.x());
-            ymin = std::min(ymin,data.p.y());
-            ymax = std::max(ymax, data.p.y());
-            yAstig[i] = data.p.y();
-            ystats.Push(yAstig[i]);
+            const double xAstig = data.p.x();
+            const double yAstig = data.p.y();
 
+            points << QPointF(xAstig, yAstig);
+            xstats.Push(xAstig);
+            ystats.Push(yAstig);
+            xmin = std::min(xmin, xAstig);
+            xmax = std::max(xmax, xAstig);
+            ymin = std::min(ymin, yAstig);
+            ymax = std::max(ymax, yAstig);
+            
             // plot marker for the point
 
             //QwtPlotMarker *m = new QwtPlotMarker(data.name.replace(".wft",""));
-//            m->setValue(data.p.x(), data.p.y());
+//            m->setValue(xAstig, yAstig);
 //            m->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(10,10)));
 //            m->attach(ui->mPlot);
 
@@ -333,8 +330,6 @@ void astigStatsDlg::plot(){
 
         }
         ++colorndx;
-        delete[] xAstig;
-        delete[] yAstig;
     }
 
     // set the legended items to be checked.
