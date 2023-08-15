@@ -43,8 +43,8 @@ QString intro( "<p style = font-size:16px ;>Astigmatism values vary from sample 
                "is from one mirror rotation."
                " <br><br>If best fit has been selected then a thick black circle is drawn through the average of each"
                " group.  The center of the circle is the average system induced astig( mostly due to test stand.)  The radius of the circle "
-               " is the best estimate of the magnitude of the astig on the mirror.  If standard diviation is selected thin "
-               " circles are drawn around each group average represent one standard diviation of the samples in that group.</p>");
+               " is the best estimate of the magnitude of the astig on the mirror.  If standard deviation is selected thin "
+               " circles are drawn around each group average represent one standard deviation of the samples in that group.</p>");
 
 class Zoomer: public QwtPlotZoomer
 {
