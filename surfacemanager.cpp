@@ -543,7 +543,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     initWaveFrontLoad();
 }
 
-SurfaceManager::~SurfaceManager(){}
+SurfaceManager::~SurfaceManager(){qDebug() << "SurfaceManager::~SurfaceManager";}
 void SurfaceManager::outputLambdaChanged(double val){
     outputLambda = val;
     computeZerns();

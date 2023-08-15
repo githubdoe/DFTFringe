@@ -17,6 +17,7 @@
 ****************************************************************************/
 #include "settings2.h"
 #include "ui_settings2.h"
+#include <QDebug>
 
 settingsIGram *Settings2::m_igram = 0;
 settingsDFT *Settings2::m_dft = 0;
@@ -58,6 +59,7 @@ Settings2 *Settings2::getInstance(){
 Settings2::~Settings2()
 {
     delete ui;
+    qDebug() << "Settings2::~Settings2";
 }
 
 
