@@ -33,9 +33,11 @@ class Settings2 : public QDialog
     Q_OBJECT
 
 public:
-    explicit Settings2(QWidget *parent = 0);
     static Settings2 *getInstance();
+    Settings2(const Settings2&) = delete;
+    Settings2& operator=(const Settings2&) = delete;
     ~Settings2();
+
     static settingsIGram *m_igram;
     static settingsDFT *m_dft;
     static settingsDebug *m_debug;
@@ -50,8 +52,8 @@ private slots:
     void on_listWidget_clicked(const QModelIndex &index);
 
 private:
+    explicit Settings2(QWidget *parent = 0);
     Ui::Settings2 *ui;
-    static Settings2 * m_Instance;
 };
 
 #endif // SETTINGS2_H

@@ -47,13 +47,10 @@ Settings2::Settings2(QWidget *parent) :
     ui->stackedWidget->addWidget(m_debug);
 
 }
-Settings2 *Settings2::m_Instance = NULL;
-Settings2 *Settings2::getInstance(){
-    if (m_Instance == NULL) {
-        m_Instance = new Settings2(0);
 
-    }
-     return m_Instance;
+Settings2 *Settings2::getInstance(){
+    static Settings2 m_Instance{};
+    return &m_Instance;
 }
 
 Settings2::~Settings2()
