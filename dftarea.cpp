@@ -627,10 +627,6 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     double *qmap = new double[size];
     double *orient = new double[size];
 
-
-    double *imRe = new double[size];
-
-
     //double *fdom[2]; fdom[0] = new double[size]; fdom[1] = new double[size];
     double *d1[2]; d1[0] = new double[size]; d1[1] = new double[size];
     double *d2[2]; d2[0] = new double [size]; d2[1] = new double [size];
@@ -639,17 +635,17 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     double *spiralIm = new double[size];
 
 
-
-
-
     if (m_vortexDebugTool->m_showInput){
-        cv::Mat tmp = cv::Mat(ysize,xsize,numType, imRe);
-        cv::Mat xx;
-        tmp.convertTo(xx,CV_32F);
-        cv::imshow("input", xx);
-        cv::waitKey(1);
+        double *imReTmp = new double[size];
+        {
+            cv::Mat tmp = cv::Mat(ysize,xsize,numType, imReTmp);
+            cv::Mat xx;
+            tmp.convertTo(xx,CV_32F);
+            cv::imshow("input", xx);
+            cv::waitKey(1);
+        } // delete imReTmp after tmp is destructed by end of scope
+        delete[] imReTmp;
     }
-
 
     cv::Mat fdomMat;
     cv::Mat fdomPlanes[2];
@@ -738,7 +734,7 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
 
     imPlanes[1] *= 0.;
 
-    imRe = (double *)(imPlanes[0].data);
+    double *imRe = (double *)(imPlanes[0].data);
     if (0) { //(0 == strcmp (what, "im2")) {
         showData("im border added", imPlanes[0].clone());
     }
