@@ -43,8 +43,8 @@ QString intro( "<p style = font-size:16px ;>Astigmatism values vary from sample 
                "is from one mirror rotation."
                " <br><br>If best fit has been selected then a thick black circle is drawn through the average of each"
                " group.  The center of the circle is the average system induced astig( mostly due to test stand.)  The radius of the circle "
-               " is the best estimate of the magnitude of the astig on the mirror.  If standard diviation is selected thin "
-               " circles are drawn around each group average represent one standard diviation of the samples in that group.</p>");
+               " is the best estimate of the magnitude of the astig on the mirror.  If standard deviation is selected thin "
+               " circles are drawn around each group average represent one standard deviation of the samples in that group.</p>");
 
 class Zoomer: public QwtPlotZoomer
 {
@@ -226,7 +226,6 @@ void astigStatsDlg::plot(){
     ui->mPlot->insertLegend( l, QwtPlot::TopLegend );
     l->setDefaultItemMode( QwtLegendData::Checkable );
     connect(l, SIGNAL(checked(QVariant,bool,int)), this, SLOT(showItem(QVariant ,bool,int)));
-    int i = 0;
 
     //QMap<QString, QColor> colorAssign;
 
@@ -259,30 +258,27 @@ void astigStatsDlg::plot(){
     int colorndx = 0;
     QMap<QString, QPointF> means;
     foreach(QString name, groups.keys()){
-        int size = groups[name].size();
-        double *xAstig = new double[size];
-        double *yAstig = new double[size];
         RunningStat xstats, ystats;
 
         QColor color = QColor(Qt::GlobalColor( 7 + colorndx%12 ));
         QVector<QPointF> points;
         foreach (measure data, groups[name]){
-            xAstig[i] = data.p.x();
-            points << QPointF(data.p.x(), data.p.y());
-            xstats.Push(xAstig[i]);
-            xmin = std::min(xmin, data.p.x());
-            xmax = std::max(xmax, data.p.x());
-            ymin = std::min(ymin,data.p.y());
-            ymax = std::max(ymax, data.p.y());
-            yAstig[i] = data.p.y();
-            ystats.Push(yAstig[i]);
+            const double xAstig = data.p.x();
+            const double yAstig = data.p.y();
 
+            points << QPointF(xAstig, yAstig);
+            xstats.Push(xAstig);
+            ystats.Push(yAstig);
+            xmin = std::min(xmin, xAstig);
+            xmax = std::max(xmax, xAstig);
+            ymin = std::min(ymin, yAstig);
+            ymax = std::max(ymax, yAstig);
+            
             // plot marker for the point
-
-            //QwtPlotMarker *m = new QwtPlotMarker(data.name.replace(".wft",""));
-//            m->setValue(data.p.x(), data.p.y());
-//            m->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(10,10)));
-//            m->attach(ui->mPlot);
+            QwtPlotMarker *m = new QwtPlotMarker(data.name.replace(".wft",""));
+            m->setValue(xAstig, yAstig);
+            m->setSymbol(new QwtSymbol(QwtSymbol::Rect, color,color, QSize(10,10)));
+            m->attach(ui->mPlot);
 
         }
         double xmean = xstats.Mean();
@@ -295,7 +291,9 @@ void astigStatsDlg::plot(){
             QwtPlotCurve *curve = new QwtPlotCurve(name.replace(".wft","") +
                              QString("\n%1,%2 \nSD: %3 %4 ").arg(xmean, 6,'f',4).arg(ymean, 6,'f',4).arg(xstd, 6,'f',4).arg(ystd, 6,'f',4));
             curve->setSamples(points);
-            curve->setStyle(QwtPlotCurve::Dots);
+            // Do not actually draw the curve as QwtPlotMarker has been used to draw the dots. 
+            // This is made like this to have igram name when hovering over QwtPlotMarker.
+            curve->setStyle(QwtPlotCurve::NoCurve);
             curve->setPen(color,10);
             curve->attach(ui->mPlot);
         }
@@ -333,8 +331,6 @@ void astigStatsDlg::plot(){
 
         }
         ++colorndx;
-        delete[] xAstig;
-        delete[] yAstig;
     }
 
     // set the legended items to be checked.
