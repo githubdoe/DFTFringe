@@ -22,28 +22,31 @@
 #include "utils.h"
 #include <QDebug>
 #include "spdlog/spdlog.h"
-#include "spdlog/cfg/env.h"
 #include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
 
 int main(int argc, char *argv[])
-{   // In order to set the log level to "info" and mylogger to "trace":
-    // SPDLOG_LEVEL=info,mylogger=trace && ./example
-    spdlog::cfg::load_env_levels();
-    spdlog::info("Welcome to spdlog version {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
+{   
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("DFTFringeLogs/log.txt", 1048576 * 5, 3);
 
-    // Create a file rotating logger with 5mb size max and 3 rotated files.
-    auto rotating_logger = spdlog::rotating_logger_mt("some_logger_name", "logs/rotating.txt", 1048576 * 5, 3);
-    // periodically flush all *registered* loggers every 10 seconds:
-    // warning: only use if all your loggers are thread-safe ("_mt" loggers)
-    spdlog::flush_every(std::chrono::seconds(10));
+    auto combined_logger = std::make_shared<spdlog::logger>("logger", spdlog::sinks_init_list({console_sink, file_sink}));
+    
+    // Combined logger needs to be manually registered or it won't be found by "get"
+    spdlog::register_logger(combined_logger);
 
-    spdlog::trace("trace");
-    spdlog::debug("debug");
-    spdlog::info("info");
-    spdlog::warn("warn");
-    spdlog::error("error");
-    spdlog::critical("critical");
+    // Set the logging format
+    spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+
+    // those are examples
+    spdlog::trace("Welcome to spdlog version {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
+    spdlog::get("logger")->trace("spdlog trace");
+    spdlog::get("logger")->debug("spdlog debug");
+    spdlog::get("logger")->info("spdlog info");
+    spdlog::get("logger")->warn("spdlog warn");
+    spdlog::get("logger")->error("spdlog error");
+    spdlog::get("logger")->critical("spdlog critical");
 
     // Allow secondary instances
     SingleApplication app( argc, argv, true );

@@ -47,6 +47,7 @@
 #include "utils.h"
 #include "colorchannel.h"
 #include "opencv2/opencv.hpp"
+#include "spdlog/spdlog.h"
 
 
 using namespace QtConcurrent;
@@ -62,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    spdlog::get("logger")->info("DFTFringe {} started", APP_VERSION);
 
     //const QString toolButtonStyle("QToolButton {"
     //                                "border-style: outset;"
