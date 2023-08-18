@@ -48,6 +48,9 @@ int main(int argc, char *argv[])
     spdlog::get("logger")->error("spdlog error");
     spdlog::get("logger")->critical("spdlog critical");
 
+    // TODO 20230818 add level setting into graphical settings pane
+    //spdlog::get("logger")->set_level(spdlog::level::debug);
+
     // Allow secondary instances
     SingleApplication app( argc, argv, true );
 
