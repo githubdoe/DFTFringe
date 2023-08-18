@@ -36,6 +36,10 @@ int main(int argc, char *argv[])
     // Combined logger needs to be manually registered or it won't be found by "get"
     spdlog::register_logger(combined_logger);
 
+    // periodically flush all *registered* loggers every 3 seconds:
+    // warning: only use if all your loggers are thread-safe ("_mt" loggers)
+    spdlog::flush_every(std::chrono::seconds(3));
+
     // Set the logging format
     spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
 
