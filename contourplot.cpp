@@ -548,12 +548,6 @@ void ContourPlot::showSpectrogram(bool on )
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ImageMode, on );
     d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
 
-    QwtPlotShapeItem *item = new QwtPlotShapeItem( "" );
-    item->setItemAttribute( QwtPlotItem::Legend, true );
-    item->setLegendMode( QwtPlotShapeItem::LegendShape );
-    item->setLegendIconSize( QSize( 20, 20 ) );
-    item->setRenderHint( QwtPlotItem::RenderAntialiased, true );
-
     replot();
 }
 

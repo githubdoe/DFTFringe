@@ -215,6 +215,11 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     ui->setupUi(this);
     populate();
 }
+
+ProfilePlot::~ProfilePlot(){
+    delete ui;
+}
+
 void ProfilePlot::showSlope(bool val){
     m_showSlopeError = val;
     if (!val)

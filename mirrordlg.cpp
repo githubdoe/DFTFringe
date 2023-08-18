@@ -118,7 +118,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
 
 mirrorDlg::~mirrorDlg()
 {
-
+    delete ui;
 }
 bool mirrorDlg::shouldFlipH(){
     return ui->flipH->isChecked();

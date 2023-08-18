@@ -384,7 +384,7 @@ void unwrap(double * pphase, double *punwrapped, char* bflags, int nx, int ny)
     unwrapped = punwrapped;
     phase = pphase;
 
-  int size = xsize * ysize;
+  const int size = xsize * ysize;
   flags = bflags;
 
 
@@ -396,10 +396,14 @@ void unwrap(double * pphase, double *punwrapped, char* bflags, int nx, int ny)
    if (g_qqmap)
     delete[] g_qqmap;
 
-  g_qqmap = qmap = new double[nx * ny];
+  g_qqmap = qmap = new double[size];
   memset(qmap,0, sizeof(double)*size);
 
-  path = new double[nx * ny];
+  // TODO JST 20230815 this limits memory leak but should be refactored with a object oriented programming
+  if(path){
+    delete[] path;
+  }
+  path = new double[size];
   memset(path,0,sizeof(double)*size);
 
   dv_quality_map(pphase, 5, qmap, nx, ny);

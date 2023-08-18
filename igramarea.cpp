@@ -109,7 +109,7 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     opacity = set.value("igramLineOpacity", 65.).toDouble();
     lineStyle = set.value("igramLineStyle", 1).toInt();
     setMouseTracking(true);
-    m_dftThumb = new dftThumb();
+    m_dftThumb = new dftThumb(this);
     m_dftThumb->setWindowFlags(    Qt::WindowStaysOnTopHint);
     m_outlineTimer = new QTimer(this);
     connect(m_outlineTimer, SIGNAL(timeout()),this, SLOT(outlineTimerTimeout()));

@@ -85,9 +85,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->SelectOutSideOutline->setChecked(true);
     setCentralWidget(ui->tabWidget);
 
-    m_colorChannels = new ColorChannelDisplay();
+    m_colorChannels = new ColorChannelDisplay(this);
 
-    m_intensityPlot = new igramIntensity(0);
+    m_intensityPlot = new igramIntensity(this);
 
     ui->tabWidget->removeTab(0);
     ui->tabWidget->removeTab(0);
