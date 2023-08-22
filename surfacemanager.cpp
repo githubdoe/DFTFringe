@@ -646,6 +646,10 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
             for (unsigned int i = 0; i < wf->regions[n].size(); ++i){
                 wf->regions[n][i].x = scale * (wf->regions[n][i].x - xavg) + xavg;
                 wf->regions[n][i].y = scale * (wf->regions[n][i].y - yavg) + yavg;
+                if (wf->regions[n][i].x < 0)wf->regions[n][i].x=0;
+                if (wf->regions[n][i].x >= width)wf->regions[n][i].x=width-1;
+                if (wf->regions[n][i].y < 0)wf->regions[n][i].y=0;
+                if (wf->regions[n][i].y >= height)wf->regions[n][i].y=height-1;
             }
         }
 
