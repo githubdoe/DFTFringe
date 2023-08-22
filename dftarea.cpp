@@ -110,7 +110,7 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     m_PSIstate = 0;
     QRect rec = QGuiApplication::primaryScreen()->geometry();
 
-    m_Psidlg = new PSI_dlg(this);
+    m_Psidlg = new PSI_dlg(nullptr);
     rec.setLeft(rec.width()/6);
     rec.setTop(rec.height()/4);
     rec.setWidth(rec.width()/4);
@@ -213,6 +213,7 @@ bool DFTArea::eventFilter(QObject * /*obj*/, QEvent *event) {
 }
 DFTArea::~DFTArea()
 {
+    delete m_Psidlg;
     delete ui;
 }
 void DFTArea::setChannel(const QString& val){
@@ -1136,7 +1137,6 @@ void DFTArea::outlineDoneSig(){
 }
 #include "psiphasedisplay.h"
 void DFTArea::doPSIstep1(){
-    //m_Psidlg = new Psidlg;
     if (!doPSIstep2())
         return;
     if (m_psiFiles.size() == 0)

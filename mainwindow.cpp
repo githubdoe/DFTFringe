@@ -85,9 +85,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->SelectOutSideOutline->setChecked(true);
     setCentralWidget(ui->tabWidget);
 
-    m_colorChannels = new ColorChannelDisplay(this);
+    m_colorChannels = new ColorChannelDisplay(nullptr);
 
-    m_intensityPlot = new igramIntensity(this);
+    m_intensityPlot = new igramIntensity(nullptr);
 
     ui->tabWidget->removeTab(0);
     ui->tabWidget->removeTab(0);
@@ -310,6 +310,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 MainWindow::~MainWindow()
 {
     qDebug() << "deleteing mainwindow";
+    delete m_colorChannels;
+    delete m_intensityPlot;
     delete m_ogl;
     delete ui;
 }
