@@ -342,4 +342,29 @@ Displays error of pixel under contour plot cursor and move the profie angle to m
 <li>DFTF can now build and run on Linux (build is only tested on latest Ubuntu)</li>
 <li>Move to semver format for version names</li>
 </ul>
+</ul>
 
+<ul><li>Version 7.0.0</li>
+<ul>
+<li>Remove compilation warnings that only affect DFTFringe programming team</li>
+<li>Project is now buildable on macOS</li>
+<li>Fixed all bugs related to rotating and averaging when there are regions or central obstruction</li>
+<ul>
+    <li>fixed issue where masked points outside mirror edge could be averaged in when rotating</li>
+    <li>made it so masked regions only grow once instead of everytime you recalculate zernike's or change blur</li>
+    <li>rotation uses only outer edge mask now as everything else should rotate</li>
+    <li>eliminates tons of bugs if the center obstruction region changes sizes or position and then we average</li>
+    <li>fixed bug when reading wavefronts where central obstruction moved due to rounding error</li>
+</ul>
+<li>Fixes GUI issues related to outline (oln) file</li>
+<ul>
+    <li>Oln files are now stored in a new format. DFTFringe can still open files from previous format</li>
+    <li>Fixed bug where oln files can be read wrong (typically 12% of the time)</li>
+    <li>Fixed bug where reading and writing to oln file after cropping would move outline and region locations</li>
+</ul>
+<li>Fix some memory leaks</li>
+<li>Hovering over data in "astig stats" dialog will show picture name</li>
+<li>Automatically close some secondary windows that were not closing at end of main application</li>
+<li>Fix issue where regions near the edge of the igram can cause a crash</li>
+</ul></ul>
+</ul>
