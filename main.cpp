@@ -24,7 +24,15 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "boost/stacktrace.hpp"
 
+void my_terminate_handler() {
+    try {
+        spdlog::get("logger")->critical("Unexpected issue. Stacktrace:");
+        spdlog::get("logger")->critical(boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
+    } catch (...) {}
+    std::abort();
+}
 
 int main(int argc, char *argv[])
 {   
@@ -51,6 +59,12 @@ int main(int argc, char *argv[])
     spdlog::get("logger")->warn("spdlog warn");
     spdlog::get("logger")->error("spdlog error");
     spdlog::get("logger")->critical("spdlog critical");
+
+    // from here, any problematic application exit should call my_terminate_handler
+    std::set_terminate(&my_terminate_handler);
+
+    spdlog::get("logger")->critical("This is a demo stacktrace");
+    spdlog::get("logger")->critical(boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
 
     // TODO 20230818 add level setting into graphical settings pane
     //spdlog::get("logger")->set_level(spdlog::level::debug);
