@@ -112,8 +112,6 @@ SOURCES += main.cpp\
     lensetablemodel.cpp \
     unwraperrorsview.cpp \
     lensdialog.cpp \
-    singleapplication.cpp \
-    singleapplication_p.cpp \
     messagereceiver.cpp \
     myutils.cpp \
     pixelstats.cpp \
@@ -143,8 +141,10 @@ SOURCES += main.cpp\
     outlinedialog.cpp \
     psitiltoptions.cpp \
     contourrulerparams.cpp \
-    zernikesmoothingdlg.cpp
-    punwrap.cpp
+    zernikesmoothingdlg.cpp \
+    punwrap.cpp \ 
+    SingleApplication/singleapplication.cpp \
+    SingleApplication/singleapplication_p.cpp
 
 HEADERS  += mainwindow.h \
     arbitrarywavefronthelp.h \
@@ -233,8 +233,6 @@ HEADERS  += mainwindow.h \
     lensetablemodel.h \
     unwraperrorsview.h \
     lensdialog.h \
-    singleapplication.h \
-    singleapplication_p.h \
     messagereceiver.h \
     boundary.h \
     myutils.h \
@@ -267,7 +265,12 @@ HEADERS  += mainwindow.h \
     mikespsiinterface.h \
     psitiltoptions.h \
     contourrulerparams.h \
-    zernikesmoothingdlg.h
+    zernikesmoothingdlg.h \
+    SingleApplication/singleapplication.h \
+    SingleApplication/singleapplication_p.h
+
+INCLUDEPATH += ./SingleApplication
+
 FORMS    += mainwindow.ui \
     arbitrarywavefronthelp.ui \
     defocusdlg.ui \
