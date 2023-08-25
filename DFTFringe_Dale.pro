@@ -149,7 +149,6 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     arbitrarywavefronthelp.h \
     arbitrarywavwidget.h \
-    bezier.h \
     cpoint.h \
     defocusdlg.h \
     edgeplot.h \
@@ -266,10 +265,11 @@ HEADERS  += mainwindow.h \
     psitiltoptions.h \
     contourrulerparams.h \
     zernikesmoothingdlg.h \
+    bezier/bezier.h \
     SingleApplication/singleapplication.h \
     SingleApplication/singleapplication_p.h
 
-INCLUDEPATH += ./SingleApplication
+INCLUDEPATH += ./bezier ./SingleApplication
 
 FORMS    += mainwindow.ui \
     arbitrarywavefronthelp.ui \

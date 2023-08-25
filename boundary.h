@@ -23,12 +23,12 @@ class boundary
     public:
         boundary();
         virtual ~boundary();
-        virtual  void draw(QPainter& painter, double scale, double scale2 = -1.) = 0;
+        virtual void draw(QPainter& painter, double scale, double scale2 = -1.) = 0;
         virtual void enlarge(int del) = 0;
         virtual void translate(QPointF del) = 0;
         virtual void scale(double factor) = 0;
         virtual bool isValid() = 0;
-        virtual bool isInside(QPointF& p, int offset = 0) =0;
+        virtual bool isInside(QPointF& p, int offset = 0) = 0;
     protected:
     private:
 };
