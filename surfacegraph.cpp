@@ -58,9 +58,9 @@ SurfaceGraph::SurfaceGraph(Q3DSurface *surface)
     m_mirrorSurfaceProxy = new QSurfaceDataProxy();
     m_wavefrontSeries = new QSurface3DSeries(m_mirrorSurfaceProxy);
     QSettings set;
-   m_colorLabelProxy = new QSurfaceDataProxy();
-   m_colorLabelSeries = new QSurface3DSeries(m_colorLabelProxy);
-   m_yGridHeight = maxHeightSelections[(set.value("yMaxNdx", 8).toInt())];
+    m_colorLabelProxy = new QSurfaceDataProxy();
+    m_colorLabelSeries = new QSurface3DSeries(m_colorLabelProxy);
+    m_yGridHeight = maxHeightSelections[(set.value("yMaxNdx", 8).toInt())];
 
     m_graph->activeTheme()->setType(Q3DTheme::Theme(3));
     QFont font = m_graph->activeTheme()->font();
@@ -88,6 +88,7 @@ SurfaceGraph::SurfaceGraph(Q3DSurface *surface)
 SurfaceGraph::~SurfaceGraph()
 {
     delete m_graph;
+    delete m_colorMap;
 }
 
 

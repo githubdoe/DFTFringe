@@ -313,6 +313,7 @@ MainWindow::~MainWindow()
     delete m_colorChannels;
     delete m_intensityPlot;
     delete m_ogl;
+    userMapDlg->close();
     delete ui;
 }
 
