@@ -1,9 +1,9 @@
 <RCC>
     <qresource prefix="/icons">
-        <file>Button-Close-icon.png</file>
-        <file>Button-Next-icon.png</file>
-        <file>Button-Previous-icon.png</file>
-        <file>igram6.png</file>
+        <file>res/Button-Close-icon.png</file>
+        <file>res/Button-Next-icon.png</file>
+        <file>res/Button-Previous-icon.png</file>
+        <file>res/igram6.png</file>
         <file>res/1461974250_f-left_256.png</file>
         <file>res/1461974256_f-right_256.png</file>
         <file>res/1461974262_f-top_256.png</file>
@@ -12,7 +12,7 @@
         <file>res/1461975092_minimize.png</file>
         <file>res/1461975017_undo.png</file>
         <file>res/redo.png</file>
-        <file>camera-icon-60.png</file>
+        <file>res/camera-icon-60.png</file>
         <file>res/surface_LeY_icon.ico</file>
     </qresource>
     <qresource prefix="/">

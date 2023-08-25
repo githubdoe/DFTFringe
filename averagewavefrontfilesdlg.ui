@@ -80,7 +80,7 @@
          </property>
          <property name="icon">
           <iconset resource="DFTResources.qrc">
-           <normaloff>:/icons/Button-Close-icon.png</normaloff>:/icons/Button-Close-icon.png</iconset>
+           <normaloff>:/icons/res/Button-Close-icon.png</normaloff>:/icons/res/Button-Close-icon.png</iconset>
          </property>
         </widget>
        </item>

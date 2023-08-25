@@ -1155,7 +1155,7 @@ em;
   <action name="actionLoad_Interferogram">
    <property name="icon">
     <iconset resource="DFTResources.qrc">
-     <normaloff>:/icons/igram6.png</normaloff>:/icons/igram6.png</iconset>
+     <normaloff>:/icons/res/igram6.png</normaloff>:/icons/res/igram6.png</iconset>
    </property>
    <property name="text">
     <string>Load Interferogram</string>
@@ -1224,7 +1224,7 @@ em;
   <action name="actionNext_Wave_Front">
    <property name="icon">
     <iconset resource="DFTResources.qrc">
-     <normaloff>:/icons/Button-Next-icon.png</normaloff>:/icons/Button-Next-icon.png</iconset>
+     <normaloff>:/icons/res/Button-Next-icon.png</normaloff>:/icons/res/Button-Next-icon.png</iconset>
    </property>
    <property name="text">
     <string>Next Wave Front</string>
@@ -1233,7 +1233,7 @@ em;
   <action name="actionPrevious_Wave_front">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/Button-Previous-icon.png</normalon>
+     <normalon>:/icons/res/Button-Previous-icon.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -1243,7 +1243,7 @@ em;
   <action name="actionDelete_wave_front">
    <property name="icon">
     <iconset resource="DFTResources.qrc">
-     <normaloff>:/icons/Button-Close-icon.png</normaloff>:/icons/Button-Close-icon.png</iconset>
+     <normaloff>:/icons/res/Button-Close-icon.png</normaloff>:/icons/res/Button-Close-icon.png</iconset>
    </property>
    <property name="text">
     <string>Delete wave front</string>

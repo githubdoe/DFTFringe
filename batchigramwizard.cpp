@@ -35,8 +35,8 @@ batchIgramWizard::batchIgramWizard(QStringList files, QWidget *parent, Qt::Windo
     introPage = new batchIntro(files, parent);
     setPage(batchIgramWizard::Page_Intro, introPage);
     setStartId(batchIgramWizard::Page_Intro);
-    setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/igram6.png").scaled(40, 40, Qt::IgnoreAspectRatio, Qt::FastTransformation));
-    //setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/igram6.png"));
+    setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/res/igram6.png").scaled(40, 40, Qt::IgnoreAspectRatio, Qt::FastTransformation));
+    //setPixmap(QWizard::LogoPixmap, QPixmap(":/icons/res/igram6.png"));
     //setOption(HaveHelpButton, true);
     //setWindowTitle(tr("Batch Process Interferograms"));
     QList<QWizard::WizardButton> layout;
