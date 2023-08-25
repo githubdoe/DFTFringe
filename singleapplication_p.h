@@ -1,6 +1,4 @@
-// The MIT License (MIT)
-//
-// Copyright (c) Itay Grudev 2015 - 2016
+// Copyright (c) Itay Grudev 2015 - 2023
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -8,6 +6,9 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
+//
+// Permission is not granted to use this software or any of the associated files
+// as sample data for the purposes of building machine learning models.
 //
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
@@ -36,41 +37,69 @@
 #include <QtNetwork/QLocalServer>
 #include <QtNetwork/QLocalSocket>
 #include "singleapplication.h"
-#include <qmutex.h>
 
 struct InstancesInfo {
     bool primary;
     quint32 secondary;
+    qint64 primaryPid;
+    char primaryUser[128];
+    quint16 checksum; // Must be the last field
+};
+
+struct ConnectionInfo {
+    qint64 msgLen = 0;
+    quint32 instanceId = 0;
+    quint8 stage = 0;
 };
 
 class SingleApplicationPrivate : public QObject {
 Q_OBJECT
 public:
+    enum ConnectionType : quint8 {
+        InvalidConnection = 0,
+        NewInstance = 1,
+        SecondaryInstance = 2,
+        Reconnect = 3
+    };
+    enum ConnectionStage : quint8 {
+        StageInitHeader = 0,
+        StageInitBody = 1,
+        StageConnectedHeader = 2,
+        StageConnectedBody = 3,
+    };
     Q_DECLARE_PUBLIC(SingleApplication)
 
     SingleApplicationPrivate( SingleApplication *q_ptr );
-     ~SingleApplicationPrivate();
+    ~SingleApplicationPrivate() override;
 
-    void genBlockServerName( int msecs );
-    void startPrimary( bool resetMemory );
+    static QString getUsername();
+    void genBlockServerName();
+    void initializeMemoryBlock() const;
+    void startPrimary();
     void startSecondary();
-    void connectToPrimary( int msecs, char connectionType );
-    void cleanUp();
+    bool connectToPrimary( int msecs, ConnectionType connectionType );
+    quint16 blockChecksum() const;
+    qint64 primaryPid() const;
+    QString primaryUser() const;
+    bool isFrameComplete(QLocalSocket *sock);
+    void readMessageHeader(QLocalSocket *socket, ConnectionStage nextStage);
+    void readInitMessageBody(QLocalSocket *socket);
+    void writeAck(QLocalSocket *sock);
+    bool writeConfirmedFrame(int msecs, const QByteArray &msg);
+    bool writeConfirmedMessage(int msecs, const QByteArray &msg, SingleApplication::SendMode sendMode = SingleApplication::NonBlocking);
+    static void randomSleep();
+    void addAppData(const QString &data);
+    QStringList appData() const;
 
-#ifndef Q_OS_WIN
-    void crashHandler();
-    static void terminate( int signum );
-    static QList<SingleApplicationPrivate*> sharedMem;
-    static QMutex sharedMemMutex;
-#endif
-
-    QSharedMemory *memory;
     SingleApplication *q_ptr;
+    QSharedMemory *memory;
     QLocalSocket *socket;
     QLocalServer *server;
     quint32 instanceNumber;
     QString blockServerName;
     SingleApplication::Options options;
+    QMap<QLocalSocket*, ConnectionInfo> connectionMap;
+    QStringList appDataList;
 
 public Q_SLOTS:
     void slotConnectionEstablished();

@@ -113,6 +113,7 @@ SOURCES += main.cpp\
     unwraperrorsview.cpp \
     lensdialog.cpp \
     singleapplication.cpp \
+    singleapplication_p.cpp \
     messagereceiver.cpp \
     myutils.cpp \
     pixelstats.cpp \
