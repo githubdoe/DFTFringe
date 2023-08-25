@@ -36,7 +36,6 @@ SOURCES += main.cpp\
     igramarea.cpp \
     circleoutline.cpp \
     gplus.cpp \
-    Boundary.cpp \
     graphicsutilities.cpp \
     dfttools.cpp \
     dftarea.cpp \

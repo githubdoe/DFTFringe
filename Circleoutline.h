@@ -59,7 +59,6 @@ public:
     ellipseOutline();
     ellipseOutline(QPointF center, double minorAxis, double majorAxis);
     ellipseOutline(QPointF left, QPointF right, double ecc);
-    void draw(QPainter& painter, double scale);
     bool isInside(QPointF& p , int offset = 0);
     void enlarge(int del);
     void translate(QPointF del);
@@ -82,7 +81,6 @@ class rectangleOutline: public boundary
 public:
     rectangleOutline();
     rectangleOutline(QPointF upperLeft, QPointF lowerRight);
-    void draw(QPainter& painter, double scale);
     bool isInside(QPointF& p , int offset = 0);
     void enlarge(int del);
     void translate(QPointF del);
