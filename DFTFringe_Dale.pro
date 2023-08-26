@@ -160,7 +160,6 @@ HEADERS  += mainwindow.h \
     pdfcalibrationdlg.h \
     profileplot.h \
     psiresizeimagesdlg.h \
-    spline.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
     surfacelightingproxy.h \
