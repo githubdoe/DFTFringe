@@ -34,8 +34,8 @@
     <rect>
      <x>30</x>
      <y>30</y>
-     <width>291</width>
-     <height>21</height>
+     <width>300</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
@@ -47,13 +47,74 @@
     <rect>
      <x>30</x>
      <y>60</y>
-     <width>181</width>
-     <height>17</height>
+     <width>300</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
     <string>Show outline work in progress</string>
    </property>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>90</y>
+     <width>211</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QLabel" name="spdLogLevelLabel">
+      <property name="text">
+       <string>Logging level</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="logLevelComboBox">
+      <property name="currentText">
+       <string>Info</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>Trace</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Debug</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Info</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Warning</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Error</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Critical</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Off</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>
