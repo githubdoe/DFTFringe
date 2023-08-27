@@ -34,8 +34,8 @@ public:
     bool showMask();
 private slots:
     void on_checkBox_clicked(bool checked);
-
     void on_debugOutline_clicked(bool checked);
+    void on_logLevelComboBox_currentTextChanged(const QString &text);
 
 private:
     Ui::settingsDebug *ui;
