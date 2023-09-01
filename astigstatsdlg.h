@@ -13,6 +13,7 @@ class Zoomer;
 class QTextEdit;
 class QVBoxLayout;
 class QHBoxLayout;
+class CustomPlotPicker;
 namespace Ui {
 
 class astigStatsDlg;
@@ -65,6 +66,7 @@ private:
     QVBoxLayout *layout;
     QHBoxLayout *toolLayout;
     bool m_usePolar;
+    CustomPlotPicker *picker;
 };
 
 #endif // ASTIGSTATSDLG_H

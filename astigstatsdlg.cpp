@@ -99,11 +99,48 @@ protected:
         return text;
     }
 };
+
+// this class expans QwtPlotPicker to be able to diplay custom text on given positions in canva
+// add positions and text using addTooltipToPoint
+class CustomPlotPicker : public QwtPlotPicker {
+public:
+    CustomPlotPicker(int xAxis, int yAxis, QWidget *canvas)
+        : QwtPlotPicker(xAxis, yAxis, QwtPicker::NoRubberBand, QwtPicker::AlwaysOn, canvas) {
+    }
+
+    void addTooltipToPoint(const QPointF &point, const QString &tooltip){
+        tooltips_.emplace_back(point, tooltip);
+    }
+
+protected:
+    // return text to display on given position in canva
+    QwtText trackerTextF(const QPointF &pos) const override {
+        // this is tolerance in astig value that allows selection given a pixel tolerance
+        const int pixelRadius = 5;
+        const QPointF tolerance = invTransform(QPoint(pixelRadius,0)) - invTransform(QPoint(0,pixelRadius));
+
+        for (const auto &data : tooltips_) {
+            const double xDiff = std::abs(data.first.x() - pos.x());
+            const double yDiff = std::abs(data.first.y() - pos.y());
+            if (xDiff < tolerance.x() && yDiff < tolerance.y()) {
+                return QwtText(data.second);
+            }
+        }
+        return QwtText();  // No tooltip if not close to any point
+    }
+
+private:
+    // holds the correspondance between canva position and tooltip to display
+     //TODO change to QWT text directly
+    std::vector<std::pair<QPointF, QString>> tooltips_;
+};
+
+
 astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::astigStatsDlg), m_wavefronts(wavefronts), editor(0), PDFMode(false),
     distributionWindow(0), runningAvgN(20), showSamples(false),
-    layout(0), m_usePolar(false)
+    layout(0), m_usePolar(false), picker(nullptr)
 {
 
     mndx = 0;
@@ -131,13 +168,13 @@ astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
     ui->mPlot->setPalette( Qt::white );
 
     ui->bestFitCB->hide();
-    dplot = new QwtPlot;
+    dplot = new QwtPlot;  //TODO JST 2023/09/01  unused ?
     plot();
 }
 
 astigStatsDlg::~astigStatsDlg()
 {
-    delete zoomer;
+    delete zoomer; //TODO JST 2023/08/30 check if delete is needed. I don't think so because the parent is set
 
     delete ui;
 }
@@ -227,7 +264,10 @@ void astigStatsDlg::plot(){
     l->setDefaultItemMode( QwtLegendData::Checkable );
     connect(l, SIGNAL(checked(QVariant,bool,int)), this, SLOT(showItem(QVariant ,bool,int)));
 
-    //QMap<QString, QColor> colorAssign;
+    if(picker != nullptr){
+        delete picker;
+    }
+    picker = new CustomPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft, ui->mPlot->canvas());
 
     // sort into rotation groups
     QMap<QString, QList<measure> > groups;
@@ -274,11 +314,9 @@ void astigStatsDlg::plot(){
             ymin = std::min(ymin, yAstig);
             ymax = std::max(ymax, yAstig);
             
-            // plot marker for the point
-            QwtPlotMarker *m = new QwtPlotMarker(data.name.replace(".wft",""));
-            m->setValue(xAstig, yAstig);
-            m->setSymbol(new QwtSymbol(QwtSymbol::Rect, color,color, QSize(10,10)));
-            m->attach(ui->mPlot);
+            if (!ui->onlyAverages->isChecked()){
+                picker->addTooltipToPoint(QPointF(xAstig, yAstig), data.name.replace(".wft",""));
+            }
 
         }
         double xmean = xstats.Mean();
@@ -291,9 +329,7 @@ void astigStatsDlg::plot(){
             QwtPlotCurve *curve = new QwtPlotCurve(name.replace(".wft","") +
                              QString("\n%1,%2 \nSD: %3 %4 ").arg(xmean, 6,'f',4).arg(ymean, 6,'f',4).arg(xstd, 6,'f',4).arg(ystd, 6,'f',4));
             curve->setSamples(points);
-            // Do not actually draw the curve as QwtPlotMarker has been used to draw the dots. 
-            // This is made like this to have igram name when hovering over QwtPlotMarker.
-            curve->setStyle(QwtPlotCurve::NoCurve);
+            curve->setStyle(QwtPlotCurve::Dots);
             curve->setPen(color,10);
             curve->attach(ui->mPlot);
         }
