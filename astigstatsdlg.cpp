@@ -168,7 +168,6 @@ astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
     ui->mPlot->setPalette( Qt::white );
 
     ui->bestFitCB->hide();
-    dplot = new QwtPlot;  //TODO JST 2023/09/01  unused ?
     plot();
 }
 

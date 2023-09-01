@@ -50,7 +50,6 @@ private slots:
 
 private:
     int mndx;
-    QwtPlot *dplot;
     QVector<QStringList> m_zerns;
     Zoomer *zoomer;
     Ui::astigStatsDlg *ui;
