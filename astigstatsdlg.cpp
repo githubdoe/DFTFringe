@@ -173,8 +173,6 @@ astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
 
 astigStatsDlg::~astigStatsDlg()
 {
-    delete zoomer; //TODO JST 2023/08/30 check if delete is needed. I don't think so because the parent is set
-
     delete ui;
 }
 class measure{
