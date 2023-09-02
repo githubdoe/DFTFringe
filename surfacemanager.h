@@ -53,13 +53,13 @@ class SurfaceManager : public QObject
     Q_OBJECT
 public:
 
-    explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
-                   contourView *contourView = 0, SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
-    ~SurfaceManager();
     static SurfaceManager *get_instance(QObject *parent = 0, surfaceAnalysisTools *tools = 0,
                                         ProfilePlot *profilePlot = 0, contourView *contourPlot = 0,
                                         SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
-    static SurfaceManager *m_instance;
+    SurfaceManager(const SurfaceManager&) = delete;
+    SurfaceManager& operator=(const SurfaceManager&) = delete;
+    ~SurfaceManager();
+
     bool loadWavefront(const QString &fileName);
     void sendSurface(wavefront* wf);
     void computeMetrics(wavefront *wf);
@@ -131,6 +131,9 @@ private:
     int workProgress;
 
     wftStats *m_wftStats;
+
+    explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
+                   contourView *contourView = 0, SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
     textres Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx);
 
 signals:

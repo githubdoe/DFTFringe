@@ -472,14 +472,12 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
     //cv::waitKey(1);
     return result;
 }
-SurfaceManager *SurfaceManager::m_instance = 0;
+
 SurfaceManager *SurfaceManager::get_instance(QObject *parent, surfaceAnalysisTools *tools,
                                              ProfilePlot *profilePlot, contourView *contourPlot,
                                              SurfaceGraph *glPlot, metricsDisplay *mets){
-    if (m_instance == 0){
-        m_instance = new SurfaceManager(parent, tools, profilePlot, contourPlot, glPlot, mets);
-    }
-    return m_instance;
+    static SurfaceManager m_instance{parent, tools, profilePlot, contourPlot, glPlot, mets};
+    return &m_instance;
 }
 
 SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
