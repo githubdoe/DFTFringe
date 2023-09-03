@@ -476,8 +476,12 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
 SurfaceManager *SurfaceManager::get_instance(QObject *parent, surfaceAnalysisTools *tools,
                                              ProfilePlot *profilePlot, contourView *contourPlot,
                                              SurfaceGraph *glPlot, metricsDisplay *mets){
-    static SurfaceManager m_instance{parent, tools, profilePlot, contourPlot, glPlot, mets};
-    return &m_instance;
+    //static SurfaceManager m_instance{parent, tools, profilePlot, contourPlot, glPlot, mets};
+    //return &m_instance;
+    // Take care. This is non standard init for when the singleton is supposed to be deleted by parent
+    // keeping original version will call class destructor and on_exit will try to clean up static variable m_instance. But the instance doesn't exist anymore.
+    static SurfaceManager *m_instance = new SurfaceManager(parent, tools, profilePlot, contourPlot, glPlot, mets);
+    return m_instance;
 }
 
 SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,

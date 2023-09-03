@@ -38,8 +38,12 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
 
 
 foucaultView *foucaultView::get_Instance(SurfaceManager *sm){
-    static foucaultView m_instance{0, sm};
-    return &m_instance;
+    //static foucaultView m_instance{0, sm};
+    //return &m_instance;
+    // Take care. This is non standard init for when the singleton is supposed to be deleted by parent
+    // keeping original version will call class destructor and on_exit will try to clean up static variable m_instance. But the instance doesn't exist anymore.
+    static foucaultView *m_instance = new foucaultView(0, sm);
+    return m_instance;
 }
 
 foucaultView::~foucaultView()
