@@ -26,46 +26,47 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "boost/stacktrace.hpp"
 
-void my_terminate_handler() {
+static void my_terminate_handler() {
     try {
-        spdlog::get("logger")->critical("Unexpected issue. Stacktrace:");
-        spdlog::get("logger")->critical(boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
+        spdlog::get("logger")->critical("Unexpected issue. Stacktrace:\n" + boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
     } catch (...) {}
     std::abort();
 }
 
+static void myQtMessageOutput(QtMsgType type, const QMessageLogContext &/*context*/, const QString &msg)
+{
+    const std::string localMsg = msg.toStdString();
+    
+    switch (type) {
+    case QtDebugMsg:
+        spdlog::get("logger")->debug("QT message handler: {}", localMsg);
+        break;
+    case QtInfoMsg:
+        spdlog::get("logger")->info("QT message handler: {}", localMsg);
+        break;
+    case QtWarningMsg:
+        spdlog::get("logger")->warn("QT message handler: {}", localMsg);
+        break;
+    case QtCriticalMsg:
+    case QtFatalMsg:
+        spdlog::get("logger")->critical("QT message handler: {}", localMsg);
+        my_terminate_handler();
+        break;
+    }
+}
+
+static int myCvErrorCallback( int /*status*/, const char* /*func_name*/,
+            const char* err_msg, const char* file_name,
+            int line, void* /*userdata*/ )
+{
+    spdlog::get("logger")->critical("CV error :{} in {} on line {}", err_msg, file_name, line);
+    
+    my_terminate_handler();
+    return 0;   //Return value is not used
+}
+
 int main(int argc, char *argv[])
 {   
-    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("DFTFringeLogs/log.txt", 1048576 * 5, 3);
-
-    auto combined_logger = std::make_shared<spdlog::logger>("logger", spdlog::sinks_init_list({console_sink, file_sink}));
-    
-    // Combined logger needs to be manually registered or it won't be found by "get"
-    spdlog::register_logger(combined_logger);
-
-    // periodically flush all *registered* loggers every 3 seconds:
-    // warning: only use if all your loggers are thread-safe ("_mt" loggers)
-    spdlog::flush_every(std::chrono::seconds(3));
-
-    // Set the logging format
-    spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
-
-    // those are examples
-    spdlog::trace("Welcome to spdlog version {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
-    spdlog::get("logger")->trace("spdlog trace");
-    spdlog::get("logger")->debug("spdlog debug");
-    spdlog::get("logger")->info("spdlog info");
-    spdlog::get("logger")->warn("spdlog warn");
-    spdlog::get("logger")->error("spdlog error");
-    spdlog::get("logger")->critical("spdlog critical");
-
-    // from here, any problematic application exit should call my_terminate_handler
-    std::set_terminate(&my_terminate_handler);
-
-    spdlog::get("logger")->critical("This is a demo stacktrace");
-    spdlog::get("logger")->critical(boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
-
     // Allow secondary instances
     SingleApplication app( argc, argv, true );
 
@@ -84,10 +85,50 @@ int main(int argc, char *argv[])
         );
     }
 
-
-
     app.setOrganizationName("DFTFringe");
     app.setApplicationName("DFTFringe");
+
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("DFTFringeLogs/log.txt", 1048576 * 5, 3);
+
+    auto combined_logger = std::make_shared<spdlog::logger>("logger", spdlog::sinks_init_list({console_sink, file_sink}));
+    
+    // Combined logger needs to be manually registered or it won't be found by "get"
+    spdlog::register_logger(combined_logger);
+
+    // periodically flush all *registered* loggers every 3 seconds:
+    // warning: only use if all your loggers are thread-safe ("_mt" loggers)
+    spdlog::flush_every(std::chrono::seconds(3));
+
+    // Set the logging format
+    spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+
+    // Set logger level
+    QSettings set;
+    settingsDebug::setLogLevel(set.value("LogLevel", "Warning").toString());
+
+    // those are examples
+    spdlog::get("logger")->info("\r\n\r\n\r\n-------------");
+    spdlog::get("logger")->trace("Welcome to spdlog version {}.{}.{}  !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
+    spdlog::get("logger")->trace("spdlog trace");
+    spdlog::get("logger")->debug("spdlog debug");
+    spdlog::get("logger")->info("spdlog info");
+    spdlog::get("logger")->warn("spdlog warn");
+    spdlog::get("logger")->error("spdlog error");
+    spdlog::get("logger")->critical("spdlog critical");
+
+    // from here, any problematic application exit (for example uncatched exceptions) should call my_terminate_handler
+    std::set_terminate(&my_terminate_handler);
+
+    // override QT message handler because qFatal() and qCritical() would exit cleanly without crashlog
+    qInstallMessageHandler(myQtMessageOutput); // replace with nullptr if you want to use original bahavior for debug purpose
+    // override CV error handler to get crashlog to execute instead of clean exit
+    cv::redirectError(myCvErrorCallback); // replace with nullptr if you want to use original bahavior for debug purpose
+
+    spdlog::get("logger")->critical("This is a demo stacktrace:\n" + boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
+
+
+
     MainWindow *w = new MainWindow;
     msgReceiver.m_mainWindow = w;
 

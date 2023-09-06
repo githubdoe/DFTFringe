@@ -57,6 +57,11 @@ void settingsDebug::on_logLevelComboBox_currentTextChanged(const QString &text)
     set.setValue("LogLevel", text);
     spdlog::get("logger")->set_level(spdlog::level::trace);
     spdlog::get("logger")->trace(std::string("Log level changed to: ") + text.toStdString());
+    setLogLevel(text);
+}
+
+void settingsDebug::setLogLevel(const QString& text)
+{
     if( text == "Trace"){
         spdlog::get("logger")->set_level(spdlog::level::trace);
     }
@@ -81,5 +86,4 @@ void settingsDebug::on_logLevelComboBox_currentTextChanged(const QString &text)
     else{
         spdlog::get("logger")->warn(std::string("Unexpected log level: ") + text.toStdString());
     }
-    
 }
