@@ -19,6 +19,12 @@ qtHaveModule(printsupport): QT += printsupport
 
 QMAKE_CXXFLAGS += -std=c++11
 
+# disable qDebug() in release
+CONFIG( release, debug|release ) { 
+    message("Release build")
+    DEFINES += QT_NO_DEBUG_OUTPUT
+}
+
 # Below are the three platform specific project configurations for WINDOWS, LINUX and MAC
 
 # WINDOWS ##########
