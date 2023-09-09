@@ -74,6 +74,7 @@ void surfaceAnalysisTools::addWaveFront(const QString &name){
 
     ui->wavefrontList->addItem(shorter);
     lastCurrentItem = ui->wavefrontList->count()-1;
+    ui->wavefrontList->item(lastCurrentItem)->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 
 }
 
@@ -94,10 +95,8 @@ void surfaceAnalysisTools::on_blurCB_clicked(bool checked)
 
 void surfaceAnalysisTools::on_wavefrontList_itemDoubleClicked(QListWidgetItem *item)
 {
-
     ui->wavefrontList->editItem(item);
     emit wavefrontDClicked(item->text());
-
 }
 
 void surfaceAnalysisTools::on_spinBox_valueChanged(int arg1)
@@ -130,9 +129,13 @@ void surfaceAnalysisTools::deleteWaveFront(int i){
 
 }
 
+// thiis is called when pressing enter on a wevefront selected with arrow key
+void surfaceAnalysisTools::on_wavefrontList_activated(const QModelIndex &index)
+{
+    on_wavefrontList_clicked(index);
+}
 void surfaceAnalysisTools::on_wavefrontList_clicked(const QModelIndex &index)
 {
-
     QListWidgetItem *item = ui->wavefrontList->item(lastCurrentItem);
     if (item)
         item->setForeground(Qt::gray);
@@ -150,6 +153,7 @@ void surfaceAnalysisTools::on_wavefrontList_clicked(const QModelIndex &index)
     emit waveFrontClicked(indexes.last().row());
     currentNdxChanged(index.row());
 }
+
 QList<int> surfaceAnalysisTools::SelectedWaveFronts(){
     QModelIndexList indexes = ui->wavefrontList->selectionModel()->selectedIndexes();
 
@@ -246,14 +250,13 @@ void surfaceAnalysisTools::on_InvertPB_pressed()
     emit invert(SelectedWaveFronts());
 }
 
+// this is "right click" on windows
 void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPoint &pos)
 {
-    QModelIndex t = ui->wavefrontList->indexAt(pos);
-    QListWidgetItem *item = ui->wavefrontList->item(t.row());
+    QListWidgetItem *item = ui->wavefrontList->itemAt(pos);
     if (item == 0)
         return;
-    item->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-    ui->wavefrontList->item(t.row())->setSelected(true);	// even a right click will select the item
+    item->setSelected(true);	// even a right click will select the item
     ui->wavefrontList->editItem(item);
 }
 
