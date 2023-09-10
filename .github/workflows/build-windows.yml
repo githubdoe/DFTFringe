@@ -361,6 +361,7 @@ jobs:
 
       - name: copy needed dlls not found by windeployqt
         run: |
+          Copy-Item ".\DFTFringe\Release\DFTFringe.exe.debug" -Destination ".\"
           mkdir ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\DFTFringe\Release\DFTFringe.exe" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
@@ -388,3 +389,5 @@ jobs:
           name: DFTFringe-windows-build-artifact
           path: |
             DFTFringeInstaller_${{env.WORKFLOW_VERSION}}.exe
+            DFTFringe.exe.debug
+      
