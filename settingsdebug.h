@@ -32,10 +32,12 @@ public:
     explicit settingsDebug(QWidget *parent = 0);
     ~settingsDebug();
     bool showMask();
+    static QString getLogLevel();
+    static void setLogLevel(const QString& text);
 private slots:
     void on_checkBox_clicked(bool checked);
-
     void on_debugOutline_clicked(bool checked);
+    void on_logLevelComboBox_currentTextChanged(const QString &text);
 
 private:
     Ui::settingsDebug *ui;

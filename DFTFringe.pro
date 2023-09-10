@@ -20,6 +20,12 @@ qtHaveModule(printsupport): QT += printsupport
 
 QMAKE_CXXFLAGS += -std=c++11
 
+# disable qDebug() in release
+CONFIG( release, debug|release ) { 
+    message("Release build")
+    DEFINES += QT_NO_DEBUG_OUTPUT
+}
+
 # Below are the three platform specific project configurations for WINDOWS, LINUX and MAC
 
 # WINDOWS ##########
@@ -30,6 +36,8 @@ win32 {
         LIBS += ..\qwt-6.1.6\lib\qwtd.dll # debug
     } else {
         LIBS += ..\qwt-6.1.6\lib\qwt.dll # release
+        CONFIG+=force_debug_info # keep debug infos (even in release build) to be able to link stacktrace address to actual function
+        CONFIG+=separate_debug_info # separate debug infos into a .exe.debug to not grow the .exe
     }
 
     # NOTE: RC_FILE is Windows only, breaks Mac (and Linux?) builds if it in their scope.
