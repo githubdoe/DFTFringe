@@ -104,8 +104,7 @@ int main(int argc, char *argv[])
     spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
 
     // Set logger level
-    QSettings set;
-    settingsDebug::setLogLevel(set.value("LogLevel", "Warning").toString());
+    settingsDebug::setLogLevel(settingsDebug::getLogLevel());
 
     // those are examples
     spdlog::get("logger")->info("\r\n\r\n\r\n-------------");
@@ -126,8 +125,6 @@ int main(int argc, char *argv[])
     cv::redirectError(myCvErrorCallback); // replace with nullptr if you want to use original bahavior for debug purpose
 
     spdlog::get("logger")->critical("This is a demo stacktrace:\n" + boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
-
-
 
     MainWindow *w = new MainWindow;
     msgReceiver.m_mainWindow = w;

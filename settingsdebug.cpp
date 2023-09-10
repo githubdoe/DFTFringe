@@ -28,7 +28,7 @@ settingsDebug::settingsDebug(QWidget *parent) :
     QSettings set;
     ui->checkBox->setChecked(set.value("DebugShowMask",false).toBool());
     ui->debugOutline->setChecked(set.value("DebugShowOutlining",false).toBool());
-    ui->logLevelComboBox->setCurrentText(set.value("LogLevel", "Warning").toString());
+    ui->logLevelComboBox->setCurrentText(getLogLevel());
 }
 
 settingsDebug::~settingsDebug()
@@ -58,6 +58,12 @@ void settingsDebug::on_logLevelComboBox_currentTextChanged(const QString &text)
     spdlog::get("logger")->set_level(spdlog::level::trace);
     spdlog::get("logger")->trace(std::string("Log level changed to: ") + text.toStdString());
     setLogLevel(text);
+}
+
+QString settingsDebug::getLogLevel()
+{
+    QSettings set;
+    return set.value("LogLevel", "Info").toString();
 }
 
 void settingsDebug::setLogLevel(const QString& text)

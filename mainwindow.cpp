@@ -206,7 +206,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(settingsDlg->m_general, SIGNAL(updateContourPlot()),m_contourView, SLOT(updateRuler()));
 
     QSettings settings;
-
+    spdlog::get("logger")->trace("qSettings stored at: {}", settings.fileName().toStdString());
 
     restoreState(settings.value("MainWindow/windowState").toByteArray());
     restoreGeometry(settings.value("geometry").toByteArray());
