@@ -26,7 +26,7 @@ TEMPLATE = app
 
 CONFIG += ``
 
-SOURCES += main.cpp\
+SOURCES += main.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
     cpoint.cpp \
