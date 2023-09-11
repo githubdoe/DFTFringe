@@ -66,7 +66,7 @@ void surfaceAnalysisTools::enableControls(bool flag){
 void surfaceAnalysisTools::setBlurText(QString txt){
     ui->blurMm->setText(txt);
 }
-void ListWidgetEditEnd(QWidget *editor, QAbstractItemDelegate::EndEditHint hint);
+
 void surfaceAnalysisTools::addWaveFront(const QString &name){
 
     QStringList list = name.split('/');
@@ -270,13 +270,19 @@ void surfaceAnalysisTools::on_InvertPB_pressed()
     emit invert(SelectedWaveFronts());
 }
 
-void surfaceAnalysisTools::ListWidgetEditEnd(QWidget *editor, QAbstractItemDelegate::EndEditHint ){
-    QString NewValue = reinterpret_cast<QLineEdit*>(editor)->text();
-    QModelIndexList indexes = ui->wavefrontList->selectionModel()->selectedIndexes();
-    if (indexes.length() == 1){
-        emit wftNameChanged(indexes[0].row(), NewValue);
+// this is troggered on renaming/editing end
+void surfaceAnalysisTools::ListWidgetEditEnd(QWidget* editor, QAbstractItemDelegate::EndEditHint ){
+    const QString NewValue = reinterpret_cast<QLineEdit*>(editor)->text();
+    QModelIndexList indexList = ui->wavefrontList->selectionModel()->selectedIndexes();
+    // because we don't know exactly which wft has been renamed in case of multiple selection
+    for (const QModelIndex &index : indexList) {
+        const int row = index.row();
+        if(NewValue == ui->wavefrontList->item(row)->text()){
+            emit wftNameChanged(index.row(), ui->wavefrontList->item(row)->text());
+            on_wavefrontList_clicked(index); //force complete redisplay to reload every name where they are printed
+            // we cannot break; the loop because there might be duplicate names (rare but can happen)
+        }
     }
-    //emit wftNameChanged(t.row(), item->text());
 }
 
 void surfaceAnalysisTools::on_pushButton_clicked()
