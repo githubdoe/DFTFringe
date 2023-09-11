@@ -508,7 +508,6 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     connect(m_toolsEnableTimer, SIGNAL(timeout()), this, SLOT(enableTools()));
 
     connect(m_surfaceTools, SIGNAL(waveFrontClicked(int)), this, SLOT(waveFrontClickedSlot(int)));
-    connect(m_surfaceTools, SIGNAL(wavefrontDClicked(const QString &)), this, SLOT(wavefrontDClicked(const QString &)));
     connect(m_surfaceTools, SIGNAL(centerMaskValue(int)),this, SLOT(centerMaskValue(int)));
     connect(m_surfaceTools, SIGNAL(outsideMaskValue(int)),this, SLOT(outsideMaskValue(int)));
     connect(m_surfaceTools, SIGNAL(surfaceSmoothGBEnabled(bool)), this, SLOT(surfaceSmoothGBEnabled(bool)));
@@ -794,7 +793,7 @@ void SurfaceManager::deleteWaveFronts(QList<int> list){
 
 void SurfaceManager::wavefrontDClicked(const QString & name){
     for (int i = 0; i < m_wavefronts.size(); ++i){
-        if (m_wavefronts[i]->name.endsWith(name)){
+        if (m_wavefronts[i]->name.endsWith(name)){ //TODO JST 2023/09/11 this does not work on some name combinations. To be fixed
             m_currentNdx = i;
             sendSurface(m_wavefronts[i]);
             break;

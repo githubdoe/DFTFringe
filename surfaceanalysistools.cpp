@@ -17,7 +17,9 @@
 ****************************************************************************/
 #include "surfaceanalysistools.h"
 #include "ui_surfaceanalysistools.h"
+#include <QAction>
 #include <QDebug>
+#include <QMenu>
 #include <QSettings>
 #include <QtAlgorithms>
 #include <QLineEdit>
@@ -73,9 +75,8 @@ void surfaceAnalysisTools::addWaveFront(const QString &name){
         shorter = list[list.size()-2] + "/" + list[list.size()-1];//fontMetrics().elidedText(name,Qt::ElideLeft,w);
 
     ui->wavefrontList->addItem(shorter);
-    lastCurrentItem = ui->wavefrontList->count()-1;
+    currentNdxChanged(ui->wavefrontList->count()-1);
     ui->wavefrontList->item(lastCurrentItem)->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-
 }
 
 void surfaceAnalysisTools::removeWaveFront(const QString &){
@@ -93,12 +94,6 @@ void surfaceAnalysisTools::on_blurCB_clicked(bool checked)
     emit surfaceSmoothGBEnabled(checked);
 }
 
-void surfaceAnalysisTools::on_wavefrontList_itemDoubleClicked(QListWidgetItem *item)
-{
-    ui->wavefrontList->editItem(item);
-    emit wavefrontDClicked(item->text());
-}
-
 void surfaceAnalysisTools::on_spinBox_valueChanged(int arg1)
 {
     emit outsideMaskValue(arg1);
@@ -109,49 +104,74 @@ void surfaceAnalysisTools::on_spinBox_2_valueChanged(int arg1)
     emit centerMaskValue(arg1);
 }
 
- void surfaceAnalysisTools::currentNdxChanged(int ndx){
-     if (ui->wavefrontList->count() == 0)
-         return;
+// this is responsible of givin user feedback about which wft is currently displayed
+void surfaceAnalysisTools::currentNdxChanged(int ndx){
+    if (ui->wavefrontList->count() == 0)
+        return;
 
-     QListWidgetItem *item = ui->wavefrontList->currentItem();
-     if (item)
-         item->setForeground(Qt::gray);
-     ui->wavefrontList->setCurrentRow(ndx,QItemSelectionModel::Current);
-     item = ui->wavefrontList->currentItem();
-     item->setForeground(Qt::black);
-     lastCurrentItem = ui->wavefrontList->currentRow();
+    QListWidgetItem *item = ui->wavefrontList->item(lastCurrentItem);
+    if (item){
+        item->setIcon(style()->standardIcon(QStyle::SP_CustomBase));
+    }
+    ui->wavefrontList->setCurrentRow(ndx,QItemSelectionModel::Current);
 
+    item = ui->wavefrontList->currentItem();
+    item->setIcon(style()->standardIcon(QStyle::SP_DialogYesButton));
 
- }
+    lastCurrentItem = ui->wavefrontList->currentRow();
+}
+
 void surfaceAnalysisTools::deleteWaveFront(int i){
     QListWidgetItem* item = ui->wavefrontList->takeItem(i);
     delete item;
-
 }
 
-// thiis is called when pressing enter on a wevefront selected with arrow key
+// this is called when pressing enter on a wavefront selected with arrow key
 void surfaceAnalysisTools::on_wavefrontList_activated(const QModelIndex &index)
 {
     on_wavefrontList_clicked(index);
 }
 void surfaceAnalysisTools::on_wavefrontList_clicked(const QModelIndex &index)
 {
-    QListWidgetItem *item = ui->wavefrontList->item(lastCurrentItem);
-    if (item)
-        item->setForeground(Qt::gray);
-
-    QModelIndexList indexes = ui->wavefrontList->selectionModel()->selectedIndexes();
-
     /*
+    QModelIndexList indexes = ui->wavefrontList->selectionModel()->selectedIndexes();
     foreach(QModelIndex index, indexes)
     {
         emit waveFrontClicked(index.row());
     }
             */
-    // only enform about the last item in the list for efficency.
+    // only inform about the clicked item in the list for efficency.
     //That way surface manager does not spend time updating things not shown.
-    emit waveFrontClicked(indexes.last().row());
-    currentNdxChanged(index.row());
+    emit waveFrontClicked(index.row());
+}
+
+// this is "right click" on windows
+void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPoint &pos)
+{
+    QListWidgetItem *item = ui->wavefrontList->itemAt(pos);
+    if (item == 0)
+        return;
+
+    QMenu contextMenu(this);
+
+    // Create "Delete" action
+    QAction *deleteAction = new QAction("Delete", this);
+    connect(deleteAction, &QAction::triggered, [this, item]() {
+        on_deleteWave_clicked();
+    });
+    contextMenu.addAction(deleteAction);
+
+    // Create "Rename" action
+    QAction *renameAction = new QAction("Rename", this);
+    connect(renameAction, &QAction::triggered, [this, item]() {
+        ui->wavefrontList->editItem(item);
+    });
+    contextMenu.addAction(renameAction);
+
+    // TODO later add "invert" and "rotate"
+
+    // Show the context menu at the cursor position
+    contextMenu.exec(ui->wavefrontList->mapToGlobal(pos));
 }
 
 QList<int> surfaceAnalysisTools::SelectedWaveFronts(){
@@ -248,16 +268,6 @@ void surfaceAnalysisTools::defocusControlChanged(double val){
 void surfaceAnalysisTools::on_InvertPB_pressed()
 {
     emit invert(SelectedWaveFronts());
-}
-
-// this is "right click" on windows
-void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPoint &pos)
-{
-    QListWidgetItem *item = ui->wavefrontList->itemAt(pos);
-    if (item == 0)
-        return;
-    item->setSelected(true);	// even a right click will select the item
-    ui->wavefrontList->editItem(item);
 }
 
 void surfaceAnalysisTools::ListWidgetEditEnd(QWidget *editor, QAbstractItemDelegate::EndEditHint ){
