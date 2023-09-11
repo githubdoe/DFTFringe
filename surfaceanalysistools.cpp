@@ -161,6 +161,13 @@ void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPo
     });
     contextMenu.addAction(deleteAction);
 
+    // Create "Invert" action
+    QAction *invertAction = new QAction("Invert", this);
+    connect(invertAction, &QAction::triggered, [this, item]() {
+        on_InvertPB_pressed();
+    });
+    contextMenu.addAction(invertAction);
+
     // Create "Rename" action
     QAction *renameAction = new QAction("Rename", this);
     connect(renameAction, &QAction::triggered, [this, item]() {
@@ -168,7 +175,12 @@ void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPo
     });
     contextMenu.addAction(renameAction);
 
-    // TODO later add "invert" and "rotate"
+    // Create "Rotate" action
+    QAction *rotateAction = new QAction("Rotate", this);
+    connect(rotateAction, &QAction::triggered, [this, item]() {
+        on_transformsPB_clicked();
+    });
+    contextMenu.addAction(rotateAction);
 
     // Show the context menu at the cursor position
     contextMenu.exec(ui->wavefrontList->mapToGlobal(pos));
