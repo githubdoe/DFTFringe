@@ -140,7 +140,6 @@ SOURCES += main.cpp \
     psitiltoptions.cpp \
     contourrulerparams.cpp \
     zernikesmoothingdlg.cpp \
-    punwrap.cpp \ 
     SingleApplication/singleapplication.cpp \
     SingleApplication/singleapplication_p.cpp
 
@@ -412,6 +411,7 @@ VERSION = 6.2
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+DEFINES += QAPPLICATION_CLASS=QApplication
 
 DISTFILES += \
     buildingDFTFringe64.txt \
