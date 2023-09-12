@@ -125,6 +125,9 @@ void surfaceAnalysisTools::currentNdxChanged(int ndx){
 }
 
 void surfaceAnalysisTools::deleteWaveFront(int i){
+    if(lastCurrentItem > i) {
+        lastCurrentItem--;
+    }
     QListWidgetItem* item = ui->wavefrontList->takeItem(i);
     delete item;
 }
