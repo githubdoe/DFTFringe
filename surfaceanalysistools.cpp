@@ -21,6 +21,7 @@
 #include <QDebug>
 #include <QMenu>
 #include <QSettings>
+#include <QShortcut>
 #include <QtAlgorithms>
 #include <QLineEdit>
 #include "mirrordlg.h"
@@ -55,6 +56,8 @@ surfaceAnalysisTools::surfaceAnalysisTools(QWidget *parent) :
     connect(ui->wavefrontList->itemDelegate(), SIGNAL(closeEditor(QWidget*, QAbstractItemDelegate::EndEditHint)), this,
             SLOT(ListWidgetEditEnd(QWidget*, QAbstractItemDelegate::EndEditHint)));
     ui->wavefrontList->setContextMenuPolicy(Qt::CustomContextMenu);
+    QShortcut* dellShortcut = new QShortcut(Qt::Key_Delete, this);
+    connect(dellShortcut, &QShortcut::activated, this, &surfaceAnalysisTools::on_deleteWave_clicked);
 }
 
 void surfaceAnalysisTools::enableControls(bool flag){
