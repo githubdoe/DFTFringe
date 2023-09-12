@@ -286,12 +286,16 @@ void surfaceAnalysisTools::on_InvertPB_pressed()
 void surfaceAnalysisTools::ListWidgetEditEnd(QWidget* editor, QAbstractItemDelegate::EndEditHint ){
     const QString NewValue = reinterpret_cast<QLineEdit*>(editor)->text();
     QModelIndexList indexList = ui->wavefrontList->selectionModel()->selectedIndexes();
-    // because we don't know exactly which wft has been renamed in case of multiple selection
+    // because we don't know exactly which wft has been renamed in case of multiple selection, we must update name for all
     for (const QModelIndex &index : indexList) {
         const int row = index.row();
+        // update name only for thoseactually matching new name (that have actually be renamed)
         if(NewValue == ui->wavefrontList->item(row)->text()){
             emit wftNameChanged(index.row(), ui->wavefrontList->item(row)->text());
-            on_wavefrontList_clicked(index); //force complete redisplay to reload every name where they are printed
+            //force complete redisplay to reload if rename was on currently displayed wft
+            if(index.row() == lastCurrentItem) {
+                on_wavefrontList_clicked(index);
+            }
             // we cannot break; the loop because there might be duplicate names (rare but can happen)
         }
     }
