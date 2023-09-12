@@ -26,7 +26,7 @@ TEMPLATE = app
 
 CONFIG += ``
 
-SOURCES += main.cpp\
+SOURCES += main.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
     cpoint.cpp \
@@ -36,7 +36,6 @@ SOURCES += main.cpp\
     igramarea.cpp \
     circleoutline.cpp \
     gplus.cpp \
-    Boundary.cpp \
     graphicsutilities.cpp \
     dfttools.cpp \
     dftarea.cpp \
@@ -111,7 +110,6 @@ SOURCES += main.cpp\
     lensetablemodel.cpp \
     unwraperrorsview.cpp \
     lensdialog.cpp \
-    singleapplication.cpp \
     messagereceiver.cpp \
     myutils.cpp \
     pixelstats.cpp \
@@ -141,13 +139,14 @@ SOURCES += main.cpp\
     outlinedialog.cpp \
     psitiltoptions.cpp \
     contourrulerparams.cpp \
-    zernikesmoothingdlg.cpp
-    punwrap.cpp
+    zernikesmoothingdlg.cpp \
+    punwrap.cpp \ 
+    SingleApplication/singleapplication.cpp \
+    SingleApplication/singleapplication_p.cpp
 
 HEADERS  += mainwindow.h \
     arbitrarywavefronthelp.h \
     arbitrarywavwidget.h \
-    bezier.h \
     cpoint.h \
     defocusdlg.h \
     edgeplot.h \
@@ -161,7 +160,6 @@ HEADERS  += mainwindow.h \
     pdfcalibrationdlg.h \
     profileplot.h \
     psiresizeimagesdlg.h \
-    spline.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
     surfacelightingproxy.h \
@@ -231,8 +229,6 @@ HEADERS  += mainwindow.h \
     lensetablemodel.h \
     unwraperrorsview.h \
     lensdialog.h \
-    singleapplication.h \
-    singleapplication_p.h \
     messagereceiver.h \
     boundary.h \
     myutils.h \
@@ -264,7 +260,13 @@ HEADERS  += mainwindow.h \
     outlinedialog.h \
     psitiltoptions.h \
     contourrulerparams.h \
-    zernikesmoothingdlg.h
+    zernikesmoothingdlg.h \
+    bezier/bezier.h \
+    SingleApplication/singleapplication.h \
+    SingleApplication/singleapplication_p.h
+
+INCLUDEPATH += ./bezier ./SingleApplication
+
 FORMS    += mainwindow.ui \
     arbitrarywavefronthelp.ui \
     defocusdlg.ui \

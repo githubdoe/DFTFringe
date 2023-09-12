@@ -103,6 +103,7 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool) :
 OGLView::~OGLView(){
     m_controls->close();
     delete m_controls;
+    delete m_surface;
 }
 
 void OGLView::showContextMenu(const QPoint &pos)
