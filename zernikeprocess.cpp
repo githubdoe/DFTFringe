@@ -826,10 +826,6 @@ void zernikeProcess::fillVoid(wavefront &wf){
         int endx = x;
         int starty = y;
         int endy = y;
-        qDebug() << "regions to fill: " << wf.regions.size();
-        for (int z = 0; z < m_norms.size(); ++z){
-            qDebug() << "zern "<< z << " " << wf.InputZerns[z];
-        }
         for (int n = 0; n < wf.regions.size(); ++n){
 
             for (std::size_t i = 0; i < wf.regions[n].size(); ++i){
@@ -862,6 +858,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
                         double v = 0.;
 
                         for (int z = 0; z < m_norms.size(); ++z){
+                            if (z >= Z_TERMS) break; // fixes issue #91
                             v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
                         }
                         wf.data.at<double>(y,x) = v;
@@ -914,6 +911,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
                     double v = 0.;
 
                     for (int z = 0; z < m_norms.size(); ++z){
+                        if (z >= Z_TERMS) break;
                         v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
                     }
                     wf.data.at<double>(y,x) = v;
