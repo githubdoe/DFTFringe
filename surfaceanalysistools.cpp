@@ -288,7 +288,7 @@ void surfaceAnalysisTools::on_InvertPB_pressed()
     emit invert(SelectedWaveFronts());
 }
 
-// this is troggered on renaming/editing end
+// this is triggered on renaming/editing end
 void surfaceAnalysisTools::ListWidgetEditEnd(QWidget* editor, QAbstractItemDelegate::EndEditHint ){
     const QString NewValue = reinterpret_cast<QLineEdit*>(editor)->text();
     QModelIndexList indexList = ui->wavefrontList->selectionModel()->selectedIndexes();
