@@ -56,8 +56,8 @@ surfaceAnalysisTools::surfaceAnalysisTools(QWidget *parent) :
     connect(ui->wavefrontList->itemDelegate(), SIGNAL(closeEditor(QWidget*, QAbstractItemDelegate::EndEditHint)), this,
             SLOT(ListWidgetEditEnd(QWidget*, QAbstractItemDelegate::EndEditHint)));
     ui->wavefrontList->setContextMenuPolicy(Qt::CustomContextMenu);
-    QShortcut* dellShortcut = new QShortcut(Qt::Key_Delete, this);
-    connect(dellShortcut, &QShortcut::activated, this, &surfaceAnalysisTools::on_deleteWave_clicked);
+    QShortcut* delShortcut = new QShortcut(Qt::Key_Delete, this);
+    connect(delShortcut, &QShortcut::activated, this, &surfaceAnalysisTools::on_deleteWave_clicked);
 }
 
 void surfaceAnalysisTools::enableControls(bool flag){
@@ -107,7 +107,7 @@ void surfaceAnalysisTools::on_spinBox_2_valueChanged(int arg1)
     emit centerMaskValue(arg1);
 }
 
-// this is responsible of givin user feedback about which wft is currently displayed
+// this is responsible of giving user feedback about which wft is currently displayed
 void surfaceAnalysisTools::currentNdxChanged(int ndx){
     if (ui->wavefrontList->count() == 0)
         return;
