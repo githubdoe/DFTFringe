@@ -56,7 +56,7 @@ surfaceAnalysisTools::surfaceAnalysisTools(QWidget *parent) :
     connect(ui->wavefrontList->itemDelegate(), SIGNAL(closeEditor(QWidget*, QAbstractItemDelegate::EndEditHint)), this,
             SLOT(ListWidgetEditEnd(QWidget*, QAbstractItemDelegate::EndEditHint)));
     ui->wavefrontList->setContextMenuPolicy(Qt::CustomContextMenu);
-    QShortcut* delShortcut = new QShortcut(Qt::Key_Delete, this);
+    QShortcut* delShortcut = new QShortcut(QKeySequence::Delete, this);
     connect(delShortcut, &QShortcut::activated, this, &surfaceAnalysisTools::on_deleteWave_clicked);
 }
 
@@ -165,6 +165,7 @@ void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPo
     connect(deleteAction, &QAction::triggered, [this, item]() {
         on_deleteWave_clicked();
     });
+    deleteAction->setShortcuts(QKeySequence::Delete);
     contextMenu.addAction(deleteAction);
 
     // Create "Invert" action
