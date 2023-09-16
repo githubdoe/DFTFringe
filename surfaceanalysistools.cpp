@@ -165,7 +165,7 @@ void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPo
     connect(deleteAction, &QAction::triggered, [this, item]() {
         on_deleteWave_clicked();
     });
-    deleteAction->setShortcuts(QKeySequence::Delete);
+    deleteAction->setShortcut(QKeySequence::Delete);
     contextMenu.addAction(deleteAction);
 
     // Create "Invert" action
@@ -180,6 +180,7 @@ void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPo
     connect(renameAction, &QAction::triggered, [this, item]() {
         ui->wavefrontList->editItem(item);
     });
+    renameAction->setShortcut(QKeySequence(Qt::Key_F2));
     contextMenu.addAction(renameAction);
 
     // Create "Rotate" action
