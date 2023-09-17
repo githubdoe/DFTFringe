@@ -114,7 +114,11 @@ void surfaceAnalysisTools::currentNdxChanged(int ndx){
 
     QListWidgetItem *item = ui->wavefrontList->item(lastCurrentItem);
     if (item){
-        item->setIcon(style()->standardIcon(QStyle::SP_CustomBase));
+        QIcon blankIcon;
+        QPixmap pixmap(16, 16);
+        pixmap.fill(Qt::transparent);
+        blankIcon.addPixmap(pixmap);
+        item->setIcon(blankIcon); // use a transparent icon to align text
     }
     ui->wavefrontList->setCurrentRow(ndx,QItemSelectionModel::Current);
 
