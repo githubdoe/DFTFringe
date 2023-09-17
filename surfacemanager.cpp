@@ -71,6 +71,8 @@
 #include "transformwavefrontdlg.h"
 #include "oglrendered.h"
 #include "ui_oglrendered.h"
+#include "spdlog/spdlog.h"
+
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -545,7 +547,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
 }
 
 SurfaceManager::~SurfaceManager(){
-    qDebug() << "SurfaceManager::~SurfaceManager";
+    spdlog::get("logger")->trace("SurfaceManager::~SurfaceManager");
     for(wavefront* wf : m_wavefronts){
         delete wf;
     }
@@ -2584,8 +2586,9 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
      QApplication::restoreOverrideCursor();
 }
 
-void SurfaceManager::computeTestStandAstig(){
-    standAstigWizard *wiz = new standAstigWizard(this);
+void SurfaceManager::computeTestStandAstig(QWidget *parent){
+    standAstigWizard *wiz = new standAstigWizard(this, parent);
+    QObject::connect(wiz, &standAstigWizard::finished, wiz, &QObject::deleteLater);
     wiz->show();
 }
 

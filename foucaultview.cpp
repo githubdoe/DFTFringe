@@ -7,6 +7,7 @@
 #include <QVector>
 #include <QMenu>
 #include "zernikeprocess.h"
+#include "spdlog/spdlog.h"
 
 extern double outputLambda;
 
@@ -49,7 +50,7 @@ foucaultView *foucaultView::get_Instance(SurfaceManager *sm){
 foucaultView::~foucaultView()
 {
     delete ui;
-    qDebug() << "foucaultView::~foucaultView";
+    spdlog::get("logger")->trace("foucaultView::~foucaultView");
 }
 QString getSaveFileName(QString type){
     QSettings settings;

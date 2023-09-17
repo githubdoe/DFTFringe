@@ -85,7 +85,7 @@ public:
     }
     cv::Mat computeWaveFrontFromZernikes(int wx,int wy, std::vector<double> &zerns, QVector<int> zernsToUse);
     void report();
-    void computeTestStandAstig();
+    void computeTestStandAstig(QWidget *parent);
     QVector<wavefront*> m_wavefronts;
     surfaceAnalysisTools *m_surfaceTools;
     ProfilePlot *m_profilePlot;

@@ -914,7 +914,7 @@ void MainWindow::on_pluss_clicked()
 
 void MainWindow::on_actionTest_Stand_Astig_Removal_triggered()
 {
-    m_surfaceManager->computeTestStandAstig();
+    m_surfaceManager->computeTestStandAstig(this);
 }
 
 
