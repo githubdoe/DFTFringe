@@ -54,7 +54,6 @@ signals:
     void doxform(QList<int>);
     void surfaceSmoothGBValue(double);
     void surfaceSmoothGBEnabled(bool);
-    void wavefrontDClicked(const QString &);
     void waveFrontClicked(int ndx);
     void outsideMaskValue(int);
     void centerMaskValue(int);
@@ -77,14 +76,13 @@ public slots:
     void defocusControlChanged(double);
     void enableControls(bool);
 private slots:
-
-    void on_wavefrontList_itemDoubleClicked(QListWidgetItem *item);
-
     void on_spinBox_valueChanged(int arg1);
 
     void on_spinBox_2_valueChanged(int arg1);
 
+    void on_wavefrontList_activated(const QModelIndex &index);
     void on_wavefrontList_clicked(const QModelIndex &index);
+    void on_wavefrontList_customContextMenuRequested(const QPoint &pos);
 
     void on_blurCB_clicked(bool checked);
 
@@ -98,9 +96,7 @@ private slots:
 
     void on_SelectNonePB_clicked();
 
-     void on_InvertPB_pressed();
-
-    void on_wavefrontList_customContextMenuRequested(const QPoint &pos);
+    void on_InvertPB_pressed();
 
     void ListWidgetEditEnd(QWidget *editor, QAbstractItemDelegate::EndEditHint);
 
