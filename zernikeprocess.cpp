@@ -858,7 +858,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
                         zpolar.init(rho,theta);
                         double v = 0.;
 
-                        for (int z = 0; z < wf.InputZerns.size(); ++z){
+                        for (size_t z = 0; z < wf.InputZerns.size(); ++z){
                             v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
                         }
                         wf.data.at<double>(y,x) = v;
@@ -910,7 +910,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
                     zpolar.init(rho,theta);
                     double v = 0.;
 
-                    for (int z = 0; z < wf.InputZerns.size(); ++z){
+                    for (size_t z = 0; z < wf.InputZerns.size(); ++z){
                         v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
                     }
                     wf.data.at<double>(y,x) = v;
