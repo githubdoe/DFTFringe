@@ -551,7 +551,9 @@ SurfaceManager::~SurfaceManager(){
     for(wavefront* wf : m_wavefronts){
         delete wf;
     }
-    m_standAstigWizard->close();
+    if(m_standAstigWizard != nullptr){
+        m_standAstigWizard->close();
+    }
 }
 
 void SurfaceManager::outputLambdaChanged(double val){
