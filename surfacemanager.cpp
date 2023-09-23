@@ -551,7 +551,7 @@ SurfaceManager::~SurfaceManager(){
     for(wavefront* wf : m_wavefronts){
         delete wf;
     }
-    delete m_standAstigWizard;
+    m_standAstigWizard->close();
 }
 
 void SurfaceManager::outputLambdaChanged(double val){
@@ -2591,7 +2591,7 @@ void SurfaceManager::computeTestStandAstig(){
     if(m_standAstigWizard == nullptr){
         spdlog::get("logger")->trace("new standAstigWizard");
         m_standAstigWizard = new standAstigWizard(this);
-        QObject::connect(m_standAstigWizard, &standAstigWizard::finished, m_standAstigWizard, &QObject::deleteLater);
+        m_standAstigWizard->setAttribute( Qt::WA_DeleteOnClose, true );
         m_standAstigWizard->show();
     }
     else{
