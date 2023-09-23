@@ -85,7 +85,7 @@ public:
     }
     cv::Mat computeWaveFrontFromZernikes(int wx,int wy, std::vector<double> &zerns, QVector<int> zernsToUse);
     void report();
-    void computeTestStandAstig(QWidget *parent);
+    void computeTestStandAstig();
     QVector<wavefront*> m_wavefronts;
     surfaceAnalysisTools *m_surfaceTools;
     ProfilePlot *m_profilePlot;
@@ -127,6 +127,7 @@ private:
     QProgressDialog *pd;
     QTimer *m_waveFrontTimer;
     QTimer *m_toolsEnableTimer;
+    QPointer<standAstigWizard> m_standAstigWizard;
     int workToDo;
     int workProgress;
 

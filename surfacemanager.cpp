@@ -492,7 +492,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
     m_SurfaceGraph(glPlot), m_metrics(mets),
     m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
-    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), workToDo(0), m_wftStats(0)
+    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {
 
     okToUpdateSurfacesOnGenerateComplete = true;
@@ -551,6 +551,7 @@ SurfaceManager::~SurfaceManager(){
     for(wavefront* wf : m_wavefronts){
         delete wf;
     }
+    delete m_standAstigWizard;
 }
 
 void SurfaceManager::outputLambdaChanged(double val){
@@ -2586,10 +2587,18 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
      QApplication::restoreOverrideCursor();
 }
 
-void SurfaceManager::computeTestStandAstig(QWidget *parent){
-    standAstigWizard *wiz = new standAstigWizard(this, parent);
-    QObject::connect(wiz, &standAstigWizard::finished, wiz, &QObject::deleteLater);
-    wiz->show();
+void SurfaceManager::computeTestStandAstig(){
+    if(m_standAstigWizard == nullptr){
+        spdlog::get("logger")->trace("new standAstigWizard");
+        m_standAstigWizard = new standAstigWizard(this);
+        QObject::connect(m_standAstigWizard, &standAstigWizard::finished, m_standAstigWizard, &QObject::deleteLater);
+        m_standAstigWizard->show();
+    }
+    else{
+        // bring to front the already oppened window
+        m_standAstigWizard->activateWindow();
+        m_standAstigWizard->raise();
+    }
 }
 
 void SurfaceManager::saveAllContours(){
