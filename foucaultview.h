@@ -13,16 +13,15 @@ class foucaultView : public QWidget
     Q_OBJECT
 
 public:
-    QString imageDir;
     static foucaultView *get_Instance(SurfaceManager *sm = 0);
-    static foucaultView *m_instance;
-    explicit foucaultView(QWidget *parent = 0, SurfaceManager *sm = 0);
+    foucaultView(const foucaultView&) = delete;
+    foucaultView& operator=(const foucaultView&) = delete;
     ~foucaultView();
-    void setSurface(wavefront * wf);
 
+    void setSurface(wavefront * wf);
     bool saveOnlyFoucault();
     bool needsDrawing;
-    QImage m_foucultQimage;
+
 public slots:
     void on_makePb_clicked();
 
@@ -84,14 +83,18 @@ private slots:
 private:
     Ui::foucaultView *ui;
     SurfaceManager *m_sm;
+    QString imageDir;
+    QImage m_foucultQimage;
     QTimer m_guiTimer;
-    cv::Mat compute_star_test(int pupil_size, double defocus, double pad, bool use_OPD);
-    double getStep();
     int heightMultiply;
     double m_sag;
     double m_temp_sag;
     wavefront *m_wf;
     int lateralOffset;
+
+    explicit foucaultView(QWidget *parent = 0, SurfaceManager *sm = 0);
+    cv::Mat compute_star_test(int pupil_size, double defocus, double pad, bool use_OPD);
+    double getStep();
     void draw_ROC_Scale();
 
 };

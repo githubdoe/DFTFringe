@@ -71,6 +71,8 @@
 #include "transformwavefrontdlg.h"
 #include "oglrendered.h"
 #include "ui_oglrendered.h"
+#include "spdlog/spdlog.h"
+
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -472,13 +474,15 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
     //cv::waitKey(1);
     return result;
 }
-SurfaceManager *SurfaceManager::m_instance = 0;
+
 SurfaceManager *SurfaceManager::get_instance(QObject *parent, surfaceAnalysisTools *tools,
                                              ProfilePlot *profilePlot, contourView *contourPlot,
                                              SurfaceGraph *glPlot, metricsDisplay *mets){
-    if (m_instance == 0){
-        m_instance = new SurfaceManager(parent, tools, profilePlot, contourPlot, glPlot, mets);
-    }
+    //static SurfaceManager m_instance{parent, tools, profilePlot, contourPlot, glPlot, mets};
+    //return &m_instance;
+    // Take care. This is non standard init for when the singleton is supposed to be deleted by parent
+    // keeping original version will call class destructor and on_exit will try to clean up static variable m_instance. But the instance doesn't exist anymore.
+    static SurfaceManager *m_instance = new SurfaceManager(parent, tools, profilePlot, contourPlot, glPlot, mets);
     return m_instance;
 }
 
@@ -488,7 +492,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
     m_SurfaceGraph(glPlot), m_metrics(mets),
     m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
-    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), workToDo(0), m_wftStats(0)
+    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {
 
     okToUpdateSurfacesOnGenerateComplete = true;
@@ -543,9 +547,12 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
 }
 
 SurfaceManager::~SurfaceManager(){
-    qDebug() << "SurfaceManager::~SurfaceManager";
+    spdlog::get("logger")->trace("SurfaceManager::~SurfaceManager");
     for(wavefront* wf : m_wavefronts){
         delete wf;
+    }
+    if(m_standAstigWizard != nullptr){
+        m_standAstigWizard->close();
     }
 }
 
@@ -1669,7 +1676,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
     for (int i = 0; i < list.size(); ++i) {
         wavefront *oldWf = m_wavefronts[list[i]];
         QStringList l = oldWf->name.split('.');
-        QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0'));
+        QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0')); // clazy:exclude=qstring-arg
         wavefront *wf = new wavefront();
         *wf = *oldWf; // copy everything to new wavefront including basic things like diameter,wavelength
         //emit nameChanged(wf->name, newName);
@@ -2468,7 +2475,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
         angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
-        imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname).arg(angle);
+        imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname).arg(angle); // clazy:exclude=qstring-arg
 
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);
@@ -2583,8 +2590,17 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
 }
 
 void SurfaceManager::computeTestStandAstig(){
-    standAstigWizard *wiz = new standAstigWizard(this);
-    wiz->show();
+    if(m_standAstigWizard == nullptr){
+        spdlog::get("logger")->trace("new standAstigWizard");
+        m_standAstigWizard = new standAstigWizard(this);
+        m_standAstigWizard->setAttribute( Qt::WA_DeleteOnClose, true );
+        m_standAstigWizard->show();
+    }
+    else{
+        // bring to front the already oppened window
+        m_standAstigWizard->activateWindow();
+        m_standAstigWizard->raise();
+    }
 }
 
 void SurfaceManager::saveAllContours(){

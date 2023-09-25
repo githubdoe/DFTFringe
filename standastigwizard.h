@@ -85,7 +85,7 @@ class makeAverages : public QWizardPage
 {
     Q_OBJECT
 public:
-    makeAverages(QWidget * p= 0);
+    makeAverages(QWidget *parent = 0);
 };
 
 class define_input : public QWizardPage

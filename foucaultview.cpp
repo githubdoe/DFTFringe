@@ -7,9 +7,9 @@
 #include <QVector>
 #include <QMenu>
 #include "zernikeprocess.h"
+#include "spdlog/spdlog.h"
 
 extern double outputLambda;
-foucaultView *foucaultView::m_instance = 0;
 
 foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     QWidget(parent),
@@ -39,15 +39,18 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
 
 
 foucaultView *foucaultView::get_Instance(SurfaceManager *sm){
-    if (m_instance == 0){
-        m_instance = new foucaultView(0,sm);
-    }
+    //static foucaultView m_instance{0, sm};
+    //return &m_instance;
+    // Take care. This is non standard init for when the singleton is supposed to be deleted by parent
+    // keeping original version will call class destructor and on_exit will try to clean up static variable m_instance. But the instance doesn't exist anymore.
+    static foucaultView *m_instance = new foucaultView(0, sm);
     return m_instance;
 }
 
 foucaultView::~foucaultView()
 {
     delete ui;
+    spdlog::get("logger")->trace("foucaultView::~foucaultView");
 }
 QString getSaveFileName(QString type){
     QSettings settings;
