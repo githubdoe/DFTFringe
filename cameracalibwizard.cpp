@@ -3,6 +3,8 @@
 #include <QLabel>
 #include <QLayout>
 #include "camwizardpage1.h"
+#include "spdlog/spdlog.h"
+
 cameraCalibWizard::cameraCalibWizard(QWidget *parent) :
     QWizard(parent),
     ui(new Ui::cameraCalibWizard)
@@ -18,6 +20,7 @@ cameraCalibWizard::cameraCalibWizard(QWidget *parent) :
 
 cameraCalibWizard::~cameraCalibWizard()
 {
+    spdlog::get("logger")->trace("cameraCalibWizard::~cameraCalibWizard");
     delete ui;
 }
 

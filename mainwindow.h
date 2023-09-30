@@ -47,6 +47,8 @@
 #include "astigstatsdlg.h"
 #include "wavefrontfilterdlg.h"
 #include "outlineplots.h"
+#include "cameracalibwizard.h"
+
 class regionEditTools;
 namespace Ui {
 class MainWindow;
@@ -333,6 +335,8 @@ private:
     QWidget *profileFv;
     void Batch_Process_Interferograms();
     QVector<QVector<QString> > batchZerns;
+
+    QPointer<cameraCalibWizard> m_cameraCalibWizard;
 };
 
 #endif // MAINWINDOW_H

@@ -59,7 +59,7 @@ MainWindow *MainWindow::me = 0;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
-    m_batchMakeSurfaceReady(false), m_astigStatsDlg(0)
+    m_batchMakeSurfaceReady(false), m_astigStatsDlg(0), m_cameraCalibWizard(nullptr)
 {
     ui->setupUi(this);
 
@@ -311,7 +311,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 MainWindow::~MainWindow()
 {
-    qDebug() << "deleteing mainwindow";
+    spdlog::get("logger")->trace("MainWindow::~MainWindow");
+    if(m_cameraCalibWizard != nullptr){
+        m_cameraCalibWizard->close();
+    }
     delete m_colorChannels;
     delete m_intensityPlot;
     delete m_ogl;
@@ -1465,9 +1468,17 @@ void MainWindow::on_actionEdit_Zernike_values_triggered()
 
 void MainWindow::on_actionCamera_Calibration_triggered()
 {
-    cameraCalibWizard *camWiz = new cameraCalibWizard;
-    camWiz->show();
-
+    if(m_cameraCalibWizard == nullptr){
+        spdlog::get("logger")->trace("new cameraCalibWizard");
+        m_cameraCalibWizard = new cameraCalibWizard;
+        m_cameraCalibWizard->setAttribute( Qt::WA_DeleteOnClose, true );
+        m_cameraCalibWizard->show();
+    }
+    else{
+        // bring to front the already oppened window
+        m_cameraCalibWizard->activateWindow();
+        m_cameraCalibWizard->raise();
+    }
 }
 #include "unwraperrorsview.h"
 void MainWindow::on_actionShow_unwrap_errors_triggered()
