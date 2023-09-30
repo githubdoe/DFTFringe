@@ -236,7 +236,6 @@ MainWindow::MainWindow(QWidget *parent) :
             continue;
         zernEnables[i] = false;
     }
-    zernEnableUpdateTime = QDateTime::currentDateTime().toTime_t();
 
     connect(m_surfaceManager, SIGNAL(rocChanged(double)),this, SLOT(rocChanged(double)));
     connect(m_mirrorDlg, SIGNAL(newPath(QString)),this, SLOT(newMirrorDlgPath(QString)));
