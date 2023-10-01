@@ -316,6 +316,7 @@ MainWindow::~MainWindow()
     delete m_intensityPlot;
     delete m_ogl;
     userMapDlg->close();
+    mirrorDlg::get_Instance()->close();
     delete ui;
 }
 
