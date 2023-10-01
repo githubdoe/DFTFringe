@@ -17,19 +17,19 @@
 ****************************************************************************/
 #include "mirrordlg.h"
 #include "ui_mirrordlg.h"
+#include "spdlog/spdlog.h"
 #include <QtGui>
 #include <QFileDialog>
 #include <iostream>
 #include <fstream>
 #include <QMessageBox>
 #include <QDebug>
+
 QString mirrorDlg::m_projectPath = "";
-mirrorDlg *mirrorDlg::m_Instance = 0;
+
 mirrorDlg *mirrorDlg::get_Instance(){
-    if (m_Instance == 0){
-        m_Instance = new mirrorDlg();
-    }
-    return m_Instance;
+    static mirrorDlg m_Instance{};
+    return &m_Instance;
 }
 
 mirrorDlg::mirrorDlg(QWidget *parent) :
@@ -118,6 +118,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
 
 mirrorDlg::~mirrorDlg()
 {
+    spdlog::get("logger")->trace("mirrorDlg::~mirrorDlg");
     delete ui;
 }
 bool mirrorDlg::shouldFlipH(){

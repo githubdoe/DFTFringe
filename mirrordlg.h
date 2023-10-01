@@ -30,9 +30,11 @@ class mirrorDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit mirrorDlg(QWidget *parent = 0);
-    ~mirrorDlg();
     static mirrorDlg *get_Instance();
+    ~mirrorDlg();
+    mirrorDlg(const mirrorDlg&) = delete;
+    mirrorDlg& operator=(const mirrorDlg&) = delete;
+
     void loadFile(QString & fileName);
     void updateZ8();
 
@@ -119,13 +121,12 @@ signals:
     void aperatureChanged();
 
 private:
-    Ui::mirrorDlg *ui;
-    static mirrorDlg *m_Instance;
-    bool m_aperatureReductionValueChanged;
-    QTimer spacingChangeTimer;
+    explicit mirrorDlg(QWidget *parent = 0);
     void setclearAp();
 
-
+    Ui::mirrorDlg *ui;
+    bool m_aperatureReductionValueChanged;
+    QTimer spacingChangeTimer;
 };
 
 #endif // MIRRORDLG_H
