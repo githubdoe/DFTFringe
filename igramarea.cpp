@@ -2437,6 +2437,8 @@ void IgramArea::writeOutlines(QString fileName){
     saveFile.write(jsondoc.toJson());
     saveFile.close();
 
+    saveRegions(); // save regions to registry also
+
 }
 
 void IgramArea::saveOutlines(){
