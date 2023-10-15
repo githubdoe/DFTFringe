@@ -22,9 +22,10 @@
 
 settingsIGram *Settings2::m_igram = 0;
 settingsDFT *Settings2::m_dft = 0;
-settingsDebug *Settings2::m_debug = 0;
 settingsProfile *Settings2::m_profile = 0;
 SettingsGeneral2 *Settings2::m_general = 0;
+settingsDebug *Settings2::m_debug = 0;
+
 Settings2::Settings2(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::Settings2)
@@ -36,17 +37,16 @@ Settings2::Settings2(QWidget *parent) :
     ui->listWidget->addItem(QString("General"));
     ui->listWidget->addItem(QString("Debug"));
     m_igram = new settingsIGram();
-    ui->stackedWidget->addWidget(m_igram);
     m_dft = new settingsDFT();
-    m_debug = new settingsDebug();
     m_profile = new settingsProfile();
     m_general = new SettingsGeneral2();
+    m_debug = new settingsDebug();
     ui->stackedWidget->setCurrentIndex(0);
+    ui->stackedWidget->addWidget(m_igram);
     ui->stackedWidget->addWidget(m_dft);
     ui->stackedWidget->addWidget(m_profile);
     ui->stackedWidget->addWidget(m_general);
     ui->stackedWidget->addWidget(m_debug);
-
 }
 
 Settings2 *Settings2::getInstance(){
