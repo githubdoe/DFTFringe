@@ -434,8 +434,7 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     mimeTypeFilters.insert(1,"Image files (*.png *.xpm *.jpg)");
     dialog.setMimeTypeFilters(mimeTypeFilters);
 
-    QSettings set;
-    QString mime = set.value("igramExt","jpeg").toString();
+    QString mime = settings.value("igramExt","jpeg").toString();
     mime.replace("jpg", "jpeg",Qt::CaseInsensitive);
     dialog.selectMimeTypeFilter("image/"+mime);
     dialog.setDefaultSuffix(mime);
@@ -444,7 +443,7 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
         if (dialog.selectedFiles().size() == 1){
             QFileInfo a(dialog.selectedFiles().first());
             QString ext = a.completeSuffix();
-            set.setValue("igramExt", ext);
+            settings.setValue("igramExt", ext);
             qDebug() << "suffix"<<ext;
 
             loadFile(dialog.selectedFiles().first());
@@ -621,7 +620,6 @@ QStringList MainWindow::SelectWaveFrontFiles(){
         if (fileNames.size() > 0){
             QFileInfo info(fileNames[0]);
             lastPath = info.absolutePath();
-            QSettings settings;
             settings.setValue("lastPath",lastPath);
             return dialog.selectedFiles();
         }
@@ -1069,8 +1067,8 @@ void MainWindow::saveBatchZerns(){
 
 void MainWindow::batchProcess(QStringList fileList){
     m_contourView->getPlot()->blockSignals(true);
-    QSettings set;
-    bool shouldBeep = set.value("RMSBeep>", true).toBool();
+    QSettings settings;
+    bool shouldBeep = settings.value("RMSBeep>", true).toBool();
     this->setCursor(Qt::WaitCursor);
     batchIgramWizard::goPb->setEnabled(false);
     batchIgramWizard::addFiles->setEnabled(false);
@@ -1080,7 +1078,6 @@ void MainWindow::batchProcess(QStringList fileList){
     QFileInfo info(m_igramsToProcess[0]);
     batchWiz->showPlots(batchIgramWizard::showProcessPlots->isChecked());
     QString lastPath = info.absolutePath();
-    QSettings settings;
     settings.setValue("lastPath",lastPath);
     int memThreshold = settings.value("lowMemoryThreshold", 300).toInt();
     int last = fileList.size()-1;
@@ -1216,8 +1213,8 @@ void MainWindow::batchProcess(QStringList fileList){
                 painter.setPen(Qt::yellow);
                 painter.setBrush(Qt::yellow);
                 QFileInfo info(fn);
-                double cx = set.value("lastOutsideCx",0).toDouble();
-                double cy = set.value("lastOutsideCy",0.).toDouble();
+                double cx = settings.value("lastOutsideCx",0).toDouble();
+                double cy = settings.value("lastOutsideCy",0.).toDouble();
                 wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
                 QString txt = QString("%1 RMS: %2 outline center x,y: %3, %4").arg(
                                                 info.baseName().toStdString().c_str()).arg(
