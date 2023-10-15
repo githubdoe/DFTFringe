@@ -202,7 +202,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     pdfcalibrationdlg.cpp \
     pixelstats.cpp \
     plotcolor.cpp \
-    prefsdlg.cpp \
     profileplot.cpp \
     psfplot.cpp \
     psi_dlg.cpp \
@@ -321,7 +320,6 @@ HEADERS += bezier/bezier.h \
     pdfcalibrationdlg.h \
     pixelstats.h \
     plotcolor.h \
-    prefsdlg.h \
     profileplot.h \
     psfplot.h \
     psi_dlg.h \
@@ -417,7 +415,6 @@ FORMS += arbitrarywavefronthelp.ui \
     outlinestatsdlg.ui \
     pdfcalibrationdlg.ui \
     pixelstats.ui \
-    prefsdlg.ui \
     profilearea.ui \
     profileplot.ui \
     psfplot.ui \
