@@ -147,8 +147,6 @@ signals:
     void rocChanged(double);
     void nameChanged(QString, QString);
     void showTab(int);
-    void load(SurfaceManager *);
-    void load(QStringList, SurfaceManager *);
     void enableControls(bool);
 private slots:
     void waveFrontClickedSlot(int ndx);
