@@ -48,32 +48,24 @@ PSI_dlg::~PSI_dlg()
 
 void PSI_dlg::on_browse_clicked()
 {
-    QStringList mimeTypeFilters;
-    foreach (const QByteArray &mimeTypeName, QImageReader::supportedMimeTypes())
-        mimeTypeFilters.append(mimeTypeName);
-    mimeTypeFilters.sort();
     QSettings settings;
     QString lastPath = settings.value("lastPath",".").toString();
     QFileDialog dialog(this, tr("Open File"),lastPath);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    mimeTypeFilters.insert(0, "application/octet-stream");
-    mimeTypeFilters.insert(1,"Image files (*.png *.xpm *.jpg)");
-    dialog.setMimeTypeFilters(mimeTypeFilters);
-
-    QSettings set;
-    QString mime = set.value("igramExt","jpeg").toString();
-    mime.replace("jpg", "jpeg",Qt::CaseInsensitive);
-    dialog.selectMimeTypeFilter("image/"+mime);
-    dialog.setDefaultSuffix(mime);
-
+    // the QT default extension are obtained by doing 
+    // `for(const QByteArray &mimeTypeName : QImageReader::supportedMimeTypes())`
+    // `   mimeTypeFilters.append(mimeTypeName);`
+    // `dialog.setMimeTypeFilters(mimeTypeFilters);`
+    // `qDebug() << dialog.nameFilters();`
+    // manually added upper case and first char upper case
+    const QStringList filters({"Image files (*.bmp *.dib *.BMP *.DIB *.Bmp *.Dib *.gif *.GIF *.Gif *.jpg *.jpeg *.jpe *.JPG *.JPEG *.JPE *.Jpg *.Jpeg *.Jpe*.png *.PNG *.Png*.svg *.SVG *.Svg*.svgz *.SVGZ *.Svgz*.ico *.ICO *.Ico*.pbm *.PBM *.Pbm*.pgm *.PGM *.Pgm*.ppm *.PPM *.Ppm*.xbm *.XBM *.Xbm*.xpm *.XPM *.Xpm)",
+                           "Any files (*)"
+                          });
+    dialog.setNameFilters(filters);
     if (dialog.exec()){
-
-
             QFileInfo a(dialog.selectedFiles().first());
-            QString ext = a.completeSuffix();
-            set.setValue("igramExt", ext);
-            set.setValue("lastPath",a.absoluteFilePath());
+            settings.setValue("lastPath",a.absoluteFilePath());
             //m_surfaceManager->process_psi(dialog.selectedFiles());
             QStringList files = dialog.selectedFiles();
             ui->igramList->addItems(files);

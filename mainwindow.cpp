@@ -420,32 +420,24 @@ QString MainWindow::strippedName(const QString &fullFileName)
 
 void MainWindow::on_actionLoad_Interferogram_triggered()
 {
-
-    QStringList mimeTypeFilters;
-    foreach (const QByteArray &mimeTypeName, QImageReader::supportedMimeTypes())
-        mimeTypeFilters.append(mimeTypeName);
-    mimeTypeFilters.sort();
     QSettings settings;
     QString lastPath = settings.value("lastPath",".").toString();
-    QFileDialog dialog(this, tr("Open File"),lastPath);
+    QFileDialog dialog(this, tr("Open File"), lastPath);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    mimeTypeFilters.insert(0, "application/octet-stream");
-    mimeTypeFilters.insert(1,"Image files (*.png *.xpm *.jpg)");
-    dialog.setMimeTypeFilters(mimeTypeFilters);
-
-    QString mime = settings.value("igramExt","jpeg").toString();
-    mime.replace("jpg", "jpeg",Qt::CaseInsensitive);
-    dialog.selectMimeTypeFilter("image/"+mime);
-    dialog.setDefaultSuffix(mime);
+    // the QT default extension are obtained by doing 
+    // `for(const QByteArray &mimeTypeName : QImageReader::supportedMimeTypes())`
+    // `   mimeTypeFilters.append(mimeTypeName);`
+    // `dialog.setMimeTypeFilters(mimeTypeFilters);`
+    // `qDebug() << dialog.nameFilters();`
+    // manually added upper case and first char upper case
+    const QStringList filters({"Image files (*.bmp *.dib *.BMP *.DIB *.Bmp *.Dib *.gif *.GIF *.Gif *.jpg *.jpeg *.jpe *.JPG *.JPEG *.JPE *.Jpg *.Jpeg *.Jpe*.png *.PNG *.Png*.svg *.SVG *.Svg*.svgz *.SVGZ *.Svgz*.ico *.ICO *.Ico*.pbm *.PBM *.Pbm*.pgm *.PGM *.Pgm*.ppm *.PPM *.Ppm*.xbm *.XBM *.Xbm*.xpm *.XPM *.Xpm)",
+                           "Any files (*)"
+                          });
+    dialog.setNameFilters(filters);
     ui->SelectObsOutline->setChecked(false);
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
-            QFileInfo a(dialog.selectedFiles().first());
-            QString ext = a.completeSuffix();
-            settings.setValue("igramExt", ext);
-            qDebug() << "suffix"<<ext;
-
             loadFile(dialog.selectedFiles().first());
         }
         else{
@@ -453,7 +445,6 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
             Batch_Process_Interferograms();
         }
     }
-
 }
 
 void MainWindow::createActions()
