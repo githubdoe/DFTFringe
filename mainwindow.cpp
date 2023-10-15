@@ -319,6 +319,7 @@ MainWindow::~MainWindow()
     delete m_ogl;
     userMapDlg->close();
     mirrorDlg::get_Instance()->close();
+    settingsDlg->close();
     delete ui;
 }
 
