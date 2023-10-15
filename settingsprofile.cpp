@@ -20,6 +20,8 @@
 #include <QSettings>
 #include <QColorDialog>
 #include <QWidget>
+#include "spdlog/spdlog.h"
+
 static inline QString colorButtonStyleSheet(const QColor &bgColor)
 {
     if (bgColor.isValid()) {
@@ -68,6 +70,7 @@ int settingsProfile::selectedWidth(){
 
 settingsProfile::~settingsProfile()
 {
+    spdlog::get("logger")->trace("settingsProfile::~settingsProfile");
     delete ui;
 }
 

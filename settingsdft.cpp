@@ -18,6 +18,8 @@
 #include "settingsdft.h"
 #include "ui_settingsdft.h"
 #include <QSettings>
+#include "spdlog/spdlog.h"
+
 settingsDFT::settingsDFT(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::settingsDFT)
@@ -33,6 +35,7 @@ settingsDFT::settingsDFT(QWidget *parent) :
 
 settingsDFT::~settingsDFT()
 {
+    spdlog::get("logger")->trace("settingsDFT::~settingsDFT");
     delete ui;
 }
 

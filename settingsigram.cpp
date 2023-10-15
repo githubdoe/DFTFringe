@@ -22,6 +22,8 @@
 #include <QPen>
 #include <QPainter>
 #include <QMenu>
+#include "spdlog/spdlog.h"
+
 static inline QString colorButtonStyleSheet(const QColor &bgColor)
 {
     if (bgColor.isValid()) {
@@ -114,6 +116,8 @@ settingsIGram::settingsIGram(QWidget *parent) :
 
 settingsIGram::~settingsIGram()
 {
+    spdlog::get("logger")->trace("settingsIGram::~settingsIGram");
+    delete lensesModel;
     delete ui;
 }
 
