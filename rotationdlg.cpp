@@ -25,11 +25,6 @@ RotationDlg::RotationDlg( QList<int> list, QWidget *parent) :
     ui(new Ui::RotationDlg), list(list)
 {
     ui->setupUi(this);
-    int interpModes[] = {cv::INTER_NEAREST, cv::INTER_LINEAR, cv::INTER_LANCZOS4, cv::INTER_CUBIC, cv::INTER_AREA};
-    QString names[] = {"Nearest Neighbor", "Linear", "Lanczos","Cubic","Area"};
-    for (int i = 0; i < 5; ++i){
-        ui->interp->addItem(names[i],interpModes[i]);
-    }
     QSettings set;
     ui->angleSB->setValue(set.value("rotationAngle", 90).toDouble());
     ui->CCWCB->setChecked(set.value("rotationSign", 1).toInt() == -1);
