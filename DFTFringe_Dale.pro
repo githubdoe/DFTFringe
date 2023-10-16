@@ -52,7 +52,6 @@ SOURCES += main.cpp \
     contourtools.cpp \
     dftcolormap.cpp \
     surfaceanalysistools.cpp \
-    prefsdlg.cpp \
     surfacemanager.cpp \
     zernikedlg.cpp \
     zernikeprocess.cpp \
@@ -168,7 +167,6 @@ HEADERS  += mainwindow.h \
     contourtools.h \
     dftcolormap.h \
     surfaceanalysistools.h \
-    prefsdlg.h \
     surfacemanager.h \
     zernikedlg.h \
     zernikeprocess.h \
@@ -280,7 +278,6 @@ FORMS    += mainwindow.ui \
     psiresizeimagesdlg.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
-    prefsdlg.ui \
     metricsdisplay.ui \
     userdrawnprofiledlg.ui \
     zernikedlg.ui \

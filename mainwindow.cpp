@@ -420,33 +420,24 @@ QString MainWindow::strippedName(const QString &fullFileName)
 
 void MainWindow::on_actionLoad_Interferogram_triggered()
 {
-
-    QStringList mimeTypeFilters;
-    foreach (const QByteArray &mimeTypeName, QImageReader::supportedMimeTypes())
-        mimeTypeFilters.append(mimeTypeName);
-    mimeTypeFilters.sort();
     QSettings settings;
     QString lastPath = settings.value("lastPath",".").toString();
-    QFileDialog dialog(this, tr("Open File"),lastPath);
+    QFileDialog dialog(this, tr("Open File"), lastPath);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    mimeTypeFilters.insert(0, "application/octet-stream");
-    mimeTypeFilters.insert(1,"Image files (*.png *.xpm *.jpg)");
-    dialog.setMimeTypeFilters(mimeTypeFilters);
-
-    QSettings set;
-    QString mime = set.value("igramExt","jpeg").toString();
-    mime.replace("jpg", "jpeg",Qt::CaseInsensitive);
-    dialog.selectMimeTypeFilter("image/"+mime);
-    dialog.setDefaultSuffix(mime);
+    // the QT default extension are obtained by doing 
+    // `for(const QByteArray &mimeTypeName : QImageReader::supportedMimeTypes())`
+    // `   mimeTypeFilters.append(mimeTypeName);`
+    // `dialog.setMimeTypeFilters(mimeTypeFilters);`
+    // `qDebug() << dialog.nameFilters();`
+    // manually added upper case and first char upper case
+    const QStringList filters({"Image files (*.bmp *.dib *.BMP *.DIB *.Bmp *.Dib *.gif *.GIF *.Gif *.jpg *.jpeg *.jpe *.JPG *.JPEG *.JPE *.Jpg *.Jpeg *.Jpe*.png *.PNG *.Png*.svg *.SVG *.Svg*.svgz *.SVGZ *.Svgz*.ico *.ICO *.Ico*.pbm *.PBM *.Pbm*.pgm *.PGM *.Pgm*.ppm *.PPM *.Ppm*.xbm *.XBM *.Xbm*.xpm *.XPM *.Xpm)",
+                           "Any files (*)"
+                          });
+    dialog.setNameFilters(filters);
     ui->SelectObsOutline->setChecked(false);
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
-            QFileInfo a(dialog.selectedFiles().first());
-            QString ext = a.completeSuffix();
-            set.setValue("igramExt", ext);
-            qDebug() << "suffix"<<ext;
-
             loadFile(dialog.selectedFiles().first());
         }
         else{
@@ -454,7 +445,6 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
             Batch_Process_Interferograms();
         }
     }
-
 }
 
 void MainWindow::createActions()
@@ -621,7 +611,6 @@ QStringList MainWindow::SelectWaveFrontFiles(){
         if (fileNames.size() > 0){
             QFileInfo info(fileNames[0]);
             lastPath = info.absolutePath();
-            QSettings settings;
             settings.setValue("lastPath",lastPath);
             return dialog.selectedFiles();
         }
@@ -1069,8 +1058,8 @@ void MainWindow::saveBatchZerns(){
 
 void MainWindow::batchProcess(QStringList fileList){
     m_contourView->getPlot()->blockSignals(true);
-    QSettings set;
-    bool shouldBeep = set.value("RMSBeep>", true).toBool();
+    QSettings settings;
+    bool shouldBeep = settings.value("RMSBeep>", true).toBool();
     this->setCursor(Qt::WaitCursor);
     batchIgramWizard::goPb->setEnabled(false);
     batchIgramWizard::addFiles->setEnabled(false);
@@ -1080,7 +1069,6 @@ void MainWindow::batchProcess(QStringList fileList){
     QFileInfo info(m_igramsToProcess[0]);
     batchWiz->showPlots(batchIgramWizard::showProcessPlots->isChecked());
     QString lastPath = info.absolutePath();
-    QSettings settings;
     settings.setValue("lastPath",lastPath);
     int memThreshold = settings.value("lowMemoryThreshold", 300).toInt();
     int last = fileList.size()-1;
@@ -1216,8 +1204,8 @@ void MainWindow::batchProcess(QStringList fileList){
                 painter.setPen(Qt::yellow);
                 painter.setBrush(Qt::yellow);
                 QFileInfo info(fn);
-                double cx = set.value("lastOutsideCx",0).toDouble();
-                double cy = set.value("lastOutsideCy",0.).toDouble();
+                double cx = settings.value("lastOutsideCx",0).toDouble();
+                double cy = settings.value("lastOutsideCy",0.).toDouble();
                 wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
                 QString txt = QString("%1 RMS: %2 outline center x,y: %3, %4").arg(
                                                 info.baseName().toStdString().c_str()).arg(
