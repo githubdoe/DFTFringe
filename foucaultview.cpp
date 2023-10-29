@@ -109,6 +109,15 @@ void foucaultView::setSurface(wavefront *wf){
     m_sag = mul * (rad * rad) /( 4 * FL);
     m_sag = round(100 * m_sag)/100.;
     m_temp_sag = m_sag;
+    ui->rocOffsetSlider->blockSignals(true);
+    ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
+    ui->rocOffsetSlider->blockSignals(false);
+    double step = getStep();
+    double offset = (ui->rocOffsetSlider->value()) * step;
+    ui->rocOffsetSb->blockSignals(true);
+    ui->rocOffsetSb->setValue(offset);
+    ui->rocOffsetSb->blockSignals(false);
+    on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
 }
 QVector<QPoint> scaleProfile(QPolygonF points, int width,

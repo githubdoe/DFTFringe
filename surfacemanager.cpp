@@ -671,11 +671,8 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     //line(wf->workMask, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), 10);
     theMask = mask.clone();
 
-    /*
-    this commented out code is bad mostly because it assumes the center obstruction is 
-    aligned with the matrix center.  Plus it is redundant.  Plus m is never used anywhere.
     
-    // add central obstruction
+    // add central obstruction (not to be confused with a hole in the mirror - this comes from mirror configuration)
     double r = md.obs * (2. * radm)/md.diameter;
     r/= 2.;
     if (r > 0){
@@ -683,7 +680,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
         cv::Mat m = wf->workMask;
         circle(m,Point((m.cols-1)/2,(m.cols-1)/2),r, Scalar(0),-1);
     }
-    */
+
     if (Settings2::showMask())
         showData("surface manager mask",mask);
 
