@@ -41,7 +41,6 @@ Settings2::Settings2(QWidget *parent) :
     m_profile = new settingsProfile();
     m_general = new SettingsGeneral2();
     m_debug = new settingsDebug();
-    ui->stackedWidget->setCurrentIndex(0);
     ui->stackedWidget->addWidget(m_igram);
     ui->stackedWidget->addWidget(m_dft);
     ui->stackedWidget->addWidget(m_profile);
@@ -50,14 +49,18 @@ Settings2::Settings2(QWidget *parent) :
 }
 
 Settings2 *Settings2::getInstance(){
-    static Settings2 m_Instance{};
-    return &m_Instance;
+    //static Settings2 m_Instance{};
+    //return &m_Instance;
+    // Take care. This is non standard init for when the singleton is supposed to be deleted by parent
+    // keeping original version will call class destructor and on_exit will try to clean up static variable m_instance. But the instance doesn't exist anymore.
+    static Settings2 *m_Instance = new Settings2;
+    return m_Instance;
 }
 
 Settings2::~Settings2()
 {
-    delete ui;
     spdlog::get("logger")->trace("Settings2::~Settings2");
+    delete ui;
 }
 
 

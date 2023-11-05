@@ -320,6 +320,7 @@ MainWindow::~MainWindow()
     userMapDlg->close();
     mirrorDlg::get_Instance()->close();
     settingsDlg->close();
+    delete settingsDlg;
     delete ui;
 }
 
