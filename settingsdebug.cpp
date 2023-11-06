@@ -19,6 +19,7 @@
 #include "ui_settingsdebug.h"
 #include "spdlog/spdlog.h"
 #include <qsettings.h>
+#include "spdlog/spdlog.h"
 
 settingsDebug::settingsDebug(QWidget *parent) :
     QDialog(parent),
@@ -33,6 +34,7 @@ settingsDebug::settingsDebug(QWidget *parent) :
 
 settingsDebug::~settingsDebug()
 {
+    spdlog::get("logger")->trace("settingsDebug::~settingsDebug");
     delete ui;
 }
 bool settingsDebug::showMask(){

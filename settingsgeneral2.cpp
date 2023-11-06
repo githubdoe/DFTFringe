@@ -3,7 +3,10 @@
 #include <QSettings>
 #include "contourrulerparams.h"
 #include <QMessageBox>
+#include "spdlog/spdlog.h"
+
 extern double outputLambda;
+
 SettingsGeneral2::SettingsGeneral2(QWidget *parent) :
     QDialog(parent),
     valsChanged(false),
@@ -31,6 +34,7 @@ SettingsGeneral2::SettingsGeneral2(QWidget *parent) :
 
 SettingsGeneral2::~SettingsGeneral2()
 {
+    spdlog::get("logger")->trace("SettingsGeneral2::~SettingsGeneral2");
     delete ui;
 }
 

@@ -22,9 +22,10 @@
 
 settingsIGram *Settings2::m_igram = 0;
 settingsDFT *Settings2::m_dft = 0;
-settingsDebug *Settings2::m_debug = 0;
 settingsProfile *Settings2::m_profile = 0;
 SettingsGeneral2 *Settings2::m_general = 0;
+settingsDebug *Settings2::m_debug = 0;
+
 Settings2::Settings2(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::Settings2)
@@ -36,28 +37,30 @@ Settings2::Settings2(QWidget *parent) :
     ui->listWidget->addItem(QString("General"));
     ui->listWidget->addItem(QString("Debug"));
     m_igram = new settingsIGram();
-    ui->stackedWidget->addWidget(m_igram);
     m_dft = new settingsDFT();
-    m_debug = new settingsDebug();
     m_profile = new settingsProfile();
     m_general = new SettingsGeneral2();
-    ui->stackedWidget->setCurrentIndex(0);
+    m_debug = new settingsDebug();
+    ui->stackedWidget->addWidget(m_igram);
     ui->stackedWidget->addWidget(m_dft);
     ui->stackedWidget->addWidget(m_profile);
     ui->stackedWidget->addWidget(m_general);
     ui->stackedWidget->addWidget(m_debug);
-
 }
 
 Settings2 *Settings2::getInstance(){
-    static Settings2 m_Instance{};
-    return &m_Instance;
+    //static Settings2 m_Instance{};
+    //return &m_Instance;
+    // Take care. This is non standard init for when the singleton is supposed to be deleted by parent
+    // keeping original version will call class destructor and on_exit will try to clean up static variable m_instance. But the instance doesn't exist anymore.
+    static Settings2 *m_Instance = new Settings2;
+    return m_Instance;
 }
 
 Settings2::~Settings2()
 {
-    delete ui;
     spdlog::get("logger")->trace("Settings2::~Settings2");
+    delete ui;
 }
 
 
