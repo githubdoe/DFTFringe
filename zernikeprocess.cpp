@@ -24,6 +24,8 @@
 #include "simigramdlg.h"
 #include "settings2.h"
 #include "myutils.h"
+#include "spdlog/spdlog.h"
+
 //#include "arbitrarywavefrontdlg.h"
 #include "userdrawnprofiledlg.h"
 std::vector<bool> zernEnables;
@@ -1269,7 +1271,7 @@ arma::mat zernikeProcess::zpmC(arma::rowvec rho, arma::rowvec theta, int maxorde
       n0 = 1;
       for (order=2; order <= maxorder; order+=2) {
           for(m=order/2; n0 < ncol && m>0; m--) {
-              n=order-m;
+              //n=order-m;
               if (n0 < m_norms.size()-2){
                   m_norms[n0+1] = m_norms[n0];
                   zm(i, n0+1) = sinmtheta[m-1]*zm(i, n0);
@@ -1290,11 +1292,13 @@ arma::mat zernikeProcess::zpmC(arma::rowvec rho, arma::rowvec theta, int maxorde
 
 arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder) {
 
+  spdlog::get("logger")->trace("starting zapmC");
   unsigned int nrow = rho.size();
   int mmax = maxorder/2;
   int ncol = (mmax+1)*(mmax+1);
   int i, j, m, nj;
   double zpnorm = std::sqrt((double) nrow);
+
   arma::mat zm(nrow, ncol), annzm(nrow, ncol);
 
   //do some rudimentary error checking
@@ -1342,6 +1346,7 @@ arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& the
   annzm.col(j) = zm.col(j) * zpnorm / norm(zm.col(j));
   annzm.col(j+1) = zm.col(j+1) * zpnorm / norm(zm.col(j+1));
 
+  spdlog::get("logger")->trace("exiting zapmC");
   return annzm;
 }
 void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
@@ -1411,7 +1416,9 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
         m_rhoTheta = rhotheta(width, radius, cx, cy);
 
         if (obsPercent <= 0.) {
+            spdlog::get("logger")->trace("initgrid no obstruction");
             m_zerns = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
+            spdlog::get("logger")->trace("zpmC done");
 //            for (int i = 0; i < m_zerns.n_rows; ++i){
 //                if (m_row[i] == 300){
 //                    qDebug()<<  "0obs" << i <<  m_row[i] << m_col [i] << m_zerns(i,1) ;
@@ -1419,6 +1426,9 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
 //            }
         }
         else {
+            spdlog::get("logger")->trace("getting row0...");
+
+            spdlog::get("logger")->trace("running zapmC");
             m_zerns = zapmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
             arma::mat m_zernsaa = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
 
@@ -1613,7 +1623,6 @@ void make3DPsf(cv::Mat surface){
 }
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include "zernikesmoothingdlg.h"
 using namespace cv;
 void debugZernRoutines(wavefront &wf){
     int cols = 4;
