@@ -1294,12 +1294,15 @@ arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& the
 
   spdlog::get("logger")->trace("starting zapmC");
   unsigned int nrow = rho.size();
+  spdlog::get("logger")->trace("zapmC 1");
   int mmax = maxorder/2;
   int ncol = (mmax+1)*(mmax+1);
   int i, j, m, nj;
   double zpnorm = std::sqrt((double) nrow);
+  spdlog::get("logger")->trace("zapmC 2");
 
   arma::mat zm(nrow, ncol), annzm(nrow, ncol);
+  spdlog::get("logger")->trace("zapmC 3");
 
   //do some rudimentary error checking
 
@@ -1307,13 +1310,16 @@ arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& the
 //  if ((maxorder % 2) != 0) stop("maxorder must be even");
 
   //good enough
+  spdlog::get("logger")->trace("zapmC 4");
 
   zm = zpmC(rho, theta, maxorder);
+  spdlog::get("logger")->trace("zapmC 5");
 
   // for each azimuthal index m find the column indexes
   // of the zp matrix having that value of m. That
   // subset is what we need to orthogonalize.
   // Note this is done separately for "sine" and "cosine" components.
+  spdlog::get("logger")->trace("zapmC 6");
 
   nj = maxorder/2 + 1;
   for (m=0; m<mmax; m++) {
@@ -1326,18 +1332,24 @@ arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& the
       jcos(i) = (m+i+1)*(m+i+1) - 2*m -1;
       jsin(i) = jcos(i) + 1;
     }
+    spdlog::get("logger")->trace("zapmC mmc {}", m);
 
     qr_econ(Q, R, zm.cols(jcos));
     sgn = sign(R.diag());
+    spdlog::get("logger")->trace("zapmC 7a");
 
     annzm.cols(jcos) = zpnorm * Q * diagmat(sgn);
+    spdlog::get("logger")->trace("zapmC 7b");
     if (m > 0) {
+        spdlog::get("logger")->trace("zapmC 7c");
       qr_econ(Q, R, zm.cols(jsin));
       sgn = sign(R.diag());
       annzm.cols(jsin) = zpnorm * Q * diagmat(sgn);
+      spdlog::get("logger")->trace("zapmC 7d");
     }
     --nj;
   }
+  spdlog::get("logger")->trace("zapmC 8");
 
   //  highest order only has one term
 
@@ -1345,6 +1357,7 @@ arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& the
 
   annzm.col(j) = zm.col(j) * zpnorm / norm(zm.col(j));
   annzm.col(j+1) = zm.col(j+1) * zpnorm / norm(zm.col(j+1));
+  spdlog::get("logger")->trace("zapmC 1");
 
   spdlog::get("logger")->trace("exiting zapmC");
   return annzm;
