@@ -1333,8 +1333,12 @@ arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& the
       jsin(i) = jcos(i) + 1;
     }
     spdlog::get("logger")->trace("zapmC mmc {}", m);
+    spdlog::get("logger")->trace("zapmC nrow {}", nrow);
+    spdlog::get("logger")->trace("zapmC nj {}", nj);
 
-    qr_econ(Q, R, zm.cols(jcos));
+    bool bResult = qr_econ(Q, R, zm.cols(jcos));
+    spdlog::get("logger")->trace("zapmC result {}", bResult);
+
     sgn = sign(R.diag());
     spdlog::get("logger")->trace("zapmC 7a");
 
