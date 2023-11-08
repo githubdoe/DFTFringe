@@ -369,7 +369,7 @@ Displays error of pixel under contour plot cursor and move the profie angle to m
 </ul></ul>
 </ul>
 
-<ul><li>Version 7.1.0</li>
+<ul><li>Version 7.1.1</li>
 <ul>
 <li>Added logging to assist with debugging, particularly if there is a crash. To view log file go to exe folder then DFTFringeLogs/log.txt</li>
 <li>Updated project dependencies</li>
@@ -387,7 +387,8 @@ Displays error of pixel under contour plot cursor and move the profie angle to m
 <li>Fixed issue where Foucault view display "TextLabel" instead of number</li>
 <li>Fixed regression introduced in 7.0.0 not displaying effects of central obstruction in most displays</li>
 <li>Removed unused interpolation drop down from rotate wavefront dialog</li>
-<li>Linux is not sensitive to jpg or other extension case anymore for selecting files</li>
+<li>Linux is not case sensitive to jpg (or other extension) anymore for selecting files</li>
 <li>Fixed regression introduced in 7.0.0 where regions might not be updated correctly when processing several igram</li>
+<li>Fixed crash if you smooth a wavefront that has an inner outline (perforated mirror). Bug existed staring ver 6.3.1.</li>
 </ul></ul>
 </ul>
