@@ -1410,7 +1410,7 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
         m_obsPercent = obsPercent;
         m_rhoTheta = rhotheta(width, radius, cx, cy);
 
-        if (obsPercent <= 0.) {
+        if (obsPercent < 0.) { // was "<=" but this can cause a crash see github issue #112
             m_zerns = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
 //            for (int i = 0; i < m_zerns.n_rows; ++i){
 //                if (m_row[i] == 300){
