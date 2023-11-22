@@ -252,6 +252,8 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
 
     double pixelsPermm =(igramArea->m_outside.m_radius/(md.diameter/2.));
     double reduction = md.aperatureReduction * pixelsPermm;
+    if (md.m_aperatureReductionEnabled == false)
+        reduction = 0;
 
     double rad = igramArea->m_outside.m_radius - reduction;
 
