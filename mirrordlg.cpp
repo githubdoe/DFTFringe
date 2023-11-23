@@ -600,6 +600,8 @@ void mirrorDlg::on_buttonBox_helpRequested()
 void mirrorDlg::setclearAp(){
 
     m_clearAperature = (diameter - aperatureReduction * 2) ;
+    if (m_aperatureReductionEnabled == false)
+        m_clearAperature = diameter;
     ui->ClearAp->setText(QString("%1 ").arg(m_clearAperature * ((mm) ? 1: 1./25.4), 6, 'f', 2));
 }
 
@@ -625,13 +627,6 @@ void mirrorDlg::on_ReducApp_clicked(bool checked)
 }
 
 
-void mirrorDlg::changeEdgeMaskvalues(double val){
-    m_aperatureReductionEnabled = true;
-    ui->ReducApp->setChecked(true);
-    ui->reduceValue->setValue(val);
-    ui->reduceValue->setEnabled(true);
-
-}
 void mirrorDlg::on_reduceValue_valueChanged(double arg1)
 {
     aperatureReduction = ((mm) ? 1: 25.4) * arg1;

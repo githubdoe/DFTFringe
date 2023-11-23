@@ -152,6 +152,8 @@ void IgramArea::computeEdgeRadius(){
     mirrorDlg &md = *mirrorDlg::get_Instance();
     double pixelsPermm =(m_outside.m_radius/(md.diameter/2.));
     m_edgeMaskWidth = md.aperatureReduction * pixelsPermm;
+    if (md.m_aperatureReductionEnabled == false)
+        m_edgeMaskWidth = 0;
 
 }
 
@@ -2140,45 +2142,6 @@ void IgramArea::loadOutlineFile(QString fileName){
     emit dftCenterFilter(filter);
 
 
-    // edge mask
-    const QJsonValue jedge = loadDoc["edge_mask_width_mm"];
-    mirrorDlg &md = *mirrorDlg::get_Instance();
-    if (jedge.isDouble()) {
-        const double edge = jedge.toDouble();
-        // if outline edge mask is different than current ask user
-        if (edge != md.aperatureReduction){
-            QString text(
-                        "Do you want to change the mirror config value to match the value in the outline file?\n"
-                        "If no then the current mirror config value will be used instead."
-                         );
-
-            QMessageBox mb;
-            mb.setText(QString("Edge mask value in outline file for this interferogram is %1 and is different than mirror config value of %2.").arg(
-                                         edge, 6, 'f', 1).arg(md.aperatureReduction, 6, 'f', 1) );
-            mb.setInformativeText(text);
-            mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
-            mb.setWindowTitle("Existing Interferogram outline file and Mirror Config difference.");
-            int width = QGuiApplication::primaryScreen()->geometry().width() * .5;
-            QSpacerItem* horizontalSpacer = new QSpacerItem(width, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-            QGridLayout* layout = (QGridLayout*)mb.layout();
-            layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
-            int resp = mb.exec();
-
-            switch (resp){
-            case QMessageBox::Yes:
-                md.changeEdgeMaskvalues(edge);
-
-                break;
-            case QMessageBox::No:
-            default: // if they click red X do same thing as "no" button
-                md.changeEdgeMaskvalues(md.aperatureReduction);
-                break;
-            }
-        }
-    }
-    else{ // just enable edge mask check box to use the current value.
-        md.changeEdgeMaskvalues(md.aperatureReduction);
-    }
 
     // mask polygons regions
     m_polygons.clear();
@@ -2257,40 +2220,7 @@ void IgramArea::loadOutlineFileOldV6(QString fileName){
         mirrorDlg &md = *mirrorDlg::get_Instance();
         if (line == "Edge Mask width"){
             std::getline(file,line);
-            double edge = QString::fromStdString(line).toDouble();
-            // if outline edge mask is different than current ask user
-            if (edge != md.aperatureReduction){
-                QString text(
-                            "Do you want to change the mirror config value to match the value in the outline file?\n"
-                            "If no then the current mirror config value will be used instead."
-);
 
-                QMessageBox mb;
-                mb.setText(QString("Edge mask value in outline file for this interferogram is %1 and is different than mirror config value of %2.").arg(
-                                             edge, 6, 'f', 1).arg(md.aperatureReduction, 6, 'f', 1) );
-                mb.setInformativeText(text);
-                mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
-                mb.setWindowTitle("Existing Interferogram outline file and Mirror Config difference.");
-                int width = QGuiApplication::primaryScreen()->geometry().width() * .5;
-                QSpacerItem* horizontalSpacer = new QSpacerItem(width, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-                QGridLayout* layout = (QGridLayout*)mb.layout();
-                layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
-                int resp = mb.exec();
-
-                switch (resp){
-                case QMessageBox::Yes:
-                    md.changeEdgeMaskvalues(edge);
-
-                    break;
-                case QMessageBox::No:
-                    md.changeEdgeMaskvalues(md.aperatureReduction);
-                    break;
-                }
-            }
-
-        }
-        else{ // just enable edge mask check box to use the current value.
-            md.changeEdgeMaskvalues(md.aperatureReduction);
         }
     }
 
@@ -2370,10 +2300,7 @@ void IgramArea::writeOutlinesOldV6(QString fileName){
         }
     }
     saveRegions(); // save regions to registry also
-    if (m_edgeMaskWidth != 0){
-        mirrorDlg &md = *mirrorDlg::get_Instance();
-        file << "\nEdge Mask width" << std::endl << md.aperatureReduction << std::endl;
-    }
+
 
     file.flush();
     file.close();
@@ -2403,11 +2330,6 @@ void IgramArea::writeOutlines(QString fileName){
     QSettings set;
     double filterRad = set.value("DFT Center Filter",10).toDouble();
     j1["dft_filter_radius"]=filterRad;
-
-    if (m_edgeMaskWidth != 0) {
-        mirrorDlg &md = *mirrorDlg::get_Instance();
-        j1["edge_mask_width_mm"] = md.aperatureReduction;
-    }
 
     QJsonArray jRegions;
     for (int i = 0; i < m_polygons.size(); ++ i){

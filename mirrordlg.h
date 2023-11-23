@@ -66,7 +66,6 @@ public:
     outlineShape m_outlineShape;
     bool isEllipse();
     void setMinorAxis(double val);
-    void changeEdgeMaskvalues(double val);
     bool m_aperatureReductionEnabled;
 private slots:
     void on_ReadBtn_clicked();
