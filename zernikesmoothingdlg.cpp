@@ -94,6 +94,10 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
     m_wf = *p_wf;
     if (!ui->useCurrentZernySet->isChecked()){
         theZerns = m_zp->ZernFitWavefront(m_wf);
+        qDebug() << "the zerns";
+        for (int z = 0; z < 8; ++z){
+            qDebug() << z << theZerns[z];
+        }
     }
 
    tableModel->setValues(&theZerns);

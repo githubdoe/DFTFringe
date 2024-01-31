@@ -56,6 +56,7 @@ SOURCES += main.cpp\
     surfaceanalysistools.cpp \
     prefsdlg.cpp \
     surfacemanager.cpp \
+    zapm.cpp \
     zernikedlg.cpp \
     zernikeprocess.cpp \
     mirrordlg.cpp \
@@ -365,7 +366,7 @@ win32 {
 
       #message("using win32")include
 
-INCLUDEPATH += D:\armadillo\armadillo-9.200.6\include
+INCLUDEPATH += D:\armadillo\armadillo-12.6.7\include
 
 INCLUDEPATH += D:\opencv\opencv-3.4.12\build\install\include
 
@@ -377,7 +378,7 @@ LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_features2d3412.dll
 LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
 
 
-LIBS += D:\armadillo\bin\libarmadillo.dll
+#LIBS += D:\armadillo\bin\libarmadillo.dll
 LIBS += D:\lapack\build64\bin\liblapack.dll
 LIBS += D:\lapack\build64\bin\libblas.dll
 }
@@ -396,7 +397,7 @@ unix {
      LIBS += -lopencv_features2d
      LIBS += -lopencv_imgproc
      LIBS += -lopencv_imgcodecs
-     LIBS += -larmadillo
+     #LIBS += -larmadillo
      message("using linux")
      contains(CONFIG,debug) { message("no extra debug libraries") }
 }

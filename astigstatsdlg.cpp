@@ -305,7 +305,7 @@ void astigStatsDlg::plot(){
             curve->attach(ui->mPlot);
         }
 
-        xmin = std::min(xmin, xstats.min());
+         xmin = std::min(xmin, xstats.min());
         ymin = std::min(ymin, ystats.min());
         xmax = std::max(xmax, xstats.max());
         ymax = std::max(ymax, ystats.max());

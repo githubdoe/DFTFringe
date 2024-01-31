@@ -103,6 +103,7 @@ private:
 
 public:
     arma::mat m_rhoTheta;
+    bool m_lastusedAnnulus;
     explicit zernikeProcess(QObject *parent = 0);
     static zernikeProcess *get_Instance();
     void unwrap_to_zernikes(wavefront &wf, int zterms = Z_TERMS);

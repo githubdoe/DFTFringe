@@ -529,7 +529,15 @@ void MainWindow::updateMetrics(wavefront& wf){
 
     double z8 = zernTablemodel->values[8];
     if (m_mirrorDlg->doNull && wf.useSANull){
+        Settings2 &settings = *Settings2::getInstance();
+        if (wf.m_inside.m_radius > wf.m_outside.m_radius * settings.m_general->getObs()) {
+            double obsRatio = wf.m_inside.m_radius/wf.m_outside.m_radius;
+            double f = (1 - obsRatio * obsRatio);
+            f *= f;
+            z8 /= f;
+        }
         BestSC = z8/m_mirrorDlg->z8;
+
     }
     else {
         BestSC = m_mirrorDlg->cc +z8/m_mirrorDlg->z8;
@@ -1678,11 +1686,42 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 //    this->setCursor(Qt::ArrowCursor);
 
 }
-
+arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
+               const double& eps, const int& maxorder=12, const int& nq=21) ;
+#include "armadillo"
+void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
+              QVector<QString> RowLable = QVector<QString>(0));
 void MainWindow::on_actionDebugStuff_triggered()
 {
+    zernikeProcess *zp = zernikeProcess::get_Instance();
+    wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
+    vector<double> rho = {1., 0., 1.};
+    vector<double> theta;
+    theta.push_back(M_PI);
+    theta.push_back(0.);
+    theta.push_back(0);
 
-    //debugZernRoutines();
+    arma::rowvec r(rho);
+    arma::rowvec t(theta);
+
+   arma::Mat<double> rhoTheta = arma::join_cols(r,t);
+    int max =4;
+    double obs = 0.5;
+    double e = sqrt(1 + obs * obs);
+    qDebug() << "e" << e;
+   arma::mat zerns = zapm(r.as_col(), t.as_col(), obs, max);
+
+   dumpArma(zerns, "Y = 0 obs = .5  ", {"   X   ","piston","xTilt","yTilt", "defocus", "xastig", "yastig"},{"x = -1", "x = 0","x = 1"});
+   qDebug() << "dump done";
+
+
+  std::vector<double> zs =  zp->ZernFitWavefront(*wf);
+   for (int i = 0; i < 10; ++i){
+       qDebug() << "z " << i << zs[i];
+
+   }
+   return;
+
 }
 
 
