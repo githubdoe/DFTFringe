@@ -296,7 +296,7 @@ mat rzernike_ann(const vec& rho, const double& eps, const int& n, const int& m, 
 //'
 //' @md
 // [[Rcpp::export]]
-mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorder=12, const int& nq=21) {
+mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorder=12) {
   
   int j, k, n0, nmax, nz, mmax = maxorder/2;
   uword nr = rho.size();
@@ -316,7 +316,7 @@ mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorde
   //good enough
   
   // get points and weights for quadrature
-  
+  int nq = maxorder/2 + 5;
   vec xq(nq), qwts(nq);
   xq = gol_welsch(eps, qwts);
 

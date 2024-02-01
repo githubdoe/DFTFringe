@@ -1387,7 +1387,7 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
 
 }
 arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
-               const double& eps, const int& maxorder=12, const int& nq=21) ;
+               const double& eps, const int& maxorder=12) ;
 
 void zernikeProcess::initGrid(int width, double radius, double cx, double cy, int maxOrder,
                               double insideRad){

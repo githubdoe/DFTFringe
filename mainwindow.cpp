@@ -1687,7 +1687,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 
 }
 arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
-               const double& eps, const int& maxorder=12, const int& nq=21) ;
+               const double& eps, const int& maxorder=12) ;
 #include "armadillo"
 void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
               QVector<QString> RowLable = QVector<QString>(0));
