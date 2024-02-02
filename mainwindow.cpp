@@ -47,6 +47,7 @@
 #include "utils.h"
 #include "colorchannel.h"
 #include "opencv2/opencv.hpp"
+#include "spdlog/spdlog.h"
 
 
 using namespace QtConcurrent;
@@ -58,25 +59,26 @@ MainWindow *MainWindow::me = 0;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
-    m_batchMakeSurfaceReady(false), m_astigStatsDlg(0)
+    m_batchMakeSurfaceReady(false), m_astigStatsDlg(0), m_cameraCalibWizard(nullptr)
 {
     ui->setupUi(this);
 
+    spdlog::get("logger")->info("DFTFringe {} started", APP_VERSION);
 
-    const QString toolButtonStyle("QToolButton {"
-                                    "border-style: outset;"
-                                    "border-width: 3px;"
-                                    "border-radius:7px;"
-                                    "border-color: darkgray;"
-                                    "font: bold 12px;"
-                                    "min-width: 10em;"
-                                    "padding: 6px;}"
-                                "QToolButton:hover {background-color: lightblue;"
-                                        " }");
-    QWidget *rw = ui->toolBar->widgetForAction(ui->actionRead_WaveFront);
+    //const QString toolButtonStyle("QToolButton {"
+    //                                "border-style: outset;"
+    //                                "border-width: 3px;"
+    //                                "border-radius:7px;"
+    //                                "border-color: darkgray;"
+    //                                "font: bold 12px;"
+    //                                "min-width: 10em;"
+    //                                "padding: 6px;}"
+    //                            "QToolButton:hover {background-color: lightblue;"
+    //                                    " }");
+    //QWidget *rw = ui->toolBar->widgetForAction(ui->actionRead_WaveFront);
     //igramArea = new IgramArea(ui->tabWidget->widget(0));
 
-    rw = ui->toolBar->widgetForAction(ui->actionSubtract_wave_front);
+    //rw = ui->toolBar->widgetForAction(ui->actionSubtract_wave_front);
     //rw->setStyleSheet(toolButtonStyle);
     me = this;
     this->setAttribute(Qt::WA_DeleteOnClose);
@@ -85,9 +87,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->SelectOutSideOutline->setChecked(true);
     setCentralWidget(ui->tabWidget);
 
-    m_colorChannels = new ColorChannelDisplay();
+    m_colorChannels = new ColorChannelDisplay(nullptr);
 
-    m_intensityPlot = new igramIntensity(0);
+    m_intensityPlot = new igramIntensity(nullptr);
 
     ui->tabWidget->removeTab(0);
     ui->tabWidget->removeTab(0);
@@ -140,7 +142,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_contourView = new contourView(this, m_contourTools);
     connect(m_contourView, SIGNAL(zoomMe(bool)),this, SLOT(zoomContour(bool)));
-    m_ogl = new OGLView(0, m_contourTools, m_surfTools);
+    m_ogl = new OGLView(0, m_contourTools);
     connect(m_ogl, SIGNAL(fullScreen()), this, SLOT(zoomOgl()));
 
     connect(userMapDlg, SIGNAL(colorMapChanged(int)), m_contourView->getPlot(), SLOT(ContourMapColorChanged(int)));
@@ -157,7 +159,7 @@ MainWindow::MainWindow(QWidget *parent) :
     review->s2->addWidget(m_profilePlot);
     m_profilePlot->setStyleSheet( {"border: 3px outset darkgrey;"});
     review->s1->addWidget(m_contourView);
-    QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     review->s1->setSizes({INT_MAX, INT_MAX});
     review->s2->setSizes({ rec.height()/2,  rec.height()/2});
     review->s2->setStyleSheet(
@@ -204,7 +206,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(settingsDlg->m_general, SIGNAL(updateContourPlot()),m_contourView, SLOT(updateRuler()));
 
     QSettings settings;
-
+    spdlog::get("logger")->trace("qSettings stored at: {}", settings.fileName().toStdString());
 
     restoreState(settings.value("MainWindow/windowState").toByteArray());
     restoreGeometry(settings.value("geometry").toByteArray());
@@ -234,7 +236,6 @@ MainWindow::MainWindow(QWidget *parent) :
             continue;
         zernEnables[i] = false;
     }
-    zernEnableUpdateTime = QDateTime::currentDateTime().toTime_t();
 
     connect(m_surfaceManager, SIGNAL(rocChanged(double)),this, SLOT(rocChanged(double)));
     connect(m_mirrorDlg, SIGNAL(newPath(QString)),this, SLOT(newMirrorDlgPath(QString)));
@@ -261,7 +262,7 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 int showmem(QString t);
 void MainWindow::openWaveFrontonInit(QStringList args){
-    QProgressDialog pd("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
+    QProgressDialog pd("    Loading wavefronts in progress.", "Cancel", 0, 100);
     pd.setRange(0, args.size());
     if (args.length()> 0)
         pd.show();
@@ -280,7 +281,7 @@ void MainWindow::openWaveFrontonInit(QStringList args){
         if (pd.wasCanceled())
             break;
 
-        if (arg.toUpper().endsWith(".WFT")){
+        if (arg.endsWith(".wft", Qt::CaseInsensitive)){
             pd.setLabelText(arg);
             try {
             m_surfaceManager->loadWavefront(arg);
@@ -309,8 +310,17 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 MainWindow::~MainWindow()
 {
-    qDebug() << "deleteing mainwindow";
+    spdlog::get("logger")->trace("MainWindow::~MainWindow");
+    if(m_cameraCalibWizard != nullptr){
+        m_cameraCalibWizard->close();
+    }
+    delete m_colorChannels;
+    delete m_intensityPlot;
     delete m_ogl;
+    userMapDlg->close();
+    mirrorDlg::get_Instance()->close();
+    settingsDlg->close();
+    delete settingsDlg;
     delete ui;
 }
 
@@ -412,33 +422,24 @@ QString MainWindow::strippedName(const QString &fullFileName)
 
 void MainWindow::on_actionLoad_Interferogram_triggered()
 {
-
-    QStringList mimeTypeFilters;
-    foreach (const QByteArray &mimeTypeName, QImageReader::supportedMimeTypes())
-        mimeTypeFilters.append(mimeTypeName);
-    mimeTypeFilters.sort();
     QSettings settings;
     QString lastPath = settings.value("lastPath",".").toString();
-    QFileDialog dialog(this, tr("Open File"),lastPath);
+    QFileDialog dialog(this, tr("Open File"), lastPath);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    mimeTypeFilters.insert(0, "application/octet-stream");
-    mimeTypeFilters.insert(1,"Image files (*.png *.xpm *.jpg)");
-    dialog.setMimeTypeFilters(mimeTypeFilters);
-
-    QSettings set;
-    QString mime = set.value("igramExt","jpeg").toString();
-    mime.replace("jpg", "jpeg",Qt::CaseInsensitive);
-    dialog.selectMimeTypeFilter("image/"+mime);
-    dialog.setDefaultSuffix(mime);
+    // the QT default extension are obtained by doing 
+    // `for(const QByteArray &mimeTypeName : QImageReader::supportedMimeTypes())`
+    // `   mimeTypeFilters.append(mimeTypeName);`
+    // `dialog.setMimeTypeFilters(mimeTypeFilters);`
+    // `qDebug() << dialog.nameFilters();`
+    // manually added upper case and first char upper case
+    const QStringList filters({"Image files (*.bmp *.dib *.BMP *.DIB *.Bmp *.Dib *.gif *.GIF *.Gif *.jpg *.jpeg *.jpe *.JPG *.JPEG *.JPE *.Jpg *.Jpeg *.Jpe*.png *.PNG *.Png*.svg *.SVG *.Svg*.svgz *.SVGZ *.Svgz*.ico *.ICO *.Ico*.pbm *.PBM *.Pbm*.pgm *.PGM *.Pgm*.ppm *.PPM *.Ppm*.xbm *.XBM *.Xbm*.xpm *.XPM *.Xpm)",
+                           "Any files (*)"
+                          });
+    dialog.setNameFilters(filters);
     ui->SelectObsOutline->setChecked(false);
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
-            QFileInfo a(dialog.selectedFiles().first());
-            QString ext = a.completeSuffix();
-            set.setValue("igramExt", ext);
-            qDebug() << "suffix"<<ext;
-
             loadFile(dialog.selectedFiles().first());
         }
         else{
@@ -446,7 +447,6 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
             Batch_Process_Interferograms();
         }
     }
-
 }
 
 void MainWindow::createActions()
@@ -491,7 +491,7 @@ void MainWindow::createDockWindows(){
     m_contourTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     m_dftTools->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     metrics = metricsDisplay::get_instance(this);
-    metrics->setWindowTitle(QString().sprintf("metrics      DFTFringe %s",APP_VERSION));
+    metrics->setWindowTitle(QString("metrics      DFTFringe %1").arg(APP_VERSION));
     zernTablemodel = metrics->tableModel;
     addDockWidget(Qt::LeftDockWidgetArea, m_outlineHelp);
     addDockWidget(Qt::LeftDockWidgetArea, m_outlinePlots);
@@ -517,14 +517,14 @@ void MainWindow::createDockWindows(){
 }
 void MainWindow::updateMetrics(wavefront& wf){
     metrics->setName(wf.name);
-    metrics->mDiam->setText(QString().sprintf("%6.3lf",wf.diameter));
-    metrics->mROC->setText(QString().sprintf("%6.3lf",wf.roc));
+    metrics->mDiam->setText(QString("%1").arg(wf.diameter, 6, 'f', 3));
+    metrics->mROC->setText(QString("%1").arg(wf.roc, 6, 'f', 3));
     const double  e = 2.7182818285;
-    metrics->mRMS->setText(QString().sprintf("<b><FONT FONT SIZE = 12>%6.3lf</b>",wf.std));
+    metrics->mRMS->setText(QString("<b><FONT FONT SIZE = 12>%1</b>").arg(wf.std, 6, 'f', 3));
     double st =(2. *M_PI * wf.std);
     st *= st;
     double Strehl = pow(e, -st);
-    metrics->mStrehl->setText(QString().sprintf("<b><FONT FONT SIZE = 12>%6.3lf</b>",Strehl));
+    metrics->mStrehl->setText(QString("<b><FONT FONT SIZE = 12>%1</b>").arg(Strehl, 6, 'f', 3));
 
 
     double z8 = zernTablemodel->values[8];
@@ -546,7 +546,7 @@ void MainWindow::updateMetrics(wavefront& wf){
 
     metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing, m_mirrorDlg->lambda);
     if (m_mirrorDlg->doNull)
-        metrics->mCC->setText(QString().sprintf("<FONT FONT SIZE = 7>%6.3lf",BestSC));
+        metrics->mCC->setText(QString("<FONT FONT SIZE = 7>%1").arg(BestSC, 6 ,'f', 3));
     else {
         metrics->mCC->setText("NA");
     }
@@ -621,7 +621,6 @@ QStringList MainWindow::SelectWaveFrontFiles(){
         if (fileNames.size() > 0){
             QFileInfo info(fileNames[0]);
             lastPath = info.absolutePath();
-            QSettings settings;
             settings.setValue("lastPath",lastPath);
             return dialog.selectedFiles();
         }
@@ -949,7 +948,7 @@ void MainWindow::on_actionAbout_triggered()
 {
 
     QMessageBox::information(this, "___________________________________________________________________________About", 
-                            QString().sprintf("<html><body><h1>DFTFringe version %s</h1>",APP_VERSION)+
+                            QString("<html><body><h1>DFTFringe version %1</h1>").arg(APP_VERSION)+
                              "<p>This program was compiled using:<ul><li>"
                              "Qt version " + QT_VERSION_STR + " </li>"
                     #if defined(__GNUC__) && defined(__VERSION__)
@@ -1033,8 +1032,8 @@ void MainWindow::batchConnections(bool flag){
     }
     else {
         m_inBatch = false;
-        disconnect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
         connect(m_dftTools, SIGNAL(makeSurface()), m_dftArea, SLOT(makeSurface()));
+        disconnect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
         disconnect(batchIgramWizard::saveZerns, SIGNAL(pressed()), this, SLOT(saveBatchZerns()));
     }
 }
@@ -1053,7 +1052,7 @@ void MainWindow::saveBatchZerns(){
     QTextStream out(&f);
     if (f.open(QIODevice::WriteOnly | QIODevice::Append)) {
         QStringList dirs = path.split("/");
-        out << endl << endl;
+        out << Qt::endl << Qt::endl;
 
         foreach(QVector<QString>   zerns, batchZerns){
             out << dirs[dirs.size()-1] + "/" + zerns[0];
@@ -1061,7 +1060,7 @@ void MainWindow::saveBatchZerns(){
 
                 out << "," << zerns[i];
             }
-            out << endl;
+            out << Qt::endl;
         }
     }
 }
@@ -1069,8 +1068,8 @@ void MainWindow::saveBatchZerns(){
 
 void MainWindow::batchProcess(QStringList fileList){
     m_contourView->getPlot()->blockSignals(true);
-    QSettings set;
-    bool shouldBeep = set.value("RMSBeep>", true).toBool();
+    QSettings settings;
+    bool shouldBeep = settings.value("RMSBeep>", true).toBool();
     this->setCursor(Qt::WaitCursor);
     batchIgramWizard::goPb->setEnabled(false);
     batchIgramWizard::addFiles->setEnabled(false);
@@ -1080,16 +1079,13 @@ void MainWindow::batchProcess(QStringList fileList){
     QFileInfo info(m_igramsToProcess[0]);
     batchWiz->showPlots(batchIgramWizard::showProcessPlots->isChecked());
     QString lastPath = info.absolutePath();
-    QSettings settings;
     settings.setValue("lastPath",lastPath);
     int memThreshold = settings.value("lowMemoryThreshold", 300).toInt();
     int last = fileList.size()-1;
 
     int ndx = 0;
-    VideoWriter *vw;
     int cnt = 0;
     int width, height;
-    QString videoFileName;
     foreach(QString fn, fileList){
 
         QApplication::processEvents();
@@ -1185,7 +1181,6 @@ void MainWindow::batchProcess(QStringList fileList){
                 QSettings settings;
                 QString lastPath = settings.value("lastPath","").toString();
                 QString fileName = m_surfaceManager->m_wavefronts.back()->name;
-                QFileInfo fileinfo(fileName);
                 QString file = lastPath + "/" + fileName + ".wft";
                 m_surfaceManager->writeWavefront(file, m_surfaceManager->m_wavefronts.back(), false);
             }
@@ -1219,22 +1214,19 @@ void MainWindow::batchProcess(QStringList fileList){
                 painter.setPen(Qt::yellow);
                 painter.setBrush(Qt::yellow);
                 QFileInfo info(fn);
-                double cx = set.value("lastOutsideCx",0).toDouble();
-                double cy = set.value("lastOutsideCy",0.).toDouble();
+                double cx = settings.value("lastOutsideCx",0).toDouble();
+                double cy = settings.value("lastOutsideCy",0.).toDouble();
                 wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
-                QString txt = QString().sprintf("%s RMS: %6.3lf outline center x,y: %6.1lf, %6.1lf",
-                                                info.baseName().toStdString().c_str(),
-                                                wf->std,
-                                                cx,cy);
+                QString txt = QString("%1 RMS: %2 outline center x,y: %3, %4").arg(
+                                                info.baseName().toStdString().c_str()).arg(
+                                                wf->std, 6, 'f', 3).arg(
+                                                cx, 6, 'f', 1).arg(
+                                                cy, 6, 'f', 1);
                 painter.drawText(20,height/2 + 15, txt);
                 cv::Mat frame = cv::Mat(img.height(), img.width(),CV_8UC4, img.bits(), img.bytesPerLine()).clone();
                 cv::Mat resized;
                 cv::resize(frame, resized, cv::Size(width,height));
 
-                QString lastPath = settings.value("lastPath","").toString();
-                QString fileName = m_surfaceManager->m_wavefronts.back()->name;
-                QFileInfo fileinfo(fileName);
-                QString file = lastPath + "/review/" + fileName + "_review.jpg";
                 //cv::imwrite(file.toStdString().c_str(),resized);
             }
             if (batchIgramWizard::deletePreviousWave->isChecked()){
@@ -1364,7 +1356,7 @@ void MainWindow::startJitter(){
         m_dftArea->makeSurface();
         qApp->processEvents();
         wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
-        wf->name = QString().sprintf("x:_%d_Y:_%d_radius:_%d",x,y,rad);
+        wf->name = QString("x:_%1_Y:_%2_radius:_%3").arg(x).arg(y).arg(rad);
         dlg->status(wf->name);
         m_surfTools->nameChanged(m_surfaceManager->m_currentNdx, wf->name);
         qApp->processEvents();
@@ -1474,9 +1466,17 @@ void MainWindow::on_actionEdit_Zernike_values_triggered()
 
 void MainWindow::on_actionCamera_Calibration_triggered()
 {
-    cameraCalibWizard *camWiz = new cameraCalibWizard;
-    camWiz->show();
-
+    if(m_cameraCalibWizard == nullptr){
+        spdlog::get("logger")->trace("new cameraCalibWizard");
+        m_cameraCalibWizard = new cameraCalibWizard;
+        m_cameraCalibWizard->setAttribute( Qt::WA_DeleteOnClose, true );
+        m_cameraCalibWizard->show();
+    }
+    else{
+        // bring to front the already oppened window
+        m_cameraCalibWizard->activateWindow();
+        m_cameraCalibWizard->raise();
+    }
 }
 #include "unwraperrorsview.h"
 void MainWindow::on_actionShow_unwrap_errors_triggered()
@@ -1515,7 +1515,7 @@ void MainWindow::on_actionSave_Zernike_Values_in_CSV_triggered()
         }
 
         QStringList dirs = path.split("/");
-        out << endl << endl;
+        out << Qt::endl << Qt::endl;
         for (int i = 0; i < m_surfaceManager->m_wavefronts.size(); ++i){
             wavefront* wf = m_surfaceManager->m_wavefronts[i];
             QStringList paths = wf->name.split('/');
@@ -1527,7 +1527,7 @@ void MainWindow::on_actionSave_Zernike_Values_in_CSV_triggered()
             for (int z = 0; z < Z_TERMS; ++z){
                 out << "," << wf->InputZerns[z];
             }
-            out << endl;
+            out << Qt::endl;
         }
     }
 }
@@ -1633,14 +1633,14 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 //                fileName.append(".avi");
 //            cv::VideoWriter video(fileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
 //            if (!video.isOpened()){
-//                QString msg = QString().sprintf("could not open %s %dx%d for writing.", fileName.toStdString().c_str(),
-//                                                width, height);
+//                QString msg = QString("could not open %1 %2x%3 for writing.").arg(fileName).arg(
+//                                                width).arg(height);
 //                QMessageBox::warning(0,"warning", msg);
 //                return;
 //            }
 //            foreach (QString name, fileNames){
 //                int mem = showmem("loading");
-//                statusBar()->showMessage(QString().sprintf("memory %d MB", mem));
+//                statusBar()->showMessage(QString("memory %1 MB").arg(mem));
 //                if (mem< memThreshold + 50){
 //                    while (m_surfaceManager->m_wavefronts.size() > 1){
 //                        m_surfaceManager->deleteCurrent();
@@ -1654,7 +1654,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 
 //                pd.setLabelText(name);
 //                QApplication::processEvents();
-//                wavefront *wf = m_surfaceManager->readWaveFront(name,false);
+//                wavefront *wf = m_surfaceManager->readWaveFront(name);
 
 //                m_surfaceManager->makeMask(wf);
 //                m_surfaceManager->generateSurfacefromWavefront(wf);
@@ -1802,7 +1802,7 @@ void MainWindow::on_actionSave_curent_profile_triggered()
     if (f.open(QIODevice::WriteOnly )){
             QPolygonF points = m_profilePlot->createProfile(m_profilePlot->m_showNm * m_profilePlot->m_showSurface,m_profilePlot->m_wf);
             foreach (QPointF pt, points) {
-                out << pt.x() << " " << pt.y() << endl;
+                out << pt.x() << " " << pt.y() << Qt::endl;
             }
     }
 }
@@ -1827,6 +1827,3 @@ void MainWindow::on_actionSmooth_current_wave_front_triggered()
     dlg->show();
     return;
 }
-
-
-

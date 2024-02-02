@@ -20,9 +20,6 @@
 #include <iostream>
 
 using namespace cv;
-using namespace std;
-
-
 
 int _brightness = 100;
 int _contrast = 100;

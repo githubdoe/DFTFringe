@@ -16,7 +16,7 @@ public:
     QwtPlot * mPlot;
     outlineStatsDlg &m_outlines;
     outlineZoomer(outlineStatsDlg *dlg, QWidget *canvas, QwtPlot * plot ):
-        m_outlines(*dlg),QwtPlotZoomer( canvas ),mPlot(plot)
+        QwtPlotZoomer( canvas ), mPlot(plot), m_outlines(*dlg)
     {
         setRubberBandPen( QColor( Qt::lightGray ) );
         setTrackerMode( QwtPlotPicker::AlwaysOn );
@@ -29,9 +29,9 @@ protected:
     int ndx = p.x();
     //qDebug() << "tracker"<< cx << cy << p;
     if (ndx > 0 && ndx < m_outlines.m_names.size()){
-        QString msg = QString().sprintf("%s \n%6.1lf,%6.1lf",
-                                        m_outlines.m_names[ndx].split("/").back().toStdString().c_str(),
-                                        m_outlines.xvals[ndx], m_outlines.yvals[ndx]);
+        QString msg = QString("%1 \n%2,%3").arg(
+                                        m_outlines.m_names[ndx].split("/").back()).arg(
+                                        m_outlines.xvals[ndx], 6, 'f', 1).arg(m_outlines.yvals[ndx], 6, 'f', 1);
         QwtText text(msg);
         text.setColor( Qt::black );
         text.setFont(QFont("Arial",12));
@@ -73,8 +73,9 @@ public:
 };
 
 // Create a histogram of mirror radius values of igrams
-QVector<int> radiusHisto(const std::vector<double> data, double *minRad, int &bins){
+QVector<int> radiusHisto(const QVector<double>& dataQVect, double *minRad, int &bins){
 
+    const std::vector<double> data = std::vector<double>(dataQVect.begin(), dataQVect.end());
     auto result = std::minmax_element (data.begin(),data.end());
     double min = *minRad = *result.first;
     double max = *result.second;
@@ -89,8 +90,7 @@ QVector<int> radiusHisto(const std::vector<double> data, double *minRad, int &bi
 
                 break;
             }
-        bound += 1;
-
+            bound += 1;
         }
     }
     return h;
@@ -123,7 +123,7 @@ void outlineStatsDlg::readFiles(){
 
         int fsize = file.tellg();
         file.seekg( 0, std::ios::end );
-        fsize = file.tellg() - fsize;
+        fsize = int(file.tellg()) - fsize;
         file.close();
         file.open(fileName.toStdString().c_str());
         if (!file.is_open()) {
@@ -158,7 +158,7 @@ void outlineStatsDlg::plot(){
     ui->mirrorRadiusHistogramPlot->setAxisTitle(QwtPlot::yLeft, "sample count");
     ui->mirrorCenterPlot->setAxisTitle(QwtPlot::yLeft, "Position");
     ui->mirrorRadiusPlot->setAxisTitle(QwtPlot::yLeft, "radius");
-    ui->mirrorCenterPlot->setAxisTitle(QwtPlot::xBottom, QString().sprintf(" %d samples", m_names.size()));
+    ui->mirrorCenterPlot->setAxisTitle(QwtPlot::xBottom, QString(" %1 samples").arg(m_names.size()));
     xpos->setSamples(sn,xvals);
     xpos->setStyle(QwtPlotCurve::Dots);
     xpos->setPen(Qt::red,4);
@@ -175,7 +175,7 @@ void outlineStatsDlg::plot(){
     double minRad;
     int bins;
 
-    QVector<int> radhisto = radiusHisto(radVals.toStdVector(), &minRad, bins);
+    QVector<int> radhisto = radiusHisto(radVals, &minRad, bins);
 
     ui->mirrorRadiusHistogramPlot->setTitle("Radius histogram");
     for (int i = 0; i < radhisto.size(); ++i){
@@ -268,7 +268,7 @@ void outlineStatsDlg::on_pushButton_clicked()
 
                 int fsize = file.tellg();
                 file.seekg( 0, std::ios::end );
-                fsize = file.tellg() - fsize;
+                fsize = int(file.tellg()) - fsize;
                 file.close();
                 file.open(fileName.toStdString().c_str());
                 if (!file.is_open()) {
@@ -328,7 +328,7 @@ void outlineStatsDlg::on_pushButton_clicked()
                 for (int i = 0; i < polygons.size(); ++ i){
                     if (polygons[i].size() > 0){
                         ofile << "Poly"<<std::endl;
-                        for (int j = 0; j < polygons[i].size(); ++j){
+                        for (std::size_t j = 0; j < polygons[i].size(); ++j){
                             ofile <<(polygons[i][j].x) << "," << (polygons[i][j].y) << " ";
                         }
                         ofile << std::endl;

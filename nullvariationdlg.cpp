@@ -160,12 +160,12 @@ void nullVariationDlg::calculate()
 
     //qDebug() << "z8 compared to z " << center << ((1.5) * pow(diam+d_tol,4) * 1.E6 /(384. * lambda * pow(roc,3)) - center) << diamPV;
 
-    ui->diamPV->setText(QString().sprintf("%6.4lf    %6.2lf%%", diamPV, 100. * diamPV/center));
-    ui->rocPV->setText(QString().sprintf( "%6.4lf    %6.2lf%%",rocPV, 100. * rocPV /center));
+    ui->diamPV->setText(QString("%1    %2%").arg(diamPV, 6, 'f', 4).arg(100. * diamPV/center, 6, 'f', 2));
+    ui->rocPV->setText(QString( "%1    %2%").arg(rocPV, 6, 'f', 4).arg(100. * rocPV /center, 6, 'f', 2));
 
     double big1 = ((1.5) * pow(diam+d_tol,4) * 1.E6 /(384. * lambda * pow(roc-roc_tol,3)));
     double big2 = ((1.5) * pow(diam-d_tol,4) * 1.E6 /(384. * lambda * pow(roc+roc_tol,3)));
-    ui->result->setText(QString().sprintf("%6.4lf  %6.4lf", sqrt(pow(diamPV,2) + pow(rocPV,2)), (big1 - big2)/2));
+    ui->result->setText(QString("%1  %2").arg(sqrt(pow(diamPV,2) + pow(rocPV,2)), 6, 'f', 4).arg((big1 - big2)/2, 6, 'f', 4));
     m_guiTimer.start(3000);
 }
 
@@ -235,7 +235,6 @@ void nullVariationDlg::on_ComputeSim_clicked()
         //qDebug() << points;
         QMap<double, int> his = histo(histData,100);
         //qDebug() << his;
-        QVector<QwtIntervalSample> histoData;
         QList<double> keys = his.keys();
         double bound = 0;
         points.clear();
@@ -248,7 +247,7 @@ void nullVariationDlg::on_ComputeSim_clicked()
 
         }
 
-        QwtPlotCurve *histPlot = new QwtPlotCurve(QString().sprintf("diameter tolerance:%6.1f      ROC tolerance:%6.1lf",d_tol,roc_tol));
+        QwtPlotCurve *histPlot = new QwtPlotCurve(QString("diameter tolerance:%1      ROC tolerance:%2").arg(d_tol, 6, 'f', 1).arg(roc_tol, 6, 'f', 1));
         QwtPlotMarker *mY = new QwtPlotMarker();
         mY->setLabel( QString::fromLatin1( "68%" ) );
         mY->setLabelAlignment( Qt::AlignRight | Qt::AlignBottom );

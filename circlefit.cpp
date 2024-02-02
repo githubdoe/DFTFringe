@@ -1,11 +1,5 @@
 #include "circleutils.h"
 #include "circle.h"
-double pythag(double a, double b)
-{
-    double absa=abs(a),	absb=abs(b);
-    if (absa > absb) return absa*sqrt(One+SQR(absb/absa));
-    else return (absb == 0.0 ? 0.0 : absb*sqrt(One+SQR(absa/absb)));
-}
 
 
 /************************************************************************
@@ -29,9 +23,9 @@ Circle::Circle(double aa, double bb, double rr)
 
 void Circle::print(void)
 {
-    cout << endl;
-    cout << setprecision(10) << "center (" <<a <<","<< b <<")  radius "
-         << r << "  sigma " << s << "  gradient " << g << "  iter "<< i << "  inner " << j << endl;
+    std::cout << std::endl;
+    std::cout << std::setprecision(10) << "center (" <<a <<","<< b <<")  radius "
+         << r << "  sigma " << s << "  gradient " << g << "  iter "<< i << "  inner " << j << std::endl;
 }
 
 //****************** Sigma ************************************
@@ -87,7 +81,7 @@ CircleData::CircleData(int N)
 }
 
 // Constructor with assignment of each field
-CircleData::CircleData(int N, double dataX[], double dataY[])
+CircleData::CircleData(int N, const double dataX[], const double dataY[])
 {
     n=N;
     X = new double[n];
@@ -169,7 +163,7 @@ CircleData::~CircleData()
         delete[] Y;
 }
 
-double Sigma (CircleData& data, Circle& circle)
+double Sigma (const CircleData& data, const Circle& circle)
 {
     double sum=0.,dx,dy;
 
@@ -177,9 +171,9 @@ double Sigma (CircleData& data, Circle& circle)
     {
         dx = data.X[i] - circle.a;
         dy = data.Y[i] - circle.b;
-        sum += SQR(sqrt(dx*dx+dy*dy) - circle.r);
+        sum += SQR(std::sqrt(dx*dx+dy*dy) - circle.r);
     }
-    return sqrt(sum/data.n);
+    return std::sqrt(sum/data.n);
 }
 
 Circle CircleFitByHyper (CircleData& data)
@@ -279,9 +273,9 @@ Circle CircleFitByHyper (CircleData& data)
     {
         Dy = A1 + x*(A22 + 16.*x*x);
         xnew = x - y/Dy;
-        if ((xnew == x)||(!isfinite(xnew))) break;
+        if ((xnew == x)||(!std::isfinite(xnew))) break;
         ynew = A0 + xnew*(A1 + xnew*(A2 + Four*xnew*xnew));
-        if (abs(ynew)>=abs(y))  break;
+        if (std::abs(ynew)>=std::abs(y))  break;
         x = xnew;  y = ynew;
     }
 
@@ -295,7 +289,7 @@ Circle CircleFitByHyper (CircleData& data)
 
     circle.a = Xcenter + data.meanX;
     circle.b = Ycenter + data.meanY;
-    circle.r = sqrt(Xcenter*Xcenter + Ycenter*Ycenter + Mz - x - x);
+    circle.r = std::sqrt(Xcenter*Xcenter + Ycenter*Ycenter + Mz - x - x);
     circle.s = Sigma(data,circle);
     circle.i = 0;
     circle.j = iter;  //  return the number of iterations, too
@@ -382,9 +376,9 @@ Circle CircleFitByKasa (CircleData &data)
 
 //    solving system of equations by Cholesky factorization
 
-    G11 = sqrt(Mxx);
+    G11 = std::sqrt(Mxx);
     G12 = Mxy/G11;
-    G22 = sqrt(Myy - G12*G12);
+    G22 = std::sqrt(Myy - G12*G12);
 
     D1 = Mxz/G11;
     D2 = (Myz - D1*G12)/G22;
@@ -398,7 +392,7 @@ Circle CircleFitByKasa (CircleData &data)
 
     circle.a = B + data.meanX;
     circle.b = C + data.meanY;
-    circle.r = sqrt(B*B + C*C + Mxx + Myy);
+    circle.r = std::sqrt(B*B + C*C + Mxx + Myy);
     circle.s = Sigma(data,circle);
     circle.i = 0;
     circle.j = 0;
@@ -503,9 +497,9 @@ Circle CircleFitByPratt (CircleData &data)
     {
         Dy = A1 + x*(A22 + 16.*x*x);
         xnew = x - y/Dy;
-        if ((xnew == x)||(!isfinite(xnew))) break;
+        if ((xnew == x)||(!std::isfinite(xnew))) break;
         ynew = A0 + xnew*(A1 + xnew*(A2 + Four*xnew*xnew));
-        if (abs(ynew)>=abs(y))  break;
+        if (std::abs(ynew)>=std::abs(y))  break;
         x = xnew;  y = ynew;
     }
 
@@ -519,7 +513,7 @@ Circle CircleFitByPratt (CircleData &data)
 
     circle.a = Xcenter + data.meanX;
     circle.b = Ycenter + data.meanY;
-    circle.r = sqrt(Xcenter*Xcenter + Ycenter*Ycenter + Mz + x + x);
+    circle.r = std::sqrt(Xcenter*Xcenter + Ycenter*Ycenter + Mz + x + x);
     circle.s = Sigma(data,circle);
     circle.i = 0;
     circle.j = iter;  //  return the number of iterations, too
@@ -631,9 +625,9 @@ Circle CircleFitByTaubin (CircleData& data)
     {
             Dy = A1 + x*(A22 + A33*x);
         xnew = x - y/Dy;
-        if ((xnew == x)||(!isfinite(xnew))) break;
+        if ((xnew == x)||(!std::isfinite(xnew))) break;
         ynew = A0 + xnew*(A1 + xnew*(A2 + xnew*A3));
-        if (abs(ynew)>=abs(y))  break;
+        if (std::abs(ynew)>=std::abs(y))  break;
         x = xnew;  y = ynew;
     }
 
@@ -647,7 +641,7 @@ Circle CircleFitByTaubin (CircleData& data)
 
     circle.a = Xcenter + data.meanX;
     circle.b = Ycenter + data.meanY;
-    circle.r = sqrt(Xcenter*Xcenter + Ycenter*Ycenter + Mz);
+    circle.r = std::sqrt(Xcenter*Xcenter + Ycenter*Ycenter + Mz);
     circle.s = Sigma(data,circle);
     circle.i = 0;
     circle.j = iter;  //  return the number of iterations, too
@@ -656,8 +650,8 @@ Circle CircleFitByTaubin (CircleData& data)
 }
 
 
-int CircleFitByLevenbergMarquardtFull (CircleData& data, Circle& circleIni, double LambdaIni, Circle& circle)
-/*                                     <------------------ Input ------------------->  <-- Output -->
+int CircleFitByLevenbergMarquardtFull (const CircleData& data, const Circle& circleIni, double LambdaIni, Circle& circle)
+/*                                     <---------------------------- Input ---------------------------->  <-- Output -->
 
        Geometric circle fit to a given set of data points (in 2D)
 
@@ -742,7 +736,7 @@ NextIteration:
     {
         dx = data.X[i] - Old.a;
         dy = data.Y[i] - Old.b;
-        ri = sqrt(dx*dx + dy*dy);
+        ri = std::sqrt(dx*dx + dy*dy);
         u = dx/ri;
         v = dy/ri;
         Mu += u;
@@ -765,7 +759,7 @@ NextIteration:
     F2 = Old.b + Old.r*Mv - data.meanY;
     F3 = Old.r - Mr;
 
-    Old.g = New.g = sqrt(F1*F1 + F2*F2 + F3*F3);
+    Old.g = New.g = std::sqrt(F1*F1 + F2*F2 + F3*F3);
 
 try_again:
 
@@ -775,12 +769,12 @@ try_again:
 
 //         Cholesly decomposition
 
-    G11 = sqrt(UUl);
+    G11 = std::sqrt(UUl);
     G12 = Muv/G11;
     G13 = Mu/G11;
-    G22 = sqrt(VVl - G12*G12);
+    G22 = std::sqrt(VVl - G12*G12);
     G23 = (Mv - G12*G13)/G22;
-    G33 = sqrt(Nl - G13*G13 - G23*G23);
+    G33 = std::sqrt(Nl - G13*G13 - G23*G23);
 
     D1 = F1/G11;
     D2 = (F2 - G12*D1)/G22;
@@ -790,14 +784,14 @@ try_again:
     dY = (D2 - G23*dR)/G22;
     dX = (D1 - G12*dY - G13*dR)/G11;
 
-    if ((abs(dR)+abs(dX)+abs(dY))/(One+Old.r) < epsilon) goto enough;
+    if ((std::abs(dR)+std::abs(dX)+std::abs(dY))/(One+Old.r) < epsilon) goto enough;
 
 //       updating the parameters
 
     New.a = Old.a - dX;
     New.b = Old.b - dY;
 
-    if (abs(New.a)>ParLimit || abs(New.b)>ParLimit) {code = 3; goto enough;}
+    if (std::abs(New.a)>ParLimit || std::abs(New.b)>ParLimit) {code = 3; goto enough;}
 
     New.r = Old.r - dR;
 

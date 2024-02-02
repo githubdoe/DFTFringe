@@ -27,7 +27,7 @@
 #include <vector>
 #include <QVector>
 
-#define Z_TERMS 48
+#define Z_TERMS 49
 
 namespace Ui {
 class zernikeDlg;

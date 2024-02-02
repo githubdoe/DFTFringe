@@ -325,3 +325,77 @@ Displays error of pixel under contour plot cursor and move the profie angle to m
 <li>Added more help info to user drawn profiles</li>
 </ul></ul>
 </ul>
+
+<ul><li>Version 6.3.1</li>
+<ul>
+<li>Fixed some issues with regions that caused DFTF to crash if you didn't check them each time\</li>
+<li>Regions are remembered better from one igram to the next</li>
+<li>Fixed a few minor bugs related to "edge mask":
+<ul>
+<li>null calculation when first opening DFTF</li>
+<li>saving edge mask</li>
+<li>improved an edge mask message wording</li>
+</ul>
+</li>
+<li>Improved many things that only affect DFTFringe programming team</li>
+<li>New windows installer</li>
+<li>DFTF can now build and run on Linux (build is only tested on latest Ubuntu)</li>
+<li>Move to semver format for version names</li>
+</ul>
+</ul>
+
+<ul><li>Version 7.0.0</li>
+<ul>
+<li>Remove compilation warnings that only affect DFTFringe programming team</li>
+<li>Project is now buildable on macOS</li>
+<li>Fixed all bugs related to rotating and averaging when there are regions or central obstruction</li>
+<ul>
+    <li>fixed issue where masked points outside mirror edge could be averaged in when rotating</li>
+    <li>made it so masked regions only grow once instead of everytime you recalculate zernike's or change blur</li>
+    <li>rotation uses only outer edge mask now as everything else should rotate</li>
+    <li>eliminates tons of bugs if the center obstruction region changes sizes or position and then we average</li>
+    <li>fixed bug when reading wavefronts where central obstruction moved due to rounding error</li>
+</ul>
+<li>Fixes GUI issues related to outline (oln) file</li>
+<ul>
+    <li>Oln files are now stored in a new format. DFTFringe can still open files from previous format</li>
+    <li>Fixed bug where oln files can be read wrong (typically 12% of the time)</li>
+    <li>Fixed bug where reading and writing to oln file after cropping would move outline and region locations</li>
+</ul>
+<li>Fix some memory leaks</li>
+<li>Hovering over data in "astig stats" dialog will show picture name</li>
+<li>Automatically close some secondary windows that were not closing at end of main application</li>
+<li>Fix issue where regions near the edge of the igram can cause a crash</li>
+</ul></ul>
+</ul>
+
+<ul><li>Version 7.1.1</li>
+<ul>
+<li>Added logging to assist with debugging, particularly if there is a crash. To view log file go to exe folder then DFTFringeLogs/log.txt</li>
+<li>Updated project dependencies</li>
+<li>Fixed regression introduced in 7.0.0 breaking "show only average" of astig stats</li>
+<li>Improved waveFront slection display</li>
+<ul>
+    <li>Displayed waveFront is clearly identified with a green circle</li>
+    <li>F2 shortcut can be used to rename waveFront</li>
+    <li>delete shortcut can be used to delete waveFront</li>
+    <li>enter shortcut can be used to dispaly selected waveFront</li>
+    <li>Right click gives access to a menu for all previous shortcuts</li>
+</ul>
+<li>Fixed issue where regions sometimes fill in with data off by many wavelengths</li>
+<li>Several secondary windows are now closing automatically on main window close (but not all)</li>
+<li>Fixed issue where Foucault view display "TextLabel" instead of number</li>
+<li>Fixed regression introduced in 7.0.0 not displaying effects of central obstruction in most displays</li>
+<li>Removed unused interpolation drop down from rotate wavefront dialog</li>
+<li>Linux is not case sensitive to jpg (or other extension) anymore for selecting files</li>
+<li>Fixed regression introduced in 7.0.0 where regions might not be updated correctly when processing several igram</li>
+<li>Fixed crash if you smooth a wavefront that has an inner outline (perforated mirror). Bug existed staring ver 6.3.1.</li>
+</ul></ul>
+</ul>
+
+<ul><li>Version 7.1.2</li>
+<ul>
+<li>Fixed some minor bugs with GUI regarding edge mask feature.</li>
+<li>Removed edge mask from OLN files (was added in version 6.3.0)</li>
+</ul>
+</ul>

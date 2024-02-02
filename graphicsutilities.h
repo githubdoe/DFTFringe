@@ -25,6 +25,6 @@
 
 void drawPlus(QPointF p, QPainter& dc);
 
-CircleOutline readCircle(std::ifstream& file);
+CircleOutline readCircle(std::ifstream& file, double x_offset=0, double y_offset=0);
 void writeCircle(std::ofstream& file, CircleOutline &circle);
 #endif // GRAPHICSUTILITIES_H

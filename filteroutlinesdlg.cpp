@@ -82,7 +82,7 @@ void FilterOutlinesDlg::setRadius(double rad)
     update();
 }
 
-void FilterOutlinesDlg::on_any_clicked(bool checked)
+void FilterOutlinesDlg::on_any_clicked(bool /*checked*/)
 {
     filterOperation = FOANY;
 }

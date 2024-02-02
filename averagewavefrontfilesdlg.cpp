@@ -43,7 +43,6 @@ void averageWaveFrontFilesDlg::on_process_clicked()
     bool first = true;
     abort = false;
     QStringList rejects;
-    bool configChanged = false;
     int count = ui->fileList->count();
     if (count == 0)
         return;
@@ -61,7 +60,7 @@ void averageWaveFrontFilesDlg::on_process_clicked()
         QString name = item->text();
         ui->fileList->setCurrentRow(i);
         qApp->processEvents();
-        wavefront *wf = sm->readWaveFront(name,configChanged);
+        wavefront *wf = sm->readWaveFront(name);
         if (useFilter){
             sm->makeMask(wf);
             sm->generateSurfacefromWavefront(wf);
@@ -70,7 +69,7 @@ void averageWaveFrontFilesDlg::on_process_clicked()
             double stdVal = std.val[0]* md->lambda/outputLambda;
             if (stdVal > filterRMS){
                 QFileInfo info(name);
-                QString item = QString().sprintf("%s RMS:%lf", info.baseName().toStdString().c_str(), stdVal);
+                QString item = QString("%1 RMS:%2").arg(info.baseName()).arg(stdVal, 0, 'f');
                 rejects << item;
                 ui->fileList->item(i)->setForeground(Qt::red);
                 qApp->processEvents();
@@ -144,7 +143,7 @@ void averageWaveFrontFilesDlg::on_addFiles_clicked()
 
 }
 
-void averageWaveFrontFilesDlg::on_buttonBox_clicked(QAbstractButton *button)
+void averageWaveFrontFilesDlg::on_buttonBox_clicked(QAbstractButton * /*button*/)
 {
 
 }

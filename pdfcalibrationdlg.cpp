@@ -14,7 +14,6 @@ PdfCalibrationDLg::PdfCalibrationDLg(QWidget *parent) :
 
     QImage testImage(3000,100,QImage::Format_ARGB32);
     QPainter tpainter(&testImage);
-    QPen linePen(Qt::black);
     for (int i = 1; i < 30; ++i){
         int x = i * 100;
         tpainter.drawText(x,60,QString("{%1}").arg(x));

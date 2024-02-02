@@ -21,7 +21,7 @@ ZernikeSmoothingDlg::ZernikeSmoothingDlg(wavefront &wf, QWidget *parent) :
     QSettings set;
     m_maxOrder = set.value("Zern maxOrder", 12).toInt();
     ui->maxOrder->setValue(m_maxOrder);
-    ui->termCnt->setText(QString().sprintf("%d Terms",m_noOfTerms));
+    ui->termCnt->setText(QString("%1 Terms").arg(m_noOfTerms));
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(intiZernTable()));
     tableModel->setValues(&m_wf.InputZerns);
     m_sm = SurfaceManager::get_instance();
@@ -57,7 +57,7 @@ void ZernikeSmoothingDlg::on_maxOrder_valueChanged(int arg1)
 
     m_zp->setMaxOrder(arg1);
     m_noOfTerms = m_zp->getNumberOfTerms();
-    ui->termCnt->setText(QString().sprintf("%d Terms",m_noOfTerms));
+    ui->termCnt->setText(QString("%1 Terms").arg(m_noOfTerms));
     theZerns.resize(m_noOfTerms);
     //tableModel->resizeRows(m_noOfTerms);
 
@@ -66,7 +66,7 @@ void ZernikeSmoothingDlg::on_maxOrder_valueChanged(int arg1)
     m_timer.start(1000);
 
 }
-cv::Mat makeSurfaceFromZerns(int width, double rad, zernikeProcess &zp, std::vector<double> theZerns){
+cv::Mat makeSurfaceFromZerns(int width, zernikeProcess &zp, std::vector<double> theZerns){
     int wx = width;
 
     cv::Mat result = cv::Mat::zeros(wx,wx,  numType);
@@ -102,17 +102,17 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
 
    tableModel->setValues(&theZerns);
 
-    cv::Mat result = makeSurfaceFromZerns(m_wf.data.cols, m_wf.m_outside.m_radius, *m_zp, theZerns);
+    cv::Mat result = makeSurfaceFromZerns(m_wf.data.cols, *m_zp, theZerns);
 
     QStringList l = m_wf.name.split("/");
     l.back().replace(".wft","");
-    l.back().append(QString().sprintf("_sm%d",m_noOfTerms));
+    l.back().append(QString("_sm%1").arg(m_noOfTerms));
     m_sm->createSurfaceFromPhaseMap(result, m_wf.m_outside,
                                                 CircleOutline(QPointF(0,0),0),l.back());
 
     if (ui->showResidual->isChecked()){
         m_sm->subtract(&m_wf, m_sm->m_wavefronts.back(), false);
-        m_sm->m_wavefronts.back()->name = QString().sprintf("Residual_%d",m_noOfTerms);
+        m_sm->m_wavefronts.back()->name = QString("Residual_%1").arg(m_noOfTerms);
         m_sm->m_surfaceTools->nameChanged(m_sm->m_currentNdx,  m_sm->m_wavefronts.back()->name);
         m_sm->m_surfaceTools->currentNdxChanged(m_sm->m_currentNdx);
         m_sm->previous();

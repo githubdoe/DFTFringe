@@ -24,7 +24,7 @@ CounterRotationDlg::CounterRotationDlg(QString fn, double rot, bool dir, QWidget
 {
     ui->setupUi(this);
     ui->fileName->setText(fn);
-    ui->counterRotation->setText(QString().sprintf("%6.1lf", rot));
+    ui->counterRotation->setText(QString("%1").arg(rot, 6, 'f', 1));
     ui->CW->setChecked(dir);
 }
 QString CounterRotationDlg::getRotation(){

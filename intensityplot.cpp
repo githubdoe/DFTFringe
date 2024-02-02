@@ -64,7 +64,7 @@ public:
         dx = m_rad  - xx * cos(i_angle);
         dy = m_rad  - xx * sin(i_angle);
         if (dy >= m_plane.rows || dx >= m_plane.cols || dy < 0 || dx < 0){
-            //qDebug() << QString().sprintf("profile Warning index out of range %d %d", dx,dy);
+            //qDebug() << QString("profile Warning index out of range %1 %2").arg(dx).arg(dy);
             return 0.0;
         }
         double v = m_plane.at<uchar>(dy,dx);
@@ -92,7 +92,7 @@ bool intensityPlot::eventFilter( QObject *object, QEvent *event )
 }
 
 intensityPlot::intensityPlot(QWidget *parent):
- m_showRed(true), m_showGreen(true),    m_showBlue(true)
+    QwtPlot(parent), m_showRed(true), m_showGreen(true),    m_showBlue(true)
 
 {
     setTitle( "intensity profiles" );
@@ -114,7 +114,7 @@ intensityPlot::intensityPlot(QWidget *parent):
     }
 
     palette0.setColor( QPalette::Base,
-        palette().color( backgroundRole() ).light( 120 ) );
+        palette().color( backgroundRole() ).lighter( 120 ) );
     palette0.setColor( QPalette::WindowText,
         palette0.color( QPalette::Base ) );
     QwtCompass *compass = new QwtCompass( this );
@@ -126,7 +126,7 @@ intensityPlot::intensityPlot(QWidget *parent):
 
     palette0.setColor( QPalette::Base, Qt::darkBlue );
     palette0.setColor( QPalette::WindowText,
-                       QColor( Qt::darkBlue ).dark( 120 ) );
+                       QColor( Qt::darkBlue ).darker( 120 ) );
     palette0.setColor( QPalette::Text, Qt::white );
 
     QwtCompassScaleDraw *scaleDraw = new QwtCompassScaleDraw();

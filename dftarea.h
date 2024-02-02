@@ -67,7 +67,7 @@ public slots:
     void doPSIstep1();
     bool doPSIstep2();
     void doPSIstep3();
-    void doPSIstep4(Mat images, QVector<double> phases);
+    void doPSIstep4(cv::Mat images, QVector<double> phases);
     void doPSITilt();
     void doDFT();
     void dftSizeChanged(const QString&);

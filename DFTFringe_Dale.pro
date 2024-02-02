@@ -26,7 +26,7 @@ TEMPLATE = app
 
 CONFIG += ``
 
-SOURCES += main.cpp\
+SOURCES += main.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
     cpoint.cpp \
@@ -36,11 +36,9 @@ SOURCES += main.cpp\
     igramarea.cpp \
     circleoutline.cpp \
     gplus.cpp \
-    Boundary.cpp \
     graphicsutilities.cpp \
     dfttools.cpp \
     dftarea.cpp \
-    mikespsirinterface.cpp \
     oglrendered.cpp \
     pdfcalibrationdlg.cpp \
     profileplot.cpp \
@@ -54,7 +52,6 @@ SOURCES += main.cpp\
     contourtools.cpp \
     dftcolormap.cpp \
     surfaceanalysistools.cpp \
-    prefsdlg.cpp \
     surfacemanager.cpp \
     zapm.cpp \
     zernikedlg.cpp \
@@ -113,7 +110,6 @@ SOURCES += main.cpp\
     lensetablemodel.cpp \
     unwraperrorsview.cpp \
     lensdialog.cpp \
-    singleapplication.cpp \
     messagereceiver.cpp \
     myutils.cpp \
     pixelstats.cpp \
@@ -125,7 +121,6 @@ SOURCES += main.cpp\
     astigscatterplot.cpp \
     wavefrontfilterdlg.cpp \
     myplotpicker.cpp \
-    testplotclass.cpp \
     rmsplot.cpp \
     regionedittools.cpp \
     reportdlg.cpp \
@@ -144,13 +139,13 @@ SOURCES += main.cpp\
     outlinedialog.cpp \
     psitiltoptions.cpp \
     contourrulerparams.cpp \
-    zernikesmoothingdlg.cpp
-    punwrap.cpp
+    zernikesmoothingdlg.cpp \
+    SingleApplication/singleapplication.cpp \
+    SingleApplication/singleapplication_p.cpp
 
 HEADERS  += mainwindow.h \
     arbitrarywavefronthelp.h \
     arbitrarywavwidget.h \
-    bezier.h \
     cpoint.h \
     defocusdlg.h \
     edgeplot.h \
@@ -164,7 +159,6 @@ HEADERS  += mainwindow.h \
     pdfcalibrationdlg.h \
     profileplot.h \
     psiresizeimagesdlg.h \
-    spline.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
     surfacelightingproxy.h \
@@ -174,7 +168,6 @@ HEADERS  += mainwindow.h \
     contourtools.h \
     dftcolormap.h \
     surfaceanalysistools.h \
-    prefsdlg.h \
     surfacemanager.h \
     zernikedlg.h \
     zernikeprocess.h \
@@ -234,8 +227,6 @@ HEADERS  += mainwindow.h \
     lensetablemodel.h \
     unwraperrorsview.h \
     lensdialog.h \
-    singleapplication.h \
-    singleapplication_p.h \
     messagereceiver.h \
     boundary.h \
     myutils.h \
@@ -249,7 +240,6 @@ HEADERS  += mainwindow.h \
     astigscatterplot.h \
     wavefrontfilterdlg.h \
     myplotpicker.h \
-    testplotclass.h \
     rmsplot.h \
     regionedittools.h \
     reportdlg.h \
@@ -266,10 +256,15 @@ HEADERS  += mainwindow.h \
     psi_dlg.h \
     psiphasedisplay.h \
     outlinedialog.h \
-    mikespsiinterface.h \
     psitiltoptions.h \
     contourrulerparams.h \
-    zernikesmoothingdlg.h
+    zernikesmoothingdlg.h \
+    bezier/bezier.h \
+    SingleApplication/singleapplication.h \
+    SingleApplication/singleapplication_p.h
+
+INCLUDEPATH += ./bezier ./SingleApplication
+
 FORMS    += mainwindow.ui \
     arbitrarywavefronthelp.ui \
     defocusdlg.ui \
@@ -284,7 +279,6 @@ FORMS    += mainwindow.ui \
     psiresizeimagesdlg.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
-    prefsdlg.ui \
     metricsdisplay.ui \
     userdrawnprofiledlg.ui \
     zernikedlg.ui \
@@ -415,6 +409,7 @@ VERSION = 6.2
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+DEFINES += QAPPLICATION_CLASS=QApplication
 
 DISTFILES += \
     buildingDFTFringe64.txt \

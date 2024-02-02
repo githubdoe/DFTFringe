@@ -22,9 +22,11 @@
 #include <counterrotationdlg.h>
 #include <QString>
 #include "surfacemanager.h"
+#include "spdlog/spdlog.h"
+
 QString AstigReportTitle = "";
 QString AstigReportPdfName = "stand.pdf";
-standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent,Qt::WindowFlags flags) :
+standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent, Qt::WindowFlags flags) :
     QWizard(parent,flags),
     ui(new Ui::standAstigWizard)
 {
@@ -47,6 +49,7 @@ standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent,Qt::Windo
 standAstigWizard::~standAstigWizard()
 {
     delete ui;
+    spdlog::get("logger")->trace("standAstigWizard::~standAstigWizard");
 }
 IntroPage::IntroPage(QWidget *parent)
     : QWizardPage(parent)
@@ -97,7 +100,9 @@ IntroPage::IntroPage(QWidget *parent)
 
     setLayout(layout);
 }
-makeAverages::makeAverages(QWidget *){
+makeAverages::makeAverages(QWidget *parent)
+    : QWizardPage(parent)
+{
     setTitle(tr("<H1>Prerequisites:</H1>"));
     setSubTitle(" ");
     QTextEdit *txt = new QTextEdit("<p style=\"font-size:15px\"><ul>"
@@ -298,8 +303,8 @@ void define_input::browse(){
         CounterRotationDlg dlg( fileName,rot, true);
         dlg.setCCW(CCWRb->isChecked());
         if (dlg.exec()) {
-            QString b = QString().sprintf("%s,%s,%s", fileName.toStdString().c_str(),(dlg.isClockwise()) ? "CW" : "CCW",
-                                          dlg.getRotation().toStdString().c_str());
+            QString b = QString("%1,%2,%3").arg(fileName).arg((dlg.isClockwise()) ? "CW" : "CCW").arg( // clazy:exclude=qstring-arg
+                                          dlg.getRotation());
             new QListWidgetItem(b,listDisplay);
             rotationDef *rd = new rotationDef(fileName, (dlg.isClockwise() ? 1 : -1) * dlg.getRotation().toDouble());
             rotationList.append(rd);

@@ -40,7 +40,7 @@ public:
 
     static QCheckBox *autoOutlineOutside;
     static QCheckBox *autoOutlineCenter;
-    explicit batchIgramWizard(QStringList files, QWidget *parent = 0 , Qt::WindowFlags flags = 0);
+    explicit batchIgramWizard(QStringList files, QWidget *parent = 0 , Qt::WindowFlags flags = Qt::Widget);
     ~batchIgramWizard();
     void listReady(QStringList list);
 

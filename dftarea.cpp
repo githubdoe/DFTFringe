@@ -28,7 +28,6 @@
 #include "utils.h"
 #include "showaliasdlg.h"
 #include <QLabel>
-#include "mikespsiinterface.h"
 #include <QShortcut>
 #include <opencv2/core/core_c.h>
 using namespace cv;
@@ -71,17 +70,17 @@ cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
     if (poly.size()>0){
         for (int n = 0; n < poly.size(); ++n){
             cv::Point points[1][poly[n].size()];
-            for (int i = 0; i < poly[n].size(); ++i){
+            for (std::size_t i = 0; i < poly[n].size(); ++i){
 
                 points[0][i] = cv::Point(poly[n][i].x, poly[n][i].y);
 
             }
-            for (int j = 0; j < poly[n].size()-1; ++j){
+            for (std::size_t j = 0; j < poly[n].size()-1; ++j){
                 cv::line(mask, points[0][j], points[0][j+1], cv::Scalar(0));
 
             }
             const Point* ppt[1] = { points[0]};
-            int npt[] = { poly[n].size() };
+            int npt[] = { static_cast<int>(poly[n].size()) };
 
             fillPoly( mask, ppt, npt, 1, Scalar(0), 8 );
         }
@@ -108,9 +107,9 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
 {
     m_outlineComplete = false;
     m_PSIstate = 0;
-    QRect rec = QGuiApplication::screens()[0]->geometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
 
-    m_Psidlg = new PSI_dlg;
+    m_Psidlg = new PSI_dlg(nullptr);
     rec.setLeft(rec.width()/6);
     rec.setTop(rec.height()/4);
     rec.setWidth(rec.width()/4);
@@ -186,7 +185,7 @@ void DFTArea::zoomFit(){
     zoom = double(this->size().height())/magIImage.size().height();
     update();
 }
-bool DFTArea::eventFilter(QObject *obj, QEvent *event) {
+bool DFTArea::eventFilter(QObject * /*obj*/, QEvent *event) {
   if (event->type() == QEvent::Wheel) {
 
       QWheelEvent *w = (QWheelEvent *)event;
@@ -213,6 +212,7 @@ bool DFTArea::eventFilter(QObject *obj, QEvent *event) {
 }
 DFTArea::~DFTArea()
 {
+    delete m_Psidlg;
     delete ui;
 }
 void DFTArea::setChannel(const QString& val){
@@ -252,6 +252,8 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
 
     double pixelsPermm =(igramArea->m_outside.m_radius/(md.diameter/2.));
     double reduction = md.aperatureReduction * pixelsPermm;
+    if (md.m_aperatureReductionEnabled == false)
+        reduction = 0;
 
     double rad = igramArea->m_outside.m_radius - reduction;
 
@@ -265,8 +267,8 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double left = centerX - rad;
     double top = centerY - rad;
     std::vector<Mat > bgr_planes;
-    top = max(top,0.);
-    left = max(left,0.);
+    top = std::max(top,0.);
+    left = std::max(left,0.);
     int width = 2. * (rad);
     int height = width;
     width = min(width, img.width());
@@ -311,6 +313,17 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
         for (unsigned int i = 0; i < igramArea->m_polygons[n].size(); ++i){
             int x = round((igramArea->m_polygons[n][i].x - left) * scaleFactor);
             int y = round((igramArea->m_polygons[n][i].y - top) * scaleFactor);
+
+            // make sure x and y values of regions are inside our matrix
+            if (x < 0)
+                x=0;
+            if (x >= roi.cols)
+                x=roi.cols-1;
+            if (y < 0)
+                y=0;
+            if (y >= roi.rows)
+                y = roi.rows-1;
+
             m_poly.back().push_back(cv::Point(x,y));
         }
     }
@@ -344,10 +357,10 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     Mat  complexI;
     merge(planes, 2, complexI);         // Add to the expanded another plane with zeros
     if (scaleFactor == 1.){
-        tools->imageSize(QString().sprintf("DFT Size will be %d", width));
+        tools->imageSize(QString("DFT Size will be %1").arg(width));
     }
     else
-        tools->imageSize(QString().sprintf("Image is resized from %d to %d pixels",width, complexI.cols));
+        tools->imageSize(QString("Image is resized from %1 to %2 pixels").arg(width).arg(complexI.cols));
     return complexI;
 }
 
@@ -455,11 +468,6 @@ void DFTArea::doDFT(){
     m_dft.release();
     m_dft = complexI/complexI.size().area();
     magIImage = showMag(complexI,false,"", true, m_gamma);
-
-
-    double h = magIImage.height();
-    QRect rec = QApplication::desktop()->screenGeometry();
-
 
 
     magIImage = magIImage.scaled(magIImage.width() , magIImage.height() );
@@ -603,7 +611,7 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
 
     try
     {
-    int startMem = showmem("start Vortex");
+    showmem("start Vortex");
     cv::Mat image = grayComplexMatfromImage(img);
 
     // convert from 32 to 64 bit double values
@@ -621,10 +629,6 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     double *qmap = new double[size];
     double *orient = new double[size];
 
-
-    double *imRe = new double[size];
-
-
     //double *fdom[2]; fdom[0] = new double[size]; fdom[1] = new double[size];
     double *d1[2]; d1[0] = new double[size]; d1[1] = new double[size];
     double *d2[2]; d2[0] = new double [size]; d2[1] = new double [size];
@@ -633,17 +637,17 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     double *spiralIm = new double[size];
 
 
-
-
-
     if (m_vortexDebugTool->m_showInput){
-        cv::Mat tmp = cv::Mat(ysize,xsize,numType, imRe);
-        cv::Mat xx;
-        tmp.convertTo(xx,CV_32F);
-        cv::imshow("input", xx);
-        cv::waitKey(1);
+        double *imReTmp = new double[size];
+        {
+            cv::Mat tmp = cv::Mat(ysize,xsize,numType, imReTmp);
+            cv::Mat xx;
+            tmp.convertTo(xx,CV_32F);
+            cv::imshow("input", xx);
+            cv::waitKey(1);
+        } // delete imReTmp after tmp is destructed by end of scope
+        delete[] imReTmp;
     }
-
 
     cv::Mat fdomMat;
     cv::Mat fdomPlanes[2];
@@ -732,7 +736,7 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
 
     imPlanes[1] *= 0.;
 
-    imRe = (double *)(imPlanes[0].data);
+    double *imRe = (double *)(imPlanes[0].data);
     if (0) { //(0 == strcmp (what, "im2")) {
         showData("im border added", imPlanes[0].clone());
     }
@@ -919,19 +923,19 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     }
     catch (std::bad_alloc &e){
         showmem();
-        qDebug() << QString().sprintf("Error %s", e.what());
+        qDebug() << QString("Error %1").arg(e.what());
        //cv::Mat phase = cv::Mat::zeros(Size(100,100), numType);
 
        return cv::Mat();
     }
     catch ( std::exception &e){
 
-        qDebug() << QString().sprintf(" some Error %s", e.what());
+        qDebug() << QString(" some Error %1").arg(e.what());
        cv::Mat phase = cv::Mat::zeros(Size(0,0), numType);
        return phase;
     }
     catch (...){
-        qDebug() << QString().sprintf(" Unknown error ");
+        qDebug() << QString(" Unknown error ");
        cv::Mat phase = cv::Mat::zeros(Size(100,100), numType);
        return phase;
     }
@@ -1114,7 +1118,7 @@ void dumpMat(cv::Mat m, QString title = ""){
     for (int r = 0; r < m.rows; ++r){
         QString msg;
         for (int c = 0; c < m.cols; ++c){
-          msg = msg + QString().sprintf("% 6.2e",m.at<double>(r,c)) + " ";
+          msg = msg + QString("%1 ").arg(m.at<double>(r,c), 6, 'e', 2);
           if ( c > 8){
               msg = msg + "...";
               break;
@@ -1134,7 +1138,6 @@ void DFTArea::outlineDoneSig(){
 }
 #include "psiphasedisplay.h"
 void DFTArea::doPSIstep1(){
-    //m_Psidlg = new Psidlg;
     if (!doPSIstep2())
         return;
     if (m_psiFiles.size() == 0)
@@ -1188,7 +1191,7 @@ cv::Mat DFTArea::PSILoadFullImages(){
         QApplication::processEvents();
         QImage loadedImage;
         if (!loadedImage.load(name)){
-            QString msg =  QString().sprintf("Failed to load %s",name.toStdString().c_str());
+            QString msg = QString("Failed to load %1").arg(name);
             QMessageBox::warning(0, "load image failed", msg);
             continue;
         }
@@ -1217,9 +1220,7 @@ cv::Mat DFTArea::PSILoadFullImages(){
         }
         else {
             if ((datam.cols != m_psiCols) || (datam.rows != m_psiRows)){
-                QString msg = QString().sprintf("igram %s (%d,%d)is not the same size as %s (%d,%d)",
-                  m_psiFiles[cnt].toStdString().c_str(),datam.rows,datam.cols, m_psiFiles[0].toStdString().c_str(),
-                        m_psiRows,m_psiCols);
+                QString msg = QString("igram %1 (%2,%3)is not the same size as %4 (%5,%6)").arg(m_psiFiles[cnt]).arg(datam.rows).arg(datam.cols).arg(m_psiFiles[0]).arg(m_psiRows).arg(m_psiCols);
                 QMessageBox::warning(0, "Failed", msg);
                  QApplication::restoreOverrideCursor();
                  return data;
@@ -1263,7 +1264,6 @@ cv::Mat atan2Mat(cv::Mat y, cv::Mat x){
     double* xptr = x.ptr<double>(0);
     double* yptr = y.ptr<double>(0);
     int last = x.total();
-    int cnt = 0;
     for (int i = 0; i < last; ++i ){
         resptr[i] = atan2(yptr[i],xptr[i]);
         //if (++cnt < 20)
@@ -1282,7 +1282,6 @@ arma::mat zpmCxx(double rho, double theta, int maxorder) {
 
   int order, nm, nm1mm1, nm1mp1, nm2m;
   int ncol = (mmax+1)*(mmax+1);
-  double a0;
   double cosmtheta[mmax], sinmtheta[mmax];
   arma::mat  zm(imax, ncol);
 
@@ -1379,7 +1378,7 @@ void DFTArea::doPSIstep4(cv::Mat images, QVector<double> phases){
     try{
         cv::solve(X, A,B,DECOMP_QR);
     }
-    catch (cv::Exception ex) {
+    catch (const cv::Exception &ex) {
         QMessageBox::warning(0,"error", ex.what());
         QApplication::restoreOverrideCursor();
         return;
@@ -1407,7 +1406,7 @@ void DFTArea::doPSIstep4(cv::Mat images, QVector<double> phases){
     QFileInfo finfo( outlineName);
     if (finfo.exists()){
         igramArea->deleteRegions();
-        igramArea->loadOutlineFile(outlineName);
+        igramArea->loadOutlineFileOldV6(outlineName);
     }
     else {
     qDebug() << "use last outline";
@@ -1435,7 +1434,6 @@ qDebug() << "dlg" << dlg.m_x << dlg.m_rad;
         int left = dlg.m_x - dlg.m_rad;
         int right = dlg.m_x + dlg.m_rad;
         int top = dlg.m_y - dlg.m_rad;
-        int bottom = dlg.m_y + dlg.m_rad;
         int width = dlg.m_rad * 2;
         int height = width;
         if (left < 0)
@@ -1561,15 +1559,15 @@ QVector<double> DFTArea::getPhases(){
     arma::mat Phi(M, 3);
     arma::vec phi(M);
     arma::vec mod(M);
-    double sdp;
-    double bestSdp;
-    int bestIteration;
+    double sdp = 0;
+    double bestSdp = DBL_MAX;
+    int bestIteration = 0;
     int i;
 
     for (i=0; i<maxiter; i++) {
         if (m_Psidlg->m_stop){
-        QMessageBox::warning(0, "Failed","Aborted by user");
-          break;
+            QMessageBox::warning(0, "Failed","Aborted by user");
+            break;
         }
         QApplication::processEvents();
 
@@ -1601,7 +1599,7 @@ QVector<double> DFTArea::getPhases(){
 
         // show current
         QVector<double> a;
-        for (int i = 0; i < phases.n_cols; ++i){
+        for (std::size_t i = 0; i < phases.n_cols; ++i){
             a << phases(i);
         }
 
@@ -1609,17 +1607,16 @@ QVector<double> DFTArea::getPhases(){
         m_Psidlg->setPhases(a);
         m_Psidlg->plot(a, i, sdp);
         // repeat until convergence
-        m_Psidlg->setStatusText(QString().sprintf("iteration %d  sdp %lf", i, sdp),i);
+        m_Psidlg->setStatusText(QString("iteration %1  sdp %2").arg(i).arg(sdp, 0, 'f'),i);
         if (i > 1 && (sdp < ptol)) {
 
             break;
         }
         phases_last = phases;
-        emit statusBarUpdate(QString().sprintf("%d %lf",i, sdp),2);
+        emit statusBarUpdate(QString("%1 %2").arg(i).arg(sdp, 0, 'f'),2);
     }
     if (i == maxiter && (sdp > ptol)){
-        QString msg = QString().sprintf("The calculated phases did not converge within the maximum number"
-                             " of iterations (%d). \nThey proabably are not valid.",maxiter);
+        QString msg = QString("The calculated phases did not converge within the maximum number of iterations (%1). \nThey proabably are not valid.").arg(maxiter);
         QMessageBox::warning(0, "No convegence", msg );
         phases = trials[bestIteration];
         i = bestIteration;
@@ -1631,10 +1628,10 @@ QVector<double> DFTArea::getPhases(){
     Phi = images * arma::pinv(S);
     phi = arma::atan2(-Phi.col(2), Phi.col(1));
     QVector<double> a;
-    for (int i = 0; i < phases.n_cols; ++i){
+    for (std::size_t i = 0; i < phases.n_cols; ++i){
         a << phases(i);
     }
-    m_Psidlg->setStatusText(QString().sprintf("iteration %d  sdp %lf Compute Phases complete. ", i, sdp),maxiter);
+    m_Psidlg->setStatusText(QString("iteration %1  sdp %2 Compute Phases complete. ").arg(i).arg(sdp, 0, 'f'),maxiter);
 
     return a;
 }

@@ -3,9 +3,9 @@
 #include <QDebug>
 CamCalibrationReviewDlg::CamCalibrationReviewDlg(std::vector<cv::Mat> images, std::vector<cv::Mat> keypoints,
                                                  std::vector<cv::Mat> corrected, QWidget *parent) :
-    m_images(images), m_keypoints(keypoints),m_ndx(0),m_corrected(corrected),m_overlay(false),
-    QDialog(parent), m_viewType(0),
-    ui(new Ui::CamCalibrationReviewDlg)
+    QDialog(parent),
+    m_ndx(0), m_images(images), m_keypoints(keypoints), m_corrected(corrected),
+    ui(new Ui::CamCalibrationReviewDlg), m_overlay(false), m_viewType(0)
 {
     ui->setupUi(this);
     ui->input->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
@@ -14,6 +14,7 @@ CamCalibrationReviewDlg::CamCalibrationReviewDlg(std::vector<cv::Mat> images, st
     cv::Mat mm = m_images[0];
     showImage(0);
 }
+
 void CamCalibrationReviewDlg::showImage(int ndx){
     cv::Mat mm;
     switch (m_viewType){
