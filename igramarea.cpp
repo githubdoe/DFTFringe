@@ -2217,7 +2217,6 @@ void IgramArea::loadOutlineFileOldV6(QString fileName){
                 m_polygons.back().push_back(cv::Point(vals[0].toDouble()-cropTotalDx, vals[1].toDouble()-cropTotalDy));
             }
         }
-        mirrorDlg &md = *mirrorDlg::get_Instance();
         if (line == "Edge Mask width"){
             std::getline(file,line);
 

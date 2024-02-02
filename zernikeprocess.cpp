@@ -846,7 +846,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 nulled.at<double>(y,x) = sz +nz;
             }
         }
-    }
+
     return nulled;
 }
 
@@ -1223,7 +1223,7 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
 
     std::vector<double> rhov;
     std::vector<double> thetav;
-    vector<double> m, n;       // row and col index of the point
+    std::vector<double> m, n;       // row and col index of the point
      m_row.clear();
      m_col.clear();
 

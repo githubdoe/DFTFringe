@@ -1695,8 +1695,8 @@ void MainWindow::on_actionDebugStuff_triggered()
 {
     zernikeProcess *zp = zernikeProcess::get_Instance();
     wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
-    vector<double> rho = {1., 0., 1.};
-    vector<double> theta;
+    std::vector<double> rho = {1., 0., 1.};
+    std::vector<double> theta;
     theta.push_back(M_PI);
     theta.push_back(0.);
     theta.push_back(0);
