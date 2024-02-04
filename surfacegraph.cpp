@@ -58,9 +58,9 @@ SurfaceGraph::SurfaceGraph(Q3DSurface *surface)
     m_mirrorSurfaceProxy = new QSurfaceDataProxy();
     m_wavefrontSeries = new QSurface3DSeries(m_mirrorSurfaceProxy);
     QSettings set;
-   m_colorLabelProxy = new QSurfaceDataProxy();
-   m_colorLabelSeries = new QSurface3DSeries(m_colorLabelProxy);
-   m_yGridHeight = maxHeightSelections[(set.value("yMaxNdx", 8).toInt())];
+    m_colorLabelProxy = new QSurfaceDataProxy();
+    m_colorLabelSeries = new QSurface3DSeries(m_colorLabelProxy);
+    m_yGridHeight = maxHeightSelections[(set.value("yMaxNdx", 8).toInt())];
 
     m_graph->activeTheme()->setType(Q3DTheme::Theme(3));
     QFont font = m_graph->activeTheme()->font();
@@ -88,6 +88,7 @@ SurfaceGraph::SurfaceGraph(Q3DSurface *surface)
 SurfaceGraph::~SurfaceGraph()
 {
     delete m_graph;
+    delete m_colorMap;
 }
 
 
@@ -223,10 +224,8 @@ void SurfaceGraph::fillSurfaceProxy() {
     double diam = m_wf->diameter;
     cv::Mat data;
     m_wf->workData.copyTo(data);
-    double min,max;
-    int id1,id2;
+    double min;
     min = m_wf->min;
-    max = m_wf->max;
     double mean = m_wf->mean;
     double std = m_wf->std;
 
@@ -244,10 +243,8 @@ void SurfaceGraph::fillSurfaceProxy() {
 
 
     double mmperstep = (diam/2)/(m_wf->m_outside.m_radius);
-    float stepX = mmperstep;
 
     int steps = 1;
-    float stepZ = stepX;
     sampleCountZ = data.rows;
     sampleCountX = data.cols;
     QSurfaceDataArray *dataArray = new QSurfaceDataArray;

@@ -13,6 +13,7 @@ class Zoomer;
 class QTextEdit;
 class QVBoxLayout;
 class QHBoxLayout;
+class CustomPlotPicker;
 namespace Ui {
 
 class astigStatsDlg;
@@ -49,12 +50,11 @@ private slots:
 
 private:
     int mndx;
-    QwtPlot *dplot;
     QVector<QStringList> m_zerns;
     Zoomer *zoomer;
     Ui::astigStatsDlg *ui;
     QVector<wavefront*> m_wavefronts;
-    QwtPlot *avgPlot(cv::Mat x, cv::Mat y, int width, int height);
+    QwtPlot *avgPlot(cv::Mat x, cv::Mat y, int width);
     QTextEdit *editor;
     QwtPlotPicker *d_picker;
     bool PDFMode;
@@ -65,6 +65,7 @@ private:
     QVBoxLayout *layout;
     QHBoxLayout *toolLayout;
     bool m_usePolar;
+    CustomPlotPicker *picker;
 };
 
 #endif // ASTIGSTATSDLG_H

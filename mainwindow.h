@@ -47,6 +47,8 @@
 #include "astigstatsdlg.h"
 #include "wavefrontfilterdlg.h"
 #include "outlineplots.h"
+#include "cameracalibwizard.h"
+
 class regionEditTools;
 namespace Ui {
 class MainWindow;
@@ -69,7 +71,6 @@ public:
     QLabel *status2;
     QLabel *status3;
     ProfilePlot *m_profilePlot;
-    uint zernEnableUpdateTime;
     ZernTableModel *zernTablemodel;
     metricsDisplay *metrics;
     reviewWindow *review;
@@ -333,6 +334,8 @@ private:
     QWidget *profileFv;
     void Batch_Process_Interferograms();
     QVector<QVector<QString> > batchZerns;
+
+    QPointer<cameraCalibWizard> m_cameraCalibWizard;
 };
 
 #endif // MAINWINDOW_H

@@ -48,7 +48,6 @@
 #include "zernikes.h"
 #include <qwt_abstract_scale.h>
 #include <qwt_plot_histogram.h>
-#include "savewavedlg.h"
 #include "simulationsview.h"
 #include "standastigwizard.h"
 #include "subtractwavefronatsdlg.h"
@@ -70,10 +69,10 @@
 #include "Circleoutline.h"
 #include <math.h>
 #include "transformwavefrontdlg.h"
-#include "psi_dlg.h"
-#include "opencv2/opencv.hpp"
 #include "oglrendered.h"
 #include "ui_oglrendered.h"
+#include "spdlog/spdlog.h"
+
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -114,6 +113,9 @@ double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
         {
             return 0.;
         }
+
+        // some of 4 nearest points may be masked - say by a region mask or an inner or outer edge of mirror
+        // so let's set 4 booleans to see which of the 4 are masked
         bool f00inside = mask.at<uchar>(fy,fx);
         double f01 = mat.at<double>(fy+1, fx);//[fx + (fy + 1) * w];
         bool f01inside = mask.at<uchar>(fy+1,fx);
@@ -124,6 +126,7 @@ double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
 
         // full bilinear
         if (f00inside && f01inside && f10inside && f11inside)
+            // nothing masked.  Do standard bilinear
             return f00 + a *( f10 - f00) + b * (f01 - f00) +
                     a * b * (f00 + f11 - f10 - f01);
         {
@@ -135,10 +138,10 @@ double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
                 return f00 + b * (f01 - f00);
             }
             if (f01inside && f11inside){
-                return f01 + b * (f11 - f01);
+                return f01 + a * (f11 - f01);
             }
-            if (f11inside && f01inside){
-                return f11 + a * (f11 - f10);
+            if (f11inside && f10inside){
+                return f10 + a * (f11 - f10);
             }
 
             // Only one inside
@@ -150,7 +153,7 @@ double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
             // none were inside boundary so go look in the other direction.
             double sum = 0.;
             int cnt = 0;
-            int u = 1;
+            int u = 2;
             for (int del = 1; del <= u; ++del){
                 if (fy+del > h) continue;
                 if (fy -del < 0) continue;
@@ -289,7 +292,7 @@ public:
         st *= st;
         const double  e = 2.7182818285;
         double strl = pow(e,-st);
-        return QString().sprintf("%6.3lf",strl);
+        return QString("%1").arg(strl, 6, 'f', 3);
     }
 };
 
@@ -338,7 +341,7 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
     wavefront *wf = m_wavefronts[wavefrontNdx];
     generateSurfacefromWavefront(wf);
 
-    surfaceGenFinished( wavefrontNdx);
+    surfaceGenFinished();
 }
 
 void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
@@ -394,10 +397,8 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
         ((MainWindow*)parent())-> zernTablemodel->update();
         // fill in void from obstruction of igram.
-        if ( wf->regions.size() > 0){
-            zp.fillVoid(*wf);
-            makeMask(wf, false);
-        }
+        zp.fillVoid(*wf);
+        makeMask(wf, true);
         // null out desired terms.
         //cv::Mat tiltremoved = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables, 0,3);
         //wf->data = tiltremoved;
@@ -473,13 +474,15 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
     //cv::waitKey(1);
     return result;
 }
-SurfaceManager *SurfaceManager::m_instance = 0;
+
 SurfaceManager *SurfaceManager::get_instance(QObject *parent, surfaceAnalysisTools *tools,
                                              ProfilePlot *profilePlot, contourView *contourPlot,
                                              SurfaceGraph *glPlot, metricsDisplay *mets){
-    if (m_instance == 0){
-        m_instance = new SurfaceManager(parent, tools, profilePlot, contourPlot, glPlot, mets);
-    }
+    //static SurfaceManager m_instance{parent, tools, profilePlot, contourPlot, glPlot, mets};
+    //return &m_instance;
+    // Take care. This is non standard init for when the singleton is supposed to be deleted by parent
+    // keeping original version will call class destructor and on_exit will try to clean up static variable m_instance. But the instance doesn't exist anymore.
+    static SurfaceManager *m_instance = new SurfaceManager(parent, tools, profilePlot, contourPlot, glPlot, mets);
     return m_instance;
 }
 
@@ -489,7 +492,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
     m_SurfaceGraph(glPlot), m_metrics(mets),
     m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
-    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), workToDo(0), m_wftStats(0)
+    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {
 
     okToUpdateSurfacesOnGenerateComplete = true;
@@ -509,7 +512,6 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     connect(m_toolsEnableTimer, SIGNAL(timeout()), this, SLOT(enableTools()));
 
     connect(m_surfaceTools, SIGNAL(waveFrontClicked(int)), this, SLOT(waveFrontClickedSlot(int)));
-    connect(m_surfaceTools, SIGNAL(wavefrontDClicked(const QString &)), this, SLOT(wavefrontDClicked(const QString &)));
     connect(m_surfaceTools, SIGNAL(centerMaskValue(int)),this, SLOT(centerMaskValue(int)));
     connect(m_surfaceTools, SIGNAL(outsideMaskValue(int)),this, SLOT(outsideMaskValue(int)));
     connect(m_surfaceTools, SIGNAL(surfaceSmoothGBEnabled(bool)), this, SLOT(surfaceSmoothGBEnabled(bool)));
@@ -525,7 +527,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     connect(m_surfaceTools, SIGNAL(average(QList<int>)),this, SLOT(average(QList<int>)));
     connect(m_surfaceTools, SIGNAL(doxform(QList<int>)),this, SLOT(transfrom(QList<int>)));
     connect(m_surfaceTools, SIGNAL(invert(QList<int>)),this,SLOT(invert(QList<int>)));
-    connect(m_surfaceTools, SIGNAL(filterWavefronts(QList<int>)),this,SLOT(filter(QList<int>)));
+    connect(m_surfaceTools, SIGNAL(filterWavefronts()),this,SLOT(filter()));
     connect(this, SIGNAL(enableControls(bool)),m_surfaceTools, SLOT(enableControls(bool)));
     connect(mirrorDlg::get_Instance(),SIGNAL(recomputeZerns()), this, SLOT(computeZerns()));
     connect(mirrorDlg::get_Instance(),SIGNAL(obstructionChanged()), this, SLOT(ObstructionChanged()));
@@ -544,7 +546,16 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     initWaveFrontLoad();
 }
 
-SurfaceManager::~SurfaceManager(){}
+SurfaceManager::~SurfaceManager(){
+    spdlog::get("logger")->trace("SurfaceManager::~SurfaceManager");
+    for(wavefront* wf : m_wavefronts){
+        delete wf;
+    }
+    if(m_standAstigWizard != nullptr){
+        m_standAstigWizard->close();
+    }
+}
+
 void SurfaceManager::outputLambdaChanged(double val){
     outputLambda = val;
     computeZerns();
@@ -552,12 +563,12 @@ void SurfaceManager::outputLambdaChanged(double val){
 void DrawPoly(cv::Mat &data, QVector<std::vector<cv::Point> > poly){
     for (int n = 0; n < poly.size(); ++n){
         cv::Point points[1][poly[n].size()];
-        for (int i = 0; i < poly[n].size(); ++i){
+        for (unsigned int i = 0; i < poly[n].size(); ++i){
 
             points[0][i] = cv::Point(poly[n][i].x, data.rows - poly[n][i].y);
 
         }
-        for (int j = 0; j < poly[n].size()-1; ++j){
+        for (unsigned int j = 0; j < poly[n].size()-1; ++j){
             cv::line(data, points[0][j], points[0][j+1], cv::Scalar(0));
 
         }
@@ -594,7 +605,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     double ry = rx * md.m_verticalAxis/md.diameter;
     double ry2 = ry * ry;
     if (!mirrorDlg::get_Instance()->isEllipse()){
-        uchar v = 0x2ff;
+        uchar v = 0xff;
         fillCircle(mask, xm,ym,radm, &v);
     }
     else {
@@ -610,17 +621,18 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
         }
     }
 
-    if (rado > 0) {
+    if (rado > 0 && useInsideCircle) {
         uchar color = 0;
         fillCircle(mask, cx,cy,rado, &color);
     }
 
     // expand the region by 10%
-    if (wf->regions.size() > 0 && useInsideCircle){
+    if (wf->regions.size() > 0 && useInsideCircle && wf->regions_have_been_expanded == false){
+        wf->regions_have_been_expanded = true; // prevents us from expanding the same regions more than once
         for (int n = 0; n < wf->regions.size(); ++ n){
             int xavg = 0;
             int yavg = 0;
-            for (int i = 0; i < wf->regions[n].size(); ++i){
+            for (unsigned int i = 0; i < wf->regions[n].size(); ++i){
                 xavg += wf->regions[n][i].x;
                 yavg += wf->regions[n][i].y;
             }
@@ -628,20 +640,22 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
             yavg /= wf->regions[n].size();
             // find the closest point to the center
             double shortest = 99999;
-            int shortestndx;
-            for (int i = 0; i < wf->regions[n].size(); ++i){
+            for (unsigned int i = 0; i < wf->regions[n].size(); ++i){
                 int delx = wf->regions[n][i].x - xavg;
                 int dely = wf->regions[n][i].y - yavg;
                 double del = sqrt(delx * delx + dely * dely);
                 if (del < shortest){
                     shortest = del;
-                    shortestndx = i;
                 }
             }
             double scale = 1.1 * (shortest+2)/shortest;
-            for (int i = 0; i < wf->regions[n].size(); ++i){
+            for (unsigned int i = 0; i < wf->regions[n].size(); ++i){
                 wf->regions[n][i].x = scale * (wf->regions[n][i].x - xavg) + xavg;
                 wf->regions[n][i].y = scale * (wf->regions[n][i].y - yavg) + yavg;
+                if (wf->regions[n][i].x < 0)wf->regions[n][i].x=0;
+                if (wf->regions[n][i].x >= width)wf->regions[n][i].x=width-1;
+                if (wf->regions[n][i].y < 0)wf->regions[n][i].y=0;
+                if (wf->regions[n][i].y >= height)wf->regions[n][i].y=height-1;
             }
         }
 
@@ -657,7 +671,8 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     //line(wf->workMask, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), 10);
     theMask = mask.clone();
 
-    // add central obstruction
+    
+    // add central obstruction (not to be confused with a hole in the mirror - this comes from mirror configuration)
     double r = md.obs * (2. * radm)/md.diameter;
     r/= 2.;
     if (r > 0){
@@ -698,7 +713,7 @@ void SurfaceManager::ObstructionChanged(){
 void SurfaceManager::centerMaskValue(int val){
     insideOffset = val;
     double mmPerPixel = getCurrent()->diameter/(2 *( m_wavefronts[m_currentNdx]->m_outside.m_radius-1));
-    m_surfaceTools->m_centerMaskLabel->setText(QString().sprintf("%6.2lf mm",mmPerPixel* val));
+    m_surfaceTools->m_centerMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
     makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
     wf->dirtyZerns = true;
@@ -711,7 +726,7 @@ void SurfaceManager::centerMaskValue(int val){
 void SurfaceManager::outsideMaskValue(int val){
     outsideOffset = val;
     double mmPerPixel = m_wavefronts[m_currentNdx]->diameter/(2 * (m_wavefronts[m_currentNdx]->m_outside.m_radius));
-    m_surfaceTools->m_edgeMaskLabel->setText(QString().sprintf("%6.2lf mm",mmPerPixel* val));
+    m_surfaceTools->m_edgeMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
     makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
     wf->dirtyZerns = true;
@@ -765,7 +780,7 @@ void SurfaceManager::waveFrontClickedSlot(int ndx)
 {
 
     m_currentNdx = ndx;
-    QString msg = QString().sprintf(" %dx%d ",m_wavefronts[ndx]->data.cols, m_wavefronts[ndx]->data.rows);
+    QString msg = QString(" %1x%2 ").arg(m_wavefronts[ndx]->data.cols).arg(m_wavefronts[ndx]->data.rows);
     ((MainWindow*)parent())->statusBar()->showMessage(msg);
     sendSurface(m_wavefronts[ndx]);
 }
@@ -782,7 +797,7 @@ void SurfaceManager::deleteWaveFronts(QList<int> list){
 
 void SurfaceManager::wavefrontDClicked(const QString & name){
     for (int i = 0; i < m_wavefronts.size(); ++i){
-        if (m_wavefronts[i]->name.endsWith(name)){
+        if (m_wavefronts[i]->name.endsWith(name)){ //TODO JST 2023/09/11 this does not work on some name combinations. To be fixed
             m_currentNdx = i;
             sendSurface(m_wavefronts[i]);
             break;
@@ -797,7 +812,7 @@ void SurfaceManager::surfaceSmoothGBValue(double value){
     m_gbValue = value;
     mirrorDlg *md = mirrorDlg::get_Instance();
 
-    m_surfaceTools->setBlurText(QString().sprintf("%6.2lf mm", .01 * value * md->diameter));
+    m_surfaceTools->setBlurText(QString("%1 mm").arg( .01 * value * md->diameter, 6, 'f', 2));
     if (m_wavefronts.size() == 0)
         return;
 
@@ -820,7 +835,7 @@ void SurfaceManager::surfaceSmoothGBEnabled(bool b){
 
     mirrorDlg *md = ((MainWindow*)parent())->m_mirrorDlg;
     double mmPerPixel = md->diameter/(2 * rad);
-    m_surfaceTools->setBlurText(QString().sprintf("%6.2lf mm",m_gbValue* mmPerPixel));
+    m_surfaceTools->setBlurText(QString("%1 mm").arg(m_gbValue* mmPerPixel, 6, 'f', 2));
     if (m_wavefronts.size() == 0)
         return;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
@@ -962,8 +977,6 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
         QSettings settings;
         QString path = settings.value("lastPath").toString();
         QFile fn(path);
-        QFileInfo info(fn.fileName());
-        QString dd = info.dir().absolutePath();
 
         QString dir = QFileDialog::getExistingDirectory(0, tr("Open Directory")
                                                         ,path,
@@ -1065,11 +1078,8 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     m_surfaceTools->select(m_currentNdx);
     emit showTab(2);
 }
-wavefront *SurfaceManager::xxx(QString name, bool t){
-    return readWaveFront(name, false);
-}
 
-wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsChanged){
+wavefront * SurfaceManager::readWaveFront(QString fileName){
     std::ifstream file(fileName.toStdString().c_str());
     if (!file) {
         QString b = "Can not read file " + fileName + " " +strerror(errno);
@@ -1145,14 +1155,14 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
     if (md->isEllipse()){
         wf->m_outside = CircleOutline(QPointF(xm,ym), xm -2);
     }
-    wf->m_inside = CircleOutline(QPoint(xo,yo), rado);
+    wf->m_inside = CircleOutline(QPointF(xo,yo), rado);
 
 
     if (lambda != md->lambda){
         if (lambdResp == ASK){
             QString message("The interferogram wavelength (");
-            message += QString().sprintf("%6.3lf", lambda) +
-                    ") Of the wavefront does not match the config value of " + QString().sprintf("%6.3lf\n",md->lambda) +
+            message += QString("%1").arg( lambda, 6, 'f', 3) +
+                    ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->lambda, 6, 'f', 3) +
                     "Do you want to make the config match?";
 
 
@@ -1172,16 +1182,13 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
         if ( lambdResp == YES || messageResult == QMessageBox::Yes){
             md->newLambda(QString::number(lambda));
         }
-        else {
-            mirrorParamsChanged = true;
-        }
     }
 
     if (roundl(diam * 10) != roundl(md->diameter* 10))
     {
         QString message("The mirror diameter (");
-        message += QString().sprintf("%6.3lf",diam) +
-                ") Of the wavefront does not match the config value of " + QString().sprintf("%6.3lf\n",md->diameter) +
+        message += QString("%1").arg(diam, 6, 'f', 3) +
+                ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->diameter, 6, 'f', 3) +
                 "Do you want to make the config match?";
         if (diamResp == ASK){
             int resp = QMessageBox(QMessageBox::Information,"config", message,QMessageBox::Yes|QMessageBox::No |
@@ -1201,7 +1208,6 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
         }
         else {
             diam = md->diameter;
-            mirrorParamsChanged = true;
         }
 
     }
@@ -1209,8 +1215,8 @@ wavefront * SurfaceManager::readWaveFront(QString fileName, bool mirrorParamsCha
     if (roundl(roc * 10.) != roundl(md->roc * 10.))
     {
         QString message("The mirror roc (");
-        message += QString().sprintf("%6.3lf",roc) +
-                ") Of the wavefront does not match the config value of " + QString().sprintf("%6.3lf\n",md->roc) +
+        message += QString("%1").arg(roc, 6, 'f', 3) +
+                ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->roc, 6, 'f', 3) +
                 "Do you want to make the config match?";
         //qDebug() << message;
         if (rocResp == ASK){
@@ -1276,7 +1282,7 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         deleteCurrent();
     }
 
-        wf = readWaveFront(fileName, mirrorParamsChanged);
+        wf = readWaveFront(fileName);
         m_wavefronts << wf;
 
         wf->name = fileName;
@@ -1318,7 +1324,8 @@ void SurfaceManager::deleteCurrent(){
 
         sendSurface(m_wavefronts[m_currentNdx]);
     }
-    else useDemoWaveFront();
+    else
+        useDemoWaveFront();
 
     emit currentNdxChanged(m_currentNdx);
 }
@@ -1388,9 +1395,9 @@ void SurfaceManager::saveAllWaveFrontStats(){
 
     if (m_wavefronts.size() == 0)
         return;
-        statsView * sv = new statsView(this);
-        sv->show();
-        return;
+    statsView * sv = new statsView(this);
+    sv->show();
+    return;
 }
 void SurfaceManager::enableTools(){
 
@@ -1401,7 +1408,7 @@ void SurfaceManager::enableTools(){
 
 }
 
-void SurfaceManager::surfaceGenFinished(int ndx) {
+void SurfaceManager::surfaceGenFinished() {
     if (workToDo > 0)
         emit progress(++workProgress);
 
@@ -1466,6 +1473,18 @@ void SurfaceManager::average(QList<int> list){
 
 #include "ccswappeddlg.h"
 void SurfaceManager::average(QList<wavefront *> wfList){
+    // The mask makes this feature not so straight forward.  The center obstruction might be masked.  There
+    // may be one or more regions that are masked and shouldn't be averaged in.
+    // However we can't just skip a region completely because it will always have very large offset and tilt.
+    // Visually what you see as a wavefront is hiding a huge amount of tilt (and defocus and more).  Unless every
+    // wavefront has the same amount of tilt, then skipping over one wavefront will add many waves of error in the
+    // resulting average.  This would show up as a huge bump/hole in the mirror.
+    //
+    // The solution that Dale came up with works great. He uses all the zernike terms to come up with a smoothed
+    // area of the wavefront.  A prediction of what that area should look like based on all the zernike terms.
+    // If you process an igram with an "ignore region" and set gaussian blur to zero then you can clearly see
+    // the region in 3d view and understand better what I am referring to.
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
     // check that all the cc have the same sign
     bool sign = wfList[0]->InputZerns[8] < 0;
@@ -1504,8 +1523,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
     QHash<QString,QList<int>> sizes;
     for (int i = 0; i < wfList.size(); ++i){
-        QString size;
-        size.sprintf("%d %d",wfList[i]->data.rows, wfList[i]->data.cols);
+        QString size =  QString("%1 %2").arg(wfList[i]->data.rows).arg(wfList[i]->data.cols);
         if (sizes.find(size)!= sizes.end())
         {
             sizes[size].append( i);
@@ -1541,7 +1559,6 @@ qDebug() << "maxkey" << maxkey << rrows << rcols << sizes[maxkey];
     }
 
     cv::Mat sum = cv::Mat::zeros(rrows,rcols, m_wavefronts[m_currentNdx]->data.type());
-    cv::Mat count = cv::Mat::zeros(rrows,rcols, CV_32S);
     cv::Mat resizedImage;
 
     for (int j = 0; j < wfList.size(); ++j){
@@ -1562,7 +1579,7 @@ qDebug() << "maxkey" << maxkey << rrows << rcols << sizes[maxkey];
 
 
     wavefront *wf = new wavefront();
-    *wf = *wfList[sizes[maxkey][0]];
+    *wf = *wfList[sizes[maxkey][0]];// copy in all the parameters (e.g. m_inside, lambda, diameter) from first wavefront to average
     wf->data = sum.clone();
     wf->mask = mask;
     wf->workMask = mask.clone();
@@ -1607,7 +1624,12 @@ void SurfaceManager::averageWavefrontFiles(QStringList files){
 
 }
 
-cv::Mat rotate(wavefront * wf, double ang){
+cv::Mat rotate(wavefront * wf, cv::Mat_<uint8_t> outerMask, double ang){
+    // returns a rotated matrix ready to be dumped directly into the new_wf->data
+    // does not rotate regions, or inner obstruction circle
+    // This uses the mask in wf->mask to decide if data can be used or not
+    //
+    // outerMask masks only the outer border - beyond the mirror's edge
     double rad = ang * M_PI/180.;
 
     double sina = sin(rad);
@@ -1630,9 +1652,9 @@ cv::Mat rotate(wavefront * wf, double ang){
             double sy = (double)y  - ycen;
             double x1 = sx * cosa - sy * sina + xcen;
             double y1 = sx * sina + sy * cosa + ycen;
-            if (wf->mask.at<uchar>(y,x) != 0)
+            if (outerMask.at<uchar>(y,x) != 0)
             {
-                double v = bilinear(wf->data,wf->mask, x1,y1);
+                double v = bilinear(wf->data,outerMask, x1,y1);
                 if (v == 0.){
                     qDebug() <<"(v == 0)" << x1 << y1 << x << y << wf->data.at<double>(y1,x1);
                 }
@@ -1650,12 +1672,10 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
     pd->setRange(0, list.size());
     for (int i = 0; i < list.size(); ++i) {
         wavefront *oldWf = m_wavefronts[list[i]];
-        QString newName;
         QStringList l = oldWf->name.split('.');
-        newName.sprintf("%s_%s%05.1lf",l[0].toStdString().c_str(), (angle >= 0) ? "CW":"CCW", fabs(angle) );
-        newName += ".wft";
+        QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0')); // clazy:exclude=qstring-arg
         wavefront *wf = new wavefront();
-        *wf = *m_wavefronts[list[0]];
+        *wf = *oldWf; // copy everything to new wavefront including basic things like diameter,wavelength
         //emit nameChanged(wf->name, newName);
 
         wf->name = newName;
@@ -1665,7 +1685,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         m_currentNdx = m_wavefronts.size()-1;
         m_surfaceTools->select(m_currentNdx);
         //wf->mask = cv::Mat::zeros(wf->data.size(), CV_8UC1);
-        uchar ones = 0xff;
+        //uchar ones = 0xff;
         //fillCircle(wf->mask, wf->m_outside.m_center.x(), wf->m_outside.m_center.y(),
                    //wf->m_outside.m_radius, &ones);
 
@@ -1687,9 +1707,6 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
 //        qDebug() << "center issue"<< xsum/cnt << ysum/cnt;
 //        cv::imshow("ttt", t);
 //        cv::waitKey(1);
-        cv::Mat rotated = rotate(wf, angle);
-
-        wf->data = rotated.clone();
 
         double sina = sin(rad);
         double cosa = cos(rad);
@@ -1700,7 +1717,11 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         wf->m_inside.m_center.rx() = sx * cosa - sy * sina + wf->m_outside.m_center.x();
         wf->m_inside.m_center.ry() = sx * sina + sy * cosa + wf->m_outside.m_center.y();
 
-        makeMask(m_currentNdx);
+        makeMask(m_currentNdx, false); // do outer mask only at first as it is needed for rotate function
+        cv::Mat rotated = rotate(wf, wf->mask, angle);
+
+        wf->data = rotated.clone();
+        makeMask(m_currentNdx); // now do full mask that includes inner obstruction circle
         wf->dirtyZerns = true;
         wf->wasSmoothed = false;
         m_surface_finished = false;
@@ -1789,7 +1810,7 @@ void SurfaceManager::invert(QList<int> list){
     m_waveFrontTimer->start(500);
 }
 
-void SurfaceManager::filter(QList<int> list){
+void SurfaceManager::filter(){
     wavefrontFilterDlg dlg;
     dlg.setRemoveFileMode();
     connect(&dlg, SIGNAL(waveWasSelected(QString)),this, SLOT(wavefrontDClicked(QString)));
@@ -1903,7 +1924,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     printer.setOutputFileName( "stand.pdf" );
     printer.setOutputFormat( QPrinter::PdfFormat );
     //printer.setResolution(85);
-    printer.setPaperSize(QPrinter::A4);
+    printer.setPageSize(QPageSize(QPageSize::A4));
 
     QPainter painterPDF( &printer );
     cv::Mat xastig = cv::Mat::zeros(list.size(), 1, numType);
@@ -1913,8 +1934,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     cv::Mat standastig = cv::Mat::zeros(list.size(), 1, numType);
     QVector<cv::Mat> standwfs;
     QVector<double> astigMag;
-    editor->resize(printer.pageRect().size());
-    doc->setPageSize(printer.pageRect().size());
+    editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
+    doc->setPageSize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
     cv::Mat standavg = cv::Mat::zeros(inputs[0]->workData.size(), numType);
     cv::Mat standavgZernMat = cv::Mat::zeros(inputs[0]->workData.size(), numType);
     double mirrorXaverage = 0;
@@ -1961,9 +1982,9 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         double mirrorY = inputs[i]->InputZerns[5];
         xastig.at<double>(i,0) = mirrorX;
         mirrorXaverage += mirrorX;
-        maxXastig = max(maxXastig,mirrorX);
+        maxXastig = std::max(maxXastig,mirrorX);
         mirrorYAverage += mirrorY;
-        maxYastig = max(maxYastig, mirrorY);
+        maxYastig = std::max(maxYastig, mirrorY);
         yastig.at<double>(i,0) = mirrorY;
         qDebug() << "Mirror astigs " << mirrorX << mirrorY;
     }
@@ -2033,8 +2054,6 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     grid->setMajorPen(Qt::darkGray, 1);
     grid->setMinorPen(Qt::gray, 1,Qt::DotLine);
 
-    QVector<QwtPlot *> astigPlots;
-
     QwtPlotRenderer renderer;
     //renderer.setDiscardFlag( QwtPlotRenderer::DiscardBackground );
     renderer.setDiscardFlag( QwtPlotRenderer::DiscardCanvasBackground );
@@ -2055,10 +2074,10 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     for (int i = 0; i < list.size(); ++i){
         double xval = standxastig.at<double>(i,0);
         double yval = standyastig.at<double>(i,0);
-        maxX = max(maxX, xval);
-        minX = min(minX, xval);
-        maxY = max(maxY, yval);
-        minY = min(minY, yval);
+        maxX = std::max(maxX, xval);
+        minX = std::min(minX, xval);
+        maxY = std::max(maxY, yval);
+        minY = std::min(minY, yval);
 
         double mag = sqrt(pow(xval,2) + pow(yval,2));
 
@@ -2136,14 +2155,14 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
         wf->useSANull = false;
         wf->min = smin;
         wf->max =  smax;
-        wf->name = QString().sprintf("%06.2lf",list[i]->angle);
+        wf->name = QString("%1").arg(list[i]->angle, 6, 'f', 2, QLatin1Char('0'));
 
         cp->setSurface(wf);
         cp->resize(Width,Height);
         cp->replot();
         contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( cp, &painter, QRect(0,0,Width,Height) );
-        QString imageName = QString().sprintf("mydata://zern%s.png",wf->name.toStdString().c_str());
+        QString imageName = QString("mydata://zern%1.png").arg(wf->name);
         imageName.replace("-","CCW");
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         results.res.append (imageName);
@@ -2269,11 +2288,11 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
 
     }
 
-    double maxv = max(fabs(mirrorYastig) +  fabs(mirrorAstigRadius),fabs(mirrorXastig ) + fabs(mirrorAstigRadius))  * 1.2;
-    maxv = max(maxX, maxv);
-    maxv = max(fabs(minX), maxv);
-    maxv = max(maxv, maxY);
-    maxv = max(fabs(minY), maxv);
+    double maxv = std::max(fabs(mirrorYastig) +  fabs(mirrorAstigRadius),fabs(mirrorXastig ) + fabs(mirrorAstigRadius))  * 1.2;
+    maxv = std::max(maxX, maxv);
+    maxv = std::max(fabs(minX), maxv);
+    maxv = std::max(maxv, maxY);
+    maxv = std::max(fabs(minY), maxv);
     pl1->setAxisScale(QwtPlot::xBottom, -maxv, maxv);
     pl1->setAxisScale(QwtPlot::yLeft,   -maxv, maxv);
     QColor color(Qt::green);
@@ -2352,9 +2371,9 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
             if (!found){
                 if (QMessageBox::Yes ==
                   QMessageBox::question(0, tr("Error"),
-                                     QString().sprintf("No 90 deg pair for %s and angle %6.2lf",
-                                                       lookat[i]->fname.toStdString().c_str(),
-                                                       lookat[i]->angle))){
+                                     QString("No 90 deg pair for %1 and angle %2").arg(
+                                                       lookat[i]->fname.toStdString().c_str()).arg(
+                                                       lookat[i]->angle, 6, 'f', 2))){
                         wizPage->runpb->setText("compute");
                         wizPage->runpb->setEnabled(true);
                         return;
@@ -2371,11 +2390,11 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     printer.setOutputFileName( "stand.pdf" );
     printer.setOutputFormat( QPrinter::PdfFormat );
     printer.setResolution(85);
-    printer.setPaperSize(QPrinter::A4);
+    printer.setPageSize(QPageSize(QPageSize::A4));
 
 
     QTextEdit *editor = new QTextEdit;
-    editor->resize(printer.pageRect().size());
+    editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
     const int contourWidth = 2 * 340/3;
     const int contourHeight = 2 * 360/3;
     QImage contour = QImage(contourWidth ,contourHeight, QImage::Format_ARGB32 );
@@ -2389,9 +2408,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     ContourPlot *plot =new ContourPlot(0,0,true);//m_contourPlot;
     plot->m_minimal = true;
     QList<int> unrotatedNdxs;
-    QList<int> rotatedNdxs;
-
-
+    
     QString html = ("<html><head/><body><h1><center>Test Stand Astig Removal</center></h1>"
                     "<h2><center>" + AstigReportTitle);
            html.append("    <font color='grey'>" + QDate::currentDate().toString() +
@@ -2408,7 +2425,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
 
     QTextDocument *doc = editor->document();
     QList<QString> doc1Res;
-    doc->setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
+    doc->setPageSize(printer.pageLayout().paintRectPixels(printer.resolution()).size()); // This is necessary if you want to hide the page number
     QList<wavefront *> rotated;
     QList<wavefront *> inputs;
     editor->append("<tr>");
@@ -2430,8 +2447,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         plot->replot();
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
 
-        QString imageName = QString().sprintf("mydata://%s.png",list[i]->fname.toStdString().c_str());
-        QString angle = QString().sprintf("%6.2lf Deg",-list[i]->angle);
+        QString imageName = QString("mydata://%1.png").arg(list[i]->fname);
+        QString angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);
         html.append("<tr><td><p align='center'> <img src='" +imageName + "' /><br><b>" + angle + "</b></p></td>");
@@ -2454,8 +2471,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
 
         contour.fill( QColor( Qt::white ).rgb() );
         renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
-        angle = QString().sprintf("%6.2lf Deg",-list[i]->angle);
-        imageName = QString().sprintf("mydata://CR%s%s.png",list[i]->fname.toStdString().c_str(),angle.toStdString().c_str());
+        angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
+        imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname).arg(angle); // clazy:exclude=qstring-arg
 
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);
@@ -2570,8 +2587,17 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
 }
 
 void SurfaceManager::computeTestStandAstig(){
-    standAstigWizard *wiz = new standAstigWizard(this);
-    wiz->show();
+    if(m_standAstigWizard == nullptr){
+        spdlog::get("logger")->trace("new standAstigWizard");
+        m_standAstigWizard = new standAstigWizard(this);
+        m_standAstigWizard->setAttribute( Qt::WA_DeleteOnClose, true );
+        m_standAstigWizard->show();
+    }
+    else{
+        // bring to front the already oppened window
+        m_standAstigWizard->activateWindow();
+        m_standAstigWizard->raise();
+    }
 }
 
 void SurfaceManager::saveAllContours(){
@@ -2606,7 +2632,7 @@ void SurfaceManager::showAllContours(){
     if (!dlg.exec()) {
         return;
     }
-    QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     QApplication::setOverrideCursor(Qt::WaitCursor);
     ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot;
     //plot->m_minimal = true;
@@ -2680,7 +2706,6 @@ void showImage(QImage img, QString title){
     myLabel->show();
 }
 
-#include "pdfcalibrationdlg.h"
 #include "ui_reportdlg.h"
 void SurfaceManager::report(){
 
@@ -2706,10 +2731,9 @@ void SurfaceManager::report(){
     if (!dlg.exec())
         return;
 
-    int finalWidth =  QGuiApplication::screens()[0]->geometry().width()/2.5;
+    int finalWidth =  QGuiApplication::primaryScreen()->geometry().width()/2.5;
 
     printer.setFullPage( true );
-    QMargins marg = printer.pageLayout().marginsPixels(printer.resolution());
 
     printer.setOutputFileName( dlg.fileName );
     int width = printer.width();
@@ -2739,10 +2763,10 @@ void SurfaceManager::report(){
             "<table border='1' width = '100%'><tr><td>" + Diameter + " mm</td><td>" + ROC + " mm</td>"
             "<td>" +FNumber+ "</td></tr>"
             "<tr><td> RMS: " + QString().number(wf->std,'f',3) +
-                QString().sprintf(" waves at %6.1lf nm</td><td>Strehl: ",outputLambda) + metrics->mStrehl->text() +
+                QString(" waves at %1 nm</td><td>Strehl: ").arg(outputLambda, 6, 'f', 1) + metrics->mStrehl->text() +
             "</td><td>" + BFC + "</td></tr>"
             "<tr><td>" + ((md->isEllipse()) ? "":"Desired Conic: " + QString::number(md->cc)) + "</td><td>" +
-            ((md->doNull) ? QString().sprintf("SANull: %6.4lf",md->z8 * md->cc) : "No software Null") + "</td>"
+            ((md->doNull) ? QString("SANull: %1").arg(md->z8 * md->cc, 6, 'f', 4) : "No software Null") + "</td>"
             "<td>Waves per fringe: " + QString::number(md->fringeSpacing) + "<br>Interferogram Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
             "</table></p>";
 
@@ -2766,8 +2790,8 @@ void SurfaceManager::report(){
             }
 
 
-            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf </td><td>%6.3lf</td></tr></table>",
-                             val, computeRMS(i,val)) + "</td><td>" +
+            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString("%1 </td><td>%2</td></tr></table>").arg(
+                             val, 6, 'f', 3).arg(computeRMS(i,val), 6, 'f', 3) + "</td><td>" +
                          QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
             if (i == 5){
                 double x = wf->InputZerns[4];
@@ -2776,8 +2800,8 @@ void SurfaceManager::report(){
                 double angle = atan2(y,x)/2;
 
                 zerns.append("<tr><td>astig Polar</td><td><table width = '100%'><tr><td>"
-                             + QString().sprintf("%6.3lf </td><td>%6.3lf Deg.</td></tr></table>",
-                                 mag, angle * (180.0 / M_PI)) + "</td><td>" +
+                             + QString("%1 </td><td>%2 Deg.</td></tr></table>").arg(
+                                 mag, 6, 'f', 3).arg(angle * (180.0 / M_PI), 6, 'f', 3) + "</td><td>" +
                              QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
             }
         }
@@ -2790,8 +2814,8 @@ void SurfaceManager::report(){
 
         for (int i = half; i < Z_TERMS; ++i){
             double val = wf->InputZerns[i];
-            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString().sprintf("%6.3lf</td><td>%6.3lf</td></tr></table>"
-                                                                                                                             ,val, computeRMS(i,val)) + "</td><td>" +
+            zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString("%1</td><td>%2</td></tr></table>").arg(
+                                                                                                                             val, 6, 'f', 3).arg(computeRMS(i,val), 6, 'f', 3) + "</td><td>" +
                          QString((zernEnables[i]) ? QString("") : QString("Disabled")) + "</td></tr>");
         }
         zerns.append("</table></td></tr></table></p>");
@@ -2846,7 +2870,8 @@ void SurfaceManager::report(){
         // assemble the surface metrics from the OG 3D view and the color map legend
         // put into the OGLW window that will provide the titles and placement.
         QImage SurfaceImage =m_SurfaceGraph->render(1000, 1000);
-        QSize lsize = m_SurfaceGraph->m_legend->pixmap()->size();
+        const QPixmap pm = m_SurfaceGraph->m_legend->pixmap(Qt::ReturnByValue);
+        QSize lsize = pm.size();
         QImage legend(lsize, QImage::Format_ARGB32);
         m_SurfaceGraph->m_legend->render(&legend);
 
@@ -2855,7 +2880,6 @@ void SurfaceManager::report(){
         oglw.show();    // show on stack to get metrics.
         QFontMetrics fm =    oglw.fontMetrics();
         QRect tw = fm.boundingRect("Waves 550 nm Waves");
-        QRect lg = oglw.getLegend()->geometry();
         QRect sg = oglw.getModel()->geometry();
 
         int surfw = sg.width() + tw.width();
@@ -2869,7 +2893,6 @@ void SurfaceManager::report(){
         imagesHtml.append("<p ><br>&nbsp;</p>");
         imagesHtml.append("<img src='" + surfPath + "'>");
     }
-    int lastH = 0;
     // star test
     if (dlg.ui->showStarTest->isChecked()){
 
@@ -3171,14 +3194,13 @@ void SurfaceManager::tiltAnalysis(){
    pl1->insertLegend( new QwtLegend() , QwtPlot::TopLegend);
    pl1->setAxisTitle( QwtPlot::yLeft, "astig" );
    pl1->setAxisTitle(QwtPlot::xBottom, "tilt");
-   pl1->setTitle(QString().sprintf("tilt vs Astig %d samples", xvals.length()));
+   pl1->setTitle(QString("tilt vs Astig %1 samples").arg(xvals.length()));
    QwtPlotGrid *grid = new QwtPlotGrid();
    grid->attach(pl1);
    QwtPlotCurve *xTilt = new QwtPlotCurve("X");
    QwtPlotCurve *yTilt = new QwtPlotCurve("y");
    xTilt->setStyle(QwtPlotCurve::Dots);
    yTilt->setStyle(QwtPlotCurve::Dots);
-   QwtPlotCurve *xTLine = new QwtPlotCurve("X fit");
    xTilt->setPen(Qt::red,4);
    yTilt->setPen(Qt::blue,4);
    xTilt->setSamples(xvals.toVector());

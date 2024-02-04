@@ -1,0 +1,22 @@
+name: build-linux-clazy
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build-linux-clazy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3 
+      - run: sudo apt update
+      - run: sudo apt install -y clazy apt-utils build-essential wget qt5-qmake qt5-qmake-bin qt5-assistant qtbase5-dev qtmultimedia5-dev libqt5charts5 libqt5charts5-dev libqt5multimedia* libqt5datavisualization5-dev libqt5datavisualization5 libopencv-core-dev libopencv-core4.5d libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libarmadillo10
+      - run: qmake -spec linux-clang QMAKE_CXX="clazy"
+      #- uses: ammaraskar/gcc-problem-matcher@master  #TODO 2023/08/05 re-enable problem matcher when all warnings are fixed
+      # ignore noisy dirs from QT files itself
+      # all level 1 checks but ignore clazy-no-connect-by-name
+      # no parallel make with clazy to not mess log
+      - run: export CLAZY_IGNORE_DIRS=.*usr.* && export CLAZY_CHECKS="level1,no-connect-by-name" && make     

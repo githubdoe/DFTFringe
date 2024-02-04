@@ -2,7 +2,8 @@
 #include "ui_regionedittools.h"
 
 regionEditTools::regionEditTools(QWidget *parent) :
-    QDockWidget(parent),m_doFreeform(true), m_doLine(false),
+    QDockWidget(parent),
+    m_doLine(false), m_doFreeform(true), 
     ui(new Ui::regionEditTools)
 {
     ui->setupUi(this);
@@ -25,13 +26,13 @@ void regionEditTools::deleteRegion(int r){
     delete ui->listWidget->takeItem(r);
 }
 
-void regionEditTools::on_freeform_clicked(bool checked)
+void regionEditTools::on_freeform_clicked(bool /*checked*/)
 {
     m_doFreeform = true;
     m_doLine = false;
 }
 
-void regionEditTools::on_line_clicked(bool checked)
+void regionEditTools::on_line_clicked(bool /*checked*/)
 {
     m_doLine = true;
     m_doFreeform = false;

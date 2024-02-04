@@ -48,32 +48,24 @@ PSI_dlg::~PSI_dlg()
 
 void PSI_dlg::on_browse_clicked()
 {
-    QStringList mimeTypeFilters;
-    foreach (const QByteArray &mimeTypeName, QImageReader::supportedMimeTypes())
-        mimeTypeFilters.append(mimeTypeName);
-    mimeTypeFilters.sort();
     QSettings settings;
     QString lastPath = settings.value("lastPath",".").toString();
     QFileDialog dialog(this, tr("Open File"),lastPath);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    mimeTypeFilters.insert(0, "application/octet-stream");
-    mimeTypeFilters.insert(1,"Image files (*.png *.xpm *.jpg)");
-    dialog.setMimeTypeFilters(mimeTypeFilters);
-
-    QSettings set;
-    QString mime = set.value("igramExt","jpeg").toString();
-    mime.replace("jpg", "jpeg",Qt::CaseInsensitive);
-    dialog.selectMimeTypeFilter("image/"+mime);
-    dialog.setDefaultSuffix(mime);
-
+    // the QT default extension are obtained by doing 
+    // `for(const QByteArray &mimeTypeName : QImageReader::supportedMimeTypes())`
+    // `   mimeTypeFilters.append(mimeTypeName);`
+    // `dialog.setMimeTypeFilters(mimeTypeFilters);`
+    // `qDebug() << dialog.nameFilters();`
+    // manually added upper case and first char upper case
+    const QStringList filters({"Image files (*.bmp *.dib *.BMP *.DIB *.Bmp *.Dib *.gif *.GIF *.Gif *.jpg *.jpeg *.jpe *.JPG *.JPEG *.JPE *.Jpg *.Jpeg *.Jpe*.png *.PNG *.Png*.svg *.SVG *.Svg*.svgz *.SVGZ *.Svgz*.ico *.ICO *.Ico*.pbm *.PBM *.Pbm*.pgm *.PGM *.Pgm*.ppm *.PPM *.Ppm*.xbm *.XBM *.Xbm*.xpm *.XPM *.Xpm)",
+                           "Any files (*)"
+                          });
+    dialog.setNameFilters(filters);
     if (dialog.exec()){
-
-
             QFileInfo a(dialog.selectedFiles().first());
-            QString ext = a.completeSuffix();
-            set.setValue("igramExt", ext);
-            set.setValue("lastPath",a.absoluteFilePath());
+            settings.setValue("lastPath",a.absoluteFilePath());
             //m_surfaceManager->process_psi(dialog.selectedFiles());
             QStringList files = dialog.selectedFiles();
             ui->igramList->addItems(files);
@@ -86,11 +78,11 @@ void PSI_dlg::on_browse_clicked()
                 startAngle = deltaAngle + ui->PhaseList->item(ui->PhaseList->count()-1)->text().toDouble();
             }
             qDebug() << "start and delta" << startAngle << deltaAngle;
-            foreach(QString file, files){
-
+            const int fileCount = files.size();
+            for(int i=0 ; i<fileCount ; i++){
                 double ang2 = startAngle + index++ * deltaAngle;
                 while (ang2 > 360.) ang2 -= 360.;
-                ui->PhaseList->addItem(QString().sprintf("%6.2lf",ang2));
+                ui->PhaseList->addItem(QString("%1").arg(ang2, 6, 'f', 2));
                 QListWidgetItem* item = ui->PhaseList->item(ui->PhaseList->count()-1);
                 item->setFlags(item->flags() | Qt::ItemIsEditable);
                 m_phases << ang2 * M_PI/180.;
@@ -194,7 +186,7 @@ void PSI_dlg::on_PSIPhaseValue_valueChanged(const QString &arg1)
         double ang2 = angle * i;
         while (ang2 > 360.) ang2 -= 360.;
         m_phases << ang2;
-        ui->PhaseList->addItem(QString().sprintf("%6.2lf",ang2));
+        ui->PhaseList->addItem(QString("%1").arg(ang2, 6, 'f', 2));
         QListWidgetItem* item = ui->PhaseList->item(i);
         item->setFlags(item->flags() | Qt::ItemIsEditable);
     }
@@ -208,7 +200,7 @@ void PSI_dlg::setPhases(QVector<double> phases){
             ang2 *= 180./M_PI;
 
         QListWidgetItem* item = ui->PhaseList->item(i);
-        item->setText(QString().sprintf("%6.4lf", ang2));
+        item->setText(QString("%1").arg(ang2, 6, 'f', 4));
     }
 
 }
@@ -269,7 +261,7 @@ void PSI_dlg::on_showRadians_clicked(bool checked)
 {
     m_useRadians = checked;
     for(int cnt = 0; cnt < ui->PhaseList->count(); ++cnt){
-        QString txt = QString().sprintf("%6.4lf", m_phases[cnt] * ((checked) ? 1: 180./M_PI));
+        QString txt = QString("%1").arg(m_phases[cnt] * ((checked) ? 1: 180./M_PI), 6, 'f', 4);
         ui->PhaseList->item(cnt)->setText(txt);
     }
     plot(m_phases, m_last_itr,m_last_sdp);
@@ -323,19 +315,19 @@ void PSI_dlg::plot(QVector<double> phases, int iteration, double sdp){
             font.setPointSize ( 12 );
             font.setWeight(QFont::DemiBold);
             p.setFont(font);
-            p.drawText( (x1+x2)/2, (y1+y2)/2,QString().sprintf("% 6.2lf", delta *  k).toStdString().c_str());
+            p.drawText( (x1+x2)/2, (y1+y2)/2,QString("%1").arg(delta *  k, 6, 'f', 2).toStdString().c_str());
             p.setPen(QPen(QColor(100,100,100)));
             font.setPointSize(10);
             p.setFont(font);
-            p.drawText( x2-10,y2+10,QString().sprintf("%d", i+1).toStdString().c_str());
-            p.drawText(x2 + 40, y2 ,QString().sprintf("%6.2lf", angle2 * k).toStdString().c_str());
+            p.drawText( x2-10,y2+10,QString("%1").arg( i+1).toStdString().c_str());
+            p.drawText(x2 + 40, y2 ,QString("%1").arg( angle2 * k, 6, 'f', 2).toStdString().c_str());
             rlast = r;
             r += rdel;
         }
         QFont font=p.font() ;
         font.setPointSize ( 15 );
         p.setFont(font);
-        p.drawText(30,100,QString().sprintf("iteration %i sdp: %lf", iteration, sdp).toStdString().c_str());
+        p.drawText(30,100,QString("iteration %1 sdp: %2").arg(iteration).arg(sdp, 0, 'f').toStdString().c_str());
         p.setPen(QPen(QBrush(QColor(0,0,255)),5));
 
         p.drawLine(50,height -120, 90, height -120);

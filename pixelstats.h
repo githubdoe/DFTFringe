@@ -60,9 +60,7 @@ private:
     void move( const QPoint & );
     void release();
 
-    void showCursor( bool enable );
-    void shiftPointCursor( bool up );
-    void shiftCurveCursor( bool up );
+    void shiftCurveCursor();
 
     QwtPlot *plot();
     const QwtPlot *plot() const;

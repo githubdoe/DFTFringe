@@ -138,7 +138,7 @@
           </sizepolicy>
          </property>
          <property name="editTriggers">
-          <set>QAbstractItemView::DoubleClicked</set>
+          <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
          </property>
          <property name="alternatingRowColors">
           <bool>true</bool>
@@ -161,7 +161,7 @@
          </property>
          <property name="icon">
           <iconset resource="DFTResources.qrc">
-           <normaloff>:/icons/Button-Close-icon.png</normaloff>:/icons/Button-Close-icon.png</iconset>
+           <normaloff>:/icons/res/Button-Close-icon.png</normaloff>:/icons/res/Button-Close-icon.png</iconset>
          </property>
          <property name="iconSize">
           <size>

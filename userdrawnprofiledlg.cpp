@@ -7,7 +7,7 @@ UserDrawnProfileDlg::UserDrawnProfileDlg(QWidget *parent) :
     ui(new Ui::UserDrawnProfileDlg)
 {
     ui->setupUi(this);
-    QRect rec = QGuiApplication::screens()[0]->geometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     resize(rec.width()/2,rec.height()/2);
     connect(ui->pww, &ArbitraryWavWidget::yScaleChanged, this, &UserDrawnProfileDlg::yScaleChanged );
 }

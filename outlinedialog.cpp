@@ -6,12 +6,15 @@
 #include <QMessageBox>
 #include <QShortcut>
 #include <QMouseEvent>
+#include <QScreen>
 #include <opencv2/imgproc.hpp>
 
 outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
-    m_x(x),m_y(y),m_rad(rad),
-    QDialog(parent), m_xoffset(0), m_yoffset(0), m_radiusOffset(0),
-    ui(new Ui::outlineDialog), m_find(false), m_hideOutline(false), dragMode(false)
+    QDialog(parent), 
+    m_xoffset(0), m_yoffset(0), m_radiusOffset(0),
+    m_find(false), m_hideOutline(false),
+    m_x(x), m_y(y), m_rad(rad),
+    ui(new Ui::outlineDialog), dragMode(false)
 {
     ui->setupUi(this);
     QSettings set;
@@ -35,9 +38,6 @@ outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
 
     ui->display->setBackgroundRole(QPalette::Dark);
     ui->display->setAutoFillBackground(true);
-    QRect rec = QApplication::desktop()->screenGeometry();
-    int height = rec.height();
-    int width = rec.width();
     ui->showEdgePixelsCB->blockSignals(true);
     ui->showEdgePixelsCB->setChecked(false);
     ui->showEdgePixelsCB->blockSignals(false);
@@ -117,7 +117,7 @@ void outlineDialog::setImage(cv::Mat img){
     cv::Mat tmp;
     img.convertTo(tmp, CV_8UC1);
     cv::cvtColor(tmp,m_igram, cv::COLOR_GRAY2RGB);
-    QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     int height = rec.height();
     int width = rec.width();
     if (img.rows > height || img.cols > width){
@@ -225,7 +225,7 @@ void outlineDialog::updateOutline(){
 //    maxBox.points(vtx);
 //    for( int j = 0; j < 4; j++ )
 //        line(display, vtx[j], vtx[(j+1)%4], cv::Scalar(0,255,0), 1, CV_AA);
-    ui->status->setText( QString().sprintf("x,y %6.1lf,%6.1lf radius:%6.1lf ",x,y,radius));
+    ui->status->setText( QString("x,y %1,%2 radius:%3 ").arg(x, 6, 'f', 1).arg(y, 6, 'f', 1).arg(radius, 6, 'f', 1));
 
     updateDisplay(display);
 }
@@ -242,8 +242,8 @@ void outlineDialog::on_blurSB_valueChanged(int arg1)
 }
 void outlineDialog::on_blurSlider_valueChanged(int value)
 {
-   if (m_findEdgePixels)
-    m_find = true;
+    if (m_findEdgePixels)
+        m_find = true;
     m_blurrSize = value;
     ui->blurSB->blockSignals(true);
     ui->blurSB->setValue(value);
@@ -386,22 +386,14 @@ void outlineDialog::hideSearchcontrole(bool hide){
 }
 void outlineDialog::mousePressEvent(QMouseEvent *event)
 {
-
-
     if (event->button() == Qt::LeftButton) {
         QPointF Raw = event->pos();
-
-        QPointF pos = Raw;
 
         setCursor(Qt::OpenHandCursor);
         dragMode = true;
             //cntrlPressed = event->modifiers() & Qt::ControlModifier;
         lastPoint = Raw;
-        return;
-
     }
-
-
 }
 
 void outlineDialog::mouseMoveEvent(QMouseEvent *event)
@@ -426,7 +418,7 @@ void outlineDialog::mouseMoveEvent(QMouseEvent *event)
     lastPoint = pos;
 }
 
-void outlineDialog::mouseReleaseEvent(QMouseEvent *event)
+void outlineDialog::mouseReleaseEvent(QMouseEvent * /*event*/)
 {
 
     setCursor(Qt::ArrowCursor);
@@ -434,16 +426,16 @@ void outlineDialog::mouseReleaseEvent(QMouseEvent *event)
     dragMode = false;
 }
 void outlineDialog::wheelEvent(QWheelEvent *e){
-    if (e->delta() == 0)
+    if (e->angleDelta().y() == 0)
         return;
 
-    int del = e->delta()/120;
+    int del = e->angleDelta().y()/120;
 
     m_rad += del;
     updateOutline();
 }
 
-void outlineDialog::on_outlineThickness_valueChanged(int arg1)
+void outlineDialog::on_outlineThickness_valueChanged(int /*arg1*/)
 {
     updateOutline();
 }

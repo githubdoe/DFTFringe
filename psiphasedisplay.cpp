@@ -23,8 +23,8 @@ PSIphaseDisplay::~PSIphaseDisplay()
 {
     delete ui;
 }
-void PSIphaseDisplay::useRadians(bool use){
-
+void PSIphaseDisplay::useRadians(bool /*use*/){
+    // TODO PSIphaseDisplay doesn't take into account m_useRadians from psi_dlg (JST 2023/07/11)
 }
 void PSIphaseDisplay::setPhases(QVector<double> phases, int iteration, double sdp){
     plot(phases, iteration, sdp);
@@ -71,19 +71,19 @@ void PSIphaseDisplay::plot(QVector<double> phases, int iteration, double sdp){
         font.setPointSize ( 12 );
         font.setWeight(QFont::DemiBold);
         p.setFont(font);
-        p.drawText( (x1+x2)/2, (y1+y2)/2,QString().sprintf("% 6.2lf", delta *  k).toStdString().c_str());
+        p.drawText( (x1+x2)/2, (y1+y2)/2,QString("%1").arg(delta *  k, 6, 'f', 2).toStdString().c_str());
         p.setPen(QPen(QColor(100,100,100)));
         font.setPointSize(10);
         p.setFont(font);
-        p.drawText( x2-10,y2+10,QString().sprintf("%d", i+1).toStdString().c_str());
-        p.drawText(x2 + 40, y2 ,QString().sprintf("%6.2lf", angle2 * k).toStdString().c_str());
+        p.drawText( x2-10,y2+10,QString("%1").arg( i+1).toStdString().c_str());
+        p.drawText(x2 + 40, y2 ,QString("%1").arg( angle2 * k, 6, 'f', 2).toStdString().c_str());
         rlast = r;
         r += rdel;
     }
     QFont font=p.font() ;
     font.setPointSize ( 15 );
     p.setFont(font);
-    p.drawText(30,100,QString().sprintf("iteration %i sdp: %lf", iteration, sdp).toStdString().c_str());
+    p.drawText(30,100,QString("iteration %1 sdp: %2").arg(iteration).arg(sdp, 0, 'f').toStdString().c_str());
     p.setPen(QPen(QBrush(QColor(0,0,255)),5));
 
     p.drawLine(50,height -120, 90, height -120);

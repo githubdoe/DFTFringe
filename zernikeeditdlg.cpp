@@ -19,7 +19,7 @@ zernikeEditDlg::zernikeEditDlg(SurfaceManager * sfm, QWidget *parent) :
     QSettings set;
     m_maxOrder = set.value("Zern maxOrder", 10).toInt();
     ui->maxOrder->setValue(m_maxOrder);
-    ui->numberOfTerms->setText(QString().sprintf("%d Terms",m_noOfTerms));
+    ui->numberOfTerms->setText(QString("%1 Terms").arg(m_noOfTerms));
 
 }
 
@@ -172,7 +172,7 @@ void zernikeEditDlg::on_maxOrder_valueChanged(int arg1)
     zernikeProcess &zp = *zernikeProcess::get_Instance();
     zp.setMaxOrder(arg1);
     m_noOfTerms = zp.getNumberOfTerms();
-    ui->numberOfTerms->setText(QString().sprintf("%d Terms",m_noOfTerms));
+    ui->numberOfTerms->setText(QString("%1 Terms").arg(m_noOfTerms));
     tableModel->resizeRows(m_noOfTerms);
     emit termCountChanged(m_noOfTerms);
 }

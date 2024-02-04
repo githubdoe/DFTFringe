@@ -30,9 +30,11 @@ class mirrorDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit mirrorDlg(QWidget *parent = 0);
-    ~mirrorDlg();
     static mirrorDlg *get_Instance();
+    ~mirrorDlg();
+    mirrorDlg(const mirrorDlg&) = delete;
+    mirrorDlg& operator=(const mirrorDlg&) = delete;
+
     void loadFile(QString & fileName);
     void updateZ8();
 
@@ -41,7 +43,7 @@ public:
     double diameter;
     double roc;
     double FNumber;
-    double obs;
+    double obs; // obstruction
     double cc;
     bool doNull;
     double z8;
@@ -64,7 +66,6 @@ public:
     outlineShape m_outlineShape;
     bool isEllipse();
     void setMinorAxis(double val);
-    void changeEdgeMaskvalues(double val);
     bool m_aperatureReductionEnabled;
 private slots:
     void on_ReadBtn_clicked();
@@ -90,7 +91,7 @@ private slots:
 
     void on_cc_textChanged(const QString &arg1);
 
-    void on_fringeSpacingEdit_textChanged(const QString &arg1);
+    void on_fringeSpacingEdit_textChanged(const QString &text);
 
     void on_name_editingFinished();
 
@@ -119,13 +120,12 @@ signals:
     void aperatureChanged();
 
 private:
-    Ui::mirrorDlg *ui;
-    static mirrorDlg *m_Instance;
-    bool m_aperatureReductionValueChanged;
-    QTimer spacingChangeTimer;
+    explicit mirrorDlg(QWidget *parent = 0);
     void setclearAp();
 
-
+    Ui::mirrorDlg *ui;
+    bool m_aperatureReductionValueChanged;
+    QTimer spacingChangeTimer;
 };
 
 #endif // MIRRORDLG_H

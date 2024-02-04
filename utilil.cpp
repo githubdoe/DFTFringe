@@ -5,25 +5,25 @@
 #define WIDTH 12
 #define DIV 1048576ull
 
-long showmem(QString title){
+long showmem(QString /*title*/){
 
     //qDebug () << title;
     MEMORYSTATUSEX statex;
     statex.dwLength = sizeof (statex);
     GlobalMemoryStatusEx (&statex);
          return statex.ullAvailVirtual/DIV;
-    qDebug() <<QString().sprintf("%*ld%% in use.", WIDTH, statex.dwMemoryLoad);
+    qDebug() <<QString("%1% in use.").arg(statex.dwMemoryLoad, WIDTH);
 
-     qDebug() <<QString().sprintf ("%*lld free  MB of physical memory.",
-              WIDTH, statex.ullAvailPhys/DIV);
+     qDebug() <<QString("%1 free  MB of physical memory.").arg(
+              statex.ullAvailPhys/DIV, WIDTH);
 
 
-     qDebug() <<QString().sprintf ("%*lld free  MB of paging file.",
-              WIDTH, statex.ullAvailPageFile/DIV);
-     qDebug() <<QString().sprintf ("%*lld total MB of virtual memory.",
-              WIDTH, statex.ullTotalVirtual/DIV);
-     qDebug() <<QString().sprintf("%*lld free  MB of virtual memory.",
-              WIDTH, statex.ullAvailVirtual/DIV);
+     qDebug() <<QString("%1 free  MB of paging file.").arg(
+              statex.ullAvailPageFile/DIV, WIDTH);
+     qDebug() <<QString("%1 total MB of virtual memory.").arg(
+              statex.ullTotalVirtual/DIV, WIDTH);
+     qDebug() <<QString("%1 free  MB of virtual memory.").arg(
+              statex.ullAvailVirtual/DIV, WIDTH);
 
      return statex.ullAvailVirtual/DIV;
 }

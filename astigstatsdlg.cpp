@@ -43,8 +43,8 @@ QString intro( "<p style = font-size:16px ;>Astigmatism values vary from sample 
                "is from one mirror rotation."
                " <br><br>If best fit has been selected then a thick black circle is drawn through the average of each"
                " group.  The center of the circle is the average system induced astig( mostly due to test stand.)  The radius of the circle "
-               " is the best estimate of the magnitude of the astig on the mirror.  If standard diviation is selected thin "
-               " circles are drawn around each group average represent one standard diviation of the samples in that group.</p>");
+               " is the best estimate of the magnitude of the astig on the mirror.  If standard deviation is selected thin "
+               " circles are drawn around each group average represent one standard deviation of the samples in that group.</p>");
 
 class Zoomer: public QwtPlotZoomer
 {
@@ -99,11 +99,48 @@ protected:
         return text;
     }
 };
+
+// this class expans QwtPlotPicker to be able to diplay custom text on given positions in canva
+// add positions and text using addTooltipToPoint
+class CustomPlotPicker : public QwtPlotPicker {
+public:
+    CustomPlotPicker(int xAxis, int yAxis, QWidget *canvas)
+        : QwtPlotPicker(xAxis, yAxis, QwtPicker::NoRubberBand, QwtPicker::AlwaysOn, canvas) {
+    }
+
+    void addTooltipToPoint(const QPointF &point, const QString &tooltip){
+        tooltips_.emplace_back(point, tooltip);
+    }
+
+protected:
+    // return text to display on given position in canva
+    QwtText trackerTextF(const QPointF &pos) const override {
+        // this is tolerance in astig value that allows selection given a pixel tolerance
+        const int pixelRadius = 5;
+        const QPointF tolerance = invTransform(QPoint(pixelRadius,0)) - invTransform(QPoint(0,pixelRadius));
+
+        for (const auto &data : tooltips_) {
+            const double xDiff = std::abs(data.first.x() - pos.x());
+            const double yDiff = std::abs(data.first.y() - pos.y());
+            if (xDiff < tolerance.x() && yDiff < tolerance.y()) {
+                return QwtText(data.second);
+            }
+        }
+        return QwtText();  // No tooltip if not close to any point
+    }
+
+private:
+    // holds the correspondance between canva position and tooltip to display
+     //TODO change to QWT text directly
+    std::vector<std::pair<QPointF, QString>> tooltips_;
+};
+
+
 astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::astigStatsDlg),m_wavefronts(wavefronts), editor(0), PDFMode(false),
-    distributionWindow(0), showSamples(false),runningAvgN(20),
-    layout(0), m_usePolar(false)
+    ui(new Ui::astigStatsDlg), m_wavefronts(wavefronts), editor(0), PDFMode(false),
+    distributionWindow(0), runningAvgN(20), showSamples(false),
+    layout(0), m_usePolar(false), picker(nullptr)
 {
 
     mndx = 0;
@@ -118,7 +155,7 @@ astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
         QStringList items;
         items << name;
         for (int z = 0; z < Z_TERMS; ++z){
-            items << QString().sprintf("%6.5lf",m_wavefronts[i]->InputZerns[z]);
+            items << QString("%1").arg(m_wavefronts[i]->InputZerns[z], 6,'f',5);
         }
         m_zerns << items;
     }
@@ -131,14 +168,11 @@ astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
     ui->mPlot->setPalette( Qt::white );
 
     ui->bestFitCB->hide();
-    dplot = new QwtPlot;
     plot();
 }
 
 astigStatsDlg::~astigStatsDlg()
 {
-    delete zoomer;
-
     delete ui;
 }
 class measure{
@@ -148,15 +182,13 @@ public:
     measure(QString n, QPointF _p):name(n),p(_p){};
     measure(){};
 };
+
 class RunningStat
     {
     public:
-        RunningStat() : m_n(0),m_min(10000), m_max(-10000) {}
-
-        void Clear()
-        {
-            m_n = 0;
-        }
+        RunningStat() : 
+            m_n(0), m_oldM(NAN), m_oldS(0.), m_min(DBL_MAX), m_max(DBL_MIN) 
+            {}
 
         void Push(double x)
         {
@@ -228,15 +260,16 @@ void astigStatsDlg::plot(){
     ui->mPlot->insertLegend( l, QwtPlot::TopLegend );
     l->setDefaultItemMode( QwtLegendData::Checkable );
     connect(l, SIGNAL(checked(QVariant,bool,int)), this, SLOT(showItem(QVariant ,bool,int)));
-    int i = 0;
 
-    //QMap<QString, QColor> colorAssign;
+    if(picker != nullptr){
+        delete picker;
+    }
+    picker = new CustomPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft, ui->mPlot->canvas());
 
     // sort into rotation groups
     QMap<QString, QList<measure> > groups;
 
     foreach(QStringList data, m_zerns){
-        QString name = data[0];
         QStringList paths = data[0].split("/");
         if (paths.size() == 1){
             paths.insert(0,defaultPath);
@@ -262,32 +295,25 @@ void astigStatsDlg::plot(){
     int colorndx = 0;
     QMap<QString, QPointF> means;
     foreach(QString name, groups.keys()){
-        int size = groups[name].size();
-        double *xAstig = new double[size];
-        double *yAstig = new double[size];
         RunningStat xstats, ystats;
-
-        QMap<QString, QColor> avgColors;
 
         QColor color = QColor(Qt::GlobalColor( 7 + colorndx%12 ));
         QVector<QPointF> points;
         foreach (measure data, groups[name]){
-            xAstig[i] = data.p.x();
-            points << QPointF(data.p.x(), data.p.y());
-            xstats.Push(xAstig[i]);
-            xmin = std::min(xmin, data.p.x());
-            xmax = std::max(xmax, data.p.x());
-            ymin = std::min(ymin,data.p.y());
-            ymax = std::max(ymax, data.p.y());
-            yAstig[i] = data.p.y();
-            ystats.Push(yAstig[i]);
+            const double xAstig = data.p.x();
+            const double yAstig = data.p.y();
 
-            // plot marker for the point
-
-            //QwtPlotMarker *m = new QwtPlotMarker(data.name.replace(".wft",""));
-//            m->setValue(data.p.x(), data.p.y());
-//            m->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(10,10)));
-//            m->attach(ui->mPlot);
+            points << QPointF(xAstig, yAstig);
+            xstats.Push(xAstig);
+            ystats.Push(yAstig);
+            xmin = std::min(xmin, xAstig);
+            xmax = std::max(xmax, xAstig);
+            ymin = std::min(ymin, yAstig);
+            ymax = std::max(ymax, yAstig);
+            
+            if (!ui->onlyAverages->isChecked()){
+                picker->addTooltipToPoint(QPointF(xAstig, yAstig), data.name.replace(".wft",""));
+            }
 
         }
         double xmean = xstats.Mean();
@@ -298,14 +324,14 @@ void astigStatsDlg::plot(){
         double rad = sqrt(xstd * xstd + ystd * ystd);
         if (!ui->onlyAverages->isChecked()){
             QwtPlotCurve *curve = new QwtPlotCurve(name.replace(".wft","") +
-                             QString().sprintf("\n%6.4lf,%6.4lf \nSD: %6.4lf %6.4lf ",xmean, ymean, xstd,ystd));
+                             QString("\n%1,%2 \nSD: %3 %4 ").arg(xmean, 6,'f',4).arg(ymean, 6,'f',4).arg(xstd, 6,'f',4).arg(ystd, 6,'f',4));
             curve->setSamples(points);
             curve->setStyle(QwtPlotCurve::Dots);
             curve->setPen(color,10);
             curve->attach(ui->mPlot);
         }
 
-         xmin = std::min(xmin, xstats.min());
+        xmin = std::min(xmin, xstats.min());
         ymin = std::min(ymin, ystats.min());
         xmax = std::max(xmax, xstats.max());
         ymax = std::max(ymax, ystats.max());
@@ -316,7 +342,7 @@ void astigStatsDlg::plot(){
         meanm->setValue(xmean,ymean);
         meanm->setSymbol(new QwtSymbol(QwtSymbol::Ellipse, color,color, QSize(10,10)));
         QStringList paths = name.split("/");
-        meanm->setTitle(paths[paths.size()-1].replace(".wft","")+ " " + QString().sprintf("\n%6.4lf,%6.4lf",xmean, ymean));
+        meanm->setTitle(paths[paths.size()-1].replace(".wft","")+ " " + QString("\n%1,%2").arg(xmean, 6,'f',4).arg(ymean, 6,'f',4));
         meanm->setLabel(paths[paths.size()-1].replace(".wft",""));
         meanm->setLabelAlignment(Qt::AlignBottom);
         meanm->setItemAttribute(QwtPlotItem::Legend, false);
@@ -327,7 +353,6 @@ void astigStatsDlg::plot(){
 
 
             QPolygonF Circle;
-            QString sd= QString().sprintf("SD %6.4lf",rad);
             QwtPlotCurve *circleCv = new QwtPlotCurve();
             for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
                 Circle << QPointF(xmean + rad* cos(rho), ymean + rad * sin(rho));
@@ -339,8 +364,6 @@ void astigStatsDlg::plot(){
 
         }
         ++colorndx;
-        delete[] xAstig;
-        delete[] yAstig;
     }
 
     // set the legended items to be checked.
@@ -384,7 +407,7 @@ void astigStatsDlg::plot(){
     // find the limits
     double xmag = std::max(fabs(xmin), fabs(xmax)) * 1.25;
     double ymag = std::max(fabs(ymin), fabs(ymax))*1.25;
-    double maxmag = max(xmag,ymag);
+    double maxmag = std::max(xmag,ymag);
     ui->mPlot->setAxisScale(QwtPlot::xBottom, -maxmag, maxmag);
     ui->mPlot->setAxisScale(QwtPlot::yLeft,   -maxmag, maxmag);
     ui->mPlot->setAxisTitle(QwtPlot::xBottom,"wavefront X astig");
@@ -425,7 +448,7 @@ void astigStatsDlg::plot(){
 
         QPolygonF Circle;
 
-        QwtPlotCurve *circleCv = new QwtPlotCurve(QString().sprintf("Best Fit astig mag %6.5lf",c.r));
+        QwtPlotCurve *circleCv = new QwtPlotCurve(QString("Best Fit astig mag %1").arg(c.r, 6,'f',5));
         for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
             Circle << QPointF(c.a + c.r* cos(rho), c.b +c.r * sin(rho));
         }
@@ -449,13 +472,13 @@ void astigStatsDlg::plot(){
     else {
         ui->bestFitCB->hide();
     }
-    ui->mPlot->setTitle(QString().sprintf("Summary of %d samples", m_zerns.size()));
+    ui->mPlot->setTitle(QString("Summary of %1 samples").arg(m_zerns.size()));
     zoomer->setZoomBase();
 
     ui->mPlot->replot();
 }
 
-void astigStatsDlg::showItem(QVariant item, bool on, int ndx){
+void astigStatsDlg::showItem(QVariant item, bool on, int /*ndx*/){
     qDebug() << "item " << item;
     QwtPlotItem *t = qvariant_cast<QwtPlotItem *>(item);
     t->setVisible(on);
@@ -499,7 +522,7 @@ void astigStatsDlg::on_zernikePB_pressed()
 }
 
 
-void astigStatsDlg::on_bestFitCB_clicked(bool checked)
+void astigStatsDlg::on_bestFitCB_clicked(bool /*checked*/)
 {
     plot();
 }
@@ -539,7 +562,7 @@ QwtPlot *makeSDPlot(cv::Mat hist, double min, double max, double mean, int size,
     return pl;
 }
 
-QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width, int height){
+QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width){
     RunningStat xrs;
     RunningStat yrs;
 
@@ -553,8 +576,6 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width, int height){
     QVector<QPointF> yavgPoints;
     QVector<QPointF> xPoints;
     QVector<QPointF> yPoints;
-    QVector<QPointF> xdel;
-    QVector<QPointF> ydel;
     QVector<QPointF> runningAvgx;
     QVector<QPointF> runningAvgy;
     QwtPlotCurve *xavgc = new QwtPlotCurve();
@@ -564,7 +585,8 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width, int height){
 
     QwtPlotCurve *runx = new QwtPlotCurve(QString((m_usePolar? "mag ":"x "))+ QString("running avg"));
     QwtPlotCurve *runy = new QwtPlotCurve(QString((m_usePolar? "angle ": "y ")) + QString("running avg"));
-    double runAvgx, runAvgy;
+    double runAvgx = 0;
+    double runAvgy = 0;
     double n = runningAvgN;
     double sumx = 0.;
     double sumy = 0;
@@ -579,15 +601,13 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width, int height){
             xz = mag;
             yz = angle * 57.2958;
         }
+
         if (i < n){
             sumx += xz;
             sumy += yz;
             runAvgx = sumx/(i+1);
             runAvgy = sumy/(i+1);
-
-
         }
-
         else{
             runAvgx = (runAvgx * (n-1)/n) + xz/n;
             runAvgy = (runAvgy * (n-1)/n) + yz/n;
@@ -608,7 +628,7 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width, int height){
     runy->setPen(Qt::black,3);
     runy->attach(plot);
     plot->setAxisScale(QwtPlot::yLeft,
-                      min(xrs.min(), yrs.min()) - .01, max(xrs.max(), yrs.max()) + .1);
+                      std::min(xrs.min(), yrs.min()) - .01, std::max(xrs.max(), yrs.max()) + .1);
     if (m_usePolar){
         plot->enableAxis(QwtPlot::yRight);
         plot->setAxisScale(QwtPlot::yRight, yrs.min() - 7, yrs.max() + 3);
@@ -680,7 +700,7 @@ void astigStatsDlg::on_savePdf(){
     printer.setOutputFileName( fileName );
     printer.setOutputFormat( QPrinter::PdfFormat );
     printer.setResolution(96);
-    printer.setPaperSize(QPrinter::Imperial8x10);
+    printer.setPageSize(QPageSize(QPageSize::Imperial8x10));
 
     QTextDocument *doc = editor->document();
     doc->print(&printer);
@@ -703,7 +723,6 @@ void astigStatsDlg::usePolar(bool flag){
 
 void astigStatsDlg::on_distribution_clicked()
 {
-    bool first = true;
     if (distributionWindow == 0){
         distributionWindow = new QWidget();
         toolLayout = new QHBoxLayout;
@@ -735,9 +754,7 @@ void astigStatsDlg::on_distribution_clicked()
         layout->addWidget(editor);
     }
     else {
-        first = false;
         editor->clear();
-
     }
 
     if (PDFMode){
@@ -750,11 +767,9 @@ void astigStatsDlg::on_distribution_clicked()
     QString lastPath = settings.value("lastPath",".").toString();
     QStringList tmp = lastPath.split("/");
     QString defaultPath = tmp.last();
-    QVector<QwtPlot *> avgPlots;
 
     QMap<QString, QList<QPointF> > groups;
     foreach(QStringList data, m_zerns){
-        QString name = data[0];
         QStringList paths = data[0].split("/");
         if (paths.size() == 1){
             paths.insert(0,defaultPath);
@@ -772,9 +787,7 @@ void astigStatsDlg::on_distribution_clicked()
 
     }
 
-    QVector<QGroupBox *> plots;
     // build the pdf
-
 
     QPrinter printer(QPrinter::ScreenResolution);
     printer.setColorMode( QPrinter::Color );
@@ -792,12 +805,11 @@ void astigStatsDlg::on_distribution_clicked()
 
     if (PDFMode){
 
-        editor->resize(printer.pageRect().size());
+        editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
     }
     QTextDocument *doc = editor->document();
-    QList<QString> doc1Res;
 
-    doc->setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
+    doc->setPageSize(printer.pageLayout().paintRectPixels(printer.resolution()).size()); // This is necessary if you want to hide the page number
 
     QString html = ("<html><head/><body><h1><center>Astig Variability analisys</center></h1>");
 
@@ -860,7 +872,7 @@ void astigStatsDlg::on_distribution_clicked()
         //xvalues -= xmin;
         //yvalues -= ymin;
 
-        QwtPlot *avgplot  = avgPlot(xvalues, yvalues, width, width);
+        QwtPlot *avgplot  = avgPlot(xvalues, yvalues, width);
 
         avgplot->insertLegend( new QwtLegend(), QwtPlot::RightLegend );
         QwtPlot *xpl = makeSDPlot(xhist, xmin,xmax, xmean.val[0], bins, width * .5, width * .25);
@@ -923,10 +935,10 @@ void astigStatsDlg::on_sdCB_clicked()
 void astigStatsDlg::on_help_clicked()
 {
     HelpDlg dlg;
-    QString html;
     QString path = qApp->applicationDirPath() + "/res/Help/astigsummary.html";
     QDesktopServices::openUrl(QUrl(path));
-    /*QFile file(path);
+    /*QString html;
+    QFile file(path);
     file.open(QFile::ReadOnly | QFile::Text);
     QTextStream stream(&file);
     html.append(stream.readAll());
@@ -962,13 +974,13 @@ void astigStatsDlg::on_savePB_clicked()
     QTextStream out(&f);
     if (f.open(QIODevice::WriteOnly | QIODevice::Append)) {
 
-        out << endl << endl;
+        out << Qt::endl << Qt::endl;
         foreach (QStringList l, m_zerns){
             out << l[0];
             for (int i = 1; i < l.size(); ++i){
                 out << "," << l[i];
             }
-            out << endl;
+            out << Qt::endl;
         }
     }
 

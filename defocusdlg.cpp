@@ -16,7 +16,7 @@ defocusDlg::~defocusDlg()
 
 
 
-void defocusDlg::on_multiplier_valueChanged(int arg1)
+void defocusDlg::on_multiplier_valueChanged(int /*arg1*/)
 {
     on_defocusSlider_valueChanged(ui->defocusSlider->value());
 }
@@ -63,7 +63,7 @@ void defocusDlg::on_defocusSlider_valueChanged(int value)
     double f = mirrorDlg::get_Instance()->FNumber;
     double mm = f * f * 8. * value * .00055;  //mmeters
     qDebug() << "mm" << mm;
-    ui->Focusoffset->setText(QString().sprintf("%6.3lfmm", mm));
+    ui->Focusoffset->setText(QString("%1mm").arg(mm, 6,'f',3));
 }
 
 

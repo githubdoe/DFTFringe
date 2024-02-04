@@ -34,8 +34,7 @@ class OGLView : public QWidget
     Surface3dControlsDlg *m_controls;
 public:
     QPushButton *m_fullScreenPb;
-    explicit OGLView(QWidget *parent = 0, ContourTools *m_tool = 0,
-             surfaceAnalysisTools *surfTools = 0);
+    explicit OGLView(QWidget *parent = 0, ContourTools *m_tool = 0);
     ~OGLView();
     SurfaceGraph *m_surface;
     QCheckBox *fillCB;

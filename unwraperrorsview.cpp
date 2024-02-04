@@ -9,6 +9,7 @@
 #include <QImageWriter>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QScreen>
 using namespace cv;
 unwrapErrorsView::unwrapErrorsView(const wavefront &wf, QWidget *parent) :
     QDialog(parent),
@@ -40,12 +41,12 @@ void unwrapErrorsView::createUnwrapErrors(){
         }
     }
 
-    ui->count->setText(QString().sprintf("%d",cnt));
+    ui->count->setText(QString("%1").arg(cnt));
     Mat xxx;
     flip(errorView, xxx, 0);
 
     cv::cvtColor(xxx,xxx, cv::COLOR_GRAY2RGB);
-    QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     int height = rec.height();
 
     double scale = (double)(height-200)/(double)xxx.rows;
