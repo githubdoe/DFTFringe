@@ -109,22 +109,22 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
                 int row = index.row();
                 int sr = floor(sqrt(row+1));
 
-                return (QString().sprintf("%d %s", index.row(),
-                      ( sr * sr == index.row()+1)? QString().sprintf("Spherical").toStdString().c_str(): ""));
+                return (QString("%1 %2").arg(index.row()).arg(
+                      ( sr * sr == index.row()+1)? "Spherical" : ""));
             }
         }
         if (index.column() == 1){
             if (index.row() == 3 && surfaceAnalysisTools::get_Instance()->m_useDefocus){
-                return QString().sprintf("%6.3lf",surfaceAnalysisTools::get_Instance()->m_defocus);
+                return QString("%1").arg(surfaceAnalysisTools::get_Instance()->m_defocus, 6, 'f', 3);
             }
 
             mirrorDlg &md = *mirrorDlg::get_Instance();
             if (index.row() == 8 && md.doNull && !m_nulled){
                 double val = values[8] - md.z8 * md.cc;
-                return QString().sprintf("%6.3lf  %6.3lf",val, computeRMS(8, val));
+                return QString("%1  %2").arg(val, 6, 'f', 3).arg( computeRMS(8, val), 6, 'f', 3);
             }
 
-            return QString().sprintf("%6.3lf  %6.3lf",values[index.row()], computeRMS(index.row(), values[index.row()]));
+            return QString("%1  %2").arg(values[index.row()], 6, 'f', 3).arg(computeRMS(index.row(), values[index.row()]), 6, 'f', 3);
         }
     }
     if (role == Qt::CheckStateRole){
@@ -158,13 +158,13 @@ bool ZernTableModel::setData(const QModelIndex & index, const QVariant & value, 
 Qt::ItemFlags ZernTableModel::flags(const QModelIndex & index) const
 {
     if (index.column() == 0)
-        return 0;
+        return Qt::NoItemFlags;
     if (index.column() == 1){
         if (canEdit)
             return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable |  Qt::ItemIsEditable;
         else
             return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled;
     }
-    return 0;
+    return Qt::NoItemFlags;
 }
 

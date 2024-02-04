@@ -25,12 +25,16 @@ class wavefront
 public:
     wavefront();
     ~wavefront();
-    wavefront( wavefront &wf);
+    wavefront( const wavefront &wf); // copy constructor doing deep copy of cv::Mat
+    wavefront( wavefront && ) = delete;	// move constructor, deleted because unused
+    wavefront& operator=( const wavefront & ) = default; // copy operator not doing deep copy of cv::mat
+    wavefront& operator=(wavefront &&) = delete; // move operator, deleted because unused
+
     cv::Mat_<double> data;
     cv::Mat_<double> nulledData;
-    cv::Mat_<bool> mask;
+    cv::Mat_<uint8_t> mask;
     cv::Mat_<double> workData;
-    cv::Mat_<bool> workMask;
+    cv::Mat_<uint8_t> workMask;
     std::vector<double> InputZerns;
     double gaussian_diameter;
     bool wasSmoothed;
@@ -49,6 +53,7 @@ public:
     double mean;
     bool dirtyZerns;
     QVector<std::vector<cv::Point> > regions;
+    bool regions_have_been_expanded;
 
 
 };

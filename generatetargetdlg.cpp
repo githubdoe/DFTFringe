@@ -10,11 +10,10 @@
 #include <QDebug>
 #include <QSettings>
 using namespace cv;
-using namespace std;
 
 generateTargetDlg::generateTargetDlg(QWidget *parent) :
-    QDialog(parent),m_units(INCHES),
-    ui(new Ui::generateTargetDlg)
+    QDialog(parent),
+    ui(new Ui::generateTargetDlg), m_units(INCHES)
 {
     ui->setupUi(this);
     m_dpix = qApp->desktop()->physicalDpiX();
@@ -79,36 +78,36 @@ void generateTargetDlg::on_generate_clicked()
     unsigned char color=0;
 
     int vcnt = 0;
-    int hcnt;
+    int hcnt = 0;
     int lastx = hsize - (ui->useChecker->isChecked() ? blockSize : .5 * blockSize);
     int lasty = vsize - (ui->useChecker->isChecked() ? blockSize : .5 * blockSize);
-     for(int i=blockSize/2;   i<= lasty; i=i+blockSize){
-       ++vcnt;
-       hcnt = 0;
-       for(int j= blockSize/2;    j <= lastx; j=j+blockSize){
-           ++hcnt;
-           if (ui->useChecker->isChecked()){
-                Mat ROI=chessBoard(Rect(j,i,blockSize,blockSize));
-                ROI.setTo(Scalar::all(color));
-                color=~color;
-           }
-           else if (ui->lineGridRb->isChecked()){
-               line(chessBoard, Point(j,i),Point(hsize-blockSize/2, i),Scalar(0,0,0),2);
-               line(chessBoard, Point(j,blockSize/2), Point(j,vsize-blockSize/2), Scalar(0,0,0),2);
-           }
-           else {
-               circle(chessBoard, Point(j ,i), blockSize/3, Scalar(0,0,0), -1);
-           }
-      }
-       if ( (hcnt %2) == 0)
+    for(int i=blockSize/2;   i<= lasty; i=i+blockSize){
+        ++vcnt;
+        hcnt = 0;
+        for(int j= blockSize/2;    j <= lastx; j=j+blockSize){
+            ++hcnt;
+            if (ui->useChecker->isChecked()){
+                 Mat ROI=chessBoard(Rect(j,i,blockSize,blockSize));
+                 ROI.setTo(Scalar::all(color));
+                 color=~color;
+            }
+            else if (ui->lineGridRb->isChecked()){
+                line(chessBoard, Point(j,i),Point(hsize-blockSize/2, i),Scalar(0,0,0),2);
+                line(chessBoard, Point(j,blockSize/2), Point(j,vsize-blockSize/2), Scalar(0,0,0),2);
+            }
+            else {
+                circle(chessBoard, Point(j ,i), blockSize/3, Scalar(0,0,0), -1);
+            }
+        }
+        if ( (hcnt %2) == 0)
            color=~color;
-     }
+    }
 
     if (ui->useChecker->isChecked()){
         --hcnt;
         --vcnt;
     }
-    putText(chessBoard, QString().sprintf("%d X %d", hcnt, vcnt).toStdString().c_str(),
+    putText(chessBoard, QString("%1 X %2").arg(hcnt).arg(vcnt).toStdString().c_str(),
             Point(40,20),1,1,cv::Scalar(100, 100,100));
     //pyrDown(chessBoard,chessBoard);
     imshow("Grid pattern", chessBoard);
@@ -156,12 +155,12 @@ void generateTargetDlg::on_fullScreen_clicked(bool checked)
 
 
 
-void generateTargetDlg::on_rows_valueChanged(int arg1)
+void generateTargetDlg::on_rows_valueChanged(int /*arg1*/)
 {
     on_generate_clicked();
 }
 
-void generateTargetDlg::on_useChecker_toggled(bool checked)
+void generateTargetDlg::on_useChecker_toggled(bool /*checked*/)
 {
     on_generate_clicked();
 }
@@ -171,9 +170,8 @@ void generateTargetDlg::on_lineGridRb_clicked()
     on_generate_clicked();
 }
 
-void generateTargetDlg::on_usePixels_clicked(bool checked)
+void generateTargetDlg::on_usePixels_clicked(bool /*checked*/)
 {
-
     double mul = 1.;
     switch (m_units){
     case MM:
@@ -193,7 +191,7 @@ void generateTargetDlg::on_usePixels_clicked(bool checked)
     m_units = PIXELS;
 }
 
-void generateTargetDlg::on_useInches_clicked(bool checked)
+void generateTargetDlg::on_useInches_clicked(bool /*checked*/)
 {
     double mul = 1.;
     switch (m_units){
@@ -213,7 +211,7 @@ void generateTargetDlg::on_useInches_clicked(bool checked)
 
 }
 
-void generateTargetDlg::on_useMm_clicked(bool checked)
+void generateTargetDlg::on_useMm_clicked(bool /*checked*/)
 {
     double mul = 1.;
     switch (m_units){

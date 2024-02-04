@@ -53,13 +53,13 @@ class SurfaceManager : public QObject
     Q_OBJECT
 public:
 
-    explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
-                   contourView *contourView = 0, SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
-    ~SurfaceManager();
     static SurfaceManager *get_instance(QObject *parent = 0, surfaceAnalysisTools *tools = 0,
                                         ProfilePlot *profilePlot = 0, contourView *contourPlot = 0,
                                         SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
-    static SurfaceManager *m_instance;
+    SurfaceManager(const SurfaceManager&) = delete;
+    SurfaceManager& operator=(const SurfaceManager&) = delete;
+    ~SurfaceManager();
+
     bool loadWavefront(const QString &fileName);
     void sendSurface(wavefront* wf);
     void computeMetrics(wavefront *wf);
@@ -77,8 +77,7 @@ public:
     void averageWavefrontFiles(QStringList files);
     void downSizeWf(wavefront *wf);
     void process(int wavefront_index, SurfaceManager *sm);
-    wavefront *readWaveFront(QString fileName, bool mirrorParamsChanged);
-    wavefront *xxx(QString name, bool t);
+    wavefront *readWaveFront(QString fileName);
     inline wavefront *getCurrent(){
         if (m_wavefronts.size() == 0)
             return 0;
@@ -128,10 +127,14 @@ private:
     QProgressDialog *pd;
     QTimer *m_waveFrontTimer;
     QTimer *m_toolsEnableTimer;
+    QPointer<standAstigWizard> m_standAstigWizard;
     int workToDo;
     int workProgress;
 
     wftStats *m_wftStats;
+
+    explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
+                   contourView *contourView = 0, SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
     textres Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx);
 
 signals:
@@ -144,8 +147,6 @@ signals:
     void rocChanged(double);
     void nameChanged(QString, QString);
     void showTab(int);
-    void load(SurfaceManager *);
-    void load(QStringList, SurfaceManager *);
     void enableControls(bool);
 private slots:
     void waveFrontClickedSlot(int ndx);
@@ -155,12 +156,12 @@ private slots:
     void surfaceSmoothGBEnabled(bool b);
     void surfaceSmoothGBValue(double value);
     void computeZerns();
-    void surfaceGenFinished(int ndx);
+    void surfaceGenFinished();
     void backGroundUpdate();
     void deleteWaveFronts(QList<int> list);
     void average(QList<int> list);
     void transfrom(QList<int> list);
-    void filter(QList<int> list);
+    void filter();
     void saveAllContours();
     void enableTools();
     void averageComplete(wavefront *wft);

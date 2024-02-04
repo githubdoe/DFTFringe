@@ -32,7 +32,7 @@ class ImageViewer : public QWidget {
         setMouseTracking(false);
     }
     void wheelEvent(QWheelEvent * e) override{
-        int del = e->delta()/120;
+        int del = e->angleDelta().y()/120;
         if (del < 0)
             scale(.8);
         else scale(1.2);
@@ -70,7 +70,7 @@ showAliasDlg::showAliasDlg(int size, QWidget *parent) :
     resizedView = new ImageViewer;
     ui->resizedScrollArea->setWidget(resizedView);
     resizedValue = size;
-    QRect rec = QGuiApplication::screens()[0]->geometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     resize(3 * rec.width()/4, 3 * rec.height()/4);
 
 }
@@ -87,7 +87,7 @@ showAliasDlg::~showAliasDlg()
      ui->resizedSB->blockSignals(false);
      contrast();
 
-     ui->originalLb->setText( QString().sprintf("Original %dx%d", img.width(),img.height()));
+     ui->originalLb->setText( QString("Original %1x%2").arg(img.width()).arg(img.height()));
      downSize();
 
  }

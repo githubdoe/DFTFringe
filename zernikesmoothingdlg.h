@@ -35,7 +35,7 @@ private:
     double m_yCen;
     double m_rad;
     int m_originalSize;
-    vector<double> theZerns;
+    std::vector<double> theZerns;
 
     QTimer m_timer;
     wavefront *p_wf;

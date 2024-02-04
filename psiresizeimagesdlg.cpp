@@ -9,7 +9,7 @@ PSIResizeImagesDlg::PSIResizeImagesDlg(int resize,int max, QWidget *parent) :
     ui->setupUi(this);
     QSettings set;
     ui->m_resize->setMaximum(max);
-    ui->CurrentSize->setText(QString().sprintf("%d",max));
+    ui->CurrentSize->setText(QString("%1").arg(max));
     ui->m_resize->setValue(resize);
 }
 

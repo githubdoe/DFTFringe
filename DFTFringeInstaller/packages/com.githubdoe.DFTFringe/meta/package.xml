@@ -2,8 +2,8 @@
 <Package>
     <DisplayName>DFTFringe</DisplayName>
     <Description>Install DFTFringe</Description>
-    <Version>a.b.c</Version>
-    <ReleaseDate>2010-01-01</ReleaseDate>
+    <Version>MY_AUTOMATED_VERSION_STRING</Version>
+    <ReleaseDate>MY_AUTOMATED_DATE_STRING</ReleaseDate>
     <Default>true</Default>
     <Script>installscript.qs</Script>
     <UserInterfaces>

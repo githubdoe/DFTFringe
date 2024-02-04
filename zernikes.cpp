@@ -26,14 +26,14 @@ void dump_matrix (double *a, int nrows, int ncols,const char *desc)
 {
     int i, j;
     qDebug() << "###############";
-    qDebug() << QString().sprintf("%s", desc);
+    qDebug() << QString(desc);
     qDebug() << "###############";
-    qDebug() << QString().sprintf("%d, %d\n", nrows, ncols);
+    qDebug() << QString("%1, %2\n").arg(nrows).arg(ncols);
     for (i=0; i < nrows; i++)
     {
         for (j=0; j < ncols; j++)
         {
-            qDebug() << QString().sprintf("%f ", a[I(i, j, ncols)]);
+            qDebug() << QString("%1 ").arg(a[I(i, j, ncols)], 0, 'f');
         }
     }
 }
@@ -73,7 +73,7 @@ void zern_spec::dump(void)
     qDebug() <<  "       n   m   s";
     qDebug() <<  "      ----------";
     for (i=0; i < m_nterms; i++) {
-        qDebug() <<  QString().sprintf("%3d: %3d %3d %3d", i, m_n[i], m_m[i], m_s[i]);
+        qDebug() <<  QString("%1: %2 %3 %4").arg(i, 3).arg(m_n[i], 3).arg(m_m[i], 3).arg(m_s[i], 3);
     }
 }
 

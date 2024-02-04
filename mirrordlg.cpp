@@ -17,19 +17,19 @@
 ****************************************************************************/
 #include "mirrordlg.h"
 #include "ui_mirrordlg.h"
+#include "spdlog/spdlog.h"
 #include <QtGui>
 #include <QFileDialog>
 #include <iostream>
 #include <fstream>
 #include <QMessageBox>
 #include <QDebug>
+
 QString mirrorDlg::m_projectPath = "";
-mirrorDlg *mirrorDlg::m_Instance = 0;
+
 mirrorDlg *mirrorDlg::get_Instance(){
-    if (m_Instance == 0){
-        m_Instance = new mirrorDlg();
-    }
-    return m_Instance;
+    static mirrorDlg m_Instance{};
+    return &m_Instance;
 }
 
 mirrorDlg::mirrorDlg(QWidget *parent) :
@@ -66,18 +66,18 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
         ui->rocLab->show();
         ui->fnumberLab->show();
         ui->FNumber->show();
-        ui->roc->setText(QString().sprintf("%6.2lf",roc));
-        ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
+        ui->roc->setText(QString("%1").arg(roc, 6, 'f', 2));
+        ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
     }
     lambda = settings.value("config lambda", 640).toDouble();
 
-    ui->lambda->setText(QString().sprintf("%6.1lf",lambda));
+    ui->lambda->setText(QString("%1").arg(lambda, 6 ,'f' ,1));
 
     obs = settings.value("config obstruction", 0.).toDouble();
 
     cc = settings.value("config cc", -1.).toDouble();
 
-    ui->cc->setText(QString().sprintf("%6.2lf",cc));
+    ui->cc->setText(QString("%1").arg(cc, 6, 'f', 2));
 
     ui->ReducApp->setChecked( m_aperatureReductionEnabled);
     if (  m_aperatureReductionEnabled)
@@ -93,7 +93,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     m_projectPath = settings.value("projectPath", "").toString();
     fringeSpacing = settings.value("config fringe spacing", 1.).toDouble();
 
-    ui->fringeSpacingEdit->setText(QString().sprintf("%3.2lf",fringeSpacing));
+    ui->fringeSpacingEdit->setText(QString("%1").arg(fringeSpacing, 6, 'f', 3));
     ui->fringeSpacingEdit->blockSignals(false);
     m_outlineShape = (outlineShape)settings.value("outlineShape", CIRCLE).toInt();
     ui->minorAxisEdit->setText(QString::number(settings.value("ellipseMinorAxis", 50.).toDouble()));
@@ -102,8 +102,8 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
         m_verticalAxis = diameter;
     ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
     ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
-    ui->diameter->setText(QString().sprintf("%6.2lf",diameter));
-    ui->obs->setText(QString().sprintf("%6.2lf",obs));
+    ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
+    ui->obs->setText(QString("%1").arg(obs, 6, 'f', 2));
     ui->FNumber->blockSignals(false);
     ui->roc->blockSignals(false);
     ui->lambda->blockSignals(false);
@@ -118,7 +118,8 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
 
 mirrorDlg::~mirrorDlg()
 {
-
+    spdlog::get("logger")->trace("mirrorDlg::~mirrorDlg");
+    delete ui;
 }
 bool mirrorDlg::shouldFlipH(){
     return ui->flipH->isChecked();
@@ -142,7 +143,7 @@ void mirrorDlg::on_saveBtn_clicked()
     if (fileName.isEmpty())
         return;
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".ini"); }
-    std::ofstream file((fileName.toStdString().c_str()),std::ios_base::out|std::ios_base::binary);
+    std::ofstream file(fileName.toStdString().c_str(),std::ios_base::out|std::ios_base::binary);
     if (!file.is_open()) {
         QMessageBox::warning(0, tr("Save mirror config."),
                              tr("Cannot write file %1: ")
@@ -250,7 +251,7 @@ void mirrorDlg::loadFile(QString & fileName){
         double *dp = (double*)buf;
         fringeSpacing = *dp;
         ui->fringeSpacingEdit->blockSignals(true);
-        ui->fringeSpacingEdit->setText(QString().sprintf("%3.1lf",*dp));
+        ui->fringeSpacingEdit->setText(QString("%1").arg(*dp, 3, 'f', 1));
         ui->fringeSpacingEdit->blockSignals(false);
 
         //read diameter
@@ -281,10 +282,10 @@ void mirrorDlg::loadFile(QString & fileName){
             //roc *= 25.4;
         }
         ui->diameter->blockSignals(true);
-        ui->diameter->setText(QString().sprintf("%6.2lf",diameter));
+        ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
         ui->diameter->blockSignals(false);
         ui->roc->blockSignals(true);
-        ui->roc->setText(QString().sprintf("%6.2lf",roc));
+        ui->roc->setText(QString("%1").arg(roc, 6, 'f', 2));
         ui->roc->blockSignals(false);
 
         //conic
@@ -329,7 +330,7 @@ void mirrorDlg::loadFile(QString & fileName){
 
         FNumber = roc/(2. * diameter);
         ui->FNumber->blockSignals(true);
-        ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
+        ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
         ui->FNumber->blockSignals(false);
 
         file.close();
@@ -363,7 +364,7 @@ void mirrorDlg::on_diameter_textChanged(const QString &arg1) {
     diameter = diam;
     FNumber = roc/(2. * diameter);
     ui->FNumber->blockSignals(true);
-    ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
+    ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
     ui->FNumber->blockSignals(false);
     updateZ8();
 
@@ -381,8 +382,8 @@ void mirrorDlg::on_diameter_Changed(const double diam)
     FNumber = roc/(2. * diameter);
     ui->FNumber->blockSignals(true);
     const QSignalBlocker blocker(ui->diameter);
-    ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber *( (mm) ? 1.: 25.4)));
-    ui->diameter->setText(QString().sprintf("%6.2lf",diameter * ((mm) ? 1.: 25.4)));
+    ui->FNumber->setText(QString("%1").arg(FNumber *( (mm) ? 1.: 25.4), 6, 'f', 2));
+    ui->diameter->setText(QString("%1").arg(diameter * ((mm) ? 1.: 25.4), 6, 'f', 2));
     ui->FNumber->blockSignals(false);
     ui->diameter->blockSignals(false);
 
@@ -396,7 +397,7 @@ void mirrorDlg::on_roc_textChanged(const QString &arg1)
     roc = arg1.toDouble() * ((mm) ? 1: 25.4);
     FNumber = roc /(2. * diameter);
     ui->FNumber->blockSignals(true);
-    ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber));
+    ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
     ui->FNumber->blockSignals(false);
     updateZ8();
 }
@@ -408,10 +409,10 @@ void mirrorDlg::on_roc_Changed(const double newVal)
 
     FNumber = roc /(2. * diameter);
     ui->FNumber->blockSignals(true);
-    ui->FNumber->setText(QString().sprintf("%6.2lf",FNumber * ((mm) ? 1.: 25.4)));
+    ui->FNumber->setText(QString("%1").arg(FNumber * ((mm) ? 1.: 25.4), 6, 'f', 2));
     ui->FNumber->blockSignals(false);
     ui->roc->blockSignals(true);
-    ui->roc->setText(QString().sprintf("%6.2lf",roc * ((mm) ? 1.: 25.4)));
+    ui->roc->setText(QString("%1").arg(roc * ((mm) ? 1.: 25.4), 6, 'f', 2));
     ui->roc->blockSignals(false);
     updateZ8();
 }
@@ -485,20 +486,20 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
 
     ui->roc->blockSignals(true);
     ui->diameter->blockSignals(true);
-     ui->diameter->setText(QString().sprintf("%6.2lf",diameter/div));
+     ui->diameter->setText(QString("%1").arg(diameter/div, 6, 'f', 2));
      ui->roc->setText(QString().number(roc/div));
      ui->obs->setText(QString().number(obs/div));
      ui->diameter->blockSignals(false);
      ui->roc->blockSignals(false);
      ui->minorAxisEdit->blockSignals(true);
-     ui->minorAxisEdit->setText(QString().sprintf(("%6.2lf"),m_verticalAxis/div));
+     ui->minorAxisEdit->setText(QString("%1").arg(m_verticalAxis/div, 6, 'f', 2));
      ui->reduceValue->blockSignals(true);
      QSettings set;
      aperatureReduction = set.value("config aperatureReduction",0.).toDouble();
 
      ui->reduceValue->setValue(aperatureReduction * ((mm) ? 1. : 1./25.4));
      ui->reduceValue->blockSignals(false);
-     ui->ClearAp->setText(QString().sprintf("%6.2lf ", m_clearAperature * ((mm) ? 1: 1./25.4)));
+     ui->ClearAp->setText(QString("%1 ").arg(m_clearAperature * ((mm) ? 1: 1./25.4), 6, 'f', 2));
 }
 
 void mirrorDlg::on_buttonBox_accepted()
@@ -551,7 +552,7 @@ void mirrorDlg::spacingChangeTimeout(){
     set.setValue("config fringe spacing", fringeSpacing);
 }
 
-void mirrorDlg::on_fringeSpacingEdit_textChanged(const QString &arg1)
+void mirrorDlg::on_fringeSpacingEdit_textChanged(const QString & /*text*/)
 {
     spacingChangeTimer.start(1000);
 }
@@ -599,7 +600,9 @@ void mirrorDlg::on_buttonBox_helpRequested()
 void mirrorDlg::setclearAp(){
 
     m_clearAperature = (diameter - aperatureReduction * 2) ;
-    ui->ClearAp->setText(QString().sprintf("%6.2lf ", m_clearAperature * ((mm) ? 1: 1./25.4)));
+    if (m_aperatureReductionEnabled == false)
+        m_clearAperature = diameter;
+    ui->ClearAp->setText(QString("%1 ").arg(m_clearAperature * ((mm) ? 1: 1./25.4), 6, 'f', 2));
 }
 
 void mirrorDlg::on_ReducApp_clicked(bool checked)
@@ -624,13 +627,6 @@ void mirrorDlg::on_ReducApp_clicked(bool checked)
 }
 
 
-void mirrorDlg::changeEdgeMaskvalues(double val){
-    m_aperatureReductionEnabled = true;
-    ui->ReducApp->setChecked(true);
-    ui->reduceValue->setValue(val);
-    ui->reduceValue->setEnabled(true);
-
-}
 void mirrorDlg::on_reduceValue_valueChanged(double arg1)
 {
     aperatureReduction = ((mm) ? 1: 25.4) * arg1;

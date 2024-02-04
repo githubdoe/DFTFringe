@@ -28,25 +28,27 @@
 
 #include <opencv2/opencv.hpp>
 #include "opencv2/imgproc.hpp"
-#include "opencv2/features2d.hpp"
 #include "graphicsutilities.h"
 #include <iostream>
 #include <fstream>
 #include <QMessageBox>
 #include "zernikeprocess.h"
-#include "zernikedlg.h"
 #include "mainwindow.h"
 #include <qsettings.h>
-#include "imagehisto.h"
 #include "simigramdlg.h"
 #include "settings2.h"
 #include "myutils.h"
 #include <fstream>
 #include "regionedittools.h"
-#include "dftarea.h"
 #include "colorchannel.h"
 #include "outlineplots.h"
 #include "qwt_scale_draw.h"
+#include <QJsonDocument>
+#include <QJsonValue>
+#include <QJsonArray>
+#include <QJsonObject>
+
+
 QVBoxLayout *debugLayout = 0;
 void undoStack::clear() {
     m_stack.clear();
@@ -107,7 +109,7 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     opacity = set.value("igramLineOpacity", 65.).toDouble();
     lineStyle = set.value("igramLineStyle", 1).toInt();
     setMouseTracking(true);
-    m_dftThumb = new dftThumb();
+    m_dftThumb = new dftThumb(this);
     m_dftThumb->setWindowFlags(    Qt::WindowStaysOnTopHint);
     m_outlineTimer = new QTimer(this);
     connect(m_outlineTimer, SIGNAL(timeout()),this, SLOT(outlineTimerTimeout()));
@@ -150,6 +152,8 @@ void IgramArea::computeEdgeRadius(){
     mirrorDlg &md = *mirrorDlg::get_Instance();
     double pixelsPermm =(m_outside.m_radius/(md.diameter/2.));
     m_edgeMaskWidth = md.aperatureReduction * pixelsPermm;
+    if (md.m_aperatureReductionEnabled == false)
+        m_edgeMaskWidth = 0;
 
 }
 
@@ -314,8 +318,8 @@ Mat IgramArea::igramToGray(cv::Mat roi){
     static const char *colorNames[] = {"red","green","blue"};
     cv::Mat gray;
     cv::merge(planes, 3, gray);
-    emit imageSize(QString().sprintf("%d X %d using %s channel", igramColor.size().width(),
-                                     igramColor.size() .height(), colorNames[maxndx]));
+    emit imageSize(QString("%1 X %2 using %3 channel").arg(igramColor.size().width()).arg(
+                                     igramColor.size().height()).arg(colorNames[maxndx]));
     return gray;
 
 }
@@ -343,8 +347,7 @@ cv::Mat toSobel(cv::Mat roi){
     //cv::waitKey(1);
     return grad;
 }
-cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,int step,
-                                             double &resp, int *radius, bool useExisting){
+cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,int step, int *radius, bool useExisting){
     double cx  = m_outside.m_center.x() * searchOutlineScale;
     double cy = m_outside.m_center.y() * searchOutlineScale;
 
@@ -369,11 +372,11 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
     if (cnt < 0) cnt *= -1;
     MainWindow::me->progBar->setRange(0,cnt);
     cnt = 0;
-    double rmean;
+    double rmean = 0;
 
     for (int rad0 = start; rad0 != end;  rad0 += step){
         MainWindow::me->progBar->setValue(++cnt);
-        MainWindow::me->progBar->setFormat(QString().sprintf("Radius %d",rad0));
+        MainWindow::me->progBar->setFormat(QString("Radius %1").arg(rad0));
         // create a light gray image
         cv::Point insideCenter(cx, cy);
         cv::Mat circlem = cv::Mat::zeros(gray.size(), gray.type());
@@ -436,8 +439,7 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
 
     return bestc;
 }
-cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,int step,
-                                       double &resp, int *radius, int pass){
+cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,int step, int *radius, int pass){
     QSettings set;
     bool showDebug = set.value("DebugShowOutlining", false).toBool();
     double cx = gray.cols/2.;
@@ -448,26 +450,23 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     cv::Point2d bestc;
     QVector<QPointF> points;
     QVector<QPointF> mpoints;
-    QVector<QPointF> delpoints;
     int cnt = end - start;
     if (cnt < 0)
         cnt *=-1;
     MainWindow::me->progBar->setRange(0, cnt);
     cnt = 0;
     int goodCnt = 0;
-    double firstResp;
-    double rmean;
+    double rmean = 0;
     double rmeanpeak = 0;
-    double avg;
     if (showDebug){
         cv::namedWindow("outline debug",cv::WINDOW_NORMAL);
         cv::moveWindow("outline debug", 10,10);
     }
-    double oldDel;
+    double oldDel = 0;
     double downcnt = 0.;
     for (int rad0 = start; rad0 >= end;  rad0 += step){
         MainWindow::me->progBar->setValue(++cnt);
-        MainWindow::me->progBar->setFormat(QString().sprintf("Radius: %d",rad0));
+        MainWindow::me->progBar->setFormat(QString("Radius: %1").arg(rad0));
         qApp->processEvents();
 
         if (rad0 < 0)
@@ -488,14 +487,13 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
             cv::circle(t, c, rad0, cv::Scalar(255), 1);
             cv::imshow("outline debug",t);
             cv::waitKey(100);
-            emit statusBarUpdate(QString().sprintf(" rad %d Resp %6.3lf", rad0, resp),3);
+            emit statusBarUpdate(QString(" rad %1 Resp %2").arg(rad0).arg(resp, 6, 'f', 3),3);
         }
 
 
         points << QPointF(rad0/searchOutlineScale, resp);
         double del;
         if (goodCnt == 0){
-            firstResp = resp;
             rmean = resp;
             oldDel = rmean;
             goodCnt = 1;
@@ -548,7 +546,7 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
     QwtPlot *plot = MainWindow::me->m_outlinePlots->getPLot(pass);
     plot->show();
     plot->detachItems( QwtPlotItem::Rtti_PlotCurve);
-    plot->setTitle(QString().sprintf("Outside pass %d",pass));
+    plot->setTitle(QString("Outside pass %1").arg(pass));
     plot->setAxisTitle(QwtPlot::xBottom, "Radius");
     plot->setAxisTitle(QwtPlot::yLeft, "strength");
     QwtPlotCurve  *curve = new QwtPlotCurve();
@@ -601,7 +599,6 @@ void IgramArea::findCenterHole(){
     int end = m_outside.m_radius/2 * scale;
     cv::Rect bounds;
     Point2d firstPassCenter;
-    double resp;
     int radius;
     int x,y;
     Point2d bestc;
@@ -620,8 +617,7 @@ void IgramArea::findCenterHole(){
     }
     else {
 
-        bestc = findBestCenterOutline(small, start,end, 1,
-                                                  resp, &radius, useExisting);
+        bestc = findBestCenterOutline(small, start,end, 1, &radius, useExisting);
 
         x = bestc.x/scale;
        y = bestc.y/scale;
@@ -677,10 +673,10 @@ void IgramArea::findCenterHole(){
     if (end > roi.cols)
         end = roi.cols;
     if (start < 0) start = 1;
-    double rmean;
+    double rmean = 0.;
     for (int rad = start; rad < end; ++rad){
         MainWindow::me->progBar->setValue(rad);
-        MainWindow::me->progBar->setFormat(QString().sprintf("Radius: %d",rad));
+        MainWindow::me->progBar->setFormat(QString("Radius: %1").arg(rad));
         qApp->processEvents();
         cv::Mat key = cv::Mat::ones(roi.rows, roi.cols, roi.type());
         key = cv::Scalar(250);
@@ -699,7 +695,12 @@ void IgramArea::findCenterHole(){
         int dely = abs(secondPassCenter.y - firstPassCenter.y);
         resp = fabs(resp);
         points << QPointF(rad, resp);
-        rmean = .3 * resp + (1-.3) * rmean;
+        if(rad == start){
+            rmean = resp;
+        }
+        else{
+            rmean = .3 * resp + (1-.3) * rmean;
+        }
         mpoints << QPointF(rad, rmean);
         if (showDebug){
             cv::Mat t = roi.clone();
@@ -711,7 +712,7 @@ void IgramArea::findCenterHole(){
             continue;
 
         if (resp > maxresp){
-             maxresp = resp;
+            maxresp = resp;
             bestc = c;
             qDebug() << "center refine"<< x << y << resp << delx << dely << rad;
 
@@ -777,7 +778,6 @@ void IgramArea::findOutline(){
     gray = toSobel(gray);
 
     double scale = 1.;
-    double resp = 0;
     int radius;
     cv::Point2d bestc;
 
@@ -797,7 +797,7 @@ void IgramArea::findOutline(){
         int end = 25;
 
         emit statusBarUpdate("searching for outside mirror phase 1.",2);
-        bestc= findBestOutsideOutline(small, start, end, -2, resp, &radius, 1);
+        bestc= findBestOutsideOutline(small, start, end, -2, &radius, 1);
         if (bestc.x == 0){
             QMessageBox::warning(NULL,"Failed","Could not find mirror outline.");
             return;
@@ -807,7 +807,7 @@ void IgramArea::findOutline(){
 
         radius /= scale;
         //searchMargin = 5./scale;
-        emit statusBarUpdate(QString().sprintf("margin %d %d", searchMargin, radius),3);
+        emit statusBarUpdate(QString("margin %1 %2").arg(searchMargin).arg(radius),3);
     }
     else {
       bestc = Point2d(m_outside.m_center.x(), m_outside.m_center.y());
@@ -817,7 +817,6 @@ void IgramArea::findOutline(){
     }
 
     // now crop to the current best circle + 5 and try full size
-    resp = 0;
 
     int left = bestc.x - (radius +searchMargin + 10);
     if (left < 0)
@@ -842,7 +841,7 @@ void IgramArea::findOutline(){
 
     cv::Mat showRect = roi.clone();
     cv::rectangle(showRect, centerBound, Scalar(255,255,255), 3);
-    bestc = findBestOutsideOutline(roi, radius + searchMargin, radius -searchMargin, -1, resp, &radius, 2);
+    bestc = findBestOutsideOutline(roi, radius + searchMargin, radius -searchMargin, -1, &radius, 2);
 
     m_searching_outside = false;
     shiftoutline(QPointF(set.value("autoOutlineXOffset", 0).toInt(),
@@ -945,11 +944,12 @@ void IgramArea::adjustCenterandRegions(){
     QStringList regionsList = set.value("lastRegions", "").toString().split("\n");
     if (regionsList.size() > 1){
         m_polygons.clear();
+        m_regionEdit->clear();
         int r = 0;
         foreach(QString str, regionsList){
             if (str == "")
                 continue;
-            m_regionEdit->addRegion(QString().sprintf("Region %d",++r));
+            m_regionEdit->addRegion(QString("Region %1").arg(++r));
             QStringList vals = str.split(" ");
             std::vector< cv::Point> region;
             for (int i = 1; i < vals.size(); ++i){
@@ -962,9 +962,10 @@ void IgramArea::adjustCenterandRegions(){
     }
 }
 
-bool IgramArea::openImage(const QString &fileName, bool autoOutside, bool showBoundary)
+bool IgramArea::openImage(const QString &fileName, bool showBoundary)
 
 {
+    cropTotalDx = cropTotalDy = 0;
     foreach(QWidget *widget, QApplication::topLevelWidgets()) {
       if(widget->objectName() == "MainWindow")
         widget->setWindowTitle(fileName);
@@ -988,10 +989,6 @@ bool IgramArea::openImage(const QString &fileName, bool autoOutside, bool showBo
         Mat distortion =Mat::zeros(1,5, CV_64FC1);
         camera.at<double>(0,0) = parms[6].toDouble();
         camera.at<double>(1,1) = camera.at<double>(0,0);
-        double width = camera.at<double>(0,2) = parms[7].toDouble();
-        double height = camera.at<double>(1,2) = parms[8].toDouble();
-        width *= 2;
-        height *= 2;
 
         for (int i = 0; i < 5; ++i){
             distortion.at<double>(0,i) = parms[1 + i].toDouble();
@@ -1072,19 +1069,21 @@ bool IgramArea::openImage(const QString &fileName, bool autoOutside, bool showBo
         qDebug() << "file exists";
         deleteRegions();
         qDebug() << "del regions";
-        loadOutlineFile(finfo.absoluteFilePath());
+        loadOutlineFileOldV6(finfo.absoluteFilePath());
         qDebug() << "outline loaded";
+        saveRegions();  // if you don't do this and then user runs findOutline then it will load regions from previous igram processed
     }
     else {
 
         useLastOutline();
+        adjustCenterandRegions();
         // setup auto outline controls.
     }
     if (set.value("autoOutline",false).toBool()){
             findOutline();
+            adjustCenterandRegions();
         }
 
-    adjustCenterandRegions();
     if (showBoundary){
         computeEdgeRadius();
         drawBoundary();
@@ -1102,10 +1101,10 @@ bool IgramArea::openImage(const QString &fileName, bool autoOutside, bool showBo
     return true;
 }
 void IgramArea::syncRegions(){
-
+    // copy m_polygons to region editor
     m_regionEdit->clear();
     for (int n = 0; n < m_polygons.size(); ++n){
-        m_regionEdit->addRegion(QString().sprintf("Region %d", n+1));
+        m_regionEdit->addRegion(QString("Region %1").arg( n+1));
     }
 }
 
@@ -1220,14 +1219,12 @@ void IgramArea::increaseRegion(int n, double scale){
     yavg /= m_polygons[n].size();
     // find the closest point to the center
     double shortest = 99999;
-    int shortestndx;
     for (unsigned int i = 0; i < m_polygons[n].size(); ++i){
         int delx = m_polygons[n][i].x - xavg;
         int dely = m_polygons[n][i].y - yavg;
         double del = sqrt(delx * delx + dely * dely);
         if (del < shortest){
             shortest = del;
-            shortestndx = i;
         }
     }
 
@@ -1330,11 +1327,10 @@ void IgramArea::wheelEvent (QWheelEvent *e)
     if (igramGray.isNull())
         return;
 
-    QString result;
-    if (e->delta() == 0)
+    if (e->angleDelta().y() == 0)
         return;
 
-    int del = e->delta()/120;
+    int del = e->angleDelta().y()/120;
 
     if( e->modifiers() & Qt::ControlModifier) {
         setCursor(Qt::SizeAllCursor);
@@ -1352,7 +1348,7 @@ void IgramArea::wheelEvent (QWheelEvent *e)
         drawBoundary();
         return;
     }
-    QPointF pos = e->pos();
+    QPointF pos = e->position();
 
     zoompt = pos/scale;
     zoom(del, zoompt);
@@ -1365,7 +1361,7 @@ void IgramArea::deleteregion(int r){
 }
 
 void IgramArea::addregion(){
-    m_regionEdit->addRegion( QString().sprintf("Region %d",m_polygons.size()+1));
+    m_regionEdit->addRegion( QString("Region %1").arg(m_polygons.size()+1));
     m_polygons.append(std::vector< cv::Point>());
     polyndx = m_polygons.size()-1;
 }
@@ -1440,6 +1436,10 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         }
         else if (m_current_boundry == CenterOutline){
             Pcount = &innerPcount;
+        }
+        else{
+            qDebug() << "If you read this message something went wrong";
+            Pcount = nullptr;
         }
         qDebug() << "pcount" << *Pcount;
         // if doing ellipse and on the center line
@@ -1575,7 +1575,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
             QPointF del = scaledPos - lastPoint;
 
             if (cntrlPressed){
-                for (unsigned int j = 0; j < m_polygons.size(); ++j){
+                for (int j = 0; j < m_polygons.size(); ++j){
                     for (unsigned int i = 0; i < m_polygons[j].size(); ++i){
                         m_polygons[j][i].x += del.x();
                         m_polygons[j][i].y += del.y();
@@ -1584,7 +1584,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
             }
             else
             {
-                for (unsigned int i = 0; i < m_polygons[polyndx].size(); ++i){
+                for (unsigned long int i = 0; i < m_polygons[polyndx].size(); ++i){
                     m_polygons[polyndx][i].x += del.x();
                     m_polygons[polyndx][i].y += del.y();
                 }
@@ -1708,7 +1708,7 @@ void IgramArea::drawBoundary()
         if (inside.m_radius > 0 && innerPcount > 1){
             //painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
             double percent = inside.m_radius/outside.m_radius * 100;
-            QString label = QString().sprintf("%6.2lf percent", percent);
+            QString label = QString("%1 percent").arg(percent, 6, 'f', 2);
             painter.setPen(Qt::black);
             QFont font("Arial", 8);
 
@@ -1756,14 +1756,14 @@ void IgramArea::drawBoundary()
                     painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
                 }
                 QPointF p(m_polygons[n][0].x -10, m_polygons[n][0].y - 10);
-                painter.drawText(p,QString().sprintf("%d",n+1));
+                painter.drawText(p,QString("%1").arg(n+1));
                 if (m_polygons[n].size() > 1){
-                    for (int j = 0; j < m_polygons[n].size()-1; ++j){
+                    for (std::size_t j = 0; j < m_polygons[n].size()-1; ++j){
                         painter.drawLine(m_polygons[n][j].x, m_polygons[n][j].y,
                                          m_polygons[n][j+1].x, m_polygons[n][j+1].y);
                     }
                     QPointF p(m_polygons[n][0].x -10, m_polygons[n][0].y - 10);
-                    painter.drawText(p,QString().sprintf("%d",n+1));
+                    painter.drawText(p,QString("%1").arg(n+1));
                 }
                 if (regionMode){
 
@@ -1796,10 +1796,13 @@ void IgramArea::drawBoundary()
     if (outterPcount == 2){
         QString vert = "";
         if (mirrorDlg::get_Instance()->isEllipse()){
-            vert = QString().sprintf("Vertical Axis: %6.1f", outside.m_radius * s2);
+            vert = QString("Vertical Axis: %1").arg(outside.m_radius * s2, 6, 'f', 1);
         }
-        msg = QString().sprintf("Outside: x=%6.1lf y=%6.1lf, Radius= %6.1lf  %s",
-                                outside.m_center.x(),outside.m_center.y(), outside.m_radius,vert.toStdString().c_str());
+        msg = QString("Outside: x=%1 y=%2, Radius= %3  %4").arg(
+                                outside.m_center.x(), 6 , 'f', 1).arg(
+                                    outside.m_center.y(), 6, 'f', 1).arg(
+                                        outside.m_radius, 6, 'f', 1).arg(
+                                            vert.toStdString().c_str());
 
     }
     m_outside = outside;
@@ -1807,8 +1810,11 @@ void IgramArea::drawBoundary()
         m_center = inside;
 
 
-        msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
-                                 inside.m_center.x(),inside.m_center.y(),inside.m_radius, scale);
+        msg2 = QString("center= %1,%2 radius = %3 scale =%4").arg(
+                                 inside.m_center.x(), 6, 'f', 1).arg(
+                                    inside.m_center.y(), 6, 'f', 1).arg(
+                                        inside.m_radius, 6, 'f', 2).arg(
+                                            scale, 6, 'f', 2);
     }
     if (m_current_boundry != PolyArea)
         emit statusBarUpdate(msg+msg2,1);
@@ -1873,7 +1879,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
     QPainter painterThis(this);
     int pw = parentWidget()->width();
     int dw = pw/2;
-    int dh = parentWidget()->height();
 
     QRect dirtyRect = event->rect();
     if ((zoomIndex > 1 && m_zoomMode == EDGEZOOM) && (
@@ -1882,7 +1887,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
             )){
         painterThis.fillRect(this->rect(), Qt::gray);
         int viewW = 3 * m_zoomBoxWidth / zoomIndex;
-        double scale = zoomIndex;
 
         QImage small(viewW * 4, viewW *2, igramColor.format());
         small.fill(Qt::gray);
@@ -1918,10 +1922,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
         //bottom *************************************************************
         topy = (circle.m_center.ry() + circle.m_radius * e - viewW/2);
-        int shifty = 0;
-        if (topy > m_withOutlines.height()){
-            shifty = topy - m_withOutlines.height();
-        }
         roi = m_withOutlines.copy(topx,topy, viewW * 2, viewW);
         smallPainter.drawImage(viewW,  viewW, roi);
 
@@ -1929,11 +1929,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
         topx = circle.m_center.rx() - circle.m_radius - viewW/2;
         topy = circle.m_center.ry() - viewW;
         roi = m_withOutlines.copy(topx,topy,viewW,viewW * 2);
-        int shiftl = 0;
-        if (topx < 0){
-            topx *= 1;
-            shiftl = topx;
-        }
         smallPainter.drawImage(0,0,roi);
 
 
@@ -1943,7 +1938,6 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
         if (topx > m_withOutlines.width()){
             topx = topx -  m_withOutlines.width();
-            shiftl = topx;
         }
         roi = m_withOutlines.copy(topx,topy, viewW , viewW * 2);
 
@@ -1962,14 +1956,15 @@ void IgramArea::paintEvent(QPaintEvent *event)
 
 }
 void IgramArea::saveRegions(){
+    // save to registry
     QString text;
     QTextStream regions(&text);
 
     for (int i = 0; i < m_polygons.size(); ++i){
         regions << "Poly";
-        for(int j = 0; j < m_polygons[i].size(); ++j){
-            regions << " " << QString().number(m_polygons[i][j].x) << ","<<
-                       QString().number(m_polygons[i][j].y);
+        for(std::size_t j = 0; j < m_polygons[i].size(); ++j){
+            regions << " " << QString().number(m_polygons[i][j].x+cropTotalDx) << ","<<
+                       QString().number(m_polygons[i][j].y+cropTotalDy);
         }
         regions << "\n";
     }
@@ -2036,14 +2031,14 @@ void IgramArea::crop() {
     x = igramGray.width()/2;
     y = igramGray.height()/2;
 
+
     for (int i = 0; i < m_polygons.size(); ++i){
-        for(int j = 0; j < m_polygons[i].size(); ++j){
+        for(std::size_t j = 0; j < m_polygons[i].size(); ++j){
             m_polygons[i][j].x -=crop_dx;
             m_polygons[i][j].y -= crop_dy;
         }
 
     }
-    saveRegions();
 
     m_outside.translate(QPointF(-crop_dx,-crop_dy));
     cx = m_outside.m_center.x() + crop_dx;
@@ -2067,7 +2062,9 @@ void IgramArea::crop() {
     hasBeenCropped = true;
     scale = fitScale = (double)parentWidget()->height()/(double)igramGray.height();
     update();
-    emit imageSize(QString().sprintf("%d X %d", igramGray.size().width(), igramGray.size() .height()));
+    emit imageSize(QString("%1 X %2").arg(
+        igramGray.size().width()).arg(
+            igramGray.size() .height()));
     emit upateColorChannels(qImageToMat(igramColor));
 
 }
@@ -2107,9 +2104,64 @@ void IgramArea::CenterOutlineActive(bool checked){
 }
 
 void IgramArea::loadOutlineFile(QString fileName){
+    QFile loadFile(fileName);
+
+    if (!loadFile.open(QIODevice::ReadOnly)) {
+        qWarning("Couldn't open oln file.");
+        return;
+    }
+
+    QByteArray saveData = loadFile.readAll();
+
+    // note that I (gr5) tested what happens if you have non-json in the oln file.  For example missing quotes commas and brackets.
+    // basically you get zeroes.  Zeroes in outlines, zero polygons, etc.  This causes no harm as it's basically like not having
+    // an oln file at all (or some portions of the oln data get lost).  Because of this I decided not to report any json parsing errors.
+    QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
+
+    // outer
+    QJsonObject outside = loadDoc["outside_outline"].toObject();
+    CircleOutline out(outside);
+    m_outside = out;
+    m_outside.translate(QPointF(-cropTotalDx, -cropTotalDy));
+    m_OutterP1 = m_outside.m_p1.m_p;
+    m_OutterP2 = m_outside.m_p2.m_p;
+    outterPcount = 2;
+
+    // center/inner
+    QJsonObject inside = loadDoc["inside_outline"].toObject();
+    CircleOutline in(inside);
+    in.translate(QPointF(-cropTotalDx, -cropTotalDy));
+    m_center = in;
+    if (m_center.m_radius > 0) {
+        m_innerP1 = m_center.m_p1.m_p;
+        m_innerP2 = m_center.m_p2.m_p;
+        innerPcount = 2;
+    }
+
+    const double filter = loadDoc["dft_filter_radius"].toDouble();
+    emit dftCenterFilter(filter);
+
+
+
+    // mask polygons regions
+    m_polygons.clear();
+    QJsonArray jregions = loadDoc["regions"].toArray();
+    for (int i=0; i < jregions.size(); ++i) {
+        QJsonArray jpoly = jregions[i].toArray();
+        m_polygons.push_back(std::vector< cv::Point>());
+        m_regionEdit->addRegion(QString("Region %1").arg( m_polygons.size()));
+
+        for (int j=0; j< jpoly.size(); ++j) {
+            QJsonObject jpoint = jpoly[j].toObject();
+            m_polygons.back().push_back(cv::Point(jpoint["x"].toDouble()-cropTotalDx, jpoint["y"].toDouble()-cropTotalDy));
+        }
+    }
+}
+
+void IgramArea::loadOutlineFileOldV6(QString fileName){
     std::ifstream file(fileName.toStdString().c_str());
 
-    long long int fsize = file.tellg();
+    std::ifstream::pos_type fsize = file.tellg();
     file.seekg( 0, std::ios::end );
     fsize = file.tellg() - fsize;
     file.close();
@@ -2121,8 +2173,16 @@ void IgramArea::loadOutlineFile(QString fileName){
                              .arg(fileName));
         return;
     }
+    char ch = file.peek();
+    if (ch != 0) {
+        // file seems to be new json format oln file
+        file.close();
+        loadOutlineFile(fileName);
+        return;
+    }
 
-    m_outside = readCircle(file);
+
+    m_outside = readCircle(file, -cropTotalDx, -cropTotalDy);
     m_OutterP1 = m_outside.m_p1.m_p;
     m_OutterP2 = m_outside.m_p2.m_p;
     outterPcount = 2;
@@ -2133,7 +2193,7 @@ void IgramArea::loadOutlineFile(QString fileName){
 
     if ((file.tellg() > 0) && (fsize > file.tellg())) {
         if ((b != 'P') && (b != 'E')){
-            m_center = readCircle(file);
+            m_center = readCircle(file, -cropTotalDx, -cropTotalDy);
             m_innerP1 = m_center.m_p1.m_p;
             m_innerP2 = m_center.m_p2.m_p;
             innerPcount = 2;
@@ -2145,57 +2205,21 @@ void IgramArea::loadOutlineFile(QString fileName){
 
     std::string line;
     m_polygons.clear();
-
     while(std::getline(file, line)){
 
         if (line == "Poly"){
             std::getline(file,line);
             m_polygons.push_back(std::vector< cv::Point>());
-            m_regionEdit->addRegion(QString().sprintf("Region %d", m_polygons.size()));
+            m_regionEdit->addRegion(QString("Region %1").arg( m_polygons.size()));
             QStringList data = QString::fromStdString(line).split(" ");
             for (int i = 0; i < data.size()-1; ++i){
                 QStringList vals = data[i].split(",");
-                m_polygons.back().push_back(cv::Point(vals[0].toDouble(),vals[1].toDouble()));
-
+                m_polygons.back().push_back(cv::Point(vals[0].toDouble()-cropTotalDx, vals[1].toDouble()-cropTotalDy));
             }
         }
-        mirrorDlg &md = *mirrorDlg::get_Instance();
         if (line == "Edge Mask width"){
             std::getline(file,line);
-            double edge = QString::fromStdString(line).toDouble();
-            // if outline edge mask is different than current ask user
-            if (edge != md.aperatureReduction){
-                QString text(
-                            "Do you want to change the mirror config value to match the value in the outline file?\n"
-                            "If no then the current mirror config value will be used instead."
-);
 
-                QMessageBox mb;
-                mb.setText(QString().sprintf("Edge mask value in outline file for this interferogram is %6.1lf and is different than mirror config value of %6.1lf.",
-                                             edge, md.aperatureReduction) );
-                mb.setInformativeText(text);
-                mb.setStandardButtons( QMessageBox::Yes|QMessageBox::No );
-                mb.setWindowTitle("Existing Interferogram outline file and Mirror Config difference.");
-                int width = QGuiApplication::screens()[0]->geometry().width() * .5;
-                QSpacerItem* horizontalSpacer = new QSpacerItem(width, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-                QGridLayout* layout = (QGridLayout*)mb.layout();
-                layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
-                int resp = mb.exec();
-
-                switch (resp){
-                case QMessageBox::Yes:
-                    md.changeEdgeMaskvalues(edge);
-
-                    break;
-                case QMessageBox::No:
-                    md.changeEdgeMaskvalues(md.aperatureReduction);
-                    break;
-                }
-            }
-
-        }
-        else{ // just enable edge mask check box to use the current value.
-            md.changeEdgeMaskvalues(md.aperatureReduction);
         }
     }
 
@@ -2206,11 +2230,16 @@ void IgramArea::loadOutlineFile(QString fileName){
     m_outsideHist.push(igramGray,m_outside);
     emit enableShiftButtons(true);
 
-    QString msg2 = QString().sprintf("center= %6.1lf,%6.1lf radius = %6.2lf scale =%6.2lf",
-                             m_outside.m_center.x(),m_outside.m_center.y(),m_outside.m_radius, scale);
+    QString msg2 = QString("center= %1,%2 radius = %3 scale =%4").arg(
+                             m_outside.m_center.x(), 6, 'f', 1).arg(
+                                m_outside.m_center.y(), 6, 'f', 1).arg(
+                                    m_outside.m_radius, 6, 'f', 2).arg(
+                                        scale, 6, 'f', 2);
     if (m_center.m_radius > 0){
-        msg2 += QString().sprintf(" center outline: center= %6.1lf,%6.1lf radius = %6.2lf",
-                                  m_center.m_center.x(), m_center.m_center.y(), m_center.m_radius);
+        msg2 += QString(" center outline: center= %1,%2 radius = %3").arg(
+                                  m_center.m_center.x(), 6, 'f', 1).arg(
+                                    m_center.m_center.y(), 6, 'f', 1).arg(
+                                        m_center.m_radius, 6, 'f', 2);
     }
     emit statusBarUpdate(msg2,1);
 }
@@ -2223,7 +2252,7 @@ void IgramArea::readOutlines(){
     if (fileName.isEmpty())
         return;
     deleteRegions();
-    loadOutlineFile(fileName);
+    loadOutlineFileOldV6(fileName);
 }
 QString IgramArea::makeOutlineName(){
             QSettings settings;
@@ -2232,8 +2261,9 @@ QString IgramArea::makeOutlineName(){
     return lastPath + "/" + name + ".oln";
 }
 
-void IgramArea::writeOutlines(QString fileName){
+void IgramArea::writeOutlinesOldV6(QString fileName){
 
+    // preserving this old way to write OLN files for people to be able to understand the old format
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".oln"); }
     std::ofstream file((fileName.toStdString().c_str()));
     if (!file.is_open()) {
@@ -2262,16 +2292,14 @@ void IgramArea::writeOutlines(QString fileName){
     for (int i = 0; i < m_polygons.size(); ++ i){
         if (m_polygons[i].size() > 0){
             file << "Poly"<<std::endl;
-            for (int j = 0; j < m_polygons[i].size(); ++j){
+            for (std::size_t j = 0; j < m_polygons[i].size(); ++j){
                 file <<(m_polygons[i][j].x+cropTotalDx) << "," << (m_polygons[i][j].y+cropTotalDy) << " ";
             }
             file << std::endl;
         }
     }
-    if (m_edgeMaskWidth != 0){
-        mirrorDlg &md = *mirrorDlg::get_Instance();
-        file << "\nEdge Mask width" << std::endl << md.aperatureReduction << std::endl;
-    }
+    saveRegions(); // save regions to registry also
+
 
     file.flush();
     file.close();
@@ -2280,6 +2308,58 @@ void IgramArea::writeOutlines(QString fileName){
     char buf[32];
     ifile.read(buf,32);
     ifile.close();*/
+}
+void IgramArea::writeOutlines(QString fileName){
+
+    if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".oln"); }
+
+    QJsonObject j1, jOutline,jInside;
+
+    // write outside outline
+    CircleOutline outside = m_outside;
+    outside.translate(QPointF(cropTotalDx, cropTotalDy));
+    outside.toJson(jOutline);
+    j1["outside_outline"] = jOutline;
+
+    CircleOutline inside = m_center;
+    inside.translate(QPointF(cropTotalDx,cropTotalDy));
+    inside.toJson(jInside);
+    j1["inside_outline"] = jInside;
+
+    QSettings set;
+    double filterRad = set.value("DFT Center Filter",10).toDouble();
+    j1["dft_filter_radius"]=filterRad;
+
+    QJsonArray jRegions;
+    for (int i = 0; i < m_polygons.size(); ++ i){
+        if (m_polygons[i].size() > 0){
+            QJsonArray jPolygon;
+            for (std::size_t j = 0; j < m_polygons[i].size(); ++j){
+                QJsonObject jpoint;
+                jpoint["x"] = m_polygons[i][j].x+cropTotalDx;
+                jpoint["y"] = m_polygons[i][j].y+cropTotalDy;
+                jPolygon.append(jpoint);
+            }
+            jRegions.append(jPolygon);
+        }
+    }
+    j1["regions"] = jRegions;
+
+    QJsonDocument jsondoc = QJsonDocument(j1);
+
+    QFile saveFile(fileName);
+
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        qWarning("Couldn't save .OLN (outline) file.");
+        return;
+    }
+    QFileInfo info(saveFile);
+    qDebug() << info.absoluteFilePath();
+    saveFile.write(jsondoc.toJson());
+    saveFile.close();
+
+    saveRegions(); // save regions to registry also
+
 }
 
 void IgramArea::saveOutlines(){
@@ -2469,6 +2549,5 @@ void IgramArea::setZoomMode(zoomMode mode){
         zoomIndex = 1;
     zoomFull();
 }
-#include "showaliasdlg.h"
 
 

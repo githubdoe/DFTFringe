@@ -18,7 +18,7 @@ PSITiltOptions::~PSITiltOptions()
 
 
 
-void PSITiltOptions::on_zernLimits_activated(int index)
+void PSITiltOptions::on_zernLimits_activated(int /*index*/)
 {
 
 }

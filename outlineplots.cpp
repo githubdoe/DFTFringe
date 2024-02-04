@@ -26,5 +26,8 @@ QwtPlot *outlinePlots::getPLot(int id){
     case 4:
         return ui->plot4;
         break;
+    default:
+        return nullptr;
+        break;
     }
 }

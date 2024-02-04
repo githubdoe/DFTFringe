@@ -42,6 +42,7 @@ public:
     QwtPlot *m_plot;
     wavefront* m_wf;
     ProfilePlot( QWidget *parent = NULL, ContourTools* tools = 0 );
+    ~ProfilePlot();
     QVector<wavefront*> *wfs;
     void setSurface(wavefront * wf);
     virtual void resizeEvent( QResizeEvent * );

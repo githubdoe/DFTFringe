@@ -18,7 +18,7 @@
 #include "wavefront.h"
 
 wavefront::wavefront():
-    gaussian_diameter(0.),useSANull(true),dirtyZerns(true)
+    gaussian_diameter(0.),useSANull(true),dirtyZerns(true),regions_have_been_expanded(false)
 {
 }
 
@@ -33,7 +33,8 @@ wavefront::~wavefront()
     nulledData.release();
 
 }
-wavefront::wavefront( wavefront &wf): data(wf.data.clone()),
+wavefront::wavefront( const wavefront &wf): 
+    data(wf.data.clone()),
     nulledData(wf.nulledData.clone()),
     mask(wf.mask.clone()),
     workData(wf.workData.clone()),

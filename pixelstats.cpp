@@ -56,7 +56,7 @@ CanvasPicker::CanvasPicker( QwtPlot *plot ):
         "- 7, 8, 9, 4, 6, 1, 2, 3:\tMove selected point";
     canvas->setWhatsThis( text );
 
-    shiftCurveCursor( true );
+    shiftCurveCursor();
 }
 
 QwtPlot *CanvasPicker::plot()
@@ -73,7 +73,6 @@ bool CanvasPicker::event( QEvent *ev )
 {
     if ( ev->type() == QEvent::User )
     {
-        showCursor( true );
         return true;
     }
     return QObject::event( ev );
@@ -88,12 +87,10 @@ bool CanvasPicker::eventFilter( QObject *object, QEvent *event )
     {
         case QEvent::FocusIn:
         {
-            showCursor( true );
             break;
         }
         case QEvent::FocusOut:
         {
-            showCursor( false );
             break;
         }
         case QEvent::Paint:
@@ -170,16 +167,12 @@ void CanvasPicker::select( const QPoint &pos )
         }
     }
 
-    showCursor( false );
     d_selectedMarker = NULL;
 
 
     if ( mark && dist < 10 ) // 10 pixels tolerance
     {
-
         d_selectedMarker = mark;
-
-        showCursor( true );
     }
 }
 
@@ -196,15 +189,15 @@ void CanvasPicker::move( const QPoint &pos )
     d_selectedMarker->setXValue(x);
     if (idx ==0){
         g_lb = d_selectedMarker->xValue();
-        d_selectedMarker->setLabel( QString().sprintf("%lf", x) ) ;
+        d_selectedMarker->setLabel( QString("%1").arg(x, 0, 'f') ) ;
 
     }
     else {
         g_ub = d_selectedMarker->xValue();
-        d_selectedMarker->setLabel( QString().sprintf("%lf", x) ) ;
+        d_selectedMarker->setLabel( QString("%1").arg(x, 0, 'f') ) ;
     }
     g_centerMarker->setXValue( (g_ub + g_lb)/2.);
-    g_centerMarker->setLabel(QString().sprintf("PV %lf", (g_ub -g_lb)));
+    g_centerMarker->setLabel(QString("PV %1").arg(g_ub -g_lb, 0, 'f'));
 
     /*
        Enable QwtPlotCanvas::ImmediatePaint, so that the canvas has been
@@ -217,20 +210,12 @@ void CanvasPicker::move( const QPoint &pos )
     plot()->replot();
     plotCanvas->setPaintAttribute( QwtPlotCanvas::ImmediatePaint, false );
 
-    showCursor( true );
     emit(markerMoved());
 }
 
-// Hightlight the selected point
-void CanvasPicker::showCursor( bool showIt )
-{
-    if ( !d_selectedMarker )
-        return;
-
-}
 
 // Select the next/previous curve
-void CanvasPicker::shiftCurveCursor( bool up )
+void CanvasPicker::shiftCurveCursor()
 {
     QwtPlotItemIterator it;
 
@@ -258,6 +243,7 @@ void CanvasPicker::shiftCurveCursor( bool up )
         if ( it == curveList.end() ) // not found
             it = curveList.begin();
 
+        const bool up = true;
         if ( up )
         {
             ++it;
@@ -272,10 +258,8 @@ void CanvasPicker::shiftCurveCursor( bool up )
         }
     }
 
-    showCursor( false );
     d_selectedPoint = 0;
     d_selectedCurve = static_cast<QwtPlotCurve *>( *it );
-    showCursor( true );
     */
 }
 
@@ -347,8 +331,8 @@ cv::Mat slope(wavefront * wf){
     for (int y = 0; y < wf->data.rows; ++y){
         for (int x = 0; x < wf->data.cols; ++x){
             double avg = 0;
-            if (wf->workMask.at<bool>(y,x) && (x + pixelsPerInch) < wf->workData.cols   &&
-                    wf->workMask.at<bool>(y,x+pixelsPerInch)){
+            if (wf->workMask.at<uint8_t>(y,x) && (x + pixelsPerInch) < wf->workData.cols   &&
+                    wf->workMask.at<uint8_t>(y,x+pixelsPerInch)){
                 for (int i = 0; i < pixelsPerInch; ++i){
                         avg += wf->workData(y,x+i);
                 }
@@ -362,8 +346,8 @@ cv::Mat slope(wavefront * wf){
         for (int y = 0; y < wf->data.rows; ++y){
             double avg = 0;
 
-            if (wf->workMask.at<bool>(y,x) && (y + pixelsPerInch) < wf->workData.rows   &&
-                    wf->workMask.at<bool>(y + pixelsPerInch,x)){
+            if (wf->workMask.at<uint8_t>(y,x) && (y + pixelsPerInch) < wf->workData.rows   &&
+                    wf->workMask.at<uint8_t>(y + pixelsPerInch,x)){
                 for (int i = 0; i < pixelsPerInch; ++i){
                     avg += wf->workData(y+i,x);
                 }
@@ -375,7 +359,7 @@ cv::Mat slope(wavefront * wf){
     for(int y = 0; y < wf->data.rows-1; ++y){
 
          for (int x = 0; x < wf->data.cols-1; ++x){
-            if (wf->workMask.at<bool>(y,x) && x+dist < wf->data.cols && wf->workMask.at<bool>(y,x+1)){
+            if (wf->workMask.at<uint8_t>(y,x) && x+dist < wf->data.cols && wf->workMask.at<uint8_t>(y,x+1)){
                 double h  = avgX.at<double>(y,x ) - avgX.at<double>(y,x+dist);
                 if ( y == half){
 
@@ -387,7 +371,7 @@ cv::Mat slope(wavefront * wf){
             else{
                 gradx.at<double>(y,x) = 0.;
             }
-            if (wf->workMask.at<bool>(y,x) && y+dist < wf->data.rows && wf->workMask.at<bool>(y+1,x)){
+            if (wf->workMask.at<uint8_t>(y,x) && y+dist < wf->data.rows && wf->workMask.at<uint8_t>(y+1,x)){
                 double h = avgY.at<double>(y,x ) - avgY.at<double>(y+dist,x);
                 double slope = atan2(h, wavePerPixel) * radToArcSec;
                 grady.at<double>(y,x) = fabs(slope);
@@ -432,7 +416,7 @@ void pixelStats::updateSurface(){
         for (int x = 0; x < sur.cols; ++x){
             for (int y = 0; y < sur.rows; ++y){
                 double v = m_wf->workData.at<double>(y,x);
-                if (m_wf->workMask.at<bool>(y,x)){
+                if (m_wf->workMask.at<uint8_t>(y,x)){
                     if (v > ub){
                         sur.at<cv::Vec3b>(y,x) =cv::Vec3b(255,0,0);
                     }
@@ -456,7 +440,7 @@ void pixelStats::updateSurface(){
             for (int x = 0; x < sur.cols; ++x){
                 for (int y = 0; y < sur.rows; ++y){
                     double v = mag.at<double>(y,x);
-                    if (m_wf->workMask.at<bool>(y,x)){
+                    if (m_wf->workMask.at<uint8_t>(y,x)){
                         if (fabs(v) > slopeLimitArcSec){
                             int c = 255 -125 * (fabs(v)-slopeLimitArcSec)/vmax;
                             sur.at<cv::Vec3b>(y,x) =cv::Vec3b(c,c,0);
@@ -557,7 +541,7 @@ void  pixelStats::updateHisto(){
     muY->setLinePen( Qt::red, 1 );
 
     double ub = g_ub;
-    muY->setLabel( QString().sprintf("%lf", ub) ) ;
+    muY->setLabel( QString("%1").arg(ub, 0 , 'f') ) ;
     muY->setXValue(ub );
     muY->attach( ui->histo);
     histPlot->setSamples(histData);
@@ -571,12 +555,12 @@ void  pixelStats::updateHisto(){
     mlY->setLinePen( Qt::blue, 1 );
 
     double lb = g_lb;
-    mlY->setLabel( QString().sprintf("%lf", lb) ) ;
+    mlY->setLabel( QString("%1").arg(lb, 0 , 'f') ) ;
     mlY->setXValue(lb );
     mlY->attach( ui->histo);
 
     QwtPlotMarker *lab = g_centerMarker = new QwtPlotMarker();
-    lab->setLabel(QString().sprintf("PV %lf", (ub -lb)));
+    lab->setLabel(QString("PV %1").arg(ub -lb, 0, 'f'));
     lab->setLineStyle( QwtPlotMarker::VLine );
     lab->setLinePen(Qt::black,0, Qt::DotLine);
     lab->setXValue((ub+lb)/2.);
@@ -598,7 +582,7 @@ void pixelStats::bounds_valueChanged()
     updateSurface();
 }
 
-void pixelStats::on_fit_clicked(bool checked)
+void pixelStats::on_fit_clicked(bool /*checked*/)
 {
     scrollArea->setWidgetResizable(true);
 
@@ -616,7 +600,7 @@ void pixelStats::on_radioButton_2_clicked()
 
 }
 
-void pixelStats::on_minmaxloc_clicked(bool checked)
+void pixelStats::on_minmaxloc_clicked(bool /*checked*/)
 {
     updateSurface();
 }

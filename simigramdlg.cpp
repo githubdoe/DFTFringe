@@ -114,13 +114,13 @@ QVariant zTableModel::data(const QModelIndex &index, int role) const
                 int row = index.row();
                 int sr = floor(sqrt(row+1));
 
-                return (QString().sprintf("%d %s", index.row(),
-                      ( sr * sr == index.row()+1)? QString().sprintf("Spherical").toStdString().c_str(): ""));
+                return (QString("%1 %2").arg(index.row()).arg(
+                      ( sr * sr == index.row()+1)? QString("Spherical").toStdString().c_str(): ""));
 
             }
         }
         if (index.column() == 1){
-            return QString().sprintf("%6.3lf",values->at(index.row()));
+            return QString("%1").arg(values->at(index.row()), 6, 'f', 3);
         }
     }
 
@@ -142,14 +142,14 @@ bool zTableModel::setData(const QModelIndex & index, const QVariant & value, int
 Qt::ItemFlags zTableModel::flags(const QModelIndex & index) const
 {
     if (index.column() == 0)
-        return 0;
+        return Qt::NoItemFlags;
     if (index.column() == 1){
         if (canEdit)
             return Qt::ItemIsEnabled | Qt::ItemIsSelectable |  Qt::ItemIsEditable;
         else
             return  Qt::ItemIsEnabled;
     }
-    return 0;
+    return Qt::NoItemFlags;
 }
 
 
@@ -186,7 +186,6 @@ simIgramDlg::simIgramDlg(QWidget *parent) :
     zernikes[2] = ytilt;
     size = s.value("simSize", 601).toDouble();
     ui->sizeSB->setValue(size);
-    QString z8 = "Correction %";
     if (mirrorDlg::get_Instance()->cc == 0.){
         ui->correctionPb->setChecked(false);
     }
@@ -216,9 +215,6 @@ void simIgramDlg::setNewTerms(std::vector<double> terms){
     update();
 }
 void simIgramDlg::showEvent(QShowEvent *){
-    QString z8 = "Correction %";
-
-
 }
 
 simIgramDlg::~simIgramDlg()
@@ -286,7 +282,7 @@ void simIgramDlg::on_clearPiston_pressed()
 
 void simIgramDlg::on_clearAll_pressed()
 {
-    for (int i = 0; i < zernikes.size(); ++i){
+    for (std::size_t i = 0; i < zernikes.size(); ++i){
         zernikes[i] = 0;
     }
     tableModel->setValues(&zernikes);

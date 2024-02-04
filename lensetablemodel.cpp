@@ -6,7 +6,6 @@ LenseTableModel::LenseTableModel(QObject *parent)
 {
 }
 
-
 QVariant LenseTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole)
@@ -51,13 +50,12 @@ bool LenseTableModel::setHeaderData(int section, Qt::Orientation orientation, co
 }
 
 
-int LenseTableModel::rowCount(const QModelIndex &parent) const
+int LenseTableModel::rowCount(const QModelIndex & /*parent*/) const
 {
-
     return m_data->size();
 }
 
-int LenseTableModel::columnCount(const QModelIndex &parent) const
+int LenseTableModel::columnCount(const QModelIndex & /*parent*/) const
 {
     return 9;
 }
@@ -107,6 +105,7 @@ bool LenseTableModel::insertRows(int row, int count, const QModelIndex &parent)
     beginInsertRows(parent, row, row + count - 1);
     // FIXME: Implement me!
     endInsertRows();
+    return false;
 }
 
 

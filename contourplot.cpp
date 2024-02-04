@@ -65,7 +65,7 @@ public:
             return QwtText("");
         if (pos.x() == lastx && pos.y() == lasty){
                     double v = thePlot->d_spectrogram->data()->value(pos.x(),pos.y());
-          QString t =  QString().sprintf("%lf", v);
+          QString t =  QString("%1").arg(v, 0, 'f');
 
           QwtText label(t);
 
@@ -82,8 +82,6 @@ public:
         lasty = pos.y();
         QColor bg( Qt::white );
         bg.setAlpha( 200 );
-        int x = thePlot->invTransform(QwtPlot::xBottom, pos.x());
-        int y = thePlot->invTransform(QwtPlot::yLeft, pos.y());
         double v = thePlot->d_spectrogram->data()->value(pos.x(),pos.y());
         int half = thePlot->m_wf->data.rows/2.;
         double delx = pos.x() - half;
@@ -91,7 +89,7 @@ public:
         //double angle = atan2(dely,delx);
         double R = sqrt( delx * delx + dely * dely )/thePlot->m_wf->data.rows;
         double r = R * thePlot->m_wf->diameter;
-        QwtText text(QString().sprintf("%lf R:%3.2lfmm",v, r));
+        QwtText text(QString("%1 R:%2mm").arg(v, 0, 'f').arg(r, 3, 'f', 2));
         text.setFont(QFont("Arial",12));
         text.setBackgroundBrush( QBrush( bg ) );
         thePlot->selected(pos);
@@ -258,13 +256,12 @@ void ContourPlot::contourZeroOffsetChanged(const QString & val){
 void ContourPlot::drawCanvas(QPainter* p)
 {
     QwtPlot::drawCanvas( p );  // <<---
-
-    QStaticText txt("number");
-
 }
+
 #include <QPainterPath>
 #include <qwt_plot_shapeitem.h>
 #include <qwt_plot_marker.h>
+
 void ContourPlot::ruler(){
 
     detachItems(QwtPlotItem::Rtti_PlotShape);
@@ -339,9 +336,6 @@ void ContourPlot::ruler(){
 
     }
 }
-void ContourPlot::moved(const QPointF pos){
-
-}
 
 void ContourPlot::selected(const QPointF& pos){
     if (m_wf==0)
@@ -377,7 +371,6 @@ void ContourPlot::drawProfileLine(const double angle){
     // line to end
     int endx = half - startx;
     int endy = half - starty;
-        QFont mf("Times", 15, QFont::Bold);
     radials.lineTo(endx,endy);
 
     QwtPlotShapeItem *item = new QwtPlotShapeItem( "");
@@ -412,7 +405,7 @@ void ContourPlot::setSurface(wavefront * wf) {
 
     setZRange();
     QwtScaleWidget *rightAxis = axisWidget( QwtPlot::yRight );
-    rightAxis->setTitle( QString().sprintf("wavefront error at %6.2lf nm", outputLambda) );
+    rightAxis->setTitle( QString("wavefront error at %1 nm").arg(outputLambda, 6, 'f', 2) );
     rightAxis->setColorBarEnabled( true );
     rightAxis->setColorBarWidth(30);
     if (!m_minimal){
@@ -434,7 +427,7 @@ void ContourPlot::setSurface(wavefront * wf) {
         name = wf->name;
     name = name.replace(".wft","");
 
-    setFooter(name + QString().sprintf(" %6.3lf rms %d X %d",wf->std, wf->data.cols, wf->data.rows));
+    setFooter(name + QString(" %1 rms %2 X %3").arg(wf->std, 6, 'f', 3).arg(wf->data.cols).arg(wf->data.rows));
 
     plotLayout()->setAlignCanvasToScales(true);
     showContoursChanged(contourRange);
@@ -499,7 +492,7 @@ void ContourPlot::initPlot(){
     const QFontMetrics fm( axisWidget( QwtPlot::yLeft )->font() );
     if (!m_minimal){
         QwtScaleDraw *sd = axisScaleDraw( QwtPlot::yLeft );
-        sd->setMinimumExtent( fm.width( "100.00" ) );
+        sd->setMinimumExtent( fm.horizontalAdvance( "100.00" ) );
 
         QwtPlotGrid *grid = new QwtPlotGrid();
         grid->enableXMin(true);
@@ -555,12 +548,6 @@ void ContourPlot::showSpectrogram(bool on )
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ImageMode, on );
     d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
 
-    QwtPlotShapeItem *item = new QwtPlotShapeItem( "" );
-    item->setItemAttribute( QwtPlotItem::Legend, true );
-    item->setLegendMode( QwtPlotShapeItem::LegendShape );
-    item->setLegendIconSize( QSize( 20, 20 ) );
-    item->setRenderHint( QwtPlotItem::RenderAntialiased, true );
-
     replot();
 }
 
@@ -576,7 +563,7 @@ void ContourPlot::setAlpha( int alpha )
 void ContourPlot::printPlot()
 {
     QPrinter printer( QPrinter::HighResolution );
-    printer.setOrientation( QPrinter::Landscape );
+    printer.setPageOrientation( QPageLayout::Landscape );
     printer.setOutputFileName( "spectrogram.pdf" );
 
     QPrintDialog dialog( &printer );

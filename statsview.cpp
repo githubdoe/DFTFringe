@@ -91,7 +91,7 @@ void statsView::getWavefronts(){
         m_stats->computeWftRunningAvg(wavefrontsToUse,0);
 
         while (m_stats->outliers.size()){
-            qSort(m_stats->outliers.begin(), m_stats->outliers.end(), qGreater<int>());
+            std::sort(m_stats->outliers.begin(), m_stats->outliers.end(), std::greater<int>());
             foreach(int i, m_stats->outliers){
                 wavefrontsToUse.removeAt(i);
             }
@@ -176,7 +176,6 @@ void statsView::on_saveImg_clicked()
     QSettings settings;
     QString path = settings.value("projectPath").toString();
     QFile fn(path);
-    QFileInfo info(fn.fileName());
     QString csvName = path + "/stats.pdf";
     QString name = QFileInfo(csvName).absoluteFilePath() + "/stats.png";
     const QList<QByteArray> imageFormats = QImageWriter::supportedImageFormats();
@@ -243,8 +242,7 @@ void statsView::on_SaveCSV_clicked()
     QTextStream file(&thefile);
     QString dir = info.dir().path();
     dir = dir.right(dir.size() - dir.lastIndexOf("/")-1);
-    file << title(dir) << ",'wavefront RMS'"<< ",,Piston,XTile,Ytilt,Defocus,XAstig,Yastig,Z6,Z7,Spherical,Z9,Z10 " << endl;
-    QString out;
+    file << title(dir) << ",'wavefront RMS'"<< ",,Piston,XTile,Ytilt,Defocus,XAstig,Yastig,Z6,Z7,Spherical,Z9,Z10 " << Qt::endl;
     cv::Mat mZerns(m_sm->m_wavefronts.size(),Z_TERMS,numType,0.);
     int row = 0;
     mirrorDlg *md = mirrorDlg::get_Instance();
@@ -254,7 +252,6 @@ void statsView::on_SaveCSV_clicked()
     double sperAvg = 0.;
     QPolygonF coma;
     QPolygonF otherTerm;
-    QVector<int> trueNdx;
     for (int i = 0; i < wavefrontsToUse.size(); ++i)
     {
         wavefront *wf = wavefrontsToUse[ i ];
@@ -287,7 +284,7 @@ void statsView::on_SaveCSV_clicked()
 
         }
 
-        file << endl;
+        file << Qt::endl;
         ++row;
 
     }
@@ -323,13 +320,12 @@ void statsView::on_savePdf_clicked()
 
     const QRectF topRect( 10.0, 10.0, size.width()-50, size.height()/2 );
 
-    const QString fmt("pdf");
     fname.replace(".csv",".pdf");
 
     QPrinter printer(QPrinter::HighResolution);
     printer.setColorMode( QPrinter::Color );
     printer.setFullPage( true );
-    printer.setPaperSize( sizeMM, QPrinter::Millimeter );
+    printer.setPageSize( QPageSize(sizeMM, QPageSize::Millimeter) );
     printer.setDocName( Title );
     printer.setOutputFileName( fname );
     printer.setOutputFormat( QPrinter::PdfFormat );
@@ -368,7 +364,7 @@ void statsView::on_checkBox_4_toggled(bool checked)
 
 void statsView::on_zernFromSP_valueChanged(int arg1)
 {
-    m_stats->zernFrom = ui->zernFromSP->text().toInt();
+    m_stats->zernFrom = arg1;
     m_stats->zernTo = ui->zernToSP->text().toInt();
     getWavefronts();
     replot();
@@ -378,7 +374,7 @@ void statsView::on_zernFromSP_valueChanged(int arg1)
 void statsView::on_zernToSP_valueChanged(int arg1)
 {
     m_stats->zernFrom = ui->zernFromSP->text().toInt();
-    m_stats->zernTo = ui->zernToSP->text().toInt();
+    m_stats->zernTo = arg1;
     getWavefronts();
     replot();
     sresize();

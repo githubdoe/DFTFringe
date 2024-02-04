@@ -7,13 +7,13 @@
 #include <QVector>
 #include <QMenu>
 #include "zernikeprocess.h"
+#include "spdlog/spdlog.h"
 
 extern double outputLambda;
-foucaultView *foucaultView::m_instance = 0;
 
 foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
-    QWidget(parent),m_sm(sm),
-    ui(new Ui::foucaultView), heightMultiply(1)
+    QWidget(parent),
+    ui(new Ui::foucaultView), m_sm(sm), heightMultiply(1)
 {
     m_wf = 0;
     lateralOffset = 0;
@@ -39,22 +39,25 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
 
 
 foucaultView *foucaultView::get_Instance(SurfaceManager *sm){
-    if (m_instance == 0){
-        m_instance = new foucaultView(0,sm);
-    }
+    //static foucaultView m_instance{0, sm};
+    //return &m_instance;
+    // Take care. This is non standard init for when the singleton is supposed to be deleted by parent
+    // keeping original version will call class destructor and on_exit will try to clean up static variable m_instance. But the instance doesn't exist anymore.
+    static foucaultView *m_instance = new foucaultView(0, sm);
     return m_instance;
 }
 
 foucaultView::~foucaultView()
 {
     delete ui;
+    spdlog::get("logger")->trace("foucaultView::~foucaultView");
 }
 QString getSaveFileName(QString type){
     QSettings settings;
     QString path = settings.value("lastPath","").toString();
 
     QString fileName = QFileDialog::getSaveFileName(0,
-            QString().sprintf("File name of %d image to be saved", type.toStdString().c_str()),
+            QString("File name of %1 image to be saved").arg(type),
                                                  path);
 
     if (!fileName.endsWith(".jpg"))
@@ -88,11 +91,13 @@ QImage *foucaultView::render(){
 }
 
 void foucaultView::saveRonchiImage(){
-    ui->ronchiViewLb->pixmap()->save(getSaveFileName("foucault"));
+    const QPixmap pm = ui->ronchiViewLb->pixmap(Qt::ReturnByValue);
+    pm.save(getSaveFileName("foucault"));
 
 }
 void foucaultView::saveFoucaultImage(){
-    ui->foucaultViewLb->pixmap()->save(getSaveFileName("foucault"));
+    const QPixmap pm = ui->foucaultViewLb->pixmap(Qt::ReturnByValue);
+    pm.save(getSaveFileName("foucault"));
 }
 
 void foucaultView::setSurface(wavefront *wf){
@@ -104,9 +109,18 @@ void foucaultView::setSurface(wavefront *wf){
     m_sag = mul * (rad * rad) /( 4 * FL);
     m_sag = round(100 * m_sag)/100.;
     m_temp_sag = m_sag;
+    ui->rocOffsetSlider->blockSignals(true);
+    ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
+    ui->rocOffsetSlider->blockSignals(false);
+    double step = getStep();
+    double offset = (ui->rocOffsetSlider->value()) * step;
+    ui->rocOffsetSb->blockSignals(true);
+    ui->rocOffsetSb->setValue(offset);
+    ui->rocOffsetSb->blockSignals(false);
+    on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
 }
-QVector<QPoint> scaleProfile(QPolygonF points, int width, int pad,
+QVector<QPoint> scaleProfile(QPolygonF points, int width,
                              double angle = 0.){
     double left = points[0].x();
     double right = points.back().x();
@@ -120,7 +134,6 @@ QVector<QPoint> scaleProfile(QPolygonF points, int width, int pad,
     }
     double xdel = right - left;
     double xscale = width/xdel;
-    double ydel = max - min;
     double yscale =  (width/2);
     QVector<QPoint> results;
     double cosangle = cos(angle);
@@ -164,9 +177,7 @@ void foucaultView::on_makePb_clicked()
     double gamma =     ui->gammaSb->value();
     mirrorDlg *md = mirrorDlg::get_Instance();
     double Radius = md->diameter/2.;
-    double inputWavelength = md->lambda;
     double r2 = Radius * Radius;
-    double fl = md->roc / 2.;
     double Fnumber =  .5 * md->roc/md->diameter;	//ROC is twice FL
     double unitMultiplyer = 1.;
     if (!ui->useMM->isChecked()){
@@ -243,11 +254,11 @@ void foucaultView::on_makePb_clicked()
 
     double slitWidthHalf = pixels_per_thou * ui->slitWidthSb->value() * 1000 * ((ui->useMM->isChecked()) ? 1./25.4 : 1.);
     if (slitWidthHalf < .75){
-        QString msg = QString().sprintf("warning the slit width of %6.5lf may too small. Using one pixel slit instead", ui->slitWidthSb->value());
+        QString msg = QString("warning the slit width of %1 may too small. Using one pixel slit instead").arg(ui->slitWidthSb->value(), 6, 'f', 5);
         QMessageBox::warning(0,"warning", msg);
 
     }
-    QString parms = QString().sprintf(" Pixel width %6.5lf slit size in pixels %d", pixwidth, (int)(2 * slitWidthHalf));
+    QString parms = QString(" Pixel width %1 slit size in pixels %2").arg(pixwidth, 6, 'f', 5).arg((int)(2 * slitWidthHalf));
     ui->pixeParms->setText(parms);
     // compute offset so that line is at center
     for (int y = 0; y < size; ++y)
@@ -339,14 +350,14 @@ void foucaultView::on_makePb_clicked()
     painter.drawPixmap(0, 0, rp);
     painter.setPen(QPen(QColor(Qt::white)));
     painter.setFont(QFont("Arial", 15));
-    QString zoffsetStr = QString().sprintf("%6.3lf %s", ui->RonchiX->value() * ui->rocOffsetSb->value(),
-                                           ui->useMM->isChecked()? "mm" : "in");
+    QString zoffsetStr = QString("%1 %2").arg(ui->RonchiX->value() * ui->rocOffsetSb->value(), 6, 'f', 3)
+                                           .arg(ui->useMM->isChecked()? "mm" : "in");
     painter.drawText(20, 40, zoffsetStr);
     QVector<QPoint> profilePoints;
     if (ui->overlayProfile->isChecked()){
         // overlay profile onto ronchi plot
         QPolygonF  profile = m_sm->m_profilePlot->createProfile(1.,m_wf);
-        profilePoints= scaleProfile(profile, rp.width(),pad, M_PI/4.);
+        profilePoints= scaleProfile(profile, rp.width(), M_PI/4.);
         painter.setPen(QPen(QColor(Qt::yellow),3));
         painter.drawLines(profilePoints);
 
@@ -397,8 +408,8 @@ void foucaultView::on_makePb_clicked()
     painterf.drawPixmap(0, 0, rpf);
     painterf.setPen(QPen(QColor(Qt::white)));
     painterf.setFont(QFont("Arial", 15));
-    zoffsetStr = QString().sprintf("%6.3lf %s", ui->rocOffsetSb->value(),
-                                   ui->useMM->isChecked()? "mm" : "in");
+    zoffsetStr = QString("%1 %2").arg(ui->rocOffsetSb->value(), 6 , 'f', 3)
+                                   .arg(ui->useMM->isChecked()? "mm" : "in");
     painterf.drawText(20, 40, zoffsetStr);
     if (ui->overlayProfile->isChecked()){
         // overlay profile onto ronchi plot
@@ -417,7 +428,7 @@ void foucaultView::on_makePb_clicked()
     QApplication::restoreOverrideCursor();
 }
 
-void foucaultView::on_gammaSb_valueChanged(double arg1)
+void foucaultView::on_gammaSb_valueChanged(double /*arg1*/)
 {
       m_guiTimer.start(500);
 }
@@ -429,7 +440,7 @@ void foucaultView::on_lpiSb_valueChanged(double arg1)
       //m_guiTimer.start(500);
 }
 
-void foucaultView::on_movingSourceRb_clicked(bool checked)
+void foucaultView::on_movingSourceRb_clicked(bool /*unused*/)
 {
      m_guiTimer.start(500);
 }
@@ -484,7 +495,6 @@ void foucaultView::on_useMM_clicked(bool checked)
     ui->slitWidthSb->setSuffix(suffix);
     ui->lpiSb->setValue(ui->lpiSb->value() / mul);
     ui->gridGroupBox->setTitle((checked) ? "Ronchi LPmm ": "Ronchi LPI ");
-    double xx = ui->rocStepSize->value();
  //qDebug() << ui->rocStepSize->value() << mul << xx;
     ui->rocStepSize->setValue( mul * ui->rocStepSize->value());
     ui->scanEndOffset->setValue (mul * ui->scanEndOffset->value());
@@ -508,7 +518,6 @@ void foucaultView::on_scanPb_clicked()
     inscan = true;
     ui->scanPb->setText("Abort");
     qApp->processEvents();
-    double steps = ui->scanSteps->value();
     double start = ui->scanStart->value();
     double end = ui->scanEndOffset->value();
     double step = ui->scanSteps->value();
@@ -517,7 +526,6 @@ void foucaultView::on_scanPb_clicked()
     foucaultView *fv = foucaultView::get_Instance(0);
     int cnt = 0;
     QSettings settings;
-    QString lastPath = settings.value("lastPath","").toString();
     for (double v = start; v <= end; v += step){
 
         ui->rocOffsetSb->setValue(v);
@@ -534,9 +542,9 @@ void foucaultView::on_scanPb_clicked()
         QPainter p3(&fvImage);
         fv->QWidget::render(&p3);
         if (ui->SaveImageCB->isChecked()){
-            QString num = QString().sprintf("%6.4lf",v).replace(".","_");
+            QString num = QString("%1").arg(v, 6, 'f', 4).replace(".","_");
             num.replace("-","n");
-            QString fvpng = QString().sprintf("%s//%06d_%s.png",imageDir.toStdString().c_str(), cnt++, num.toStdString().c_str());
+            QString fvpng = QString("%1//%2_%3.png").arg(imageDir).arg(cnt++, 6, 10, QLatin1Char('0')).arg(num);
             qDebug() << "fn"<< fvpng;
             if (ui->saveOnlyFouccault->isChecked()){
                 fv->m_foucultQimage.save(fvpng);
@@ -603,7 +611,7 @@ void foucaultView::draw_ROC_Scale(){
     double step = getStep();
     for (int i = 0; i< 17; ++i){
         double val =  (i - 8) * step * 5;  // label slider every 5 steps.
-        findChild<QLabel *>(QString().sprintf("l%d",i))->setText(QString::number(val));
+        findChild<QLabel *>(QString("l%1").arg(i))->setText(QString::number(val));
     }
 }
 
@@ -654,12 +662,12 @@ bool foucaultView::saveOnlyFoucault(){
     return ui->saveOnlyFouccault->isChecked();
 }
 
-void foucaultView::on_saveOnlyFouccault_clicked(bool checked)
+void foucaultView::on_saveOnlyFouccault_clicked(bool /*checked*/)
 {
 
 }
 
-void foucaultView::on_overlayProfile_stateChanged(int arg1)
+void foucaultView::on_overlayProfile_stateChanged(int /*arg1*/)
 {
     on_makePb_clicked();
 }

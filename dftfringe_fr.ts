@@ -2777,20 +2777,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>prefsDlg</name>
-    <message>
-        <location filename="prefsdlg.ui" line="14"/>
-        <source>Dialog</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="prefsdlg.ui" line="42"/>
-        <source>Save Current Window 
-state</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>profileArea</name>
     <message>
         <location filename="profilearea.ui" line="16"/>
