@@ -1695,6 +1695,13 @@ void MainWindow::on_actionDebugStuff_triggered()
 {
     zernikeProcess *zp = zernikeProcess::get_Instance();
     wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
+
+    // compute annular defocus from circular value
+    double obs = 0.5;
+    double e = sqrt(1 + obs * obs);
+
+    double a4 = 1./ (1 - obs * obs) * (+ wf->InputZerns[3] - (std::sqrt(3)*obs*obs * wf->InputZerns[0] ));
+    qDebug() << "defocus circular" << wf->InputZerns[3] << "annular" << a4;
     vector<double> rho = {1., 0., 1.};
     vector<double> theta;
     theta.push_back(M_PI);
@@ -1706,8 +1713,7 @@ void MainWindow::on_actionDebugStuff_triggered()
 
    arma::Mat<double> rhoTheta = arma::join_cols(r,t);
     int max =4;
-    double obs = 0.5;
-    double e = sqrt(1 + obs * obs);
+
     qDebug() << "e" << e;
    arma::mat zerns = zapm(r.as_col(), t.as_col(), obs, max);
 
@@ -1717,7 +1723,7 @@ void MainWindow::on_actionDebugStuff_triggered()
 
   std::vector<double> zs =  zp->ZernFitWavefront(*wf);
    for (int i = 0; i < 10; ++i){
-       qDebug() << "z " << i << zs[i];
+       qDebug() << "z " << i << zs[i] << wf->InputZerns[i];
 
    }
    return;
