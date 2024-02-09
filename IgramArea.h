@@ -239,6 +239,7 @@ public:
     void findOutline();
     void findCenterHole();
     void useLastOutline();
+    void useAnnulusforCenterOutine();
 private:
     QImage m_withOutlines;
     QPointF m_OutterP1;

@@ -597,7 +597,7 @@ zernikeProcess *zernikeProcess::get_Instance(){
 
 zernikeProcess::zernikeProcess(QObject *parent) :
     QObject(parent),m_gridRowSize(200), m_maxOrder(0),
-    m_lastusedAnnulus(false), m_needsInit(true),m_dirty_zerns(true)
+    m_needsInit(true),m_lastusedAnnulus(false),m_dirty_zerns(true)
 {
     md = mirrorDlg::get_Instance();;
     QSettings set;
@@ -617,8 +617,8 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
         //return;
 
     // if annular zernikes needed then do this instead of all the other stuff below this.
-    Settings2 &settings = *Settings2::getInstance();
-    if (wf.m_inside.m_radius > wf.m_outside.m_radius * settings.m_general->getObs()) {
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    if (md->m_useAnnular) {
         initGrid(wf, 12);
         ZernFitWavefront(wf);
 
@@ -630,6 +630,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
 
 
     bool useSvd = false;
+    Settings2 &settings = *Settings2::getInstance();
     if (settings.m_general->useSVD()){
         useSvd = true;
     }
@@ -730,16 +731,10 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
     cv::Mat unwrapped = wf.data.clone();
 
     double scz8 = md->z8 * md->cc;
-    Settings2 &settings = *Settings2::getInstance();
-    bool annulus = false;
-    double obsRatio = 0.;
-    if (wf.m_inside.m_radius > wf.m_outside.m_radius * settings.m_general->getObs()) {
-        obsRatio = wf.m_inside.m_radius/wf.m_outside.m_radius;
-        double f = (1 - obsRatio * obsRatio);
-        f *= f;
-        scz8 =  scz8*f;
-        annulus = true;
-    }
+
+    mirrorDlg *md = mirrorDlg::get_Instance();
+
+
     if (!md->doNull || !wf.useSANull){
         scz8 = 0.;
     }
@@ -776,7 +771,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
             }
         }
 
-        if (annulus){
+        if (md->m_useAnnular){
             rows = m_row;
             cols = m_col;
             for (int z = 0; z < 9; ++z){
@@ -789,7 +784,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
             if (mask.at<uint8_t>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0)
             {
-                if (annulus){
+                if (md->m_useAnnular){
                     rho = m_rhoTheta.row(0)(i);
                     theta = m_rhoTheta.row(1)(i);
                 }
@@ -812,7 +807,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 if (last_term > 7)
                 {
                     if (md->doNull && enables[8]){
-                        if (!annulus)
+                        if (!md->m_useAnnular)
                             nz -= scz8 * zpolar.zernike(8,rho, theta);
                         else {
                             nz -= scz8 * m_zerns(i, 8);
@@ -829,7 +824,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                     }
 
                     else if (!enables[z]){
-                        if (!annulus)
+                        if (!md->m_useAnnular)
                              nz -= zerns[z] * zpolar.zernike(z,rho, theta);
                         else {
 
@@ -1209,7 +1204,7 @@ void ZernikeSmooth(cv::Mat wf, cv::Mat mask)
 
 
 arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double cy,
-                                   double insideRad, const wavefront *wf){
+                                   const wavefront *wf){
     bool useMask = false;
     if (wf != 0){
         useMask = true;
@@ -1217,7 +1212,7 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
         width = wf->data.rows;
         cx = wf->m_outside.m_center.x();
         cy = wf->m_outside.m_center.y();
-        insideRad = wf->m_inside.m_radius;
+
     }
     int rows = width;
 
@@ -1404,7 +1399,7 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
         }
         log.append("</tr>\n");
     }
-    int step = theMat.n_rows / 10;
+
     for (arma::uword row =0; row < theMat.n_rows; ++row){
         if (row > 20) break;
         log.append("<tr> <td> ");
@@ -1417,7 +1412,7 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
         }
         log.append("</td>");
 
-        for (int c = 0; c< theMat.n_cols; ++c){
+        for (arma::uword c = 0; c< theMat.n_cols; ++c){
             log.append(QString("<td style=\"text-align:center\" width=\"150\">%1</td>").arg(theMat(row,c), 6, 'f', 5));
         }
         log.append("</tr>\n");
@@ -1441,12 +1436,10 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
     // if grid or maxOrder is different then update values.
     double obsPercent = 0.;
     bool shouldUseAnnulus = false;
-    Settings2 &settings = *Settings2::getInstance();
-    if (radius != 0){
-        obsPercent = (double)insideRad/radius;
-        if (obsPercent >= settings.m_general->getObs()) {
-            shouldUseAnnulus = true;
-        }
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    if (md->m_useAnnular){
+        obsPercent = md->m_annularObsPercent;
+        shouldUseAnnulus = true;
     }
 
     setMaxOrder(maxOrder);
@@ -1458,28 +1451,17 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
         m_gridRowSize = width;
         m_radius = radius;
         m_obsPercent = obsPercent;
-        m_rhoTheta = rhotheta(width, radius, cx, cy, m_obsPercent);
+        m_rhoTheta = rhotheta(width, radius, cx, cy);
 
         if (obsPercent <= 0.) {
-            qDebug() << "just before call to zpmC";
             m_zerns = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
             m_lastusedAnnulus = false;
 
         }
         else {  // compute the annular zernike values
-            //m_zerns = zapmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
-            //arma::vec v1 = m_rhoTheta.row(0).t();
-            qDebug() << "before zapm";
+
             m_zerns = zapm( m_rhoTheta.row(0).as_col(), m_rhoTheta.row(1).as_col(), obsPercent, maxOrder);
-            arma::Mat<double> circular = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
-                    for(int i = 0; i < width; i++){
-                int ndx = i;
-                double rho = m_rhoTheta.row(0)(ndx);
-                double theta = m_rhoTheta.row(1)(ndx);
-                double z1vale = rho * cos(theta);
-                double s = sqrt(1 + obsPercent * obsPercent);
-                //qDebug() <<" Annular zern " << m_zerns(ndx ,1) << "computed ann norm"<< z1vale  * s << "circular" << circular(ndx,1) << "rho"<< rho << "theta" << theta;
-            }
+
             m_lastusedAnnulus = true;
             //arma::mat m_zernsaa = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
 
@@ -1487,7 +1469,6 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
 
     }
     m_needsInit = false;
-    qDebug() << "initgrid complete";
     return;
 }
 

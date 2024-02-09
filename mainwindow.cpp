@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_batchMakeSurfaceReady(false), m_astigStatsDlg(0), m_cameraCalibWizard(nullptr)
 {
     ui->setupUi(this);
-
+    ui->useAnnulust->hide();
     spdlog::get("logger")->info("DFTFringe {} started", APP_VERSION);
 
     //const QString toolButtonStyle("QToolButton {"
@@ -438,15 +438,18 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
                           });
     dialog.setNameFilters(filters);
     ui->SelectObsOutline->setChecked(false);
+    ui->useAnnulust->hide();
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
             loadFile(dialog.selectedFiles().first());
+
         }
         else{
             m_igramsToProcess = dialog.selectedFiles();
             Batch_Process_Interferograms();
         }
     }
+
 }
 
 void MainWindow::createActions()
@@ -530,12 +533,7 @@ void MainWindow::updateMetrics(wavefront& wf){
     double z8 = zernTablemodel->values[8];
     if (m_mirrorDlg->doNull && wf.useSANull){
         Settings2 &settings = *Settings2::getInstance();
-        if (wf.m_inside.m_radius > wf.m_outside.m_radius * settings.m_general->getObs()) {
-            double obsRatio = wf.m_inside.m_radius/wf.m_outside.m_radius;
-            double f = (1 - obsRatio * obsRatio);
-            f *= f;
-            z8 /= f;
-        }
+
         BestSC = z8/m_mirrorDlg->z8;
 
     }
@@ -744,10 +742,12 @@ void MainWindow::on_SelectOutSideOutline_clicked(bool checked)
 {
     m_igramArea->SideOutLineActive( checked);
     m_regionsEdit->hide();
+    ui->useAnnulust->hide();
 }
 
 void MainWindow::on_SelectObsOutline_clicked(bool checked)
 {
+    ui->useAnnulust->show();
     m_igramArea->CenterOutlineActive(checked);
     m_regionsEdit->hide();
 }
@@ -1835,3 +1835,9 @@ void MainWindow::on_actionSmooth_current_wave_front_triggered()
     dlg->show();
     return;
 }
+
+void MainWindow::on_useAnnulust_clicked()
+{
+    m_igramArea->useAnnulusforCenterOutine();
+}
+
