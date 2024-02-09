@@ -878,6 +878,22 @@ void IgramArea::autoTraceOutline(){
     QApplication::restoreOverrideCursor();
     emit statusBarUpdate( "",2);
 }
+void IgramArea::useAnnulusforCenterOutine(){
+    if (m_current_boundry == CenterOutline) {
+
+            mirrorDlg *md = mirrorDlg::get_Instance();
+            double rad = m_outside.m_radius * md->m_annularObsPercent;
+
+            double cx = m_outside.m_center.x();
+            double cy = m_outside.m_center.y();
+            m_center = CircleOutline(QPointF(cx,cy),rad);
+            m_innerP1 = m_center.m_p1.m_p;
+            m_innerP2 = m_center.m_p2.m_p;
+            innerPcount = 2;
+            drawBoundary();
+
+    }
+}
 void IgramArea::useLastOutline(){
 
     QSettings set;

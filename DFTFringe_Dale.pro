@@ -27,6 +27,7 @@ TEMPLATE = app
 CONFIG += ``
 
 SOURCES += main.cpp \
+    annulushelpdlg.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
     cpoint.cpp \
@@ -144,6 +145,7 @@ SOURCES += main.cpp \
     SingleApplication/singleapplication_p.cpp
 
 HEADERS  += mainwindow.h \
+    annulushelpdlg.h \
     arbitrarywavefronthelp.h \
     arbitrarywavwidget.h \
     cpoint.h \
@@ -266,6 +268,7 @@ HEADERS  += mainwindow.h \
 INCLUDEPATH += ./bezier ./SingleApplication
 
 FORMS    += mainwindow.ui \
+    annulushelpdlg.ui \
     arbitrarywavefronthelp.ui \
     defocusdlg.ui \
     dfttools.ui \
