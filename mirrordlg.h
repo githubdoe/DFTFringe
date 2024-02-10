@@ -70,6 +70,7 @@ public:
     bool isEllipse();
     void setMinorAxis(double val);
     bool m_aperatureReductionEnabled;
+    void setObsPercent(double obs);
 private slots:
     void on_ReadBtn_clicked();
 
