@@ -1725,7 +1725,8 @@ void IgramArea::drawBoundary()
             //painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
             double percent = inside.m_radius/outside.m_radius * 100;
             QString label = QString("%1 percent").arg(percent, 6, 'f', 2);
-            painter.setPen(Qt::black);
+
+            painter.setPen(Qt::white);
             QFont font("Arial", 8);
 
             painter.setFont(font);

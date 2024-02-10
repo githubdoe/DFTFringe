@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>100</width>
+    <width>181</width>
     <height>409</height>
    </size>
   </property>
@@ -273,6 +273,9 @@ Conic:</string>
     </item>
     <item>
      <widget class="QLabel" name="zernTitle">
+      <property name="toolTip">
+       <string extracomment="at interferogram wave length"/>
+      </property>
       <property name="text">
        <string>Zernike Values</string>
       </property>
