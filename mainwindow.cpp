@@ -528,8 +528,11 @@ void MainWindow::updateMetrics(wavefront& wf){
     st *= st;
     double Strehl = pow(e, -st);
     metrics->mStrehl->setText(QString("<b><FONT FONT SIZE = 12>%1</b>").arg(Strehl, 6, 'f', 3));
-
-
+    QString ztitle("Zernike Values");
+    if (m_mirrorDlg->m_useAnnular){
+        ztitle = QString("Annular Zernike values %1% center hole").arg(100 * m_mirrorDlg->m_annularObsPercent, 6, 'f',1);
+    }
+    metrics->setZernTitle(ztitle);
     double z8 = zernTablemodel->values[8];
     if (m_mirrorDlg->doNull && wf.useSANull){
         Settings2 &settings = *Settings2::getInstance();

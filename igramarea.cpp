@@ -1631,9 +1631,6 @@ void IgramArea::mouseReleaseEvent(QMouseEvent *event)
         else if (m_current_boundry == CenterOutline){
             m_center = CircleOutline(m_innerP1,m_innerP2);
             m_centerHist.push(igramGray, m_center);
-            mirrorDlg *md = mirrorDlg::get_Instance();
-            double obsPercent = m_center.m_radius/m_outside.m_radius;
-            md->setObsPercent(100. * obsPercent);
         }
         emit enableShiftButtons(true);
     }
@@ -1729,8 +1726,6 @@ void IgramArea::drawBoundary()
             double percent = inside.m_radius/outside.m_radius * 100;
             QString label = QString("%1 percent").arg(percent, 6, 'f', 2);
 
-            mirrorDlg *md = mirrorDlg::get_Instance();
-            md->setObsPercent( percent);
             painter.setPen(Qt::white);
             QFont font("Arial", 8);
 

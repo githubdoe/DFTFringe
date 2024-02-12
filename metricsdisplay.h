@@ -44,6 +44,7 @@ public:
     void setName(QString name);
     void setWavePerFringe(double val, double lambda);
     void setOutputLambda(double val);
+    void setZernTitle(QString title);
 private:
     bool shouldEnableAll;
 public slots:

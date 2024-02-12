@@ -674,7 +674,7 @@ void mirrorDlg::on_buttonBox_accepted()
     settings.setValue("configAperatureReductionChecked", m_aperatureReductionEnabled);
     settings.setValue("config aperatureReduction", aperatureReduction);
     settings.setValue("md annulus percent",  m_annularObsPercent);
-    settings.setValue("md use annulus", m_aperatureReductionEnabled);
+    settings.setValue("md use annulus", m_useAnnular);
     if (m_obsChanged)
 
         emit obstructionChanged();

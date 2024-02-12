@@ -830,10 +830,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                         else {
 
                             nz -= zerns[z] * m_zerns(i,z) ;
-                            if (z == 1 && y == nx/2){
-                                qDebug() << "zzz" << i  << x  << rho << theta << zerns[z] <<  m_zerns(i,z) <<
-                                            nz << sz << rho * cos(theta);
-                            }
+
                         }
                     }
 
@@ -1167,7 +1164,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
 
 
 
-        for (unsigned int z = 0; z < dlg.zernikes.size(); ++z){
+        for (unsigned int z = 0; z < m_zerns.n_cols; ++z){
             double val = dlg.zernikes[z];
             if (z == 8){
                 val = (dlg.doCorrection && md->doNull) ? md->cc * md->z8 * val * .01 : val;
