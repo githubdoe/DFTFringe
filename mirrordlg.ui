@@ -68,6 +68,9 @@ Wave Length nm</string>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <widget class="QCheckBox" name="unitsCB">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If set units are displayed in mm.   If not then units are in inches.  But only for this mirror configurion dialog.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Units in mm</string>
         </property>
@@ -143,7 +146,11 @@ Wave Length nm</string>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="obs"/>
+         <widget class="QLineEdit" name="obs">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Usually the size of the diagonal shadow on the mirror.  The surface error in this area will be ignored by the metrics.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -170,7 +177,7 @@ Wave Length nm</string>
         <item>
          <widget class="QCheckBox" name="ReducApp">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable masking the clear apature at the outside edge.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable masking the clear apature at the outside edge of the mirror.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Edge Mask</string>
@@ -183,7 +190,7 @@ Wave Length nm</string>
            <bool>false</bool>
           </property>
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Width of mask&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Width of the edge to mask. New SA artificial null will be computed based on the clear aperature of the mirror with this this mask value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="decimals">
            <number>3</number>
@@ -257,7 +264,7 @@ Wave Length nm</string>
       <bool>false</bool>
      </property>
      <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Computed from mirror parameters and used when testing a non sphere at Radius of Curvature.&lt;/p&gt;&lt;p&gt;Uses Miirror Diameter, ROC  Interferogram wave length, and desired conic constant.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;d</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Computed from mirror parameters and used when testing a non sphere at Radius of Curvature.&lt;/p&gt;&lt;p&gt;Uses Miirror Diameter, ROC Interferogram wave length, and desired conic constant.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
@@ -285,7 +292,7 @@ Wave Length nm</string>
         <item>
          <widget class="QCheckBox" name="useAnnulus">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the interferogram has a hole in the middle it is an interferogram of a mirror with a hole in the middle then annulus should be set and the diameter of the hole should be set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the interferogram has a hole in the middle it is an interferogram of a mirror with a hole in the middle then annulus should be set and the diameter of the hole should be set either as a percentage of the mirror diameter or by the actual diameter of the hole.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Annulus</string>
@@ -363,7 +370,7 @@ Wave Length nm</string>
         <item>
          <widget class="QCheckBox" name="annulusetToObs">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Link/send hole diameter to mirror obstruction value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set hole diameter to  mirror obstruction value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Set into Obstruction</string>
