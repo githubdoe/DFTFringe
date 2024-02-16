@@ -14,49 +14,10 @@
    <string>Mirror configuration</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="0" column="0" colspan="4">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Name</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="name"/>
-     </item>
-    </layout>
-   </item>
    <item row="2" column="1">
     <widget class="QCheckBox" name="nullCB">
      <property name="text">
       <string>Artificial Null</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1" colspan="3">
-    <widget class="QCheckBox" name="flipH">
-     <property name="text">
-      <string> Flip Interferogram left to right on loading </string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0" colspan="4">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QLabel" name="label_7">
-     <property name="text">
-      <string>Interferogram
-Wave Length nm</string>
      </property>
     </widget>
    </item>
@@ -226,6 +187,23 @@ Wave Length nm</string>
      </layout>
     </widget>
    </item>
+   <item row="1" column="3">
+    <widget class="QLineEdit" name="lambda"/>
+   </item>
+   <item row="0" column="0" colspan="4">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Name</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="name"/>
+     </item>
+    </layout>
+   </item>
    <item row="3" column="1" colspan="3">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
@@ -244,27 +222,13 @@ Wave Length nm</string>
      </item>
     </layout>
    </item>
-   <item row="5" column="1">
-    <widget class="QPushButton" name="ReadBtn">
-     <property name="text">
-      <string>Read Existing File</string>
+   <item row="8" column="0" colspan="4">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
-    </widget>
-   </item>
-   <item row="5" column="3">
-    <widget class="QPushButton" name="saveBtn">
-     <property name="text">
-      <string>Save in a File</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="2" colspan="2">
-    <widget class="QLineEdit" name="z8">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Computed from mirror parameters and used when testing a non sphere at Radius of Curvature.&lt;/p&gt;&lt;p&gt;Uses Miirror Diameter, ROC Interferogram wave length, and desired conic constant.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
@@ -280,6 +244,91 @@ Wave Length nm</string>
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="5" column="3">
+    <widget class="QPushButton" name="saveBtn">
+     <property name="text">
+      <string>Save in a File</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" colspan="3">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Elliptical outline</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="ellipseShape">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>Elliptical FLat or Nulled Optics</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_9">
+          <property name="acceptDrops">
+           <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
+           <string>Vertical Axis</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="minorAxisEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The vertical diameter of the Ellipse.&lt;/p&gt;&lt;p&gt; The other diameter which is always the horizontal diameter is specified by the Mirror diameter field. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Interferogram
+Wave Length nm</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QPushButton" name="ReadBtn">
+     <property name="text">
+      <string>Read Existing File</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" colspan="3">
+    <widget class="QCheckBox" name="flipH">
+     <property name="text">
+      <string> Flip Interferogram left to right on loading </string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2" colspan="2">
+    <widget class="QLineEdit" name="z8">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Computed from mirror parameters and used when testing a non sphere at Radius of Curvature.&lt;/p&gt;&lt;p&gt;Uses Miirror Diameter, ROC Interferogram wave length, and desired conic constant.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
    </item>
    <item row="7" column="1" colspan="3">
     <widget class="QGroupBox" name="groupBox_3">
@@ -368,16 +417,6 @@ Wave Length nm</string>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_13">
         <item>
-         <widget class="QCheckBox" name="annulusetToObs">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set hole diameter to  mirror obstruction value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Set into Obstruction</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QPushButton" name="annulusHelp">
           <property name="text">
            <string>Help</string>
@@ -388,55 +427,6 @@ Wave Length nm</string>
       </item>
      </layout>
     </widget>
-   </item>
-   <item row="6" column="1" colspan="3">
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>Elliptical outline</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="ellipseShape">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>Elliptical FLat or Nulled Optics</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0" colspan="2">
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLabel" name="label_9">
-          <property name="acceptDrops">
-           <bool>false</bool>
-          </property>
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="text">
-           <string>Vertical Axis</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="minorAxisEdit">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The vertical diameter of the Ellipse.&lt;/p&gt;&lt;p&gt; The other diameter which is always the horizontal diameter is specified by the Mirror diameter field. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="1" column="3">
-    <widget class="QLineEdit" name="lambda"/>
    </item>
   </layout>
  </widget>

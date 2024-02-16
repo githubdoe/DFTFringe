@@ -612,9 +612,7 @@ QStringList MainWindow::SelectWaveFrontFiles(){
     QSettings settings;
     QString lastPath = settings.value("lastPath",".").toString();
 
-    QFileDialog dialog(this);
-    dialog.setDirectory(lastPath);
-    dialog.setFileMode(QFileDialog::ExistingFiles);
+    QFileDialog dialog(this, "load wave front file", lastPath, tr("wft(*.wft)"));
     dialog.setNameFilter(tr("wft (*.wft)"));
 
     if (dialog.exec()) {

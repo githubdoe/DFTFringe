@@ -436,7 +436,6 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
         mcurve->attach(plot);
         plot->replot();
 
-
     return bestc;
 }
 cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,int step, int *radius, int pass){
@@ -619,7 +618,7 @@ void IgramArea::findCenterHole(){
 
         bestc = findBestCenterOutline(small, start,end, 1, &radius, useExisting);
 
-        x = bestc.x/scale;
+       x = bestc.x/scale;
        y = bestc.y/scale;
         radius/= scale;
         if (useExisting)
@@ -951,7 +950,7 @@ void IgramArea::adjustCenterandRegions(){
     if (centerRad > 0){
         double cx = set.value("lastInsideCx", 0).toDouble();
         double cy = set.value("lastInsideCy",0).toDouble();
-        m_center = CircleOutline(QPointF(cx +xoffset,cy + yoffset),centerRad);
+        m_center = CircleOutline(QPointF(cx +xoffset,cy + yoffset),m_center.m_radius);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
         innerPcount = 2;
