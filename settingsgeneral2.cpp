@@ -27,8 +27,7 @@ SettingsGeneral2::SettingsGeneral2(QWidget *parent) :
     ui->outputLambda->blockSignals(true);
     ui->outputLambda->setValue(set.value("outputLambda", 550.).toDouble());
     ui->outputLambda->blockSignals(false);
-    ui->useAnnular->setChecked(set.value("useAnnular", false).toBool());
-    ui->percenObstruction->setValue(set.value("percentObs", 1.).toDouble());
+
 
 }
 
@@ -79,11 +78,7 @@ void SettingsGeneral2::on_AstigDistGraphWidth_valueChanged(int val){
     QSettings set;
     set.setValue("AstigDistGraphWidth", val);
 }
-double SettingsGeneral2::getObs(){
-    if (ui->useAnnular->isChecked())
-        return ui->percenObstruction->value() * .01;
-    else return 1.;
-}
+
 void SettingsGeneral2::on_checkBox_clicked(bool checked)
 {
     m_useSVD = checked;
@@ -116,18 +111,8 @@ void SettingsGeneral2::on_apply_clicked(){
     }
 }
 
-void SettingsGeneral2::on_useAnnular_clicked(bool checked)
-{
-    QSettings set;
-    set.setValue("useAnnular", checked);
-    if (checked)
-       QMessageBox::warning(0,"_____________________warning______________________", "This is an experimental feature and probably not accurate.");
-}
 
 
-void SettingsGeneral2::on_percenObstruction_valueChanged(double arg1)
-{
-    QSettings set;
-    set.setValue("percendObs", arg1);
-}
+
+
 
