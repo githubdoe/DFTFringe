@@ -794,26 +794,12 @@ void mirrorDlg::on_annulusPercent_valueChanged(double arg1)
     updateZ8();
 }
 
-
-
-
-
-void mirrorDlg::on_annulusetToObs_clicked(bool checked)
-{
-    m_connectAnnulusToObs = checked;
-    if (checked){
-        ui->obs->setText(QString::number(m_annularObsPercent * diameter * ((mm)? 1.: 1./25.4)));
-    }
-
-}
 void mirrorDlg::enableAnnular(bool enable){
     ui->annularDiameter->setEnabled(enable);
     ui->annulusPercent->setEnabled(enable);
-    ui->annulusetToObs->setEnabled(enable);
     if (enable) {
         ui->annularDiameter->show();
         ui->annulusPercent->show();
-        ui->annulusetToObs->show();
         ui->annularDiamLb->show();
         ui->annularpercentLb->show();
         ui->annulusHelp->show();
@@ -821,7 +807,6 @@ void mirrorDlg::enableAnnular(bool enable){
     else {
         ui->annularDiameter->hide();
         ui->annulusPercent->hide();
-        ui->annulusetToObs->hide();
         ui->annularDiamLb->hide();
         ui->annularpercentLb->hide();
         ui->annulusHelp->hide();

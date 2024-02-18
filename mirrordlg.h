@@ -104,8 +104,6 @@ private slots:
 
     void on_ellipseShape_clicked(bool checked);
 
-
-
     void on_buttonBox_helpRequested();
 
     void on_ReducApp_clicked(bool checked);
@@ -113,8 +111,6 @@ private slots:
     void on_reduceValue_valueChanged(double arg1);
 
     void on_annulusPercent_valueChanged(double arg1);
-
-    void on_annulusetToObs_clicked(bool checked);
 
     void on_useAnnulus_clicked(bool checked);
 

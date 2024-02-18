@@ -361,7 +361,7 @@ win32 {
       }
       INCLUDEPATH += D:\\qwt-6.1.5\\src
 
-      #message("using win32")include
+      #message("using win32")
 
 INCLUDEPATH += D:\armadillo\armadillo-12.6.7\include
 
