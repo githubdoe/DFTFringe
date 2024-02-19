@@ -188,7 +188,7 @@ void mirrorDlg:: on_saveBtn_clicked()
     if (m_useAnnular){
         path.replace(".ini",".json");
     }
-    QString extensionTypes(tr((m_useAnnular)? "config file (*.json)" : "config file (*.ini,*.json)"));
+    QString extensionTypes(tr((m_useAnnular)? "config file (*.json)" : "config file (*.ini *.json)"));
     QString fileName = QFileDialog::getSaveFileName(0,
                         tr("Save stats file"), path,
                         extensionTypes);
@@ -478,7 +478,7 @@ void mirrorDlg::on_ReadBtn_clicked()
     QString lastPath = settings.value("lastPath",".").toString();
     QString fileName = QFileDialog::getOpenFileName(this,
                         tr("Read mirror configuratoin file"), lastPath,
-                        tr("ini (*.ini, *.json)"));
+                        tr("ini (*.ini *.json)"));
     if (fileName.isEmpty())
         return;
     loadFile(fileName);
