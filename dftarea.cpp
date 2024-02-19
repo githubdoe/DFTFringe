@@ -1073,7 +1073,6 @@ void DFTArea::mouseMoveEvent(QMouseEvent *event){
     int xdel = pos.x() - xcenter;
     int ydel = pos.y() - ycenter;
     int rad = sqrt(pow(xdel,2)+pow(ydel,2));
-qDebug() << "xcenter" << xcenter << ycenter << xdel << ydel;
     emit updateFilterSize(rad/zoom);
 }
 

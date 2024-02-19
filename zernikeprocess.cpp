@@ -758,49 +758,28 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
     }
 
-        double ux,uy,sz,nz;
+        double sz,nz;
         double rho,theta;
         std::vector<int> rows, cols;
         zernikePolar &zpolar = *zernikePolar::get_Instance();
-        for(int  y = 0; y < ny; ++y)
-        {
-
-            for(int x = 0; x < nx; ++x)
-            {
-                rows.push_back(y);
-                cols.push_back(x);
-            }
+        // make a list of points on the surface containing their rho and theta values as well as their
+        // row column indexes in the matix that contanis the wave front.
+        // annular wave fronts already have this made elsewhere.
+        if (!md->m_useAnnular){
+            m_rhoTheta = rhotheta(nx ,wf.m_outside.m_radius, midx,midy, &wf);
         }
+        // now iterate over those points
+        for (unsigned int i = 0; i < m_row.size(); ++i){
+            int x = m_col[i];
+            int y = m_row[i];
+            // this mask test may not be needed any longer but don't have time to check that.
+            if (mask.at<uint8_t>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0){
 
-        if (md->m_useAnnular){
-            rows = m_row;
-            cols = m_col;
-            for (int z = 0; z < 9; ++z){
-                qDebug() << "the zern table" << z << m_zerns(15532,z);
-            }
-        }
-        for (unsigned int i = 0; i < rows.size(); ++i){
-            int x = cols[i];
-            int y = rows[i];
-
-            if (mask.at<uint8_t>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0)
-            {
-                if (md->m_useAnnular){
                     rho = m_rhoTheta.row(0)(i);
                     theta = m_rhoTheta.row(1)(i);
-                }
-                else {
-                    ux = (double)(x - midx)/rad;
-                    uy = (double)(y - midy)/rad;
-                    rho = sqrt(ux * ux + uy * uy);
-                    if (rho > 1.){
-                        continue;
+                    if (!md->m_useAnnular){
+                        zpolar.init(rho,theta);
                     }
-
-
-                    theta = atan2(uy,ux);
-                    zpolar.init(rho,theta);
-                }
 
                 sz = unwrapped.at<double>(y,x);
                 nz = 0;
