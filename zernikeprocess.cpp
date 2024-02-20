@@ -1252,13 +1252,17 @@ void ZernikeSmooth(cv::Mat wf, cv::Mat mask)
 arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double cy,
                                    const wavefront *wf){
     bool useMask = false;
+    double centerR = 0.0;
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    if (md->m_useAnnular){
+        centerR = md->m_annularObsPercent;
+    }
     if (wf != 0){
         useMask = true;
         radius = wf->m_outside.m_radius;
         width = wf->data.rows;
         cx = wf->m_outside.m_center.x();
         cy = wf->m_outside.m_center.y();
-
     }
     int rows = width;
 
@@ -1279,6 +1283,8 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
             double theta = atan2(uy,ux);
             if ( rho <= 1. && ((useMask) ?  (wf->mask.at<uchar>(y,x) != 0): true)
                  && ((wf == 0)? true:wf->data.at<double>(y,x) != 0.0)) {
+                if (rho < centerR)
+                    continue;
                 rhov.push_back(rho);
                 thetav.push_back(theta);
                  m_row.push_back(y);

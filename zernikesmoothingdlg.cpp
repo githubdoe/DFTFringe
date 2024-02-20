@@ -2,6 +2,7 @@
 #include "ui_zernikesmoothingdlg.h"
 #include <QSettings>
 #include "myutils.h"
+#include "mirrordlg.h"
 
 ZernikeSmoothingDlg::ZernikeSmoothingDlg(wavefront &wf, QWidget *parent) :
     QDialog(parent),
@@ -107,8 +108,10 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
     QStringList l = m_wf.name.split("/");
     l.back().replace(".wft","");
     l.back().append(QString("_sm%1").arg(m_noOfTerms));
-    m_sm->createSurfaceFromPhaseMap(result, m_wf.m_outside,
-                                                CircleOutline(QPointF(0,0),0),l.back());
+
+    m_sm->createSurfaceFromPhaseMap(result, m_wf.m_outside, m_wf.m_inside
+
+                                               ,l.back());
 
     if (ui->showResidual->isChecked()){
         m_sm->subtract(&m_wf, m_sm->m_wavefronts.back(), false);
