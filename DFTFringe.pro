@@ -142,6 +142,7 @@ INCLUDEPATH += ./bezier ./SingleApplication
 
 SOURCES += SingleApplication/singleapplication.cpp \
     SingleApplication/singleapplication_p.cpp \
+    annulushelpdlg.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
     astigscatterplot.cpp \
@@ -259,6 +260,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
 HEADERS += bezier/bezier.h \
     SingleApplication/singleapplication_p.h \
     SingleApplication/singleapplication.h \
+    annulushelpdlg.h \
     arbitrarywavefronthelp.h \
     arbitrarywavwidget.h \
     astigscatterplot.h \
@@ -377,6 +379,7 @@ HEADERS += bezier/bezier.h \
     zernikesmoothingdlg.h
 
 FORMS += arbitrarywavefronthelp.ui \
+    annulushelpdlg.ui \
     astigstatsdlg.ui \
     averagewavefrontfilesdlg.ui \
     batchigramwizard.ui \
