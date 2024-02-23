@@ -298,7 +298,7 @@ void mirrorDlg::loadFile(QString & fileName){
         m_verticalAxis = QJsonValue(Ellipse["ellipse vert axis"]).toDouble();
         QJsonObject Annulus = loadDoc["Annulus"].toObject();
         m_useAnnular = QJsonValue(Annulus["use annular Zernike values"]).toBool();
-        m_annularObsPercent = QJsonValue(Annulus["obs percentage"]).toDouble();
+        m_annularObsPercent = QJsonValue(Annulus["obs percentage"]).toDouble() * 100.;
         ui->useAnnulus->setChecked(m_useAnnular);
         ui->annulusPercent->setValue(m_annularObsPercent);
         enableAnnular(m_useAnnular);
@@ -333,6 +333,8 @@ void mirrorDlg::loadFile(QString & fileName){
         blockSignals(false);
     }
     else {
+        enableAnnular(false);
+        ui->useAnnulus->setChecked(false);
         std::ifstream file((fileName.toStdString().c_str()));
         if (!file.is_open()) {
             QMessageBox::warning(this, tr("Read Mirror Config"),
