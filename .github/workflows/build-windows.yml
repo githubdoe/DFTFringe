@@ -80,7 +80,7 @@ jobs:
       - name: install QT
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw81 -m qtcharts qtdatavis3d
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         with:
           repository: 'opencv/opencv'
@@ -227,7 +227,7 @@ jobs:
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         shell: bash
         run: echo "${{github.workspace}}\Tools\mingw${{env.mingw_version}}_64\bin" >> $GITHUB_PATH
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         with:
           repository: 'Reference-LAPACK/lapack'
@@ -250,9 +250,9 @@ jobs:
       # because problem matcher will not work when chechout in a subfolder,
       # checkout at root and then copy everything in folder.
       # Match will be done in build folder, and file at root will be used to link the match
-      # Note xheckouting twive is not wokring.
+      # Note checkouting twice is not working.
       # This copy is done before adding any more file into folders
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       #  with:
       #    path: 'DFTFringe'
       
