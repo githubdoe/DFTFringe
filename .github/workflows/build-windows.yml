@@ -38,7 +38,7 @@ jobs:
       - name: install QT installer framework
         if: steps.cache-minGW.outputs.cache-hit != 'true'
         run: aqt install-tool windows desktop tools_ifw
-        # path is Tools\QtInstallerFramework\4.6\bin\
+        # path is Tools\QtInstallerFramework\4.7\bin\
 
   build-openCV-with-QT:
     runs-on: windows-latest
@@ -383,7 +383,7 @@ jobs:
         run: .\${{env.QT_version}}\mingw81_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
 
       - name: make installer using QT installer framework
-        run: Tools\QtInstallerFramework\4.6\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{env.WORKFLOW_VERSION}}
+        run: Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{env.WORKFLOW_VERSION}}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
