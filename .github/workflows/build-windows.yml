@@ -22,7 +22,7 @@ jobs:
       # this will restore/cache everything in /Tools depending on cache hit/miss
       - name: Cache minGW
         id: cache-minGW
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: Tools
           key: ${{ runner.os }}-mingw${{env.mingw_version}}_64
@@ -38,7 +38,7 @@ jobs:
       - name: install QT installer framework
         if: steps.cache-minGW.outputs.cache-hit != 'true'
         run: aqt install-tool windows desktop tools_ifw
-        # path is Tools\QtInstallerFramework\4.6\bin\
+        # path is Tools\QtInstallerFramework\4.7\bin\
 
   build-openCV-with-QT:
     runs-on: windows-latest
@@ -46,7 +46,7 @@ jobs:
     steps:
       # this will restore/cache everything depending on cache hit/miss
       - name: Cache QT and openCV
-        uses: actions/cache/@v3
+        uses: actions/cache/@v4
         id: cache-openCV-QT
         with:
           path: |
@@ -63,7 +63,7 @@ jobs:
       # all what follows is only run on cache miss
 
       # restore cached minGW
-      - uses: actions/cache/restore@v3
+      - uses: actions/cache/restore@v4
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         id: cache-minGW
         with:
@@ -80,7 +80,7 @@ jobs:
       - name: install QT
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw81 -m qtcharts qtdatavis3d
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         with:
           repository: 'opencv/opencv'
@@ -105,7 +105,7 @@ jobs:
     steps:
       # this will restore/cache everything depending on cache hit/miss
       - name: cache QWT
-        uses: actions/cache/@v3
+        uses: actions/cache/@v4
         id: cache-QWT
         with:
           path: |
@@ -116,7 +116,7 @@ jobs:
       # all what follows is only run on cache miss
 
       # restore cached minGW
-      - uses: actions/cache/restore@v3
+      - uses: actions/cache/restore@v4
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         id: cache-minGW
         with:
@@ -157,7 +157,7 @@ jobs:
       # this will restore/cache everything depending on cache hit/miss
       - name: Cache armadillo build
         id: cache-armadillo
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             build_armadillo\libarmadillo.dll
@@ -167,7 +167,7 @@ jobs:
       # all what follows is only run on cache miss
 
       # restore cached minGW
-      - uses: actions/cache/restore@v3
+      - uses: actions/cache/restore@v4
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
         id: cache-minGW
         with:
@@ -206,7 +206,7 @@ jobs:
       # this will restore/cache everything depending on cache hit/miss
       - name: Cache lapack build
         id: cache-lapack
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             build_lapack\lib\liblapack.a
@@ -216,7 +216,7 @@ jobs:
       # all what follows is only run on cache miss
 
       # restore cached minGW
-      - uses: actions/cache/restore@v3
+      - uses: actions/cache/restore@v4
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         id: cache-minGW
         with:
@@ -227,7 +227,7 @@ jobs:
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         shell: bash
         run: echo "${{github.workspace}}\Tools\mingw${{env.mingw_version}}_64\bin" >> $GITHUB_PATH
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         with:
           repository: 'Reference-LAPACK/lapack'
@@ -250,9 +250,9 @@ jobs:
       # because problem matcher will not work when chechout in a subfolder,
       # checkout at root and then copy everything in folder.
       # Match will be done in build folder, and file at root will be used to link the match
-      # Note xheckouting twive is not wokring.
+      # Note checkouting twice is not working.
       # This copy is done before adding any more file into folders
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       #  with:
       #    path: 'DFTFringe'
       
@@ -264,7 +264,7 @@ jobs:
 
 
       # restore cached minGW
-      - uses: actions/cache/restore@v3
+      - uses: actions/cache/restore@v4
         id: cache-minGW
         with:
           path: Tools
@@ -274,7 +274,7 @@ jobs:
         shell: bash
         run: echo "${{github.workspace}}\Tools\mingw${{env.mingw_version}}_64\bin" >> $GITHUB_PATH
       # restore cached lapack
-      - uses: actions/cache/restore@v3
+      - uses: actions/cache/restore@v4
         id: cache-lapack
         with:
           path: |
@@ -283,7 +283,7 @@ jobs:
           key: ${{ runner.os }}-lapack-${{env.lapack_version}}
           fail-on-cache-miss: true
       # restore cached armadillo
-      - uses: actions/cache/restore@v3
+      - uses: actions/cache/restore@v4
         id: cache-armadillo
         with:
           path: |
@@ -292,7 +292,7 @@ jobs:
           key: ${{ runner.os }}-armadillo-${{env.armadillo_version}}
           fail-on-cache-miss: true
       # restore cached QWT
-      - uses: actions/cache/restore@v3
+      - uses: actions/cache/restore@v4
         id: cache-QWT
         with:
           path: |
@@ -301,7 +301,7 @@ jobs:
           key: ${{ runner.os }}-QWT-${{env.QWT_version}}
           fail-on-cache-miss: true
       # restore cached openCV and QT
-      - uses: actions/cache/restore@v3
+      - uses: actions/cache/restore@v4
         id: cache-openCV-QT
         with:
           path: |
@@ -383,10 +383,10 @@ jobs:
         run: .\${{env.QT_version}}\mingw81_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
 
       - name: make installer using QT installer framework
-        run: Tools\QtInstallerFramework\4.6\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{env.WORKFLOW_VERSION}}
+        run: Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{env.WORKFLOW_VERSION}}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: DFTFringe-windows-build-artifact
           path: |
