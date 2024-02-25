@@ -237,6 +237,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
     surfacemanager.cpp \
+    zapm.cpp \
     surfacepropertiesdlg.cpp \
     transformwavefrontdlg.cpp \
     unwraperrorsview.cpp \
