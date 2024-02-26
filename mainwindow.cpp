@@ -427,7 +427,7 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     QFileDialog dialog(this, tr("Open File"), lastPath);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    // the QT default extension are obtained by doing 
+    // the QT default extension are obtained by doing
     // `for(const QByteArray &mimeTypeName : QImageReader::supportedMimeTypes())`
     // `   mimeTypeFilters.append(mimeTypeName);`
     // `dialog.setMimeTypeFilters(mimeTypeFilters);`
@@ -535,10 +535,7 @@ void MainWindow::updateMetrics(wavefront& wf){
     metrics->setZernTitle(ztitle);
     double z8 = zernTablemodel->values[8];
     if (m_mirrorDlg->doNull && wf.useSANull){
-        Settings2 &settings = *Settings2::getInstance();
-
         BestSC = z8/m_mirrorDlg->z8;
-
     }
     else {
         BestSC = m_mirrorDlg->cc +z8/m_mirrorDlg->z8;
@@ -948,7 +945,7 @@ void MainWindow::on_actionHelp_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
 
-    QMessageBox::information(this, "___________________________________________________________________________About", 
+    QMessageBox::information(this, "___________________________________________________________________________About",
                             QString("<html><body><h1>DFTFringe version %1</h1>").arg(APP_VERSION)+
                              "<p>This program was compiled using:<ul><li>"
                              "Qt version " + QT_VERSION_STR + " </li>"

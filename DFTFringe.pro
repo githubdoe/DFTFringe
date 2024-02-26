@@ -21,7 +21,7 @@ qtHaveModule(printsupport): QT += printsupport
 QMAKE_CXXFLAGS += -std=c++11
 
 # disable qDebug() in release
-CONFIG( release, debug|release ) { 
+CONFIG( release, debug|release ) {
     message("Release build")
     DEFINES += QT_NO_DEBUG_OUTPUT
 }
@@ -237,7 +237,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
     surfacemanager.cpp \
-    zapm.cpp \
     surfacepropertiesdlg.cpp \
     transformwavefrontdlg.cpp \
     unwraperrorsview.cpp \
@@ -252,6 +251,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     wavefrontloader.cpp \
     wftexaminer.cpp \
     wftstats.cpp \
+    zapm.cpp \
     zernikedlg.cpp \
     zernikeeditdlg.cpp \
     zernikeprocess.cpp \

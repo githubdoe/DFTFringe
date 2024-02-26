@@ -727,7 +727,6 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 {
 
     int nx = wf.data.cols;
-    int ny = wf.data.rows;
 
     cv::Mat unwrapped = wf.data.clone();
 
@@ -1005,10 +1004,10 @@ int zernikeProcess::getNumberOfTerms(){
 }
 void spectral_color(double &R,double &G,double &B,double wavelength)
 // RGB <0,1> <- lambda l <400,700> [nm]
-{ 
-    R=0.0; 
-    G=0.0; 
-    B=0.0; 
+{
+    R=0.0;
+    G=0.0;
+    B=0.0;
     double gamma = .8;
     double attenuation = 1;
 
