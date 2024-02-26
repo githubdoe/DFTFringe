@@ -436,7 +436,6 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
         mcurve->attach(plot);
         plot->replot();
 
-
     return bestc;
 }
 cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,int step, int *radius, int pass){
@@ -619,7 +618,7 @@ void IgramArea::findCenterHole(){
 
         bestc = findBestCenterOutline(small, start,end, 1, &radius, useExisting);
 
-        x = bestc.x/scale;
+       x = bestc.x/scale;
        y = bestc.y/scale;
         radius/= scale;
         if (useExisting)
@@ -878,6 +877,22 @@ void IgramArea::autoTraceOutline(){
     QApplication::restoreOverrideCursor();
     emit statusBarUpdate( "",2);
 }
+void IgramArea::useAnnulusforCenterOutine(){
+    if (m_current_boundry == CenterOutline) {
+
+            mirrorDlg *md = mirrorDlg::get_Instance();
+            double rad = m_outside.m_radius * md->m_annularObsPercent;
+
+            double cx = m_outside.m_center.x();
+            double cy = m_outside.m_center.y();
+            m_center = CircleOutline(QPointF(cx,cy),rad);
+            m_innerP1 = m_center.m_p1.m_p;
+            m_innerP2 = m_center.m_p2.m_p;
+            innerPcount = 2;
+            drawBoundary();
+
+    }
+}
 void IgramArea::useLastOutline(){
 
     QSettings set;
@@ -935,7 +950,7 @@ void IgramArea::adjustCenterandRegions(){
     if (centerRad > 0){
         double cx = set.value("lastInsideCx", 0).toDouble();
         double cy = set.value("lastInsideCy",0).toDouble();
-        m_center = CircleOutline(QPointF(cx +xoffset,cy + yoffset),centerRad);
+        m_center = CircleOutline(QPointF(cx +xoffset,cy + yoffset),m_center.m_radius);
         m_innerP1 = m_center.m_p1.m_p;
         m_innerP2 = m_center.m_p2.m_p;
         innerPcount = 2;
@@ -1709,7 +1724,8 @@ void IgramArea::drawBoundary()
             //painter.setPen(QPen(centerPenColor, centerPenWidth, (Qt::PenStyle)lineStyle));
             double percent = inside.m_radius/outside.m_radius * 100;
             QString label = QString("%1 percent").arg(percent, 6, 'f', 2);
-            painter.setPen(Qt::black);
+
+            painter.setPen(Qt::white);
             QFont font("Arial", 8);
 
             painter.setFont(font);
@@ -2217,7 +2233,6 @@ void IgramArea::loadOutlineFileOldV6(QString fileName){
                 m_polygons.back().push_back(cv::Point(vals[0].toDouble()-cropTotalDx, vals[1].toDouble()-cropTotalDy));
             }
         }
-        mirrorDlg &md = *mirrorDlg::get_Instance();
         if (line == "Edge Mask width"){
             std::getline(file,line);
 

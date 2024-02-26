@@ -53,7 +53,8 @@ int Zw[] = {								/*  n    */
 
 // [[Rcpp::export]]
 
-
+arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
+               const double& eps, const int& maxorder=12) ;
 cv::Mat zpmCx(QVector<double> rho, QVector<double> theta, int maxorder) {
 
   int m, n, n0, mmax = maxorder/2;
@@ -596,7 +597,8 @@ zernikeProcess *zernikeProcess::get_Instance(){
 }
 
 zernikeProcess::zernikeProcess(QObject *parent) :
-    QObject(parent),m_gridRowSize(200), m_maxOrder(0),m_needsInit(true),m_dirty_zerns(true)
+    QObject(parent),m_gridRowSize(200), m_maxOrder(0),
+    m_needsInit(true),m_lastusedAnnulus(false),m_dirty_zerns(true)
 {
     md = mirrorDlg::get_Instance();;
     QSettings set;
@@ -615,13 +617,12 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
     //if (!m_dirty_zerns)
         //return;
 
-    Settings2 &settings = *Settings2::getInstance();
-    if (wf.m_inside.m_radius > wf.m_outside.m_radius * settings.m_general->getObs()) {
+    // if annular zernikes needed then do this instead of all the other stuff below this.
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    if (md->m_useAnnular) {
         initGrid(wf, 12);
         ZernFitWavefront(wf);
-        for (int z = 1; z < m_norms.size(); ++z){
-            wf.InputZerns[z] *= m_norms[z];
-        }
+
         return;
     }
     /*
@@ -630,6 +631,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
 
 
     bool useSvd = false;
+    Settings2 &settings = *Settings2::getInstance();
     if (settings.m_general->useSVD()){
         useSvd = true;
     }
@@ -725,19 +727,14 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 {
 
     int nx = wf.data.cols;
-    int ny = wf.data.rows;
 
     cv::Mat unwrapped = wf.data.clone();
 
     double scz8 = md->z8 * md->cc;
-    Settings2 &settings = *Settings2::getInstance();
 
-    if (wf.m_inside.m_radius > wf.m_outside.m_radius * settings.m_general->getObs()) {
-        double E = wf.m_inside.m_radius/wf.m_outside.m_radius;
-        double f = (1 - E * E);
-        f *= f;
-        scz8 =  scz8*f;
-    }
+    mirrorDlg *md = mirrorDlg::get_Instance();
+
+
     if (!md->doNull || !wf.useSANull){
         scz8 = 0.;
     }
@@ -760,54 +757,66 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
     }
 
-    double ux,uy,sz,nz;
-    double rho,theta;
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
-    for(int  y = 0; y < ny; ++y)
-    {
-        for(int x = 0; x < nx; ++x)
-        {
+        double sz,nz;
+        double rho,theta;
+        std::vector<int> rows, cols;
+        zernikePolar &zpolar = *zernikePolar::get_Instance();
+        // make a list of points on the surface containing their rho and theta values as well as their
+        // row column indexes in the matix that contanis the wave front.
+        // annular wave fronts already have this made elsewhere.
+        if (!md->m_useAnnular){
+            m_rhoTheta = rhotheta(nx ,wf.m_outside.m_radius, midx,midy, &wf);
+        }
+        // now iterate over those points
+        for (unsigned int i = 0; i < m_row.size(); ++i){
+            int x = m_col[i];
+            int y = m_row[i];
+            // this mask test may not be needed any longer but don't have time to check that.
+            if (mask.at<uint8_t>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0){
 
-            if (mask.at<uint8_t>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0)
-            {
-                ux = (double)(x - midx)/rad;
-                uy = (double)(y - midy)/rad;
-                rho = sqrt(ux * ux + uy * uy);
-                if (rho > 1.){
-                    continue;
-                }
-
-                theta = atan2(uy,ux);
-                zpolar.init(rho,theta);
+                    rho = m_rhoTheta.row(0)(i);
+                    theta = m_rhoTheta.row(1)(i);
+                    if (!md->m_useAnnular){
+                        zpolar.init(rho,theta);
+                    }
 
                 sz = unwrapped.at<double>(y,x);
                 nz = 0;
 
                 if (last_term > 7)
                 {
-                    if (md->doNull && enables[8])
-                        nz -= scz8 * zpolar.zernike(8,rho, theta);
+                    if (md->doNull && enables[8]){
+                        if (!md->m_useAnnular)
+                            nz -= scz8 * zpolar.zernike(8,rho, theta);
+                        else {
+                            nz -= scz8 * m_zerns(i, 8);
+                        }
+                    }
                 }
 
                 for (int z = start_term; z < Z_TERMS; ++z)
                 {
-                    if ((z == 3) & doDefocus){
+                    if ((z == 3) && doDefocus){
                         nz += defocus * zpolar.zernike(z,rho, theta);
                         nz -= zerns[z] * zpolar.zernike(z,rho,theta);
 
                     }
-                    else
-                    if (!enables[z])
-                        nz -= zerns[z] * zpolar.zernike(z,rho, theta);
+
+                    else if (!enables[z]){
+                        if (!md->m_useAnnular)
+                             nz -= zerns[z] * zpolar.zernike(z,rho, theta);
+                        else {
+
+                            nz -= zerns[z] * m_zerns(i,z) ;
+
+                        }
+                    }
 
                 }
 
                 nulled.at<double>(y,x) = sz +nz;
             }
         }
-    }
-
-    //generate_image_from_doubles(nulled_image, nx,ny, CString(L"Nulled"),true);
 
     return nulled;
 }
@@ -816,6 +825,8 @@ void zernikeProcess::fillVoid(wavefront &wf){
     // fill in "ignore regions" - interpolate using all our zernike terms
     double ux,uy;
     double rho,theta;
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    bool useannular = md->m_useAnnular;
 
     zernikePolar &zpolar = *zernikePolar::get_Instance();
 
@@ -826,6 +837,9 @@ void zernikeProcess::fillVoid(wavefront &wf){
         int endx = x;
         int starty = y;
         int endy = y;
+
+        std::vector<double> rhov, thetav, theX, theY;   // to be used by the annulus portion
+                                            // will hold the points of all regions
 
         for (int n = 0; n < wf.regions.size(); ++n){
 
@@ -845,6 +859,10 @@ void zernikeProcess::fillVoid(wavefront &wf){
             double midx = wf.m_outside.m_center.x();
             double midy = wf.m_outside.m_center.y();
             double rad = wf.m_outside.m_radius;
+
+            // if this is an annulus then compute a rho and theta for each point.
+            // don't process them until you have a list of each point inside all regions.
+            // otherwise process using the circular Zern equations.
             for (int y = starty; y < endy; ++y){
                 for (int x = startx; x < endx; ++x){
                     if (x < 0 || y < 0 || x >= wf.data.cols || y >= wf.data.rows){
@@ -855,14 +873,44 @@ void zernikeProcess::fillVoid(wavefront &wf){
                         uy = (double)(y - midy)/rad;
                         rho = sqrt(ux * ux + uy * uy);
                         theta = atan2(uy,ux);
-                        zpolar.init(rho,theta);
-                        double v = 0.;
-
-                        for (size_t z = 0; z < wf.InputZerns.size(); ++z){
-                            v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
+                        if (useannular){
+                            rhov.push_back(rho);
+                            thetav.push_back(theta);
+                            theX.push_back(x);
+                            theY.push_back(y);
                         }
-                        wf.data.at<double>(y,x) = v;
+                        else {
+                            zpolar.init(rho,theta);
+                            double v = 0.;
+
+                            for (size_t z = 0; z < wf.InputZerns.size(); ++z){
+                                v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
+                            }
+                            wf.data.at<double>(y,x) = v;
+                        }
                     }
+                }
+            }
+
+        }
+        // now that we have the points in rho and theta get the zernike terms at each of those points
+        if (useannular){
+            arma::rowvec r(rhov),t(thetav);
+
+            // now that we have the points in rho and theta get the zernike terms at each of those points
+            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->m_annularObsPercent, 12);
+            // compute the surface at each point by using the zernike poly at each point.
+            for (arma::uword i = 0; i < r.size(); ++i){
+                double S1 = 0.0;
+                for (unsigned int z = 0; z < zerns.n_cols; ++z){
+                    double val = wf.InputZerns[z];
+                    S1 +=  val * zerns(i,z);
+                    int x =  theX[i];
+                    int y =  theY[i];
+
+                    if (S1 == 0.0) S1 += .0000001;
+
+                    wf.data.at<double>(y,x) = S1;
                 }
             }
         }
@@ -874,6 +922,8 @@ void zernikeProcess::fillVoid(wavefront &wf){
         // Outward we go only 1 pixel in case a rotated wavefront has an unmasked pixel set to zero (maybe we should do the fill before rotating?)
 
 
+        std::vector<double> rhov, thetav, theX, theY;   // to be used by the annulus portion
+                                            // will hold the points of all regions
         // outer radius of area to fill in
         double radius_outer_fill = wf.m_inside.m_radius+5; // go out a few pixels
 
@@ -907,17 +957,45 @@ void zernikeProcess::fillVoid(wavefront &wf){
                     uy = (double)(y - midy)/rad;
                     rho = sqrt(ux * ux + uy * uy);
                     theta = atan2(uy,ux);
-                    zpolar.init(rho,theta);
-                    double v = 0.;
-
-                    for (size_t z = 0; z < wf.InputZerns.size(); ++z){
-                        v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
+                    if (useannular){
+                        rhov.push_back(rho);
+                        thetav.push_back(theta);
+                        theX.push_back(x);
+                        theY.push_back(y);
                     }
-                    wf.data.at<double>(y,x) = v;
+                    else{
+                        zpolar.init(rho,theta);
+                        double v = 0.;
+
+                        for (size_t z = 0; z < wf.InputZerns.size(); ++z){
+                            v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
+                        }
+                        wf.data.at<double>(y,x) = v;
+                    }
+                }
+            }
+        }
+        if (useannular){
+            arma::rowvec r(rhov),t(thetav);
+
+            // now that we have the points in rho and theta get the zernike terms at each of those points
+            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->m_annularObsPercent, 12);
+            // compute the surface at each point by using the zernike poly at each point.
+            for (arma::uword i = 0; i < r.size(); ++i){
+                double S1 = 0.0;
+                for (unsigned int z = 0; z < zerns.n_cols; ++z){
+                    double val = wf.InputZerns[z];
+                    S1 +=  val * zerns(i,z);
+                    int x =  theX[i];
+                    int y =  theY[i];
+
+                    if (S1 == 0.0) S1 += .0000001;
+                    wf.data.at<double>(y,x) = S1;
                 }
             }
         }
     }
+
 }
 int zernikeProcess::getNumberOfTerms(){
     int terms = m_maxOrder/2+1;
@@ -926,10 +1004,10 @@ int zernikeProcess::getNumberOfTerms(){
 }
 void spectral_color(double &R,double &G,double &B,double wavelength)
 // RGB <0,1> <- lambda l <400,700> [nm]
-{ 
-    R=0.0; 
-    G=0.0; 
-    B=0.0; 
+{
+    R=0.0;
+    G=0.0;
+    B=0.0;
     double gamma = .8;
     double attenuation = 1;
 
@@ -1064,7 +1142,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
 
 
 
-        for (unsigned int z = 0; z < dlg.zernikes.size(); ++z){
+        for (unsigned int z = 0; z < m_zerns.n_cols; ++z){
             double val = dlg.zernikes[z];
             if (z == 8){
                 val = (dlg.doCorrection && md->doNull) ? md->cc * md->z8 * val * .01 : val;
@@ -1173,6 +1251,11 @@ void ZernikeSmooth(cv::Mat wf, cv::Mat mask)
 arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double cy,
                                    const wavefront *wf){
     bool useMask = false;
+    double centerR = 0.0;
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    if (md->m_useAnnular){
+        centerR = md->m_annularObsPercent;
+    }
     if (wf != 0){
         useMask = true;
         radius = wf->m_outside.m_radius;
@@ -1184,8 +1267,9 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
 
     std::vector<double> rhov;
     std::vector<double> thetav;
-    m_row.clear();
-    m_col.clear();
+    std::vector<double> m, n;       // row and col index of the point
+     m_row.clear();
+     m_col.clear();
 
     for (int y = 0; y < rows; ++y){
         double uy = (y -cy)/radius;
@@ -1198,7 +1282,8 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
             double theta = atan2(uy,ux);
             if ( rho <= 1. && ((useMask) ?  (wf->mask.at<uchar>(y,x) != 0): true)
                  && ((wf == 0)? true:wf->data.at<double>(y,x) != 0.0)) {
-
+                if (rho < centerR)
+                    continue;
                 rhov.push_back(rho);
                 thetav.push_back(theta);
                  m_row.push_back(y);
@@ -1355,7 +1440,7 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
     QString s;
     QTextStream out(&s);
 
-    out << "<!DOCTYPE html><html><body><H1>" << transposed <<  title << mm.n_rows <<"X" << mm.n_cols << "</H1>";
+    out << "<!DOCTYPE html><html><body><H1>" << transposed <<  title <<"   zern matrix size   "<< mm.n_rows <<"X" << mm.n_cols << "</H1>";
 
     log.append(s);
     if (!colHeading.empty()){
@@ -1366,7 +1451,8 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
         log.append("</tr>\n");
     }
 
-    for (std::size_t row = 0; row < theMat.n_rows; ++row){
+    for (arma::uword row =0; row < theMat.n_rows; ++row){
+        if (row > 20) break;
         log.append("<tr> <td> ");
         if (!RowLable.empty()){
 
@@ -1377,7 +1463,7 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
         }
         log.append("</td>");
 
-        for (int c = 0; c< 10; ++c){
+        for (arma::uword c = 0; c< theMat.n_cols; ++c){
             log.append(QString("<td style=\"text-align:center\" width=\"150\">%1</td>").arg(theMat(row,c), 6, 'f', 5));
         }
         log.append("</tr>\n");
@@ -1392,35 +1478,42 @@ void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QV
     display->show();
 
 }
+
+
 void zernikeProcess::initGrid(int width, double radius, double cx, double cy, int maxOrder,
                               double insideRad){
+    qDebug() << "initGrid width " << width << radius << cx << cy << maxOrder << insideRad;
     // if grid or maxOrder is different then update values.
     double obsPercent = 0.;
-    if (radius != 0){
-        obsPercent = (double)insideRad/radius;
+    bool shouldUseAnnulus = false;
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    if (md->m_useAnnular){
+        obsPercent = md->m_annularObsPercent;
+        shouldUseAnnulus = true;
     }
 
     setMaxOrder(maxOrder);
     if ( m_needsInit || width != m_gridRowSize ||
             radius != m_radius ||
             maxOrder != m_maxOrder ||
-         obsPercent != m_obsPercent){
+         obsPercent != m_obsPercent ||
+         m_lastusedAnnulus != shouldUseAnnulus){
         m_gridRowSize = width;
         m_radius = radius;
         m_obsPercent = obsPercent;
         m_rhoTheta = rhotheta(width, radius, cx, cy);
 
-        if (obsPercent >= 0.) { // was "<=" but this can cause a crash see github issue #112
+        if (obsPercent <= 0.) {
             m_zerns = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
-//            for (int i = 0; i < m_zerns.n_rows; ++i){
-//                if (m_row[i] == 300){
-//                    qDebug()<<  "0obs" << i <<  m_row[i] << m_col [i] << m_zerns(i,1) ;
-//                }
-//            }
+            m_lastusedAnnulus = false;
+
         }
-        else {
-            m_zerns = zapmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
-            arma::mat m_zernsaa = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
+        else {  // compute the annular zernike values
+
+            m_zerns = zapm( m_rhoTheta.row(0).as_col(), m_rhoTheta.row(1).as_col(), obsPercent, maxOrder);
+
+            m_lastusedAnnulus = true;
+            //arma::mat m_zernsaa = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
 
         }
 
@@ -1674,4 +1767,3 @@ void debugZernRoutines(wavefront &wf){
 
 
     }
-

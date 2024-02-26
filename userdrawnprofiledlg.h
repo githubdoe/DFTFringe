@@ -2,7 +2,7 @@
 #define USERDRAWNPROFILEDLG_H
 
 #include <QDialog>
-#include <arbitrarywavwidget.h>
+#include "arbitrarywavwidget.h"
 namespace Ui {
 class UserDrawnProfileDlg;
 }

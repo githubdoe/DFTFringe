@@ -102,6 +102,7 @@ private:
 
 public:
     arma::mat m_rhoTheta;
+    bool m_lastusedAnnulus;
     explicit zernikeProcess(QObject *parent = 0);
     static zernikeProcess *get_Instance();
     void unwrap_to_zernikes(wavefront &wf, int zterms = Z_TERMS);
@@ -112,8 +113,7 @@ public:
     void unwrap_to_zernikes(zern_generator *zg, cv::Mat wf, cv::Mat mask);
     cv::Mat makeSurfaceFromZerns(int border, bool doColor);
 
-    arma::mat rhotheta( int width, double radius, double cx, double cy,
-                                       const wavefront *wf = 0);
+    arma::mat rhotheta( int width, double radius, double cx, double cy, const wavefront *wf = 0);
 
     arma::mat zpmC(arma::rowvec rho, arma::rowvec theta, int maxorder);
     arma::mat zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder=12);

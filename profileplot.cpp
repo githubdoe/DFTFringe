@@ -345,7 +345,16 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     double radius = md.m_clearAperature/2.;
     double obs_radius = md.obs/2.;
 
-//    qDebug() << "Clear" << radius;
+    // If there is an annulus use it if it is a larger radius than the set obstruction
+    if (md.m_useAnnular){
+        double annularRadius = md.m_annularObsPercent * md.diameter/2.;
+        if (annularRadius > obs_radius ){
+            obs_radius =  annularRadius;
+        }
+
+
+    }
+
     for (double rad = -1.; rad < 1.; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
@@ -368,20 +377,20 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
         }
 
         if (wf->workMask.at<uint8_t>(dy,dx)){
-                double defocus = 0.;
+            double defocus = 0.;
 
-                if (m_defocus_mode){
-                    defocus = (m_defocusValue)* (-1. + 2. * rad * rad);
-                    points << QPointF(radx,(units * (m_defocus_wavefront((int)dy,(int)dx) + defocus ) *
-                                            wf->lambda/outputLambda)  +y_offset * units);
-                }
-                else {
-
-                    points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
+            if (m_defocus_mode){
+                defocus = (m_defocusValue)* (-1. + 2. * rad * rad);
+                points << QPointF(radx,(units * (m_defocus_wavefront((int)dy,(int)dx) + defocus ) *
                                         wf->lambda/outputLambda)  +y_offset * units);
-                }
             }
-            //else points << QPointF(radx,0.0);
+            else {
+
+                points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
+                                        wf->lambda/outputLambda)  +y_offset * units);
+            }
+        }
+        //else points << QPointF(radx,0.0);
     }
 
     if (m_showSlopeError){

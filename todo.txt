@@ -1,0 +1,14 @@
+Working on zapm annular zernikes
+
+
+
+The following probably need rework to include annular zernikes
+The defocs feature needs to be changed to use the annular when appropriate.
+The RMS values.
+
+
+Report of metrics
+
+
+Why are residual zernike values from zernike smoothing all zero yet image shows rings when rings were input in simulation.
+

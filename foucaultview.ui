@@ -529,7 +529,6 @@
         <property name="font">
          <font>
           <pointsize>-1</pointsize>
-          <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
@@ -587,12 +586,25 @@
          <string> Lateral Offset</string>
         </property>
         <property name="minimum">
-         <number>-50</number>
+         <number>-500</number>
         </property>
         <property name="maximum">
-         <number>50</number>
+         <number>500</number>
         </property>
        </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item>
        <widget class="QLineEdit" name="pixeParms">

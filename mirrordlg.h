@@ -51,6 +51,9 @@ public:
     double fringeSpacing;
     bool flipv;
     bool fliph;
+    bool m_useAnnular;
+    bool m_connectAnnulusToObs;
+    double m_annularObsPercent;
     double m_clearAperature;
     double aperatureReduction;
     static QString m_projectPath;
@@ -67,6 +70,7 @@ public:
     bool isEllipse();
     void setMinorAxis(double val);
     bool m_aperatureReductionEnabled;
+    void setObsPercent(double obs);
 private slots:
     void on_ReadBtn_clicked();
 
@@ -100,13 +104,19 @@ private slots:
 
     void on_ellipseShape_clicked(bool checked);
 
-
-
     void on_buttonBox_helpRequested();
 
     void on_ReducApp_clicked(bool checked);
 
     void on_reduceValue_valueChanged(double arg1);
+
+    void on_annulusPercent_valueChanged(double arg1);
+
+    void on_useAnnulus_clicked(bool checked);
+
+    void on_annulusHelp_clicked();
+
+    void on_annularDiameter_valueChanged(double arg1);
 
 signals:
     void diameterChanged(double);
@@ -126,6 +136,8 @@ private:
     Ui::mirrorDlg *ui;
     bool m_aperatureReductionValueChanged;
     QTimer spacingChangeTimer;
+    void saveJson(QString fileName);
+    void enableAnnular(bool enable);
 };
 
 #endif // MIRRORDLG_H

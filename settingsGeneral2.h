@@ -41,9 +41,6 @@ private slots:
     void on_outputLambda_valueChanged(double val);
     void on_apply_clicked();
     void on_rulerParms_clicked();
-    void on_useAnnular_clicked(bool checked);
-
-    void on_percenObstruction_valueChanged(double arg1);
 
 private:
     Ui::SettingsGeneral2 *ui;

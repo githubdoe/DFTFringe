@@ -1485,7 +1485,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     // If you process an igram with an "ignore region" and set gaussian blur to zero then you can clearly see
     // the region in 3d view and understand better what I am referring to.
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
+
     // check that all the cc have the same sign
     bool sign = wfList[0]->InputZerns[8] < 0;
     bool someReversed = false;
@@ -1552,6 +1552,8 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
     s >> rrows >> rcols;
 
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
 qDebug() << "maxkey" << maxkey << rrows << rcols << sizes[maxkey];
     cv::Mat mask = wfList[sizes[maxkey][0]]->workMask.clone();
     if (mask.cols != rcols || mask.rows != rrows){
@@ -2774,7 +2776,10 @@ void SurfaceManager::report(){
     QString zerns("<p>This is a flat so no zernike values are computed.</p>");
     if (!md->isEllipse()){
         zerns = "<p><br><table width='100%' border = '1'>"
-                "<tr><th colspan = '2'><h2>Zernike Values at interferogram wavelength</h2></th></tr>"
+                "<tr><th colspan = '2'><h2>" +
+                ((!md->m_useAnnular) ? QString("Zernike Values at interferogram wavelength") :
+                 QString("Annular Zernike Values %1\% center hole").arg(100 * md->m_annularObsPercent, 6,'f',2))+
+                "</h2></th></tr>"
                 "<tr><td><table  border='1' width='40%'>";
         zerns.append("<tr><th>Term</th><td><table width = '100%'><tr><th>Wyant</th><th>RMS</th></tr></table></td></tr>");
         int half = Z_TERMS/2 +2;
