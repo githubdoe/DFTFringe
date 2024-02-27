@@ -40,7 +40,7 @@ jobs:
     needs: call-build-windows
     steps:
       # get artifact uploaded from build workflow
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: DFTFringe-windows-build-artifact
       # create the GitHub release and upload the artifacts
