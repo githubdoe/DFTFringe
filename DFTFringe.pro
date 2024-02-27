@@ -47,7 +47,6 @@ win32 {
     INCLUDEPATH += ..\build_armadillo\tmp\include
     INCLUDEPATH += ..\build_openCV\install\include
 
-    LIBS += ..\build_armadillo\libarmadillo.dll
     LIBS += ..\build_lapack\lib\libblas.a
     LIBS += ..\build_lapack\lib\liblapack.a
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll
