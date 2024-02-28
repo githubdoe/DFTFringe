@@ -297,7 +297,7 @@ mat rzernike_ann(const vec& rho, const double& eps, const int& n, const int& m, 
 //' @md
 // [[Rcpp::export]]
 mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorder=12) {
-
+qDebug() << "zapm1";
   int j, k, nmax, nz, mmax = maxorder/2;
   uword nr = rho.size();
   int ncol = (mmax+1)*(mmax+1);
@@ -305,12 +305,15 @@ mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorde
   mat zm(nr, ncol);
 
     //do some rudimentary error checking
+qDebug() << "2";
 
   if (rho.size() != theta.size()) {
     stop("Numeric vectors must be same length");
+qDebug() << "3";
   }
   if ((maxorder % 2) != 0) {
     stop("maxorder must be even");
+qDebug() << "4";
   }
 
   //good enough
@@ -319,6 +322,7 @@ mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorde
   int nq = maxorder/2 + 5;
   vec xq(nq), qwts(nq);
   xq = gol_welsch(eps, qwts);
+qDebug() << "5";
 
   //cache values of cos and sin
 
@@ -328,6 +332,7 @@ mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorde
     cosmtheta.col(m) = cosmtheta.col(m-1) % cosmtheta.col(0) - sinmtheta.col(m-1) % sinmtheta.col(0);
     sinmtheta.col(m) = sinmtheta.col(m-1) % cosmtheta.col(0) + cosmtheta.col(m-1) % sinmtheta.col(0);
   }
+qDebug() << "6";
 
   //n=0 zernikes are just the scaled radial zernikes
 
@@ -339,11 +344,14 @@ mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorde
     k = (n*n)/4 + n;
     zm.col(k) = RZ.col(n/2);
   }
+qDebug() << "7";
 
   for (int m=1; m<=mmax; m++) {
     nmax = maxorder - m;
     nz = (nmax - m)/2 + 1;
     mat RZ(nr, nz);
+    qDebug() << "ann" << m;
+
     RZ = rzernike_ann(rho, eps, nmax, m, xq, qwts);
     j = 0;
     for (int n=m; n<= nmax; n += 2) {
@@ -354,6 +362,7 @@ mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorde
       j++;
     }
   }
+qDebug() << "8";
 
   return zm;
 }
