@@ -24,6 +24,13 @@ QT += datavisualization
 TARGET = DFTFringe
 TEMPLATE = app
 
+# disable qDebug() in release
+CONFIG( release, debug|release ) {
+    message("Release build")
+    DEFINES += QT_NO_DEBUG_OUTPUT
+}
+
+
 CONFIG += ``
 
 SOURCES += main.cpp \

@@ -17,6 +17,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 # include "armadillo"
 #include <QDebug>
 #include <QString>
+#include "spdlog/spdlog.h"
 
 
 
@@ -297,7 +298,7 @@ mat rzernike_ann(const vec& rho, const double& eps, const int& n, const int& m, 
 //' @md
 // [[Rcpp::export]]
 mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorder=12) {
-qDebug() << "zapm1";
+  spdlog::get("logger")->trace("zapm1");
   int j, k, nmax, nz, mmax = maxorder/2;
   uword nr = rho.size();
   int ncol = (mmax+1)*(mmax+1);
@@ -305,15 +306,17 @@ qDebug() << "zapm1";
   mat zm(nr, ncol);
 
     //do some rudimentary error checking
-qDebug() << "2";
+  spdlog::get("logger")->trace("2");
 
   if (rho.size() != theta.size()) {
     stop("Numeric vectors must be same length");
-qDebug() << "3";
+    spdlog::get("logger")->trace("3");
+
   }
   if ((maxorder % 2) != 0) {
     stop("maxorder must be even");
-qDebug() << "4";
+    spdlog::get("logger")->trace("4");
+
   }
 
   //good enough
@@ -322,7 +325,8 @@ qDebug() << "4";
   int nq = maxorder/2 + 5;
   vec xq(nq), qwts(nq);
   xq = gol_welsch(eps, qwts);
-qDebug() << "5";
+  spdlog::get("logger")->trace("5");
+
 
   //cache values of cos and sin
 
@@ -332,7 +336,8 @@ qDebug() << "5";
     cosmtheta.col(m) = cosmtheta.col(m-1) % cosmtheta.col(0) - sinmtheta.col(m-1) % sinmtheta.col(0);
     sinmtheta.col(m) = sinmtheta.col(m-1) % cosmtheta.col(0) + cosmtheta.col(m-1) % sinmtheta.col(0);
   }
-qDebug() << "6";
+  spdlog::get("logger")->trace("6");
+
 
   //n=0 zernikes are just the scaled radial zernikes
 
@@ -344,13 +349,14 @@ qDebug() << "6";
     k = (n*n)/4 + n;
     zm.col(k) = RZ.col(n/2);
   }
-qDebug() << "7";
+  spdlog::get("logger")->trace("7");
+
 
   for (int m=1; m<=mmax; m++) {
     nmax = maxorder - m;
     nz = (nmax - m)/2 + 1;
     mat RZ(nr, nz);
-    qDebug() << "ann" << m;
+    spdlog::get("logger")->trace("ann ", m);
 
     RZ = rzernike_ann(rho, eps, nmax, m, xq, qwts);
     j = 0;
@@ -362,8 +368,7 @@ qDebug() << "7";
       j++;
     }
   }
-qDebug() << "8";
-
+spdlog::get("logger")->trace("8");
   return zm;
 }
 

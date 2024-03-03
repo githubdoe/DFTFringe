@@ -26,6 +26,8 @@
 #include "myutils.h"
 //#include "arbitrarywavefrontdlg.h"
 #include "userdrawnprofiledlg.h"
+#include "spdlog/spdlog.h"
+
 std::vector<bool> zernEnables;
 std::vector<double> zNulls;
 double BestSC = -1.;
@@ -1509,9 +1511,10 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
 
         }
         else {  // compute the annular zernike values
-            qDebug() << "calling zapm() from init grid";
+            spdlog::get("logger")->trace("calling zapm() from init grid");
+
             m_zerns = zapm( m_rhoTheta.row(0).as_col(), m_rhoTheta.row(1).as_col(), obsPercent, maxOrder);
-            qDebug() << "returning from zapm() from init grid";
+            spdlog::get("logger")->trace("returning from zapm() from init grid");
 
             m_lastusedAnnulus = true;
             //arma::mat m_zernsaa = zpmC(m_rhoTheta.row(0), m_rhoTheta.row(1), maxOrder);
