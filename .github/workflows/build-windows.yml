@@ -252,22 +252,15 @@ jobs:
       - name: add minGW to path
         shell: bash
         run: echo "${{github.workspace}}\Tools\mingw${{env.mingw_version}}_64\bin" >> $GITHUB_PATH
-      # restore cached lapack
+      # restore cached lapack and armadillo
       - uses: actions/cache/restore@v4
         id: cache-lapack
         with:
           path: |
             build_lapack\lib\liblapack.a
             build_lapack\lib\libblas.a
-          key: ${{ runner.os }}-lapack-${{env.lapack_version}}
-          fail-on-cache-miss: true
-      # restore cached armadillo
-      - uses: actions/cache/restore@v4
-        id: cache-armadillo
-        with:
-          path: |
             build_armadillo\tmp\include
-          key: ${{ runner.os }}-armadillo-${{env.armadillo_version}}
+          key: ${{ runner.os }}-lapack-${{env.lapack_version}}-armadillo-${{env.armadillo_version}}
           fail-on-cache-miss: true
       # restore cached QWT
       - uses: actions/cache/restore@v4
