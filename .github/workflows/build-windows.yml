@@ -197,6 +197,9 @@ jobs:
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         shell: bash
         run: echo "${{github.workspace}}\build_lapack" >> $GITHUB_PATH
+      - name: DEBUG #TODO remove
+        if: steps.cache-lapack.outputs.cache-hit != 'true'
+        run: dir
       - name: install wget
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         run: choco install -y wget
