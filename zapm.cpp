@@ -69,7 +69,10 @@ vec gol_welsch(const double& eps, vec& qwts) {
     J(i-1, i) = sqbi;
     J(i, i-1) = sqbi;
   }
-  spdlog::get("logger")->trace("c");
+
+  for(uword i=0; i < nq; i++)
+    for(uword j=0; j < nq; j++)
+        spdlog::get("logger")->trace(J(i,j));
 
 
   eig_sym(eval, evec, J);
