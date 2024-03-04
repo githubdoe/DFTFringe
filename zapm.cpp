@@ -51,7 +51,7 @@ void stop(QString str){
 vec gol_welsch(const double& eps, vec& qwts) {
 
   uword nq = qwts.n_elem;
-  mat J(nq, nq), evec(nq, nq);
+  mat J(nq, nq,fill::zeros), evec(nq, nq);
   vec eval(nq);
   rowvec wts(nq);
   double ak = (1. + eps*eps)/2.;
