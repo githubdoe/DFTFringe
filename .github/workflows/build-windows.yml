@@ -193,7 +193,7 @@ jobs:
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         run: cmake --build ./build_lapack -j4
       # now that Lapack is built, do the Armadillo build
-      - name: add lapack to path
+      - name: add lapack to path #TODO why not working
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         shell: bash
         run: echo "${{github.workspace}}\build_lapack" >> $GITHUB_PATH
@@ -216,7 +216,7 @@ jobs:
         shell: cmd
       - name: cmake generate
         if: steps.cache-lapack.outputs.cache-hit != 'true'
-        run: cmake -G "MinGW Makefiles" -S armadillo-${{env.armadillo_version}} -B build_armadillo
+        run: cmake -D CMAKE_LIBRARY_PATH=./build_lapack/lib -G "MinGW Makefiles" -S armadillo-${{env.armadillo_version}} -B build_armadillo
       - name: cmake build
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         run: cmake --build ./build_armadillo -j4
