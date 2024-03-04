@@ -220,7 +220,7 @@ jobs:
 
   build-DFTFringe:
     runs-on: windows-latest
-    needs: [cache-mingw-from-QT, build-lapack, build-armadillo, build-QWT, build-openCV-with-QT]
+    needs: [cache-mingw-from-QT, build-lapack-armadillo, build-QWT, build-openCV-with-QT]
     steps:
 
       # because problem matcher will not work when chechout in a subfolder,
