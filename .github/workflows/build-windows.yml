@@ -160,7 +160,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            build_armadillo\tmp\include
+            armadillo-${{env.armadillo_version}}\include\armadillo_bits
+          #build_armadillo\tmp\include
           key: ${{ runner.os }}-armadillo-${{env.armadillo_version}}
 
       # all what follows is only run on cache miss
@@ -191,12 +192,12 @@ jobs:
         if: steps.cache-armadillo.outputs.cache-hit != 'true'
         run: 7z x -so armadillo-${{env.armadillo_version}}.tar.xz | 7z x -si -ttar
         shell: cmd
-      - name: cmake generate
-        if: steps.cache-armadillo.outputs.cache-hit != 'true'
-        run: cmake -G "MinGW Makefiles" -S armadillo-${{env.armadillo_version}} -B build_armadillo
-      - name: cmake build
-        if: steps.cache-armadillo.outputs.cache-hit != 'true'
-        run: cmake --build ./build_armadillo -j4
+      #- name: cmake generate
+      #  if: steps.cache-armadillo.outputs.cache-hit != 'true'
+      #  run: cmake -G "MinGW Makefiles" -S armadillo-${{env.armadillo_version}} -B build_armadillo
+      #- name: cmake build
+      #  if: steps.cache-armadillo.outputs.cache-hit != 'true'
+      #  run: cmake --build ./build_armadillo -j4
 
   build-lapack:
     runs-on: windows-latest
@@ -286,7 +287,7 @@ jobs:
         id: cache-armadillo
         with:
           path: |
-            build_armadillo\tmp\include
+            armadillo-${{env.armadillo_version}}\include\armadillo_bits
           key: ${{ runner.os }}-armadillo-${{env.armadillo_version}}
           fail-on-cache-miss: true
       # restore cached QWT

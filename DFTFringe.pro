@@ -44,7 +44,7 @@ win32 {
     RC_FILE = DFTFringe.rc
 
     INCLUDEPATH += ..\qwt-6.1.6\src
-    INCLUDEPATH += ..\build_armadillo\tmp\include
+    INCLUDEPATH += ..\armadillo-12.6.7\include\armadillo_bits
     INCLUDEPATH += ..\build_openCV\install\include
 
     LIBS += ..\build_lapack\lib\libblas.a
