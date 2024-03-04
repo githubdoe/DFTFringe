@@ -317,7 +317,11 @@ jobs:
 
       # this enables the problem matcher
       - uses: ammaraskar/gcc-problem-matcher@master
-
+      - name: debug
+        run: |
+          dir
+          dir armadillo-${{env.armadillo_version}}
+          dir armadillo-${{env.armadillo_version}}\include\armadillo_bits
       # Update the 2 strings automatically
       # MY_AUTOMATED_VERSION_STRING
       # MY_AUTOMATED_DATE_STRING
