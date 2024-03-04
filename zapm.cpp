@@ -50,7 +50,7 @@ void stop(QString str){
 //' @seealso Called by [zapm()] and [zapm_iso()].
 // [[Rcpp::export]]
 vec gol_welsch(const double& eps, vec& qwts) {
-
+  spdlog::get("logger")->trace("gol_welsch");
   uword nq = qwts.n_elem;
   mat J(nq, nq), evec(nq, nq);
   vec eval(nq);
@@ -59,16 +59,24 @@ vec gol_welsch(const double& eps, vec& qwts) {
   double sqbi;
   double mu0 = 1. - eps*eps;
 
+  spdlog::get("logger")->trace("a");
+
   J.diag().fill(ak);
+  spdlog::get("logger")->trace("b");
   for (uword i = 1; i < nq; i++) {
+    spdlog::get("logger")->trace(i);
     sqbi = i * 0.5 * mu0/std::sqrt(4.*i*i - 1.);
     J(i-1, i) = sqbi;
     J(i, i-1) = sqbi;
   }
+  spdlog::get("logger")->trace("c");
+
 
   eig_sym(eval, evec, J);
+  spdlog::get("logger")->trace("d");
   wts = mu0 * square(evec.row(0));
   qwts = wts.as_col();
+  spdlog::get("logger")->trace("e");
 
   // eigenvalues are the abscissa values for the quadrature
   return eval;
