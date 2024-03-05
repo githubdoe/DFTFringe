@@ -214,9 +214,10 @@ jobs:
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         run: 7z x -so armadillo-${{env.armadillo_version}}.tar.xz | 7z x -si -ttar
         shell: cmd
+      # Armadillo relies on Lapack, it's important it knowns where it is during genration to be configured correctly
       - name: cmake generate
         if: steps.cache-lapack.outputs.cache-hit != 'true'
-        run: cmake -D CMAKE_LIBRARY_PATH=./build_lapack/lib -G "MinGW Makefiles" -S armadillo-${{env.armadillo_version}} -B build_armadillo
+        run: cmake -D CMAKE_PREFIX_PATH=./build_lapack -G "MinGW Makefiles" -S armadillo-${{env.armadillo_version}} -B build_armadillo
       - name: cmake build
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         run: cmake --build ./build_armadillo -j4
