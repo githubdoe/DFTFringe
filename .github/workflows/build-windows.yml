@@ -160,8 +160,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            build_lapack\lib\liblapack.a
-            build_lapack\lib\libblas.a
+            build_lapack\bin\liblapack.dll
+            build_lapack\bin\libblas.dll
             build_armadillo\tmp\include
           key: ${{ runner.os }}-lapack-${{env.lapack_version}}-armadillo-${{env.armadillo_version}}
 
@@ -185,21 +185,14 @@ jobs:
           repository: 'Reference-LAPACK/lapack'
           ref: 'v${{env.lapack_version}}'
           path: './lapack'
-      # remove test compiler because https://github.com/Reference-LAPACK/lapack/issues/305 not needed to create DLL
+      # See https://github.com/Reference-LAPACK/lapack/issues/305 : CMAKE_SHARED_LINKER_FLAGS is fixing a build issue
       - name: cmake generate
         if: steps.cache-lapack.outputs.cache-hit != 'true'
-        run: cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D TEST_FORTRAN_COMPILER=OFF
+        run: cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON -D CMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"
       - name: cmake build
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         run: cmake --build ./build_lapack -j4
       # now that Lapack is built, do the Armadillo build
-      - name: add lapack to path #TODO why not working
-        if: steps.cache-lapack.outputs.cache-hit != 'true'
-        shell: bash
-        run: echo "${{github.workspace}}\build_lapack" >> $GITHUB_PATH
-      - name: DEBUG #TODO remove
-        if: steps.cache-lapack.outputs.cache-hit != 'true'
-        run: dir
       - name: install wget
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         run: choco install -y wget
@@ -258,8 +251,8 @@ jobs:
         id: cache-lapack
         with:
           path: |
-            build_lapack\lib\liblapack.a
-            build_lapack\lib\libblas.a
+            build_lapack\bin\liblapack.dll
+            build_lapack\bin\libblas.dll
             build_armadillo\tmp\include
           key: ${{ runner.os }}-lapack-${{env.lapack_version}}-armadillo-${{env.armadillo_version}}
           fail-on-cache-miss: true
@@ -350,7 +343,9 @@ jobs:
           Copy-Item ".\DFTFringe\res\surface_LeY_icon.ico" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res"
           Copy-Item ".\DFTFringe\res\help" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res\help" -Recurse
           Copy-Item ".\DFTFringe\RevisionHistory.html" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-
+      #TODO copy those:
+      #build_lapack\bin\liblapack.dll
+      #build_lapack\bin\libblas.dll
       - name: automatically add QT dependencies with windeployqt
         run: .\${{env.QT_version}}\mingw81_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
 
