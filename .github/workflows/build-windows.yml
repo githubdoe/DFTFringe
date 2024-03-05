@@ -329,6 +329,8 @@ jobs:
           Copy-Item ".\DFTFringe\Release\DFTFringe.exe.debug" -Destination ".\"
           mkdir ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\DFTFringe\Release\DFTFringe.exe" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\build_lapack\bin\liblapack.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\build_lapack\bin\libblas.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_core460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
@@ -343,9 +345,6 @@ jobs:
           Copy-Item ".\DFTFringe\res\surface_LeY_icon.ico" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res"
           Copy-Item ".\DFTFringe\res\help" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res\help" -Recurse
           Copy-Item ".\DFTFringe\RevisionHistory.html" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-      #TODO copy those:
-      #build_lapack\bin\liblapack.dll
-      #build_lapack\bin\libblas.dll
       - name: automatically add QT dependencies with windeployqt
         run: .\${{env.QT_version}}\mingw81_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
 
