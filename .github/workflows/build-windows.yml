@@ -160,7 +160,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            armadillo-${{env.armadillo_version}}\include\armadillo_bits
+            armadillo-${{env.armadillo_version}}\include
           #build_armadillo\tmp\include
           key: ${{ runner.os }}-armadillo-${{env.armadillo_version}}
 
@@ -287,7 +287,7 @@ jobs:
         id: cache-armadillo
         with:
           path: |
-            armadillo-${{env.armadillo_version}}\include\armadillo_bits
+            armadillo-${{env.armadillo_version}}\include
           key: ${{ runner.os }}-armadillo-${{env.armadillo_version}}
           fail-on-cache-miss: true
       # restore cached QWT
