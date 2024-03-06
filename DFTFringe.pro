@@ -47,15 +47,17 @@ win32 {
     INCLUDEPATH += ..\build_armadillo\tmp\include
     INCLUDEPATH += ..\build_openCV\install\include
 
-    LIBS += ..\build_armadillo\libarmadillo.dll
-    LIBS += ..\build_lapack\lib\libblas.a
-    LIBS += ..\build_lapack\lib\liblapack.a
+    LIBS += ..\build_lapack\bin\libblas.dll
+    LIBS += ..\build_lapack\bin\liblapack.dll
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_core460.dll
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll
     LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll
+
+    # This is for armadillo to not use wrapper. See https://gitlab.com/conradsnicta/armadillo-code#6-linux-and-macos-compiling-and-linking
+    DEFINES += ARMA_DONT_USE_WRAPPER
 }
 
 # LINUX ############
