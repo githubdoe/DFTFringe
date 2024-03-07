@@ -340,6 +340,7 @@ jobs:
           Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\qwt-${{env.QWT_version}}\lib\qwt.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\${{env.QT_version}}\mingw81_64\bin\Qt5OpenGL.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\tools\mingw${{env.mingw_version}}_64\bin\libquadmath-0.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\DFTFringe\ColorMaps" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\ColorMaps" -Recurse
           mkdir ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res"
           Copy-Item ".\DFTFringe\res\surface_LeY_icon.ico" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res"
