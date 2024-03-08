@@ -971,7 +971,7 @@ void MainWindow::on_actionAbout_triggered()
                              "<li> QWT " + QWT_VERSION_STR + ", armadillo " + QString::fromStdString(arma::arma_version::as_string()) + ", Lapack, BLAS</li></ul></p>"
                              "<h3>Credits</h3>"
                              "<ul><li>Mike Peck for<ul><li>Researching and explaining FFT algorithm.</li>"
-                             "<li>Researching and explaining Unwrap algorithms.</li></li>"
+                             "<li>Researching and explaining Unwrap and annular algorithms.</li></li>"
                              "<li>Steve Koehler for much help with Vortex implementation.</li>"
                              "<li>Dave Rowe for starting the Interferometry group and publishig the initial program.</li>"
                              "<li>Kieran Larken for deriving and publishing the Vortex Transform.</li>"
