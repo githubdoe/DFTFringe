@@ -766,6 +766,8 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
         // annular wave fronts already have this made elsewhere.
         if (!md->m_useAnnular){
             m_rhoTheta = rhotheta(nx ,wf.m_outside.m_radius, midx,midy, &wf);
+            if (m_lastusedAnnulus)
+                m_needsInit=true;
         }
         // now iterate over those points
         for (unsigned int i = 0; i < m_row.size(); ++i){
