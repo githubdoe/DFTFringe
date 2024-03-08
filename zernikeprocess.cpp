@@ -1099,7 +1099,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
     cv::Mat result = cv::Mat::ones(wx,wx, (doColor)? CV_8UC4: numType);
 
 
-
+    m_needsInit = true;
     initGrid(wx, rad, (wx-1)/2, (wx-1)/2, m_maxOrder, 0);
     double spacing = 1.;
     mirrorDlg *md = mirrorDlg::get_Instance();
@@ -1116,7 +1116,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
         dlg_arbitrary->prepare(dlg.size);
 
 
-    for (std::size_t i = 0; i < m_zerns.n_rows; ++i)
+    for (std::size_t i = 0; i < m_rhoTheta.n_cols; ++i)
     {
 
         double rho = m_rhoTheta.row(0)(i);
