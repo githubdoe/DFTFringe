@@ -52,31 +52,20 @@ There are many different solutions combinations for building. Pick the one you p
 
 |                                  | Option A         | Option B    | Option C |
 | -------------------------------- | ---------------- | ----------- | -------- |
-| Stage 1: getting compiler and QT | aqt command line | QT IDE      | WSL |
-| Stage 2: DLL dependencies        | full build       | lazy method | :x: |
-| Stage 3: Building DFTFringe      | command line     | QT IDE      | :x: |
-| Stage 4: Making installer        | distributing     | :x:         | :x: |
+| Stage 1: getting compiler and QT | [aqt command line](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-using-command-line-and-aqt) | [QT IDE](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-using-qt-ide)  | [WSL](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-c-using-windows-subsystem-for-linux-wsl) |
+| Stage 2: DLL dependencies        | [full build](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-full-build) | [lazy method](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-getting-dlls-from-official-installer) | :x: |
+| Stage 3: Building DFTFringe      | [command line](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-using-command-line) | [QT IDE](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-using-ide)      | :x: |
+| Stage 4: Making installer        | [QT installer framework](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#stage-4-making-installer) | :x:         | :x: |
 
 ## Stage 1: getting compiler and QT
+
 ### Option A: using command line and aqt
-### Option B: using QT IDE
-### Option C: using Windows Subsystem for Linux (WSL)
-## Stage 2: DLL dependencies
-### Option A: full build
-### Option B: getting DLLs from official installer
-## Stage 3: Building DFTFringe
-### Option A: using command line
-### Option B: using IDE
-## Stage 4: Making installer
 
-
-
-
-### Create a folder
+#### Create a folder
 
 Personnaly I use `C:\buildingDFTFringe` to have a short path. All tools and dependencies will be stored here. It's important that inside folder structure is indentical for the project to build but you can change the base path.
 
-### Get minGw
+#### Get minGw
 
 The easiest way I have found to install it from command line requires to have Python installed. It then uses [aqtinstall](https://aqtinstall.readthedocs.io/en/latest/).
 
@@ -84,12 +73,12 @@ From within `C:\buildingDFTFringe` do the following:
 ```
 pip install aqtinstall
 aqt install-tool windows desktop tools_mingw qt.tools.win64_mingw810
-aqt install-tool windows desktop tools_ifw
 ```
 
 Add minGW to your Path: `C:\buildingDFTFringe\Tools\mingw810_64\bin`
+Add Qmake to your Path: `C:\buildingDFTFringe\5.15.2\mingw81_64\bin`
 
-### Get QT
+#### Get QT
 
 Here again, I have found easier to use Python and [aqtinstall](https://aqtinstall.readthedocs.io/en/latest/) to get QT.
 
@@ -99,7 +88,34 @@ aqt install-qt windows desktop 5.15.2 win64_mingw81 -m qtcharts qtdatavis3d
 aqt install-qt windows desktop 5.15.2 win64_mingw81 --archives qtbase qtsvg
 ```
 
-### Build OpenCV
+### Option B: using QT IDE
+
+:writing_hand: Work in progress (planned for this PR) :writing_hand:
+
+### Option C: using Windows Subsystem for Linux (WSL)
+
+Since Windows 10, Windows provides a native Linux subsystem. You don't need a virtual machine or a dual boot and can run any Linux application directly inside Windows. It works also for graphical applications.  
+More information about installation are available here: https://learn.microsoft.com/en-us/windows/wsl/install  
+
+All what you need to do is:
+```
+wsl --install
+```
+
+To run you already installed WSL:
+```
+wsl
+```
+
+For the resto of the build process you can now relly on [Linux build process](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#how-to-build-dftfringe-on-linux).
+
+## Stage 2: DLL dependencies
+
+### Option A: full build
+
+What will be described here is the same method used to build the installer [GitHub action workflow](https://github.com/githubdoe/DFTFringe/blob/master/.github/workflows/build-windows.yml). It relies heavily on command line but you can transpose everything to your prefered approch. For example using CMake-gui instead of cmake command line. Versions might have changed, rely on the workflow if you want to duplicate with same versions as the repository.
+
+#### Build OpenCV
 
 Get [OpenCV](https://opencv.org/) source code version 4.6.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\openCV`
 
@@ -112,17 +128,17 @@ cmake --build ./build_openCV -j4
 cmake --install ./build_openCV
 ```
 
-### Build Qwt
+#### Build Qwt
 
 Get [Qwt](https://qwt.sourceforge.io/) source code version 6.1.6 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.1.6`
 
 Then from within `C:\buildingDFTFringe\qwt-6.1.6` do the following:  
 ```
-..\5.15.2\mingw81_64\bin\qmake.exe
+qmake.exe
 mingw32-make -j4
 ```
 
-### Build Lapack and Blas
+#### Build Lapack and Blas
 
 Get [Lapack](https://www.netlib.org/lapack/) source code version 3.11.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\lapack`. Lapack comes with Blas.
 
@@ -132,7 +148,7 @@ cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON -D 
 cmake --build ./build_lapack -j4
 ```
 
-### Build Armadillo
+#### Build Armadillo
 
 Get [Armadillo](https://arma.sourceforge.net/) source code version 12.6.7 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-12.6.7`.
 
@@ -144,13 +160,47 @@ cmake --build ./build_armadillo -j4
 
 It's important that Armadillo known the path to Lapack to work correctly. Here we use CMAKE_PREFIX_PATH but you can also add it to your Path or use other methods.
 
-### Build DFTFringe
+### Option B: getting DLLs from official installer
 
-:writing_hand: This will be done in this PR
+:writing_hand: Work in progress (planned for this PR) :writing_hand:
+You can copy the DLLs from the intaller but still need the header files of the libraries for the build.
 
+## Stage 3: Building DFTFringe
 
+### Option A: using command line
 
+Get [DFTFringe](https://github.com/githubdoe/DFTFringe) source code in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\DFTFringe`.
 
-## TODO remove this
+From within `C:\buildingDFTFringe\DFTFringe` do the following:  
+```
+qmake.exe
+mingw32-make -j4
+```
 
-What will be described here is the same method used to build the installer [GitHub action workflow](https://github.com/githubdoe/DFTFringe/blob/master/.github/workflows/build-windows.yml). It relies heavily on command line but you can transpose everything to your prefered approch. For example using CMake-gui instead of cmake command line. Versions might have changed, rely on the workflow if you want to duplicate with same versions as the repository.
+### Option B: using IDE
+
+Open Qt Creator  
+Open the project file `DFTFringe.pro`  
+Build  
+
+## Stage 4: Making installer
+
+:writing_hand: Work in progress (planned for this PR) :writing_hand:
+
+First you need to get Qt Installer Framework. The easiest way I have found to install it from command line requires to have Python installed. It then uses [aqtinstall](https://aqtinstall.readthedocs.io/en/latest/).
+
+From within `C:\buildingDFTFringe` do the following: 
+```
+pip install aqtinstall
+aqt install-tool windows desktop tools_ifw
+```
+
+:writing_hand: TODO missing step to copy required DLLs
+
+Then we create the actual installer. From within `C:\buildingDFTFringe` do the following:  
+```
+Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_YourInfoString
+```
+
+:writing_hand: TODO how to test the installer.
+Remove all compile ror dependencies from path for the test
