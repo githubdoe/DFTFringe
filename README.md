@@ -148,6 +148,8 @@ cmake --build ./build_openCV -j4
 cmake --install ./build_openCV
 ```
 
+:writing_hand: Work in progress (planned for this PR) :writing_hand: need to add the path when using IDE Qt installation
+
 #### Build Qwt
 
 Get [Qwt](https://qwt.sourceforge.io/) source code version 6.1.6 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.1.6`
@@ -182,8 +184,16 @@ It's important that Armadillo known the path to Lapack to work correctly. Here w
 
 ### Option B: getting DLLs from official installer
 
+First you need to get the header files for each dependency. Than follow [this](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-c-copying-from-release) to copy the necessary DLLs from release to your build folder.
+
+#### Build OpenCV
 :writing_hand: Work in progress (planned for this PR) :writing_hand:
-You can copy the DLLs from the intaller but still need the header files of the libraries for the build.
+
+#### Build Qwt
+:writing_hand: Work in progress (planned for this PR) :writing_hand:
+
+#### Build Armadillo
+:writing_hand: Work in progress (planned for this PR) :writing_hand:
 
 ## Stage 3: Building DFTFringe
 
@@ -207,7 +217,28 @@ Build
 
 ### Option A: using command line
 
-:writing_hand: Work in progress (planned for this PR) :writing_hand:
+From within `C:\buildingDFTFringe` do the following:  
+Note `Copy-Item` is for powershell.  
+```
+windeployqt.exe DFTFringe\Release\DFTFringe.exe
+
+Copy-Item ".\build_lapack\bin\liblapack.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_lapack\bin\libblas.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_core460.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_flann460.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\qwt-6.1.6\lib\qwt.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\5.15.2\mingw81_64\bin\Qt5OpenGL.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\tools\mingw810_64\bin\libquadmath-0.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\DFTFringe\ColorMaps" -Destination ".\DFTFringe\Release\ColorMaps" -Recurse
+mkdir ".\DFTFringe\Release\res"
+Copy-Item ".\DFTFringe\res\help" -Destination ".\DFTFringe\Release\res\help" -Recurse
+Copy-Item ".\DFTFringe\RevisionHistory.html" -Destination ".\DFTFringe\Release"
+```
 
 ### Option B: holistic approach
 
@@ -217,11 +248,18 @@ Copy the missing DLLs from wherever they are to the build folder. Take care to u
 Continue to do so until it works.
 
 ### Option C: copying from release
-:writing_hand: Work in progress (planned for this PR) :writing_hand:
+
+Use the official installer to install DFTFringe.  
+From the install folder, copy these file to your build folder:  
+- All `.dll` files
+- `ColorMaps` folder
+- `imageformats` folder
+- `platform` folder
+- `res` folder
 
 ## Stage 5: Making installer
 
-:writing_hand: Work in progress (planned for this PR) :writing_hand:
+:warning: This step is described only for documentation purpose. It's very unlikelly you need to make an installer manually on your computer. Only official releases should get installer.
 
 First you need to get Qt Installer Framework. The easiest way I have found to install it from command line requires to have Python installed. It then uses [aqtinstall](https://aqtinstall.readthedocs.io/en/latest/).
 
@@ -231,6 +269,7 @@ pip install aqtinstall
 aqt install-tool windows desktop tools_ifw
 ```
 
+:writing_hand: Work in progress (planned for this PR) :writing_hand:
 :writing_hand: TODO missing step to copy required DLLs
 
 Then we create the actual installer. From within `C:\buildingDFTFringe` do the following:  
