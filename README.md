@@ -55,7 +55,8 @@ There are many different solutions combinations for building. Pick the one you p
 | Stage 1: getting compiler and QT | [aqt command line](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-using-command-line-and-aqt) | [QT IDE](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-using-qt-ide)  | [WSL](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-c-using-windows-subsystem-for-linux-wsl) |
 | Stage 2: DLL dependencies        | [full build](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-full-build) | [lazy method](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-getting-dlls-from-official-installer) | :x: |
 | Stage 3: Building DFTFringe      | [command line](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-using-command-line) | [QT IDE](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-using-ide)      | :x: |
-| Stage 4: Making installer        | [QT installer framework](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#stage-4-making-installer) | :x:         | :x: |
+| Stage 4: Copy necessary DLLs     | [command line](TODO) | [holistic approach](TODO) | [from release](TODO) |
+| Stage 5: Making installer        | [QT installer framework](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#stage-5-making-installer) | :x:         | :x: |
 
 ## Stage 1: getting compiler and QT
 
@@ -82,15 +83,32 @@ Add Qmake to your Path: `C:\buildingDFTFringe\5.15.2\mingw81_64\bin`
 
 Here again, I have found easier to use Python and [aqtinstall](https://aqtinstall.readthedocs.io/en/latest/) to get QT.
 
-From within `C:\buildingDFTFringe` do the following: 
-``` 
+From within `C:\buildingDFTFringe` do the following:
+```
 aqt install-qt windows desktop 5.15.2 win64_mingw81 -m qtcharts qtdatavis3d
 aqt install-qt windows desktop 5.15.2 win64_mingw81 --archives qtbase qtsvg
 ```
 
+#### Get Qt creator
+
+This is not a necessary step but if you are building on your own computer you probably want to debug and need Qt creator IDE.
+```
+aqt install-tool windows desktop tools_qtcreator
+```
+
 ### Option B: using QT IDE
 
-:writing_hand: Work in progress (planned for this PR) :writing_hand:
+Download the **open source** version of Qt framework https://www.qt.io/download-open-source
+Run the installer and go through it.
+When it's time to select which components to install in custom installation you must first tick the `archive` checkbox and click on `filter`. Without this, you won't be able to install the old 
+Qt 5.15.2 version.  
+
+**Which components to choose ?**  
+You will need `QT 5.15.2`.  
+For faster installation, you probably do not need `Qt design studio`.   
+In the details of Qt 5.15.2 you only need `MinGW 8.1.0 64-bit`, `QT Charts` and `Qt Data Visualization`.  
+You probably want to install `Qt Creator`.  
+You may want to install `Cmake`, `Ninja` and `Qt Installer Framework`.
 
 ### Option C: using Windows Subsystem for Linux (WSL)
 
@@ -114,6 +132,8 @@ For the resto of the build process you can now relly on [Linux build process](ht
 ### Option A: full build
 
 What will be described here is the same method used to build the installer [GitHub action workflow](https://github.com/githubdoe/DFTFringe/blob/master/.github/workflows/build-windows.yml). It relies heavily on command line but you can transpose everything to your prefered approch. For example using CMake-gui instead of cmake command line. Versions might have changed, rely on the workflow if you want to duplicate with same versions as the repository.
+
+If you haven't already, you will need to install latest version of [CMake](https://cmake.org/) first.
 
 #### Build OpenCV
 
@@ -183,7 +203,23 @@ Open Qt Creator
 Open the project file `DFTFringe.pro`  
 Build  
 
-## Stage 4: Making installer
+## Stage 4: Copy necessary DLLs
+
+### Using command line
+
+:writing_hand: Work in progress (planned for this PR) :writing_hand:
+
+### Holistic approach
+
+Run your newly built DFTFringe.exe.  
+Identify missing DLLs by reading error message.  
+Copy the missing DLLs from wherever they are to the build folder. Take care to use correct version of each DLL.  
+Continue to do so until it works.
+
+### Copying from release
+:writing_hand: Work in progress (planned for this PR) :writing_hand:
+
+## Stage 5: Making installer
 
 :writing_hand: Work in progress (planned for this PR) :writing_hand:
 
@@ -203,4 +239,9 @@ Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInsta
 ```
 
 :writing_hand: TODO how to test the installer.
-Remove all compile ror dependencies from path for the test
+Remove all compiler or dependencies from path for the test
+
+
+# How to analyse crashlog
+
+:building_construction: Under construction :building_construction:
