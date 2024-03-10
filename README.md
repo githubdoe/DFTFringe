@@ -55,7 +55,7 @@ There are many different solutions combinations for building. Pick the one you p
 | Stage 1: getting compiler and QT | [aqt command line](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-using-command-line-and-aqt) | [QT IDE](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-using-qt-ide)  | [WSL](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-c-using-windows-subsystem-for-linux-wsl) |
 | Stage 2: DLL dependencies        | [full build](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-full-build) | [lazy method](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-getting-dlls-from-official-installer) | :x: |
 | Stage 3: Building DFTFringe      | [command line](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-using-command-line) | [QT IDE](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-using-ide)      | :x: |
-| Stage 4: Copy necessary DLLs     | [command line](TODO) | [holistic approach](TODO) | [from release](TODO) |
+| Stage 4: Copy necessary DLLs     | [command line](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-a-using-command-line-1) | [holistic approach](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-b-holistic-approach) | [from release](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-c-copying-from-release) |
 | Stage 5: Making installer        | [QT installer framework](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#stage-5-making-installer) | :x:         | :x: |
 
 ## Stage 1: getting compiler and QT
@@ -125,7 +125,7 @@ To run you already installed WSL:
 wsl
 ```
 
-For the resto of the build process you can now relly on [Linux build process](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#how-to-build-dftfringe-on-linux).
+For the resto of the build process you can now relly on [Linux build process](how-to-build-dftfringe-on-linux).
 
 ## Stage 2: DLL dependencies
 
@@ -205,18 +205,18 @@ Build
 
 ## Stage 4: Copy necessary DLLs
 
-### Using command line
+### Option A: using command line
 
 :writing_hand: Work in progress (planned for this PR) :writing_hand:
 
-### Holistic approach
+### Option B: holistic approach
 
 Run your newly built DFTFringe.exe.  
 Identify missing DLLs by reading error message.  
 Copy the missing DLLs from wherever they are to the build folder. Take care to use correct version of each DLL.  
 Continue to do so until it works.
 
-### Copying from release
+### Option C: copying from release
 :writing_hand: Work in progress (planned for this PR) :writing_hand:
 
 ## Stage 5: Making installer
