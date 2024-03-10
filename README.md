@@ -6,8 +6,21 @@
 # Introduction
 
 DFTFringe Telescope Mirror interferometry analysis Program.
-This is the successor to OpenFringe which is a Telescope Mirror interferometry analysis program.
-This code depends on QT, OpenCV, QWT, Armadillo, Lapack and BLAS.
+This is the successor to OpenFringe which is a Telescope Mirror interferometry analysis program.  
+
+This code is distributed with DLLs from: 
+- QT
+- OpenCV
+- QWT
+- Armadillo
+- Lapack
+- BLAS
+
+It also integrates code from:
+- [Michael Peck Zernike analysis tools](https://github.com/mlpeck/zernike)
+- [Bezier](https://github.com/oysteinmyrmo/bezier)
+- [Boost](https://www.boost.org/)
+- [Spdlog](https://github.com/gabime/spdlog)
 
 You can find tutorials at https://youtu.be/wWdG3wrGAbM
 
@@ -27,11 +40,37 @@ qmake
 make -j4
 ```
 
+# How to build DFTFringe on MacOS
+
+:building_construction: Under construction :building_construction:
+
 # How to build DFTFringe on Windows
 
 :warning: For Windows installation it is recommended that you use the prebuilt installer provided here: [link to latest release](https://github.com/githubdoe/dftfringe/releases/latest).
 
-What will be described here is the same method used to build the installer [GitHub action workflow](https://github.com/githubdoe/DFTFringe/blob/master/.github/workflows/build-windows.yml). It relies heavily on command line but you can transpose everything to your prefered approch. For example using CMake-gui instead of cmake command line. Versions might have changed, rely on the workflow if you want to duplicate with same versions as the repository.
+There are many different solutions combinations for building. Pick the one you prefer/need. You can mix different options at each stage.
+
+|                                  | Option A         | Option B    | Option C |
+| -------------------------------- | ---------------- | ----------- | -------- |
+| Stage 1: getting compiler and QT | aqt command line | QT IDE      | WSL |
+| Stage 2: DLL dependencies        | full build       | lazy method | :x: |
+| Stage 3: Building DFTFringe      | command line     | QT IDE      | :x: |
+| Stage 4: Making installer        | distributing     | :x:         | :x: |
+
+## Stage 1: getting compiler and QT
+### Option A: using command line and aqt
+### Option B: using QT IDE
+### Option C: using Windows Subsystem for Linux (WSL)
+## Stage 2: DLL dependencies
+### Option A: full build
+### Option B: getting DLLs from official installer
+## Stage 3: Building DFTFringe
+### Option A: using command line
+### Option B: using IDE
+## Stage 4: Making installer
+
+
+
 
 ### Create a folder
 
@@ -73,7 +112,7 @@ cmake --build ./build_openCV -j4
 cmake --install ./build_openCV
 ```
 
-### Buld Qwt
+### Build Qwt
 
 Get [Qwt](https://qwt.sourceforge.io/) source code version 6.1.6 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.1.6`
 
@@ -109,6 +148,9 @@ It's important that Armadillo known the path to Lapack to work correctly. Here w
 
 :writing_hand: This will be done in this PR
 
-# How to build DFTFringe on MacOS
 
-:building_construction: Under construction :building_construction:
+
+
+## TODO remove this
+
+What will be described here is the same method used to build the installer [GitHub action workflow](https://github.com/githubdoe/DFTFringe/blob/master/.github/workflows/build-windows.yml). It relies heavily on command line but you can transpose everything to your prefered approch. For example using CMake-gui instead of cmake command line. Versions might have changed, rely on the workflow if you want to duplicate with same versions as the repository.
