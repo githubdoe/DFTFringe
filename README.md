@@ -146,12 +146,11 @@ cmake -G "MinGW Makefiles" -S openCV -B build_openCV
 cmake --build ./build_openCV -j4
 cmake --install ./build_openCV
 ```
-
-:writing_hand: Work in progress (planned for this PR) :writing_hand: need to add the path when using IDE Qt installation
+You may need to adapt `Qt5_DIR` to you actual installation directory. If you installed Qt with the official isntaller the path is `C:/Qt/5.15.2/mingw81_64/lib/cmake/Qt5`.
 
 #### Build Qwt
 
-Get [Qwt](https://qwt.sourceforge.io/) source code version 6.1.6 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.1.6`
+Get [Qwt](https://qwt.sourceforge.io/) source code version 6.1.6 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.1.6`.
 
 Then from within `C:\buildingDFTFringe\qwt-6.1.6` do the following:  
 ```
@@ -183,16 +182,40 @@ It's important that Armadillo knows the path to Lapack to work correctly. Here w
 
 ### Option B: getting DLLs from official installer
 
-First you need to get the header files for each dependency. Then follow [this](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-c-copying-from-release) to copy the necessary DLLs from release to your build folder.
-
 #### Build OpenCV
-:writing_hand: Work in progress (planned for this PR) :writing_hand:
+
+Get [OpenCV](https://opencv.org/) **installer (not source code)** 4.6.0 in your prefered way (typically from their [GitHub](https://github.com/opencv/opencv/releases) or [website](https://opencv.org/releases/)). Run the installer `opencv-4.6.0-vc14_vc15.exe`.
+
+Copy content from `yourExtractionLocation\opencv\build\include` to `C:\buildingDFTFringe\build_openCV\install\include`.  
 
 #### Build Qwt
-:writing_hand: Work in progress (planned for this PR) :writing_hand:
+
+Get [Qwt](https://qwt.sourceforge.io/) source code version 6.1.6 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.1.6`.
+
+No additional modification required here.
 
 #### Build Armadillo
-:writing_hand: Work in progress (planned for this PR) :writing_hand:
+
+Get [Armadillo](https://arma.sourceforge.net/) source code version 12.6.7 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-12.6.7`.
+
+Then follow the information in `DFTFringe.pro` to create appropriate folders for header files and DLLs.  
+Copy content from `armadillo-12.6.7\include` to `build_armadillo\tmp\include`. 
+
+#### Copy all the DLLs
+
+Previous steps have permitted to get necessary header files to build the code. DLLs are still requires.  
+Install DFTFringe from official installer and copy the DLLs from install folder to the folder expected by `DFTFringe.pro`:  
+```
+qwt-6.1.6\lib\qwt.dll
+build_lapack\bin\libblas.dll
+build_lapack\bin\liblapack.dll
+build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll
+build_openCV\install\x64\mingw\bin\libopencv_core460.dll
+build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll
+build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll
+build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll
+build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll
+```
 
 ## Stage 3: Building DFTFringe
 
@@ -260,7 +283,7 @@ From the install folder, copy these file to your build folder:
 
 :warning: This step is described only for documentation purpose. It's very unlikelly you need to make an installer manually on your computer. Only official releases should get installer.
 
-First you need to get Qt Installer Framework. The easiest way I have found to install it from command line requires to have Python installed. It then uses [aqtinstall](https://aqtinstall.readthedocs.io/en/latest/).
+First you need to get Qt Installer Framework. The easiest way I have found to install it from command line requires to have Python installed. It then uses [aqtinstall](https://aqtinstall.readthedocs.io/en/latest/). You can also install it with official Qt installer.
 
 From within `C:\buildingDFTFringe` do the following: 
 ```
@@ -268,17 +291,12 @@ pip install aqtinstall
 aqt install-tool windows desktop tools_ifw
 ```
 
-:writing_hand: Work in progress (planned for this PR) :writing_hand:
-:writing_hand: TODO missing step to copy required DLLs
+:building_construction: Under construction :building_construction:
+- Need to copy all DLLs (see github action build-windows.yml)
+- Create the installer 
+- To test on a developper computer, remember to remove path to DLLs (compiler, ...)
 
-Then we create the actual installer. From within `C:\buildingDFTFringe` do the following:  
-```
-Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_YourInfoString
-```
-
-:writing_hand: TODO how to test the installer.
-Remove all compiler or dependencies from path for the test
-
+:building_construction: Under construction :building_construction:
 
 # How to analyse crashlog
 
