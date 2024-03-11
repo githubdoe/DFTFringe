@@ -100,14 +100,13 @@ aqt install-tool windows desktop tools_qtcreator
 
 Download the **open source** version of Qt framework https://www.qt.io/download-open-source
 Run the installer and go through it.
-When it's time to select which components to install in custom installation you must first tick the `archive` checkbox and click on `filter`. Without this, you won't be able to install the old 
-Qt 5.15.2 version.  
+When it's time to select which components to install in custom installation you must first tick the `archive` checkbox and click on `filter`. Without this, you won't be able to install the old Qt 5.15.2 version.  
 
 **Which components to choose ?**  
 You will need `QT 5.15.2`.  
 For faster installation, you probably do not need `Qt design studio`.   
 In the details of Qt 5.15.2 you only need `MinGW 8.1.0 64-bit`, `QT Charts` and `Qt Data Visualization`.  
-You probably want to install `Qt Creator`.  
+You probably want to install `Qt Creator`. This is Qt's IDE and if you are here it's probably because you need to debug (breakpoints, step by step, variables, ...).  
 You may want to install `Cmake`, `Ninja` and `Qt Installer Framework`.
 
 ### Option C: using Windows Subsystem for Linux (WSL)
@@ -120,12 +119,12 @@ All what you need to do is:
 wsl --install
 ```
 
-To run you already installed WSL:
+Once a Linux distribution is installed, you only need this to run same one each time:
 ```
 wsl
 ```
 
-For the resto of the build process you can now relly on [Linux build process](how-to-build-dftfringe-on-linux).
+For the rest of the build process you can now rely on [Linux build process](how-to-build-dftfringe-on-linux).
 
 ## Stage 2: DLL dependencies
 
@@ -180,11 +179,11 @@ cmake -D CMAKE_PREFIX_PATH=C:/buildingDFTFringe/build_lapack -G "MinGW Makefiles
 cmake --build ./build_armadillo -j4
 ```
 
-It's important that Armadillo known the path to Lapack to work correctly. Here we use CMAKE_PREFIX_PATH but you can also add it to your Path or use other methods.
+It's important that Armadillo knows the path to Lapack to work correctly. Here we use CMAKE_PREFIX_PATH but you can also add it to your Path or use other methods.
 
 ### Option B: getting DLLs from official installer
 
-First you need to get the header files for each dependency. Than follow [this](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-c-copying-from-release) to copy the necessary DLLs from release to your build folder.
+First you need to get the header files for each dependency. Then follow [this](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#option-c-copying-from-release) to copy the necessary DLLs from release to your build folder.
 
 #### Build OpenCV
 :writing_hand: Work in progress (planned for this PR) :writing_hand:
