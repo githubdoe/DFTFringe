@@ -49,12 +49,12 @@ win32 {
 
     LIBS += -L..\build_lapack\bin -llibblas
     LIBS += -L..\build_lapack\bin -lliblapack
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d490
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core490
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d490
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui490
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs490
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc490
 
 
     # This is for armadillo to not use wrapper. See https://gitlab.com/conradsnicta/armadillo-code#6-linux-and-macos-compiling-and-linking

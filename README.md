@@ -136,7 +136,7 @@ If you haven't already, you will need to install latest version of [CMake](https
 
 #### Build OpenCV
 
-Get [OpenCV](https://opencv.org/) source code version 4.6.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\openCV`
+Get [OpenCV](https://opencv.org/) source code version 4.9.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\openCV`
 
 Then from within `C:\buildingDFTFringe` do the following:  
 
@@ -184,7 +184,7 @@ It's important that Armadillo knows the path to Lapack to work correctly. Here w
 
 #### Build OpenCV
 
-Get [OpenCV](https://opencv.org/) **installer (not source code)** 4.6.0 in your prefered way (typically from their [GitHub](https://github.com/opencv/opencv/releases) or [website](https://opencv.org/releases/)). Run the installer `opencv-4.6.0-vc14_vc15.exe`.
+Get [OpenCV](https://opencv.org/) **installer (not source code)** 4.9.0 in your prefered way (typically from their [GitHub](https://github.com/opencv/opencv/releases) or [website](https://opencv.org/releases/)). Run the installer `opencv-4.9.0-windows.exe`.
 
 Copy content from `yourExtractionLocation\opencv\build\include` to `C:\buildingDFTFringe\build_openCV\install\include`.  
 
@@ -209,12 +209,12 @@ Install DFTFringe from official installer and copy the DLLs from install folder 
 qwt-6.1.6\lib\qwt.dll
 build_lapack\bin\libblas.dll
 build_lapack\bin\liblapack.dll
-build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll
-build_openCV\install\x64\mingw\bin\libopencv_core460.dll
-build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll
-build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll
-build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll
-build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll
+build_openCV\install\x64\mingw\bin\libopencv_calib3d490.dll
+build_openCV\install\x64\mingw\bin\libopencv_core490.dll
+build_openCV\install\x64\mingw\bin\libopencv_features2d490.dll
+build_openCV\install\x64\mingw\bin\libopencv_highgui490.dll
+build_openCV\install\x64\mingw\bin\libopencv_imgcodecs490.dll
+build_openCV\install\x64\mingw\bin\libopencv_imgproc490.dll
 ```
 
 ## Stage 3: Building DFTFringe
@@ -248,13 +248,13 @@ windeployqt.exe DFTFringe\Release\DFTFringe.exe
 
 Copy-Item ".\build_lapack\bin\liblapack.dll" -Destination ".\DFTFringe\Release"
 Copy-Item ".\build_lapack\bin\libblas.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_core460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_flann460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_calib3d490.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_core490.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_features2d490.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_flann490.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_highgui490.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs490.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgproc490.dll" -Destination ".\DFTFringe\Release"
 Copy-Item ".\qwt-6.1.6\lib\qwt.dll" -Destination ".\DFTFringe\Release"
 Copy-Item ".\5.15.2\mingw81_64\bin\Qt5OpenGL.dll" -Destination ".\DFTFringe\Release"
 Copy-Item ".\tools\mingw810_64\bin\libquadmath-0.dll" -Destination ".\DFTFringe\Release"
