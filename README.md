@@ -237,6 +237,8 @@ Build
 
 ## Stage 4: Copy necessary DLLs
 
+This step is only necessary if you want to run DFTFringe.exe standalone. Execution and debugging from within Qt Creator IDE does not require any additional step.
+
 ### Option A: using command line
 
 From within `C:\buildingDFTFringe` do the following:  
