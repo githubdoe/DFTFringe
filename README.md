@@ -124,7 +124,7 @@ Once a Linux distribution is installed, you only need this to run same one each 
 wsl
 ```
 
-For the rest of the build process you can now rely on [Linux build process](how-to-build-dftfringe-on-linux).
+For the rest of the build process you can now rely on [Linux build process](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#how-to-build-dftfringe-on-linux).
 
 ## Stage 2: DLL dependencies
 
