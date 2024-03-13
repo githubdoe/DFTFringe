@@ -276,7 +276,7 @@ void mirrorDlg::loadFile(QString & fileName){
         QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
 
         ui->name->setText(QJsonValue(loadDoc["name"]).toString());
-        ui->unitsCB->setChecked(QJsonValue(loadDoc["show units in mm"]).toBool());
+        ui->unitsCB->setChecked(true);
         ui->nullCB->setChecked( QJsonValue(loadDoc["useNull"]).toBool());
 
         QJsonObject mirror = loadDoc["mirror"].toObject();
