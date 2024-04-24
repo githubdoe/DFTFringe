@@ -277,10 +277,18 @@ void mirrorDlg::loadFile(QString & fileName){
 
         ui->name->setText(QJsonValue(loadDoc["name"]).toString());
         ui->unitsCB->setChecked(true);
-        ui->nullCB->setChecked( QJsonValue(loadDoc["useNull"]).toBool());
+        mm=true;// don't understand why this isn't set in the above line of code, but it isn't
+                // or maybe it gets set after this function returns
 
+        // set diameter early - before setting roc and annulus percentage
         QJsonObject mirror = loadDoc["mirror"].toObject();
         diameter = QJsonValue(mirror["diameter"]).toDouble();
+        ui->diameter->blockSignals(true);
+        ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
+        ui->diameter->blockSignals(false);
+
+        ui->nullCB->setChecked( QJsonValue(loadDoc["useNull"]).toBool());
+
         obs = QJsonValue(mirror["obs diameter"]).toDouble();
         roc = QJsonValue(mirror["roc"]).toDouble();
         cc = QJsonValue(mirror["desired conic"]).toDouble();
@@ -301,6 +309,7 @@ void mirrorDlg::loadFile(QString & fileName){
         m_annularObsPercent = QJsonValue(Annulus["obs percentage"]).toDouble() * 100.;
         ui->useAnnulus->setChecked(m_useAnnular);
         ui->annulusPercent->setValue(m_annularObsPercent);
+        on_annulusPercent_valueChanged(m_annularObsPercent);
         enableAnnular(m_useAnnular);
 
         ui->fringeSpacingEdit->blockSignals(true);
@@ -310,9 +319,6 @@ void mirrorDlg::loadFile(QString & fileName){
         ui->obs->setText(QString().number(obs));
 
 
-        ui->diameter->blockSignals(true);
-        ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
-        ui->diameter->blockSignals(false);
         ui->roc->blockSignals(true);
         ui->roc->setText(QString("%1").arg(roc, 6, 'f', 2));
         ui->roc->blockSignals(false);
