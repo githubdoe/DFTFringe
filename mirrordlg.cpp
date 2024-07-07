@@ -277,8 +277,7 @@ void mirrorDlg::loadFile(QString & fileName){
 
         ui->name->setText(QJsonValue(loadDoc["name"]).toString());
         ui->unitsCB->setChecked(true);
-        mm=true;// don't understand why this isn't set in the above line of code, but it isn't
-                // or maybe it gets set after this function returns
+        mm=true;  // setChecked() does not call on_unitsCB_clicked()
 
         // set diameter early - before setting roc and annulus percentage
         QJsonObject mirror = loadDoc["mirror"].toObject();
