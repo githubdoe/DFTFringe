@@ -123,6 +123,8 @@ public:
     cv::Mat Z;
     cv::Mat inputZ;
     bool m_dirty_zerns;
+    bool m_bDontProcessEvents;
+
     mirrorDlg *md;
     MainWindow *mw;
     arma::mat m_zerns;
