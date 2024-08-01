@@ -918,9 +918,9 @@ void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulle
         for (int row = wf->data.rows - 1; row >=0; --row){
             for (int col = 0; col < wf->data.cols ; ++col){
                 if (saveNulled)
-                    file << wf->workData(row,col) << std::endl;
+                    file << wf->workData(row,col) << '\n';
                 else {
-                    file << wf->data(row,col) << std::endl;
+                    file << wf->data(row,col) << '\n';
 
                 }
             }
