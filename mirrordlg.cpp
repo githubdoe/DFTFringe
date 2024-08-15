@@ -305,10 +305,10 @@ void mirrorDlg::loadFile(QString & fileName){
         m_verticalAxis = QJsonValue(Ellipse["ellipse vert axis"]).toDouble();
         QJsonObject Annulus = loadDoc["Annulus"].toObject();
         m_useAnnular = QJsonValue(Annulus["use annular Zernike values"]).toBool();
-        m_annularObsPercent = QJsonValue(Annulus["obs percentage"]).toDouble() * 100.;
+        m_annularObsPercent = QJsonValue(Annulus["obs percentage"]).toDouble();
         ui->useAnnulus->setChecked(m_useAnnular);
-        ui->annulusPercent->setValue(m_annularObsPercent);
-        on_annulusPercent_valueChanged(m_annularObsPercent);
+        ui->annulusPercent->setValue(m_annularObsPercent * 100);
+        on_annulusPercent_valueChanged(m_annularObsPercent * 100);
         enableAnnular(m_useAnnular);
 
         ui->fringeSpacingEdit->blockSignals(true);
