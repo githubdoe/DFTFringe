@@ -16,6 +16,7 @@
 
 ****************************************************************************/
 #include "profileplot.h"
+#include "simigramdlg.h"
 #include "ui_profileplot.h"
 #include <QtWidgets>
 #include <qwt_compass.h>
@@ -45,7 +46,15 @@
 #include "mirrordlg.h"
 #include <qwt_plot_textlabel.h>
 #include "surfaceanalysistools.h"
+#include "surfacemanager.h"
+#include "zernikeprocess.h"
+#include <QAbstractTableModel>
 extern double outputLambda;
+
+#include <iostream>
+#include <stdio.h>
+#include <fstream>
+#include <cmath>
 
 #define PITORAD  M_PI/180.;
 double g_angle = 270. * PITORAD; //start at 90 deg (pointing east)
@@ -83,11 +92,9 @@ bool ProfilePlot::eventFilter( QObject *object, QEvent *event )
 }
 
 ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
-    QWidget( parent ), 
-    m_wf(0), m_tools(tools),
-    m_showSurface(1.), m_showNm(1.), dragging(false),
-    offsetType("Middle"),
-    m_defocusValue(0.), ui(new Ui::ProfilePlot)
+    QWidget( parent ), m_wf(0), m_tools(tools),
+     m_showSurface(1.),m_showNm(1.),dragging(false),
+     offsetType("Middle"),ui(new Ui::ProfilePlot), m_defocusValue(0.)
 {
     zoomed = false;
     m_defocus_mode = false;
@@ -215,7 +222,6 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     ui->setupUi(this);
     populate();
 }
-
 ProfilePlot::~ProfilePlot(){
     delete ui;
 }
@@ -345,16 +351,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     double radius = md.m_clearAperature/2.;
     double obs_radius = md.obs/2.;
 
-    // If there is an annulus use it if it is a larger radius than the set obstruction
-    if (md.m_useAnnular){
-        double annularRadius = md.m_annularObsPercent * md.diameter/2.;
-        if (annularRadius > obs_radius ){
-            obs_radius =  annularRadius;
-        }
-
-
-    }
-
+//    qDebug() << "Clear" << radius;
     for (double rad = -1.; rad < 1.; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
@@ -376,21 +373,21 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
             continue;
         }
 
-        if (wf->workMask.at<uint8_t>(dy,dx)){
-            double defocus = 0.;
+        if (wf->workMask.at<bool>(dy,dx)){
+                double defocus = 0.;
 
-            if (m_defocus_mode){
-                defocus = (m_defocusValue)* (-1. + 2. * rad * rad);
-                points << QPointF(radx,(units * (m_defocus_wavefront((int)dy,(int)dx) + defocus ) *
-                                        wf->lambda/outputLambda)  +y_offset * units);
-            }
-            else {
+                if (m_defocus_mode){
+                    defocus = (m_defocusValue)* (-1. + 2. * rad * rad);
+                    points << QPointF(radx,(units * (m_defocus_wavefront((int)dy,(int)dx) + defocus ) *
+                                            wf->lambda/outputLambda)  +y_offset * units);
+                }
+                else {
 
-                points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
+                    points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
                                         wf->lambda/outputLambda)  +y_offset * units);
+                }
             }
-        }
-        //else points << QPointF(radx,0.0);
+            //else points << QPointF(radx,0.0);
     }
 
     if (m_showSlopeError){
@@ -427,7 +424,7 @@ void ProfilePlot::populate()
     compass->setGeometry(QRect(80,80,70,70));
     QString tmp("nanometers");
     if (m_showNm == 1.)
-        tmp = QString("waves of %1 nm").arg(outputLambda, 6, 'f', 1);
+        tmp = QString().sprintf("waves of %6.1lf nm",outputLambda);
     m_plot->setAxisTitle( m_plot->yLeft, "Error in " + tmp );
     m_plot->setAxisTitle( m_plot->xBottom, "Radius mm" );
 
@@ -445,7 +442,7 @@ void ProfilePlot::populate()
 
     if (m_wf->m_outside.m_radius > 0 && settings.value("GBlur", false).toBool()){
         double val = .01 * (m_wf->diameter) * smoothing;
-        QString t = QString("Surface Smoothing diameter %1% of surface diameter %2 mm").arg(smoothing, 6, 'f', 2).arg( val, 6, 'f', 1 );
+        QString t = QString().sprintf("Surface Smoothing diameter %6.2lf%% of surface diameter %6.1lf mm", smoothing , val );
         QwtText title(t);
         title.setRenderFlags( Qt::AlignHCenter | Qt::AlignTop );
 
@@ -538,11 +535,102 @@ void ProfilePlot::populate()
         QwtPlotCurve *cprofileavg = new QwtPlotCurve( "average");
         cprofileavg->setRenderHint( QwtPlotItem::RenderAntialiased );
         cprofileavg->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
-        cprofileavg->setPen( QPen(Qt::blue,5) );
+        cprofileavg->setPen( QPen(Qt::red,3) );
         cprofileavg->setSamples( avg);
         cprofileavg->attach( m_plot );
         g_angle = startAngle;
-        break;
+
+        // calculate and show percentages of correction
+
+        SurfaceManager &sm = *SurfaceManager::get_instance();
+        std::vector<double> zernikes;
+        zernikes = sm.getCurrent()->InputZerns;
+        double z8 = zernikes[8];                           //Z8 of current wavefront
+
+        mirrorDlg &md = *mirrorDlg::get_Instance();
+        double radius = md.m_clearAperature/2.;			// mirror radius of clear aperture
+        double roc =  md.roc;							// ROC of the mirror
+        double lambda_nm =  md.lambda;
+        // double lambda =  lambda_nm * 1e-6;				//igram wavelength in mm
+        double desiredZ8 = md.z8;
+       // double sphereParabolaDiff = pow(radius, 4) / (8 * pow(roc, 3));		// calculate sphere-parabola difference of the mirror (on surface), from Telescope Making #8, pg 36-, Richard Berry
+       // double wavesOfCorr = sphereParabolaDiff / lambda;					// sphere-parabola difference of the mirror in waves at igram wavelength
+
+
+        double BestSC = z8/desiredZ8;							// best fit conic of current wavefront
+        double slope;
+       // double slope2;
+        double rho;
+        double slopedefocused;
+        double avgdefocus = -3 * z8;				// defocus term coefficient needed for avg
+        double slopeOfAvgDefocus;
+        double dx = 2.0 / (avg.size() -1.0);
+        double desiredSlope;
+        double percentCorr;
+       // double avgdefocused;       // for debugging
+
+
+          QPolygonF slp;
+            QPolygonF slp2;
+
+            double size = avg.size();
+
+
+            for (int i = 2; i < size - 2; ++i){
+                rho = avg[i].x() / radius;
+               // avgdefocused = avg[i].y() + avgdefocus * (2* rho * rho -1)  * (lambda_nm/outputLambda);                 // for debugging
+                slope = 0.5 * ((avg[i+2].y() - avg[i-2].y()) / (4 * dx) - (avg[(size - i) +2].y() - avg[(size - i) -2].y()) / (4 * dx) );   //slope of average profile avg (smoothed a bit), with artificial Null applied (for output wavelength)
+                slopeOfAvgDefocus = ( -3 * z8 * 4 * rho + (desiredZ8) * (24 * pow(rho , 3) - 12 * rho))  * (lambda_nm/outputLambda);       //slope of the defocus term needed for avg, PLUS the slope of the first spherical term removed by artificial null, converted to output wavelength
+               /* The profileplot avg is the measured profile minus artificial Null. The above term restores the slope of the original measured surface...
+                */
+                slopedefocused = slope - slopeOfAvgDefocus;                                //slope of the restored original profile, without artificial null
+                desiredSlope = (3 * desiredZ8 * 4 * rho + desiredZ8 * (24 * pow(rho , 3) - 12 * rho))* (lambda_nm/outputLambda);   // slope of defocused perfect parabola, converted to output wavelength
+                percentCorr = ( slopedefocused / desiredSlope ) + 2 * (-z8 / desiredZ8);
+
+
+                slp << QPointF(avg[i].x(), percentCorr);
+              // slp2  << QPointF(avg[i].x(),  slopedefocused);
+            }
+
+                //QVector<QPointF> slope;
+                QwtPlotCurve *slopeCurve = new QwtPlotCurve;
+                slopeCurve->setSamples(slp);
+                slopeCurve->setRenderHint( QwtPlotItem::RenderAntialiased );
+                slopeCurve->setPen(QPen(QColor("green"),3));
+                slopeCurve->setLegendAttribute(QwtPlotCurve::LegendShowSymbol,false );
+                slopeCurve->setLegendAttribute(QwtPlotCurve::LegendShowLine,false );
+                slopeCurve->setItemAttribute(QwtPlotCurve::Legend,false);
+                slopeCurve->attach( m_plot);
+
+              QwtPlotCurve *slopeCurve2 = new QwtPlotCurve;
+                slopeCurve2->setSamples(slp2);
+                slopeCurve2->setRenderHint( QwtPlotItem::RenderAntialiased );
+                slopeCurve2->setPen(QPen(QColor("blue"),3));
+                slopeCurve2->setLegendAttribute(QwtPlotCurve::LegendShowSymbol,false );
+                slopeCurve2->setLegendAttribute(QwtPlotCurve::LegendShowLine,false );
+                slopeCurve2->setItemAttribute(QwtPlotCurve::Legend,false);
+                slopeCurve2->attach( m_plot);
+
+
+
+
+                std::ofstream myfile;
+                myfile.open("_Zahlen_for_debug.txt");
+
+                myfile << "roc = "<< roc << "\n"
+                        << "lambda = "<< lambda_nm << "\n"
+                         << "lambda = "<< outputLambda << "\n"
+                      << "Z8 = "<< z8 << "\n"
+                        << " avgdefocus = "<< avgdefocus << "\n"
+                        << " desiredZ8  = "<<  desiredZ8  << "\n" ;
+
+    myfile.close();
+
+
+
+         break;
+
+
 
     }
     case 2:{    // show each wave front
@@ -675,6 +763,7 @@ void ProfilePlot::contourPointSelected(const QPointF &pos){
     double dely = pos.y() - m_wf->data.cols/2;
 
     double angle = atan2(delx,dely);  // swaped x and y to rotate by 90 deg.
+    double angle2 = angle;
     const double twopi = M_PI * 2.;
     // force 0 to 360
     if (angle < 0)

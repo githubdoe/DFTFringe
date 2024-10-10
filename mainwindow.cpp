@@ -48,7 +48,7 @@
 #include "colorchannel.h"
 #include "opencv2/opencv.hpp"
 #include "spdlog/spdlog.h"
-
+#include <QUrl>
 
 using namespace QtConcurrent;
 std::vector<wavefront*> g_wavefronts;
@@ -1108,7 +1108,7 @@ void MainWindow::batchProcess(QStringList fileList){
         }
 
         QApplication::processEvents();
-        QObject().thread()->msleep(1000);
+        //QObject().thread()->msleep(1000);
         ui->SelectOutSideOutline->setChecked(true);
         if (!batchIgramWizard::autoCb->isChecked()){
             while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
@@ -1125,7 +1125,7 @@ void MainWindow::batchProcess(QStringList fileList){
 
         m_igramArea->nextStep();
         QApplication::processEvents();
-        QObject().thread()->msleep(1000);
+        //QObject().thread()->msleep(1000);
 
         m_batchMakeSurfaceReady = false;
         if (!batchIgramWizard::autoCb->isChecked() && !m_skipItem){
@@ -1610,80 +1610,179 @@ void MainWindow::on_useLastOutline_clicked()
 
 void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 {
-//    QStringList fileNames = SelectWaveFrontFiles();
-//    this->setCursor(Qt::WaitCursor);
-//    QProgressDialog pd("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
-//    pd.setRange(0, fileNames.size());
-//    if (fileNames.length()> 0)
-//        pd.show();
-//    int cnt = 0;
-//    QSettings set;
-//    QString lastPath = set.value("lastPath",".").toString();
-//    int memThreshold = set.value("lowMemoryThreshold",300).toInt();
-//    QImage img = m_ogl->m_gl->grabFrameBuffer();
+    if (QMessageBox::No == QMessageBox::question(0,"---------- 3D  wave front Video maker -------------","This will create an 3D image of each wave front file selected and save it as an image.\n"
+                                                 " So a video app can turn them into a movie. Select Yes if you want to continue."))
+    {
+       return;
+    }
+    QStringList fileNames = SelectWaveFrontFiles();
+    this->setCursor(Qt::WaitCursor);
+    QProgressDialog pd("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
+    pd.setRange(0, fileNames.size());
+    if (fileNames.length()> 0)
+        pd.show();
 
-//    int width = img.width();
-//    int height = img.height();
+    //ask which sets to make (asig and/or wavefronts)
+    bool dowavefront = false;
+    bool doastig = false;
+    astigScatterPlot *astigPlot = NULL;
+    QWidget *astigWindow = NULL;
 
-//    try {
-//        QString fileName = QFileDialog::getSaveFileName(0, "Save AVI video as:", lastPath,"*.avi" );
-//        if (fileName.length() > 0){
-//            if (!(fileName.toUpper().endsWith(".AVI")))
-//                fileName.append(".avi");
-//            cv::VideoWriter video(fileName.toStdString().c_str(),-1,4,cv::Size(width,height),true);
-//            if (!video.isOpened()){
-//                QString msg = QString("could not open %1 %2x%3 for writing.").arg(fileName).arg(
-//                                                width).arg(height);
-//                QMessageBox::warning(0,"warning", msg);
-//                return;
-//            }
-//            foreach (QString name, fileNames){
-//                int mem = showmem("loading");
-//                statusBar()->showMessage(QString("memory %1 MB").arg(mem));
-//                if (mem< memThreshold + 50){
-//                    while (m_surfaceManager->m_wavefronts.size() > 1){
-//                        m_surfaceManager->deleteCurrent();
-//                    }
-//                }
-//                QApplication::processEvents();
+    if (QMessageBox::Yes == QMessageBox::question(0,"3D","Make image of 3D model of each wave front?"))
+    {
+       dowavefront = true;
+    }
 
-//                if (pd.wasCanceled())
-//                    break;
+    if (QMessageBox::Yes == QMessageBox::question(0,"astig","Make plot of astig for each wave front?"))
+    {
+        doastig = true;
+        astigPlot = new astigScatterPlot;
+        QVBoxLayout *layout = new QVBoxLayout();
+        astigWindow = new QWidget();
+        layout->addWidget(astigPlot);
+        astigWindow->setLayout(layout);
+        astigWindow->resize(1000,1000);
+        astigWindow->show();
+
+    }
+    if (!doastig and !dowavefront)
+        return;
+    int cnt = 0;
+    QSettings set;
+    QString lastPath = set.value("lastPath",".").toString();
+    int memThreshold = set.value("lowMemoryThreshold",300).toInt();
+    QImage img = m_ogl->m_surface->render(1000,1000);
+
+    int width = img.width();
+    int height = img.height();
+
+    try {
+
+        QString dir = QFileDialog::getExistingDirectory(0, "Select directory where images will be saved.", lastPath,
+                                                        QFileDialog::ShowDirsOnly
+                                                        | QFileDialog::DontResolveSymlinks);
+        int framecnt = 0;
+        if (dir.length() > 0){
 
 
-//                pd.setLabelText(name);
-//                QApplication::processEvents();
-//                wavefront *wf = m_surfaceManager->readWaveFront(name);
+            foreach (QString name, fileNames){
 
-//                m_surfaceManager->makeMask(wf);
-//                m_surfaceManager->generateSurfacefromWavefront(wf);
-//                m_surfaceManager->computeMetrics(wf);
+                QApplication::processEvents();
 
-//                pd.setValue(++cnt);
+                if (pd.wasCanceled())
+                    break;
 
-//                m_ogl->m_gl->setSurface(wf);
-//                delete wf;
-//                QApplication::processEvents();
 
-//                QImage img = m_ogl->m_gl->grabFrameBuffer();
-//                QPainter painter(&img);
-//                painter.setPen(Qt::yellow);
-//                painter.setBrush(Qt::yellow);
-//                QFileInfo info(name);
-//                painter.drawText(20,50, info.baseName());
-//                cv::Mat frame = cv::Mat(img.height(), img.width(),CV_8UC4, img.bits(), img.bytesPerLine()).clone();
-//                cv::Mat resized;
-//                cv::resize(frame, resized, cv::Size(width,height));
-//                video.write(resized);
-//            }
-//        }
-//    }
-//    catch(std::exception& e) {
-//        qDebug() <<  "Exception writing video " << e.what();
-//    }
+                pd.setLabelText(name);
+                QApplication::processEvents();
+                wavefront *wf = m_surfaceManager->readWaveFront(name);
 
-//    this->setCursor(Qt::ArrowCursor);
+                m_surfaceManager->makeMask(wf);
+                m_surfaceManager->generateSurfacefromWavefront(wf);
+                m_surfaceManager->computeMetrics(wf);
 
+                pd.setValue(++cnt);
+
+                m_ogl->m_surface->setSurface(wf);
+                QPointF astig(wf->InputZerns[4], wf->InputZerns[5]);
+                delete wf;
+                QApplication::processEvents();
+                if (dowavefront){
+                    QImage img = m_ogl->m_surface->render(1000,1000);
+                    QPainter painter(&img);
+                    painter.setPen(Qt::yellow);
+                    painter.setBrush(Qt::yellow);
+                    QFileInfo info(name);
+                    painter.drawText(20,50, info.baseName());
+                    cv::Mat frame = cv::Mat(img.height(), img.width(),CV_8UC4, img.bits(), img.bytesPerLine()).clone();
+                    cv::Mat resized;
+                    cv::resize(frame, resized, cv::Size(width,height));
+                    // write frame
+                    QString filename = dir + "//" + QString("f%1.jpg").arg(framecnt++,3,10, QChar('0'));
+                    img.save ( filename );
+                }
+                if (doastig){
+
+                    astigPlot->addValue("", astig);
+
+                    // write frame
+                    QString filename = dir + "//" + QString("astig%1.jpg").arg(framecnt++,3,10, QChar('0'));
+                    astigWindow->grab().save ( filename );
+                    qDebug() << filename;
+                }
+            }
+        }
+        if (QMessageBox::Yes == QMessageBox::question(0,"---------- 3D  wave front Video maker -------------","Do you have FFMpeg and want it to make a video from these images?"))
+
+        {
+            QString cmd = "ffmpeg -framerate 60 -i f%03d.jpg -c:v libx264 -vf format=yuv420p -y output.mp4";
+            if (doastig) {cmd.replace("f%03d", "a%03d");}
+            bool ok = false;
+            QString text = QInputDialog::getText(this,
+            "------------------ FFmpeg command to create video from images.----------------",
+            "--------------------  Command to make 60 fps.  Copy to command line app.  -----------------",
+             QLineEdit::Normal,
+             "ffmpeg -framerate 60 -i f%03d.jpg -c:v libx264 -vf format=yuv420p -y output.mp4",
+              &ok);
+            if (ok) {
+                QDialog *dialog = new QDialog;
+                dialog->setWindowTitle("Popup Text Edit");
+                dialog->resize(1000,1000);
+                QTextEdit *textEdit = new QTextEdit("ffmpeg output");
+
+                QPushButton *closeButton = new QPushButton("Close");
+
+                QVBoxLayout *layout = new QVBoxLayout;
+                layout->addWidget(textEdit);
+                layout->addWidget(closeButton);
+
+                dialog->setLayout(layout);
+
+                QObject::connect(closeButton, &QPushButton::clicked, dialog, &QDialog::close);
+
+                dialog->show();
+
+
+                QApplication::setOverrideCursor(Qt::WaitCursor);
+                QProcess *proc = new QProcess;
+                connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                    [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus; });
+
+                proc->setProcessChannelMode(QProcess::MergedChannels);
+                proc->setWorkingDirectory(dir);
+                QStringList args = cmd.split(" ");
+                qDebug() << "args" << args.mid(1);
+                proc->start("ffmpeg",args.mid(1));
+
+
+                while (!proc->waitForFinished(200)){
+                           QString q = proc->readAll();
+                           if (q != "")
+                                textEdit->append(q);
+                           QApplication::processEvents();
+                       }
+
+                qDebug() << "done" ;
+
+                proc->waitForFinished();
+                QString out = proc->readAll() ;
+                QApplication::restoreOverrideCursor();
+
+                QString fn = dir + "/" + args[args.length()-1];
+                QDesktopServices::openUrl(fn);
+
+            }
+        }
+
+    }
+    catch(std::exception& e) {
+
+        qDebug() <<  "Exception writing video " << e.what();
+    }
+    if (astigWindow != NULL)
+        delete astigWindow;
+    this->setCursor(Qt::ArrowCursor);
+    QApplication::restoreOverrideCursor();
 }
 arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
                const double& eps, const int& maxorder=12) ;
@@ -1839,4 +1938,7 @@ void MainWindow::on_useAnnulust_clicked()
 {
     m_igramArea->useAnnulusforCenterOutine();
 }
+
+
+
 

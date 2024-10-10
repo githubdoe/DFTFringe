@@ -1484,6 +1484,11 @@ em;
     <string>Arbitrary Wavefront</string>
    </property>
   </action>
+  <action name="actionCreate_Movie_of_astig_fom_wavefonts">
+   <property name="text">
+    <string>Create Movie of astig fom wavefonts</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>

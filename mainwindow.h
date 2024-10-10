@@ -268,6 +268,8 @@ private slots:
 
     void on_useAnnulust_clicked();
 
+
+
 private:
 
     Ui::MainWindow *ui;

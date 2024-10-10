@@ -177,7 +177,7 @@ void OGLView::showSelected()    // show all selected wavefronts as 3D plots
     QVector<wavefront *>  m_wavefronts =SurfaceManager::get_instance()->m_wavefronts;
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     QList<int> list = saTools->SelectedWaveFronts();
-    int cols = 4;
+    int cols = 3;
     if (list.size() %3 == 0)  cols = 3;
     int rows =  ceil((double)list.size()/cols);
     int columns = cols;//min(m_wavefronts.size(),int(ceil((double)m_wavefronts.size()/rows)));
