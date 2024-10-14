@@ -277,10 +277,17 @@ void mirrorDlg::loadFile(QString & fileName){
 
         ui->name->setText(QJsonValue(loadDoc["name"]).toString());
         ui->unitsCB->setChecked(true);
-        ui->nullCB->setChecked( QJsonValue(loadDoc["useNull"]).toBool());
+        mm=true;  // setChecked() does not call on_unitsCB_clicked()
 
+        // set diameter early - before setting roc and annulus percentage
         QJsonObject mirror = loadDoc["mirror"].toObject();
         diameter = QJsonValue(mirror["diameter"]).toDouble();
+        ui->diameter->blockSignals(true);
+        ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
+        ui->diameter->blockSignals(false);
+
+        ui->nullCB->setChecked( QJsonValue(loadDoc["useNull"]).toBool());
+
         obs = QJsonValue(mirror["obs diameter"]).toDouble();
         roc = QJsonValue(mirror["roc"]).toDouble();
         cc = QJsonValue(mirror["desired conic"]).toDouble();
@@ -298,9 +305,10 @@ void mirrorDlg::loadFile(QString & fileName){
         m_verticalAxis = QJsonValue(Ellipse["ellipse vert axis"]).toDouble();
         QJsonObject Annulus = loadDoc["Annulus"].toObject();
         m_useAnnular = QJsonValue(Annulus["use annular Zernike values"]).toBool();
-        m_annularObsPercent = QJsonValue(Annulus["obs percentage"]).toDouble() * 100.;
+        m_annularObsPercent = QJsonValue(Annulus["obs percentage"]).toDouble();
         ui->useAnnulus->setChecked(m_useAnnular);
-        ui->annulusPercent->setValue(m_annularObsPercent);
+        ui->annulusPercent->setValue(m_annularObsPercent * 100);
+        on_annulusPercent_valueChanged(m_annularObsPercent * 100);
         enableAnnular(m_useAnnular);
 
         ui->fringeSpacingEdit->blockSignals(true);
@@ -310,9 +318,6 @@ void mirrorDlg::loadFile(QString & fileName){
         ui->obs->setText(QString().number(obs));
 
 
-        ui->diameter->blockSignals(true);
-        ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
-        ui->diameter->blockSignals(false);
         ui->roc->blockSignals(true);
         ui->roc->setText(QString("%1").arg(roc, 6, 'f', 2));
         ui->roc->blockSignals(false);

@@ -400,12 +400,21 @@ Displays error of pixel under contour plot cursor and move the profie angle to m
 </ul>
 </ul>
 
-
 <ul><li>Version 7.2.1</li>
 <ul>
 <li>Added annulus processing for mirrors with holes in the center. Previously, mirrors with holes larger than around 30% could get some error in S.A. and in defocus removal.</li>
 <li>When saving mirror configuration parameters, file format is now .json file.  DFTFringe can still read old .ini format files.</li>
 <li>Added more hover help popups (aka tooltips), particularly in mirror configuration screen.</li>
 <li>First version that isn't compatible with Windows 7</li>
+</ul>
+</ul>
+
+<ul><li>Version 7.2.3</li>
+<ul>
+<li>Improved DLL dependencies behavior for developers</li>
+<li>Fixed a bug in mirror config when switching between inch and millimeter</li>
+<li>Fixed a limitation in mirror config for very large mirrors</li>
+<li>Fixed a bug where defocus adjustment would make DFTFringe crash</li>
+<li>Improved saving speed when working on network drives</li>
 </ul>
 </ul>

@@ -33,9 +33,9 @@ win32 {
     message("Using WINDOWS project configuration.")
 
     CONFIG( debug, debug|release ) {
-        LIBS += ..\qwt-6.1.6\lib\qwtd.dll # debug
+        LIBS += -L..\qwt-6.1.6\lib -lqwtd # debug
     } else {
-        LIBS += ..\qwt-6.1.6\lib\qwt.dll # release
+        LIBS += -L..\qwt-6.1.6\lib -lqwt # release
         CONFIG+=force_debug_info # keep debug infos (even in release build) to be able to link stacktrace address to actual function
         CONFIG+=separate_debug_info # separate debug infos into a .exe.debug to not grow the .exe
     }
@@ -47,14 +47,15 @@ win32 {
     INCLUDEPATH += ..\build_armadillo\tmp\include
     INCLUDEPATH += ..\build_openCV\install\include
 
-    LIBS += ..\build_lapack\bin\libblas.dll
-    LIBS += ..\build_lapack\bin\liblapack.dll
-    LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll
-    LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_core460.dll
-    LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll
-    LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll
-    LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll
-    LIBS += ..\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll
+    LIBS += -L..\build_lapack\bin -llibblas
+    LIBS += -L..\build_lapack\bin -lliblapack
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc460
+
 
     # This is for armadillo to not use wrapper. See https://gitlab.com/conradsnicta/armadillo-code#6-linux-and-macos-compiling-and-linking
     DEFINES += ARMA_DONT_USE_WRAPPER
@@ -546,4 +547,7 @@ DISTFILES += buildingDFTFringe64.txt \
     helptext.txt \
     README.md \
     RevisionHistory.html
+
+
+
 

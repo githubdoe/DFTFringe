@@ -124,7 +124,7 @@ Once a Linux distribution is installed, you only need this to run same one each 
 wsl
 ```
 
-For the rest of the build process you can now rely on [Linux build process](how-to-build-dftfringe-on-linux).
+For the rest of the build process you can now rely on [Linux build process](https://github.com/githubdoe/DFTFringe?tab=readme-ov-file#how-to-build-dftfringe-on-linux).
 
 ## Stage 2: DLL dependencies
 
@@ -236,6 +236,8 @@ Open the project file `DFTFringe.pro`
 Build  
 
 ## Stage 4: Copy necessary DLLs
+
+This step is only necessary if you want to run DFTFringe.exe standalone. Execution and debugging from within Qt Creator IDE does not require any additional step.
 
 ### Option A: using command line
 

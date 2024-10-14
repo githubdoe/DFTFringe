@@ -870,6 +870,8 @@ void SurfaceManager::defocusSetup(){
 }
 
 void SurfaceManager::defocusChanged(){
+    zernikeProcess &zp = *zernikeProcess::get_Instance();
+    zp.m_bDontProcessEvents=true;
 
     double val = m_surfaceTools->m_defocus;
     //if (!m_surfaceTools->m_useDefocus)
@@ -884,6 +886,7 @@ void SurfaceManager::defocusChanged(){
     m_ignoreInverse = old_ignore;
     m_profilePlot->setDefocusValue(val);
     m_waveFrontTimer->start(2000);
+    zp.m_bDontProcessEvents=false;
 
 }
 
@@ -915,9 +918,9 @@ void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulle
         for (int row = wf->data.rows - 1; row >=0; --row){
             for (int col = 0; col < wf->data.cols ; ++col){
                 if (saveNulled)
-                    file << wf->workData(row,col) << std::endl;
+                    file << wf->workData(row,col) << '\n';
                 else {
-                    file << wf->data(row,col) << std::endl;
+                    file << wf->data(row,col) << '\n';
 
                 }
             }
@@ -1432,9 +1435,9 @@ void SurfaceManager::loadComplete(){
 // Update all surfaces since some control has changed.  Skip current surface it has already been done
 void SurfaceManager::backGroundUpdate(){
 
+    zernikeProcess &zp = *zernikeProcess::get_Instance();
     m_waveFrontTimer->stop();
     workProgress = 0;
-
     m_surfaceTools->setEnabled(false);
     QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
     workToDo = doThese.size();
@@ -1445,7 +1448,9 @@ void SurfaceManager::backGroundUpdate(){
         m_wavefronts[i]->wasSmoothed = false;
         makeMask(i);
         try {
+            zp.m_bDontProcessEvents=true;
             generateSurfacefromWavefront(i);
+            zp.m_bDontProcessEvents=false;
         }
         catch (int i) {
             break;

@@ -598,7 +598,8 @@ zernikeProcess *zernikeProcess::get_Instance(){
 
 zernikeProcess::zernikeProcess(QObject *parent) :
     QObject(parent),m_gridRowSize(200), m_maxOrder(0),
-    m_needsInit(true),m_lastusedAnnulus(false),m_dirty_zerns(true)
+    m_needsInit(true),m_lastusedAnnulus(false),m_dirty_zerns(true),
+    m_bDontProcessEvents(false)
 {
     md = mirrorDlg::get_Instance();;
     QSettings set;
@@ -1276,7 +1277,8 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
     for (int y = 0; y < rows; ++y){
         double uy = (y -cy)/radius;
 
-        QApplication::processEvents();
+        if (!m_bDontProcessEvents)
+            QApplication::processEvents();
         for (int x = 0; x< rows; ++x){
 
             double ux = (x -cx)/radius;

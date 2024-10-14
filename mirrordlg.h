@@ -53,7 +53,7 @@ public:
     bool fliph;
     bool m_useAnnular;
     bool m_connectAnnulusToObs;
-    double m_annularObsPercent;
+    double m_annularObsPercent; // a value from 0 to 1 (not 0 to 100)
     double m_clearAperature;
     double aperatureReduction;
     static QString m_projectPath;
