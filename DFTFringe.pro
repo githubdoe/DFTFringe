@@ -204,6 +204,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     outlineplots.cpp \
     outlinestatsdlg.cpp \
     pdfcalibrationdlg.cpp \
+    percentcorrectiondlg.cpp \
     pixelstats.cpp \
     plotcolor.cpp \
     profileplot.cpp \
@@ -324,6 +325,7 @@ HEADERS += bezier/bezier.h \
     outlineplots.h \
     outlinestatsdlg.h \
     pdfcalibrationdlg.h \
+    percentcorrectiondlg.h \
     pixelstats.h \
     plotcolor.h \
     profileplot.h \
