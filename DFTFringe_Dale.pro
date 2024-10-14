@@ -42,6 +42,7 @@ SOURCES += main.cpp \
     dftarea.cpp \
     oglrendered.cpp \
     pdfcalibrationdlg.cpp \
+    percentcorrectiondlg.cpp \
     profileplot.cpp \
     psiresizeimagesdlg.cpp \
     surface3dcontrolsdlg.cpp \
@@ -159,6 +160,7 @@ HEADERS  += mainwindow.h \
     dftarea.h \
     oglrendered.h \
     pdfcalibrationdlg.h \
+    percentcorrectiondlg.h \
     profileplot.h \
     psiresizeimagesdlg.h \
     surface3dcontrolsdlg.h \
@@ -276,6 +278,7 @@ FORMS    += mainwindow.ui \
     edgeplot.ui \
     oglrendered.ui \
     pdfcalibrationdlg.ui \
+    percentcorrectiondlg.ui \
     profilearea.ui \
     profileplot.ui \
     contourtools.ui \

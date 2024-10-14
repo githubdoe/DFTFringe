@@ -1726,9 +1726,9 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
               &ok);
             if (ok) {
                 QDialog *dialog = new QDialog;
-                dialog->setWindowTitle("Popup Text Edit");
+                dialog->setWindowTitle("ffmpeg output");
                 dialog->resize(1000,1000);
-                QTextEdit *textEdit = new QTextEdit("ffmpeg output");
+                QTextEdit *textEdit = new QTextEdit();
 
                 QPushButton *closeButton = new QPushButton("Close");
 
@@ -1941,4 +1941,11 @@ void MainWindow::on_useAnnulust_clicked()
 
 
 
+
+
+void MainWindow::on_actionShow_percentage_of_correction_triggered()
+{
+
+
+}
 

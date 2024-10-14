@@ -30,6 +30,7 @@
 #include <QRadioButton>
 #include <QCheckBox>
 #include <QDoubleSpinBox>
+#include "percentcorrectiondlg.h"
 namespace Ui {
 class ProfilePlot;
 }
@@ -39,6 +40,8 @@ class ProfilePlot : public QWidget
     Q_OBJECT
 
 public:
+    percentCorrectionDlg *m_pcdlg;
+    bool m_showCorrection = false;
     QwtPlot *m_plot;
     wavefront* m_wf;
     ProfilePlot( QWidget *parent = NULL, ContourTools* tools = 0 );
@@ -60,6 +63,7 @@ public:
     double m_showNm;
     bool zoomed;
     bool m_showSlopeError;
+
     double slopeLimitArcSec;
     void setDefocusValue(double val);
     void setDefocusWaveFront( cv::Mat_<double> wf);
@@ -82,15 +86,18 @@ public slots:
     void showSlope(bool);
     void slopeLimit(double);
     void contourPointSelected(const QPointF &pos);
+    void populate();
+    void showCorrection(bool);
 
 private:
-    void populate();
+
     void updateGradient();
     bool dragging;
     QPoint startPos;
     QString offsetType;
     QwtCompass *compass;
     QCheckBox *showSlopeError;
+    QCheckBox *showPercentCorrection;
     QDoubleSpinBox *slopeLimitSB;
     double m_defocusValue;
 

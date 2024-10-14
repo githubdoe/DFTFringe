@@ -94,6 +94,7 @@
     <addaction name="actionShow_unwrap_errors"/>
     <addaction name="actionShow_outline_statistics"/>
     <addaction name="actionPlay_batch_results_review_movie"/>
+    <addaction name="actionShow_percentage_of_correction"/>
    </widget>
    <widget class="QMenu" name="menuConfiguration">
     <property name="title">
@@ -1487,6 +1488,11 @@ em;
   <action name="actionCreate_Movie_of_astig_fom_wavefonts">
    <property name="text">
     <string>Create Movie of astig fom wavefonts</string>
+   </property>
+  </action>
+  <action name="actionShow_percentage_of_correction">
+   <property name="text">
+    <string>Show percentage of correction</string>
    </property>
   </action>
  </widget>
