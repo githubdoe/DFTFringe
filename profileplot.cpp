@@ -49,6 +49,7 @@
 #include "surfacemanager.h"
 #include "zernikeprocess.h"
 #include <QAbstractTableModel>
+#include "plotcolor.h"
 extern double outputLambda;
 
 #include <iostream>
@@ -95,8 +96,9 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
      m_showSurface(1.),m_showNm(1.),dragging(false),
      offsetType("Middle"),ui(new Ui::ProfilePlot), m_defocusValue(0.)
 {
-qDebug() << "new profilePlot";
+
     m_pcdlg = new percentCorrectionDlg;
+    QObject::connect(m_pcdlg, SIGNAL(percent_plot_changed()), this, SLOT(populate()));
     zoomed = false;
     m_defocus_mode = false;
     m_plot = new QwtPlot(this);
@@ -355,7 +357,6 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     double radius = md.m_clearAperature/2.;
     double obs_radius = md.obs/2.;
 
-//    qDebug() << "Clear" << radius;
     for (double rad = -1.; rad < 1.; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
@@ -394,7 +395,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
             //else points << QPointF(radx,0.0);
     }
 
-    if (m_showSlopeError){
+    if (m_showSlopeError && ((type==1 && !m_showCorrection) || (type == 0) || (type == 2))){
         double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
         double xDel = points[0].x() - points[1].x();
         double hDelLimit =m_showNm *  m_showSurface * ((outputLambda/m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /(outputLambda * 1.e-6));
@@ -424,7 +425,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
 
 void ProfilePlot::populate()
 {
-qDebug() << "new populate";
+
     m_plot->detachItems(QwtPlotItem::Rtti_PlotItem);
     compass->setGeometry(QRect(80,80,70,70));
     QString tmp("nanometers");
@@ -468,7 +469,7 @@ qDebug() << "new populate";
     m_plot->setAxisScaleDiv(QwtPlot::xBottom, sd1);
     m_plot->detachItems( QwtPlotItem::Rtti_PlotCurve);
     m_plot->detachItems( QwtPlotItem::Rtti_PlotMarker);
-    QPolygonF avg;
+
 
     switch (type) {
     case 0:{        // show one
@@ -493,7 +494,15 @@ qDebug() << "new populate";
         break;
     }
     case 1: {   // show 16 diameters
-qDebug() << "case 16";
+
+        surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
+        QList<int> list = saTools->SelectedWaveFronts();
+        bool firstPlot = true;
+        QColor penColor = QColor("blue");
+
+        for (int indx = 0; indx < list.size(); ++indx){
+            if (indx > 0) penColor = QColor(plotColors[indx % 10]);
+            QPolygonF avg;
             QString t = "Average of all 16 diameters";
             QwtText title(t);
             title.setRenderFlags( Qt::AlignHCenter | Qt::AlignBottom );
@@ -506,61 +515,76 @@ qDebug() << "case 16";
             titleItem->setText( title );
             titleItem->attach( m_plot );
 
-        double startAngle = g_angle;
-        QPolygonF sum;
+            double startAngle = g_angle;
+            QPolygonF sum;
 
-        for (int i = 0; i < 16; ++i){
-            QPolygonF points;
-            g_angle = startAngle + i * M_PI/ 16;
+            for (int i = 0; i < 16; ++i){
+                QPolygonF points;
+                g_angle = startAngle + i * M_PI/ 16;
 
-            QwtPlotCurve *cprofile = new QwtPlotCurve( );
-            cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
-            cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
-            cprofile->setPen( Qt::black );
-            points = createProfile( m_showNm * m_showSurface,m_wf);
-            if (i == 0) {
-                sum = points;
-            }
-            else {
-                for(int j = 0; j < fmin(sum.length(),points.length());++j){
-                    sum[j].ry()  += points[j].y();
+                QwtPlotCurve *cprofile = new QwtPlotCurve( );
+                cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
+                cprofile->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
+                cprofile->setPen( Qt::black );
+
+                    points = createProfile( m_showNm * m_showSurface,wfs->at(list[indx]));
+                    if (i == 0) {
+                        sum = points;
+                    }
+                    else {
+                        for(int j = 0; j < fmin(sum.length(),points.length());++j){
+                            sum[j].ry()  += points[j].y();
+                        }
+                    }
+                    if (!m_showCorrection){
+                        cprofile->setSamples( points);
+                        cprofile->attach( m_plot );
+                    }
                 }
+
+            // plot the average profile
+            foreach(QPointF p, sum){
+                avg << QPointF(p.x(),p.y()/16);
             }
-            cprofile->setSamples( points);
-            cprofile->attach( m_plot );
-        }
+            QString name("average");
+            if (m_showCorrection){
+                QStringList path = wfs->at(list[indx])->name.split("/");
+                name = path.last().replace(".wft","");
+            }
+            QwtPlotCurve *cprofileavg = new QwtPlotCurve( name);
+            cprofileavg->setRenderHint( QwtPlotItem::RenderAntialiased );
+            cprofileavg->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
+            cprofileavg->setLegendIconSize(QSize(50,20));
+            cprofileavg->setPen( QPen(penColor,5) );
+            cprofileavg->setSamples( avg);
+            cprofileavg->attach( m_plot );
+            g_angle = startAngle;
 
-        foreach(QPointF p, sum){
-            avg << QPointF(p.x(),p.y()/16);
-        }
-        QwtPlotCurve *cprofileavg = new QwtPlotCurve( "average");
-        cprofileavg->setRenderHint( QwtPlotItem::RenderAntialiased );
-        cprofileavg->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
-        cprofileavg->setPen( QPen(Qt::blue,5) );
-        cprofileavg->setSamples( avg);
-        cprofileavg->attach( m_plot );
-        g_angle = startAngle;
+            if (m_showCorrection){
+                // calculate and show percentages of correction
+                m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
 
-        if (m_showCorrection){
-            // calculate and show percentages of correction
+                m_plot->setStyleSheet(" font: 12pt \"Deja Vu\";");
+                SurfaceManager &sm = *SurfaceManager::get_instance();
+                std::vector<double> zernikes;
+                zernikes = sm.getCurrent()->InputZerns;
+                double z8 = zernikes[8];                           //Z8 of current wavefront
 
-            SurfaceManager &sm = *SurfaceManager::get_instance();
-            std::vector<double> zernikes;
-            zernikes = sm.getCurrent()->InputZerns;
-            double z8 = zernikes[8];                           //Z8 of current wavefront
+                mirrorDlg &md = *mirrorDlg::get_Instance();
+                double radius = md.m_clearAperature/2.;			// mirror radius of clear aperture
+                // ROC of the mirror
+                double lambda_nm =  md.lambda;
 
-            mirrorDlg &md = *mirrorDlg::get_Instance();
-            double radius = md.m_clearAperature/2.;			// mirror radius of clear aperture
-                        // ROC of the mirror
-            double lambda_nm =  md.lambda;
+                double desiredZ8 = md.z8;
 
-            double desiredZ8 = md.z8;
-
-            m_pcdlg->show();
-            m_pcdlg->plot(avg, radius,
-                        z8,desiredZ8, lambda_nm, outputLambda);
+                m_pcdlg->show();
+                m_pcdlg->raise();
+                m_pcdlg->plot(avg, radius,
+                              z8,desiredZ8, lambda_nm, outputLambda,penColor, !firstPlot);
 
 
+            }
+            firstPlot = false;
         }
 
 
@@ -585,7 +609,7 @@ qDebug() << "case 16";
             int width = Settings2::m_profile->lineWidth();
             if (name == m_wf->name.split("/").last().replace(".wft",""))
                 width = Settings2::m_profile->selectedWidth();
-
+            cprofile->setLegendIconSize(QSize(50,20));
             cprofile->setPen(QPen(Settings2::m_profile->getColor(i),width));
             cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
             cprofile->setSamples( createProfile( m_showNm * m_showSurface,wfs->at(list[i])));

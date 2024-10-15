@@ -20,7 +20,8 @@ ZernikeSmoothingDlg::ZernikeSmoothingDlg(wavefront &wf, QWidget *parent) :
     std::vector<double> val(m_noOfTerms,0.);
     ui->zernView->setModel(tableModel);
     QSettings set;
-    m_maxOrder = set.value("Zern maxOrder", 12).toInt();
+
+    m_maxOrder = set.value("Zern maxOrder", 22).toInt();
     ui->maxOrder->setValue(m_maxOrder);
     ui->termCnt->setText(QString("%1 Terms").arg(m_noOfTerms));
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(intiZernTable()));
@@ -52,9 +53,11 @@ void ZernikeSmoothingDlg::on_maxOrder_valueChanged(int arg1)
 {
     if (arg1 % 2 != 0)
         ++arg1;
+    QSettings set;
+    set.setValue("Zern maxOrder",arg1);
+
     ui->maxOrder->setValue( arg1);
     m_maxOrder = arg1;
-
 
     m_zp->setMaxOrder(arg1);
     m_noOfTerms = m_zp->getNumberOfTerms();
@@ -65,6 +68,7 @@ void ZernikeSmoothingDlg::on_maxOrder_valueChanged(int arg1)
    // init zp and update zern table view
     m_timer.setSingleShot(true);
     m_timer.start(1000);
+
 
 }
 cv::Mat makeSurfaceFromZerns(int width, zernikeProcess &zp, std::vector<double> theZerns){
@@ -95,10 +99,6 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
     m_wf = *p_wf;
     if (!ui->useCurrentZernySet->isChecked()){
         theZerns = m_zp->ZernFitWavefront(m_wf);
-        qDebug() << "the zerns";
-        for (int z = 0; z < 8; ++z){
-            qDebug() << z << theZerns[z];
-        }
     }
 
    tableModel->setValues(&theZerns);

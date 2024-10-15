@@ -1,11 +1,18 @@
 #include "defocusdlg.h"
 #include "ui_defocusdlg.h"
 #include <QMessageBox>
+#include <QSettings>
 defocusDlg::defocusDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::defocusDlg)
 {
     ui->setupUi(this);
+    QSettings set;
+
+     if (set.contains("defocus dialogGeometry")) {
+        setGeometry(set.value("defocus dialogGeometry").toRect());
+
+    }
 }
 
 defocusDlg::~defocusDlg()
@@ -20,7 +27,7 @@ void defocusDlg::on_multiplier_valueChanged(int /*arg1*/)
 {
     on_defocusSlider_valueChanged(ui->defocusSlider->value());
 }
-#include <QDebug>
+
 #include "math.h"
 void defocusDlg::on_defocusVal_valueChanged(double arg1)
 {
@@ -42,6 +49,7 @@ void defocusDlg::on_defocusVal_valueChanged(double arg1)
         ui->multiplier->setValue(1.);
         ui->multiplier->blockSignals(false);
     }
+
     emit defocus(arg1);
 }
 
@@ -62,7 +70,7 @@ void defocusDlg::on_defocusSlider_valueChanged(int value)
 
     double f = mirrorDlg::get_Instance()->FNumber;
     double mm = f * f * 8. * value * .00055;  //mmeters
-    qDebug() << "mm" << mm;
+
     ui->Focusoffset->setText(QString("%1mm").arg(mm, 6,'f',3));
 }
 
@@ -77,3 +85,14 @@ void defocusDlg::on_pushButton_clicked()
                 "<p>The resulting focal length offset is displayed in mm at the lower right.</p>");
 }
 
+void defocusDlg::moveEvent(QMoveEvent *event) {
+    QSettings set;
+    set.setValue("defocus dialogGeometry", geometry());
+    QDialog::moveEvent(event);
+
+}
+void defocusDlg::closeEvent(QCloseEvent *event) {
+    QSettings set;
+    set.setValue("defocus dialogGeometry", geometry());
+    QDialog::closeEvent(event);
+}

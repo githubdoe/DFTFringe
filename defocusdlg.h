@@ -14,6 +14,9 @@ class defocusDlg : public QDialog
 public:
     explicit defocusDlg(QWidget *parent = nullptr);
     ~defocusDlg();
+protected:
+    void closeEvent(QCloseEvent *event);
+    void moveEvent(QMoveEvent *event);
 signals:
     void defocus(double def);
 private slots:
