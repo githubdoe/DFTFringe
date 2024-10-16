@@ -94,7 +94,6 @@
     <addaction name="actionShow_unwrap_errors"/>
     <addaction name="actionShow_outline_statistics"/>
     <addaction name="actionPlay_batch_results_review_movie"/>
-    <addaction name="actionShow_percentage_of_correction"/>
    </widget>
    <widget class="QMenu" name="menuConfiguration">
     <property name="title">

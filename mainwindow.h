@@ -268,10 +268,6 @@ private slots:
 
     void on_useAnnulust_clicked();
 
-
-
-    void on_actionShow_percentage_of_correction_triggered();
-
 private:
 
     Ui::MainWindow *ui;

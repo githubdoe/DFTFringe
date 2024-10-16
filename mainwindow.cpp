@@ -1941,11 +1941,3 @@ void MainWindow::on_useAnnulust_clicked()
 
 
 
-
-
-void MainWindow::on_actionShow_percentage_of_correction_triggered()
-{
-
-
-}
-
