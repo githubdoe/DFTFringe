@@ -7,7 +7,8 @@
 #include "qwt_plot_marker.h"
 #include <QSettings>
 #include "surfaceanalysistools.h"
-
+#include "mirrordlg.h"
+#include <qwt_legend.h>
 percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     QDialog(parent),m_showZones(false),
     ui(new Ui::percentCorrectionDlg)
@@ -15,6 +16,7 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     ui->setupUi(this);
 
     resize(1000,800);
+    setWindowFlags(Qt::WindowStaysOnTopHint);
     QSettings set;
     ui->minvalue->blockSignals(true);
     ui->maxvalue->blockSignals(true);
@@ -32,53 +34,58 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     }
 }
 void percentCorrectionDlg::replot(QColor penColor, bool addToPlot){
+    auto z8null =[] (double rho, double z8) {
+        return z8 * (6 * pow(rho, 4) - 6 * pow(rho, 2 + 1));};
 
     double min = 1000.;
     double max = -1000.;
     int smoothrange = .1 * m_size;
-    QPolygonF slp;
-    QPolygonF slp2;
-    QPolygonF smoothed;
+
+    QPolygonF expectedslope;
+    QPolygonF actualslope;
+    QPolygonF percentplot;
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     double exc_pct = 100. * pow(16.75,2.)/pow(m_radius,2.);
     QList<double> zoneCenter;
     for (int i = 0; i <= m_number_of_zones; ++i){
         zoneCenter << m_radius * sqrt((1. -.01 * exc_pct) * i/m_number_of_zones + .01 * exc_pct);
     }
-qDebug() << "zones" << zoneCenter;
+
+    double DesiredZ8 = m_desiredZ8;
+
+    if (saTools->m_useDefocus){ // if defocus compute new SA null Desired Z8
+        double fnumber = mirrorDlg::get_Instance()->FNumber;
+        double rocDel = fnumber * fnumber * 8. * saTools->m_defocus * .055;  //mmeters
+        double newRoc = m_roc + rocDel;
+        DesiredZ8 = (pow(m_radius * 2.,4) * 1000000.) /
+            (384. * pow(newRoc, 3) * m_lambda_nm);
+    }
+
+    double size = m_avg.size();
     double dx = 2.0 / (m_avg.size() -1.0);
+    double sag = m_roc - sqrt( pow(m_roc,2)- pow((m_radius * 2.),2)/4.);
     for (int i = 2; i <= m_size - 2; ++i){
-        double rho = m_avg[i].x() / m_radius;
-        double slope = 0.5 * ((m_avg[i+2].y() - m_avg[i-2].y()) / (4 * dx) - (m_avg[(m_size - i) +2].y() - m_avg[(m_size - i) -2].y()) / (4 * dx) );   //slope of average profile avg (smoothed a bit), with artificial Null applied (for output wavelength)
-        double slopeOfAvgDefocus = ( -3 * m_z8 * 4 * rho + (m_desiredZ8) * (24 * pow(rho , 3) - 12 * rho))  * (m_lambda_nm/m_outputLambda);       //slope of the defocus term needed for avg, PLUS the slope of the first spherical term removed by artificial null, converted to output wavelength
-        if (saTools->m_useDefocus){
-            slopeOfAvgDefocus -= saTools->m_defocus * (-1. + 2. * pow(rho,2) );
-        }
-        /* The profileplot avg is the measured profile minus artificial Null. The above term restores the slope of the original measured surface...
-        */
-        double slopedefocused = slope - slopeOfAvgDefocus;                                //slope of the restored original profile, without artificial null
-        double desiredSlope = (3 * m_desiredZ8 * 4 * rho + m_desiredZ8 * (24 * pow(rho , 3) - 12 * rho))* (m_lambda_nm/m_outputLambda);   // slope of defocused perfect parabola, converted to output wavelength
-        double percentCorr = ( slopedefocused / desiredSlope ) + 2 * (-m_z8 / m_desiredZ8);
+        double rho1 = m_avg[i+2].x() / m_radius;
+        double rho2 = m_avg[i-2].x() /m_radius;
+        if (rho1 > .10){
 
-        if (rho > .10){
-            slp << QPointF(m_avg[i].x(), 100. * (percentCorr));
+            // make expected slope
+            double parabExpectedSlope = -sag * (pow(rho2,2) - pow(rho1,2))/dx;
+
+            // make actual slope buy adding the error to the expected
+            double error1 = .0001 * m_avg[i-2].y() * m_lambda_nm * (m_lambda_nm/m_outputLambda);
+            double error2 = .0001 * m_avg[i+2].y() * m_lambda_nm * (m_lambda_nm/m_outputLambda);
+
+            double parabActualSlope = -sag * ((pow( rho2,2) + error2) - (pow(rho1,2) + error1))/dx;
+            actualslope << QPointF(m_avg[i].x(), parabActualSlope );
+            expectedslope << QPointF( m_avg[i].x(),parabExpectedSlope);
+            double percent = 100.  - 100. * fabs( parabExpectedSlope -parabActualSlope)/((parabExpectedSlope + parabActualSlope)/2.) ;
+            percentplot << QPointF(m_avg[i].x(),percent);
+
         }
 
     }
-    for (int i = 0; i < slp.size()-smoothrange; i++){
-        double smoothavg = 0;
-        for (int j = i; j < i + smoothrange; ++j){
-            smoothavg += slp[j].y();
 
-        }
-        smoothed << QPointF(slp[i + smoothrange/2].x(),smoothavg/ (double)smoothrange);
-        if (smoothed.last().y() < min){
-            min = smoothed.last().y();
-        }
-        if (smoothed.last().y() > max){
-            max = smoothed.last().y();
-        }
-    }
     if (!addToPlot)
         ui->plot->detachItems(QwtPlotItem::Rtti_PlotItem);
     for (int i = 0; i < zoneCenter.size()-1; ++i) {
@@ -99,32 +106,52 @@ qDebug() << "zones" << zoneCenter;
     grid->enableYMin(true);
 
     grid->setPen( Qt::gray, 0, Qt::DotLine );
-    grid->setMajorPen( Qt::blue, 2.0,Qt::SolidLine);
-    grid->setMinorPen(Qt::black, 2.0, Qt::DotLine);
+    grid->setMajorPen( Qt::blue, 2.0,Qt::DotLine);
+    grid->setMinorPen(Qt::black, 1.0, Qt::DotLine);
     grid->attach( ui->plot);
 
+    QwtPlotCurve *slopeCurve8 = new QwtPlotCurve("expected slope");
+    slopeCurve8->setSamples(expectedslope);
+    slopeCurve8->attach(ui->plot);
+    slopeCurve8->setPen(Qt::green,5);
+    slopeCurve8->setZ(0);
+    slopeCurve8->setLegendIconSize(QSize(50,20));
 
-    QwtPlotCurve *slopeCurve = new QwtPlotCurve;
-    slopeCurve->setSamples(slp);
-    slopeCurve->setRenderHint( QwtPlotItem::RenderAntialiased );
-    slopeCurve->setPen(QPen(penColor,3));
-    slopeCurve->setLegendAttribute(QwtPlotCurve::LegendShowSymbol,false );
-    slopeCurve->setLegendAttribute(QwtPlotCurve::LegendShowLine,false );
-    slopeCurve->setItemAttribute(QwtPlotCurve::Legend,false);
-    slopeCurve->attach( ui->plot);
+    QwtPlotCurve *slopeCurve9 = new QwtPlotCurve("actual slope");
+    slopeCurve9->setSamples(actualslope);
+    slopeCurve9->attach(ui->plot);
+    slopeCurve9->setPen(Qt::red,5);
+    slopeCurve9->setZ(0);
+    slopeCurve9->setLegendIconSize(QSize(50,20));
+
+    QwtPlotCurve *slopeCurve5 = new QwtPlotCurve("percent");
+    slopeCurve5->setSamples(percentplot);
+    slopeCurve5->attach(ui->plot);
+    slopeCurve5->setPen(penColor,5, Qt::DotLine);
+    slopeCurve5->setZ(5);
+    slopeCurve5->setLegendIconSize(QSize(50,20));
+
+    ui->plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
+    QwtPlotCurve *slopeCurve3 = new QwtPlotCurve("Actual");
+
+    slopeCurve3->setLegendAttribute(QwtPlotCurve::LegendShowSymbol,true );
+    slopeCurve3->setLegendAttribute(QwtPlotCurve::LegendShowLine,true );
+    slopeCurve3->setItemAttribute(QwtPlotCurve::Legend,true);
+
     ui->plot->setAxisTitle( ui->plot->yLeft, "Percent correction" );
     ui->plot->setAxisTitle( ui->plot->xTop, "Radius mm" );
-    slopeCurve->setZ(1);
+    slopeCurve3->setZ(1);
     ui->plot->setAxisScale(QwtPlot::yLeft, ui->minvalue->value(), ui->maxvalue->value());
     ui->plot->replot();
 }
-void percentCorrectionDlg::plot( QPolygonF avg, double radius,double z8,
+void percentCorrectionDlg::plot( QPolygonF avg, double radius,double roc, double z8,
                                  double desiredZ8,
                                  double lambda_nm, double outputLambda,
                                  QColor penColor, bool addToPlot){
 
     m_avg = avg;
     m_radius = radius;
+    m_roc = roc;
     m_z8 = z8;
     m_desiredZ8 = desiredZ8;
     m_lambda_nm = lambda_nm;

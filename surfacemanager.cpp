@@ -865,7 +865,7 @@ void SurfaceManager::computeMetrics(wavefront *wf){
 }
 void SurfaceManager::defocusSetup(){
     wavefront *wf = m_wavefronts[m_currentNdx];
-    qDebug() << "wave" << wf->workData.rows;
+
     m_profilePlot->setDefocusWaveFront(wf->workData);
 }
 

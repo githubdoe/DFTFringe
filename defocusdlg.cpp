@@ -23,31 +23,38 @@ defocusDlg::~defocusDlg()
 
 
 
-void defocusDlg::on_multiplier_valueChanged(int /*arg1*/)
+void defocusDlg::on_multiplier_valueChanged(int arg1)
 {
-    on_defocusSlider_valueChanged(ui->defocusSlider->value());
+    double s = ui->defocusSlider->value()/100.;
+    ui->defocusVal->blockSignals(true);
+    ui->defocusVal->setValue( arg1 * s);
+    ui->defocusVal->blockSignals(false);
+    emit defocus(arg1 * s);
 }
 
 #include "math.h"
 void defocusDlg::on_defocusVal_valueChanged(double arg1)
 {
-    if (fabs(arg1) > 1) {
+    if (ui->multiplier->value() * ui->defocusSlider->value()/100. != arg1) {
         int mul = fabs(arg1/.5);
         double slid = arg1/mul;
 
         ui->multiplier->blockSignals(true);
+        ui->spinValue->blockSignals(true);
         ui->spinValue->setValue(slid);
-
-        ui->multiplier->blockSignals(false);
         ui->multiplier->setValue(mul);
+        ui->multiplier->blockSignals(false);
+        ui->spinValue->blockSignals(false);
+
     }
     else {
-
+        ui->spinValue->blockSignals(true);
         ui->spinValue->setValue(arg1);
 
         ui->multiplier->blockSignals(true);
         ui->multiplier->setValue(1.);
         ui->multiplier->blockSignals(false);
+        ui->spinValue->blockSignals(false);
     }
 
     emit defocus(arg1);
@@ -56,7 +63,14 @@ void defocusDlg::on_defocusVal_valueChanged(double arg1)
 
 void defocusDlg::on_spinValue_valueChanged(double arg1)
 {
+    ui->defocusSlider->blockSignals(true);
     ui->defocusSlider->setValue(arg1 * 100);
+    double val = ui->multiplier->value() * arg1;
+    ui->defocusVal->blockSignals(true);
+    ui->defocusVal->setValue(val);
+    ui->defocusVal->blockSignals(false);
+    ui->defocusSlider->blockSignals(false);
+    emit defocus(val);
 }
 #include "mirrordlg.h"
 void defocusDlg::on_defocusSlider_valueChanged(int value)
@@ -66,12 +80,16 @@ void defocusDlg::on_defocusSlider_valueChanged(int value)
     ui->spinValue->setValue(val);
     ui->spinValue->blockSignals(false);
     val *= ui->multiplier->value();
+    ui->defocusVal->blockSignals(true);
+    val *= ui->multiplier->value();
     ui->defocusVal->setValue(val);
+    ui->defocusVal->blockSignals(false);
 
     double f = mirrorDlg::get_Instance()->FNumber;
     double mm = f * f * 8. * value * .00055;  //mmeters
-
+    m_defocusInmm = mm;
     ui->Focusoffset->setText(QString("%1mm").arg(mm, 6,'f',3));
+    emit defocus(val);
 }
 
 

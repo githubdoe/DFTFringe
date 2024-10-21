@@ -263,6 +263,8 @@ void ProfilePlot::showSurface(bool flag){
 
 void ProfilePlot::showOne(){
     type = 0;
+    showPercentCorrection->setChecked(false);
+    m_pcdlg->close();
     populate();
     m_plot->replot();
 }
@@ -273,6 +275,8 @@ void ProfilePlot::show16(){
 }
 void ProfilePlot::showAll(){
     type = 2;
+    showPercentCorrection->setChecked(false);
+    m_pcdlg->close();
     populate();
     m_plot->replot();
 }
@@ -579,7 +583,7 @@ void ProfilePlot::populate()
 
                 m_pcdlg->show();
                 m_pcdlg->raise();
-                m_pcdlg->plot(avg, radius,
+                m_pcdlg->plot(avg, radius, md.roc,
                               z8,desiredZ8, lambda_nm, outputLambda,penColor, !firstPlot);
 
 
@@ -742,6 +746,8 @@ void ProfilePlot::contourPointSelected(const QPointF &pos){
 void ProfilePlot::showCorrection(bool show){
     m_showCorrection = show;
     Show16->setChecked(show);
+    if (!show)
+        m_pcdlg->close();
     show16();
 
 }

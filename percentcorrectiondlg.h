@@ -20,6 +20,7 @@ class percentCorrectionDlg : public QDialog
     double m_lambda_nm;
     double m_outputLambda;
     bool m_showZones;
+    double m_roc;
 signals:
     void percent_plot_changed();
 protected:
@@ -29,7 +30,7 @@ public:
     explicit percentCorrectionDlg( QWidget *parent = nullptr);
     ~percentCorrectionDlg();
     QPolygonF m_avg;
-    void plot(QPolygonF avg, double radius,double z8,
+    void plot(QPolygonF avg, double radius,double roc, double z8,
               double desiredZ8, double lambda_nm, double outputlampda,
               QColor penColor, bool addToPlot = false);
     void replot(QColor penColor = Qt::blue, bool addToPlot = false);
