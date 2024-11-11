@@ -394,6 +394,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
 
                     points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
                                         wf->lambda/outputLambda)  +y_offset * units);
+
                 }
             }
             //else points << QPointF(radx,0.0);
@@ -521,7 +522,7 @@ void ProfilePlot::populate()
 
             double startAngle = g_angle;
             QPolygonF sum;
-
+            QMap<int,int> count;
             for (int i = 0; i < 16; ++i){
                 QPolygonF points;
                 g_angle = startAngle + i * M_PI/ 16;
@@ -531,24 +532,30 @@ void ProfilePlot::populate()
                 cprofile->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
                 cprofile->setPen( Qt::black );
 
-                    points = createProfile( m_showNm * m_showSurface,wfs->at(list[indx]));
-                    if (i == 0) {
-                        sum = points;
-                    }
-                    else {
-                        for(int j = 0; j < fmin(sum.length(),points.length());++j){
-                            sum[j].ry()  += points[j].y();
-                        }
-                    }
-                    if (!m_showCorrection){
-                        cprofile->setSamples( points);
-                        cprofile->attach( m_plot );
+                points = createProfile( m_showNm * m_showSurface,wfs->at(list[indx]));
+                if (i == 0) {
+                    sum = points;
+                    for (int j = 0; j < sum.length(); ++j)
+                        count[j] = 1;
+                }
+                else {
+                    for(int j = 0; j < fmin(sum.length(),points.length());++j){
+                        sum[j].ry()  += points[j].y();;
+
+                        if (count.contains(j)) count[j] += 1 ;
+                        else count[j] = 1;
                     }
                 }
+                if (!m_showCorrection){
+                    cprofile->setSamples( points);
+                    cprofile->attach( m_plot );
+                }
+            }
 
             // plot the average profile
+            int i = 0;
             foreach(QPointF p, sum){
-                avg << QPointF(p.x(),p.y()/16);
+                avg << QPointF(p.x(),p.y()/(count[i++]));
             }
             QString name("average");
             if (m_showCorrection){
@@ -584,7 +591,7 @@ void ProfilePlot::populate()
                 m_pcdlg->show();
                 m_pcdlg->raise();
                 m_pcdlg->plot(avg, radius, md.roc,
-                              z8,desiredZ8, lambda_nm, outputLambda,penColor, !firstPlot);
+                              md.cc,desiredZ8, lambda_nm, outputLambda,penColor, !firstPlot);
 
 
             }

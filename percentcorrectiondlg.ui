@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>412</width>
+    <width>501</width>
     <height>300</height>
    </rect>
   </property>
@@ -15,33 +15,115 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="label">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This assumes the surface is a figure of revolution that matches the average profile.&lt;/p&gt;&lt;p&gt;It computes the slope of the average profile and compares it to the ideal slope for the conic desired. If the slope matches the expected value the percentage will be 100 percent. &lt;/p&gt;&lt;p&gt;This is only good for desired conics of -1. &lt;/p&gt;&lt;p&gt;The first 5% radius of the surface is ignored because the desired slope there is 0 to very small which creates invalid data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Help&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QCheckBox" name="checkBox">
+      <widget class="QComboBox" name="plotType">
+       <item>
+        <property name="text">
+         <string>percent knife delta</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>knife positions</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>Always on top</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
+        <string>ROC</string>
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="roc">
+       <property name="minimum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>99999.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="testbox">
+       <property name="minimum">
+        <double>-9999.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>9999.000000000000000</double>
+       </property>
+       <property name="stepType">
+        <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Delta</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="del">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="value">
+        <number>5</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>avgw</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="avgwidth">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="singleStep">
+        <number>2</number>
+       </property>
+       <property name="value">
+        <number>3</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="help">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This assumes the surface is a figure of revolution that matches the average profile.&lt;/p&gt;&lt;p&gt;It computes the slope of the average profile and compares it to the ideal slope for the conic desired. If the slope matches the expected value the percentage will be 100 percent. &lt;/p&gt;&lt;p&gt;This is only good for desired conics of -1. &lt;/p&gt;&lt;p&gt;The first 5% radius of the surface is ignored because the desired slope there is 0 to very small which creates invalid data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>?</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
@@ -54,6 +136,9 @@
      </item>
      <item>
       <widget class="QDoubleSpinBox" name="minvalue">
+       <property name="decimals">
+        <number>3</number>
+       </property>
        <property name="minimum">
         <double>-500.000000000000000</double>
        </property>
@@ -80,6 +165,9 @@
      </item>
      <item>
       <widget class="QDoubleSpinBox" name="maxvalue">
+       <property name="decimals">
+        <number>3</number>
+       </property>
        <property name="minimum">
         <double>-500.000000000000000</double>
        </property>
@@ -98,6 +186,9 @@
       <widget class="QLabel" name="label_4">
        <property name="text">
         <string>Zones:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>

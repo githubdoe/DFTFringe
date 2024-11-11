@@ -21,6 +21,7 @@ class percentCorrectionDlg : public QDialog
     double m_outputLambda;
     bool m_showZones;
     double m_roc;
+    double m_roc_offset = 0.;
 signals:
     void percent_plot_changed();
 protected:
@@ -36,13 +37,21 @@ public:
     void replot(QColor penColor = Qt::blue, bool addToPlot = false);
 private slots:
 
-    void on_checkBox_clicked(bool checked);
-
     void on_minvalue_valueChanged(double arg1);
 
     void on_maxvalue_valueChanged(double arg1);
 
     void on_numberOfZones_valueChanged(int arg1);
+
+    void on_help_clicked();
+
+    void on_plotType_currentTextChanged(const QString &arg1);
+
+    void on_testbox_valueChanged(double arg1);
+
+    void on_del_valueChanged(int arg1);
+
+    void on_avgwidth_valueChanged(int arg1);
 
 private:
     Ui::percentCorrectionDlg *ui;

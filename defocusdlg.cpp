@@ -73,6 +73,7 @@ void defocusDlg::on_spinValue_valueChanged(double arg1)
     emit defocus(val);
 }
 #include "mirrordlg.h"
+#include <QDebug>
 void defocusDlg::on_defocusSlider_valueChanged(int value)
 {
     double val = value/100.;
@@ -88,6 +89,7 @@ void defocusDlg::on_defocusSlider_valueChanged(int value)
     double f = mirrorDlg::get_Instance()->FNumber;
     double mm = f * f * 8. * value * .00055;  //mmeters
     m_defocusInmm = mm;
+    qDebug() << "defocus offset" << mm;
     ui->Focusoffset->setText(QString("%1mm").arg(mm, 6,'f',3));
     emit defocus(val);
 }
