@@ -309,7 +309,7 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
 }
 #endif
 // create star test using pupil_size which is usually smaller than the wavefront being sampled.
-cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double pad , bool returnComplex){
+cv::Mat SimulationsView:: computeStarTest(cv::Mat surface, int pupil_size, double pad , bool returnComplex){
     alias = false;
     cv::Mat out;
 

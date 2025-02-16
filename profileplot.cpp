@@ -495,7 +495,32 @@ void ProfilePlot::populate()
         QPolygonF points = createProfile( m_showNm * m_showSurface,m_wf);
 
         cprofile->setSamples( points );
+        /*if (m_showCorrection){
+            // calculate and show percentages of correction
+            m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
 
+            m_plot->setStyleSheet(" font: 12pt \"Deja Vu\";");
+            SurfaceManager &sm = *SurfaceManager::get_instance();
+            std::vector<double> zernikes;
+            zernikes = sm.getCurrent()->InputZerns;
+            double z8 = zernikes[8];                           //Z8 of current wavefront
+
+            mirrorDlg &md = *mirrorDlg::get_Instance();
+            double radius = md.m_clearAperature/2.;			// mirror radius of clear aperture
+            // ROC of the mirror
+            double lambda_nm =  md.lambda;
+
+            double desiredZ8 = md.z8;
+
+            m_pcdlg->show();
+            m_pcdlg->raise();
+            bool firstPlot = true;
+            QColor penColor = QColor("blue");
+            m_pcdlg->plot(points, radius, md.roc,
+                          md.cc,desiredZ8, lambda_nm, outputLambda,penColor, !firstPlot);
+
+
+        } */
         break;
     }
     case 1: {   // show 16 diameters

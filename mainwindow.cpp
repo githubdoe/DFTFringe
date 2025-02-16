@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->useAnnulust->hide();
+
     spdlog::get("logger")->info("DFTFringe {} started", APP_VERSION);
 
     //const QString toolButtonStyle("QToolButton {"
@@ -837,7 +838,7 @@ void MainWindow::on_actionSave_interferogram_triggered()
 void MainWindow::on_actionSave_screen_triggered()
 {
     QSettings set;
-    QString path = set.value("mirrorConfigFile").toString();
+    QString path = set.value("saveImagePath").toString();
     QFile fn(path);
     QFileInfo info(fn.fileName());
     QString dd = info.dir().absolutePath();
@@ -864,7 +865,7 @@ void MainWindow::on_actionSave_screen_triggered()
 
     if (fName.isEmpty())
         return;
-
+    set.setValue("saveImagePath", fName);
     QImage image( this->size(), QImage::Format_ARGB32 );
 
 
@@ -875,8 +876,15 @@ void MainWindow::on_actionSave_screen_triggered()
     this->render( &painter);
 
     painter.setPen(QPen(Qt::red,5));
+    // want to place the ogl widget back into the main window.
+    // get the topleft of the ogl but it's parent is not the main window
+    QPoint ml = this->mapToGlobal(QPoint (0,0));
     QRect widgetRect = m_ogl->m_container->geometry();
-    widgetRect.moveTopLeft(m_ogl->mapToGlobal(QPoint(0,20)));
+    QPoint tl = m_ogl->m_container->mapToGlobal(QPoint(0,0));
+    QPoint offset = tl-ml;
+
+
+    widgetRect.moveTopLeft(offset);
 
     painter.drawImage(widgetRect, SurfaceImage);
 

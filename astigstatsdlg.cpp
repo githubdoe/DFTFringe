@@ -166,8 +166,8 @@ astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
         Qt::RightButton );
 
     ui->mPlot->setPalette( Qt::white );
-
-    ui->bestFitCB->hide();
+qDebug() << "what the heck";
+    //ui->bestFitCB->hide();
     plot();
 }
 

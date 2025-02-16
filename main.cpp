@@ -26,6 +26,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "boost/stacktrace.hpp"
 
+
 static void my_terminate_handler() {
     try {
         spdlog::get("logger")->critical("Unexpected issue. Stacktrace:\n" + boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
@@ -101,7 +102,7 @@ int main(int argc, char *argv[])
     spdlog::flush_every(std::chrono::seconds(3));
 
     // Set the logging format
-    spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+    //spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
 
     // Set logger level
     settingsDebug::setLogLevel(settingsDebug::getLogLevel());
@@ -118,12 +119,13 @@ int main(int argc, char *argv[])
 
     // from here, any problematic application exit (for example uncatched exceptions) should call my_terminate_handler
     std::set_terminate(&my_terminate_handler);
-
+#ifndef DALE_DO_NOT_LOG
     // override QT message handler because qFatal() and qCritical() would exit cleanly without crashlog
     qInstallMessageHandler(myQtMessageOutput); // replace with nullptr if you want to use original bahavior for debug purpose
     // override CV error handler to get crashlog to execute instead of clean exit
-    cv::redirectError(myCvErrorCallback); // replace with nullptr if you want to use original bahavior for debug purpose
 
+    cv::redirectError(myCvErrorCallback); // replace with nullptr if you want to use original bahavior for debug purpose
+#endif
     spdlog::get("logger")->critical("This is a demo stacktrace:\n" + boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
 
     MainWindow *w = new MainWindow;

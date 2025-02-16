@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>501</width>
+    <width>505</width>
     <height>300</height>
    </rect>
   </property>
@@ -17,83 +17,33 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QComboBox" name="plotType">
-       <item>
-        <property name="text">
-         <string>percent knife delta</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>knife positions</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label">
+      <widget class="QPushButton" name="loadZones">
        <property name="text">
-        <string>ROC</string>
+        <string>Load Zone File</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QDoubleSpinBox" name="roc">
-       <property name="minimum">
-        <double>1.000000000000000</double>
+      <widget class="QCheckBox" name="editEnable">
+       <property name="text">
+        <string>Edit Zone centers</string>
        </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="zoneValue">
        <property name="maximum">
-        <double>99999.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="testbox">
-       <property name="minimum">
-        <double>-9999.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>9999.000000000000000</double>
-       </property>
-       <property name="stepType">
-        <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>Delta</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="del">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="value">
-        <number>5</number>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>avgw</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="avgwidth">
-       <property name="minimum">
-        <number>1</number>
+        <double>2000.000000000000000</double>
        </property>
        <property name="singleStep">
-        <number>2</number>
+        <double>0.100000000000000</double>
        </property>
-       <property name="value">
-        <number>3</number>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="saveZones">
+       <property name="text">
+        <string>Save Zones</string>
        </property>
       </widget>
      </item>
@@ -137,7 +87,7 @@
      <item>
       <widget class="QDoubleSpinBox" name="minvalue">
        <property name="decimals">
-        <number>3</number>
+        <number>5</number>
        </property>
        <property name="minimum">
         <double>-500.000000000000000</double>
@@ -166,7 +116,7 @@
      <item>
       <widget class="QDoubleSpinBox" name="maxvalue">
        <property name="decimals">
-        <number>3</number>
+        <number>5</number>
        </property>
        <property name="minimum">
         <double>-500.000000000000000</double>
@@ -198,7 +148,7 @@
         <number>0</number>
        </property>
        <property name="maximum">
-        <number>20</number>
+        <number>1000</number>
        </property>
        <property name="value">
         <number>5</number>

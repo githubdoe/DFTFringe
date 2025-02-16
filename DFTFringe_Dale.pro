@@ -416,7 +416,7 @@ VERSION = Dale7.3.3
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 DEFINES += QAPPLICATION_CLASS=QApplication
-
+DEFINES += DALE_DO_NOT_LOG
 DISTFILES += \
     buildingDFTFringe64.txt \
     helptext.txt \

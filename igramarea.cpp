@@ -2269,6 +2269,7 @@ void IgramArea::readOutlines(){
         return;
     deleteRegions();
     loadOutlineFileOldV6(fileName);
+    drawBoundary();
 }
 QString IgramArea::makeOutlineName(){
             QSettings settings;
