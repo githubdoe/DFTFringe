@@ -35,7 +35,7 @@ Additional information and help is availlable at https://groups.io/g/Interferome
 
 ```
 sudo apt update
-sudo apt install -y apt-utils build-essential wget qt5-qmake qt5-qmake-bin qt5-assistant qtbase5-dev qtmultimedia5-dev libqt5charts5 libqt5charts5-dev libqt5multimedia* libqt5datavisualization5-dev libqt5datavisualization5 libopencv-core-dev libopencv-core4.5d libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libarmadillo10
+sudo apt install -y apt-utils build-essential wget qt5-qmake qt5-qmake-bin qt5-assistant qtbase5-dev qtmultimedia5-dev libqt5charts5 libqt5charts5-dev libqt5multimedia* libqt5datavisualization5-dev libqt5datavisualization5 libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev
 qmake
 make -j4
 ```
