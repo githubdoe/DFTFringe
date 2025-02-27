@@ -5,45 +5,24 @@
 #include <QPolygonF>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_marker.h>
+#include <QTableWidgetItem>
+#include <armadillo>
 
 namespace Ui {
 class percentCorrectionDlg;
 }
-class ZonePicker: public QObject
-{
-    Q_OBJECT
-    QList<double> *m_zonelist;
-    bool moving = false;
-    bool onazone = false;
+class surfaceData {
+    public:
 
-public:
-    bool m_editing = false;
-    QwtPlotMarker *d_lastFound = NULL;
-    double m_radius;
-    ZonePicker( QwtPlot *plot, QList<double> *zones );
-    virtual bool eventFilter( QObject *, QEvent * );
+    double igramlambda;
+    QColor penColor;
+  // set of zernike values at each zone (rho)
+    std::vector<double> zernvalues;
 
-    virtual bool event( QEvent * );
-    void edit(bool b);
-    void reset();
-Q_SIGNALS:
-    void zoneMoved(int zone, double rad);
-    void zoneSelected(int ndx);
+    surfaceData( double igramlambda, QColor pen, std::vector<double> zernvalues): igramlambda(igramlambda),
+        penColor(pen), zernvalues(zernvalues){};
+} ;
 
-private:
-    QwtPlotMarker *findItem(double x, double tolerance, QwtPlotItem::RttiValues type);
-    void select( const QPoint & );
-    void move( const QPoint & );
-    void release();
-    void highlight(QwtPlotMarker *m, bool flag);
-    QwtPlot *plot();
-    const QwtPlot *plot() const;
-
-    QwtPlotMarker *d_selectedMarker;
-
-    int d_selectedZone;
-
-};
 class percentCorrectionDlg : public QDialog
 {
     Q_OBJECT
@@ -57,25 +36,34 @@ class percentCorrectionDlg : public QDialog
     bool m_showZones;
     double m_roc;
     double m_roc_offset = 0.;
+    arma::mat zoneZerns;
     QList<double> zoneCenter;
     QList<double> zoneedge;
-    QList<int> indexOfZoneCenter;
-    ZonePicker *zonePicker;
+
+    QPolygonF m_avg;
+    int m_currentprofileIndex = 0;
     int m_currentSelectedZone = -1;
+    int m_maxOrder = 12;
+    QVector<surfaceData *>  surfs;
+    QPolygonF makePercentages(surfaceData *);
+    double getnormalSlope(double RoC, double radius, std::vector<double> Zernikes, double x);
+    double getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double x);
+    double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, double x);
 signals:
     void percent_plot_changed();
+    void make_percent_correction(int maxOrder);
 protected:
     void closeEvent(QCloseEvent *event);
     void moveEvent(QMoveEvent *event);
 public:
     explicit percentCorrectionDlg( QWidget *parent = nullptr);
     ~percentCorrectionDlg();
-    QPolygonF m_avg;
-    void plot(QPolygonF avg, double radius,double roc, double z8,
-              double desiredZ8, double lambda_nm, double outputlampda,
-              QColor penColor, bool addToPlot = false);
-    void replot(QColor penColor = Qt::blue, bool addToPlot = false);
-
+    std::vector<double> m_zerns;
+    void setData(QVector< surfaceData *> );
+    void plot();
+    void updateZoneTable();
+    QJsonDocument loadZonesFromJson(QString str);
+    double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, int zone);
 private slots:
 
     void on_minvalue_valueChanged(double arg1);
@@ -86,19 +74,19 @@ private slots:
 
     void on_help_clicked();
 
-    void zoneMoved(int ndx, double value);
-
-    void zoneSelected(int ndx);
-
     void on_loadZones_clicked();
 
     void on_saveZones_clicked();
 
-    void on_editEnable_toggled(bool checked);
+    void on_zoneTable_itemChanged(QTableWidgetItem *item);
 
-    void on_zoneValue_valueChanged(double arg1);
+    void on_showBars_clicked(bool checked);
 
+    void on_Generate_clicked();
 
+    void on_maxOrder_valueChanged(int arg1);
+
+    arma::mat makeZoneZerns(QList<double> centers);
 
 private:
     Ui::percentCorrectionDlg *ui;

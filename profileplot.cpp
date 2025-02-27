@@ -94,11 +94,11 @@ bool ProfilePlot::eventFilter( QObject *object, QEvent *event )
 ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     QWidget( parent ), m_wf(0), m_tools(tools),
      m_showSurface(1.),m_showNm(1.),dragging(false),
-     offsetType("Middle"),ui(new Ui::ProfilePlot), m_defocusValue(0.)
+     offsetType("Middle"), m_defocusValue(0.),ui(new Ui::ProfilePlot)
 {
 
     m_pcdlg = new percentCorrectionDlg;
-    QObject::connect(m_pcdlg, SIGNAL(percent_plot_changed()), this, SLOT(populate()));
+    QObject::connect(m_pcdlg, SIGNAL(make_percent_correction(int)), this, SLOT(make_correction_graph(int)));
     zoomed = false;
     m_defocus_mode = false;
     m_plot = new QwtPlot(this);
@@ -427,7 +427,103 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf){
     }
     return points;
 }
+// create a smoothed wave front with only spherical terms.
+//  Use that to get zernike values to send to percent completion feature
+// display the profile and then send the zerns to percent completion
+// have to decide what is maxOrder
 
+zernikeProcess *zp = NULL;
+int maxOrder = 18;
+void ProfilePlot::make_correction_graph( int maxOrder){
+    m_showCorrection = true;
+
+    // for each selected wave front
+    zernikeProcess zp;
+    zp.setMaxOrder(maxOrder);
+
+    surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
+    QList<int> list = saTools->SelectedWaveFronts();
+    if (list.length() == 0)
+        list << 0;
+    QVector < surfaceData *> surfs;
+    for (int i = 0; i < list.size(); ++i){
+        QStringList path = wfs->at(list[i])->name.split("/");
+        QString name = path.last().replace(".wft","");
+
+        // compute zerns using the new maxorder zern set
+        zp.initGrid(*wfs->at(list[i]), maxOrder);
+        std::vector<double> theZerns = zp.ZernFitWavefront(*wfs->at(list[i]));
+
+        // send zernike values to the correction dialog to have it plot correction based on them.
+
+        QColor penColor = Settings2::m_profile->getColor(i);
+        // give the plot routine new zernike values for each curve.
+        mirrorDlg *md = mirrorDlg::get_Instance();
+        surfs << new surfaceData( md->lambda, penColor, theZerns);
+
+    }
+    m_pcdlg->setData(surfs);
+}
+#ifdef notnow
+extern double getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double radius);
+
+QPolygonF ProfilePlot::createZernProfile(wavefront *wf){
+    mirrorDlg &md = *mirrorDlg::get_Instance();
+    double radius = md.m_clearAperature/2.;			// mirror radius of clear aperture
+
+    double RoC = md.roc;
+    if (zp == NULL)
+        zp = new zernikeProcess;
+    zp->initGrid(*wf, maxOrder);
+    std::vector<double> theZerns;
+    theZerns = zp->ZernFitWavefront(*wf);
+
+    // make the profl
+    int wx = wf->data.size[1];
+
+    int numType = CV_64FC1;
+    cv::Mat result = cv::Mat::zeros(wx,wx,  numType);
+
+
+
+    // apply the artificial null
+    theZerns[8] -= md.z8 * md.cc;
+    // build surface with only spherical terms
+    for (unsigned long long i = 4; i < zp->m_zerns.n_rows; ++i){
+
+        double S1 = 0.0;
+        unsigned int z = 8;
+        for (unsigned int j = 5; z < theZerns.size(); ++j){
+
+            double val = theZerns[z];
+             S1 +=  val * zp->m_zerns(i,z);
+
+            z = j * j/4 + j;
+        }
+        int x =  zp->m_col[i];
+        int y =  zp->m_row[i];
+       if (S1 == 0.0) S1 += .0000001;
+        result.at<double>(y,x) = S1;
+        if (y == wx/2.){
+            qDebug() << x << y << S1;
+        }
+
+    }
+    QPolygonF surf;
+    int half = result.cols/2;
+    for (int i = 0; i < result.cols; ++i){
+        // map  0 - n   to   -radius to radius
+        double x = -radius +  2 * ((double)i/result.cols) * radius;
+        surf << QPointF(x,result.at<double>(i,half));
+        //qDebug() << surf.last();
+    }
+    //m_pcdlg->plot(1, theZerns, radius, md.roc,
+                  //md.cc,md.z8, md.lambda, outputLambda,Qt::black);
+    return surf;
+}
+
+extern double getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double radius);
+#endif
 void ProfilePlot::populate()
 {
 
@@ -476,7 +572,8 @@ void ProfilePlot::populate()
     m_plot->detachItems( QwtPlotItem::Rtti_PlotMarker);
 
 
-    switch (type) {
+
+        switch (type) {
     case 0:{        // show one
         QStringList path = wfs->at(0)->name.split("/");
         QString name;
@@ -495,34 +592,10 @@ void ProfilePlot::populate()
         QPolygonF points = createProfile( m_showNm * m_showSurface,m_wf);
 
         cprofile->setSamples( points );
-        /*if (m_showCorrection){
-            // calculate and show percentages of correction
-            m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
 
-            m_plot->setStyleSheet(" font: 12pt \"Deja Vu\";");
-            SurfaceManager &sm = *SurfaceManager::get_instance();
-            std::vector<double> zernikes;
-            zernikes = sm.getCurrent()->InputZerns;
-            double z8 = zernikes[8];                           //Z8 of current wavefront
-
-            mirrorDlg &md = *mirrorDlg::get_Instance();
-            double radius = md.m_clearAperature/2.;			// mirror radius of clear aperture
-            // ROC of the mirror
-            double lambda_nm =  md.lambda;
-
-            double desiredZ8 = md.z8;
-
-            m_pcdlg->show();
-            m_pcdlg->raise();
-            bool firstPlot = true;
-            QColor penColor = QColor("blue");
-            m_pcdlg->plot(points, radius, md.roc,
-                          md.cc,desiredZ8, lambda_nm, outputLambda,penColor, !firstPlot);
-
-
-        } */
         break;
     }
+
     case 1: {   // show 16 diameters
 
         surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
@@ -596,31 +669,6 @@ void ProfilePlot::populate()
             cprofileavg->attach( m_plot );
             g_angle = startAngle;
 
-            if (m_showCorrection){
-                // calculate and show percentages of correction
-                m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
-
-                m_plot->setStyleSheet(" font: 12pt \"Deja Vu\";");
-                SurfaceManager &sm = *SurfaceManager::get_instance();
-                std::vector<double> zernikes;
-                zernikes = sm.getCurrent()->InputZerns;
-                double z8 = zernikes[8];                           //Z8 of current wavefront
-
-                mirrorDlg &md = *mirrorDlg::get_Instance();
-                double radius = md.m_clearAperature/2.;			// mirror radius of clear aperture
-                // ROC of the mirror
-                double lambda_nm =  md.lambda;
-
-                double desiredZ8 = md.z8;
-
-                m_pcdlg->show();
-                m_pcdlg->raise();
-                m_pcdlg->plot(avg, radius, md.roc,
-                              md.cc,desiredZ8, lambda_nm, outputLambda,penColor, !firstPlot);
-
-
-            }
-            firstPlot = false;
         }
 
 
@@ -776,10 +824,14 @@ void ProfilePlot::contourPointSelected(const QPointF &pos){
 
 }
 void ProfilePlot::showCorrection(bool show){
-    m_showCorrection = show;
-    Show16->setChecked(show);
-    if (!show)
+    //m_showCorrection = show;
+    if (show){
+        m_pcdlg->show();
+        m_pcdlg->raise();
+
+    }
+    else
         m_pcdlg->close();
-    show16();
+
 
 }

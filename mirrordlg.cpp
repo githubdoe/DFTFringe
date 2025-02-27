@@ -190,7 +190,7 @@ void mirrorDlg:: on_saveBtn_clicked()
     }
     QString extensionTypes(tr((m_useAnnular)? "config file (*.json)" : "config file (*.ini *.json)"));
     QString fileName = QFileDialog::getSaveFileName(0,
-                        tr("Save stats file"), path,
+                        tr("Save config file"), path,
                         extensionTypes);
     if (fileName.isEmpty())
         return;

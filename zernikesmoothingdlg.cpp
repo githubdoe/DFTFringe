@@ -71,22 +71,47 @@ void ZernikeSmoothingDlg::on_maxOrder_valueChanged(int arg1)
 
 
 }
-cv::Mat makeSurfaceFromZerns(int width, zernikeProcess &zp, std::vector<double> theZerns){
+
+cv::Mat makeSurfaceFromZerns(int width, zernikeProcess &zp, std::vector<double> theZerns, bool sph = false){
     int wx = width;
 
     cv::Mat result = cv::Mat::zeros(wx,wx,  numType);
+    if (!sph) {
+        for (unsigned long long i = 0; i < zp.m_zerns.n_rows; ++i){
+            double S1 = 0.0;
+            for (unsigned int z = 0; z < theZerns.size(); ++z){
+                double val = theZerns[z];
+                 S1 +=  val * zp.m_zerns(i,z);
 
-    for (unsigned long long i = 0; i < zp.m_zerns.n_rows; ++i){
-        double S1 = 0.0;
-        for (unsigned int z = 0; z < theZerns.size(); ++z){
-            double val = theZerns[z];
-             S1 +=  val * zp.m_zerns(i,z);
+                //if (rho < .5) S1 = 0.;
+            }
             int x =  zp.m_col[i];
             int y =  zp.m_row[i];
-
             if (S1 == 0.0) S1 += .0000001;
-            //if (rho < .5) S1 = 0.;
             result.at<double>(y,x) = S1;
+        }
+    }
+    else {  // use only spherical terms.
+        unsigned int z = 0;
+        for (unsigned long long i = 4; i < zp.m_zerns.n_rows; ++i){
+
+            double S1 = 0.0;
+            unsigned int z = 8;
+            for (unsigned int j = 6; z < theZerns.size(); j+=2){
+
+                double val = theZerns[z];
+                 S1 +=  val * zp.m_zerns(i,z);
+
+                z = j * j/4 + j;
+            }
+            int x =  zp.m_col[i];
+            int y =  zp.m_row[i];
+           if (S1 == 0.0) S1 += .0000001;
+            result.at<double>(y,x) = S1;
+            if (y == wx/2.){
+                qDebug() << x << y << S1;
+            }
+
         }
     }
     return result;
@@ -103,7 +128,7 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
 
    tableModel->setValues(&theZerns);
 
-    cv::Mat result = makeSurfaceFromZerns(m_wf.data.cols, *m_zp, theZerns);
+    cv::Mat result = makeSurfaceFromZerns(m_wf.data.cols, *m_zp, theZerns, m_spherical_only);
 
     QStringList l = m_wf.name.split("/");
     l.back().replace(".wft","");
@@ -123,3 +148,9 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
     }
     QApplication::restoreOverrideCursor();
   }
+
+void ZernikeSmoothingDlg::on_sphereOnly_toggled(bool checked)
+{
+      m_spherical_only = checked;
+}
+

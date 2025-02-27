@@ -88,7 +88,8 @@ public slots:
     void contourPointSelected(const QPointF &pos);
     void populate();
     void showCorrection(bool);
-
+    void make_correction_graph(int maxOrder);
+    //QPolygonF createZernProfile(wavefront *wf);
 private:
 
     void updateGradient();

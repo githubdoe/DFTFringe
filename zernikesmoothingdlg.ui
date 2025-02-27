@@ -101,6 +101,13 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="sphereOnly">
+         <property name="text">
+          <string>Spherical terms only</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="showResidual">
          <property name="toolTip">
           <string>Also compute the residusal and place in the wave front list.</string>
