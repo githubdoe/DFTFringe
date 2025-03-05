@@ -18,9 +18,8 @@
 #include <QMessageBox>
 #include "zernikeprocess.h"
 #include <QLineEdit>
-#include <QtDataVisualization/q3dbars.h>
-#include <QtDataVisualization/qbardataproxy.h>
-#include <QtDataVisualization/qabstract3dseries.h>
+
+
 percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     QDialog(parent),m_showZones(false),
     ui(new Ui::percentCorrectionDlg)
@@ -28,19 +27,8 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     ui->setupUi(this);
 
     resize(1000,800);
-    Q3DBars *widgetgraph = new Q3DBars();
-    QWidget *container = QWidget::createWindowContainer(widgetgraph);
 
-    QHBoxLayout *hLayout = new QHBoxLayout(ui->bar3D);
 
-    hLayout->addWidget(container, 1);
-    ui->bar3D->setWindowTitle(" how about this");
-    //setWindowFlags(Qt::WindowStaysOnTopHint);
-
-    QCheckBox *smoothCheckBox = new QCheckBox(ui->bar3D);
-    smoothCheckBox->setText(QStringLiteral("Smooth bars"));
-    smoothCheckBox->setChecked(false);
-    hLayout->addWidget(smoothCheckBox);
     mirrorDlg &md = *mirrorDlg::get_Instance();
     m_radius = md.m_clearAperature/2.;
     QSettings set;
@@ -50,8 +38,17 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     ui->maxvalue->setValue(set.value("percent_correction_max", 120).toDouble());
     ui->minvalue->blockSignals(false);
     ui->maxvalue->blockSignals(false);
-
-
+    ui->maxOrder->blockSignals(true);
+    m_maxOrder = set.value("percentMaxOrder",18).toUInt();
+    ui->maxOrder->setValue(m_maxOrder);
+    int mmax = m_maxOrder/2;
+    int nzerns = (mmax+1)*(mmax+1);
+    ui->noOfTerms->setText(QString::number(nzerns));
+    ui->maxOrder->blockSignals(false);
+    ui->percentTable->setStyleSheet("background-color: lightgray;");
+    QList<int> sizes;
+    sizes << 500 << 100;
+    ui->splitter->setSizes(sizes);
     m_number_of_zones = set.value("percent number of zones", 5).toInt();
 
     ui->numberOfZones->blockSignals(true);
@@ -62,7 +59,11 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     }
 
     makeZones();
+
+
 }
+
+
 
 double  g_laserLambda = 550.; // a global so a none member function can access it.
 
@@ -79,7 +80,7 @@ void percentCorrectionDlg::saveSettings(){
     QSettings set;
     QJsonDocument jsonDoc(myJsonObject);
     set.setValue("correctionZones", jsonDoc.toJson(QJsonDocument::Compact));
-
+    set.setValue("percentMaxOrder",m_maxOrder);
 }
 
 
@@ -108,15 +109,32 @@ QList<double> generateZoneCenters(double radius, int number_of_zones){
     return zoneCenters;
 }
 void percentCorrectionDlg::updateZoneTable(){
-    ui->zoneTable->clearContents();
-    ui->zoneTable->setRowCount(zoneCenter.size());
-    ui->zoneTable->blockSignals(true);
+
+    QStringList vertLabels;
+
+    QStringList hLabels;
+
+    ui->percentTable->clear();
+    ui->percentTable->setColumnCount(zoneCenter.size());
+    ui->percentTable->setRowCount(2);
+    ui->percentTable->blockSignals(true);
+
+
     for (int i = 0; i < zoneCenter.size(); ++i) {
-        QTableWidgetItem *item = new QTableWidgetItem(QString::number(zoneCenter[i],'f',0));
-        ui->zoneTable->setItem(i, 0, item);
-        item->setTextAlignment(Qt::AlignRight);
+
+        QTableWidgetItem *item = new QTableWidgetItem(QString("%1mm").arg(zoneCenter[i],0,'f',0));
+        item->setTextAlignment(Qt::AlignCenter);
+        ui->percentTable->setItem(0, i, item);
+        item->setTextAlignment(Qt::AlignCenter);
+        vertLabels<< QString().number(i);
+        hLabels << QString().number(i+1);
     }
-    ui->zoneTable->blockSignals(false);
+
+
+    ui->percentTable->setHorizontalHeaderLabels(hLabels);
+
+    ui->percentTable->setColumnCount(zoneCenter.size());
+    ui->percentTable->blockSignals(false);
 }
 QJsonDocument percentCorrectionDlg::loadZonesFromJson(QString str){
     QJsonParseError jsonError;
@@ -126,8 +144,8 @@ QJsonDocument percentCorrectionDlg::loadZonesFromJson(QString str){
 
 
     zoneCenter.clear();
-    ui->zoneTable->clearContents();
-    ui->zoneTable->setRowCount(zones.size());
+    ui->percentTable->clearContents();
+    ui->percentTable->setColumnCount(zones.size());
 
     for (int i = 0; i < zones.size(); ++i) {
         double d = zones[i].toDouble()* m_radius;
@@ -180,40 +198,9 @@ void percentCorrectionDlg::makeZones(){
     updateZoneTable();
     zoneZerns = makeZoneZerns(zoneCenter);
 }
-/*
- *     // creaate rowvec or rho and theta.  Theta will only be 0.
-    std::vector<double> rhovec, thetavec;
 
-    for (double r = 0; r < m_radius; ++r){
-        double rho = r/m_radius;
-        rhovec.push_back(rho);
-        thetavec.push_back(0.);
-    }
-    arma::rowvec rhov(rhovec), thetav(thetavec);
-    zernikeProcess zp;
-
-    arma::mat theZs = zp.zpmC(rhov, thetav, maxorder);
-
-
-        double rho = rhov(10);
-        double num1 = rho;
-
-        double num2 = num1 * num1;
-        double num3 = num2 * num2;
-        double num4 = num3 * num2;
-        double num5 = num3 * num3;
-        double num6 = num5 * num2;
-
-        double z8 = (1.0 - 6.0 * num2 + 6.0 * num3);
-        double z15 =(-1.0 + 12.0 * num2 - 30.0 * num3 + 20.0 * num4);
-        double z24 = (1.0 - 20.0 * num2 + 90.0 * num3 - 140.0 * num4 + 70.0 * num5);
-
-
-        qDebug() << "rho" << rho << z8 << z15 << z24;
-        qDebug() << "rho" << rho << "theZs8" << theZs(10,8) << theZs(10,15) << theZs(10,24);
-*/
 int maxorder = 18;
-double percentCorrectionDlg::getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double x){
+double percentCorrectionDlg::getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double x, double null = 0.){
 
          double num1 = x / MirrorRad;
 
@@ -231,24 +218,15 @@ double percentCorrectionDlg::getZernSurface( double RoC, double MirrorRad, std::
          // for each spherical term
          int z = 8;
          for(unsigned int j = 6; z < theZs.n_cols; j+=2){
-            val += Zernikes[z] * theZs(0,z);
+
+            if (z == 8)
+                val += (Zernikes[8]- null) * theZs(0,z);
+            else
+                val += Zernikes[z] * theZs(0,z);
             z = j * j /4 + j;
          }
 
-//         double num2 = num1 * num1;
-//         double num3 = num2 * num2;
-//         double num4 = num3 * num2;
-//         double num5 = num3 * num3;
-//         double num6 = num5 * num2;
 
-
-//         double num7 = 0.0 + Zernikes[8] * (1.0 - 6.0 * num2 + 6.0 * num3) +
-//                 Zernikes[15] * (-1.0 + 12.0 * num2 - 30.0 * num3 + 20.0 * num4) +
-//                 Zernikes[24] * (1.0 - 20.0 * num2 + 90.0 * num3 - 140.0 * num4 + 70.0 * num5) +
-//                 Zernikes[35] * (-1.0 + 30.0 * num2 - 210.0 * num3 + 560.0 * num4 - 630.0 * num5 + 252.0 * num6);
-
-
-//         qDebug() << "rho" << num1 << val << num7;
          double spherey = RoC - sqrt(pow(RoC, 2.0) - pow(x, 2.0));
          double zerny = val * m_lambda_nm * .5E-6;
          double surf =   spherey + zerny;
@@ -257,11 +235,11 @@ double percentCorrectionDlg::getZernSurface( double RoC, double MirrorRad, std::
 
 // will use zernike values to compute two surface points x+- .01x  away from x
 //      then compute normal slope from that.
-double percentCorrectionDlg::getnormalSlope(double RoC, double radius, std::vector<double> Zernikes, double x){
+double percentCorrectionDlg::getnormalSlope(double RoC, double radius, std::vector<double> Zernikes, double x, double null = 0){
 
     double num1 = x / 100.0;
-    double surface1 = getZernSurface(RoC, radius, Zernikes, x - num1);  // problem  with zonendx  (the delta is not same as zonendx)
-    double surface2 = getZernSurface(RoC, radius, Zernikes, x + num1);
+    double surface1 = getZernSurface(RoC, radius, Zernikes, x - num1, null);  // problem  with zonendx  (the delta is not same as zonendx)
+    double surface2 = getZernSurface(RoC, radius, Zernikes, x + num1, null);
     double slope =  (surface2 - surface1)/ (2 * num1);
     slope = -1.0 / slope;
 
@@ -332,9 +310,6 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
 
         double x = zoneCenter[zone];
 
-
-
-
         //idealSurface << QPointF(x, normIdealSlope);
         double idealknife = getIdealKE(m_roc, x);
         double zernKnife = GetActualKE(m_roc, m_radius, surf->zernvalues, x);
@@ -358,6 +333,36 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
 
     return correction;
 }
+
+
+void percentCorrectionDlg::plotProfile(){
+
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    double nullval = md->z8 * md->cc;
+    for (int i = 0; i < surfs.length(); ++ i) {
+
+        QwtPlotCurve *Curve = new QwtPlotCurve();
+        QPolygonF profile;
+        for(double r = -m_radius; r <= m_radius; r += 1. ){
+            double y = getZernSurface(m_roc, m_radius, surfs[i]->zernvalues, fabs(r), nullval);
+
+            double sphery = m_roc - sqrt(pow(m_roc, 2.0) - pow(r, 2.0));
+            y -= sphery;
+            y /= m_lambda_nm * .5E-6;
+            profile << QPointF(r,  y);
+        }
+
+        Curve->setSamples(profile);
+        Curve->attach(ui->plot);
+        Curve->setPen(surfs[i]->penColor,5);
+        Curve->attach(ui->plot);
+    }
+    ui->plot->setAxisScale(QwtPlot::xBottom, -m_radius, m_radius);
+    ui->plot->setAxisAutoScale(QwtPlot::yLeft);
+
+    ui->plot->setAxisTitle( ui->plot->yLeft, "Error in waves at 550 nm" );
+    ui->plot->replot();
+}
 void percentCorrectionDlg::plot(){
 
 
@@ -379,6 +384,7 @@ void percentCorrectionDlg::plot(){
     }
 
     ui->plot->detachItems(QwtPlotItem::Rtti_PlotItem);
+
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->setZ(1);
 
@@ -390,41 +396,71 @@ void percentCorrectionDlg::plot(){
     grid->setMinorPen(Qt::black, 1.0, Qt::DotLine);
     grid->attach( ui->plot);
 
+
+    if (!ui->correction->isChecked()){
+        qDebug() << "doing profile";
+        plotProfile();
+        return;
+    }
+
+    ui->percentTable->blockSignals(true);
+    ui->percentTable->setRowCount(surfs.length() + 1);
+    QTableWidgetItem *item = new QTableWidgetItem("Zone Center");
+    ui->percentTable->setVerticalHeaderItem(0, item);
     // for each surface draw the percent plot
     for (int i = 0; i < surfs.length(); ++ i) {
         // make percentages
         QPolygonF percent = makePercentages( surfs[i]);
 
+        // Create 3D bar data
+        QVector<double> row;
+
+        for(int j = 0; j < percent.length(); ++j){
+            QTableWidgetItem *item = new QTableWidgetItem(QString::number(percent[j].y(),'f',0) + "%");
+            item->setTextAlignment(Qt::AlignCenter);
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            ui->percentTable->setItem(i+1,j+1,item);
+
+            row << percent[j].y();
+        }
+        QTableWidgetItem *item = new QTableWidgetItem(surfs[i]->m_name);
+        item->setForeground(surfs[i]->penColor);
+        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+
+        ui->percentTable->setVerticalHeaderItem(i+1, item);
+        m_seriesName << surfs[i]->m_name;
+
+
         QPolygonF bars;
 
-         if (surfs.length() < 2) {
-        // draw zone rectangles
-            if (ui->showBars->isChecked()){
-                double width;
-                for(int i = 0; i < percent.length(); ++i){
+        if (surfs.length() < 2) {
+            // draw zone rectangles
 
-                    double y = percent[i].y();
+            double width;
+            for(int i = 0; i < percent.length(); ++i){
 
-                    if (i < percent.length()-1)
-                     width= .80 * (percent[i+1].x() - percent[i].x()) ;
+                double y = percent[i].y();
 
-                    QwtPlotShapeItem *rectangleItem = new QwtPlotShapeItem();
+                if (i < percent.length()-1)
+                    width= .80 * (percent[i+1].x() - percent[i].x()) ;
 
-                    rectangleItem->setRect(QRectF(percent[i].x() - width/2. ,0,width,y));
+                QwtPlotShapeItem *rectangleItem = new QwtPlotShapeItem();
 
-                    QPen pen(Qt::black);
-                    pen.setWidth(3);
-                    rectangleItem->setPen(pen);
-                    rectangleItem->setBrush(QBrush(Qt::lightGray));
-                    rectangleItem->attach(ui->plot);
-                    rectangleItem->setZ(0);
-                    QwtPlotMarker *label = new QwtPlotMarker();
-                    label->setLineStyle(QwtPlotMarker::NoLine);
-                    label->setLabel(QString("%1\%").arg(y, 0, 'f',1)) ;
-                    label->setValue(percent[i].x(), y-10);
-                    label->attach(ui->plot);
-                }
+                rectangleItem->setRect(QRectF(percent[i].x() - width/2. ,0,width,y));
+
+                QPen pen(Qt::black);
+                pen.setWidth(3);
+                rectangleItem->setPen(pen);
+                rectangleItem->setBrush(QBrush(Qt::lightGray));
+                rectangleItem->attach(ui->plot);
+                rectangleItem->setZ(0);
+                QwtPlotMarker *label = new QwtPlotMarker();
+                label->setLineStyle(QwtPlotMarker::NoLine);
+                label->setLabel(QString("%1\%").arg(y, 0, 'f',1)) ;
+                label->setValue(percent[i].x(), y-10);
+                label->attach(ui->plot);
             }
+
         }
 
 
@@ -469,31 +505,58 @@ void percentCorrectionDlg::plot(){
 
         ui->plot->setAxisTitle( ui->plot->yLeft, "Percent correction" );
         ui->plot->setAxisScale(ui->plot->yRight, -10, 20, 1);
-        ui->plot->setAxisTitle( ui->plot->xBottom, "Radius mm" );
+        ui->plot->setAxisTitle( ui->plot->xBottom, "Mirror Radius mm" );
         slopeCurve3->setZ(1);
         ui->plot->setAxisScale(QwtPlot::yLeft, ui->minvalue->value(), ui->maxvalue->value());
         ui->plot->setAxisScale(QwtPlot::xBottom, 0, m_radius);
-}
+    }
+    ui->percentTable->blockSignals(false);
+    // Add the series to the graph
     ui->plot->replot();
 }
 
+bool compare(QVector< surfaceData *> data1, QVector< surfaceData *> data2){
+    if (data1.length() != data2.length()){
+        qDebug() << "different length";
+        return false;
+    }
+    for (int ndx = 0; ndx < data1.length(); ++ ndx){
+        if (data1[ndx]->igramlambda != data2[ndx]->igramlambda ||
+                data1[ndx]->m_name != data2[ndx]->m_name ||
+                data1[ndx]->penColor != data2[ndx]->penColor ||
+                data1[ndx]->zernvalues != data2[ndx]->zernvalues)
 
+            return false;
+
+    }
+    return true;
+}
 
 void percentCorrectionDlg::setData( QVector< surfaceData *> data) {
 
+    bool different = !compare(data,surfs);
+    qDebug() << "true if different" << different;
     mirrorDlg &md = *mirrorDlg::get_Instance();
     m_roc = md.roc;
     m_lambda_nm = md.lambda;
     m_radius = md.m_clearAperature/2.;
     surfs = data;
+    ui->percentTable->setRowCount(data.length());
 
-    // create surface samples every 1mm.
-    // THen change the zone logic to match.
+    QStringList labels;
+    labels << "Zone\ncenter";
+    foreach(auto t, data){
+        labels << t->m_name;
 
-    //it is possible that the zones have yet to be set go read them from the settings.
-    // it will make them if needed.
+    }
+    ui->percentTable->setVerticalHeaderLabels(labels);
+    ui->percentTable->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+
     makeZones();
+
     plot();
+    //if (different)
+        //emit make_percent_correction(m_maxOrder);
 }
 
 percentCorrectionDlg::~percentCorrectionDlg()
@@ -560,7 +623,7 @@ void percentCorrectionDlg::on_loadZones_clicked()
     QFile file(fileName);
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        //qDebug() << "Failed to open file";
+        qDebug() << "Failed to open file";
         return;
     }
 
@@ -612,12 +675,27 @@ void percentCorrectionDlg::on_saveZones_clicked()
 
 
 
-
-
-void percentCorrectionDlg::on_zoneTable_itemChanged(QTableWidgetItem *item)
+void percentCorrectionDlg::on_Generate_clicked()
 {
-    qDebug() << "item changed" << item->row() << item->text();
-    zoneCenter[item->row()] = item->text().toDouble();
+    emit make_percent_correction();
+}
+
+
+void percentCorrectionDlg::on_maxOrder_valueChanged(int arg1)
+{
+    m_maxOrder = arg1;
+
+    int mmax = arg1/2;
+    int ncol = (mmax+1)*(mmax+1);
+    ui->noOfTerms->setText(QString::number(ncol));
+    saveSettings();
+}
+
+
+void percentCorrectionDlg::on_percentTable_itemChanged(QTableWidgetItem *item)
+{
+
+    zoneCenter[item->column()] = item->text().toDouble();
 
     saveSettings();
     plot();
@@ -625,25 +703,8 @@ void percentCorrectionDlg::on_zoneTable_itemChanged(QTableWidgetItem *item)
 
 
 
-
-void percentCorrectionDlg::on_showBars_clicked(bool checked)
+void percentCorrectionDlg::on_correction_toggled(bool checked)
 {
     plot();
-}
-
-
-void percentCorrectionDlg::on_Generate_clicked()
-{
-    emit make_percent_correction(m_maxOrder);
-}
-
-
-void percentCorrectionDlg::on_maxOrder_valueChanged(int arg1)
-{
-    m_maxOrder = arg1;
-    qDebug() << "maxorder" << arg1;
-    int mmax = arg1/2;
-    int ncol = (mmax+1)*(mmax+1);
-    ui->noOfTerms->setText(QString::number(ncol));
 }
 

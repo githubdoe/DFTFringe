@@ -160,6 +160,7 @@ HEADERS  += mainwindow.h \
     dftarea.h \
     oglrendered.h \
     pdfcalibrationdlg.h \
+    percentCorrectionSurface.h \
     percentcorrectiondlg.h \
     profileplot.h \
     psiresizeimagesdlg.h \
