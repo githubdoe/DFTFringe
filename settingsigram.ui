@@ -359,6 +359,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="importConfig">
+     <property name="text">
+      <string>Import outline configuration (what hot key I does)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QTableView" name="lenseTableView">
      <property name="tabKeyNavigation">
       <bool>false</bool>

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>505</width>
+    <width>528</width>
     <height>300</height>
    </rect>
   </property>
@@ -153,22 +153,22 @@
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="correction">
+      <widget class="QRadioButton" name="useProfile">
        <property name="text">
-        <string>correction</string>
+        <string>use profile</string>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="showCorrection">
+      <widget class="QRadioButton" name="useZernikies">
        <property name="text">
-        <string>surface profile</string>
+        <string>use zernikes</string>
        </property>
        <property name="checked">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
      </item>

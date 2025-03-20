@@ -39,14 +39,16 @@ class percentCorrectionDlg : public QDialog
     QList<QVector<double> > m_barData;
     QStringList m_seriesName;
 
-    QPolygonF m_avg;
+    QPolygonF m_avg;   //  from profile plot
     int m_currentprofileIndex = 0;
     int m_currentSelectedZone = -1;
 
     QVector<surfaceData *>  surfs;
     QPolygonF makePercentages(surfaceData *);
-    double getnormalSlope(double RoC, double radius, std::vector<double> Zernikes, double x, double null);
-    double getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double x, double null);
+
+    double getnormalSlope(double RoC, double radius, std::vector<double> Zernikes, double x, double null, bool use_avg);
+    double getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double x,
+                           double null, bool useavg);
     double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, double x);
     void  make_3DBarControls(QWidget *widget, QVBoxLayout *vlayout);
     Q3DBars *m_barGraph;
@@ -55,6 +57,7 @@ class percentCorrectionDlg : public QDialog
     QBarDataProxy *m_proxy;
 public:
     int m_maxOrder = 12;
+
 signals:
     void percent_plot_changed();
     void make_percent_correction();
@@ -66,12 +69,14 @@ public:
     ~percentCorrectionDlg();
     std::vector<double> m_zerns;
     void setData(QVector< surfaceData *> );
+    void setProfile(QPolygonF profile);
     void plot();
     void plotProfile();
     void plotSlope();
     void updateZoneTable();
     QJsonDocument loadZonesFromJson(QString str);
-    double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, int zone);
+    double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes,  double x, double nulll, bool use_avg);
+
 private slots:
     void on_percentTable_itemChanged(QTableWidgetItem *item);
 
@@ -95,7 +100,9 @@ private slots:
 
     arma::mat makeZoneZerns(QList<double> centers);
 
-    void on_correction_toggled(bool checked);
+    void on_useProfile_clicked(bool checked);
+
+    void on_useZernikies_clicked(bool checked);
 
 private:
     Ui::percentCorrectionDlg *ui;

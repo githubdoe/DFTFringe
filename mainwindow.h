@@ -128,6 +128,7 @@ private slots:
 
     void on_saveOutline_clicked();
 
+     void importIgram();
     //void on_actionSimulated_interferogram_triggered();
 
     void on_actionPrevious_Wave_front_triggered();

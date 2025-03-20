@@ -199,47 +199,75 @@ void percentCorrectionDlg::makeZones(){
     zoneZerns = makeZoneZerns(zoneCenter);
 }
 
-int maxorder = 18;
-double percentCorrectionDlg::getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double x, double null = 0.){
+// the profile version needs the null removed and is in output lambda (usually 550);
+// zernike based does not need the null removed but needs to use laser wave length
+double percentCorrectionDlg::getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double x, double null = 0.,
+                                             bool useavg = false){
 
-         double num1 = x / MirrorRad;
+    double num1 = x / MirrorRad;
+    arma::rowvec rhov(1), thetav(1);
+    rhov[0] = x/m_radius;  thetav[0] = 0.;
+    zernikeProcess zp;
+    zp.setMaxOrder(m_maxOrder);
 
+    arma::mat theZs = zp.zpmC(rhov, thetav, m_maxOrder);
 
+    double val = 0;
+    if (useavg) {
 
-         arma::rowvec rhov(1), thetav(1);
-         rhov[0] = x/m_radius;  thetav[0] = 0.;
-         zernikeProcess zp;
-         zp.setMaxOrder(m_maxOrder);
+        // find x location in profile
+        val = m_avg[m_avg.length()-1].y();
+        for (int i = 0; i < m_avg.length(); ++i){
+            if (m_avg[i].x() == x){
+                val = m_avg[i].y();
+                break;
+            }
+            if (m_avg[i].x() > x){
+                double dx = m_avg[i].x() - m_avg[i-1].x();
+                double dy = m_avg[i].y() - m_avg[i-1].y();
+                val = m_avg[i-1].y()  + (x - m_avg[i-1].x())*(dy/dx);
+                break;
 
-         arma::mat theZs = zp.zpmC(rhov, thetav, m_maxOrder);
+            }
 
+        }
+        val += (null) * theZs(0,8);
+        double spherey = RoC - sqrt(pow(RoC, 2.0) - pow(x, 2.0));
+        double zerny = val * m_outputLambda * .5E-6;
+        double surf =   spherey + zerny;
+        return surf;
+    }
+    else {
 
-         double val = 0;
-         // for each spherical term
-         int z = 8;
-         for(unsigned int j = 6; z < theZs.n_cols; j+=2){
+        // for each spherical term
+        int z = 8;
+        for(unsigned int j = 6; z < theZs.n_cols; j+=2){
 
-            if (z == 8)
-                val += (Zernikes[8]- null) * theZs(0,z);
-            else
-                val += Zernikes[z] * theZs(0,z);
+            val += Zernikes[z] * theZs(0,z);
             z = j * j /4 + j;
-         }
+        }
+        double spherey = RoC - sqrt(pow(RoC, 2.0) - pow(x, 2.0));
+        double zerny = val * m_lambda_nm * .5E-6;
+        double surf =   spherey + zerny;
+        return surf;
+    }
 
 
-         double spherey = RoC - sqrt(pow(RoC, 2.0) - pow(x, 2.0));
-         double zerny = val * m_lambda_nm * .5E-6;
-         double surf =   spherey + zerny;
-         return surf;
+
 }
 
+// profile from profile plot with null removed
+void percentCorrectionDlg::setProfile(QPolygonF profile){
+    m_avg = profile;
+
+}
 // will use zernike values to compute two surface points x+- .01x  away from x
 //      then compute normal slope from that.
-double percentCorrectionDlg::getnormalSlope(double RoC, double radius, std::vector<double> Zernikes, double x, double null = 0){
+double percentCorrectionDlg::getnormalSlope(double RoC, double radius, std::vector<double> Zernikes, double x, double null = 0, bool useAvg = false){
 
     double num1 = x / 100.0;
-    double surface1 = getZernSurface(RoC, radius, Zernikes, x - num1, null);  // problem  with zonendx  (the delta is not same as zonendx)
-    double surface2 = getZernSurface(RoC, radius, Zernikes, x + num1, null);
+    double surface1 = getZernSurface(RoC, radius, Zernikes, x - num1, null,useAvg);  // problem  with zonendx  (the delta is not same as zonendx)
+    double surface2 = getZernSurface(RoC, radius, Zernikes, x + num1, null,useAvg);
     double slope =  (surface2 - surface1)/ (2 * num1);
     slope = -1.0 / slope;
 
@@ -249,11 +277,11 @@ double percentCorrectionDlg::getnormalSlope(double RoC, double radius, std::vect
 // y = mx + b
 // b = y - mx
 
-double percentCorrectionDlg::GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, double x)
+double percentCorrectionDlg::GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, double x, double null, bool use_avg)
 {
 
-    double slope = getnormalSlope(RoC, MirrorRad, Zernikes, x);
-    double surface = getZernSurface(RoC, MirrorRad, Zernikes, x);
+    double slope = getnormalSlope(RoC, MirrorRad, Zernikes, x, null, use_avg);
+    double surface = getZernSurface(RoC, MirrorRad, Zernikes, x, null, use_avg);
 
     double actualKe =  surface - x * slope  - RoC;
 
@@ -294,7 +322,8 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
     IdealzoneKnife << 0.;
     ActualZoneKnife << 0.0;
 
-
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    double nullval = md->z8 * md->cc;
     // process each zone center
 
     QPolygonF idealknives;
@@ -306,13 +335,14 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
     double zernOffset = 0.;
 
     for (int zone = 0; zone < zoneCenter.length(); ++zone){
-
-
         double x = zoneCenter[zone];
 
         //idealSurface << QPointF(x, normIdealSlope);
         double idealknife = getIdealKE(m_roc, x);
-        double zernKnife = GetActualKE(m_roc, m_radius, surf->zernvalues, x);
+
+        // when using average profile as the profile we need to remove the artificial
+        //   null from the profile thus the nullval being passed.
+        double zernKnife = GetActualKE(m_roc, m_radius, surf->zernvalues, x, nullval ,ui->useProfile->isChecked());
 
         if (zone == 0){
             idealoffset = idealknife;
@@ -344,7 +374,7 @@ void percentCorrectionDlg::plotProfile(){
         QwtPlotCurve *Curve = new QwtPlotCurve();
         QPolygonF profile;
         for(double r = -m_radius; r <= m_radius; r += 1. ){
-            double y = getZernSurface(m_roc, m_radius, surfs[i]->zernvalues, fabs(r), nullval);
+            double y = getZernSurface(m_roc, m_radius, surfs[i]->zernvalues, fabs(r), nullval, false);
 
             double sphery = m_roc - sqrt(pow(m_roc, 2.0) - pow(r, 2.0));
             y -= sphery;
@@ -354,9 +384,29 @@ void percentCorrectionDlg::plotProfile(){
 
         Curve->setSamples(profile);
         Curve->attach(ui->plot);
-        Curve->setPen(surfs[i]->penColor,5);
+        Curve->setPen(Qt::green,5);
         Curve->attach(ui->plot);
     }
+    QPolygonF profile2;
+    // now plot the m_avg surface
+    int i = 0;
+    for(double r = 0; r < m_avg.length(); r += 1. ){
+
+       // qDebug() << "r" << r << m_avg[i];
+                    double y = m_avg[r].y();//getZernSurface(m_roc, m_radius, surfs[i]->zernvalues, fabs(r), true);
+
+        double sphery = m_roc - sqrt(pow(m_roc, 2.0) - pow(r, 2.0));
+        //y -= sphery;
+        //y /= m_lambda_nm * .5E-6;
+        profile2 << QPointF(m_avg[r].x(),  y);
+
+    }
+        QwtPlotCurve *Curve2 = new QwtPlotCurve();
+        Curve2->setSamples(profile2);
+        Curve2->attach(ui->plot);
+        Curve2->setPen(Qt::blue,5);
+        Curve2->attach(ui->plot);
+
     ui->plot->setAxisScale(QwtPlot::xBottom, -m_radius, m_radius);
     ui->plot->setAxisAutoScale(QwtPlot::yLeft);
 
@@ -364,8 +414,6 @@ void percentCorrectionDlg::plotProfile(){
     ui->plot->replot();
 }
 void percentCorrectionDlg::plot(){
-
-
     QPolygonF expectedslope;
     QPolygonF actualslope;
     QPolygonF percentplot;
@@ -397,11 +445,10 @@ void percentCorrectionDlg::plot(){
     grid->attach( ui->plot);
 
 
-    if (!ui->correction->isChecked()){
-        qDebug() << "doing profile";
-        plotProfile();
-        return;
-    }
+//    if (!ui->correction->isChecked()){
+//        plotProfile();
+//        return;
+//    }
 
     ui->percentTable->blockSignals(true);
     ui->percentTable->setRowCount(surfs.length() + 1);
@@ -539,6 +586,9 @@ void percentCorrectionDlg::setData( QVector< surfaceData *> data) {
     mirrorDlg &md = *mirrorDlg::get_Instance();
     m_roc = md.roc;
     m_lambda_nm = md.lambda;
+    QSettings set;
+    m_outputLambda = set.value("outputLambda").toDouble();
+
     m_radius = md.m_clearAperature/2.;
     surfs = data;
     ui->percentTable->setRowCount(data.length());
@@ -703,7 +753,13 @@ void percentCorrectionDlg::on_percentTable_itemChanged(QTableWidgetItem *item)
 
 
 
-void percentCorrectionDlg::on_correction_toggled(bool checked)
+void percentCorrectionDlg::on_useProfile_clicked(bool checked)
+{
+    plot();
+}
+
+
+void percentCorrectionDlg::on_useZernikies_clicked(bool checked)
 {
     plot();
 }

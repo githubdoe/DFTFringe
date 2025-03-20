@@ -86,6 +86,8 @@ private slots:
 
     void on_holeY_valueChanged(int arg1);
 
+    void on_importConfig_clicked();
+
 private:
 
     Ui::settingsIGram *ui;

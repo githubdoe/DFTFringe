@@ -49,7 +49,8 @@ public:
     QVector<wavefront*> *wfs;
     void setSurface(wavefront * wf);
     virtual void resizeEvent( QResizeEvent * );
-    QPolygonF createProfile(double units, wavefront *wf);
+    QPolygonF createProfile(double units, wavefront *wf, bool allowOffset = true);
+    QPolygonF createAverageProfile(double umnits, wavefront *wf, bool removeNull);
     ContourTools *m_tools;
     double m_waveRange;
     virtual bool eventFilter( QObject *, QEvent * );
@@ -87,7 +88,7 @@ public slots:
     void slopeLimit(double);
     void contourPointSelected(const QPointF &pos);
     void populate();
-    void showCorrection(bool);
+    void showCorrection();
     void make_correction_graph();
     //QPolygonF createZernProfile(wavefront *wf);
 private:
@@ -98,7 +99,7 @@ private:
     QString offsetType;
     QwtCompass *compass;
     QCheckBox *showSlopeError;
-    QCheckBox *showPercentCorrection;
+    QPushButton *showPercentCorrection;
     QDoubleSpinBox *slopeLimitSB;
     double m_defocusValue;
 

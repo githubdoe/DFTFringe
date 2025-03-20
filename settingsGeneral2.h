@@ -25,22 +25,34 @@ public:
     bool shouldDownsize(){ return m_downsize;}
     int wavefrontSize(){ return m_waveFrontSize;}
     double getObs();
+
+public slots:
+    void updateContour();
 signals:
     void outputLambdaChanged(double val);
     void updateContourPlot();
-public slots:
-    void updateContour();
+
 private slots:
     void on_checkBox_clicked(bool checked);
+
     void on_starTestMakeCb_clicked(bool checked);
+
     void on_showConditionNumbersCb_clicked(bool checked);
+
     void on_wavefrontSizeSb_valueChanged(int arg1);
+
     void on_downSizeCB_clicked(bool checked);
+
     void on_AstigDistGraphWidth_valueChanged(int val);
+
     void on_applyOffsets_clicked(bool checked);
+
     void on_outputLambda_valueChanged(double val);
+
     void on_apply_clicked();
+
     void on_rulerParms_clicked();
+
 
 private:
     Ui::SettingsGeneral2 *ui;

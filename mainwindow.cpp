@@ -200,6 +200,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_igramArea, SIGNAL(doDFT()), m_dftArea, SLOT(doDFT()));
     enableShiftButtons(true);
 
+    QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_I), this);
+    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(importIgram()));
+
+    QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this);
+    QObject::connect(shortcut1, SIGNAL(activated()), this, SLOT(importIgram()));
 
     connect(m_dftTools,SIGNAL(doDFT()),m_dftArea,SLOT(doDFT()));
     settingsDlg = Settings2::getInstance();
@@ -261,6 +266,28 @@ MainWindow::MainWindow(QWidget *parent) :
     openWaveFrontonInit(args);
 
 }
+void MainWindow::importIgram() {
+    QSettings set;
+
+    if (set.value("importIgramOpenMostRecent", true).toBool()){
+        QString dirPath = set.value("importIgramPath",".").toString();
+        QDir dir(dirPath);
+        QStringList filters;
+        filters << "*.png" << "*.jpg" << "*.jpeg" << "*.bmp" << "*.gif"; // Add more image formats if needed
+
+        dir.setNameFilters(filters);
+        dir.setFilter(QDir::Files | QDir::Readable);
+        QFileInfoList fileList = dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot, QDir::Time | QDir::Reversed);
+
+        if (fileList.isEmpty())
+            return;
+
+       loadFile( fileList.last().filePath());
+    }
+    else on_actionLoad_Interferogram_triggered();
+
+}
+
 int showmem(QString t);
 void MainWindow::openWaveFrontonInit(QStringList args){
     QProgressDialog pd("    Loading wavefronts in progress.", "Cancel", 0, 100);
