@@ -80,6 +80,8 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_autocollimation_clicked(bool checked);
+
 private:
     Ui::foucaultView *ui;
     SurfaceManager *m_sm;

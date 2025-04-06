@@ -1976,3 +1976,36 @@ void MainWindow::on_useAnnulust_clicked()
 
 
 
+
+void MainWindow::on_actionHot_Keys_triggered()
+{
+    QString msgtext =
+            QString("<html><body><h3><u>hot keys (interferogram or results tab</u>> </h3>")+
+            "<dl>"
+            "<dt><b>i, ctrl-o</b></dt>"
+            "<dd>Import interferogram<p>"
+            "(see preferences igram settings for path setup)"
+            "</dd></dt>"
+            "<h3><u>outline hot keys</u></h3>"
+            "<dl>"
+            "<dt><b>h</b></dt><dd>toggle outline (hide) on or off</dd>"
+            "<dt><b>f</b></dt><dd>zoom to full image</dd>"
+            "<dt><b>scroll wheel</b></dt><dd>zoom image</dd>"
+            "<dt><b>ctrl scroll wheel</b></dt><dd>increase/decrease diameter of outline.</dd>"
+            "<dt><b> +/-</b></dt><dd> expand or contract outline.</dd>"
+            "<dt><b>arrow keys</b><dt><dd>move outline.</dd>"
+            "<dl>"
+
+            "</body></html>";
+
+    QMessageBox msg;
+    msg.setIconPixmap(QPixmap(":/error.svg"));
+    msg.setText(msgtext);
+    msg.setStandardButtons(QMessageBox::Ok);
+    msg.setDefaultButton(QMessageBox::Ok);
+    QSpacerItem* horizontalSpacer = new QSpacerItem(800, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    QGridLayout* layout = (QGridLayout*)msg.layout();
+    layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
+    msg.exec();
+}
+

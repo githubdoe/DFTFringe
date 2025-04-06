@@ -33,6 +33,7 @@ SOURCES += main.cpp \
     cpoint.cpp \
     defocusdlg.cpp \
     edgeplot.cpp \
+    hotkeysdlg.cpp \
     mainwindow.cpp \
     igramarea.cpp \
     circleoutline.cpp \
@@ -159,6 +160,7 @@ HEADERS  += mainwindow.h \
     graphicsutilities.h \
     dfttools.h \
     dftarea.h \
+    hotkeysdlg.h \
     oglrendered.h \
     pdfcalibrationdlg.h \
     percentCorrectionSurface.h \
@@ -279,6 +281,7 @@ FORMS    += mainwindow.ui \
     dfttools.ui \
     dftarea.ui \
     edgeplot.ui \
+    hotkeysdlg.ui \
     oglrendered.ui \
     pdfcalibrationdlg.ui \
     percentcorrectiondlg.ui \

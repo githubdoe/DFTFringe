@@ -230,53 +230,48 @@
        </layout>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBox_3">
-        <property name="title">
-         <string>Surface Height</string>
-        </property>
-        <widget class="QRadioButton" name="h1x">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>20</y>
-           <width>82</width>
-           <height>17</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>1X</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-        <widget class="QRadioButton" name="h2x">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>40</y>
-           <width>82</width>
-           <height>17</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>2X</string>
-         </property>
-        </widget>
-        <widget class="QRadioButton" name="h4x">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>60</y>
-           <width>82</width>
-           <height>17</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>4x</string>
-         </property>
-        </widget>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_7">
+        <item>
+         <widget class="QCheckBox" name="autocollimation">
+          <property name="text">
+           <string>auto collimation</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox_3">
+          <property name="title">
+           <string>Surface Height</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <widget class="QRadioButton" name="h1x">
+             <property name="text">
+              <string>1X</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="h2x">
+             <property name="text">
+              <string>2X</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="h4x">
+             <property name="text">
+              <string>4x</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox_2">

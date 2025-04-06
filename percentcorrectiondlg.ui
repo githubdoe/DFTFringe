@@ -153,26 +153,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="useProfile">
-       <property name="text">
-        <string>use profile</string>
-       </property>
-       <property name="checked">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QRadioButton" name="useZernikies">
-       <property name="text">
-        <string>use zernikes</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
         <string>Zones:</string>

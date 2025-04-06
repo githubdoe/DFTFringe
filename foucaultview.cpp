@@ -197,7 +197,9 @@ void foucaultView::on_makePb_clicked()
     double z3 = pv / ( moving_constant);
 
     bool oldDoNull = md->doNull;
-    md->doNull = false;
+    if (!ui->autocollimation->isChecked()){
+        md->doNull = false;
+    }
 
     cv::Mat surf_fft;
     SimulationsView *sv = SimulationsView::getInstance(0);
@@ -700,6 +702,19 @@ void foucaultView::on_pushButton_clicked()
     ui->rocOffsetSb->blockSignals(false);
     on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
+    on_makePb_clicked();
+}
+
+
+
+
+
+void foucaultView::on_autocollimation_clicked(bool checked)
+{
+    if (checked)
+        ui->h2x->setChecked(true);
+    else
+        ui->h1x->setChecked(false);
     on_makePb_clicked();
 }
 

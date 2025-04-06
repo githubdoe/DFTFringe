@@ -100,9 +100,6 @@ private slots:
 
     arma::mat makeZoneZerns(QList<double> centers);
 
-    void on_useProfile_clicked(bool checked);
-
-    void on_useZernikies_clicked(bool checked);
 
 private:
     Ui::percentCorrectionDlg *ui;

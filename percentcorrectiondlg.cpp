@@ -323,7 +323,8 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
     ActualZoneKnife << 0.0;
 
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double nullval = md->z8 * md->cc;
+    double nullval = md->z8 * md->cc;  // null value was computed at the igram wavevlength
+    nullval *=  m_lambda_nm/m_outputLambda;   // only data from the profile needs the null but it's data is at the output wavelength;
     // process each zone center
 
     QPolygonF idealknives;
@@ -342,7 +343,7 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
 
         // when using average profile as the profile we need to remove the artificial
         //   null from the profile thus the nullval being passed.
-        double zernKnife = GetActualKE(m_roc, m_radius, surf->zernvalues, x, nullval ,ui->useProfile->isChecked());
+        double zernKnife = GetActualKE(m_roc, m_radius, surf->zernvalues, x, nullval ,false);
 
         if (zone == 0){
             idealoffset = idealknife;
@@ -564,7 +565,6 @@ void percentCorrectionDlg::plot(){
 
 bool compare(QVector< surfaceData *> data1, QVector< surfaceData *> data2){
     if (data1.length() != data2.length()){
-        qDebug() << "different length";
         return false;
     }
     for (int ndx = 0; ndx < data1.length(); ++ ndx){
@@ -712,7 +712,6 @@ void percentCorrectionDlg::on_saveZones_clicked()
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qDebug() << " failed to read zones file.";
-        //return false; // Failed to open file for writing
     }
 
     QTextStream out(&file);
@@ -753,14 +752,5 @@ void percentCorrectionDlg::on_percentTable_itemChanged(QTableWidgetItem *item)
 
 
 
-void percentCorrectionDlg::on_useProfile_clicked(bool checked)
-{
-    plot();
-}
 
-
-void percentCorrectionDlg::on_useZernikies_clicked(bool checked)
-{
-    plot();
-}
 

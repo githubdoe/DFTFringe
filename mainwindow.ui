@@ -135,6 +135,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="actionHot_Keys"/>
     <addaction name="actionHelp"/>
     <addaction name="actionVideos"/>
     <addaction name="actionVersion_History"/>
@@ -1492,6 +1493,11 @@ em;
   <action name="actionShow_percentage_of_correction">
    <property name="text">
     <string>Show percentage of correction</string>
+   </property>
+  </action>
+  <action name="actionHot_Keys">
+   <property name="text">
+    <string>Hot Keys</string>
    </property>
   </action>
  </widget>

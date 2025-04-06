@@ -269,6 +269,8 @@ private slots:
 
     void on_useAnnulust_clicked();
 
+    void on_actionHot_Keys_triggered();
+
 private:
 
     Ui::MainWindow *ui;
