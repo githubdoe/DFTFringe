@@ -117,6 +117,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     l1->addStretch();
     showSlopeError = new QCheckBox("Show Slope: ");
     showPercentCorrection = new QPushButton("Show Correction");
+    showPercentCorrection->setToolTip("Show % correction of zone areas used in the Zambuto method of mirror figuring.");
     slopeLimitSB = new QDoubleSpinBox();
 
 

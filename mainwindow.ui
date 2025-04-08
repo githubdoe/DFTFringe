@@ -68,6 +68,7 @@
     </property>
     <addaction name="actionLoad_Interferogram"/>
     <addaction name="actionLoad_outline"/>
+    <addaction name="actionLoad_wave_fronts_from_multiple_directories"/>
     <addaction name="actionRead_WaveFront"/>
     <addaction name="actionAverage_wave_front_files"/>
     <addaction name="actionProcess_PSI_interferograms"/>
@@ -1498,6 +1499,11 @@ em;
   <action name="actionHot_Keys">
    <property name="text">
     <string>Hot Keys</string>
+   </property>
+  </action>
+  <action name="actionLoad_wave_fronts_from_multiple_directories">
+   <property name="text">
+    <string>Load wave fronts from multiple directories</string>
    </property>
   </action>
  </widget>

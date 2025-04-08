@@ -1662,15 +1662,28 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
     bool doastig = false;
     astigScatterPlot *astigPlot = NULL;
     QWidget *astigWindow = NULL;
-
+    QString waveprefix("f");
+    QString astigprefix("astig");
     if (QMessageBox::Yes == QMessageBox::question(0,"3D","Make image of 3D model of each wave front?"))
     {
        dowavefront = true;
+       bool ok{};
+           QString text = QInputDialog::getText(this, tr("QInputDialog::getText()"),
+                                                tr("File prefix"), QLineEdit::Normal,
+                                                waveprefix, &ok);
+           if (ok && !text.isEmpty())
+               waveprefix = text;
     }
 
     if (QMessageBox::Yes == QMessageBox::question(0,"astig","Make plot of astig for each wave front?"))
     {
         doastig = true;
+        bool ok{};
+            QString text = QInputDialog::getText(this, tr("QInputDialog::getText()"),
+                                                 tr("file prefix"), QLineEdit::Normal,
+                                                 astigprefix, &ok);
+            if (ok && !text.isEmpty())
+                astigprefix = text;
         astigPlot = new astigScatterPlot;
         QVBoxLayout *layout = new QVBoxLayout();
         astigWindow = new QWidget();
@@ -1733,7 +1746,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                     cv::Mat resized;
                     cv::resize(frame, resized, cv::Size(width,height));
                     // write frame
-                    QString filename = dir + "//" + QString("f%1.jpg").arg(framecnt++,3,10, QChar('0'));
+                    QString filename = dir + "//" + QString("%1%2.jpg").arg(waveprefix).arg(framecnt++,3,10, QChar('0'));
                     img.save ( filename );
                 }
                 if (doastig){
@@ -1741,7 +1754,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                     astigPlot->addValue("", astig);
 
                     // write frame
-                    QString filename = dir + "//" + QString("astig%1.jpg").arg(framecnt++,3,10, QChar('0'));
+                    QString filename = dir + "//" + QString("%1%2.jpg").arg(astigprefix).arg(framecnt++,3,10, QChar('0'));
                     astigWindow->grab().save ( filename );
                     qDebug() << filename;
                 }
@@ -2007,5 +2020,46 @@ void MainWindow::on_actionHot_Keys_triggered()
     QGridLayout* layout = (QGridLayout*)msg.layout();
     layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
     msg.exec();
+}
+
+
+void MainWindow::on_actionLoad_wave_fronts_from_multiple_directories_triggered()
+{
+    QSettings set;
+    QString lastPath = set.value("lastPath",".").toString();
+    QFileDialog dialog;
+    QStringList files;
+    dialog.setFileMode(QFileDialog::Directory);
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true);
+    dialog.setDirectory(lastPath);
+
+    QListView *listView = dialog.findChild<QListView*>("listView");
+    if (listView) {
+        listView->setSelectionMode(QAbstractItemView::MultiSelection);
+    }
+
+    QTreeView *treeView = dialog.findChild<QTreeView*>();
+    if (treeView) {
+        treeView->setSelectionMode(QAbstractItemView::MultiSelection);
+    }
+
+    QStringList selectedDirectories;
+    if (dialog.exec()) {
+        selectedDirectories = dialog.selectedFiles();
+        foreach (QString fn,selectedDirectories){
+            QFileDialog dialog(this, "load wave front file", fn, tr("wft(*.wft)"));
+            dialog.setFileMode(QFileDialog::ExistingFiles);
+            dialog.setNameFilter(tr("wft (*.wft)"));
+
+            if (dialog.exec()) {
+                QStringList fileNames = dialog.selectedFiles();
+                if (fileNames.size() > 0){
+                   files << dialog.selectedFiles();
+                }
+            }
+        }
+        openWaveFrontonInit(files);
+    }
+
 }
 
