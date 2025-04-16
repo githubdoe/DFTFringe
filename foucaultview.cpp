@@ -718,7 +718,7 @@ void foucaultView::on_autocollimation_clicked(bool checked)
     if (checked)
         ui->h2x->setChecked(true);
     else
-        ui->h1x->setChecked(false);
+        ui->h1x->setChecked(true);
     on_makePb_clicked();
 }
 
