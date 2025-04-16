@@ -1205,8 +1205,8 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
     for (int y = 0; y < rows; ++y){
         double uy = (y -cy)/radius;
 
-        if (!m_bDontProcessEvents)
-            QApplication::processEvents();
+//        if (!m_bDontProcessEvents)
+//            QApplication::processEvents();
         for (int x = 0; x< rows; ++x){
 
             double ux = (x -cx)/radius;
@@ -1464,9 +1464,11 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
             if (i%5000 == 0) {
                 prg->setValue(i);
                 QApplication::processEvents();
-//                if (prg->wasCanceled()){
-//                    throw 42;
-//                }
+                if (prg->wasCanceled()){
+                    std::vector<double> dummy;
+                    return dummy;  // a zero lengh vector signals cancelation.
+
+                }
             }
             if ( rho <= 1. && (wf.mask.at<uchar>( m_row[i], m_col[i]) != 0)){
 

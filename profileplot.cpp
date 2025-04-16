@@ -517,7 +517,7 @@ void ProfilePlot::make_correction_graph(){
         // compute zerns using the new maxorder zern set
         zp.initGrid(*wfs->at(list[i]), maxOrder);
         std::vector<double> theZerns = zp.ZernFitWavefront(*wfs->at(list[i]));
-
+        if (theZerns.size() == 0) return;
         // send zernike values to the correction dialog to have it plot correction based on them.
 
         QColor penColor = Settings2::m_profile->getColor(i);

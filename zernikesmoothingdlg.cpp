@@ -123,7 +123,12 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
     QApplication::setOverrideCursor(Qt::WaitCursor);
     m_wf = *p_wf;
     if (!ui->useCurrentZernySet->isChecked()){
-        theZerns = m_zp->ZernFitWavefront(m_wf);
+        std::vector<double> tzerns = m_zp->ZernFitWavefront(m_wf);
+        if (tzerns.size() == 0){
+            QApplication::restoreOverrideCursor();
+            return;
+        }
+        theZerns = tzerns;
     }
 
    tableModel->setValues(&theZerns);

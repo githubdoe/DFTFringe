@@ -1186,15 +1186,10 @@ em;
     <string>Save WaveFront</string>
    </property>
    <property name="toolTip">
-    <string>Save Selected Wavefront or Wavefronts</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save Wavefront or Wavefronts that have been selected.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="statusTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save Selected Wavefront or Wavefronts&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-  </action>
-  <action name="actionWrite_WaveFront">
-   <property name="text">
-    <string>Write WaveFront</string>
    </property>
   </action>
   <action name="actionSave_outline">
@@ -1225,6 +1220,9 @@ em;
   <action name="actionRead_WaveFront">
    <property name="text">
     <string>Read Wavefront/s</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load one or more wave fronts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="statusTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Read one or more wavefronts&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1282,6 +1280,9 @@ em;
   <action name="actionSave_Wavefront">
    <property name="text">
     <string>Save Wavefront/s</string>
+   </property>
+   <property name="toolTip">
+    <string>Save selected wave fronts.</string>
    </property>
    <property name="statusTip">
     <string>Save all selected wavefronts</string>
@@ -1421,6 +1422,9 @@ em;
    <property name="text">
     <string>Average wave front files</string>
    </property>
+   <property name="toolTip">
+    <string>Average wave front files seleted from a file folder and not from the selected wave fronts controls.</string>
+   </property>
   </action>
   <action name="actionDebugStuff">
    <property name="enabled">
@@ -1491,11 +1495,6 @@ em;
     <string>Create Movie of astig fom wavefonts</string>
    </property>
   </action>
-  <action name="actionShow_percentage_of_correction">
-   <property name="text">
-    <string>Show percentage of correction</string>
-   </property>
-  </action>
   <action name="actionHot_Keys">
    <property name="text">
     <string>Hot Keys</string>
@@ -1504,6 +1503,9 @@ em;
   <action name="actionLoad_wave_fronts_from_multiple_directories">
    <property name="text">
     <string>Load wave fronts from multiple directories</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select wave fronts from several directories and not just one.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </action>
  </widget>

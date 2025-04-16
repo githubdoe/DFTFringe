@@ -63,7 +63,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->useAnnulust->hide();
-
+    QList<QAction *> acts = ui->menuBar->actions();
+    foreach(QAction* a, acts){
+        a->menu()->setToolTipsVisible(true);
+    }
     spdlog::get("logger")->info("DFTFringe {} started", APP_VERSION);
 
     //const QString toolButtonStyle("QToolButton {"
@@ -202,6 +205,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_I), this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(importIgram()));
+
+    QShortcut *shortcutl = new QShortcut(QKeySequence(Qt::Key_L), this);
+    QObject::connect(shortcutl, SIGNAL(activated()), this, SLOT(on_actionLoad_Interferogram_triggered()));
 
     QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this);
     QObject::connect(shortcut1, SIGNAL(activated()), this, SLOT(importIgram()));
@@ -725,13 +731,6 @@ void MainWindow::on_actionNext_Wave_Front_triggered()
 void MainWindow::on_actionDelete_wave_front_triggered()
 {
     m_surfaceManager->deleteCurrent();
-}
-
-
-
-void MainWindow::on_actionWrite_WaveFront_triggered()
-{
-
 }
 
 
@@ -1995,9 +1994,12 @@ void MainWindow::on_actionHot_Keys_triggered()
     QString msgtext =
             QString("<html><body><h3><u>hot keys (interferogram or results tab</u>> </h3>")+
             "<dl>"
-            "<dt><b>i, ctrl-o</b></dt>"
+            "<dt><b>I, ctrl-o</b></dt>"
             "<dd>Import interferogram<p>"
             "(see preferences igram settings for path setup)"
+            "</dd></dt>"
+            "<dt><b>L</b></dt>"
+            "Open interferogram (manually select interferogram from directory)"
             "</dd></dt>"
             "<h3><u>outline hot keys</u></h3>"
             "<dl>"

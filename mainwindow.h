@@ -137,8 +137,6 @@ private slots:
 
     void on_actionDelete_wave_front_triggered();
 
-    void on_actionWrite_WaveFront_triggered();
-
     void on_actionSave_Wavefront_triggered();
 
     void on_SelectOutSideOutline_clicked(bool checked);
