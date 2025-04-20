@@ -1673,24 +1673,25 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
            if (ok && !text.isEmpty())
                waveprefix = text;
     }
-
-    if (QMessageBox::Yes == QMessageBox::question(0,"astig","Make plot of astig for each wave front?"))
-    {
-        doastig = true;
-        bool ok{};
+    if (!dowavefront) {
+        if (QMessageBox::Yes == QMessageBox::question(0,"astig","Make plot of astig for each wave front?"))
+        {
+            doastig = true;
+            bool ok{};
             QString text = QInputDialog::getText(this, tr("QInputDialog::getText()"),
                                                  tr("file prefix"), QLineEdit::Normal,
                                                  astigprefix, &ok);
             if (ok && !text.isEmpty())
                 astigprefix = text;
-        astigPlot = new astigScatterPlot;
-        QVBoxLayout *layout = new QVBoxLayout();
-        astigWindow = new QWidget();
-        layout->addWidget(astigPlot);
-        astigWindow->setLayout(layout);
-        astigWindow->resize(1000,1000);
-        astigWindow->show();
+            astigPlot = new astigScatterPlot;
+            QVBoxLayout *layout = new QVBoxLayout();
+            astigWindow = new QWidget();
+            layout->addWidget(astigPlot);
+            astigWindow->setLayout(layout);
+            astigWindow->resize(1000,1000);
+            astigWindow->show();
 
+        }
     }
     if (!doastig and !dowavefront)
         return;
@@ -1709,6 +1710,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                                                         QFileDialog::ShowDirsOnly
                                                         | QFileDialog::DontResolveSymlinks);
         int framecnt = 0;
+        int astigCnt = 0;
         if (dir.length() > 0){
 
 
@@ -1753,24 +1755,24 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                     astigPlot->addValue("", astig);
 
                     // write frame
-                    QString filename = dir + "//" + QString("%1%2.jpg").arg(astigprefix).arg(framecnt++,3,10, QChar('0'));
+                    QString filename = dir + "//" + QString("%1%2.jpg").arg(astigprefix).arg(astigCnt++,3,10, QChar('0'));
                     astigWindow->grab().save ( filename );
-                    qDebug() << filename;
+
                 }
             }
         }
         if (QMessageBox::Yes == QMessageBox::question(0,"---------- 3D  wave front Video maker -------------","Do you have FFMpeg and want it to make a video from these images?"))
 
         {
-            QString cmd = "ffmpeg -framerate 60 -i f%03d.jpg -c:v libx264 -vf format=yuv420p -y output.mp4";
-            if (doastig) {cmd.replace("f%03d", "a%03d");}
+            QString cmd = QString("ffmpeg -framerate 1 -i %1%03d.jpg -c:v libx264 -vf format=yuv420p -y -r 25 %2").arg(dowavefront? waveprefix:astigprefix).  \
+                    arg(dowavefront? "waveFronts.mp4": "astig.mp4");
+
             bool ok = false;
             QString text = QInputDialog::getText(this,
             "------------------ FFmpeg command to create video from images.----------------",
-            "--------------------  Command to make 60 fps.  Copy to command line app.  -----------------",
+            "--------------------  Command to make 2 fps.  Copy to command line app.  -----------------",
              QLineEdit::Normal,
-             "ffmpeg -framerate 60 -i f%03d.jpg -c:v libx264 -vf format=yuv420p -y output.mp4",
-              &ok);
+             QString(cmd) ,&ok);
             if (ok) {
                 QDialog *dialog = new QDialog;
                 dialog->setWindowTitle("ffmpeg output");
@@ -1789,7 +1791,8 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 
                 dialog->show();
 
-
+                cmd = textEdit->toPlainText();
+                qDebug() << "plain text"<< text;
                 QApplication::setOverrideCursor(Qt::WaitCursor);
                 QProcess *proc = new QProcess;
                 connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
@@ -1797,17 +1800,17 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 
                 proc->setProcessChannelMode(QProcess::MergedChannels);
                 proc->setWorkingDirectory(dir);
-                QStringList args = cmd.split(" ");
+                QStringList args = text.split(" ");
                 qDebug() << "args" << args.mid(1);
                 proc->start("ffmpeg",args.mid(1));
 
 
                 while (!proc->waitForFinished(200)){
-                           QString q = proc->readAll();
-                           if (q != "")
-                                textEdit->append(q);
-                           QApplication::processEvents();
-                       }
+                    QString q = proc->readAll();
+                    if (q != "")
+                        textEdit->append(q);
+                    QApplication::processEvents();
+                }
 
                 qDebug() << "done" ;
 
