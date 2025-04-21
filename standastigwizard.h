@@ -103,6 +103,7 @@ public:
     QRadioButton *CCWRb;
     QPushButton *runpb;
     QCheckBox *showWork;
+    QTextEdit* m_log;
 
 
     //int nextId() const;

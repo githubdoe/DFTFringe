@@ -1921,8 +1921,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     QTextDocument *doc = editor->document();
     textres results;
     results.Edit = editor;
-    const int Width = 400 * .9;
-    const int Height = 300 * .9;
+    const int Width = 800 * .9;
+    const int Height = 600 * .9;
     QImage contour(Width ,Height, QImage::Format_ARGB32 );
 
     QPrinter printer(QPrinter::HighResolution);
@@ -1994,6 +1994,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         maxYastig = std::max(maxYastig, mirrorY);
         yastig.at<double>(i,0) = mirrorY;
         qDebug() << "Mirror astigs " << mirrorX << mirrorY;
+        QApplication::processEvents();
     }
 
     Circle fittedcircle1;
@@ -2095,7 +2096,7 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
                     "<td>" + QString().number(yval,'f',3) + "</td>"
                     "<td>" + QString().number(mag,'f',3) + "</td>"
                     "<td>" + QString().number((180./ M_PI) * atan2(yval,xval)/2.,'f',1) + "</td></right></tr>");
-
+        QApplication::processEvents();
     }
     html.append("<tr></b><td>MEAN</b></td><td>" + QString().number(fittedcircle.a,'f',3) + "</td><td>" +
                 QString().number(fittedcircle.b,'f',3) + "</td><td>" + QString().number(sqrt(fittedcircle.a * fittedcircle.a + fittedcircle.b * fittedcircle.b),'f',3) + "</td></tr>");
@@ -2178,6 +2179,7 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
             cnt = 0;
             imagesHtml.append("</tr>");
         }
+        QApplication::processEvents();
     }
 
     mirrorAstigRadius /= list.size();
@@ -2446,6 +2448,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         // get input file
         QStringList loadList;
         loadList << list[i]->fname;
+        wizPage->m_log->append("Loading  " + list[i]->fname);
+        QApplication::processEvents();
         loadWavefront(list[i]->fname);
         wavefront * wf = m_wavefronts[m_currentNdx];
         inputs.append(wf);
@@ -2461,7 +2465,9 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         html.append("<tr><td><p align='center'> <img src='" +imageName + "' /><br><b>" + angle + "</b></p></td>");
 
         // counter rotate it
-        wizPage->runpb->setText(QString("Counter Rotating ") + list[i]->fname.right(list[i]->fname.size() - list[i]->fname.lastIndexOf("/")-1));
+
+        wizPage->m_log->setText(QString("Counter Rotating ") + list[i]->fname.right(list[i]->fname.size() - list[i]->fname.lastIndexOf("/")-1));
+        QApplication::processEvents();
         QList<int> l;
         l.append(ndx);
         ndx = m_wavefronts.size();
@@ -2492,7 +2498,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     editor->setDocument(doc);
 
     //editor->show();
-
+    wizPage->m_log->append("averaging rotated wave fronts");
+    QApplication::processEvents();
     // Now average all the rotated ones.
     QList<wavefront *> wlist;
     for (int i = 0; i < rotated.size(); ++i){
@@ -2539,7 +2546,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     // for each input rotate the average by the input angle and subtract it from the input
     // plot the astig of each of the inputs which will be the stand only astig.
 
-    wizPage->runpb->setText("computing stand astigs");
+    wizPage->m_log->setText("computing stand astigs");
+    QApplication::processEvents();
     textres page3res = Phase2(list, inputs, avgNdx);
     QTabWidget *tabw = new QTabWidget();
     tabw->setTabShape(QTabWidget::Triangular);

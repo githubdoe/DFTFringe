@@ -126,15 +126,17 @@ makeAverages::makeAverages(QWidget *parent)
     setLayout(layout);
 }
 void define_input::pdfNamesPressed(){
-    QString fileName = QFileDialog::getSaveFileName((QWidget* )0, "Export PDF", QString(mirrorDlg::get_Instance()->getProjectPath() +
-                                                                                        "/stand.pdf"), "*.pdf");
+    QSettings set;
+    QString standReportPath = set.value("stand report path", mirrorDlg::get_Instance()->getProjectPath()).toString();
+    QString fileName = QFileDialog::getSaveFileName((QWidget* )0, "Export PDF", standReportPath + "/stand.pdf" ,
+                                                          "*.pdf");
     if (fileName.isEmpty())
         return;
     if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".pdf"); }
     AstigReportPdfName = fileName;
     pdfName->setText(fileName);
-    QSettings set;
-    set.setValue("stand pdf file", fileName.split("/").last());
+
+    set.setValue("stand report path", QFileInfo(fileName).absolutePath());
 }
 void define_input::setBasePath(){
     QString baseName = QFileDialog::getExistingDirectory(
@@ -250,11 +252,14 @@ define_input::define_input(QWidget *parent)
     l->addWidget(listDisplay,8,0,10,-1);
     l->addWidget(new QLabel("Report Title:"),18,0);
     l->addWidget(title, 18,1);
-    showWork = new QCheckBox("Show work Files");
+    showWork = new QCheckBox("Keep work Files");
     l->addWidget(showWork, 18,2);
     l->addWidget(new QLabel("Pdf File Name:"), 19,0);
     l->addWidget(pdfName, 19,1,1,-1);
     l->addWidget(runpb, 20,0,1,7);
+    m_log = new QTextEdit();
+    m_log->append("Ready to add wave fronts to process.");
+    l->addWidget(m_log,21,0,1,0);
     setLayout(l);
 
 }
