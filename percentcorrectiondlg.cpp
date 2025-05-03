@@ -692,7 +692,7 @@ void percentCorrectionDlg::on_loadZones_clicked()
     ui->numberOfZones->setValue(m_number_of_zones);
     ui->numberOfZones->blockSignals(false);
     saveSettings();
-    //emit percent_plot_changed();
+    plot();
 
 }
 

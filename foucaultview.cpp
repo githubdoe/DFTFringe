@@ -697,8 +697,7 @@ void foucaultView::on_pushButton_clicked()
     ui->rocOffsetSlider->blockSignals(true);
     ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
     ui->rocOffsetSlider->blockSignals(false);
-    double step = getStep();
-    double offset = (ui->rocOffsetSlider->value()) * step;
+    double offset = (m_sag/2);
     QSettings set;
     set.setValue("foucault roc offset", offset);
     ui->rocOffsetSb->blockSignals(true);

@@ -41,7 +41,6 @@ class ProfilePlot : public QWidget
 
 public:
     percentCorrectionDlg *m_pcdlg;
-    bool m_showCorrection = false;
     QwtPlot *m_plot;
     wavefront* m_wf;
     ProfilePlot( QWidget *parent = NULL, ContourTools* tools = 0 );

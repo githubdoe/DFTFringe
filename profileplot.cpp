@@ -264,7 +264,6 @@ void ProfilePlot::showSurface(bool flag){
 
 void ProfilePlot::showOne(){
     type = 0;
-    showPercentCorrection->setChecked(false);
     m_pcdlg->close();
     populate();
     m_plot->replot();
@@ -276,7 +275,6 @@ void ProfilePlot::show16(){
 }
 void ProfilePlot::showAll(){
     type = 2;
-    showPercentCorrection->setChecked(false);
     m_pcdlg->close();
     populate();
     m_plot->replot();
@@ -463,7 +461,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffs
             //else points << QPointF(radx,0.0);
     }
 
-    if (m_showSlopeError && ((type==1 && !m_showCorrection) || (type == 0) || (type == 2))){
+    if (m_showSlopeError && ((type==1) || (type == 0) || (type == 2))){
         double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
         double xDel = points[0].x() - points[1].x();
         double hDelLimit =m_showNm *  m_showSurface * ((outputLambda/m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /(outputLambda * 1.e-6));
@@ -498,7 +496,8 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffs
 zernikeProcess *zp = NULL;
 
 void ProfilePlot::make_correction_graph(){
-    m_showCorrection = true;
+
+
     int maxOrder = m_pcdlg->m_maxOrder;
 
     // for each selected wave front
@@ -663,10 +662,7 @@ void ProfilePlot::populate()
                       avg << QPointF(p.x(),p.y()/(count[i++]));
                   }
                   QString name("average");
-                  if (m_showCorrection){
-                      QStringList path = wfs->at(list[indx])->name.split("/");
-                      name = path.last().replace(".wft","");
-                  }
+
                   QwtPlotCurve *cprofileavg = new QwtPlotCurve( name);
                   cprofileavg->setRenderHint( QwtPlotItem::RenderAntialiased );
                   cprofileavg->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
@@ -706,8 +702,6 @@ void ProfilePlot::populate()
             cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
             cprofile->setSamples( createProfile( m_showNm * m_showSurface,wfs->at(list[i]), i==0));
             cprofile->attach( m_plot );
-
-
         }
 
             break;
@@ -715,8 +709,6 @@ void ProfilePlot::populate()
     default:
         break;
     }
-
-
 
     // Insert markers
 
@@ -832,7 +824,8 @@ void ProfilePlot::contourPointSelected(const QPointF &pos){
 
 }
 void ProfilePlot::showCorrection(){
-
+    if (m_wf == 0)
+        return;
 
         m_pcdlg->show();
         m_pcdlg->raise();
