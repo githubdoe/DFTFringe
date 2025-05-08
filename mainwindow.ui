@@ -94,6 +94,7 @@
     <addaction name="separator"/>
     <addaction name="actionShow_unwrap_errors"/>
     <addaction name="actionShow_outline_statistics"/>
+    <addaction name="actionastig_in_polar"/>
     <addaction name="actionPlay_batch_results_review_movie"/>
    </widget>
    <widget class="QMenu" name="menuConfiguration">
@@ -1506,6 +1507,11 @@ em;
    </property>
    <property name="toolTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select wave fronts from several directories and not just one.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </action>
+  <action name="actionastig_in_polar">
+   <property name="text">
+    <string>Show astig in polar form of selected wave fronts</string>
    </property>
   </action>
  </widget>

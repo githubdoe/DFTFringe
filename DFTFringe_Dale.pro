@@ -30,6 +30,7 @@ SOURCES += main.cpp \
     annulushelpdlg.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
+    astigpolargraph.cpp \
     cpoint.cpp \
     defocusdlg.cpp \
     edgeplot.cpp \
@@ -151,6 +152,7 @@ HEADERS  += mainwindow.h \
     annulushelpdlg.h \
     arbitrarywavefronthelp.h \
     arbitrarywavwidget.h \
+    astigpolargraph.h \
     cpoint.h \
     defocusdlg.h \
     edgeplot.h \
@@ -277,6 +279,7 @@ INCLUDEPATH += ./bezier ./SingleApplication
 FORMS    += mainwindow.ui \
     annulushelpdlg.ui \
     arbitrarywavefronthelp.ui \
+    astigpolargraph.ui \
     defocusdlg.ui \
     dfttools.ui \
     dftarea.ui \

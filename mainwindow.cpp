@@ -2007,6 +2007,7 @@ void MainWindow::on_actionHot_Keys_triggered()
             "<h3><u>outline hot keys</u></h3>"
             "<dl>"
             "<dt><b>h</b></dt><dd>toggle outline (hide) on or off</dd>"
+            "<dt><b>space bar</b></dt><dd>toggle edge zoom on or off</dd>"
             "<dt><b>f</b></dt><dd>zoom to full image</dd>"
             "<dt><b>scroll wheel</b></dt><dd>zoom image</dd>"
             "<dt><b>ctrl scroll wheel</b></dt><dd>increase/decrease diameter of outline.</dd>"
@@ -2066,5 +2067,15 @@ void MainWindow::on_actionLoad_wave_fronts_from_multiple_directories_triggered()
         openWaveFrontonInit(files);
     }
 
+}
+
+#include "astigpolargraph.h"
+void MainWindow::on_actionastig_in_polar_triggered()
+{
+    surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
+    QList<int> list = saTools->SelectedWaveFronts();
+    astigPolargraph * graph = new astigPolargraph( list);
+    graph->resize(2000,1000);
+    graph->exec();
 }
 

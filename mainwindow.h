@@ -271,6 +271,8 @@ private slots:
 
     void on_actionLoad_wave_fronts_from_multiple_directories_triggered();
 
+    void on_actionastig_in_polar_triggered();
+
 private:
 
     Ui::MainWindow *ui;

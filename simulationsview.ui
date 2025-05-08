@@ -145,7 +145,7 @@
      <item>
       <widget class="QDoubleSpinBox" name="centerMagnifySB">
        <property name="toolTip">
-        <string>Image magnifiction (as with an eyepiece)</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Image magnification (as with an eyepiece)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="minimum">
         <double>1.000000000000000</double>
