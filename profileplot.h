@@ -52,7 +52,6 @@ public:
     QPolygonF createAverageProfile(double umnits, wavefront *wf, bool removeNull);
     ContourTools *m_tools;
     double m_waveRange;
-    virtual bool eventFilter( QObject *, QEvent * );
     QCheckBox *showNmCB;
     QCheckBox *showSurfaceCB;
     QRadioButton *OneOnly;

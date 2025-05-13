@@ -1921,8 +1921,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     QTextDocument *doc = editor->document();
     textres results;
     results.Edit = editor;
-    const int Width = 800 * .9;
-    const int Height = 600 * .9;
+    const int Width = 800 * .6;
+    const int Height = 600 * .6;
     QImage contour(Width ,Height, QImage::Format_ARGB32 );
 
     QPrinter printer(QPrinter::HighResolution);

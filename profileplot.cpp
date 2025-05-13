@@ -50,6 +50,7 @@
 #include "zernikeprocess.h"
 #include <QAbstractTableModel>
 #include "plotcolor.h"
+#include "profileplotpicker.h"
 extern double outputLambda;
 
 #include <iostream>
@@ -61,35 +62,7 @@ extern double outputLambda;
 double g_angle = 270. * PITORAD; //start at 90 deg (pointing east)
 double y_offset = 0.;
 
-bool ProfilePlot::eventFilter( QObject *object, QEvent *event )
-{
-    if ( event->type() == QEvent::MouseButtonPress )
-    {
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>( event );
-        if (mouseEvent->button() == Qt::RightButton){
-            showContextMenu(mouseEvent->pos());
-            return false;
-        }
-        startPos = mouseEvent->pos();
-        dragging = true;
-        return true;
 
-    }
-    else if (dragging && event->type() == QEvent::MouseMove){
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>( event );
-        QPoint p = mouseEvent->pos();
-        y_offset = .005 * (startPos.y() - p.y());
-        populate();
-        m_plot->replot();
-        return true;
-    }
-    else if (dragging && event->type() == QEvent::MouseButtonRelease){
-        dragging = false;
-        return true;
-    }
-
-    return QObject::eventFilter( object, event );
-}
 
 ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     QWidget( parent ), m_wf(0), m_tools(tools),
@@ -102,6 +75,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     zoomed = false;
     m_defocus_mode = false;
     m_plot = new QwtPlot(this);
+    profilePlotPicker *picker = new profilePlotPicker(m_plot);
     type = 0;
     QHBoxLayout * l1 = new QHBoxLayout();
     QVBoxLayout *v1 = new QVBoxLayout();

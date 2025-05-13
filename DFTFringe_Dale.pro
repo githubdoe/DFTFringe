@@ -46,6 +46,7 @@ SOURCES += main.cpp \
     pdfcalibrationdlg.cpp \
     percentcorrectiondlg.cpp \
     profileplot.cpp \
+    profileplotpicker.cpp \
     psiresizeimagesdlg.cpp \
     settingsigramimportconfig.cpp \
     surface3dcontrolsdlg.cpp \
@@ -168,6 +169,7 @@ HEADERS  += mainwindow.h \
     percentCorrectionSurface.h \
     percentcorrectiondlg.h \
     profileplot.h \
+    profileplotpicker.h \
     psiresizeimagesdlg.h \
     settingsigramimportconfig.h \
     surface3dcontrolsdlg.h \
