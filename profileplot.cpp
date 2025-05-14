@@ -289,7 +289,14 @@ void ProfilePlot::angleChanged(double a){
     m_plot->replot();
     emit profileAngleChanged(M_2_PI - g_angle +M_PI/4.);
 }
+void ProfilePlot::wheelEvent(QWheelEvent *event)
+{
+  double factor = 1/1.55;
+  if( event->angleDelta().y() < 0) factor = 1.5;
 
+ m_tools->setMinMaxValues(m_tools->m_min * factor, m_tools->m_max * factor);
+
+}
 void ProfilePlot::setSurface(wavefront * wf){
     m_wf = wf;
 

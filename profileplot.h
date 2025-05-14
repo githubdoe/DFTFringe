@@ -71,6 +71,7 @@ signals:
     void profileAngleChanged(const double ang);
 
 public slots:
+    void wheelEvent(QWheelEvent *event);
     void setWavefronts(QVector<wavefront*> *wf);
     void angleChanged(double a);
     void newDisplayErrorRange(double min, double max);
