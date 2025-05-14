@@ -35,7 +35,7 @@ Additional information and help is availlable at https://groups.io/g/Interferome
 
 ```
 sudo apt update
-sudo apt install -y apt-utils build-essential wget qt5-qmake qt5-qmake-bin qt5-assistant qtbase5-dev qtmultimedia5-dev libqt5charts5 libqt5charts5-dev libqt5multimedia* libqt5datavisualization5-dev libqt5datavisualization5 libopencv-core-dev libopencv-core4.5d libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libarmadillo10
+sudo apt install -y apt-utils build-essential wget qt5-qmake qt5-qmake-bin qt5-assistant qtbase5-dev qtmultimedia5-dev libqt5charts5 libqt5charts5-dev libqt5multimedia* libqt5datavisualization5-dev libqt5datavisualization5 libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev
 qmake
 make -j4
 ```
@@ -170,11 +170,11 @@ cmake --build ./build_lapack -j4
 
 #### Build Armadillo
 
-Get [Armadillo](https://arma.sourceforge.net/) source code version 12.6.7 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-12.6.7`.
+Get [Armadillo](https://arma.sourceforge.net/) source code version 14.4.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-14.4.0`.
 
 Then from within `C:\buildingDFTFringe` do the following:  
 ```
-cmake -D CMAKE_PREFIX_PATH=C:/buildingDFTFringe/build_lapack -G "MinGW Makefiles" -S armadillo-12.6.7 -B build_armadillo
+cmake -D CMAKE_PREFIX_PATH=C:/buildingDFTFringe/build_lapack -G "MinGW Makefiles" -S armadillo-14.4.0 -B build_armadillo
 cmake --build ./build_armadillo -j4
 ```
 
@@ -196,10 +196,10 @@ No additional modification required here.
 
 #### Build Armadillo
 
-Get [Armadillo](https://arma.sourceforge.net/) source code version 12.6.7 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-12.6.7`.
+Get [Armadillo](https://arma.sourceforge.net/) source code version 14.4.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-14.4.0`.
 
 Then follow the information in `DFTFringe.pro` to create appropriate folders for header files and DLLs.  
-Copy content from `armadillo-12.6.7\include` to `build_armadillo\tmp\include`. 
+Copy content from `armadillo-14.4.0\include` to `build_armadillo\tmp\include`. 
 
 #### Copy all the DLLs
 

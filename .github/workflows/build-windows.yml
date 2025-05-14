@@ -8,7 +8,7 @@ on:
   workflow_call:
 
 env:
-  armadillo_version: 12.6.7
+  armadillo_version: 14.4.0
   QWT_version: 6.1.6
   openCV_version: 4.6.0
   QT_version: 5.15.2
@@ -228,7 +228,7 @@ jobs:
       - uses: actions/checkout@v4
       #  with:
       #    path: 'DFTFringe'
-      
+
       # copy all files for problem matcher to work
       - name: copy files into build folder (problem matcher workaround)
         run: |
@@ -303,7 +303,7 @@ jobs:
         # suffix will be commit sha 5108ce7c3ac60bec1e0867bb10c4497db67e3606
         run: |
           echo "WORKFLOW_VERSION=${{github.sha}}" >> $env:GITHUB_ENV
-       
+
       - name: Find and Replace MY_AUTOMATED_VERSION_STRING
         run: |
           echo "${{env.WORKFLOW_VERSION}}"
@@ -318,7 +318,7 @@ jobs:
         run: |
           echo "${{env.NOW}}"
           (Get-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml).replace('MY_AUTOMATED_DATE_STRING', '${{env.NOW}}') | Set-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml
-          
+
       - run: cd DFTFringe ; ..\${{env.QT_version}}\mingw81_64\bin\qmake.exe
       - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
       - run: cd DFTFringe ; mingw32-make -j4
@@ -359,4 +359,4 @@ jobs:
           path: |
             DFTFringeInstaller_${{env.WORKFLOW_VERSION}}.exe
             DFTFringe.exe.debug
-      
+
