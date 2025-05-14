@@ -14,6 +14,7 @@ env:
   QT_version: 5.15.2
   lapack_version: 3.11.0
   mingw_version: 810
+  python_version: 3.13
 
 jobs:
   cache-mingw-from-QT:
@@ -28,6 +29,11 @@ jobs:
           key: ${{ runner.os }}-mingw${{env.mingw_version}}_64
 
       # all what follows is only run on cache miss
+      - name: install newer python
+        if: steps.cache-minGW.outputs.cache-hit != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.python_version}}
       - name: install aqtinstall tool
         if: steps.cache-minGW.outputs.cache-hit != 'true'
         run: pip install aqtinstall
@@ -70,6 +76,11 @@ jobs:
           path: Tools
           key: ${{ runner.os }}-mingw${{env.mingw_version}}_64
           fail-on-cache-miss: true
+      - name: install newer python
+        if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.python_version}}
       - name: add minGW to path
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         shell: bash
@@ -137,6 +148,11 @@ jobs:
       - name: extract archive
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         run: 7z x qwt-${{env.QWT_version}}.zip
+      - name: install newer python
+        if: steps.cache-QWT.outputs.cache-hit != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.python_version}}
       - name: install aqtinstall tool
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         run: pip install aqtinstall
