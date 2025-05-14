@@ -48,9 +48,11 @@ signals:
     void newDisplayErrorRange(double, double);
     void lineColorChanged(QColor);
     void fillChanged(int );
+public slots:
+   void setMinMaxValues(double min,double max);
 private slots:
     void updateMinMax();
-    void setMinMaxValues(double min,double max);
+
     void setWaveRange(double val);
     void on_ColorMapCB_activated(int index);
 

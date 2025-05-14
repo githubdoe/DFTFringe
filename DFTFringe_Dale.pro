@@ -30,9 +30,11 @@ SOURCES += main.cpp \
     annulushelpdlg.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
+    astigpolargraph.cpp \
     cpoint.cpp \
     defocusdlg.cpp \
     edgeplot.cpp \
+    hotkeysdlg.cpp \
     mainwindow.cpp \
     igramarea.cpp \
     circleoutline.cpp \
@@ -42,8 +44,11 @@ SOURCES += main.cpp \
     dftarea.cpp \
     oglrendered.cpp \
     pdfcalibrationdlg.cpp \
+    percentcorrectiondlg.cpp \
     profileplot.cpp \
+    profileplotpicker.cpp \
     psiresizeimagesdlg.cpp \
+    settingsigramimportconfig.cpp \
     surface3dcontrolsdlg.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
@@ -148,6 +153,7 @@ HEADERS  += mainwindow.h \
     annulushelpdlg.h \
     arbitrarywavefronthelp.h \
     arbitrarywavwidget.h \
+    astigpolargraph.h \
     cpoint.h \
     defocusdlg.h \
     edgeplot.h \
@@ -157,10 +163,15 @@ HEADERS  += mainwindow.h \
     graphicsutilities.h \
     dfttools.h \
     dftarea.h \
+    hotkeysdlg.h \
     oglrendered.h \
     pdfcalibrationdlg.h \
+    percentCorrectionSurface.h \
+    percentcorrectiondlg.h \
     profileplot.h \
+    profileplotpicker.h \
     psiresizeimagesdlg.h \
+    settingsigramimportconfig.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
     surfacelightingproxy.h \
@@ -270,16 +281,20 @@ INCLUDEPATH += ./bezier ./SingleApplication
 FORMS    += mainwindow.ui \
     annulushelpdlg.ui \
     arbitrarywavefronthelp.ui \
+    astigpolargraph.ui \
     defocusdlg.ui \
     dfttools.ui \
     dftarea.ui \
     edgeplot.ui \
+    hotkeysdlg.ui \
     oglrendered.ui \
     pdfcalibrationdlg.ui \
+    percentcorrectiondlg.ui \
     profilearea.ui \
     profileplot.ui \
     contourtools.ui \
     psiresizeimagesdlg.ui \
+    settingsigramimportconfig.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
     metricsdisplay.ui \
@@ -408,12 +423,12 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = 6.2
+VERSION = Dale7.3.0
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 DEFINES += QAPPLICATION_CLASS=QApplication
-
+DEFINES += DALE_DO_NOT_LOG
 DISTFILES += \
     buildingDFTFringe64.txt \
     helptext.txt \

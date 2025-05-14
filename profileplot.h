@@ -30,6 +30,7 @@
 #include <QRadioButton>
 #include <QCheckBox>
 #include <QDoubleSpinBox>
+#include "percentcorrectiondlg.h"
 namespace Ui {
 class ProfilePlot;
 }
@@ -39,6 +40,7 @@ class ProfilePlot : public QWidget
     Q_OBJECT
 
 public:
+    percentCorrectionDlg *m_pcdlg;
     QwtPlot *m_plot;
     wavefront* m_wf;
     ProfilePlot( QWidget *parent = NULL, ContourTools* tools = 0 );
@@ -46,10 +48,10 @@ public:
     QVector<wavefront*> *wfs;
     void setSurface(wavefront * wf);
     virtual void resizeEvent( QResizeEvent * );
-    QPolygonF createProfile(double units, wavefront *wf);
+    QPolygonF createProfile(double units, wavefront *wf, bool allowOffset = true);
+    QPolygonF createAverageProfile(double umnits, wavefront *wf, bool removeNull);
     ContourTools *m_tools;
     double m_waveRange;
-    virtual bool eventFilter( QObject *, QEvent * );
     QCheckBox *showNmCB;
     QCheckBox *showSurfaceCB;
     QRadioButton *OneOnly;
@@ -60,6 +62,7 @@ public:
     double m_showNm;
     bool zoomed;
     bool m_showSlopeError;
+
     double slopeLimitArcSec;
     void setDefocusValue(double val);
     void setDefocusWaveFront( cv::Mat_<double> wf);
@@ -68,6 +71,7 @@ signals:
     void profileAngleChanged(const double ang);
 
 public slots:
+    void wheelEvent(QWheelEvent *event);
     void setWavefronts(QVector<wavefront*> *wf);
     void angleChanged(double a);
     void newDisplayErrorRange(double min, double max);
@@ -82,15 +86,19 @@ public slots:
     void showSlope(bool);
     void slopeLimit(double);
     void contourPointSelected(const QPointF &pos);
-
-private:
     void populate();
+    void showCorrection();
+    void make_correction_graph();
+    //QPolygonF createZernProfile(wavefront *wf);
+private:
+
     void updateGradient();
     bool dragging;
     QPoint startPos;
     QString offsetType;
     QwtCompass *compass;
     QCheckBox *showSlopeError;
+    QPushButton *showPercentCorrection;
     QDoubleSpinBox *slopeLimitSB;
     double m_defocusValue;
 

@@ -66,6 +66,8 @@ void SettingsGeneral2::on_rulerParms_clicked(){
 
 }
 
+
+
 void SettingsGeneral2::on_outputLambda_valueChanged(double val){
    QSettings set;
    set.setValue("outputLambda", val);

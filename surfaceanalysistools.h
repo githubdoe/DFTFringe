@@ -46,6 +46,7 @@ public:
     QList<int> SelectedWaveFronts();
     bool m_useDefocus;
     double m_defocus;
+    double m_defocusInmm;
     void setBlurText(QString txt);
     void nameChanged(int, QString);
     void select(int item);

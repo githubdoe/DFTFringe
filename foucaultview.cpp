@@ -101,6 +101,8 @@ void foucaultView::saveFoucaultImage(){
 }
 
 void foucaultView::setSurface(wavefront *wf){
+    QSettings set;
+    double offset = set.value("foucault roc offset", 0.).toDouble();
     m_wf = wf;
     mirrorDlg *md = mirrorDlg::get_Instance();
     double rad = md->diameter/2.;
@@ -108,12 +110,8 @@ void foucaultView::setSurface(wavefront *wf){
     double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
     m_sag = mul * (rad * rad) /( 4 * FL);
     m_sag = round(100 * m_sag)/100.;
-    m_temp_sag = m_sag;
-    ui->rocOffsetSlider->blockSignals(true);
-    ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
-    ui->rocOffsetSlider->blockSignals(false);
-    double step = getStep();
-    double offset = (ui->rocOffsetSlider->value()) * step;
+    m_temp_sag = m_sag;     // used to set the zernike slider step size to make it appropriate to a faction of the sagitta.
+
     ui->rocOffsetSb->blockSignals(true);
     ui->rocOffsetSb->setValue(offset);
     ui->rocOffsetSb->blockSignals(false);
@@ -197,7 +195,9 @@ void foucaultView::on_makePb_clicked()
     double z3 = pv / ( moving_constant);
 
     bool oldDoNull = md->doNull;
-    md->doNull = false;
+    if (!ui->autocollimation->isChecked()){
+        md->doNull = false;
+    }
 
     cv::Mat surf_fft;
     SimulationsView *sv = SimulationsView::getInstance(0);
@@ -469,7 +469,9 @@ void foucaultView::on_rocOffsetSb_editingFinished()
     ui->rocOffsetSlider->blockSignals(true);
     ui->rocOffsetSlider->setValue(pos);
     ui->rocOffsetSlider->blockSignals(false);
-qDebug() << "slider" << val << step << pos;
+    QSettings set;
+    set.setValue("foucault roc offset", val);
+
     m_guiTimer.start(500);
 }
 
@@ -589,9 +591,11 @@ void foucaultView::on_rocOffsetSlider_valueChanged(int value)
 
     double step = getStep();
     double offset = (value) * step;
+    QSettings set;
+
+    set.setValue("foucault roc offset", offset);
 
     ui->rocOffsetSb->setValue(offset);
-
     m_guiTimer.start(1000);
 
 }
@@ -693,13 +697,27 @@ void foucaultView::on_pushButton_clicked()
     ui->rocOffsetSlider->blockSignals(true);
     ui->rocOffsetSlider->setValue((m_sag/2.)/getStep());
     ui->rocOffsetSlider->blockSignals(false);
-    double step = getStep();
-    double offset = (ui->rocOffsetSlider->value()) * step;
+    double offset = (m_sag/2);
+    QSettings set;
+    set.setValue("foucault roc offset", offset);
     ui->rocOffsetSb->blockSignals(true);
     ui->rocOffsetSb->setValue(offset);
     ui->rocOffsetSb->blockSignals(false);
     on_autoStepSize_clicked(ui->autoStepSize->isChecked());
     needsDrawing = true;
+    on_makePb_clicked();
+}
+
+
+
+
+
+void foucaultView::on_autocollimation_clicked(bool checked)
+{
+    if (checked)
+        ui->h2x->setChecked(true);
+    else
+        ui->h1x->setChecked(true);
     on_makePb_clicked();
 }
 

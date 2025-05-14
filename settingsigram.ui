@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>492</width>
-    <height>537</height>
+    <height>563</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -355,6 +355,13 @@
     <widget class="QCheckBox" name="removeDistortion">
      <property name="text">
       <string>Remove lens distortion</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="importConfig">
+     <property name="text">
+      <string>Import interferogram configuration (what hot key &quot;i&quot; does)</string>
      </property>
     </widget>
    </item>

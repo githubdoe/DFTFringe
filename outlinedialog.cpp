@@ -44,7 +44,7 @@ outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
     hideSearchcontrole(true);
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Down), this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftDown()));
-    shortcut = new QShortcut(QKeySequence("d"), this);
+    shortcut = new QShortcut(QKeySequence(Qt::Key_Up), this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftUp()));
     shortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftLeft()));

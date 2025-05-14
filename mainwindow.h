@@ -128,6 +128,7 @@ private slots:
 
     void on_saveOutline_clicked();
 
+     void importIgram();
     //void on_actionSimulated_interferogram_triggered();
 
     void on_actionPrevious_Wave_front_triggered();
@@ -135,8 +136,6 @@ private slots:
     void on_actionNext_Wave_Front_triggered();
 
     void on_actionDelete_wave_front_triggered();
-
-    void on_actionWrite_WaveFront_triggered();
 
     void on_actionSave_Wavefront_triggered();
 
@@ -267,6 +266,12 @@ private slots:
     void on_actionSmooth_current_wave_front_triggered();
 
     void on_useAnnulust_clicked();
+
+    void on_actionHot_Keys_triggered();
+
+    void on_actionLoad_wave_fronts_from_multiple_directories_triggered();
+
+    void on_actionastig_in_polar_triggered();
 
 private:
 

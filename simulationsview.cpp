@@ -309,7 +309,7 @@ cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double
 }
 #endif
 // create star test using pupil_size which is usually smaller than the wavefront being sampled.
-cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double pad , bool returnComplex){
+cv::Mat SimulationsView:: computeStarTest(cv::Mat surface, int pupil_size, double pad , bool returnComplex){
     alias = false;
     cv::Mat out;
 
@@ -709,8 +709,8 @@ void SimulationsView::on_MakePB_clicked()
 
     cv::Mat focused = computeStarTest(nulledSurface(0), fftSize,  ui->centerMagnifySB->value());
     t = fitStarTest(zoomMat(focused,ui->centerMagnifySB->value()), wid ,gamma/2);
-
-    cv::putText(t,"Focused",cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
+    QString focusedtext = QString("Focused magnified by %1x").arg(ui->centerMagnifySB->value());
+    cv::putText(t,focusedtext.toStdString().c_str(),cv::Point(20,20),1,1,cv::Scalar(255, 255,255));
     QImage focusDisplay ((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
     ui->Focused->setPixmap(QPixmap::fromImage(focusDisplay.copy()));
 

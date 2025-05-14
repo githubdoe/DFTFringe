@@ -65,6 +65,9 @@ p, li { white-space: pre-wrap; }
            <property name="singleStep">
             <number>2</number>
            </property>
+           <property name="value">
+            <number>22</number>
+           </property>
           </widget>
          </item>
         </layout>
@@ -94,6 +97,13 @@ p, li { white-space: pre-wrap; }
          </property>
          <property name="text">
           <string>Use Current Zernike set</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="sphereOnly">
+         <property name="text">
+          <string>Spherical terms only</string>
          </property>
         </widget>
        </item>

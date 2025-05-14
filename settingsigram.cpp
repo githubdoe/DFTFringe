@@ -23,7 +23,7 @@
 #include <QPainter>
 #include <QMenu>
 #include "spdlog/spdlog.h"
-
+#include "settingsigramimportconfig.h"
 static inline QString colorButtonStyleSheet(const QColor &bgColor)
 {
     if (bgColor.isValid()) {
@@ -271,3 +271,15 @@ void settingsIGram::on_holeY_valueChanged(int arg1)
     QSettings set;
     set.setValue("autoholeYOffset", arg1);
 }
+
+void settingsIGram::on_importConfig_clicked()
+{
+    // set the path to igrams that "I key" should look at
+    // set select most recent
+    // set just open path
+    // set open camera stream
+
+    settingsIgramImportConfig dlg;
+    dlg.exec();
+}
+

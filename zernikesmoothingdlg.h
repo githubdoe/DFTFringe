@@ -16,11 +16,14 @@ class ZernikeSmoothingDlg : public QDialog
 public:
     explicit ZernikeSmoothingDlg(wavefront &wf, QWidget *parent = nullptr);
     ~ZernikeSmoothingDlg();
-
+    bool m_spherical_only = false;
 private slots:
     void on_maxOrder_valueChanged(int arg1);
     void on_createWaveFront_clicked();
     void intiZernTable();
+
+    void on_sphereOnly_toggled(bool checked);
+
 private:
     Ui::ZernikeSmoothingDlg *ui;
     int m_maxOrder;

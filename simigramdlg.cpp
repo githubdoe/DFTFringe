@@ -246,13 +246,17 @@ void simIgramDlg::on_buttonBox_accepted()
     size = ui->sizeSB->value();
     s.setValue("simSize", size);
 }
-
+extern std::vector<bool> zernEnables;
 void simIgramDlg::on_importPb_clicked()
 {
     SurfaceManager &sm = *SurfaceManager::get_instance();
     if (sm.m_wavefronts.size() == 0)
         return;
     zernikes = sm.getCurrent()->InputZerns;
+    for (unsigned int z = 0; z < zernikes.size(); ++z){
+        if (!zernEnables[z])
+            zernikes[z] = 0.;
+    }
     tableModel->setValues(&zernikes);
     ui->correctionPb->setChecked(false);
     ui->Z8Pb->setChecked(true);

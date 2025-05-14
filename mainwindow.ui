@@ -68,6 +68,7 @@
     </property>
     <addaction name="actionLoad_Interferogram"/>
     <addaction name="actionLoad_outline"/>
+    <addaction name="actionLoad_wave_fronts_from_multiple_directories"/>
     <addaction name="actionRead_WaveFront"/>
     <addaction name="actionAverage_wave_front_files"/>
     <addaction name="actionProcess_PSI_interferograms"/>
@@ -93,6 +94,7 @@
     <addaction name="separator"/>
     <addaction name="actionShow_unwrap_errors"/>
     <addaction name="actionShow_outline_statistics"/>
+    <addaction name="actionastig_in_polar"/>
     <addaction name="actionPlay_batch_results_review_movie"/>
    </widget>
    <widget class="QMenu" name="menuConfiguration">
@@ -135,6 +137,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="actionHot_Keys"/>
     <addaction name="actionHelp"/>
     <addaction name="actionVideos"/>
     <addaction name="actionVersion_History"/>
@@ -1184,15 +1187,10 @@ em;
     <string>Save WaveFront</string>
    </property>
    <property name="toolTip">
-    <string>Save Selected Wavefront or Wavefronts</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save Wavefront or Wavefronts that have been selected.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="statusTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save Selected Wavefront or Wavefronts&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-  </action>
-  <action name="actionWrite_WaveFront">
-   <property name="text">
-    <string>Write WaveFront</string>
    </property>
   </action>
   <action name="actionSave_outline">
@@ -1223,6 +1221,9 @@ em;
   <action name="actionRead_WaveFront">
    <property name="text">
     <string>Read Wavefront/s</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load one or more wave fronts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="statusTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Read one or more wavefronts&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1280,6 +1281,9 @@ em;
   <action name="actionSave_Wavefront">
    <property name="text">
     <string>Save Wavefront/s</string>
+   </property>
+   <property name="toolTip">
+    <string>Save selected wave fronts.</string>
    </property>
    <property name="statusTip">
     <string>Save all selected wavefronts</string>
@@ -1419,6 +1423,9 @@ em;
    <property name="text">
     <string>Average wave front files</string>
    </property>
+   <property name="toolTip">
+    <string>Average wave front files seleted from a file folder and not from the selected wave fronts controls.</string>
+   </property>
   </action>
   <action name="actionDebugStuff">
    <property name="enabled">
@@ -1482,6 +1489,29 @@ em;
   <action name="actionArbitrary_Wavefront">
    <property name="text">
     <string>Arbitrary Wavefront</string>
+   </property>
+  </action>
+  <action name="actionCreate_Movie_of_astig_fom_wavefonts">
+   <property name="text">
+    <string>Create Movie of astig fom wavefonts</string>
+   </property>
+  </action>
+  <action name="actionHot_Keys">
+   <property name="text">
+    <string>Hot Keys</string>
+   </property>
+  </action>
+  <action name="actionLoad_wave_fronts_from_multiple_directories">
+   <property name="text">
+    <string>Load wave fronts from multiple directories</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select wave fronts from several directories and not just one.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </action>
+  <action name="actionastig_in_polar">
+   <property name="text">
+    <string>Show astig in polar form of selected wave fronts</string>
    </property>
   </action>
  </widget>
