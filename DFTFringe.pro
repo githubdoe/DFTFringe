@@ -148,6 +148,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     annulushelpdlg.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
+    astigpolargraph.cpp \
     astigscatterplot.cpp \
     astigstatsdlg.cpp \
     astigzoomer.cpp \
@@ -181,6 +182,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     gplus.cpp \
     graphicsutilities.cpp \
     helpdlg.cpp \
+    hotkeysdlg.cpp \
     igramarea.cpp \
     igramintensity.cpp \
     imagehisto.cpp \
@@ -208,6 +210,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     pixelstats.cpp \
     plotcolor.cpp \
     profileplot.cpp \
+    profileplotpicker.cpp \
     psfplot.cpp \
     psi_dlg.cpp \
     psiphasedisplay.cpp \
@@ -227,6 +230,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     settingsdft.cpp \
     settingsGeneral2.cpp \
     settingsigram.cpp \
+    settingsigramimportconfig.cpp \
     settingsprofile.cpp \
     showaliasdlg.cpp \
     showallcontoursdlg.cpp \
@@ -267,6 +271,7 @@ HEADERS += bezier/bezier.h \
     SingleApplication/singleapplication.h \
     annulushelpdlg.h \
     arbitrarywavefronthelp.h \
+    astigpolargraph.h \
     arbitrarywavwidget.h \
     astigscatterplot.h \
     astigstatsdlg.h \
@@ -303,6 +308,7 @@ HEADERS += bezier/bezier.h \
     gplus.h \
     graphicsutilities.h \
     helpdlg.h \
+    hotkeysdlg.h \
     IgramArea.h \
     igramintensity.h \
     imagehisto.h \
@@ -326,9 +332,11 @@ HEADERS += bezier/bezier.h \
     outlinestatsdlg.h \
     pdfcalibrationdlg.h \
     percentcorrectiondlg.h \
+    percentCorrectionSurface.h \
     pixelstats.h \
     plotcolor.h \
     profileplot.h \
+    profileplotpicker.h \
     psfplot.h \
     psi_dlg.h \
     psiphasedisplay.h \
@@ -348,6 +356,7 @@ HEADERS += bezier/bezier.h \
     settingsdft.h \
     settingsGeneral2.h \
     settingsigram.h \
+    settingsigramimportconfig.h \
     settingsprofile.h \
     showaliasdlg.h \
     showallcontoursdlg.h \
@@ -386,6 +395,7 @@ HEADERS += bezier/bezier.h \
 
 FORMS += arbitrarywavefronthelp.ui \
     annulushelpdlg.ui \
+    astigpolargraph.ui \
     astigstatsdlg.ui \
     averagewavefrontfilesdlg.ui \
     batchigramwizard.ui \
@@ -409,6 +419,7 @@ FORMS += arbitrarywavefronthelp.ui \
     foucaultview.ui \
     generatetargetdlg.ui \
     helpdlg.ui \
+    hotkeysdlg.ui \
     igramintensity.ui \
     jitteroutlinedlg.ui \
     lensdialog.ui \
@@ -423,6 +434,7 @@ FORMS += arbitrarywavefronthelp.ui \
     outlineplots.ui \
     outlinestatsdlg.ui \
     pdfcalibrationdlg.ui \
+    percentcorrectiondlg.ui \
     pixelstats.ui \
     profilearea.ui \
     profileplot.ui \
@@ -443,6 +455,7 @@ FORMS += arbitrarywavefronthelp.ui \
     settingsdft.ui \
     settingsGeneral2.ui \
     settingsigram.ui \
+    settingsigramimportconfig.ui \
     settingsprofile.ui \
     showaliasdlg.ui \
     showallcontoursdlg.ui \
