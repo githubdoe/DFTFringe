@@ -1698,7 +1698,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
     int cnt = 0;
     QSettings set;
     QString lastPath = set.value("lastPath",".").toString();
-    int memThreshold = set.value("lowMemoryThreshold",300).toInt();
+    //int memThreshold = set.value("lowMemoryThreshold",300).toInt();
     QImage img = m_ogl->m_surface->render(1000,1000);
 
     int width = img.width();
@@ -1796,7 +1796,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 QApplication::setOverrideCursor(Qt::WaitCursor);
                 QProcess *proc = new QProcess;
                 connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                    [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus; });
+                    [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus << "code" << exitCode; });
 
                 proc->setProcessChannelMode(QProcess::MergedChannels);
                 proc->setWorkingDirectory(dir);
