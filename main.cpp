@@ -101,8 +101,10 @@ int main(int argc, char *argv[])
     // warning: only use if all your loggers are thread-safe ("_mt" loggers)
     spdlog::flush_every(std::chrono::seconds(3));
 
+#ifndef DALE_DO_NOT_LOG
     // Set the logging format
-    //spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+    spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+#endif 
 
     // Set logger level
     settingsDebug::setLogLevel(settingsDebug::getLogLevel());

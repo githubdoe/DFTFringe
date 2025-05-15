@@ -25,7 +25,6 @@ public:
 private:
     Ui::astigPolargraph *ui;
     QList<int> m_list;  // list index of selected wave fronts in surface manager's list.
-    void makeChart();
 };
 
 #endif // ASTIGPOLARGRAPH_H
