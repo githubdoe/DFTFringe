@@ -15,7 +15,7 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
-#include "mainwindow.h"
+#include "mainwindow.h" 
 #include "ui_mainwindow.h"
 #include <QtWidgets>
 #include <iostream>
@@ -1827,7 +1827,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
     }
     catch(std::exception& e) {
 
-        qDebug() <<  "Exception writing video " << e.what();
+        qWarning() <<  "Exception writing video " << e.what();
     }
     if (astigWindow != NULL)
         delete astigWindow;

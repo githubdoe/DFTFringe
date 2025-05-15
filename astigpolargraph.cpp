@@ -2,9 +2,13 @@
 #include "ui_astigpolargraph.h"
 #include "surfacemanager.h"
 
-void astigPolargraph::makeChart(){
 
-
+astigPolargraph::astigPolargraph(    QList<int>list, QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::astigPolargraph), m_list(list)
+{
+    ui->setupUi(this);
+    
     QPolarChart *chart = new QPolarChart();
 
     // process each wave front and place astig on the chart
@@ -78,21 +82,6 @@ void astigPolargraph::makeChart(){
     angularAxis->setRange(0, 360);
 
     ui->polarChart->setChart(chart);
-
-
-
-}
-astigPolargraph::astigPolargraph(    QList<int>list, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::astigPolargraph), m_list(list)
-{
-    ui->setupUi(this);
-    //For some reason the original starter code of makeChart was in this function but it caused a crash.
-    // I could never figure out why because that code was taken from a working Qt example.  When
-    // moved to inside another function it worked.  So there you go.  Exact same code with no changes worked there but not here.
-    makeChart();
-
-
 }
 
 astigPolargraph::~astigPolargraph()
