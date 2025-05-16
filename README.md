@@ -302,7 +302,7 @@ aqt install-tool windows desktop tools_ifw
 
 # How to analyse crashlog
 
-:warning: This methos is for Windows only.
+:warning: This method is for Windows only.
 
 - Get `DFTFringe.exe.debug` file corresponding to the release where the log comes from in github
 - Run `addr2line -e DFTFringe.exe.debug 0x00000000005A7229` with the address of the stack you get from the log
