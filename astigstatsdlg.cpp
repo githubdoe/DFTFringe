@@ -187,7 +187,7 @@ class RunningStat
     {
     public:
         RunningStat() : 
-            m_n(0), m_oldM(NAN), m_oldS(0.), m_min(DBL_MAX), m_max(DBL_MIN) 
+            m_n(0), m_oldM(NAN), m_oldS(0.), m_newS(0.), m_min(DBL_MAX), m_max(DBL_MIN) 
             {}
 
         void Push(double x)
