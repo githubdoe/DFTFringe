@@ -2074,7 +2074,7 @@ void MainWindow::on_actionastig_in_polar_triggered()
 {
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     QList<int> list = saTools->SelectedWaveFronts();
-    astigPolargraph * graph = new astigPolargraph( list);
+    astigPolargraph * graph = new astigPolargraph( list, this);
     graph->resize(2000,1000);
     graph->exec();
 }

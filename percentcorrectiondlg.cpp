@@ -482,7 +482,7 @@ void percentCorrectionDlg::plot(){
         if (surfs.length() < 2) {
             // draw zone rectangles
 
-            double width;
+            double width= 0.;
             for(int i = 0; i < percent.length(); ++i){
 
                 double y = percent[i].y();

@@ -75,7 +75,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     zoomed = false;
     m_defocus_mode = false;
     m_plot = new QwtPlot(this);
-    profilePlotPicker *picker = new profilePlotPicker(m_plot);
+    new profilePlotPicker(m_plot);
     type = 0;
     QHBoxLayout * l1 = new QHBoxLayout();
     QVBoxLayout *v1 = new QVBoxLayout();
