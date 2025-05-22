@@ -13,19 +13,25 @@
 namespace Ui {
 class astigPolargraph;
 }
+class astigSample{
+public:
+    QString m_name;
+    double m_xastig;
+    double m_yastig;
+    astigSample(QString name, double xastig, double yastig): m_name(name), m_xastig(xastig), m_yastig(yastig){};
+};
 
 class astigPolargraph : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit astigPolargraph(QList<int> list,QWidget *parent = nullptr);
+    explicit astigPolargraph(QList<astigSample> list,QWidget *parent = nullptr);
     ~astigPolargraph();
 
 private:
     Ui::astigPolargraph *ui;
-    QList<int> m_list;  // list index of selected wave fronts in surface manager's list.
-    void makeChart();
+
 };
 
 #endif // ASTIGPOLARGRAPH_H

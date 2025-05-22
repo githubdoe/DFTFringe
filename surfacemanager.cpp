@@ -72,6 +72,7 @@
 #include "oglrendered.h"
 #include "ui_oglrendered.h"
 #include "spdlog/spdlog.h"
+#include "astigpolargraph.h"
 
 cv::Mat theMask;
 cv::Mat deb;
@@ -1909,31 +1910,41 @@ void plotlineThruAstigs(QwtPlot *plt, cv::Mat xastig, cv::Mat yastig, QList<rota
 
 }
 
+int getImageSize(QPrinter &printer){
+    QScreen *screen = QGuiApplication::primaryScreen();
+
+    qreal screenDPI = screen->physicalDotsPerInchX();
+
+    int Width;
+
+    printer.setPageSize(QPageSize(printer.pageLayout().pageSize()));
+    QPainter painterPDF( &printer );
+
+    // I want to create images that are about 1/2 as wide as the printer paper.
+    // So get the printer paper size
+    // THen get the screen resolution
+    // then calculate how many pixels create that size image on the screen
+
+    // get the size of the printed page in inches.
+    QSize printerSizePixels = printer.pageLayout().paintRectPixels(printer.resolution()).size();
+    qreal pageWidthInches = printerSizePixels.width()/printer.resolution();
+    qreal imageWidthInches= .8 * pageWidthInches/2;
+
+    Width = imageWidthInches * screenDPI;
+    return Width;
+}
 // calculate stand astig for each input
 // for each input rotate the average by the input angle and subtract it from the input
 // plot the astig of each of the inputs which will be the stand only astig.
 // on input list is the list of wavefront files and thier rotation angle.
 //     inputs are the actual wavefronts at original rotations.
 //     avgNdx is the index in the m_wavefronts list of the average with stand removed.
-textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx ){
+textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx , int Width, QPrinter &printer){
     QTextEdit *editor = new QTextEdit;
 
     QTextDocument *doc = editor->document();
     textres results;
-    results.Edit = editor;
-    const int Width = 800 * .6;
-    const int Height = 600 * .6;
-    QImage contour(Width ,Height, QImage::Format_ARGB32 );
 
-    QPrinter printer(QPrinter::HighResolution);
-    printer.setColorMode( QPrinter::Color );
-    printer.setFullPage( true );
-    printer.setOutputFileName( "stand.pdf" );
-    printer.setOutputFormat( QPrinter::PdfFormat );
-    //printer.setResolution(85);
-    printer.setPageSize(QPageSize(QPageSize::A4));
-
-    QPainter painterPDF( &printer );
     cv::Mat xastig = cv::Mat::zeros(list.size(), 1, numType);
     cv::Mat yastig = cv::Mat::zeros(list.size(), 1, numType);
     cv::Mat standxastig = cv::Mat::zeros(list.size(), 1, numType);
@@ -1941,8 +1952,15 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     cv::Mat standastig = cv::Mat::zeros(list.size(), 1, numType);
     QVector<cv::Mat> standwfs;
     QVector<double> astigMag;
-    editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
+
+    int Height = Width;
+
+    QImage contour(Width , Height, QImage::Format_ARGB32 );
+
+    results.Edit = editor;
+    editor->resize(Width, Height);
     doc->setPageSize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
+
     cv::Mat standavg = cv::Mat::zeros(inputs[0]->workData.size(), numType);
     cv::Mat standavgZernMat = cv::Mat::zeros(inputs[0]->workData.size(), numType);
     double mirrorXaverage = 0;
@@ -2021,7 +2039,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         }
         fittedcircle2 = Circle(xmean/xastig.rows, ymean/xastig.rows, avgRadius/xastig.rows );
         fittedcircle = fittedcircle2;
-qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
+
     fittedcircle = fittedcircle1;
     if (xastig.rows == 2 || fittedcircle1.r > 1.5 * fittedcircle2.r ){
         fittedcircle = fittedcircle2;
@@ -2118,6 +2136,7 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     QPolygonF mirrorAstigAtEachRotation;
     double mirrorAstigRadius =0;
     plotlineThruAstigs(pl1, xastig, yastig, list);
+    QList<astigSample> samples;
     for (int i = 0; i < list.size(); ++i){
         if (cnt++ == 0)
             imagesHtml.append("<tr>");
@@ -2166,15 +2185,21 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
         wf->name = QString("%1").arg(list[i]->angle, 6, 'f', 2, QLatin1Char('0'));
 
         cp->setSurface(wf);
-        cp->resize(Width,Height);
+        cp->resize(Width,.8 * Height);
         cp->replot();
+        astigSample sample(wf->name, wf->InputZerns[4], wf->InputZerns[5]);
+        samples << sample;
+        QSize s = cp->size();
         contour.fill( QColor( Qt::white ).rgb() );
-        renderer.render( cp, &painter, QRect(0,0,Width,Height) );
+        renderer.render( cp, &painter, QRect(0,0,s.width(),s.height() ));
+
         QString imageName = QString("mydata://zern%1.png").arg(wf->name);
         imageName.replace("-","CCW");
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         results.res.append (imageName);
-        imagesHtml.append("<td><p> <img src='" +imageName + "' /></p></td>");
+
+        imagesHtml.append(QString("<td style=\"text-align: center;\"> ") + wf->name +  "<br><img src='" +imageName + "'><br></td>");
+
         if (cnt == 2){
             cnt = 0;
             imagesHtml.append("</tr>");
@@ -2200,20 +2225,20 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     minMaxIdx(wf2->data, &mmin,&mmax);
     wf2->min = mmin;
     wf2->max = mmax;
-    //wf2->workMask = m_wavefronts[0]->workMask.clone();
+
     wf2->name = QString("Average Stand zernike based");
     ContourPlot *cp1 = new ContourPlot();
-    //cp1->m_zRangeMode = "Min/Max";
+
     cp1->setSurface(wf2);
-    cp1->resize(Width, Height);
+    cp1->resize(Width, .8 * Height);
     cp1->replot();
-    QImage contour2(500, 500, QImage::Format_ARGB32 );
+    QImage contour2(Width, Width, QImage::Format_ARGB32 );
     contour2.fill( QColor( Qt::white ).rgb() );
     QPainter painter2( &contour2 );
 
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend, false);
     renderer.render( cp1, &painter2, QRect(0,0,Width,Height) );
-    QString imageName = "mydata://StandCotourZerns.png";
+    QString imageName = "mydata://StandContourZerns.png";
     doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour2));
 
     wf2->data = wf2->workData = standavg;
@@ -2232,7 +2257,7 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     contour2.fill( QColor( Qt::white ).rgb() );
     renderer.render( cp1, &painter2, QRect(0,0,Width,Height) );
     cp1->m_zRangeMode = "Auto"; // restore contour plot to auto scaling.
-    imageName = QString("mydata://StandCotourMat.png");
+    imageName = QString("mydata://StandContourMat.png");
     doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour2));
 
 
@@ -2309,15 +2334,22 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
     curveAvgMirror->setPen(pen);
     curveAvgMirror->setSamples(stdCircle);
     curveAvgMirror->attach(pl1);
-    pl1->resize(500,500);
+    pl1->resize(1.5 * Width,1.5 * Width);
     pl1->replot();
-    QwtPlotRenderer renderer3;
-    QImage contour3(500, 500, QImage::Format_ARGB32 );
+
+    QImage contour3(1.5 * Width, 1.5 * Width , QImage::Format_ARGB32 );
     contour3.fill( QColor( Qt::white ).rgb() );
     QPainter painter3( &contour3 );
 
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend, false);
-    renderer.render( pl1, &painter3, QRect(0,0,500,500) );
+    renderer.render( pl1, &painter3, QRect(0,0,1.5  * Width,1.5 * Width) );
+
+//    QPixmap pixmap = QPixmap::fromImage(contour3); // Create a QPixmap from the QImage
+//    QLabel* label = new QLabel(); // Create a QLabel
+//    label->setPixmap(pixmap); // Set the QPixmap to the QLabel
+//    label->show(); // Show the QLabel
+
+
     imageName = QString("mydata://plot.png");
     doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour3));
     results.res.append (imageName);
@@ -2336,16 +2368,35 @@ qDebug() << "circle fit"<< avgRadius << fittedcircle1.r << fittedcircle2.r;
                 "The stand removal was good.  Idealy the STD (standard deviation) should be"
                 " less than .1 which means less than .1 wave pv on the surface of the mirror"
                 "<br>The colored plus signs are what is calculated for test stand induced astig."
-                "at each rotation angle.</p><br>"
+                "at each rotation angle.</p><br>The plot below is a polar plot of each rotations test stand astig."
+                "The ideal would be they are all the same magnitude and angle. If any one is much different than the rest then the astig removal may not be good.");
+            astigPolargraph *polar = new astigPolargraph(samples);
+            polar->setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+            polar->resize(Width * 2, 2 *  Width);
+            QImage polarImage(2 * Width, 2 * Width , QImage::Format_ARGB32 );
+            polarImage.fill( QColor( Qt::white ).rgb() );
+            QPainter painterPolar( &polarImage );
 
 
-                "<table><tr><td><img src='mydata://StandCotourZerns.png' /></td><td><img src='mydata://StandCotourMat.png' /></td></tr></table>"
-                "<p font-size:12pt>The contours above are the average system induced forces derived from the average of all rotations.<br>"
-                "The left contour is based on the zernike values and the contour on the right is based on the wavefront.</p>"
-                "<p font-size:12pt>The contour plots below are of what is beleived to be test stand only induced errors at each rotation. "
+            polar->render(  &painterPolar);
+
+            imageName = QString("mydata://polarplot.png");
+            doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(polarImage));
+            results.res.append (imageName);
+            html.append("<p> <img src='" + imageName + "' /></p>");
+
+                html.append("<table><tr><td><img src='mydata://StandContourZerns.png' /></td><td><img src='mydata://StandContourMat.png' /></td></tr></table>"
+                "<p style=\"page-break-before:always\"; font-size:12pt>The contours above are the average system induced forces derived from the average of all rotations.<br>"
+                "The left contour is based on the zernike values and the contour on the right is based on the wavefront.</p>");
+
+
+
+    html.append( "<p style=\"page-break-before:always\"; font-size:12pt>The contour plots below are of what is beleived to be test stand only induced errors at each rotation. "
                 "Check that they are similar at each rotation.  If not then maybe "
                 "stand (system) induced error is not same at each rotation then the stand removal is not reliable. "
                 "However it is unlikely that they will all look exactly the same.</p>");
+
+
 
 
     html.append(imagesHtml);
@@ -2392,21 +2443,20 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
             break;
         }
     }
-        QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     QPrinter printer(QPrinter::HighResolution);
     printer.setColorMode( QPrinter::Color );
     printer.setFullPage( true );
     printer.setOutputFileName( "stand.pdf" );
     printer.setOutputFormat( QPrinter::PdfFormat );
-    printer.setResolution(85);
-    printer.setPageSize(QPageSize(QPageSize::A4));
 
+    int Width = getImageSize(printer);
 
     QTextEdit *editor = new QTextEdit;
     editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
     const int contourWidth = 2 * 340/3;
     const int contourHeight = 2 * 360/3;
-    QImage contour = QImage(contourWidth ,contourHeight, QImage::Format_ARGB32 );
+    QImage contour = QImage(Width ,Width, QImage::Format_ARGB32 );
 
 
     QwtPlotRenderer renderer;
@@ -2455,8 +2505,9 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         inputs.append(wf);
         unrotatedNdxs.append(m_currentNdx);
         plot->setSurface(wf);
+        plot->resize(Width, .8 * Width);
         plot->replot();
-        renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
+        renderer.render( plot, &painter, QRect(0,0,Width,.8 * Width) );
 
         QString imageName = QString("mydata://%1.png").arg(list[i]->fname);
         QString angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
@@ -2472,18 +2523,17 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         l.append(ndx);
         ndx = m_wavefronts.size();
 
-
-        qDebug() << "Counter rotating " << list[i]->fname << " angle " << list[i]->angle;
         rotateThese(wrapAngle(list[i]->angle),l);
         rotated.append(m_wavefronts[ndx]);
         wf = m_wavefronts[ndx];
 
         loadComplete();
         plot->setSurface(wf);
+        plot->resize(Width, .8 * Width);
         plot->replot();
 
         contour.fill( QColor( Qt::white ).rgb() );
-        renderer.render( plot, &painter, QRect(0,0,contourWidth,contourHeight) );
+        renderer.render( plot, &painter, QRect(0,0,Width, .8 * Width) );
         angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
         imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname).arg(angle); // clazy:exclude=qstring-arg
 
@@ -2525,11 +2575,11 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     ContourPlot *plotAvg =new ContourPlot(0,0,false);//m_contourPlot;
 
     plotAvg->setSurface(m_wavefronts[m_currentNdx]);
-    contour = QImage(550,450, QImage::Format_ARGB32 );
+    contour = QImage(1.5 * Width,1.5 * Width, QImage::Format_ARGB32 );
     contour.fill( QColor( Qt::white ).rgb() );
     QPainter painter( &contour );
-
-    renderer.render( plotAvg, &painter, QRect(0,0,550,450) );
+    plotAvg->resize(1.5 * Width, 1.5 * .8 * Width);
+    renderer.render( plotAvg, &painter, QRect(0,0,1.5 * Width, 1.5 *  Width) );
 
     QString imageName = "mydata://AvgAstigremoved.png";
     doc2->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
@@ -2540,6 +2590,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     page2->setHtml(html);
     //page2->show();
 
+
     /**************************************************************************************************/
     // PHASE 2
     // calculate stand astig for each input
@@ -2548,13 +2599,18 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
 
     wizPage->m_log->setText("computing stand astigs");
     QApplication::processEvents();
-    textres page3res = Phase2(list, inputs, avgNdx);
+    textres page3res = Phase2(list, inputs, avgNdx, Width, printer);
     QTabWidget *tabw = new QTabWidget();
     tabw->setTabShape(QTabWidget::Triangular);
     tabw->addTab(editor, "Page 1 input analysis");
     tabw->addTab(page2, "Page 2 Stand removed.");
     tabw->addTab(page3res.Edit, "Page 3 stand analysis");
-    tabw->resize(800,600);
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QSizeF physicalSize = screen->availableSize();
+
+
+    //tabw->resize(Width,2 * Width);
+    tabw->setGeometry(Width, 200, 2 * Width, physicalSize.height()* .7);
     tabw->show();
 
     // build pdf doc from the three textedits
@@ -2562,10 +2618,10 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     foreach( QString res, page3res.res){
         pdfDoc.addResource(QTextDocument::ImageResource, res, page3res.Edit->document()->resource(QTextDocument::ImageResource,res));
     }
-    pdfDoc.addResource(QTextDocument::ImageResource, QString("mydata://StandCotourZerns.png"),
-                       page3res.Edit->document()->resource(QTextDocument::ImageResource,QString("mydata://StandCotourZerns.png") ));
-    pdfDoc.addResource(QTextDocument::ImageResource, QString("mydata://StandCotourMat.png"),
-                       page3res.Edit->document()->resource(QTextDocument::ImageResource,QString("mydata://StandCotourMat.png") ));
+    pdfDoc.addResource(QTextDocument::ImageResource, QString("mydata://StandContourZerns.png"),
+                       page3res.Edit->document()->resource(QTextDocument::ImageResource,QString("mydata://StandContourZerns.png") ));
+    pdfDoc.addResource(QTextDocument::ImageResource, QString("mydata://StandContourMat.png"),
+                       page3res.Edit->document()->resource(QTextDocument::ImageResource,QString("mydata://StandContourMat.png") ));
     foreach(QString res, doc1Res){
         pdfDoc.addResource(QTextDocument::ImageResource, res, editor->document()->resource(QTextDocument::ImageResource,res));
     }
@@ -2606,6 +2662,7 @@ void SurfaceManager::computeTestStandAstig(){
         spdlog::get("logger")->trace("new standAstigWizard");
         m_standAstigWizard = new standAstigWizard(this);
         m_standAstigWizard->setAttribute( Qt::WA_DeleteOnClose, true );
+
         m_standAstigWizard->show();
     }
     else{

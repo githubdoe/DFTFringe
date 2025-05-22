@@ -2,13 +2,16 @@
 #include "ui_astigpolargraph.h"
 #include "surfacemanager.h"
 
-void astigPolargraph::makeChart(){
-
+astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::astigPolargraph)
+{
+    ui->setupUi(this);
 
     QPolarChart *chart = new QPolarChart();
 
     // process each wave front and place astig on the chart
-    ui->waveFrontTable->setRowCount(m_list.size());
+    ui->waveFrontTable->setRowCount(list.size());
 
     QValueAxis *angularAxis = new QValueAxis();
     angularAxis->setTickCount(9); // First and last ticks are co-located on 0/360 angle.
@@ -25,15 +28,15 @@ void astigPolargraph::makeChart(){
 
     QVector<wavefront *>  wavefronts =SurfaceManager::get_instance()->m_wavefronts;
 
-    for(int ndx = 0; ndx < m_list.length(); ++ndx){
-        wavefront *wf = wavefronts[m_list[ndx]];
-        QString name = wf->name;
+    for(int ndx = 0; ndx < list.length(); ++ndx){
+
+        QString name = list[ndx].m_name;
         int slashndx = name.lastIndexOf('/');
         QString shortName = name.mid(name.lastIndexOf('/',slashndx-1));
         QTableWidgetItem *item = new QTableWidgetItem(shortName, 0);
         ui->waveFrontTable->setItem(ndx,0,item);
-        double xastig = wf->InputZerns[4];
-        double yastig = wf->InputZerns[5];
+        double xastig = list[ndx].m_xastig;
+        double yastig = list[ndx].m_yastig;
         double mag = sqrt(xastig * xastig + yastig * yastig);
         if (mag > maxAstig) maxAstig = mag;
 
@@ -69,7 +72,7 @@ void astigPolargraph::makeChart(){
     }
 
     chart->setTitle("Magnitude and axis of high edge");
-    if (m_list.length() > 4)
+    if (list.length() > 4)
         chart->legend()->setAlignment(Qt::AlignRight);
     else chart->legend()->setAlignment(Qt::AlignBottom);
 
@@ -78,20 +81,6 @@ void astigPolargraph::makeChart(){
     angularAxis->setRange(0, 360);
 
     ui->polarChart->setChart(chart);
-
-
-
-}
-astigPolargraph::astigPolargraph(    QList<int>list, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::astigPolargraph), m_list(list)
-{
-    ui->setupUi(this);
-    //For some reason the original starter code of makeChart was in this function but it caused a crash.
-    // I could never figure out why because that code was taken from a working Qt example.  When
-    // moved to inside another function it worked.  So there you go.  Exact same code with no changes worked there but not here.
-    makeChart();
-
 
 }
 

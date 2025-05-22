@@ -2074,8 +2074,16 @@ void MainWindow::on_actionastig_in_polar_triggered()
 {
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     QList<int> list = saTools->SelectedWaveFronts();
-    astigPolargraph * graph = new astigPolargraph( list);
-    graph->resize(2000,1000);
+    QList<astigSample> samples;
+    foreach(int i, list){
+        wavefront *wf = m_surfaceManager->m_wavefronts[i];
+        astigSample sample(wf->name, wf->InputZerns[4], wf->InputZerns[5]);
+        samples << sample;
+    }
+    astigPolargraph * graph = new astigPolargraph(samples);
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QSizeF physicalSize = screen->availableSize();
+    graph->resize(physicalSize.width()/2,physicalSize.height()/2);
     graph->exec();
 }
 

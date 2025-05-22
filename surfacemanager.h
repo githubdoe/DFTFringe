@@ -135,7 +135,7 @@ private:
 
     explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
                    contourView *contourView = 0, SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
-    textres Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx);
+    textres Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx, int Width, QPrinter &printer);
 
 signals:
     void currentNdxChanged(int);
