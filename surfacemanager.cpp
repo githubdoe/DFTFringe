@@ -2296,11 +2296,6 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     mirrorXastig /= count;
     mirrorYastig /= count;
 
-    //QwtPlotMarker *mirrorMeanMark = new QwtPlotMarker();
-    //mirrorMeanMark->setValue(QPointF(bestFitAstig.a, bestFitAstig.b));
-    //mirrorMeanMark->setSymbol(new QwtSymbol(QwtSymbol::Triangle,QColor(0,255,0,40), QColor(0,0,0), QSize(30,30)));
-    //mirrorMeanMark->attach(pl1);
-
     QPolygonF stdCircle;
     double SE = standStd[0]/sqrt(standastig.rows);
     for (double rho = 0; rho <= 2 * M_PI; rho += M_PI/32.){
@@ -2343,12 +2338,6 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend, false);
     renderer.render( pl1, &painter3, QRect(0,0,1.5  * Width,1.5 * Width) );
-
-//    QPixmap pixmap = QPixmap::fromImage(contour3); // Create a QPixmap from the QImage
-//    QLabel* label = new QLabel(); // Create a QLabel
-//    label->setPixmap(pixmap); // Set the QPixmap to the QLabel
-//    label->show(); // Show the QLabel
-
 
     imageName = QString("mydata://plot.png");
     doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour3));
