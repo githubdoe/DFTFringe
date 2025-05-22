@@ -2368,7 +2368,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 
 
             polar->render(  &painterPolar);
-
+            delete polar;
             imageName = QString("mydata://polarplot.png");
             doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(polarImage));
             results.res.append (imageName);

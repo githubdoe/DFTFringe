@@ -2081,9 +2081,12 @@ void MainWindow::on_actionastig_in_polar_triggered()
         samples << sample;
     }
     astigPolargraph * graph = new astigPolargraph(samples);
+    connect(graph, SIGNAL(waveSeleted(QString)), m_surfaceManager, SLOT(wavefrontDClicked(QString)));
     QScreen *screen = QGuiApplication::primaryScreen();
     QSizeF physicalSize = screen->availableSize();
     graph->resize(physicalSize.width()/2,physicalSize.height()/2);
     graph->exec();
+    graph->disconnect();
+    delete graph;
 }
 

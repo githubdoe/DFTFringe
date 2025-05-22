@@ -97,6 +97,7 @@ void astigPolargraph::on_waveFrontTable_cellDoubleClicked(int row, int column)
 {
     QTableWidgetItem *item = ui->waveFrontTable->item(row,0);
     QString name = item->text();
+    emit waveSeleted(name);
     int lastndx = name.lastIndexOf('/');
     if (lastndx != -1)
         name = name.mid(lastndx);

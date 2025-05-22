@@ -29,7 +29,8 @@ class astigPolargraph : public QDialog
 public:
     explicit astigPolargraph(QList<astigSample> list,QWidget *parent = nullptr);
     ~astigPolargraph();
-
+signals:
+    void waveSeleted(QString);
 private slots:
     void on_waveFrontTable_cellDoubleClicked(int row, int column);
 

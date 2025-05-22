@@ -257,11 +257,11 @@ define_input::define_input(QWidget *parent)
     listDisplay = new QListWidget();
     listDisplay->setSelectionMode( QAbstractItemView::MultiSelection);
     listDisplay->setContextMenuPolicy(Qt::CustomContextMenu);
-    int size = set.beginReadArray("stand astig removal files");
-    for (int i = 0; i < size; ++i) {
-        set.setArrayIndex(i);
-        listDisplay->addItem(set.value("item").toString());
-    }
+//    int size = set.beginReadArray("stand astig removal files");
+//    for (int i = 0; i < size; ++i) {
+//        set.setArrayIndex(i);
+//        listDisplay->addItem(set.value("item").toString());
+//    }
     set.endArray();
     connect(listDisplay, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(showContextMenu(QPoint)));
