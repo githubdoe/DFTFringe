@@ -8,7 +8,7 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QPolarChart *chart = new QPolarChart();
+    chart = new QPolarChart();
 
     // process each wave front and place astig on the chart
     ui->waveFrontTable->setRowCount(list.size());
@@ -60,6 +60,7 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
         chart->addSeries(line);
         line->attachAxis(radialAxis);
         line->attachAxis(angularAxis);
+        line->setName(name);
         chart->legend()->markers(line)[0]->setVisible(false);
 
         line->setPen(QPen(series->brush(),5));
@@ -87,4 +88,36 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
 astigPolargraph::~astigPolargraph()
 {
     delete ui;
+    delete chart;
 }
+
+// if table row is double clicked set all polar plot lines invisible but the one that was clicked in the table.
+// if they were invisible then make them visible.
+void astigPolargraph::on_waveFrontTable_cellDoubleClicked(int row, int column)
+{
+    QTableWidgetItem *item = ui->waveFrontTable->item(row,0);
+    QString name = item->text();
+    int lastndx = name.lastIndexOf('/');
+    if (lastndx != -1)
+        name = name.mid(lastndx);
+
+
+    int seriesCount = chart->series().count();
+
+    for (int i = 0; i < seriesCount; ++i) {
+      QAbstractSeries* series = chart->series().at(i);
+      if (series) {
+
+           if (series->type()== QAbstractSeries::SeriesTypeLine){
+              if (series->name() != name){
+                  if (series->isVisible())
+                    series->setVisible(false);
+                  else
+                    series->setVisible(true);
+              }
+           }
+
+      }
+    }
+}
+

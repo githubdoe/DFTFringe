@@ -9,11 +9,12 @@
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QPolarChart>
 #include "wavefront.h"
-
+QT_CHARTS_USE_NAMESPACE
 namespace Ui {
 class astigPolargraph;
 }
 class astigSample{
+
 public:
     QString m_name;
     double m_xastig;
@@ -29,9 +30,12 @@ public:
     explicit astigPolargraph(QList<astigSample> list,QWidget *parent = nullptr);
     ~astigPolargraph();
 
+private slots:
+    void on_waveFrontTable_cellDoubleClicked(int row, int column);
+
 private:
     Ui::astigPolargraph *ui;
-
+    QPolarChart *chart;
 };
 
 #endif // ASTIGPOLARGRAPH_H
