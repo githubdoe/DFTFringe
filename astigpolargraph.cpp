@@ -80,8 +80,9 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
     maxAstig = ceil(maxAstig);
     radialAxis->setRange(0, maxAstig);
     angularAxis->setRange(0, 360);
-
+    ui->waveFrontTable->resizeColumnsToContents();
     ui->polarChart->setChart(chart);
+
 
 }
 
