@@ -75,7 +75,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     zoomed = false;
     m_defocus_mode = false;
     m_plot = new QwtPlot(this);
-    profilePlotPicker *picker = new profilePlotPicker(m_plot);
+    new profilePlotPicker(m_plot);
     type = 0;
     QHBoxLayout * l1 = new QHBoxLayout();
     QVBoxLayout *v1 = new QVBoxLayout();
@@ -332,7 +332,7 @@ void ProfilePlot::setDefocusValue(double val){
             m_plot->replot();
         }
 }
-QPolygonF ProfilePlot::createAverageProfile(double umnits, wavefront *wf, bool removeNull = false){
+QPolygonF ProfilePlot::createAverageProfile(double /*umnits*/, wavefront * /*wf*/, bool /*removeNull = false*/){
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     QList<int> list = saTools->SelectedWaveFronts();
     QPolygonF avg;
@@ -518,7 +518,7 @@ void ProfilePlot::populate()
     compass->setGeometry(QRect(80,80,70,70));
     QString tmp("nanometers");
     if (m_showNm == 1.)
-        tmp = QString().sprintf("waves of %6.1lf nm",outputLambda);
+        tmp = QString("waves of %1 nm").arg(outputLambda, 6, 'f', 1);
     m_plot->setAxisTitle( m_plot->yLeft, "Error in " + tmp );
     m_plot->setAxisTitle( m_plot->xBottom, "Radius mm" );
 
@@ -536,7 +536,9 @@ void ProfilePlot::populate()
 
     if (m_wf->m_outside.m_radius > 0 && settings.value("GBlur", false).toBool()){
         double val = .01 * (m_wf->diameter) * smoothing;
-        QString t = QString().sprintf("Surface Smoothing diameter %6.2lf%% of surface diameter %6.1lf mm", smoothing , val );
+        QString t = QString("Surface Smoothing diameter %1% of surface diameter %2 mm")
+                        .arg(smoothing, 6, 'f', 2)
+                        .arg(val, 6, 'f', 1);
         QwtText title(t);
         title.setRenderFlags( Qt::AlignHCenter | Qt::AlignTop );
 
@@ -587,7 +589,6 @@ void ProfilePlot::populate()
 
             surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
               QList<int> list = saTools->SelectedWaveFronts();
-              bool firstPlot = true;
               QColor penColor = QColor("blue");
 
               for (int indx = 0; indx < list.size(); ++indx){
@@ -789,7 +790,6 @@ void ProfilePlot::contourPointSelected(const QPointF &pos){
     double dely = pos.y() - m_wf->data.cols/2;
 
     double angle = atan2(delx,dely);  // swaped x and y to rotate by 90 deg.
-    double angle2 = angle;
     const double twopi = M_PI * 2.;
     // force 0 to 360
     if (angle < 0)
@@ -806,11 +806,13 @@ void ProfilePlot::contourPointSelected(const QPointF &pos){
 }
 void ProfilePlot::showCorrection(){
     if (m_wf == 0)
+    {
         return;
+    }
 
-        m_pcdlg->show();
-        m_pcdlg->raise();
-        make_correction_graph();
+    m_pcdlg->show();
+    m_pcdlg->raise();
+    make_correction_graph();
 
 
 }

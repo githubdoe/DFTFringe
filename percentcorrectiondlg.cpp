@@ -201,10 +201,9 @@ void percentCorrectionDlg::makeZones(){
 
 // the profile version needs the null removed and is in output lambda (usually 550);
 // zernike based does not need the null removed but needs to use laser wave length
-double percentCorrectionDlg::getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double x, double null = 0.,
+double percentCorrectionDlg::getZernSurface( double RoC, double /*MirrorRad*/, std::vector<double> Zernikes, double x, double null = 0.,
                                              bool useavg = false){
 
-    double num1 = x / MirrorRad;
     arma::rowvec rhov(1), thetav(1);
     rhov[0] = x/m_radius;  thetav[0] = 0.;
     zernikeProcess zp;
@@ -240,7 +239,7 @@ double percentCorrectionDlg::getZernSurface( double RoC, double MirrorRad, std::
     else {
 
         // for each spherical term
-        int z = 8;
+        unsigned int z = 8;
         for(unsigned int j = 6; z < theZs.n_cols; j+=2){
 
             val += Zernikes[z] * theZs(0,z);
@@ -390,13 +389,12 @@ void percentCorrectionDlg::plotProfile(){
     }
     QPolygonF profile2;
     // now plot the m_avg surface
-    int i = 0;
     for(double r = 0; r < m_avg.length(); r += 1. ){
 
        // qDebug() << "r" << r << m_avg[i];
                     double y = m_avg[r].y();//getZernSurface(m_roc, m_radius, surfs[i]->zernvalues, fabs(r), true);
 
-        double sphery = m_roc - sqrt(pow(m_roc, 2.0) - pow(r, 2.0));
+        //double sphery = m_roc - sqrt(pow(m_roc, 2.0) - pow(r, 2.0));
         //y -= sphery;
         //y /= m_lambda_nm * .5E-6;
         profile2 << QPointF(m_avg[r].x(),  y);
@@ -484,7 +482,7 @@ void percentCorrectionDlg::plot(){
         if (surfs.length() < 2) {
             // draw zone rectangles
 
-            double width;
+            double width= 0.;
             for(int i = 0; i < percent.length(); ++i){
 
                 double y = percent[i].y();

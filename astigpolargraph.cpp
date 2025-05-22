@@ -2,6 +2,7 @@
 #include "ui_astigpolargraph.h"
 #include "surfacemanager.h"
 
+
 astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::astigPolargraph)
@@ -9,6 +10,7 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
     ui->setupUi(this);
 
     chart = new QPolarChart();
+
 
     // process each wave front and place astig on the chart
     ui->waveFrontTable->setRowCount(list.size());
@@ -82,7 +84,6 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
     angularAxis->setRange(0, 360);
     ui->waveFrontTable->resizeColumnsToContents();
     ui->polarChart->setChart(chart);
-
 
 }
 

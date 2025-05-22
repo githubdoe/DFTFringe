@@ -1366,7 +1366,7 @@ arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& the
 
 
 void zernikeProcess::initGrid(int width, double radius, double cx, double cy, int maxOrder,
-                              double insideRad){
+                              double /*insideRad*/){
 
     // if grid or maxOrder is different then update values.
     double obsPercent = 0.;

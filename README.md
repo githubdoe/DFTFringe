@@ -302,4 +302,9 @@ aqt install-tool windows desktop tools_ifw
 
 # How to analyse crashlog
 
-:building_construction: Under construction :building_construction:
+:warning: This method is for Windows only.
+
+- Get `DFTFringe.exe.debug` file corresponding to the release where the log comes from in github
+- Run `addr2line -e DFTFringe.exe.debug 0x00000000005A7229` with the address of the stack you get from the log
+- You should get an output like `D:\a\DFTFringe\DFTFringe\DFTFringe/./boost/stacktrace/stacktrace.hpp:78`
+- Do this for each line of the call stack leading to the crash. Look at corresponding file and line (here it's `stacktrace.hpp` line `78`) of the source code corresponding to the release you are debugging to understand what went wrong.

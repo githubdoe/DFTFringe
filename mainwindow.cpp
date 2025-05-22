@@ -15,7 +15,7 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
-#include "mainwindow.h"
+#include "mainwindow.h" 
 #include "ui_mainwindow.h"
 #include <QtWidgets>
 #include <iostream>
@@ -1698,7 +1698,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
     int cnt = 0;
     QSettings set;
     QString lastPath = set.value("lastPath",".").toString();
-    int memThreshold = set.value("lowMemoryThreshold",300).toInt();
+    //int memThreshold = set.value("lowMemoryThreshold",300).toInt();
     QImage img = m_ogl->m_surface->render(1000,1000);
 
     int width = img.width();
@@ -1796,7 +1796,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 QApplication::setOverrideCursor(Qt::WaitCursor);
                 QProcess *proc = new QProcess;
                 connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                    [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus; });
+                    [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus << "code" << exitCode; });
 
                 proc->setProcessChannelMode(QProcess::MergedChannels);
                 proc->setWorkingDirectory(dir);
@@ -1827,7 +1827,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
     }
     catch(std::exception& e) {
 
-        qDebug() <<  "Exception writing video " << e.what();
+        qWarning() <<  "Exception writing video " << e.what();
     }
     if (astigWindow != NULL)
         delete astigWindow;
@@ -2074,6 +2074,7 @@ void MainWindow::on_actionastig_in_polar_triggered()
 {
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     QList<int> list = saTools->SelectedWaveFronts();
+
     QList<astigSample> samples;
     foreach(int i, list){
         wavefront *wf = m_surfaceManager->m_wavefronts[i];
@@ -2085,6 +2086,7 @@ void MainWindow::on_actionastig_in_polar_triggered()
     QScreen *screen = QGuiApplication::primaryScreen();
     QSizeF physicalSize = screen->availableSize();
     graph->resize(physicalSize.width()/2,physicalSize.height()/2);
+
     graph->exec();
     graph->disconnect();
     delete graph;

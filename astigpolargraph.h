@@ -37,6 +37,7 @@ private slots:
 private:
     Ui::astigPolargraph *ui;
     QPolarChart *chart;
+
 };
 
 #endif // ASTIGPOLARGRAPH_H

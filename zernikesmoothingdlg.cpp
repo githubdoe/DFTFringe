@@ -92,7 +92,6 @@ cv::Mat makeSurfaceFromZerns(int width, zernikeProcess &zp, std::vector<double> 
         }
     }
     else {  // use only spherical terms.
-        unsigned int z = 0;
         for (unsigned long long i = 4; i < zp.m_zerns.n_rows; ++i){
 
             double S1 = 0.0;
