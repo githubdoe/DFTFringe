@@ -1786,7 +1786,7 @@ void SurfaceManager::subtractWavefronts(){
     QList<QString> list;
     QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
     for (int i = 0; i < m_wavefronts.size(); ++i){
-        if (m_wavefronts[i]->name != doThese[0])
+        if (!m_wavefronts[i]->name.contains(doThese[0]))
              list.append(m_wavefronts[i]->name);
     }
     subtractWavefronatsDlg dlg(list);

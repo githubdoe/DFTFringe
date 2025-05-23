@@ -36,7 +36,7 @@ signals:
     void waveSeleted(QString);
 private slots:
     void tooltip(QPointF point, bool state);
-
+    void clicked(QPointF point);
     void on_waveFrontTable_itemClicked(QTableWidgetItem *item);
 
 private:

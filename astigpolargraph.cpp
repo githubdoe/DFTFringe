@@ -75,6 +75,7 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
         line->attachAxis(angularAxis);
         line->setName(name);
             connect(line, &QLineSeries::hovered, this, &astigPolargraph::tooltip);
+            connect(line, &QLineSeries::clicked, this, &astigPolargraph::clicked);
         chart->legend()->markers(line)[0]->setVisible(false);
 
         line->setPen(QPen(series->brush(),pensize));
@@ -105,7 +106,12 @@ void astigPolargraph::tooltip(QPointF point, bool state)
     }
 
 }
+void astigPolargraph::clicked(QPointF point)
+{
 
+   findClosestPoint(point);
+
+}
 astigPolargraph::~astigPolargraph()
 {
     delete ui;

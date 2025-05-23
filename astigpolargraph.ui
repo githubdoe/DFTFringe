@@ -32,7 +32,7 @@
      <item>
       <widget class="QLabel" name="hoverText">
        <property name="text">
-        <string>Hover over right side end point to highlight associated wave front.</string>
+        <string>Hover or left click over right side end point to highlight associated wave front.</string>
        </property>
       </widget>
      </item>
