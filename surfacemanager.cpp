@@ -949,6 +949,9 @@ void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulle
         file << "DIAM " << wf->diameter << std::endl;
         file << "ROC " << wf->roc << std::endl;
         file << "Lambda " << wf->lambda << std::endl;
+        if (!wf->useSANull){
+            file << "Do Not use null" <<  1 << std::endl;
+        }
         mirrorDlg &md = *mirrorDlg::get_Instance();
         if (md.isEllipse()){
             file << "ellipse_vertical_axis " << md.m_verticalAxis;
@@ -1146,7 +1149,7 @@ wavefront * SurfaceManager::readWaveFront(QString fileName){
             md->m_outlineShape = ELLIPSE;
             iss >> dummy >> md->m_verticalAxis;
         }
-        if (l.startsWith("nulled")){
+        if (l.startsWith("Do Not use null")){
             wf->useSANull = false;
         }
     }
@@ -1781,10 +1784,15 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
 
 void SurfaceManager::subtractWavefronts(){
     QList<QString> list;
+    QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
     for (int i = 0; i < m_wavefronts.size(); ++i){
-        list.append(m_wavefronts[i]->name);
+        if (m_wavefronts[i]->name != doThese[0])
+             list.append(m_wavefronts[i]->name);
     }
     subtractWavefronatsDlg dlg(list);
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QSizeF physicalSize = screen->availableSize();
+    dlg.resize(physicalSize.width()/2,physicalSize.height()/2);
     if (dlg.exec()){
         int ndx2 = dlg.getSelected();
         if (ndx2 == -1){
