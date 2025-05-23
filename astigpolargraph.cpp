@@ -11,7 +11,6 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
 
     chart = new QPolarChart();
 
-
     // process each wave front and place astig on the chart
     ui->waveFrontTable->setRowCount(list.size());
     ui->waveFrontTable->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -32,7 +31,11 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
     double maxAstig = 1.;
 
     QVector<wavefront *>  wavefronts =SurfaceManager::get_instance()->m_wavefronts;
-
+    QScreen *screen = QGuiApplication::primaryScreen();
+    qreal screenDPI = screen->physicalDotsPerInchX();
+    int pensize = 5 * screenDPI/256.;  // adjust pen size to screen resolution.  256 is DPI of my 4K 17 inch laptop
+    if (pensize < 1)
+        pensize = 1;
     for(int ndx = 0; ndx < list.length(); ++ndx){
 
         QString name = list[ndx].m_name;
@@ -74,7 +77,7 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
             connect(line, &QLineSeries::hovered, this, &astigPolargraph::tooltip);
         chart->legend()->markers(line)[0]->setVisible(false);
 
-        line->setPen(QPen(series->brush(),5));
+        line->setPen(QPen(series->brush(),pensize));
 
         QTableWidgetItem *pv = new QTableWidgetItem(QString().number(mag), 0);
         item->setForeground(series->brush());
