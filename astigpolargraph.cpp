@@ -150,3 +150,42 @@ int astigPolargraph::findClosestPoint(const QPointF clickedPoint){
     }
     return closeNdx;
 }
+
+void astigPolargraph::on_waveFrontTable_itemClicked(QTableWidgetItem *item)
+{
+    QString name = ui->waveFrontTable->item(item->row(),0)->text();
+    emit waveSeleted(name);
+
+    int lastndx = name.lastIndexOf('/');
+    if (lastndx != -1)
+        name = name.mid(lastndx);
+
+
+    int seriesCount = chart->series().count();
+
+    for (int i = 0; i < seriesCount; ++i) {
+      QAbstractSeries* series = chart->series().at(i);
+      if (series) {
+
+           if (series->type()== QAbstractSeries::SeriesTypeLine){
+              if (series->name() == name){
+                  QLineSeries *line = static_cast<QLineSeries*>(series);
+                  // Create a pen object to get the current pen attributes.
+                  QPen pen = line->pen();
+                  if (pen.style() == Qt::DotLine){
+                      pen.setStyle(Qt::SolidLine);
+                      pen.setWidth(pen.width()/4);
+                  }
+                  else {
+                    pen.setStyle(Qt::DotLine);
+                    pen.setWidth(pen.width() * 4);
+                  }
+
+                  line->setPen(pen);
+              }
+           }
+
+      }
+    }
+}
+

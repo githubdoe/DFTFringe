@@ -9,6 +9,8 @@
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QPolarChart>
 #include "wavefront.h"
+#include <QTableWidgetItem>
+
 QT_CHARTS_USE_NAMESPACE
 namespace Ui {
 class astigPolargraph;
@@ -34,6 +36,8 @@ signals:
     void waveSeleted(QString);
 private slots:
     void tooltip(QPointF point, bool state);
+
+    void on_waveFrontTable_itemClicked(QTableWidgetItem *item);
 
 private:
     int findClosestPoint(const QPointF clickedPoint );
