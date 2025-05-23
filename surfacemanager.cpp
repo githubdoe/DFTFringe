@@ -1958,7 +1958,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     QImage contour(Width , Height, QImage::Format_ARGB32 );
 
     results.Edit = editor;
-    editor->resize(Width, Height);
+    editor->resize(Width * 1.2, Height);
     doc->setPageSize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
 
     cv::Mat standavg = cv::Mat::zeros(inputs[0]->workData.size(), numType);
@@ -2360,6 +2360,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
                 "at each rotation angle.</p><br>The plot below is a polar plot of each rotations test stand astig."
                 "The ideal would be they are all the same magnitude and angle. If any one is much different than the rest then the astig removal may not be good.");
             astigPolargraph *polar = new astigPolargraph(samples);
+            polar->hideHoverHelp();
             polar->setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
             polar->resize(Width * 2, 2 *  Width);
             QImage polarImage(2 * Width, 2 * Width , QImage::Format_ARGB32 );

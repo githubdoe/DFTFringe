@@ -29,15 +29,19 @@ class astigPolargraph : public QDialog
 public:
     explicit astigPolargraph(QList<astigSample> list,QWidget *parent = nullptr);
     ~astigPolargraph();
+
 signals:
     void waveSeleted(QString);
 private slots:
-    void on_waveFrontTable_cellDoubleClicked(int row, int column);
+    void tooltip(QPointF point, bool state);
 
 private:
+    int findClosestPoint(const QPointF clickedPoint );
     Ui::astigPolargraph *ui;
     QPolarChart *chart;
-
+    QList<astigSample> m_list;
+public:
+        void hideHoverHelp();
 };
 
 #endif // ASTIGPOLARGRAPH_H

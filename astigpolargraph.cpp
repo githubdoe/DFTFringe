@@ -4,8 +4,8 @@
 
 
 astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::astigPolargraph)
+
+        QDialog(parent),ui(new Ui::astigPolargraph)
 {
     ui->setupUi(this);
 
@@ -14,7 +14,10 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
 
     // process each wave front and place astig on the chart
     ui->waveFrontTable->setRowCount(list.size());
+    ui->waveFrontTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 
+    // Configure selection mode (e.g., single selection)
+    ui->waveFrontTable->setSelectionMode(QAbstractItemView::SingleSelection);
     QValueAxis *angularAxis = new QValueAxis();
     angularAxis->setTickCount(9); // First and last ticks are co-located on 0/360 angle.
     angularAxis->setLabelFormat("%.0f");
@@ -43,7 +46,12 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
         if (mag > maxAstig) maxAstig = mag;
 
         double angle = (atan2(yastig,xastig)/2.) * 180./M_PI;
+
         angle = 90 - angle;
+
+        astigSample sample(name, angle, mag);
+
+        m_list << sample;
         QScatterSeries *series = new QScatterSeries();
 
         int lastndx = name.lastIndexOf('/');
@@ -63,6 +71,7 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
         line->attachAxis(radialAxis);
         line->attachAxis(angularAxis);
         line->setName(name);
+            connect(line, &QLineSeries::hovered, this, &astigPolargraph::tooltip);
         chart->legend()->markers(line)[0]->setVisible(false);
 
         line->setPen(QPen(series->brush(),5));
@@ -86,6 +95,13 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
     ui->polarChart->setChart(chart);
 
 }
+void astigPolargraph::tooltip(QPointF point, bool state)
+{
+    if (state) {
+        findClosestPoint(point);
+    }
+
+}
 
 astigPolargraph::~astigPolargraph()
 {
@@ -93,34 +109,41 @@ astigPolargraph::~astigPolargraph()
     delete chart;
 }
 
-// if table row is double clicked set all polar plot lines invisible but the one that was clicked in the table.
-// if they were invisible then make them visible.
-void astigPolargraph::on_waveFrontTable_cellDoubleClicked(int row, int column)
-{
-    QTableWidgetItem *item = ui->waveFrontTable->item(row,0);
-    QString name = item->text();
-    emit waveSeleted(name);
-    int lastndx = name.lastIndexOf('/');
-    if (lastndx != -1)
-        name = name.mid(lastndx);
-
-
-    int seriesCount = chart->series().count();
-
-    for (int i = 0; i < seriesCount; ++i) {
-      QAbstractSeries* series = chart->series().at(i);
-      if (series) {
-
-           if (series->type()== QAbstractSeries::SeriesTypeLine){
-              if (series->name() != name){
-                  if (series->isVisible())
-                    series->setVisible(false);
-                  else
-                    series->setVisible(true);
-              }
-           }
-
-      }
-    }
+void astigPolargraph::hideHoverHelp(){
+    ui->hoverText->hide();
 }
+int astigPolargraph::findClosestPoint(const QPointF clickedPoint){
 
+    QPointF closest(INT_MAX, INT_MAX);
+    qreal distance(INT_MAX);
+    int closeNdx = -1;
+    int ndx = 0;
+    for (auto sample : m_list) {
+        QPointF currentPoint(sample.m_xastig, sample.m_yastig);
+        qreal currentDistance = qSqrt((currentPoint.x() - clickedPoint.x())
+                                      * (currentPoint.x() - clickedPoint.x())
+                                      + (currentPoint.y() - clickedPoint.y())
+                                      * (currentPoint.y() - clickedPoint.y()));
+
+        if (currentDistance < distance) {
+            distance = currentDistance;
+            closest = currentPoint;
+            closeNdx = ndx;
+
+        }
+        ++ndx;
+    }
+    QString name = m_list[closeNdx].m_name;
+    emit waveSeleted(name);
+    int slashndx = name.lastIndexOf('/');
+    QString shortName = name.mid(name.lastIndexOf('/',slashndx-1));
+
+    QList<QTableWidgetItem*> items = ui->waveFrontTable->findItems(shortName, Qt::MatchEndsWith);
+
+
+    if (items.length() > 0){
+
+        ui->waveFrontTable->selectRow(items[0]->row());
+    }
+    return closeNdx;
+}
