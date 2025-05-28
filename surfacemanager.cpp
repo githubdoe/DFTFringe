@@ -1563,7 +1563,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
-qDebug() << "maxkey" << maxkey << rrows << rcols << sizes[maxkey];
+
     cv::Mat mask = wfList[sizes[maxkey][0]]->workMask.clone();
     if (mask.cols != rcols || mask.rows != rrows){
         cv::resize(mask,mask,Size(rrows,rcols));
@@ -2452,8 +2452,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
 
     QTextEdit *editor = new QTextEdit;
     editor->resize(printer.pageLayout().paintRectPixels(printer.resolution()).size());
-    const int contourWidth = 2 * 340/3;
-    const int contourHeight = 2 * 360/3;
+
     QImage contour = QImage(Width ,Width, QImage::Format_ARGB32 );
 
 
