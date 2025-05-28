@@ -42,8 +42,12 @@ standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent, Qt::Wind
     setWindowTitle(tr("Stand Astig analysis"));
     setPixmap(QWizard::WatermarkPixmap, QPixmap(":/res/wats2.png"));
     setPixmap(QWizard::LogoPixmap, QPixmap(":/res/mirror_stand.png"));
-    //AstigReportTitle = mirrorDlg::get_Instance()->m_name;
-    //resize( QSize(600, 489));
+
+
+    QScreen *screen = QGuiApplication::primaryScreen();
+
+    resize(screen->availableSize().width() * .5 ,screen->availableSize().height() * .5);
+
 }
 
 standAstigWizard::~standAstigWizard()
@@ -122,6 +126,7 @@ makeAverages::makeAverages(QWidget *parent)
                                    );
     txt->setReadOnly(true);
     QVBoxLayout *layout = new QVBoxLayout;
+
     layout->addWidget(txt);
     setLayout(layout);
 }
@@ -227,8 +232,14 @@ define_input::define_input(QWidget *parent)
     QPushButton *browsePath = new QPushButton("...");
     CWRb = new QRadioButton("Rotate CW");
     CCWRb = new QRadioButton("Rotate CCW");
-    CCWRb->setChecked(true);
+    if (set.value("stand astig ccw", true).toBool())
+        CCWRb->setChecked(true);
+    else
+        CWRb->setChecked(true);
+
     connect(browsePath, SIGNAL(pressed()), this, SLOT(setBasePath()));
+
+
 
     browsePath->setStyleSheet("");
     QGridLayout *l = new QGridLayout();
@@ -246,6 +257,12 @@ define_input::define_input(QWidget *parent)
     listDisplay = new QListWidget();
     listDisplay->setSelectionMode( QAbstractItemView::MultiSelection);
     listDisplay->setContextMenuPolicy(Qt::CustomContextMenu);
+//    int size = set.beginReadArray("stand astig removal files");
+//    for (int i = 0; i < size; ++i) {
+//        set.setArrayIndex(i);
+//        listDisplay->addItem(set.value("item").toString());
+//    }
+    set.endArray();
     connect(listDisplay, SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(showContextMenu(QPoint)));
 
@@ -260,6 +277,7 @@ define_input::define_input(QWidget *parent)
     m_log = new QTextEdit();
     m_log->append("Ready to add wave fronts to process.");
     l->addWidget(m_log,21,0,1,0);
+
     setLayout(l);
 
 }
@@ -270,7 +288,15 @@ void define_input::compute(){
         QMessageBox::warning(0, "", "You must first add at least 2 wavefront files to the list.");
         return;
     }
-
+    QSettings set;
+    set.setValue("stand astig ccw",CCWRb->isChecked() );
+    set.beginWriteArray("stand astig removal files");
+    // save the listDisplay of files to process
+    for (int i = 0; i < listDisplay->count(); ++i) {
+        set.setArrayIndex(i);
+        set.setValue("item", listDisplay->item(i)->text());
+    }
+    set.endArray();
     AstigReportTitle = title->text();
     runpb->setText("Working");
     runpb->setEnabled(false);

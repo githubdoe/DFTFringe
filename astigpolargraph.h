@@ -9,22 +9,43 @@
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QPolarChart>
 #include "wavefront.h"
+#include <QTableWidgetItem>
 
+QT_CHARTS_USE_NAMESPACE
 namespace Ui {
 class astigPolargraph;
 }
+class astigSample{
+
+public:
+    QString m_name;
+    double m_xastig;
+    double m_yastig;
+    astigSample(QString name, double xastig, double yastig): m_name(name), m_xastig(xastig), m_yastig(yastig){};
+};
 
 class astigPolargraph : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit astigPolargraph(QList<int> list,QWidget *parent = nullptr);
+    explicit astigPolargraph(QList<astigSample> list,QWidget *parent = nullptr);
     ~astigPolargraph();
 
+signals:
+    void waveSeleted(QString);
+private slots:
+    void tooltip(QPointF point, bool state);
+    void clicked(QPointF point);
+    void on_waveFrontTable_itemClicked(QTableWidgetItem *item);
+
 private:
+    int findClosestPoint(const QPointF clickedPoint );
     Ui::astigPolargraph *ui;
-    QList<int> m_list;  // list index of selected wave fronts in surface manager's list.
+    QPolarChart *chart;
+    QList<astigSample> m_list;
+public:
+        void hideHoverHelp();
 };
 
 #endif // ASTIGPOLARGRAPH_H
