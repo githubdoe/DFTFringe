@@ -46,7 +46,7 @@ standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent, Qt::Wind
 
     QScreen *screen = QGuiApplication::primaryScreen();
 
-    resize(screen->availableSize().width() * .5 ,screen->availableSize().height() * .5);
+    resize(screen->availableSize().width() * .5 ,screen->availableSize().height() * .7);
 
 }
 
