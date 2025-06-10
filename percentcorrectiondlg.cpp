@@ -34,10 +34,14 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     QSettings set;
     ui->minvalue->blockSignals(true);
     ui->maxvalue->blockSignals(true);
+    ui->exclusionRadius->blockSignals(true);
     ui->minvalue->setValue(set.value("percent_correction_min",-10).toDouble());
     ui->maxvalue->setValue(set.value("percent_correction_max", 120).toDouble());
+    m_exclusionRadius = set.value("correction exclusion", 19).toDouble();
+    ui->exclusionRadius->setValue(m_exclusionRadius);
     ui->minvalue->blockSignals(false);
     ui->maxvalue->blockSignals(false);
+    ui->exclusionRadius->blockSignals(false);
     ui->maxOrder->blockSignals(true);
     m_maxOrder = set.value("percentMaxOrder",18).toUInt();
     ui->maxOrder->setValue(m_maxOrder);
@@ -50,7 +54,7 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     sizes << 500 << 100;
     ui->splitter->setSizes(sizes);
     m_number_of_zones = set.value("percent number of zones", 5).toInt();
-
+    m_exclusionRadius = ui->exclusionRadius->value();
     ui->numberOfZones->blockSignals(true);
     ui->numberOfZones->setValue(m_number_of_zones);
     ui->numberOfZones->blockSignals(false);
@@ -59,6 +63,7 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     }
 
     makeZones();
+    ui->useInches->setChecked(set.value("correction useInches", true).toBool());
 
 
 }
@@ -71,7 +76,7 @@ void percentCorrectionDlg::saveSettings(){
     QJsonObject myJsonObject;
     myJsonObject["ROC"] = m_roc;
     myJsonObject["mirror radius"] = m_radius;
-
+    myJsonObject["exclusion radius"] = ui->exclusionRadius->value();
     QJsonArray jzones;
     for (const auto &item : zoneCenter) {
         jzones.append((double)item/m_radius);   // zone centers are saved as a percentage.
@@ -91,21 +96,23 @@ void percentCorrectionDlg::saveSettings(){
  * allow loading and saveing of zones
  * allways save current accpeted zones in settings probalby in json format.
 */
-QList<double> generateZoneCenters(double radius, int number_of_zones){
-    double exc_pct = 100. * pow(16.75,2.)/pow(radius,2.);
+QList<double> percentCorrectionDlg::generateZoneCenters(double radius, int number_of_zones){
+    double exc_pct = 100. * pow(m_exclusionRadius,2.)/pow(radius,2.);
+
     QList<double> zoneCenters;
-    QList<double> zoneedge;
+    zoneedge.clear();
+    zoneedge << m_exclusionRadius;
     // create the zones and the zone centers
-    for (int i = 0; i < number_of_zones+1; ++i){
+    for (int i = 1; i <= number_of_zones; ++i){
         zoneedge << radius * sqrt((1. -.01 * exc_pct) * i/number_of_zones + .01 * exc_pct);
     }
 
-    double lastzone = 0.;
+
     for (int i = 0; i < number_of_zones; ++i){
-        double zoneCenter = (lastzone + zoneedge[i])/2.;
-        lastzone = zoneedge[i];
-        zoneCenters << QString::number(zoneCenter,'f',0).toDouble();
+        double zoneCenter = (zoneedge[i] + zoneedge[i+1])/2.;
+        zoneCenters << QString::number(zoneCenter,'f',2).toDouble();
     }
+
     return zoneCenters;
 }
 void percentCorrectionDlg::updateZoneTable(){
@@ -122,7 +129,11 @@ void percentCorrectionDlg::updateZoneTable(){
 
     for (int i = 0; i < zoneCenter.size(); ++i) {
 
-        QTableWidgetItem *item = new QTableWidgetItem(QString("%1mm").arg(zoneCenter[i],0,'f',0));
+        QTableWidgetItem *item;
+        if (ui->useInches->isChecked())
+                    item = new QTableWidgetItem(QString("%1 inches").arg(zoneCenter[i]/25.4,0,'f',2));
+        else
+            item = new QTableWidgetItem(QString("%1 mm").arg(zoneCenter[i],0,'f',1));
         item->setTextAlignment(Qt::AlignCenter);
         ui->percentTable->setItem(0, i, item);
         item->setTextAlignment(Qt::AlignCenter);
@@ -177,26 +188,14 @@ arma::mat percentCorrectionDlg::makeZoneZerns(QList<double> centers){
 
 void percentCorrectionDlg::makeZones(){
 
-    QSettings set;
-    if (!set.contains("correctionZones")){
-        generateZoneCenters(m_radius, m_number_of_zones);
 
-        saveSettings();
-    }
-    else { // read zones from settings
-        // if mirror is different now than last then make the same number of zones but with new radius values
-        QString jsonString = set.value("correctionZones").toString();
+    zoneCenter = generateZoneCenters(m_radius, m_number_of_zones);
 
-        QJsonDocument doc = loadZonesFromJson(jsonString);
-        // if number of zones has changed then generate new zones.
-        if ((zoneCenter.size() != m_number_of_zones)  || (m_radius != doc.object()["mirror radius"].toDouble())){
-            zoneCenter = generateZoneCenters(m_radius, m_number_of_zones);
-            saveSettings();
-        }
 
-    }
     updateZoneTable();
+
     zoneZerns = makeZoneZerns(zoneCenter);
+
 }
 
 // the profile version needs the null removed and is in output lambda (usually 550);
@@ -296,6 +295,7 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
     auto knifeDeltas = [](QPolygonF &knives){
         double last = knives[0].y();
         QPolygonF deltas;
+
         for (int i = 1; i < knives.length(); ++i ){
             deltas << QPointF( knives[i].x(),knives[i].y() - last);
             last = knives[i].y();
@@ -326,9 +326,9 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
     nullval *=  m_lambda_nm/m_outputLambda;   // only data from the profile needs the null but it's data is at the output wavelength;
     // process each zone center
 
-    QPolygonF idealknives;
+    idealknives.clear();
     QPolygonF actualknives;
-    QPolygonF zernKnives;
+    zernKnives.clear();
     QPolygonF zernSurf;
 
     double idealoffset = 0.;
@@ -344,6 +344,7 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
         //   null from the profile thus the nullval being passed.
         double zernKnife = GetActualKE(m_roc, m_radius, surf->zernvalues, x, nullval ,false);
 
+
         if (zone == 0){
             idealoffset = idealknife;
             zernOffset = zernKnife;
@@ -358,13 +359,12 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
 
     QPolygonF idealDeltas = knifeDeltas(idealknives);
     QPolygonF zernDeltas = knifeDeltas(zernKnives);
-
     QPolygonF correction = getZoneCorrection(idealDeltas, zernDeltas);
 
     return correction;
 }
 
-
+// no longer used but left in case it should be.
 void percentCorrectionDlg::plotProfile(){
 
     mirrorDlg *md = mirrorDlg::get_Instance();
@@ -391,7 +391,7 @@ void percentCorrectionDlg::plotProfile(){
     // now plot the m_avg surface
     for(double r = 0; r < m_avg.length(); r += 1. ){
 
-       // qDebug() << "r" << r << m_avg[i];
+
                     double y = m_avg[r].y();//getZernSurface(m_roc, m_radius, surfs[i]->zernvalues, fabs(r), true);
 
         //double sphery = m_roc - sqrt(pow(m_roc, 2.0) - pow(r, 2.0));
@@ -458,6 +458,12 @@ void percentCorrectionDlg::plot(){
         // make percentages
         QPolygonF percent = makePercentages( surfs[i]);
 
+        if (ui->useInches->isChecked()){
+            for(int p = 0; p < percent.length(); ++p){
+                percent[p].setX(percent[p].x() /25.4);
+            }
+        }
+
         // Create 3D bar data
         QVector<double> row;
 
@@ -475,12 +481,34 @@ void percentCorrectionDlg::plot(){
 
         ui->percentTable->setVerticalHeaderItem(i+1, item);
         m_seriesName << surfs[i]->m_name;
-
-
+        double mm = 1.;
+        if (ui->useInches->isChecked())
+           mm = 1./25.4;
         QPolygonF bars;
+        // draw zone rectangles
+        for(int  p = 0; p < zoneedge.length();++p){
+            QwtPlotShapeItem *rectangleItem = new QwtPlotShapeItem();
+            double x1 = zoneedge[p] * mm;
+            double x2;
+            if (p+1 == zoneedge.length()){
+                x2 = m_radius * mm;
+            }
+            else
+                x2 = zoneedge[p+1] * mm;
+            //x2 *= .9;
 
+            double width = x2 - x1;
+            double border = (width - width * .95)/2;
+
+            rectangleItem->setRect(QRectF(x1 + border,ui->minvalue->value(), width * .95 , ui->maxvalue->value() - ui->minvalue->value()));
+
+
+            rectangleItem->setBrush(QBrush(QColor(240, 250, 250)));
+            rectangleItem->attach(ui->plot);
+            rectangleItem->setZ(0);
+        }
         if (surfs.length() < 2) {
-            // draw zone rectangles
+
 
             double width= 0.;
             for(int i = 0; i < percent.length(); ++i){
@@ -488,7 +516,7 @@ void percentCorrectionDlg::plot(){
                 double y = percent[i].y();
 
                 if (i < percent.length()-1)
-                    width= .80 * (percent[i+1].x() - percent[i].x()) ;
+                    width= .80 *  (percent[i+1].x() - percent[i].x()) ;
 
                 QwtPlotShapeItem *rectangleItem = new QwtPlotShapeItem();
 
@@ -502,7 +530,7 @@ void percentCorrectionDlg::plot(){
                 rectangleItem->setZ(0);
                 QwtPlotMarker *label = new QwtPlotMarker();
                 label->setLineStyle(QwtPlotMarker::NoLine);
-                label->setLabel(QString("%1\%").arg(y, 0, 'f',1)) ;
+                label->setLabel(QString("%1\%").arg(y, 0, 'f',2)) ;
                 label->setValue(percent[i].x(), y-10);
                 label->attach(ui->plot);
             }
@@ -514,7 +542,7 @@ void percentCorrectionDlg::plot(){
         if (surfs.length() == 1) {
             // draw markers
             for (int i = 0; i < zoneCenter.size(); ++i) {
-                double center= zoneCenter[i];
+                double center= zoneCenter[i] * mm;
                 QwtPlotMarker *marker = new QwtPlotMarker();
                 marker->setLineStyle(QwtPlotMarker::VLine); // Set the line style to vertical
                 marker->setLinePen(Qt::red,2,Qt::DashLine);
@@ -524,7 +552,7 @@ void percentCorrectionDlg::plot(){
 
                 QwtPlotMarker *label = new QwtPlotMarker();
                 label->setLineStyle(QwtPlotMarker::NoLine);
-                label->setLabel(QString("%1\n%2\%").arg(center, 0, 'f',1).arg(100. * center/m_radius,0,'f',1 )) ;
+                label->setLabel(QString("%1\n%2\%").arg(center, 0, 'f',1).arg(100. * center/(m_radius * mm),0,'f',1 )) ;
                 label->setLabelAlignment(Qt::AlignCenter);
                 label->setXValue(center);
                 label->setYValue(-23);
@@ -551,10 +579,11 @@ void percentCorrectionDlg::plot(){
 
         ui->plot->setAxisTitle( ui->plot->yLeft, "Percent correction" );
         ui->plot->setAxisScale(ui->plot->yRight, -10, 20, 1);
-        ui->plot->setAxisTitle( ui->plot->xBottom, "Mirror Radius mm" );
+
+        ui->plot->setAxisTitle( ui->plot->xBottom, (ui->useInches->isChecked())? " mirror radius inches":" mirror radius mm" );
         slopeCurve3->setZ(1);
         ui->plot->setAxisScale(QwtPlot::yLeft, ui->minvalue->value(), ui->maxvalue->value());
-        ui->plot->setAxisScale(QwtPlot::xBottom, 0, m_radius);
+        ui->plot->setAxisScale(QwtPlot::xBottom, 0, m_radius * mm);
     }
     ui->percentTable->blockSignals(false);
     // Add the series to the graph
@@ -580,7 +609,7 @@ bool compare(QVector< surfaceData *> data1, QVector< surfaceData *> data2){
 void percentCorrectionDlg::setData( QVector< surfaceData *> data) {
 
     bool different = !compare(data,surfs);
-    qDebug() << "true if different" << different;
+
     mirrorDlg &md = *mirrorDlg::get_Instance();
     m_roc = md.roc;
     m_lambda_nm = md.lambda;
@@ -660,6 +689,7 @@ void percentCorrectionDlg::on_help_clicked()
 
 void percentCorrectionDlg::on_loadZones_clicked()
 {
+
     QSettings set;
     QString path = set.value("projectPath").toString();
     QString extensionTypes(tr( "zone file (*.zones)"));
@@ -750,5 +780,59 @@ void percentCorrectionDlg::on_percentTable_itemChanged(QTableWidgetItem *item)
 
 
 
+void percentCorrectionDlg::on_useInches_clicked(bool use)
+{
 
+    QSettings set;
+    set.setValue("correction useInches", use);
+    ui->exclusionRadius->blockSignals(true);
+    ui->exclusionRadius->setValue(m_exclusionRadius/25.4);
+    ui->exclusionRadius->blockSignals(false);
+    makeZones();
+    plot();
+}
+
+
+void percentCorrectionDlg::on_useMM_clicked(bool use)
+{
+    QSettings set;
+
+    set.setValue("correction useInches", false);
+    ui->exclusionRadius->blockSignals(true);
+    ui->exclusionRadius->setValue(m_exclusionRadius);
+    ui->exclusionRadius->blockSignals(false);
+    makeZones();
+    plot();
+}
+
+
+void percentCorrectionDlg::on_exclusionRadius_valueChanged(double arg1)
+{
+    QSettings set;
+
+    if (ui->useInches->isChecked()){
+      m_exclusionRadius = arg1 * 25.4;
+    }
+    else
+        m_exclusionRadius = arg1;
+    set.setValue("correction exclusion", arg1);
+    makeZones();
+    plot();
+}
+
+
+void percentCorrectionDlg::on_knives_clicked()
+{
+    QString knives;
+    double mm = 1.;
+    if (ui->useInches->isChecked())
+        mm /=25.4;
+    for (int i = 0; i < idealknives.length(); ++i){
+        QString k = QString("%1  Ideal: %2 actual: %3\n").arg(i+1).arg(idealknives[i].y() * mm ,0,'f',3).arg(zernKnives[i].y()*mm,0,'f',3);
+        knives.append(k);
+    }
+    QMessageBox msg(QMessageBox::NoIcon, "Knife Posiitons", knives, QMessageBox::Ok, this);
+   msg.setTextInteractionFlags(Qt::TextSelectableByMouse);
+   msg.exec();
+}
 

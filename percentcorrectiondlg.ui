@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>528</width>
+    <width>579</width>
     <height>300</height>
    </rect>
   </property>
@@ -27,6 +27,26 @@
       <widget class="QPushButton" name="saveZones">
        <property name="text">
         <string>Save Zones</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Exclusion Radius:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="exclusionRadius">
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>19.050000000000001</double>
        </property>
       </widget>
      </item>
@@ -149,6 +169,43 @@
        </property>
        <property name="value">
         <double>120.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="useMM">
+       <property name="text">
+        <string>mm</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="useInches">
+       <property name="text">
+        <string>Inches</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="knives">
+       <property name="text">
+        <string>Knive positions</string>
        </property>
       </widget>
      </item>

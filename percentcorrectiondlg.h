@@ -30,9 +30,13 @@ class percentCorrectionDlg : public QDialog
     double m_desiredZ8;
     double m_lambda_nm;
     double m_outputLambda;
+    double m_exclusionRadius;
     bool m_showZones;
     double m_roc;
     double m_roc_offset = 0.;
+    QPolygonF idealknives;
+
+    QPolygonF zernKnives;
     arma::mat zoneZerns;
     QList<double> zoneCenter;
     QList<double> zoneedge;
@@ -76,7 +80,7 @@ public:
     void updateZoneTable();
     QJsonDocument loadZonesFromJson(QString str);
     double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes,  double x, double nulll, bool use_avg);
-
+    QList<double> generateZoneCenters(double radius, int number_of_zones);
 private slots:
     void on_percentTable_itemChanged(QTableWidgetItem *item);
 
@@ -100,6 +104,14 @@ private slots:
 
     arma::mat makeZoneZerns(QList<double> centers);
 
+
+    void on_useInches_clicked(bool checked);
+
+    void on_useMM_clicked(bool checked);
+
+    void on_exclusionRadius_valueChanged(double arg1);
+
+    void on_knives_clicked();
 
 private:
     Ui::percentCorrectionDlg *ui;
