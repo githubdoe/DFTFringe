@@ -983,6 +983,7 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
     else if (list.size() > 1){
         QSettings settings;
         QString path = settings.value("lastPath").toString();
+
         QFile fn(path);
 
         QString dir = QFileDialog::getExistingDirectory(0, tr("Open Directory")
@@ -1021,8 +1022,9 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
             qApp->processEvents();
             writeWavefront(fullPath, wf, saveNulled);
 
-
         }
+
+        settings.setValue("lastPath", dir);
     }
     QApplication::restoreOverrideCursor();
 }

@@ -391,7 +391,7 @@ QPolygonF ProfilePlot::createAverageProfile(double /*umnits*/, wavefront * /*wf*
 //        }
 //        avg = avg2;
 //    }
-qDebug() << "avg" << avg;
+
     return avg;
 }
 QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffset){
