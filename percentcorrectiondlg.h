@@ -38,7 +38,7 @@ class percentCorrectionDlg : public QDialog
 
     QPolygonF zernKnives;
     arma::mat zoneZerns;
-    QList<double> zoneCenter;
+    QList<double> m_zoneCenters;
     QList<double> zoneedge;
     QList<QVector<double> > m_barData;
     QStringList m_seriesName;
@@ -55,6 +55,7 @@ class percentCorrectionDlg : public QDialog
                            double null, bool useavg);
     double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, double x);
     void  make_3DBarControls(QWidget *widget, QVBoxLayout *vlayout);
+    void adjustZonestoDifferentDiameter(double old, double newDiam);
     Q3DBars *m_barGraph;
     GraphModifier *modifier;
     QBar3DSeries *m_series;
@@ -80,7 +81,7 @@ public:
     void updateZoneTable();
     QJsonDocument loadZonesFromJson(QString str);
     double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes,  double x, double nulll, bool use_avg);
-    QList<double> generateZoneCenters(double radius, int number_of_zones);
+    QList<double> generateZoneCenters(double radius, int number_of_zones, bool makenew = true);
 private slots:
     void on_percentTable_itemChanged(QTableWidgetItem *item);
 
@@ -116,7 +117,7 @@ private slots:
 private:
     Ui::percentCorrectionDlg *ui;
 
-    void makeZones();
+    void makeZones(bool makeNew = true);
     void saveSettings();
 
 };
