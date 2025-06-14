@@ -30,11 +30,15 @@ class percentCorrectionDlg : public QDialog
     double m_desiredZ8;
     double m_lambda_nm;
     double m_outputLambda;
+    double m_exclusionRadius;
     bool m_showZones;
     double m_roc;
     double m_roc_offset = 0.;
+    QPolygonF idealknives;
+
+    QPolygonF zernKnives;
     arma::mat zoneZerns;
-    QList<double> zoneCenter;
+    QList<double> m_zoneCenters;
     QList<double> zoneedge;
     QList<QVector<double> > m_barData;
     QStringList m_seriesName;
@@ -51,6 +55,7 @@ class percentCorrectionDlg : public QDialog
                            double null, bool useavg);
     double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, double x);
     void  make_3DBarControls(QWidget *widget, QVBoxLayout *vlayout);
+    void adjustZonestoDifferentDiameter(double old, double newDiam);
     Q3DBars *m_barGraph;
     GraphModifier *modifier;
     QBar3DSeries *m_series;
@@ -76,7 +81,7 @@ public:
     void updateZoneTable();
     QJsonDocument loadZonesFromJson(QString str);
     double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes,  double x, double nulll, bool use_avg);
-
+    QList<double> generateZoneCenters(double radius, int number_of_zones, bool makenew = true);
 private slots:
     void on_percentTable_itemChanged(QTableWidgetItem *item);
 
@@ -101,10 +106,18 @@ private slots:
     arma::mat makeZoneZerns(QList<double> centers);
 
 
+    void on_useInches_clicked(bool checked);
+
+    void on_useMM_clicked(bool checked);
+
+    void on_exclusionRadius_valueChanged(double arg1);
+
+    void on_knives_clicked();
+
 private:
     Ui::percentCorrectionDlg *ui;
 
-    void makeZones();
+    void makeZones(bool makeNew = true);
     void saveSettings();
 
 };
