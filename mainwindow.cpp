@@ -2092,3 +2092,22 @@ void MainWindow::on_actionastig_in_polar_triggered()
     delete graph;
 }
 
+
+void MainWindow::on_actiondebugSomething_triggered()
+{
+
+
+
+
+
+
+
+}
+
+
+void MainWindow::on_actionStop_auto_invert_triggered()
+{
+    m_surfaceManager->m_askAboutReverse = true;
+    QMessageBox::information(this, "auto invert", "DFTFringe will now ask if it thinks it needs to invert a wave front.");
+}
+
