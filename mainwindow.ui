@@ -83,6 +83,7 @@
     <addaction name="separator"/>
     <addaction name="actionSave_PDF_report"/>
     <addaction name="actionCreate_Movie_of_wavefronts"/>
+    <addaction name="actiondebugSomething"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -124,6 +125,7 @@
     <addaction name="actionwave_front_transforms"/>
     <addaction name="actiontilt_versus_astig_analysis"/>
     <addaction name="actionDebugStuff"/>
+    <addaction name="actionStop_auto_invert"/>
    </widget>
    <widget class="QMenu" name="menuSimulations">
     <property name="title">
@@ -1512,6 +1514,16 @@ em;
   <action name="actionastig_in_polar">
    <property name="text">
     <string>Show astig in polar form of selected wave fronts</string>
+   </property>
+  </action>
+  <action name="actiondebugSomething">
+   <property name="text">
+    <string>debugSomething</string>
+   </property>
+  </action>
+  <action name="actionStop_auto_invert">
+   <property name="text">
+    <string>Stop auto invert</string>
    </property>
   </action>
  </widget>
