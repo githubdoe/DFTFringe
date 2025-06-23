@@ -375,26 +375,35 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         mirrorDlg *md = mirrorDlg::get_Instance();
         zp.unwrap_to_zernikes(*wf);
         // check for swapped conic value
-        if (!m_ignoreInverse && (md->cc != 0.0) && md->cc * wf->InputZerns[8] < 0.){
-            bool reverse = false;
-            if (m_askAboutReverse){
-                if (QMessageBox::Yes == QMessageBox::question(0,"should invert?","Wavefront seems inverted.  Do you want to invert it?"))
-                {
-                   reverse = true;
-                    m_askAboutReverse = false;
-                }else
-                {
-                    reverse = false;
-                }
+        if (!m_ignoreInverse)
+        {
+            if (m_inverseMode==invNOTSET)
+            {
+                autoInvertDlg *dlg_ai = autoInvertDlg::get_Instance();
+                dlg_ai->exec();
+                md->updateAutoInvertStatus();
             }
-            else {
-                reverse = true;
+            bool reverse = false;
+            if (m_inverseMode == invCONIC)
+            {
+                if (md->cc != 0.0 && md->cc * wf->InputZerns[8] < 0.)
+                    reverse = true;
+            } else if (m_inverseMode == invINSIDE)
+            {
+                if (wf->InputZerns[3]>0)
+                    reverse = true;
+            } else if (m_inverseMode == invOUTSIDE)
+            {
+                if (wf->InputZerns[3]<0)
+                    reverse = true;
             }
             if (reverse){
                 wf->data *= -1;
+                zp.unwrap_to_zernikes(*wf);
             }
-            zp.unwrap_to_zernikes(*wf);
         }
+
+
         ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
         ((MainWindow*)parent())-> zernTablemodel->update();
         // fill in void from obstruction of igram.
@@ -491,7 +500,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
                                ProfilePlot *profilePlot, contourView *contourView,
                                SurfaceGraph *glPlot, metricsDisplay *mets): QObject(parent),
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
-    m_SurfaceGraph(glPlot), m_metrics(mets),
+    m_SurfaceGraph(glPlot), m_metrics(mets),m_inverseMode(invNOTSET),
     m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
     outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {

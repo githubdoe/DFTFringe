@@ -29,6 +29,8 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include "annulushelpdlg.h"
+#include "surfacemanager.h"
+
 QString mirrorDlg::m_projectPath = "";
 
 mirrorDlg *mirrorDlg::get_Instance(){
@@ -51,7 +53,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->useAnnulus->setChecked(m_useAnnular);
     enableAnnular(m_useAnnular);
     ui->annulusPercent->setValue(settings.value("md annulus percent",0.).toDouble() * 100   );
-
+    m_autoInvertDlg = autoInvertDlg::get_Instance();
 
     ui->nullCB->setChecked(doNull);
     diameter = settings.value("config diameter", 200.).toDouble();
@@ -848,4 +850,34 @@ void mirrorDlg::on_annularDiameter_valueChanged(double arg1)
 void mirrorDlg::setObsPercent(double obs){
     ui->annulusPercent->setValue(obs);
 }
+
+void mirrorDlg::updateAutoInvertStatus()
+{
+    switch(SurfaceManager::get_instance()->m_inverseMode)
+    {
+        case invNOTSET:
+            ui->lblAutoInvert->setText("Autoinvert: Not Set");
+            break;
+        case invMANUAL:
+            ui->lblAutoInvert->setText("Autoinvert: Manual");
+            break;
+        case invCONIC:
+            ui->lblAutoInvert->setText("Autoinvert: Parabolic");
+            break;
+        case invINSIDE:
+            ui->lblAutoInvert->setText("Autoinvert: Inside Focus");
+            break;
+        case invOUTSIDE:
+            ui->lblAutoInvert->setText("Autoinvert: Outside Focus");
+            break;
+    }
+
+}
+
+void mirrorDlg::on_btnChangeAutoInvert_clicked()
+{
+    m_autoInvertDlg->exec();
+    updateAutoInvertStatus();
+}
+
 

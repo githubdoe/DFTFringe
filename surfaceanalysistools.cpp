@@ -27,6 +27,7 @@
 #include "mirrordlg.h"
 #include "renamewavefrontdlg.h"
 #include <QMessageBox>
+#include "surfacemanager.h"
 surfaceAnalysisTools *surfaceAnalysisTools::m_Instance = NULL;
 
 surfaceAnalysisTools * surfaceAnalysisTools::get_Instance(QWidget *parent){
@@ -292,6 +293,8 @@ void surfaceAnalysisTools::defocusControlChanged(double val){
 void surfaceAnalysisTools::on_InvertPB_pressed()
 {
     emit invert(SelectedWaveFronts());
+    SurfaceManager::get_instance()->m_inverseMode = invMANUAL; // switch to manual mode of inverting wavefronts
+    mirrorDlg::get_Instance()->updateAutoInvertStatus();
 }
 
 // this is triggered on renaming/editing end
@@ -357,3 +360,6 @@ void surfaceAnalysisTools::closeDefocus(int /*result*/){
     m_defocus = 0.;
     emit defocusChanged();
 }
+
+
+

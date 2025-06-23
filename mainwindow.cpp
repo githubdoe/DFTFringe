@@ -49,6 +49,7 @@
 #include "opencv2/opencv.hpp"
 #include "spdlog/spdlog.h"
 #include <QUrl>
+#include "autoinvertdlg.h"
 
 using namespace QtConcurrent;
 std::vector<wavefront*> g_wavefronts;
@@ -353,6 +354,7 @@ MainWindow::~MainWindow()
     delete m_ogl;
     userMapDlg->close();
     mirrorDlg::get_Instance()->close();
+    autoInvertDlg::get_Instance()->close();
     settingsDlg->close();
     delete settingsDlg;
     delete ui;
@@ -2107,7 +2109,8 @@ void MainWindow::on_actiondebugSomething_triggered()
 
 void MainWindow::on_actionStop_auto_invert_triggered()
 {
-    m_surfaceManager->m_askAboutReverse = true;
-    QMessageBox::information(this, "auto invert", "DFTFringe will now ask if it thinks it needs to invert a wave front.");
+    m_surfaceManager->m_inverseMode = invNOTSET;
+    m_mirrorDlg->updateAutoInvertStatus();
+    //QMessageBox::information(this, "auto invert", "DFTFringe will now ask if it thinks it needs to invert a wave front.");
 }
 
