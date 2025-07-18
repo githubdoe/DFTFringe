@@ -82,7 +82,9 @@
 static void my_terminate_handler() {
     try {
         spdlog::get("logger")->critical("Unexpected issue. Stacktrace:\n" + boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
+#ifdef _WIN32
         MyUnhandledExceptionFilter(nullptr); // Call the unhandled exception filter to create a crash dump
+#endif
     } catch (...) {}
     std::abort();
 }
