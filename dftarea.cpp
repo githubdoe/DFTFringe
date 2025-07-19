@@ -1475,11 +1475,11 @@ qDebug() << "rec" << left << top << width << height;
 
 
     zernikePolar &zpolar = *zernikePolar::get_Instance();
-    zpolar.init(r0,t0);
+    zpolar.init(r0,t0,100);
 
 // debug print the difference
 //    for (int i = 0; i < 100; ++i){
-//        qDebug() << "psi Zernike" <<i <<  coords(0,i) << zpolar.zernike(i,r0, t0);
+//        qDebug() << "psi Zernike" <<i <<  coords(0,i) << zpolar.zernike(i);
 //    }
 
     //cv::Mat modul = modu.reshape(0,rows);
