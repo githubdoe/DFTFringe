@@ -19,10 +19,7 @@
 #include "zernikepolar.h"
 #include <QDebug>
 
-/*
-Public Function Zernike(n As Integer, X As Double, Y As Double) As Double
-' N is Zernike number as given by James Wyant
-*/
+
 zernikePolar *zernikePolar::m_instance = 0;
 zernikePolar *zernikePolar::get_Instance(){
     if (m_instance == 0){

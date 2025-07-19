@@ -27,19 +27,10 @@
 #include "myutils.h"
 //#include "arbitrarywavefrontdlg.h"
 #include "userdrawnprofiledlg.h"
+
+
 std::vector<bool> zernEnables;
 std::vector<double> zNulls;
-double BestSC = -1.;
-int Zw[] = {								/*  n    */
-    1,									  //    0
-    4,4,3,								  //	1
-    6,6,8,8,5,  //8						  //	2
-    8,8,10,10,12,12,7, // 15					3
-    10,10,12,12,14,14,16,16,9,  //24			4
-    12,12,14,14,16,16,18,18,20,20,11,  //35		5
-    14,14,16,16,18,18,20,20,22,22,24,24,13  // 48
-};
-
 
 
 //
@@ -132,15 +123,7 @@ cv::Mat zpmCx(QVector<double> rho, QVector<double> theta, int maxorder) {
   }
   return zm;
 }
-/*
-Public Function ZernikeW(n As Integer) As Double
-' N is Zernike number as given by James Wyant
-' routine calculates the inverse of the weight in the variance computation
-*/
-int ZernikeW(int n)
-{
-    return(Zw[n]);
-}
+
 
 long fact( int n1, int n2)
 {
@@ -152,9 +135,8 @@ long fact( int n1, int n2)
     return f;
 
 }
-void gauss_jordan(int n, double* Am, double* Bm)
-{
-    /*
+
+/*
 Private Sub GJ(n As Integer)
 Dim indxc(50) As Integer, indxr(50) As Integer, ipiv(50) As Integer
 Dim i As Integer, icol As Integer, irow As Integer, j As Integer
@@ -168,6 +150,10 @@ Dim big As Double, dum As Double, pivinv As Double, temp As Double
    'on entry, Am(1 to N, 1 to N) is the matrix coefficients
    'on exit, Am is the inverse matrix
  */
+/*
+void gauss_jordan(int n, double* Am, double* Bm)
+{
+    
     int* ipiv = new int[n];
     int* indxr = new int[n];
     int* indxc = new int[n];
@@ -261,11 +247,14 @@ Dim big As Double, dum As Double, pivinv As Double, temp As Double
     delete[] ipiv;
     delete[] indxr;
     delete[] indxc;
-}
+}*/
 
 
-
-double Zernike(int n, double X, double Y)
+/*
+Public Function Zernike(n As Integer, X As Double, Y As Double) As Double
+' N is Zernike number as given by James Wyant
+*/
+/*double Zernike(int n, double X, double Y)
 {
     static double X2 = 0., X3 = 0., X4 = 0.;
     static double Y2 = 0., Y3 = 0., Y4 = 0.;
@@ -431,9 +420,7 @@ double Zernike(int n, double X, double Y)
         return(0.);
     }
     return d;
-
-
-}
+}*/
 
 
 
