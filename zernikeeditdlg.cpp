@@ -65,12 +65,12 @@ void zernikeEditDlg::on_createSurface_clicked()
             if (rho <= 1.)
             {
                 double theta = atan2(uy,ux);
-                zpolar.init(rho,theta);
+                zpolar.init(rho, theta, tableModel->rowCount());
                 double s1 = 0;
                 for (int z = 0; z < tableModel->rowCount(); ++z){
                     double v = tableModel->values[z];
                     if (m_zernEnables[z]){
-                        s1 += v * zpolar.zernike(z, rho, theta);
+                        s1 += v * zpolar.zernike(z);
                     }
                 }
                 result.at<double>(y,x) = s1;

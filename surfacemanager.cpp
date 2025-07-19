@@ -447,19 +447,19 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
             {
                 double S1 = 0;
                 double theta = atan2(y1,x1);
-                zpolar.init(rho,theta);
+                zpolar.init(rho,theta,zernsToUse.size());
                 for (int ii = 0; ii < zernsToUse.size(); ++ii) {
                     int z = zernsToUse[ii];
 
                     if ( z == 3 && m_surfaceTools->m_useDefocus){
-                        S1 += m_surfaceTools->m_defocus * zpolar.zernike(z,rho,theta);
+                        S1 += m_surfaceTools->m_defocus * zpolar.zernike(z);
                     }
                     else {
                         if (en[z]){
                             if (z == 8 && md->doNull)
-                                S1 +=    md->z8 * zpolar.zernike(z,rho, theta);
+                                S1 +=    md->z8 * zpolar.zernike(z);
 
-                            S1 += zerns[z] * zpolar.zernike(z,rho, theta);
+                            S1 += zerns[z] * zpolar.zernike(z);
                         }
                     }
                 }
@@ -753,11 +753,11 @@ void SurfaceManager::useDemoWaveFront(){
             double y1 = (double)(j - (ycen )) /rad;
             rho = sqrt(x1 * x1 + y1 * y1);
             double theta = atan2(y1,x1);
-            zpolar.init(rho,theta);
+            zpolar.init(rho,theta,10);
 
             if (rho <= 1.)
             {
-                double S1 = md->z8 * -.9 * zpolar.zernike(8,rho,theta) + .02* zpolar.zernike(9, rho,theta);
+                double S1 = md->z8 * -.9 * zpolar.zernike(8) + .02* zpolar.zernike(9);
 
                 result.at<double>(j,i) = S1;
             }

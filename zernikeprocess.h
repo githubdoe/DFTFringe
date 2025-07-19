@@ -25,6 +25,8 @@
 #include "mainwindow.h"
 #include "armadillo"
 #include <stdlib.h>
+
+//TODO remove this if possible and use a class
 extern std::vector<bool> zernEnables;
 extern int Zw[];
 extern double BestSC;
@@ -137,14 +139,15 @@ public slots:
 
 };
 
+//TODO separate class into different files
 class zernikePolar : public QObject
 {
     Q_OBJECT
 public:
     explicit zernikePolar(){};
-    static zernikePolar *get_Instance();
-    void init(double rho, double theta);
-    double zernike(int z, double rho, double theta);
+    static zernikePolar *get_Instance();  //TODO check if we really need a singleton here
+    void init(double rho, double theta, size_t nbTerms = 48);
+    double zernike(size_t z);
 private:
      static zernikePolar *m_instance;
      double rho2;
@@ -164,6 +167,8 @@ private:
      double sin4theta;
      double cos5theta;
      double sin5theta;
+     size_t m_nbTermsComputed;
+     double zernTerms[49]; // TODO if no singleton, use correct length
 };
 
 void debugZernRoutines();
