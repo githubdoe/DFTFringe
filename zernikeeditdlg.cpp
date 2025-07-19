@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include <fstream>
 #include "zernikeprocess.h"
+#include "zernikepolar.h"
 #include "mirrordlg.h"
 #include "myutils.h"
 zernikeEditDlg::zernikeEditDlg(SurfaceManager * sfm, QWidget *parent) :

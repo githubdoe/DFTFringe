@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <vector>
 #include "zernikeprocess.h"
+#include "zernikepolar.h"
 #include <QTimer>
 #include <qprinter.h>
 #include "rotationdlg.h"

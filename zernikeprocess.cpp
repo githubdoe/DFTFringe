@@ -16,6 +16,7 @@
 
 ****************************************************************************/
 #include "zernikeprocess.h"
+#include "zernikepolar.h"
 #include <opencv2/opencv.hpp>
 #include <cmath>
 #include "mainwindow.h"
@@ -261,122 +262,7 @@ Dim big As Double, dum As Double, pivinv As Double, temp As Double
     delete[] indxr;
     delete[] indxc;
 }
-/*
-Public Function Zernike(n As Integer, X As Double, Y As Double) As Double
-' N is Zernike number as given by James Wyant
-*/
-zernikePolar *zernikePolar::m_instance = 0;
-zernikePolar *zernikePolar::get_Instance(){
-    if (m_instance == 0){
-        m_instance = new zernikePolar;
-    }
-    return m_instance;
-}
 
-// Having all terms computed at once here let's compiler optimize the code better
-void zernikePolar::init(double rho, double theta, size_t nbTerms){
-    if(nbTerms > 49){
-        qWarning() << "zernikePolar::init: maxorder is limited to 49, setting to 49";
-        nbTerms = 49;
-    }
-    
-    m_nbTermsComputed = nbTerms;
-    
-    zernTerms[0] = 1.;
-    
-    rho2 = rho * rho;
-    costheta = cos(theta);
-    sintheta = sin(theta);
-    cos2theta = cos(2. * theta);
-    sin2theta = sin(2. * theta);
-    zernTerms[1] = rho * costheta;
-    zernTerms[2] = rho * sintheta;
-    zernTerms[3] = -1. + 2. * rho2;
-    zernTerms[4] = rho2 * cos2theta;
-    zernTerms[5] = rho2 * sin2theta;
-    zernTerms[6] = rho * (-2. + 3. * rho2) * costheta;
-    zernTerms[7] = rho * (-2. + 3. * rho2) * sintheta;
-    zernTerms[8] = 1. + rho2 * (-6 + 6. * rho2);
-
-    // only compute what is actually needed
-    // but to avoid complex code I use only 4 ranges
-    if(nbTerms > 8)
-    {
-        
-        rho3 = rho2 * rho;
-        rho4 = rho3 * rho;
-        rho5 = rho4 * rho;
-        rho6 = rho5 * rho;
-        rho8 = rho6 * rho;
-        cos3theta = cos(3. * theta);
-        sin3theta = sin(3. * theta);
-        cos4theta = cos(4. * theta);
-        sin4theta = sin(4. * theta);
-
-        zernTerms[9] = rho3 * cos3theta;
-        zernTerms[10] = rho3 * sin3theta;
-        zernTerms[11] = rho2 * (-3 + 4 * rho2) * cos2theta;
-        zernTerms[12] = rho2 * (-3 + 4 * rho2) * sin2theta ;
-        zernTerms[13] = rho * (3. - 12. * rho2 + 10. * rho4) * costheta;
-        zernTerms[14] = rho * (3. - 12. * rho2 + 10. * rho4) * sintheta;
-        zernTerms[15] = -1 + 12 * rho2 - 30. * rho4 + 20. * rho6;
-        zernTerms[16] = rho4 * cos4theta;
-        zernTerms[17] = rho4 * sin4theta;
-        zernTerms[18] = rho3 *( -4. + 5. * rho2) * cos3theta;
-        zernTerms[19] = rho3 *( -4. + 5. * rho2) * sin3theta;
-        zernTerms[20] = rho2 * (6. - 20. * rho2 + 15 * rho4)* cos2theta;
-        zernTerms[21] = rho2 * (6. - 20. * rho2 + 15 * rho4)* sin2theta;
-        zernTerms[22] = rho * (-4. + 30. * rho2 - 60. * rho4 + 35 * rho6)* costheta;
-        zernTerms[23] = rho * (-4. + 30. * rho2 - 60. * rho4 + 35 * rho6)* sintheta;
-        zernTerms[24] = 1. - 20. * rho2 + 90. *  rho4 - 140. * rho6 + 70. * rho8;
-    }
-
-    if(nbTerms > 24) {
-        rho10 = rho8 * rho2;
-        cos5theta = cos(5. * theta);
-        sin5theta = sin(5. * theta);
-
-        zernTerms[25] = rho5 * cos5theta;
-        zernTerms[26] = rho5 * sin5theta;
-        zernTerms[27] = rho4 * (-5. + 6. * rho2) * cos4theta;
-        zernTerms[28] = rho4 * (-5. + 6. * rho2) * sin4theta;
-        zernTerms[29] = rho3 * (10. - 30. * rho2 + 21. * rho4) * cos3theta;
-        zernTerms[30] = rho3 * (10. - 30. * rho2 + 21. * rho4) * sin3theta;
-        zernTerms[31] = rho2 *(-10. + 60. * rho2 - 105. * rho4 + 56. * rho6) * cos2theta;
-        zernTerms[32] = rho2 *(-10. + 60. * rho2 - 105. * rho4 + 56. * rho6) * sin2theta;
-        zernTerms[33] = rho * (5. - 60. * rho2 + 210 * rho4 -280. * rho6 + 126. * rho8) * costheta;
-        zernTerms[34] = rho * (5. - 60. * rho2 + 210 * rho4 -280. * rho6 + 126. * rho8) * sintheta;
-        zernTerms[35] = -1 + 30. * rho2 -210 * rho4 + 560. * rho6 - 630 * rho8 + 252. * rho10;
-    }
-
-    if(nbTerms > 35)
-    {
-        zernTerms[36] = rho6 * cos(6. * theta);
-        zernTerms[37] = rho6 * sin(6. * theta);
-        zernTerms[38] = rho5 * (-6. + 7 * rho2) * cos5theta;
-        zernTerms[39] = rho5 * (-6. + 7 * rho2) * sin5theta;
-        zernTerms[40] = rho4 * (15. -42. * rho2 + 28. * rho4) * cos4theta;
-        zernTerms[41] = rho4 * (15. -42. * rho2 + 28. * rho4) * sin4theta;
-        zernTerms[42] = rho3 * (-20 + 105. * rho2 - 168. * rho4 + 84 * rho6) * cos3theta;
-        zernTerms[43] = rho3 * (-20. + 105. * rho2 - 168. * rho4 + 84. * rho6) * sin3theta;
-        zernTerms[44] = rho2 * (15. - 140. * rho2 + 420. * rho4 - 504. * rho6 +  210. * rho8) * cos2theta;
-        zernTerms[45] = rho2 * (15. - 140. * rho2 + 420. * rho4 - 504. * rho6 +  210. * rho8) * sin2theta;
-        zernTerms[46] = rho *(-6. + 105 * rho2 - 560. * rho4 + 1260. * rho6 -1260. * rho8 +462. * rho10) * costheta;
-        zernTerms[47] = rho *(-6. + 105 * rho2 - 560. * rho4 + 1260. * rho6 -1260. * rho8 +462. * rho10) * sintheta;
-        zernTerms[48] = 1. - 42. * rho2 + 420. * rho4 - 1680. * rho6 + 3150. * rho8 -2772. * rho10 + 924. * rho8 * rho2;
-    }
-}
-
-double zernikePolar::zernike(size_t n){
-    if(n < m_nbTermsComputed) {
-        return zernTerms[n];
-    }
-    else
-    {
-        throw std::out_of_range("Zernike order exceeds maximum computed order");
-        return 0.;
-    }
-}
 
 
 double Zernike(int n, double X, double Y)
