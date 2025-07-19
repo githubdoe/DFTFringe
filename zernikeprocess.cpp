@@ -275,12 +275,12 @@ zernikePolar *zernikePolar::get_Instance(){
 
 void zernikePolar::init(double rho, double theta){
         rho2 = rho * rho;
-        rho3 = pow(rho,3.);
-        rho4 = pow(rho,4.);
-        rho5 = pow(rho,5.);
-        rho6 = pow(rho,6.);
-        rho8 = pow(rho,8.);
-        rho10 = pow(rho,10.);
+        rho3 = rho2 * rho;
+        rho4 = rho3 * rho;
+        rho5 = rho4 * rho;
+        rho6 = rho5 * rho;
+        rho8 = rho6 * rho;
+        rho10 = rho8 * rho2;
         costheta = cos(theta);
         sintheta = sin(theta);
         cos2theta = cos(2. * theta);
