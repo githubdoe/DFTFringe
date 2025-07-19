@@ -119,7 +119,7 @@ void zernikePolar::init(double rho, double theta, size_t nbTerms){
         zernTerms[45] = rho2 * (15. - 140. * rho2 + 420. * rho4 - 504. * rho6 +  210. * rho8) * sin2theta;
         zernTerms[46] = rho *(-6. + 105 * rho2 - 560. * rho4 + 1260. * rho6 -1260. * rho8 +462. * rho10) * costheta;
         zernTerms[47] = rho *(-6. + 105 * rho2 - 560. * rho4 + 1260. * rho6 -1260. * rho8 +462. * rho10) * sintheta;
-        zernTerms[48] = 1. - 42. * rho2 + 420. * rho4 - 1680. * rho6 + 3150. * rho8 -2772. * rho10 + 924. * rho8 * rho2;
+        zernTerms[48] = 1. - 42. * rho2 + 420. * rho4 - 1680. * rho6 + 3150. * rho8 -2772. * rho10 + 924. * rho10 * rho2;
     }
 }
 
