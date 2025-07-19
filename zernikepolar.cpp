@@ -17,6 +17,7 @@
 ****************************************************************************/
 
 #include "zernikepolar.h"
+#include <cmath>
 #include <QDebug>
 
 
@@ -40,10 +41,10 @@ void zernikePolar::init(double rho, double theta, size_t nbTerms){
     zernTerms[0] = 1.;
     
     rho2 = rho * rho;
-    costheta = cos(theta);
-    sintheta = sin(theta);
-    cos2theta = cos(2. * theta);
-    sin2theta = sin(2. * theta);
+    costheta = std::cos(theta);
+    sintheta = std::sin(theta);
+    cos2theta = std::cos(2. * theta);
+    sin2theta = std::sin(2. * theta);
     zernTerms[1] = rho * costheta;
     zernTerms[2] = rho * sintheta;
     zernTerms[3] = -1. + 2. * rho2;
@@ -63,10 +64,10 @@ void zernikePolar::init(double rho, double theta, size_t nbTerms){
         rho5 = rho4 * rho;
         rho6 = rho5 * rho;
         rho8 = rho6 * rho;
-        cos3theta = cos(3. * theta);
-        sin3theta = sin(3. * theta);
-        cos4theta = cos(4. * theta);
-        sin4theta = sin(4. * theta);
+        cos3theta = std::cos(3. * theta);
+        sin3theta = std::sin(3. * theta);
+        cos4theta = std::cos(4. * theta);
+        sin4theta = std::sin(4. * theta);
 
         zernTerms[9] = rho3 * cos3theta;
         zernTerms[10] = rho3 * sin3theta;
@@ -88,8 +89,8 @@ void zernikePolar::init(double rho, double theta, size_t nbTerms){
 
     if(nbTerms > 24) {
         rho10 = rho8 * rho2;
-        cos5theta = cos(5. * theta);
-        sin5theta = sin(5. * theta);
+        cos5theta = std::cos(5. * theta);
+        sin5theta = std::sin(5. * theta);
 
         zernTerms[25] = rho5 * cos5theta;
         zernTerms[26] = rho5 * sin5theta;
@@ -106,8 +107,8 @@ void zernikePolar::init(double rho, double theta, size_t nbTerms){
 
     if(nbTerms > 35)
     {
-        zernTerms[36] = rho6 * cos(6. * theta);
-        zernTerms[37] = rho6 * sin(6. * theta);
+        zernTerms[36] = rho6 * std::cos(6. * theta);
+        zernTerms[37] = rho6 * std::sin(6. * theta);
         zernTerms[38] = rho5 * (-6. + 7 * rho2) * cos5theta;
         zernTerms[39] = rho5 * (-6. + 7 * rho2) * sin5theta;
         zernTerms[40] = rho4 * (15. -42. * rho2 + 28. * rho4) * cos4theta;
