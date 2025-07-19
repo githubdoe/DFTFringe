@@ -63,7 +63,7 @@ void zernikePolar::init(double rho, double theta, size_t nbTerms){
         rho4 = rho3 * rho;
         rho5 = rho4 * rho;
         rho6 = rho5 * rho;
-        rho8 = rho6 * rho;
+        rho8 = rho6 * rho2;
         cos3theta = std::cos(3. * theta);
         sin3theta = std::sin(3. * theta);
         cos4theta = std::cos(4. * theta);
