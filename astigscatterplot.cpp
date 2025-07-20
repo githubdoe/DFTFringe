@@ -12,7 +12,7 @@ astigScatterPlot::astigScatterPlot(QWidget *parent):QwtPlot( parent ),m_max(.3)
 {
 
     Picker = new myPlotPicker( this );
-    connect(Picker, SIGNAL(selected(QString)),this,SLOT(selectedwave(QString)));
+    connect(Picker, SIGNAL(mySelected(QString)),this,SLOT(selectedwave(QString)));
 
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->setPen( Qt::gray, 0.0, Qt::DotLine );
