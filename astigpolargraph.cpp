@@ -126,7 +126,7 @@ int astigPolargraph::findClosestPoint(const QPointF clickedPoint){
     qreal distance(INT_MAX);
     int closeNdx = -1;
     int ndx = 0;
-    for (auto sample : m_list) {
+    for (const auto& sample : m_list) {
         QPointF currentPoint(sample.m_xastig, sample.m_yastig);
         qreal currentDistance = qSqrt((currentPoint.x() - clickedPoint.x())
                                       * (currentPoint.x() - clickedPoint.x())
