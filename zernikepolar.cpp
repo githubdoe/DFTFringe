@@ -20,17 +20,9 @@
 #include <cmath>
 #include <QDebug>
 
+zernikePolar::zernikePolar(double rho, double theta, size_t nbTerms) {
+    // Having all terms computed at once here let's compiler optimize the code better
 
-zernikePolar *zernikePolar::m_instance = 0;
-zernikePolar *zernikePolar::get_Instance(){
-    if (m_instance == 0){
-        m_instance = new zernikePolar;
-    }
-    return m_instance;
-}
-
-// Having all terms computed at once here let's compiler optimize the code better
-void zernikePolar::init(double rho, double theta, size_t nbTerms){
     if(nbTerms > 49){
         qWarning() << "zernikePolar::init: maxorder is limited to 49, setting to 49";
         nbTerms = 49;
@@ -40,11 +32,11 @@ void zernikePolar::init(double rho, double theta, size_t nbTerms){
     
     zernTerms[0] = 1.;
     
-    rho2 = rho * rho;
-    costheta = std::cos(theta);
-    sintheta = std::sin(theta);
-    cos2theta = std::cos(2. * theta);
-    sin2theta = std::sin(2. * theta);
+    const double rho2 = rho * rho;
+    const double costheta = std::cos(theta);
+    const double sintheta = std::sin(theta);
+    const double cos2theta = std::cos(2. * theta);
+    const double sin2theta = std::sin(2. * theta);
     zernTerms[1] = rho * costheta;
     zernTerms[2] = rho * sintheta;
     zernTerms[3] = -1. + 2. * rho2;
@@ -54,11 +46,23 @@ void zernikePolar::init(double rho, double theta, size_t nbTerms){
     zernTerms[7] = rho * (-2. + 3. * rho2) * sintheta;
     zernTerms[8] = 1. + rho2 * (-6 + 6. * rho2);
 
+    double rho3;
+    double rho4;
+    double rho5;
+    double rho6;
+    double rho8;
+    double cos3theta;
+    double sin3theta;
+    double cos4theta;
+    double sin4theta;
+    double rho10;
+    double cos5theta;
+    double sin5theta;
+
     // only compute what is actually needed
     // but to avoid complex code I use only 4 ranges
     if(nbTerms > 8)
     {
-        
         rho3 = rho2 * rho;
         rho4 = rho3 * rho;
         rho5 = rho4 * rho;

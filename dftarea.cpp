@@ -1473,9 +1473,7 @@ qDebug() << "rec" << left << top << width << height;
     qDebug() << "Rho " << r0 << "Theta" << t0;
 
 
-
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
-    zpolar.init(r0,t0,100);
+    zernikePolar zpolar(r0,t0,100);
 
 // debug print the difference
 //    for (int i = 0; i < 100; ++i){

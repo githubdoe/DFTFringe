@@ -435,7 +435,6 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
 
     std::vector<bool> &en = zernEnables;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
     for (int i = 0; i <  wx; ++i)
     {
         double x1 = (double)(i - (xcen)) / rad;
@@ -448,7 +447,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
             {
                 double S1 = 0;
                 double theta = atan2(y1,x1);
-                zpolar.init(rho,theta,zernsToUse.size());
+                zernikePolar zpolar(rho, theta, zernsToUse.size());
                 for (int ii = 0; ii < zernsToUse.size(); ++ii) {
                     int z = zernsToUse[ii];
 
@@ -745,7 +744,6 @@ void SurfaceManager::useDemoWaveFront(){
     double rho;
     mirrorDlg *md = mirrorDlg::get_Instance();
     cv::Mat result = cv::Mat::zeros(wx,wx, numType);
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
     for (int i = 0; i <  wx; ++i)
     {
         double x1 = (double)(i - (xcen)) / rad;
@@ -754,7 +752,7 @@ void SurfaceManager::useDemoWaveFront(){
             double y1 = (double)(j - (ycen )) /rad;
             rho = sqrt(x1 * x1 + y1 * y1);
             double theta = atan2(y1,x1);
-            zpolar.init(rho,theta,10);
+            zernikePolar zpolar(rho, theta, 10);
 
             if (rho <= 1.)
             {

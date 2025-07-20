@@ -54,7 +54,6 @@ void zernikeEditDlg::on_createSurface_clicked()
     double xcen = (size -1)/2.;
     double ycen = xcen;
     double rad = xcen - 1;
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
     for (int y = 0; y <  size; ++y)
     {
         double uy = (double)(y - (ycen)) / rad;
@@ -66,7 +65,7 @@ void zernikeEditDlg::on_createSurface_clicked()
             if (rho <= 1.)
             {
                 double theta = atan2(uy,ux);
-                zpolar.init(rho, theta, tableModel->rowCount());
+                zernikePolar zpolar(rho, theta, tableModel->rowCount());
                 double s1 = 0;
                 for (int z = 0; z < tableModel->rowCount(); ++z){
                     double v = tableModel->values[z];

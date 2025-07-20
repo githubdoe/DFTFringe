@@ -497,7 +497,6 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
     }
 
     double delta = 1./(wf.m_outside.m_radius);
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
     int sampleCnt = 0;
     for(int y = 0; y < ny; y += step) //for each point on the surface
     {
@@ -510,7 +509,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
 
             if ( rho <= 1. && (wf.mask.at<uchar>(y,x) != 0) && wf.data.at<double>(y,x) != 0.0){
                 double theta = atan2(uy,ux);
-                zpolar.init(rho, theta, zterms);
+                zernikePolar zpolar(rho, theta, zterms);
                 for ( int i = 0; i < zterms; ++i)
                 {
 
@@ -597,7 +596,6 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
         double sz,nz;
         double rho,theta;
         std::vector<int> rows, cols;
-        zernikePolar &zpolar = *zernikePolar::get_Instance();
         // make a list of points on the surface containing their rho and theta values as well as their
         // row column indexes in the matix that contanis the wave front.
         // annular wave fronts already have this made elsewhere.
@@ -613,11 +611,14 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
             // this mask test may not be needed any longer but don't have time to check that.
             if (mask.at<uint8_t>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0){
 
-                    rho = m_rhoTheta.row(0)(i);
-                    theta = m_rhoTheta.row(1)(i);
-                    if (!md->m_useAnnular){
-                        zpolar.init(rho,theta, Z_TERMS);
-                    }
+                // Declare zernikePolar pointer, construct later if needed
+                zernikePolar* zpolar = nullptr;
+                
+                rho = m_rhoTheta.row(0)(i);
+                theta = m_rhoTheta.row(1)(i);
+                if (!md->m_useAnnular){
+                    zpolar = new zernikePolar(rho,theta, Z_TERMS);
+                }
 
                 sz = unwrapped.at<double>(y,x);
                 nz = 0;
@@ -626,7 +627,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 {
                     if (md->doNull && enables[8]){
                         if (!md->m_useAnnular)
-                            nz -= scz8 * zpolar.zernike(8);
+                            nz -= scz8 * zpolar->zernike(8);
                         else {
                             nz -= scz8 * m_zerns(i, 8);
                         }
@@ -636,21 +637,27 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 for (int z = start_term; z < Z_TERMS; ++z)
                 {
                     if ((z == 3) && doDefocus){
-                        nz += defocus * zpolar.zernike(z);
-                        nz -= zerns[z] * zpolar.zernike(z);
-
-                    }
-
-                    else if (!enables[z]){
-                        if (!md->m_useAnnular)
-                             nz -= zerns[z] * zpolar.zernike(z);
+                        if (!md->m_useAnnular) {
+                            nz += defocus * zpolar->zernike(z);
+                            nz -= zerns[z] * zpolar->zernike(z);
+                        }
                         else {
-
-                            nz -= zerns[z] * m_zerns(i,z) ;
-
+                            nz += defocus * m_zerns(i,z);
+                            nz -= zerns[z] * m_zerns(i,z);
                         }
                     }
+                    else if (!enables[z]){
+                        if (!md->m_useAnnular) {
+                            nz -= zerns[z] * zpolar->zernike(z);
+                        }
+                        else {
+                            nz -= zerns[z] * m_zerns(i,z);
+                        }
+                    }
+                }
 
+                if (!md->m_useAnnular){
+                    delete zpolar;
                 }
 
                 nulled.at<double>(y,x) = sz +nz;
@@ -666,8 +673,6 @@ void zernikeProcess::fillVoid(wavefront &wf){
     double rho,theta;
     mirrorDlg *md = mirrorDlg::get_Instance();
     bool useannular = md->m_useAnnular;
-
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
 
     if (wf.regions.size() > 0){
         int x = wf.regions[0][0].x;
@@ -719,7 +724,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
                             theY.push_back(y);
                         }
                         else {
-                            zpolar.init(rho, theta, wf.InputZerns.size());
+                            zernikePolar zpolar(rho, theta, wf.InputZerns.size());
                             double v = 0.;
 
                             for (size_t z = 0; z < wf.InputZerns.size(); ++z){
@@ -803,7 +808,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
                         theY.push_back(y);
                     }
                     else{
-                        zpolar.init(rho, theta, wf.InputZerns.size());
+                        zernikePolar zpolar(rho, theta, wf.InputZerns.size());
                         double v = 0.;
 
                         for (size_t z = 0; z < wf.InputZerns.size(); ++z){
