@@ -57,7 +57,6 @@ public:
     QRadioButton *OneOnly;
     QRadioButton *Show16;
     QRadioButton *ShowAll;
-    int type;
     double m_showSurface;
     double m_showNm;
     bool zoomed;
@@ -91,6 +90,11 @@ public slots:
     void make_correction_graph();
     //QPolygonF createZernProfile(wavefront *wf);
 private:
+    enum class ProfileType {
+        SHOW_ONE = 0,
+        SHOW_16 = 1,
+        SHOW_ALL = 2
+    };
 
     void updateGradient();
     bool dragging;
@@ -101,8 +105,8 @@ private:
     QPushButton *showPercentCorrection;
     QDoubleSpinBox *slopeLimitSB;
     double m_defocusValue;
+    ProfileType type;
 
-private:
     Ui::ProfilePlot *ui;
     bool m_defocus_mode;
     cv::Mat_<double> m_defocus_wavefront;
