@@ -58,8 +58,8 @@ extern double outputLambda;
 #include <fstream>
 #include <cmath>
 #include "percentcorrectiondlg.h"
-#define PITORAD  M_PI/180.;
-double g_angle = 270. * PITORAD; //start at 90 deg (pointing east)
+#define DEGTORAD  M_PI/180.;
+double g_angle = 270. * DEGTORAD; //start at 90 deg (pointing east)
 double y_offset = 0.;
 
 
@@ -282,12 +282,12 @@ void ProfilePlot::newDisplayErrorRange(double min, double max){
 void ProfilePlot::angleChanged(double a){
     if (m_wf == 0)
         return;
-    g_angle = a * PITORAD;
+    g_angle = a * DEGTORAD;
 
     if (type == 2 || type == 0)
         populate();
     m_plot->replot();
-    emit profileAngleChanged(M_2_PI - g_angle +M_PI/4.);
+    emit profileAngleChanged(M_PI_2 - g_angle);
 }
 void ProfilePlot::wheelEvent(QWheelEvent *event)
 {
