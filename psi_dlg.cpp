@@ -68,7 +68,6 @@ void PSI_dlg::on_browse_clicked()
             QFileInfo a(files.first());
             settings.setValue("lastPath",a.absoluteFilePath());
             //m_surfaceManager->process_psi(dialog.selectedFiles());
-            QStringList files = dialog.selectedFiles();
             ui->igramList->addItems(files);
             double deltaAngle = ui->PSIPhaseValue->value();
             int index = 0;
