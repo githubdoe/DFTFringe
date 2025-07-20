@@ -1796,6 +1796,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 qDebug() << "plain text"<< text;
                 QApplication::setOverrideCursor(Qt::WaitCursor);
                 QProcess *proc = new QProcess;
+                connect(proc, &QProcess::finished, proc, &QObject::deleteLater);
                 connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
                     [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus << "code" << exitCode; });
 
@@ -1806,22 +1807,23 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 proc->start("ffmpeg",args.mid(1));
 
 
-                while (!proc->waitForFinished(200)){
-                    QString q = proc->readAll();
-                    if (q != "")
-                        textEdit->append(q);
-                    QApplication::processEvents();
-                }
+                connect(proc, &QProcess::readyRead, [proc, textEdit]() {
+                    QString output = proc->readAll();
+                    if (!output.isEmpty())
+                        textEdit->append(output);
+                });
+
+                QEventLoop loop;
+                connect(proc, &QProcess::finished, &loop, &QEventLoop::quit);
+                loop.exec();
 
                 qDebug() << "done" ;
+       
 
-                proc->waitForFinished();
-                QString out = proc->readAll() ;
                 QApplication::restoreOverrideCursor();
 
-                QString fn = dir + "/" + args[args.length()-1];
+                QString fn = dir + "/" + args.last();
                 QDesktopServices::openUrl(fn);
-
             }
         }
 
