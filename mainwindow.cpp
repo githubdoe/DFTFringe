@@ -475,8 +475,8 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     ui->useAnnulust->hide();
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
-            loadFile(dialog.selectedFiles().first());
-
+            QStringList selectedFiles = dialog.selectedFiles();
+            loadFile(selectedFiles.first());
         }
         else{
             m_igramsToProcess = dialog.selectedFiles();
