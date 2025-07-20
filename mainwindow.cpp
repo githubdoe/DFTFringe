@@ -1764,8 +1764,9 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
         if (QMessageBox::Yes == QMessageBox::question(0,"---------- 3D  wave front Video maker -------------","Do you have FFMpeg and want it to make a video from these images?"))
 
         {
-            QString cmd = QString("ffmpeg -framerate 1 -i %1%03d.jpg -c:v libx264 -vf format=yuv420p -y -r 25 %2").arg(dowavefront? waveprefix:astigprefix).  \
-                    arg(dowavefront? "waveFronts.mp4": "astig.mp4");
+            QString cmd = QString("ffmpeg -framerate 1 -i %1%03d.jpg -c:v libx264 -vf format=yuv420p -y -r 25 %2")
+                .arg(dowavefront ? waveprefix : astigprefix, 
+                    dowavefront ? "waveFronts.mp4" : "astig.mp4");
 
             bool ok = false;
             QString text = QInputDialog::getText(this,
