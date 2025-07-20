@@ -181,20 +181,17 @@ void ContourPlot::showContoursChanged(double val){
 }
 
 void ContourPlot::applyZeroOffset(bool useMiddle){
-    double min,max;
-    max = m_wf->max;
-    min = m_wf->min;
+    //double max = m_wf->max;
+    double min = m_wf->min;
     if (useMiddle){
         zOffset = 0.;
         m_useMiddleOffset = true;
-
     }
     else {
         zOffset = min;
         m_useMiddleOffset = false;
-        max -= zOffset;
-        min -= zOffset;
-
+        //max -= zOffset;
+        //min -= zOffset;
     }
     setZRange();
 

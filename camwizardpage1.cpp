@@ -246,7 +246,7 @@ void CamWizardPage1::on_compute_clicked()
                     std::vector<cv::KeyPoint> keypoints;
                     detector.detect( dial, keypoints);
 
-                    int horz = 1;
+                    /*int horz = 1;
                     int vert = 1;
                     for (std::size_t ndx = 1; ndx < keypoints.size(); ++ndx){
                         float del = keypoints[ndx-1].pt.x - keypoints[ndx].pt.x;
@@ -258,7 +258,7 @@ void CamWizardPage1::on_compute_clicked()
                             horz = 1;
                             ++vert;
                         }
-                    }
+                    }*/
 
                 }
             }
