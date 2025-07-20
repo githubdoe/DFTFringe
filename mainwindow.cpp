@@ -1778,11 +1778,11 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 QDialog *dialog = new QDialog;
                 dialog->setWindowTitle("ffmpeg output");
                 dialog->resize(1000,1000);
-                QTextEdit *textEdit = new QTextEdit();
+                QTextEdit *textEdit = new QTextEdit(dialog);
 
-                QPushButton *closeButton = new QPushButton("Close");
+                QPushButton *closeButton = new QPushButton("Close", dialog);
 
-                QVBoxLayout *layout = new QVBoxLayout;
+                QVBoxLayout *layout = new QVBoxLayout(dialog);
                 layout->addWidget(textEdit);
                 layout->addWidget(closeButton);
 
@@ -1800,14 +1800,23 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
                     [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus << "code" << exitCode; });
 
+                // ensure we kill ffmpeg if the dialog is closed
+                connect(dialog, &QDialog::finished, dialog, [=](int) {
+                    if (proc->state() == QProcess::Running) {
+                        proc->kill();
+                        proc->waitForFinished();
+                        qDebug() << "ffmpeg Process killed by user";
+                    }
+                });
+
                 proc->setProcessChannelMode(QProcess::MergedChannels);
                 proc->setWorkingDirectory(dir);
-                QStringList args = text.split(" ");
+                QStringList args = QProcess::splitCommand(text);
                 qDebug() << "args" << args.mid(1);
                 proc->start("ffmpeg",args.mid(1));
 
 
-                connect(proc, &QProcess::readyRead, [proc, textEdit]() {
+                connect(proc, &QProcess::readyRead, textEdit, [proc, textEdit]() {
                     QString output = proc->readAll();
                     if (!output.isEmpty())
                         textEdit->append(output);
