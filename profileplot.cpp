@@ -76,7 +76,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     m_defocus_mode = false;
     m_plot = new QwtPlot(this);
     new profilePlotPicker(m_plot);
-    type = 0;
+    type = ProfileType::SHOW_ONE;
     QHBoxLayout * l1 = new QHBoxLayout();
     QVBoxLayout *v1 = new QVBoxLayout();
     showNmCB = new QCheckBox("Show in Nanometers",this);
@@ -237,18 +237,18 @@ void ProfilePlot::showSurface(bool flag){
 }
 
 void ProfilePlot::showOne(){
-    type = 0;
+    type = ProfileType::SHOW_ONE;
     m_pcdlg->close();
     populate();
     m_plot->replot();
 }
 void ProfilePlot::show16(){
-    type = 1;
+    type = ProfileType::SHOW_16;
     populate();
     m_plot->replot();
 }
 void ProfilePlot::showAll(){
-    type = 2;
+    type = ProfileType::SHOW_ALL;
     m_pcdlg->close();
     populate();
     m_plot->replot();
@@ -284,7 +284,7 @@ void ProfilePlot::angleChanged(double a){
         return;
     g_angle = a * DEGTORAD;
 
-    if (type == 2 || type == 0)
+    if (type == ProfileType::SHOW_ONE || type == ProfileType::SHOW_ALL)
         populate();
     m_plot->replot();
     emit profileAngleChanged(M_PI_2 - g_angle);
@@ -442,7 +442,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffs
             //else points << QPointF(radx,0.0);
     }
 
-    if (m_showSlopeError && ((type==1) || (type == 0) || (type == 2))){
+    if (m_showSlopeError){
         double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
         double xDel = points[0].x() - points[1].x();
         double hDelLimit =m_showNm *  m_showSurface * ((outputLambda/m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /(outputLambda * 1.e-6));
@@ -563,7 +563,7 @@ void ProfilePlot::populate()
 
 
         switch (type) {
-    case 0:{        // show one
+    case ProfileType::SHOW_ONE:{
         QStringList path = wfs->at(0)->name.split("/");
         QString name;
         int l = path.length();
@@ -585,7 +585,7 @@ void ProfilePlot::populate()
         break;
     }
 
-        case 1: {   // show 16 diameters
+        case ProfileType::SHOW_16: {
 
             surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
               QList<int> list = saTools->SelectedWaveFronts();
@@ -660,7 +660,7 @@ void ProfilePlot::populate()
 
               break;
           }
-    case 2:{    // show each wave front
+    case ProfileType::SHOW_ALL:{
 
         m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
         surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
