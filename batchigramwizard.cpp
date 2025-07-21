@@ -43,7 +43,6 @@ batchIgramWizard::batchIgramWizard(QStringList files, QWidget *parent, Qt::Windo
     layout << QWizard::Stretch << QWizard::CancelButton;
     setButtonLayout(layout);
     resize(800,600);
-    emit swapBathConnections(true);
 }
 
 batchIgramWizard::~batchIgramWizard()
