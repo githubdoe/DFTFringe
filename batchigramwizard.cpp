@@ -277,7 +277,6 @@ void batchIgramWizard::showPlots(bool flags){
 
 void batchIgramWizard::on_batchIgramWizard_finished(int /*result*/)
 {
-    //emit swapBathConnections(false);
 }
 
 void batchIgramWizard::select(int n){

@@ -475,8 +475,7 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     ui->useAnnulust->hide();
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
-            QStringList selectedFiles = dialog.selectedFiles();
-            loadFile(selectedFiles.first());
+            loadFile(dialog.selectedFiles().constFirst());
         }
         else{
             m_igramsToProcess = dialog.selectedFiles();
@@ -1303,7 +1302,6 @@ void MainWindow::batchProcess(QStringList fileList){
 void MainWindow::Batch_Process_Interferograms()
 {
     batchWiz = new batchIgramWizard(m_igramsToProcess, this,Qt::Window);
-    connect(batchWiz,SIGNAL(swapBathConnections(bool)),this, SLOT(batchConnections(bool)));
     batchConnections(true);
     //connect(batchIgramWizard::goPb, &QPushButton::pressed, this, &MainWindow::batchProcess);
     connect(batchWiz, SIGNAL(finished(int)), this, SLOT(batchFinished(int)));
