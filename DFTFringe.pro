@@ -55,6 +55,7 @@ win32 {
     LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui460
     LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs460
     LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc460
+    LIBS += -ldbghelp # for SetUnhandledExceptionFilter
 
 
     # This is for armadillo to not use wrapper. See https://gitlab.com/conradsnicta/armadillo-code#6-linux-and-macos-compiling-and-linking
