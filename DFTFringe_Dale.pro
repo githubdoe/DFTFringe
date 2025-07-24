@@ -61,6 +61,7 @@ SOURCES += main.cpp \
     surfacemanager.cpp \
     zapm.cpp \
     zernikedlg.cpp \
+    zernikepolar.cpp \
     zernikeprocess.cpp \
     mirrordlg.cpp \
     zernikes.cpp \
@@ -183,6 +184,7 @@ HEADERS  += mainwindow.h \
     surfaceanalysistools.h \
     surfacemanager.h \
     zernikedlg.h \
+    zernikepolar.h \
     zernikeprocess.h \
     mirrordlg.h \
     zernikes.h \
