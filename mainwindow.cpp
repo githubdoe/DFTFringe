@@ -475,8 +475,8 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     ui->useAnnulust->hide();
     if (dialog.exec()){
         if (dialog.selectedFiles().size() == 1){
-            loadFile(dialog.selectedFiles().first());
-
+            QStringList selectedFiles = dialog.selectedFiles();
+            loadFile(selectedFiles.first());
         }
         else{
             m_igramsToProcess = dialog.selectedFiles();
@@ -1764,8 +1764,9 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
         if (QMessageBox::Yes == QMessageBox::question(0,"---------- 3D  wave front Video maker -------------","Do you have FFMpeg and want it to make a video from these images?"))
 
         {
-            QString cmd = QString("ffmpeg -framerate 1 -i %1%03d.jpg -c:v libx264 -vf format=yuv420p -y -r 25 %2").arg(dowavefront? waveprefix:astigprefix).  \
-                    arg(dowavefront? "waveFronts.mp4": "astig.mp4");
+            QString cmd = QString("ffmpeg -framerate 1 -i %1%03d.jpg -c:v libx264 -vf format=yuv420p -y -r 25 %2")
+                .arg(dowavefront ? waveprefix : astigprefix, 
+                    dowavefront ? "waveFronts.mp4" : "astig.mp4");
 
             bool ok = false;
             QString text = QInputDialog::getText(this,
@@ -1777,11 +1778,11 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 QDialog *dialog = new QDialog;
                 dialog->setWindowTitle("ffmpeg output");
                 dialog->resize(1000,1000);
-                QTextEdit *textEdit = new QTextEdit();
+                QTextEdit *textEdit = new QTextEdit(dialog);
 
-                QPushButton *closeButton = new QPushButton("Close");
+                QPushButton *closeButton = new QPushButton("Close", dialog);
 
-                QVBoxLayout *layout = new QVBoxLayout;
+                QVBoxLayout *layout = new QVBoxLayout(dialog);
                 layout->addWidget(textEdit);
                 layout->addWidget(closeButton);
 
@@ -1795,32 +1796,43 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 qDebug() << "plain text"<< text;
                 QApplication::setOverrideCursor(Qt::WaitCursor);
                 QProcess *proc = new QProcess;
+                QObject::connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)), proc, SLOT(deleteLater()));
                 connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
                     [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus << "code" << exitCode; });
 
+                // ensure we kill ffmpeg if the dialog is closed
+                connect(dialog, &QDialog::finished, dialog, [=](int) {
+                    if (proc->state() == QProcess::Running) {
+                        proc->kill();
+                        proc->waitForFinished();
+                        qDebug() << "ffmpeg Process killed by user";
+                    }
+                });
+
                 proc->setProcessChannelMode(QProcess::MergedChannels);
                 proc->setWorkingDirectory(dir);
-                QStringList args = text.split(" ");
+                QStringList args = QProcess::splitCommand(text);
                 qDebug() << "args" << args.mid(1);
                 proc->start("ffmpeg",args.mid(1));
 
 
-                while (!proc->waitForFinished(200)){
-                    QString q = proc->readAll();
-                    if (q != "")
-                        textEdit->append(q);
-                    QApplication::processEvents();
-                }
+                connect(proc, &QProcess::readyRead, textEdit, [proc, textEdit]() {
+                    QString output = proc->readAll();
+                    if (!output.isEmpty())
+                        textEdit->append(output);
+                });
+
+                QEventLoop loop;
+                QObject::connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)), &loop, SLOT(quit()));
+                loop.exec();
 
                 qDebug() << "done" ;
+       
 
-                proc->waitForFinished();
-                QString out = proc->readAll() ;
                 QApplication::restoreOverrideCursor();
 
-                QString fn = dir + "/" + args[args.length()-1];
+                QString fn = dir + "/" + args.last();
                 QDesktopServices::openUrl(fn);
-
             }
         }
 

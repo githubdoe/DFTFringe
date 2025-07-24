@@ -246,7 +246,7 @@ void CamWizardPage1::on_compute_clicked()
                     std::vector<cv::KeyPoint> keypoints;
                     detector.detect( dial, keypoints);
 
-                    int horz = 1;
+                    /*int horz = 1;
                     int vert = 1;
                     for (std::size_t ndx = 1; ndx < keypoints.size(); ++ndx){
                         float del = keypoints[ndx-1].pt.x - keypoints[ndx].pt.x;
@@ -258,7 +258,7 @@ void CamWizardPage1::on_compute_clicked()
                             horz = 1;
                             ++vert;
                         }
-                    }
+                    }*/
 
                 }
             }
@@ -462,7 +462,6 @@ void CamWizardPage1::on_pushButton_2_clicked()
 
 void CamWizardPage1::showResuslts()
 {
-    QStringList parms;
     ui->xFv->setText(QString().number(cameraMatrix.at<double>(0,0)));
     ui->yFv->setText(QString().number(cameraMatrix.at<double>(1,1)));
     ui->XFc->setText(QString().number(cameraMatrix.at<double>(0,2)));
@@ -473,7 +472,6 @@ void CamWizardPage1::showResuslts()
     ui->P1->setText(QString().number(distCoeffs.at<double>(0,2)));
     ui->P2->setText(QString().number(distCoeffs.at<double>(0,3)));
     ui->K3->setText(QString().number(distCoeffs.at<double>(0,4)));
-
 }
 
 void CamWizardPage1::on_currentLens_clicked()

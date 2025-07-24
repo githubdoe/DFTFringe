@@ -18,7 +18,7 @@ public:
     QString find(const QPointF &p)const;
     QwtPlot *m_plot;
 signals:
-    void selected(const QString);
+    void mySelected(const QString);
 public slots:
 };
 

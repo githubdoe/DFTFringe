@@ -128,10 +128,10 @@ QMap<double,int > histo(const QList<double> data, int bins){
     {
         intervals[ *minma.first + histInterval * (i+1)] = 0;
     }
-    QVector<double> keys = intervals.keys().toVector();
+    const QList<double>& keys = intervals.keys();
     for (int i = 0; i < data.size(); ++i){
         for (int j = 0; j < bins; ++j){
-            if (data[i]<= keys[j]) {
+            if (data[i] <= keys[j]) {
                 ++intervals[keys[j]];
                 break;
             }

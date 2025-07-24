@@ -30,7 +30,6 @@ astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :
     chart->addAxis(radialAxis, QPolarChart::PolarOrientationRadial);
     double maxAstig = 1.;
 
-    QVector<wavefront *>  wavefronts =SurfaceManager::get_instance()->m_wavefronts;
     QScreen *screen = QGuiApplication::primaryScreen();
     qreal screenDPI = screen->physicalDotsPerInchX();
     int pensize = 5 * screenDPI/256.;  // adjust pen size to screen resolution.  256 is DPI of my 4K 17 inch laptop
@@ -127,7 +126,7 @@ int astigPolargraph::findClosestPoint(const QPointF clickedPoint){
     qreal distance(INT_MAX);
     int closeNdx = -1;
     int ndx = 0;
-    for (auto sample : m_list) {
+    for (const auto& sample : m_list) {
         QPointF currentPoint(sample.m_xastig, sample.m_yastig);
         qreal currentDistance = qSqrt((currentPoint.x() - clickedPoint.x())
                                       * (currentPoint.x() - clickedPoint.x())
