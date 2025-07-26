@@ -30,6 +30,7 @@
 #include <QLabel>
 #include <QShortcut>
 #include <opencv2/core/core_c.h>
+using namespace cv;
 
 
 cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,

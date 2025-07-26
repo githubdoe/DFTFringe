@@ -28,7 +28,7 @@
 #include <string>
 #include "psi_dlg.h"
 #include "psiphasedisplay.h"
-using namespace cv;
+
 extern void showData(const std::string& txt, cv::Mat mat, bool useLog = false);
 extern QImage showMag(cv::Mat complexI, bool show = false, const char *title = "FFT", bool doLog = true, double gamma = 0);
 extern void shiftDFT(cv::Mat &magI);
