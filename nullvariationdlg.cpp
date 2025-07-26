@@ -9,6 +9,7 @@
 #include <qwt_plot_grid.h>
 #include <qwt_plot_marker.h>
 #include <qwt_symbol.h>
+#include <qwt_text.h>
 #include <QSettings>
 #include "QLayout"
 #include "plotcolor.h"

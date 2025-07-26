@@ -9,7 +9,7 @@
 #include "utils.h"
 #include <opencv2/imgproc.hpp>
 
-void showData(const std::string &txt, Mat mat, bool useLog);
+void showData(const std::string &txt, cv::Mat mat, bool useLog);
 averageWaveFrontFilesDlg::averageWaveFrontFilesDlg(QStringList list, SurfaceManager *m, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::averageWaveFrontFilesDlg)

@@ -173,13 +173,13 @@ double PSI_dlg::tolerance(){
     return ui->tolerance->value();
 }
 
-void PSI_dlg::on_PSIPhaseValue_valueChanged(const QString &arg1)
+void PSI_dlg::on_PSIPhaseValue_valueChanged(double arg1)
 {
     QSettings set;
 
     ui->PhaseList->clear();
     m_phases.clear();
-    double angle = arg1.toDouble();
+    double angle = arg1;
     set.setValue("PSIPhaseValue", angle);
     for (int i = 0; i < ui->igramList->count(); ++i){
         double ang2 = angle * i;

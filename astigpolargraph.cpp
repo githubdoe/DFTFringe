@@ -1,6 +1,7 @@
 #include "astigpolargraph.h"
 #include "ui_astigpolargraph.h"
 #include "surfacemanager.h"
+#include <QtCharts/QLegendMarker>
 
 
 astigPolargraph::astigPolargraph(    QList<astigSample>list, QWidget *parent) :

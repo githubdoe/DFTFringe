@@ -12,6 +12,7 @@
 #include <qwt_interval_symbol.h>
 #include <qwt_plot_intervalcurve.h>
 #include <qwt_scale_engine.h>
+#include <qwt_scale_map.h>
 #include <qwt_plot_marker.h>
 #include <QDebug>
 #include <math.h>
@@ -26,6 +27,7 @@
 #include <qwt_plot_panner.h>
 #include <QScrollArea>
 #include <QGroupBox>
+#include <QPen>
 #include <QPrinter>
 #include <QTextDocument>
 #include <QTextEdit>
@@ -53,7 +55,7 @@ public:
     Zoomer( QWidget *canvas, QwtPlot * plot ):
         QwtPlotZoomer( canvas ),mPlot(plot)
     {
-        setRubberBandPen( QColor( Qt::lightGray ) );
+        setRubberBandPen( QPen( Qt::lightGray ) );
         setTrackerMode( QwtPlotPicker::AlwaysOn );
     }
 

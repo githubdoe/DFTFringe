@@ -17,10 +17,10 @@
 ****************************************************************************/
 #include "settingsprofile.h"
 #include "ui_settingsprofile.h"
+#include "spdlog/spdlog.h"
 #include <QSettings>
 #include <QColorDialog>
 #include <QWidget>
-#include "spdlog/spdlog.h"
 
 static inline QString colorButtonStyleSheet(const QColor &bgColor)
 {
@@ -50,13 +50,13 @@ settingsProfile::settingsProfile(QWidget *parent) :
 QColor settingsProfile::getColor(int num){
     QString name = QString("pushButton_%1").arg(1 + num%7);
     QPushButton *btn = findChild<QPushButton *>(name);
-    return btn->palette().color(QPalette::Background);
+    return btn->palette().color(QPalette::Window);
 }
 
 void settingsProfile::setColor(int num){
     QString name = QString("pushButton_%1").arg(num);
     QPushButton *btn = findChild<QPushButton *>(name);
-    QColor color = QColorDialog::getColor( btn->palette().color(QPalette::Background));
+    QColor color = QColorDialog::getColor( btn->palette().color(QPalette::Window));
     btn->setStyleSheet(colorButtonStyleSheet(color));
     QSettings set;
     set.setValue("profile color "+name, color.name());

@@ -42,6 +42,7 @@
 #include <qwt_plot_shapeitem.h>
 #include <QSettings>
 #include <qwt_picker_machine.h>
+#include "spdlog/spdlog.h"
 
 
 double zOffset = 0;

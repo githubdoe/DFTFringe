@@ -8,7 +8,6 @@
 #include <QFileDialog>
 #include <QImageWriter>
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QScreen>
 using namespace cv;
 unwrapErrorsView::unwrapErrorsView(const wavefront &wf, QWidget *parent) :

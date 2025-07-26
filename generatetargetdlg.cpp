@@ -1,6 +1,7 @@
 #include "generatetargetdlg.h"
 #include "ui_generatetargetdlg.h"
-#include <QDesktopWidget>
+#include <QGuiApplication>
+#include <QScreen>
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -16,8 +17,9 @@ generateTargetDlg::generateTargetDlg(QWidget *parent) :
     ui(new Ui::generateTargetDlg), m_units(INCHES)
 {
     ui->setupUi(this);
-    m_dpix = qApp->desktop()->physicalDpiX();
-    m_dpiy = qApp->desktop()->physicalDpiY();
+    QScreen *screen = QGuiApplication::primaryScreen();
+    m_dpix = screen->physicalDotsPerInchX();
+    m_dpiy = screen->physicalDotsPerInchY();
     ui->printerGroup->hide();
     QSettings set;
     ui->rows->setValue(set.value("target rows", 10).toInt());
@@ -38,17 +40,9 @@ void generateTargetDlg::on_generate_clicked()
     int vsize;
 
     if (ui->fullScreen->isChecked()){
-        // make sure sizes are even
-       hsize = qApp->desktop()->width();
-       hsize/=2;
-       hsize *= 2;
-
-       vsize = qApp->desktop()->height();
-       vsize /=2;
-       vsize *= 2;
-
-
-
+       QScreen *screen = QGuiApplication::primaryScreen();
+       hsize = screen->geometry().width();
+       vsize = screen->geometry().height();
     }
     else {
         double mul = 1.;

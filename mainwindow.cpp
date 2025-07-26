@@ -17,6 +17,7 @@
 ****************************************************************************/
 #include "mainwindow.h" 
 #include "ui_mainwindow.h"
+#include "spdlog/spdlog.h"
 #include <QtWidgets>
 #include <iostream>
 #include <fstream>
@@ -47,7 +48,6 @@
 #include "utils.h"
 #include "colorchannel.h"
 #include "opencv2/opencv.hpp"
-#include "spdlog/spdlog.h"
 #include <QUrl>
 
 using namespace QtConcurrent;
@@ -209,7 +209,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QShortcut *shortcutl = new QShortcut(QKeySequence(Qt::Key_L), this);
     QObject::connect(shortcutl, SIGNAL(activated()), this, SLOT(on_actionLoad_Interferogram_triggered()));
 
-    QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_O), this);
+    QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_O), this);
     QObject::connect(shortcut1, SIGNAL(activated()), this, SLOT(on_actionLoad_Interferogram_triggered()));
 
     connect(m_dftTools,SIGNAL(doDFT()),m_dftArea,SLOT(doDFT()));
@@ -1265,7 +1265,7 @@ void MainWindow::batchProcess(QStringList fileList){
             if (batchIgramWizard::deletePreviousWave->isChecked()){
                 QVector<QString> zerns;
                 zerns << wf->name;
-                foreach(double v , wf->InputZerns){
+                for(const double &v : wf->InputZerns){
                     zerns << QString::number(v);
                 }
 
