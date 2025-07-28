@@ -40,9 +40,14 @@ void generateTargetDlg::on_generate_clicked()
     int vsize;
 
     if (ui->fullScreen->isChecked()){
+       // make sure sizes are even
        QScreen *screen = QGuiApplication::primaryScreen();
        hsize = screen->geometry().width();
+       hsize /= 2;
+       hsize *= 2;
        vsize = screen->geometry().height();
+       vsize /= 2;
+       vsize *= 2;
     }
     else {
         double mul = 1.;
