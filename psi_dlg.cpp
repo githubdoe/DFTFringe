@@ -65,7 +65,7 @@ void PSI_dlg::on_browse_clicked()
     dialog.setNameFilters(filters);
     if (dialog.exec()){
             QStringList files = dialog.selectedFiles();
-            QFileInfo a(files.first());
+            QFileInfo a(files.constFirst());
             settings.setValue("lastPath",a.absoluteFilePath());
             //m_surfaceManager->process_psi(dialog.selectedFiles());
             ui->igramList->addItems(files);
