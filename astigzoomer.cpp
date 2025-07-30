@@ -3,11 +3,12 @@
 #include <qwt_plot.h>
 #include <qwt_plot_marker.h>
 #include <QtMath>
+#include <QPen>
 
 astigZoomer::astigZoomer( QWidget *canvas, QwtPlot * plot ):
     QwtPlotZoomer( canvas ),mPlot(plot)
 {
-    setRubberBandPen( QColor( Qt::lightGray ) );
+    setRubberBandPen( QPen( Qt::lightGray ) );
     setTrackerMode( QwtPlotPicker::AlwaysOn );
 }
 

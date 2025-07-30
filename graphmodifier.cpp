@@ -39,9 +39,6 @@
 #include <QtWidgets/QComboBox>
 #include <QtCore/qmath.h>
 
-using namespace QtDataVisualization;
-
-
 
 //! [0]
 GraphModifier::GraphModifier(Q3DBars *bargraph)

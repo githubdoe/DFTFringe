@@ -15,16 +15,16 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "boost/stacktrace.hpp"
 #include "mainwindow.h"
 #include <QApplication>
 #include "singleapplication.h"
 #include "messagereceiver.h"
 #include "utils.h"
 #include <QDebug>
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/rotating_file_sink.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "boost/stacktrace.hpp"
 
 
 static void my_terminate_handler() {

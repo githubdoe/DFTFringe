@@ -35,7 +35,7 @@ void ContourRulerParams::on_radialAngleSB_valueChanged(int arg1)
 void ContourRulerParams::on_setColorPB_clicked()
 {
 
-    QColor color = QColorDialog::getColor( ui->setColorPB->palette().color(QPalette::Background));
+    QColor color = QColorDialog::getColor( ui->setColorPB->palette().color(QPalette::Window));
 
     QSettings set;
     set.setValue("contourRulerColor", color.name());

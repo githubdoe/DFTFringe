@@ -37,7 +37,6 @@
 #include <QFileDialog>
 #include "surfacemanager.h"
 
-using namespace QtDataVisualization;
 OGLView::OGLView(QWidget *parent, ContourTools *m_tool) :
     QWidget(parent), m_spinRate(5)
 {
@@ -167,7 +166,6 @@ void OGLView::saveImage(){
 }
 #include <QApplication>
 #include "wavefront.h"
-#include <QDesktopWidget>
 void OGLView::showSelected()    // show all selected wavefronts as 3D plots
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);

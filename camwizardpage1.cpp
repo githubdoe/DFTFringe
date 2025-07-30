@@ -240,11 +240,11 @@ void CamWizardPage1::on_compute_clicked()
                 if (found)
                     break;
                 if ( i == 1){
-                    cv::SimpleBlobDetector detector;
+                    static Ptr<SimpleBlobDetector> detector = cv::SimpleBlobDetector::create();
 
                     // Detect blobs.
                     std::vector<cv::KeyPoint> keypoints;
-                    detector.detect( dial, keypoints);
+                    detector->detect( dial, keypoints);
 
                     /*int horz = 1;
                     int vert = 1;
@@ -329,13 +329,13 @@ void CamWizardPage1::on_compute_clicked()
             msg << "Grid of " << ui->columns->value() << " X " << ui->rows->value() << " not found. Press any key.";
             ui->Results->append("Pattern not found. Calibration failed.");
             // Set up the detector with default parameters.
-            cv::SimpleBlobDetector detector;
+            static Ptr<SimpleBlobDetector> detector = cv::SimpleBlobDetector::create();
 
             cv::threshold(raw,view, 200, 255, cv::THRESH_BINARY);
 
             // Detect blobs.
             std::vector<cv::KeyPoint> keypoints;
-            detector.detect( view, keypoints);
+            detector->detect( view, keypoints);
 
             // Draw detected blobs as red circles.
             // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob

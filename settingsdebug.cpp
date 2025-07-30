@@ -19,7 +19,6 @@
 #include "ui_settingsdebug.h"
 #include "spdlog/spdlog.h"
 #include <qsettings.h>
-#include "spdlog/spdlog.h"
 
 settingsDebug::settingsDebug(QWidget *parent) :
     QDialog(parent),

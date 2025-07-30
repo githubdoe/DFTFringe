@@ -41,7 +41,7 @@ private slots:
 
     void on_PhaseApproximate_clicked(bool checked);
 
-    void on_PSIPhaseValue_valueChanged(const QString &arg1);
+    void on_PSIPhaseValue_valueChanged(double arg1);
 
     void on_computePhase_clicked();
 
