@@ -393,6 +393,8 @@ LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
 #LIBS += D:\armadillo\bin\libarmadillo.dll
 LIBS += D:\lapack\build64\bin\liblapack.dll
 LIBS += D:\lapack\build64\bin\libblas.dll
+
+LIBS += -ldbghelp # for SetUnhandledExceptionFilter
 }
 
 
