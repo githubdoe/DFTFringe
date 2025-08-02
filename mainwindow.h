@@ -273,8 +273,6 @@ private slots:
 
     void on_actionastig_in_polar_triggered();
 
-    void on_actiondebugSomething_triggered();
-
     void on_actionStop_auto_invert_triggered();
 
 private:
