@@ -34,9 +34,21 @@ class SpectrogramData2: public QwtRasterData
 public:
     SpectrogramData2()
     {
-        setInterval( Qt::XAxis, QwtInterval( -5, 5 ) );
-        setInterval( Qt::YAxis, QwtInterval( -5, 5 ) );
-        setInterval( Qt::ZAxis, QwtInterval( -25, 25) );
+    }
+
+    QwtInterval interval(Qt::Axis axis) const override
+    {
+        switch (axis)
+        {
+            case Qt::XAxis:
+                return QwtInterval(-5, 5);
+            case Qt::YAxis:
+                return QwtInterval(-5, 5);
+            case Qt::ZAxis:
+                return QwtInterval(-25, 25);
+            default:
+                return QwtInterval();
+        }
     }
 
     virtual double value( double x, double y ) const

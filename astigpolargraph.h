@@ -11,7 +11,6 @@
 #include "wavefront.h"
 #include <QTableWidgetItem>
 
-QT_CHARTS_USE_NAMESPACE
 namespace Ui {
 class astigPolargraph;
 }

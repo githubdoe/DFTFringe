@@ -23,8 +23,9 @@
 #include <opencv2/opencv.hpp>
 #include <QTimer>
 #include <QtDataVisualization/Q3DSurface>
+
 class arcSecScaleDraw;
-using namespace QtDataVisualization;
+
 namespace Ui {
 class SimulationsView;
 }

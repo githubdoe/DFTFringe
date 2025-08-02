@@ -39,7 +39,6 @@
 #include "dftcolormap.h"
 #include <QLabel>
 
-using namespace QtDataVisualization;
 extern double maxHeightSelections[];
 class SurfaceGraph : public QObject
 {
