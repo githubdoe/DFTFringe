@@ -1,9 +1,9 @@
 #include "settingsGeneral2.h"
 #include "ui_settingsgeneral2.h"
+#include "spdlog/spdlog.h"
 #include <QSettings>
 #include "contourrulerparams.h"
 #include <QMessageBox>
-#include "spdlog/spdlog.h"
 
 extern double outputLambda;
 

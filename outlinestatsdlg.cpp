@@ -5,6 +5,7 @@
 #include <qwt_plot_curve.h>
 #include <qwt_plot_grid.h>
 #include <QMessageBox>
+#include <QPen>
 #include <qwt_scale_draw.h>
 #include <qwt_legend.h>
 #include <qwt_plot_zoomer.h>
@@ -18,7 +19,7 @@ public:
     outlineZoomer(outlineStatsDlg *dlg, QWidget *canvas, QwtPlot * plot ):
         QwtPlotZoomer( canvas ), mPlot(plot), m_outlines(*dlg)
     {
-        setRubberBandPen( QColor( Qt::lightGray ) );
+        setRubberBandPen( QPen( Qt::lightGray ) );
         setTrackerMode( QwtPlotPicker::AlwaysOn );
     }
 

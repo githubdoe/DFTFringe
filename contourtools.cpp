@@ -114,12 +114,12 @@ void ContourTools::on_ColorMapCB_activated(int index)
 
 
 
-void ContourTools::on_zeroOffsetCB_activated(const QString &arg1)
+void ContourTools::on_zeroOffsetCB_textActivated(const QString &arg1)
 {
     emit contourZeroOffsetChanged(arg1);
 }
 
-void ContourTools::on_colorRangeCB_activated(const QString &arg1)
+void ContourTools::on_colorRangeCB_textActivated(const QString &arg1)
 {
     ui->errorRangeSpin->setEnabled(arg1 == "Fractions of Wave");
     emit contourColorRangeChanged(arg1);

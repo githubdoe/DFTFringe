@@ -542,12 +542,12 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
         }
     }
 
-    cv::solve(A,B,X,(useSvd)? DECOMP_SVD : DECOMP_LU);
+    cv::solve(A,B,X,(useSvd)? cv::DECOMP_SVD : cv::DECOMP_LU);
     if (settings.m_general->showConditionNumbers()){
         cv::Mat Ai;
 
-        double conditionNumber = 1./cv::invert(A,Ai,DECOMP_SVD);
-        double c2 = cv::norm(A,NORM_L2) * cv::norm(Ai,NORM_L2);
+        double conditionNumber = 1./cv::invert(A,Ai,cv::DECOMP_SVD);
+        double c2 = cv::norm(A,cv::NORM_L2) * cv::norm(Ai,cv::NORM_L2);
         emit statusBarUpdate(QString(" Zernike LSF matrix Condition Numbers %1 %2").arg(conditionNumber, 6, 'f', 3).arg(c2, 6, 'f', 3),1);
     }
     wf.InputZerns = std::vector<double>(zterms,0);
@@ -952,7 +952,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
     double r,g,b;
     spectral_color(r,g,b, md->lambda);
     if (doColor) {
-        result =  Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
+        result =  cv::Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
     }
 
 
@@ -1002,9 +1002,9 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
                 if (rho < obs)
                     continue;
                 int iv = cos(spacing *2 * M_PI * S1) * 100 + 120;
-                result.at<Vec4b>(y,x)[0] = iv * b;
-                result.at<Vec4b>(y,x)[1] = iv * g;
-                result.at<Vec4b>(y,x)[2] = iv * r;
+                result.at<cv::Vec4b>(y,x)[0] = iv * b;
+                result.at<cv::Vec4b>(y,x)[1] = iv * g;
+                result.at<cv::Vec4b>(y,x)[2] = iv * r;
             }
             else {
                 if (S1 == 0.0) S1 += .0000001;
@@ -1329,7 +1329,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
         }
 
 
-    cv::solve(A,B,X, DECOMP_QR);
+    cv::solve(A,B,X, cv::DECOMP_QR);
 
     wf.InputZerns = std::vector<double>(ztermCnt,0);
     for (std::size_t z = 0;  z < static_cast<std::size_t>(X.rows); ++z){

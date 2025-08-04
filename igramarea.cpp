@@ -256,7 +256,7 @@ void IgramArea::doGamma(double gammaV){
 
 }
 
-Mat IgramArea::qImageToMat(QImage &img){
+cv::Mat IgramArea::qImageToMat(QImage &img){
     QImage::Format f = img.format();
     int depth = img.depth();
     int planesCnt = img.bitPlaneCount();
@@ -277,7 +277,7 @@ Mat IgramArea::qImageToMat(QImage &img){
      return iMat;
 }
 
-Mat IgramArea::igramToGray(cv::Mat roi){
+cv::Mat IgramArea::igramToGray(cv::Mat roi){
     // split image into three color planes
 
     cv::Mat planes[4];
@@ -324,17 +324,17 @@ Mat IgramArea::igramToGray(cv::Mat roi){
 cv::Mat toSobel(cv::Mat roi){
 
     /// Generate grad_x and grad_y
-    Mat grad_x, grad_y, grad;
-    Mat abs_grad_x, abs_grad_y;
+    cv::Mat grad_x, grad_y, grad;
+    cv::Mat abs_grad_x, abs_grad_y;
     int scale = 1;
     /// Gradient X
     //Scharr( src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
-    cv::Sobel( roi, grad_x, -1, 1, 0, 3, scale, 0, BORDER_DEFAULT );
+    cv::Sobel( roi, grad_x, -1, 1, 0, 3, scale, 0, cv::BORDER_DEFAULT );
     cv::convertScaleAbs( grad_x, abs_grad_x );
 
     /// Gradient Y
     //Scharr( src_gray, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
-    cv::Sobel( roi, grad_y, -1, 0, 1, 3, scale, 0, BORDER_DEFAULT );
+    cv::Sobel( roi, grad_y, -1, 0, 1, 3, scale, 0, cv::BORDER_DEFAULT );
     cv::convertScaleAbs( grad_y, abs_grad_y );
 
     /// Total Gradient (approximate)
@@ -384,11 +384,11 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
 
         double resp;
         cv::Point2d center = cv::phaseCorrelate(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
-                                                   noArray(), &resp);
+                                                   cv::noArray(), &resp);
         int x = cx - center.x;
         int y = cy - center.y;
 
-        Point2d c(x,y);
+        cv::Point2d c(x,y);
         if (cnt == 1){
            rmean = resp;
         }
@@ -474,11 +474,11 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
 
         double resp;
         cv::Point2d center = cv::phaseCorrelate(cv::Mat_<float>(gray),cv::Mat_<float>(circlem),
-                                                   noArray(), &resp);
+                                                   cv::noArray(), &resp);
         resp = fabs(resp);
 
         // compute location from the shift
-        Point2d c(cx - center.x, cy - center.y);
+        cv::Point2d c(cx - center.x, cy - center.y);
         if (showDebug){
             cv::Mat t = gray.clone();
             cv::circle(t, c, rad0, cv::Scalar(255), 1);
@@ -595,10 +595,10 @@ void IgramArea::findCenterHole(){
     int start = 10;
     int end = m_outside.m_radius/2 * scale;
     cv::Rect bounds;
-    Point2d firstPassCenter;
+    cv::Point2d firstPassCenter;
     int radius;
     int x,y;
-    Point2d bestc;
+    cv::Point2d bestc;
     if (useExisting){
         radius = m_center.m_radius;
         start = m_center.m_radius * scale -searchRange;
@@ -609,7 +609,7 @@ void IgramArea::findCenterHole(){
         bounds.height = 10;
         x = m_center.m_center.x();
         y = m_center.m_center.y();
-        firstPassCenter = Point2d(x,y);
+        firstPassCenter = cv::Point2d(x,y);
         bestc = firstPassCenter;
     }
     else {
@@ -621,7 +621,7 @@ void IgramArea::findCenterHole(){
         radius/= scale;
         if (useExisting)
             radius = m_center.m_radius;
-        firstPassCenter = Point2d(x,y);
+        firstPassCenter = cv::Point2d(x,y);
     }
 
     // phase 2 search for full size hole
@@ -681,12 +681,12 @@ void IgramArea::findCenterHole(){
 
         double resp;
         cv::Point2d center = cv::phaseCorrelate(cv::Mat_<float>(roi),cv::Mat_<float>(key),
-                                                   noArray(), &resp);
+                                                   cv::noArray(), &resp);
 
         int x = cx - center.x;
         int y = cy - center.y;
-        Point2d c(x,y);
-        Point2d secondPassCenter(x + left, y);
+        cv::Point2d c(x,y);
+        cv::Point2d secondPassCenter(x + left, y);
         // if center is more than 1/2 diameter away from outside center then reject
         int delx = abs(secondPassCenter.x - firstPassCenter.x);
         int dely = abs(secondPassCenter.y - firstPassCenter.y);
@@ -807,7 +807,7 @@ void IgramArea::findOutline(){
         emit statusBarUpdate(QString("margin %1 %2").arg(searchMargin).arg(radius),3);
     }
     else {
-      bestc = Point2d(m_outside.m_center.x(), m_outside.m_center.y());
+      bestc = cv::Point2d(m_outside.m_center.x(), m_outside.m_center.y());
       radius = m_outside.m_radius;
       searchMargin = set.value("outlineScanRange", 40).toInt();
 
@@ -837,7 +837,7 @@ void IgramArea::findOutline(){
                          2 * searchMargin, 2 * searchMargin);
 
     cv::Mat showRect = roi.clone();
-    cv::rectangle(showRect, centerBound, Scalar(255,255,255), 3);
+    cv::rectangle(showRect, centerBound, cv::Scalar(255,255,255), 3);
     bestc = findBestOutsideOutline(roi, radius + searchMargin, radius -searchMargin, -1, &radius, 2);
 
     m_searching_outside = false;
@@ -996,10 +996,10 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
         loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
 
     if (Settings2::getInstance()->m_igram->m_removeDistortion){
-        cv::Mat raw = imread(fileName.toStdString().c_str());
+        cv::Mat raw = cv::imread(fileName.toStdString().c_str());
         QStringList parms = Settings2::getInstance()->m_igram->m_lenseParms;
-        Mat camera = Mat::zeros(3,3,CV_64FC1);
-        Mat distortion =Mat::zeros(1,5, CV_64FC1);
+        cv::Mat camera = cv::Mat::zeros(3,3,CV_64FC1);
+        cv::Mat distortion =cv::Mat::zeros(1,5, CV_64FC1);
         camera.at<double>(0,0) = parms[6].toDouble();
         camera.at<double>(1,1) = camera.at<double>(0,0);
 
@@ -1014,13 +1014,13 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
         std::stringstream ss;
         ss  << "camera "<< camera << std::endl <<"distortion " << distortion;
         qDebug() << ss.str().c_str();
-        Mat corrected;
+        cv::Mat corrected;
 
-        Mat view, rview, map1, map2;
+        cv::Mat view, rview, map1, map2;
 
         undistort(raw, corrected, camera, distortion);
 
-        cvtColor(corrected,corrected, COLOR_BGR2RGB);
+        cv::cvtColor(corrected, corrected, cv::COLOR_BGR2RGB);
         loadedImage =  QImage((uchar*)corrected.data,
                               corrected.cols,
                               corrected.rows,
@@ -1859,7 +1859,7 @@ void IgramArea::resizeImage()
         double scalew = (double)parentWidget()->width()/(double)igramGray.width();
         newSize = gscrollArea->size();
         gscrollArea->setWidgetResizable(true);
-        scale = min(scaleh,scalew);
+        scale = cv::min(scaleh,scalew);
     }
     try {
         QImage newImage(newSize, QImage::Format_RGB888);

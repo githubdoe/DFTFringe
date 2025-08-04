@@ -7,7 +7,11 @@
 #include <qpainter.h>
 #include <QScreen>
 #include <QDebug>
-#define M_PI 3.14159265358979323846
+
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 PSIphaseDisplay::PSIphaseDisplay(QVector<double> phases,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::PSIphaseDisplay),m_useRadians(false)

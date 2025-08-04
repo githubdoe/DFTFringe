@@ -15,21 +15,76 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "boost/stacktrace.hpp"
 #include "mainwindow.h"
 #include <QApplication>
 #include "singleapplication.h"
 #include "messagereceiver.h"
 #include "utils.h"
 #include <QDebug>
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/rotating_file_sink.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "boost/stacktrace.hpp"
 
+#ifdef _WIN32
+    #include <Windows.h>
+    #include <DbgHelp.h>
+    #include <ctime>
+
+    LONG WINAPI MyUnhandledExceptionFilter(EXCEPTION_POINTERS* ExceptionInfo)
+    {
+        // Create a timestamped filename
+        time_t now = time(nullptr);
+        char filename[MAX_PATH];
+        strftime(filename, sizeof(filename), "DFTFringeLogs\\crashdump_%Y%m%d_%H%M%S.dmp", localtime(&now));
+
+        HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            return EXCEPTION_EXECUTE_HANDLER;
+        }
+
+        if(ExceptionInfo != nullptr)
+        {
+            MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
+            dumpInfo.ThreadId = GetCurrentThreadId();
+            dumpInfo.ExceptionPointers = ExceptionInfo;
+            dumpInfo.ClientPointers = FALSE;
+
+            MiniDumpWriteDump(
+                GetCurrentProcess(),
+                GetCurrentProcessId(),
+                hFile,
+                MiniDumpNormal,
+                &dumpInfo,
+                nullptr,
+                nullptr
+            );
+        }
+        else
+        {
+            MiniDumpWriteDump(
+                GetCurrentProcess(),
+                GetCurrentProcessId(),
+                hFile,
+                MiniDumpNormal,
+                nullptr, // No exception information
+                nullptr,
+                nullptr
+            );
+        }
+
+        CloseHandle(hFile);
+
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+#endif
 
 static void my_terminate_handler() {
     try {
         spdlog::get("logger")->critical("Unexpected issue. Stacktrace:\n" + boost::stacktrace::to_string((boost::stacktrace::stacktrace())));
+#ifdef _WIN32
+        MyUnhandledExceptionFilter(nullptr); // Call the unhandled exception filter to create a crash dump
+#endif
     } catch (...) {}
     std::abort();
 }
@@ -121,6 +176,11 @@ int main(int argc, char *argv[])
 
     // from here, any problematic application exit (for example uncatched exceptions) should call my_terminate_handler
     std::set_terminate(&my_terminate_handler);
+#ifdef _WIN32
+    // in case of specific Windows exceptions, we want to catch them and write a minidump
+    SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
+#endif
+
 #ifndef DALE_DO_NOT_LOG
     // override QT message handler because qFatal() and qCritical() would exit cleanly without crashlog
     qInstallMessageHandler(myQtMessageOutput); // replace with nullptr if you want to use original bahavior for debug purpose

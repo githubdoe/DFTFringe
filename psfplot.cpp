@@ -20,6 +20,7 @@
 #include <qwt_plot_curve.h>
 #include <qwt_plot_legenditem.h>
 #include <qwt_plot_textlabel.h>
+#include <qwt_text.h>
 #include <QPushButton>
 psfPlot::psfPlot(QWidget *parent) :
     QwtPlot(parent),

@@ -17,12 +17,13 @@
 ****************************************************************************/
 #include "standastigwizard.h"
 #include "ui_standastigwizard.h"
+#include "spdlog/spdlog.h"
 #include <QtWidgets>
 #include <QDebug>
 #include <counterrotationdlg.h>
 #include <QString>
+#include <QRegExp>
 #include "surfacemanager.h"
-#include "spdlog/spdlog.h"
 
 QString AstigReportTitle = "";
 QString AstigReportPdfName = "stand.pdf";

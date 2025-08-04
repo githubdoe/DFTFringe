@@ -50,7 +50,7 @@ void waveFrontLoader::loadx( SurfaceManager *sm){
     int size = m_list.size();
 
     emit status(0);
-    bool mirrorConfigChanged = false;
+    //bool mirrorConfigChanged = false;
     done = false;
 
     emit progressRange(0, size);
@@ -84,7 +84,7 @@ void waveFrontLoader::loadx( SurfaceManager *sm){
             emit currentWavefront(file);
 
             emit status(++prog);
-            mirrorConfigChanged |= sm->loadWavefront(file);
+            /*mirrorConfigChanged |= */sm->loadWavefront(file);
         }
     }
     catch (const std::bad_alloc &ex)

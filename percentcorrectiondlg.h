@@ -13,7 +13,6 @@
 #include <QVBoxLayout>
 #include "graphmodifier.h"
 #include "percentCorrectionSurface.h"
-using namespace QtDataVisualization;
 
 namespace Ui {
 class percentCorrectionDlg;
