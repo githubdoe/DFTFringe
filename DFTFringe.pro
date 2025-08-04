@@ -263,6 +263,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     zapm.cpp \
     zernikedlg.cpp \
     zernikeeditdlg.cpp \
+    zernikepolar.cpp \
     zernikeprocess.cpp \
     zernikes.cpp \
     zernikesmoothingdlg.cpp
@@ -390,6 +391,7 @@ HEADERS += bezier/bezier.h \
     wftstats.h \
     zernikedlg.h \
     zernikeeditdlg.h \
+    zernikepolar.h \
     zernikeprocess.h \
     zernikes.h \
     zernikesmoothingdlg.h

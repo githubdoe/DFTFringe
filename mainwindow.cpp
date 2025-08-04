@@ -567,6 +567,7 @@ void MainWindow::updateMetrics(wavefront& wf){
     }
     metrics->setZernTitle(ztitle);
     double z8 = zernTablemodel->values[8];
+    double BestSC;
     if (m_mirrorDlg->doNull && wf.useSANull){
         BestSC = z8/m_mirrorDlg->z8;
     }

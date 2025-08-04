@@ -38,6 +38,15 @@ void dump_matrix (double *a, int nrows, int ncols,const char *desc)
     }
 }
 
+static const int Zw[] = {                    /*  n    */
+    1,                                       //  0
+    4,4,3,                                   //  1
+    6,6,8,8,5,  //8                          //  2
+    8,8,10,10,12,12,7, // 15                     3
+    10,10,12,12,14,14,16,16,9,  //24             4
+    12,12,14,14,16,16,18,18,20,20,11,  //35      5
+    14,14,16,16,18,18,20,20,22,22,24,24,13  // 48
+};
 
 double computeRMS(int term,  double val){
 
@@ -251,7 +260,7 @@ double *rand_zern ( zern_spec *s)
 
 void zern_generator::set_zcoefs(double *data)
 {
-    m_zcoef.assign(data,data + get_terms_cnt());		// temp.  chanage to param after debug
+    m_zcoef.assign(data,data + get_terms_cnt());        // temp.  chanage to param after debug
 }
 
 

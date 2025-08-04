@@ -25,29 +25,12 @@
 #include "mainwindow.h"
 #include "armadillo"
 #include <stdlib.h>
-extern std::vector<bool> zernEnables;
-extern int Zw[];
-extern double BestSC;
-double zernike(int n, double x, double y);
-void gauss_jordan(int n, double* Am, double* Bm);
-void ZernikeSmooth(cv::Mat wf, cv::Mat mask);
 
-typedef struct  {
-    std::vector<bool> enables;
-    std::vector<double> norms;
-    int maxOrder;
-    int noOfTerms;
-    std::vector<int> rowIndex;
-    std::vector<int> colIndex;
-    arma::mat zernsArSample;
-    arma::mat rhoTheta;
-    int widthOfMatrix;
-    double radius;
-    double centerX;
-    double centerY;
-    double insideRadius;
-    bool valid;
-} zernikeData;
+//TODO remove this if possible and use a class. It's undocumented, difficult to undesrstand and maintain
+extern std::vector<bool> zernEnables;
+//double zernike(int n, double x, double y);
+//void gauss_jordan(int n, double* Am, double* Bm);
+
 
 
 class zernikeProcess : public QObject
@@ -100,35 +83,5 @@ public slots:
 
 };
 
-class zernikePolar : public QObject
-{
-    Q_OBJECT
-public:
-    explicit zernikePolar(){};
-    static zernikePolar *get_Instance();
-    void init(double rho, double theta);
-    double zernike(int z, double rho, double theta);
-private:
-     static zernikePolar *m_instance;
-     double rho2;
-     double rho3;
-     double rho4;
-     double rho5;
-     double rho6;
-     double rho8;
-     double rho10;
-     double costheta;
-     double sintheta;
-     double cos2theta;
-     double sin2theta;
-     double cos3theta;
-     double sin3theta;
-     double cos4theta;
-     double sin4theta;
-     double cos5theta;
-     double sin5theta;
-};
-
-void debugZernRoutines();
 
 #endif // ZERNIKEPROCESS_H
