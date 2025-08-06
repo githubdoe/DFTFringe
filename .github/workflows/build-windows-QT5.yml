@@ -298,7 +298,7 @@ jobs:
           fail-on-cache-miss: true
 
       # this enables the problem matcher
-      - uses: ammaraskar/gcc-problem-matcher@master
+      #- uses: ammaraskar/gcc-problem-matcher@master
 
       # Update the 2 strings automatically
       # MY_AUTOMATED_VERSION_STRING
@@ -336,9 +336,9 @@ jobs:
           (Get-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml).replace('MY_AUTOMATED_DATE_STRING', '${{env.NOW}}') | Set-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml
 
       - run: cd DFTFringe ; ..\${{env.QT_version}}\mingw81_64\bin\qmake.exe DFTFringe_QT5.pro
-      - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
+      #- run: echo "::add-matcher::.github/matcher/uic_matcher.json"
       - run: cd DFTFringe ; mingw32-make -j4
-      - run: echo "::remove-matcher owner=uic-problem-matcher::"
+      #- run: echo "::remove-matcher owner=uic-problem-matcher::"
 
       - name: copy needed dlls not found by windeployqt
         run: |

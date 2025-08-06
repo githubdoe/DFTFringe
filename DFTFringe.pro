@@ -49,12 +49,12 @@ win32 {
 
     LIBS += -L..\build_lapack\bin -llibblas
     LIBS += -L..\build_lapack\bin -lliblapack
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d4110
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core4110
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d4110
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui4110
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4110
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4110
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4120
     LIBS += -ldbghelp # for SetUnhandledExceptionFilter
 
 

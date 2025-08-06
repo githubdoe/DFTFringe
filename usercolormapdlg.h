@@ -61,7 +61,7 @@ public:
     }
 #endif
 
-    virtual double value( double x, double y ) const
+    virtual double value( double x, double y ) const override
     {
         return x  * y;
 

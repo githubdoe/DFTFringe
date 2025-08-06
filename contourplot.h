@@ -41,7 +41,7 @@ public:
     QwtInterval interval(Qt::Axis axis) const override;
     void setInterval(Qt::Axis axis, const QwtInterval &interval);
 #endif
-    virtual double value( double x, double y ) const;
+    virtual double value( double x, double y ) const override;
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // keep compatibility with newer version of QWT used in QT6
