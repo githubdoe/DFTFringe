@@ -366,13 +366,13 @@ jobs:
         run: .\${{env.QT_version}}\mingw81_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
 
       - name: make installer using QT installer framework
-        run: Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{env.WORKFLOW_VERSION}}
+        run: Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_QT5_${{env.WORKFLOW_VERSION}}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DFTFringe-windows-build-artifact
+          name: DFTFringe-windows-build-artifact-QT5
           path: |
             DFTFringeInstaller_QT5_${{env.WORKFLOW_VERSION}}.exe
-            DFTFringe_QT5.exe.debug
+            DFTFringe.exe.debug
 
