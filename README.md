@@ -145,7 +145,7 @@ If you haven't already, you will need to install latest version of [CMake](https
 
 #### Build OpenCV
 
-Get [OpenCV](https://opencv.org/) source code version 4.11.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\openCV`
+Get [OpenCV](https://opencv.org/) source code version 4.12.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\openCV`
 
 Then from within `C:\buildingDFTFringe` do the following:  
 
@@ -193,7 +193,7 @@ It's important that Armadillo knows the path to Lapack to work correctly. Here w
 
 #### Build OpenCV
 
-Get [OpenCV](https://opencv.org/) **installer (not source code)** 4.11.0 in your prefered way (typically from their [GitHub](https://github.com/opencv/opencv/releases) or [website](https://opencv.org/releases/)). Run the installer `opencv-4.11.0-windows.exe`.
+Get [OpenCV](https://opencv.org/) **installer (not source code)** 4.12.0 in your prefered way (typically from their [GitHub](https://github.com/opencv/opencv/releases) or [website](https://opencv.org/releases/)). Run the installer `opencv-4.12.0-windows.exe`.
 
 Copy content from `yourExtractionLocation\opencv\build\include` to `C:\buildingDFTFringe\build_openCV\install\include`.  
 

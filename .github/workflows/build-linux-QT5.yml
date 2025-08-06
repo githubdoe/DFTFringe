@@ -1,0 +1,26 @@
+name: build-linux-QT5
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build-linux-QT5:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt update
+      - run: sudo apt install -y apt-utils build-essential wget qt5-qmake qt5-qmake-bin qt5-assistant qtbase5-dev qtmultimedia5-dev libqt5charts5 libqt5charts5-dev libqt5multimedia* libqt5datavisualization5-dev libqt5datavisualization5 libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev
+      - run: qmake DFTFringe_QT5.pro
+      - uses: ammaraskar/gcc-problem-matcher@master
+      - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
+      - run: make -j4
+      - run: echo "::remove-matcher owner=uic-problem-matcher::"
+

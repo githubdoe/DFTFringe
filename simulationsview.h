@@ -26,6 +26,11 @@
 
 class arcSecScaleDraw;
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+//keep compatiblity with Qt5
+using namespace QtDataVisualization;
+#endif
+
 namespace Ui {
 class SimulationsView;
 }

@@ -106,6 +106,8 @@ SpectrogramData::SpectrogramData(): m_wf(0)
 
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+// keep compatibility with newer version of QWT used in QT6
 QwtInterval SpectrogramData::interval(Qt::Axis axis) const
 {
     switch (axis)
@@ -138,12 +140,20 @@ void SpectrogramData::setInterval(Qt::Axis axis, const QwtInterval &interval)
             break;
     }
 }
+#endif
 
 void SpectrogramData::setSurface(wavefront *surface) {
     m_wf = surface;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+
     // Store interval info for use in `interval()`
     m_xInterval = QwtInterval(0, m_wf->workData.cols);
     m_yInterval = QwtInterval(0, m_wf->workData.rows);
+#else
+    setInterval( Qt::XAxis, QwtInterval(0,m_wf->workData.cols));
+    setInterval( Qt::YAxis, QwtInterval(0, m_wf->workData.rows));
+#endif
 }
 #include <qwt_round_scale_draw.h>
 extern double g_angle;

@@ -41,6 +41,10 @@
 #include <QtCore/QPropertyAnimation>
 #include "percentCorrectionSurface.h"
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+//keep compatiblity with Qt5
+using namespace QtDataVisualization;
+#endif
 
 class GraphModifier : public QObject
 {

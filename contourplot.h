@@ -36,15 +36,20 @@ public:
     SpectrogramData();
     wavefront *m_wf;
     void setSurface(wavefront *surface);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
     QwtInterval interval(Qt::Axis axis) const override;
     void setInterval(Qt::Axis axis, const QwtInterval &interval);
-
+#endif
     virtual double value( double x, double y ) const;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
 private:
     QwtInterval m_xInterval;
     QwtInterval m_yInterval;
     QwtInterval m_zInterval;
+#endif
 };
 class ContourPlot: public QwtPlot
 {

@@ -1,4 +1,4 @@
-name: build-windows
+name: build-windows-QT5
 on:
   push:
     branches:
@@ -9,11 +9,11 @@ on:
 
 env:
   armadillo_version: 14.4.0
-  QWT_version: 6.3.0
-  openCV_version: 4.12.0
-  QT_version: 6.8.3
+  QWT_version: 6.1.6
+  openCV_version: 4.6.0
+  QT_version: 5.15.2
   lapack_version: 3.11.0
-  mingw_version: 1310
+  mingw_version: 810
   python_version: 3.13
 
 jobs:
@@ -39,7 +39,7 @@ jobs:
         run: pip install aqtinstall
       - name: install correct minGW version
         if: steps.cache-minGW.outputs.cache-hit != 'true'
-        run: aqt install-tool windows desktop tools_mingw1310 qt.tools.win64_mingw${{env.mingw_version}}
+        run: aqt install-tool windows desktop tools_mingw qt.tools.win64_mingw${{env.mingw_version}}
         # path is Tools\mingw${{env.mingw_version}}_64\bin\
       - name: install QT installer framework
         if: steps.cache-minGW.outputs.cache-hit != 'true'
@@ -58,14 +58,12 @@ jobs:
           path: |
             build_openCV\install\x64\mingw\bin\*.dll
             build_openCV\install\include\*
-            ${{env.QT_version}}\mingw_64\bin\*
-            ${{env.QT_version}}\mingw_64\include\*
-            ${{env.QT_version}}\mingw_64\lib\*
-            ${{env.QT_version}}\mingw_64\mkspecs\*
-            ${{env.QT_version}}\mingw_64\modules\*
-            ${{env.QT_version}}\mingw_64\plugins\platforms\*
-            ${{env.QT_version}}\mingw_64\plugins\imageformats\*
-            ${{env.QT_version}}\mingw_64\translations\*
+            ${{env.QT_version}}\mingw81_64\bin\*
+            ${{env.QT_version}}\mingw81_64\include\*
+            ${{env.QT_version}}\mingw81_64\lib\*
+            ${{env.QT_version}}\mingw81_64\mkspecs\*
+            ${{env.QT_version}}\mingw81_64\plugins\platforms\*
+            ${{env.QT_version}}\mingw81_64\plugins\imageformats\*
           key: ${{ runner.os }}-openCV-${{env.openCV_version}}-QT-${{env.QT_version}}
 
       # all what follows is only run on cache miss
@@ -92,7 +90,7 @@ jobs:
         run: pip install aqtinstall
       - name: install QT
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
-        run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw -m qtcharts qtdatavis3d qt5compat
+        run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw81 -m qtcharts qtdatavis3d
       - uses: actions/checkout@v4
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         with:
@@ -101,7 +99,7 @@ jobs:
           path: './openCV'
       - name: cmake generate
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
-        run: cmake -G "MinGW Makefiles" -S openCV -B build_openCV -D WITH_QT=ON -D WITH_OPENGL=ON -D Qt6_DIR=:./${{env.QT_version}}/mingw_64/lib/cmake/Qt6
+        run: cmake -G "MinGW Makefiles" -S openCV -B build_openCV -D WITH_QT=ON -D WITH_OPENGL=ON -D Qt5_DIR=:./${{env.QT_version}}/mingw81_64/lib/cmake/Qt5
       - name: cmake generate again
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         run: cmake -G "MinGW Makefiles" -S openCV -B build_openCV
@@ -124,7 +122,7 @@ jobs:
           path: |
             qwt-${{env.QWT_version}}\src
             qwt-${{env.QWT_version}}\lib\*.dll
-          key: ${{ runner.os }}-QWT-${{env.QWT_version}}-mingw${{env.mingw_version}}
+          key: ${{ runner.os }}-QWT-${{env.QWT_version}}
 
       # all what follows is only run on cache miss
 
@@ -160,10 +158,10 @@ jobs:
         run: pip install aqtinstall
       - name: install qmake
         if: steps.cache-QWT.outputs.cache-hit != 'true'
-        run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw --archives qtbase qtsvg
+        run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw81 --archives qtbase qtsvg
       - name: qmake
         if: steps.cache-QWT.outputs.cache-hit != 'true'
-        run: cd qwt-${{env.QWT_version}} ; ..\${{env.QT_version}}\mingw_64\bin\qmake.exe
+        run: cd qwt-${{env.QWT_version}} ; ..\${{env.QT_version}}\mingw81_64\bin\qmake.exe
       - name: build
         if: steps.cache-QWT.outputs.cache-hit != 'true'
         run: cd qwt-${{env.QWT_version}} ; mingw32-make -j4
@@ -181,7 +179,7 @@ jobs:
             build_lapack\bin\liblapack.dll
             build_lapack\bin\libblas.dll
             build_armadillo\tmp\include
-          key: ${{ runner.os }}-lapack-${{env.lapack_version}}-armadillo-${{env.armadillo_version}}-mingw${{env.mingw_version}}
+          key: ${{ runner.os }}-lapack-${{env.lapack_version}}-armadillo-${{env.armadillo_version}}
 
       # all what follows is only run on cache miss
 
@@ -272,7 +270,7 @@ jobs:
             build_lapack\bin\liblapack.dll
             build_lapack\bin\libblas.dll
             build_armadillo\tmp\include
-          key: ${{ runner.os }}-lapack-${{env.lapack_version}}-armadillo-${{env.armadillo_version}}-mingw${{env.mingw_version}}
+          key: ${{ runner.os }}-lapack-${{env.lapack_version}}-armadillo-${{env.armadillo_version}}
           fail-on-cache-miss: true
       # restore cached QWT
       - uses: actions/cache/restore@v4
@@ -281,7 +279,7 @@ jobs:
           path: |
             qwt-${{env.QWT_version}}\src
             qwt-${{env.QWT_version}}\lib\*.dll
-          key: ${{ runner.os }}-QWT-${{env.QWT_version}}-mingw${{env.mingw_version}}
+          key: ${{ runner.os }}-QWT-${{env.QWT_version}}
           fail-on-cache-miss: true
       # restore cached openCV and QT
       - uses: actions/cache/restore@v4
@@ -290,14 +288,12 @@ jobs:
           path: |
             build_openCV\install\x64\mingw\bin\*.dll
             build_openCV\install\include\*
-            ${{env.QT_version}}\mingw_64\bin\*
-            ${{env.QT_version}}\mingw_64\include\*
-            ${{env.QT_version}}\mingw_64\lib\*
-            ${{env.QT_version}}\mingw_64\mkspecs\*
-            ${{env.QT_version}}\mingw_64\modules\*
-            ${{env.QT_version}}\mingw_64\plugins\platforms\*
-            ${{env.QT_version}}\mingw_64\plugins\imageformats\*
-            ${{env.QT_version}}\mingw_64\translations\*
+            ${{env.QT_version}}\mingw81_64\bin\*
+            ${{env.QT_version}}\mingw81_64\include\*
+            ${{env.QT_version}}\mingw81_64\lib\*
+            ${{env.QT_version}}\mingw81_64\mkspecs\*
+            ${{env.QT_version}}\mingw81_64\plugins\platforms\*
+            ${{env.QT_version}}\mingw81_64\plugins\imageformats\*
           key: ${{ runner.os }}-openCV-${{env.openCV_version}}-QT-${{env.QT_version}}
           fail-on-cache-miss: true
 
@@ -339,7 +335,7 @@ jobs:
           echo "${{env.NOW}}"
           (Get-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml).replace('MY_AUTOMATED_DATE_STRING', '${{env.NOW}}') | Set-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml
 
-      - run: cd DFTFringe ; ..\${{env.QT_version}}\mingw_64\bin\qmake.exe
+      - run: cd DFTFringe ; ..\${{env.QT_version}}\mingw81_64\bin\qmake.exe DFTFringe_QT5.pro
       - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
       - run: cd DFTFringe ; mingw32-make -j4
       - run: echo "::remove-matcher owner=uic-problem-matcher::"
@@ -351,15 +347,15 @@ jobs:
           Copy-Item ".\DFTFringe\Release\DFTFringe.exe" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\build_lapack\bin\liblapack.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\build_lapack\bin\libblas.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_calib3d4110.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_core4110.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_features2d4110.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_flann4110.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_highgui4110.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs4110.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgproc4110.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_core460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_flann460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\qwt-${{env.QWT_version}}\lib\qwt.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\${{env.QT_version}}\mingw_64\bin\Qt6OpenGL.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\${{env.QT_version}}\mingw81_64\bin\Qt5OpenGL.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\tools\mingw${{env.mingw_version}}_64\bin\libquadmath-0.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\DFTFringe\ColorMaps" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\ColorMaps" -Recurse
           mkdir ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res"
@@ -367,7 +363,7 @@ jobs:
           Copy-Item ".\DFTFringe\res\help" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res\help" -Recurse
           Copy-Item ".\DFTFringe\RevisionHistory.html" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
       - name: automatically add QT dependencies with windeployqt
-        run: .\${{env.QT_version}}\mingw_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
+        run: .\${{env.QT_version}}\mingw81_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
 
       - name: make installer using QT installer framework
         run: Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{env.WORKFLOW_VERSION}}
@@ -377,6 +373,6 @@ jobs:
         with:
           name: DFTFringe-windows-build-artifact
           path: |
-            DFTFringeInstaller_${{env.WORKFLOW_VERSION}}.exe
-            DFTFringe.exe.debug
+            DFTFringeInstaller_QT5_${{env.WORKFLOW_VERSION}}.exe
+            DFTFringe_QT5.exe.debug
 
