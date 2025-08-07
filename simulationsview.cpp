@@ -115,7 +115,12 @@ void SimulationsView::initMTFPlot(){
     m_arcSecScaleDraw  =  new arcSecScaleDraw(mirrorDlg::get_Instance()->diameter);
     ui->MTF->setAxisScaleDraw(ui->MTF->xBottom, m_arcSecScaleDraw);
     QwtPlotLegendItem *customLegend = new QwtPlotLegendItem();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+    customLegend->setAlignmentInCanvas(Qt::AlignLeft | Qt::AlignBottom);
+#else
     customLegend->setAlignment(Qt::AlignLeft | Qt::AlignBottom);
+#endif
     customLegend->attach(ui->MTF);
     QwtPlotTextLabel *t = new QwtPlotTextLabel();
     QwtText title( "MTF" );

@@ -14,11 +14,11 @@ DEFINES += QAPPLICATION_CLASS=QApplication
 
 TEMPLATE = app
 
-QT += charts concurrent core core5compat datavisualization gui network opengl widgets xml
+QT += charts concurrent core datavisualization gui multimedia multimediawidgets network opengl widgets xml
 
 qtHaveModule(printsupport): QT += printsupport
 
-QMAKE_CXXFLAGS += -std=c++17
+QMAKE_CXXFLAGS += -std=c++14
 
 # disable qDebug() in release
 CONFIG( release, debug|release ) {
@@ -33,9 +33,9 @@ win32 {
     message("Using WINDOWS project configuration.")
 
     CONFIG( debug, debug|release ) {
-        LIBS += -L..\qwt-6.3.0\lib -lqwtd # debug
+        LIBS += -L..\qwt-6.1.6\lib -lqwtd # debug
     } else {
-        LIBS += -L..\qwt-6.3.0\lib -lqwt # release
+        LIBS += -L..\qwt-6.1.6\lib -lqwt # release
         CONFIG+=force_debug_info # keep debug infos (even in release build) to be able to link stacktrace address to actual function
         CONFIG+=separate_debug_info # separate debug infos into a .exe.debug to not grow the .exe
     }
@@ -43,18 +43,18 @@ win32 {
     # NOTE: RC_FILE is Windows only, breaks Mac (and Linux?) builds if it in their scope.
     RC_FILE = DFTFringe.rc
 
-    INCLUDEPATH += ..\qwt-6.3.0\src
+    INCLUDEPATH += ..\qwt-6.1.6\src
     INCLUDEPATH += ..\build_armadillo\tmp\include
     INCLUDEPATH += ..\build_openCV\install\include
 
     LIBS += -L..\build_lapack\bin -llibblas
     LIBS += -L..\build_lapack\bin -lliblapack
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc460
     LIBS += -ldbghelp # for SetUnhandledExceptionFilter
 
 
@@ -68,9 +68,7 @@ unix: !mac {
     contains( CONFIG,debug ) { message("no extra debug libraries") }
 
     INCLUDEPATH += /usr/include/opencv4
-    INCLUDEPATH += /usr/local/qwt-6.3.0/include
-
-    QMAKE_RPATHDIR += /usr/local/qwt-6.3.0/lib
+    INCLUDEPATH += /usr/include/qwt
 
     LIBS += -larmadillo
     LIBS += -lGLU
@@ -80,7 +78,8 @@ unix: !mac {
     LIBS += -lopencv_highgui
     LIBS += -lopencv_imgcodecs
     LIBS += -lopencv_imgproc
-    LIBS += -L/usr/local/qwt-6.3.0/lib -lqwt
+    LIBS += -lopencv_imgproc
+    LIBS += -lqwt-qt5
 }
 
 # MAC ##############

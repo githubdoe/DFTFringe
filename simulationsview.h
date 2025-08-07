@@ -23,8 +23,14 @@
 #include <opencv2/opencv.hpp>
 #include <QTimer>
 #include <QtDataVisualization/Q3DSurface>
+
 class arcSecScaleDraw;
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+//keep compatiblity with Qt5
 using namespace QtDataVisualization;
+#endif
+
 namespace Ui {
 class SimulationsView;
 }
