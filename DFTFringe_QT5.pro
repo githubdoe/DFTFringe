@@ -180,7 +180,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     filteroutlinesdlg.cpp \
     foucaultview.cpp \
     generatetargetdlg.cpp \
-    gplus.cpp \
     graphicsutilities.cpp \
     helpdlg.cpp \
     hotkeysdlg.cpp \
@@ -281,7 +280,6 @@ HEADERS += bezier/bezier.h \
     averagewavefrontfilesdlg.h \
     batchigramwizard.h \
     bathastigdlg.h \
-    boundary.h \
     camcalibrationreviewdlg.h \
     cameracalibwizard.h \
     camwizardpage1.h \
@@ -307,7 +305,6 @@ HEADERS += bezier/bezier.h \
     filteroutlinesdlg.h \
     foucaultview.h \
     generatetargetdlg.h \
-    gplus.h \
     graphicsutilities.h \
     helpdlg.h \
     hotkeysdlg.h \
