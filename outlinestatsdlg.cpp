@@ -13,6 +13,7 @@
 #include "surfacemanager.h"
 class outlineZoomer: public QwtPlotZoomer
 {
+    Q_OBJECT
 public:
     QwtPlot * mPlot;
     outlineStatsDlg &m_outlines;

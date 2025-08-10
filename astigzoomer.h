@@ -6,6 +6,7 @@
 class QwtPlot;
 class astigZoomer: public QwtPlotZoomer
 {
+    Q_OBJECT
 public:
     QwtPlot * mPlot;
     explicit astigZoomer( QWidget *canvas, QwtPlot * plot );

@@ -5,6 +5,8 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include <QSettings>
 class ImageViewer : public QWidget {
+    Q_OBJECT
+    
     QPixmap m_pixmap;
     QRectF m_rect;
     QPointF m_reference;

@@ -50,6 +50,7 @@ double lastx = -1.;
 double lasty = -1.;
 class MyZoomer: public QwtPlotZoomer
 {
+    Q_OBJECT
 public:
     ContourPlot* thePlot;
     MyZoomer( QWidget *canvas ,ContourPlot* plot):

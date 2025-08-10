@@ -50,6 +50,8 @@ QString intro( "<p style = font-size:16px ;>Astigmatism values vary from sample 
 
 class Zoomer: public QwtPlotZoomer
 {
+    Q_OBJECT
+
 public:
     QwtPlot * mPlot;
     Zoomer( QWidget *canvas, QwtPlot * plot ):
@@ -105,6 +107,7 @@ protected:
 // this class expans QwtPlotPicker to be able to diplay custom text on given positions in canva
 // add positions and text using addTooltipToPoint
 class CustomPlotPicker : public QwtPlotPicker {
+    Q_OBJECT
 public:
     CustomPlotPicker(int xAxis, int yAxis, QWidget *canvas)
         : QwtPlotPicker(xAxis, yAxis, QwtPicker::NoRubberBand, QwtPicker::AlwaysOn, canvas) {
