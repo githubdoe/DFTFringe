@@ -26,7 +26,7 @@
 #include <opencv2/opencv.hpp>
 #include <QJsonObject>
 void fillCircle(cv::Mat &m, double cx, double cy, double rad, void *color);
-class CircleOutline: public boundary
+class CircleOutline final: public boundary
 {
     public:
         CircleOutline();
@@ -35,7 +35,7 @@ class CircleOutline: public boundary
         CircleOutline(const QJsonObject &obj);
         void toJson(QJsonObject &obj);
 
-        virtual ~CircleOutline();
+        ~CircleOutline();
         void draw(QPainter& painter, double scale, double scale2 = -1.);
         bool isInside(QPointF& p , int offset = 0);
         bool isInside(double x, double y, int offset=0);
@@ -48,17 +48,15 @@ class CircleOutline: public boundary
         double m_radius;
         gPlus m_p1;
         gPlus m_p2;
-    protected:
-
-    private:
 };
 
-class ellipseOutline: public boundary
+class ellipseOutline final: public boundary
 {
 public:
     ellipseOutline();
     ellipseOutline(QPointF center, double minorAxis, double majorAxis);
     ellipseOutline(QPointF left, QPointF right, double ecc);
+    void draw(QPainter& painter, double scale, double scale2 = -1.);
     bool isInside(QPointF& p , int offset = 0);
     void enlarge(int del);
     void translate(QPointF del);
@@ -76,11 +74,12 @@ public:
     gPlus m_p2;
 };
 
-class rectangleOutline: public boundary
+class rectangleOutline final: public boundary
 {
 public:
     rectangleOutline();
     rectangleOutline(QPointF upperLeft, QPointF lowerRight);
+    void draw(QPainter& painter, double scale, double scale2 = -1.);
     bool isInside(QPointF& p , int offset = 0);
     void enlarge(int del);
     void translate(QPointF del);

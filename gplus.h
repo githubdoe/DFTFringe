@@ -24,7 +24,7 @@ class gPlus
     public:
         gPlus(QPointF p);
         gPlus();
-        virtual ~gPlus();
+        ~gPlus();
         void draw(QPainter& dc, double scale, int size = 10);
         QPointF m_p;
     protected:
