@@ -672,7 +672,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     //line(wf->workMask, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), 10);
     theMask = mask.clone();
 
-    
+
     // add central obstruction (not to be confused with a hole in the mirror - this comes from mirror configuration)
     double r = md.obs * (2. * radm)/md.diameter;
     r/= 2.;
@@ -2466,7 +2466,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     ContourPlot *plot =new ContourPlot(0,0,true);//m_contourPlot;
     plot->m_minimal = true;
     QList<int> unrotatedNdxs;
-    
+
     QString html = ("<html><head/><body><h1><center>Test Stand Astig Removal</center></h1>"
                     "<h2><center>" + AstigReportTitle);
            html.append("    <font color='grey'>" + QDate::currentDate().toString() +

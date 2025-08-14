@@ -38,7 +38,6 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     igramarea.cpp \
     circleoutline.cpp \
-    gplus.cpp \
     graphicsutilities.cpp \
     dfttools.cpp \
     dftarea.cpp \
@@ -160,7 +159,6 @@ HEADERS  += mainwindow.h \
     edgeplot.h \
     IgramArea.h \
     circleoutline.h \
-    gplus.h \
     graphicsutilities.h \
     dfttools.h \
     dftarea.h \
@@ -243,7 +241,6 @@ HEADERS  += mainwindow.h \
     unwraperrorsview.h \
     lensdialog.h \
     messagereceiver.h \
-    boundary.h \
     myutils.h \
     pixelstats.h \
     utils.h \

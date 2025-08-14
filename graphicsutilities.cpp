@@ -69,9 +69,9 @@ CircleOutline readCircle(std::ifstream &file, double x_offset, double y_offset){
     c.m_center.rx() = x + x_offset;
     c.m_center.ry() = y + y_offset;
     c.m_radius = rx;
-    c.m_p1.m_p.rx() = c.m_center.x() + c.m_radius;
-    c.m_p2.m_p.rx() = c.m_center.x() - c.m_radius;
-    c.m_p1.m_p.ry() = c.m_center.y();
-    c.m_p2.m_p.ry() = c.m_center.y();
+    c.m_p1.rx() = c.m_center.x() + c.m_radius;
+    c.m_p2.rx() = c.m_center.x() - c.m_radius;
+    c.m_p1.ry() = c.m_center.y();
+    c.m_p2.ry() = c.m_center.y();
     return c;
 }

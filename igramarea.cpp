@@ -215,8 +215,8 @@ void IgramArea::DrawSimIgram(void){
     resizeImage();
 
     m_outside = CircleOutline(QPointF(xcen, ycen),rad);
-    m_OutterP1 = m_outside.m_p1.m_p;
-    m_OutterP2 = m_outside.m_p2.m_p;
+    m_OutterP1 = m_outside.m_p1;
+    m_OutterP2 = m_outside.m_p2;
     outterPcount = 2;
     deleteRegions();
     drawBoundary();
@@ -406,8 +406,8 @@ cv::Point2d IgramArea::findBestCenterOutline(cv::Mat gray, int start, int end,in
             bestc = c;
             QPointF qp(c.x,c.y);
             CircleOutline newoutline(QPointF(x/searchOutlineScale, y/searchOutlineScale), rad0/searchOutlineScale);
-            m_innerP1 = newoutline.m_p1.m_p;
-            m_innerP2 = newoutline.m_p2.m_p;
+            m_innerP1 = newoutline.m_p1;
+            m_innerP2 = newoutline.m_p2;
             innerPcount = 2;
 
             drawBoundary();
@@ -530,8 +530,8 @@ cv::Point2d IgramArea::findBestOutsideOutline(cv::Mat gray, int start, int end,i
             bestc = c;
             CircleOutline newoutline(QPointF(bestc.x/searchOutlineScale + leftMargin, bestc.y/searchOutlineScale),
                                      rad0/searchOutlineScale);
-            m_OutterP1 = newoutline.m_p1.m_p;
-            m_OutterP2 = newoutline.m_p2.m_p;
+            m_OutterP1 = newoutline.m_p1;
+            m_OutterP2 = newoutline.m_p2;
             outterPcount = 2;
 
             if (pass == 2)drawBoundary();
@@ -715,8 +715,8 @@ void IgramArea::findCenterHole(){
 
             CircleOutline newoutline(QPointF(bestc.x+ left, bestc.y),
                                      rad);
-            m_innerP1 = newoutline.m_p1.m_p;
-            m_innerP2 = newoutline.m_p2.m_p;
+            m_innerP1 = newoutline.m_p1;
+            m_innerP2 = newoutline.m_p2;
             innerPcount = 2;
             drawBoundary();
             qApp->processEvents();
@@ -884,8 +884,8 @@ void IgramArea::useAnnulusforCenterOutine(){
             double cx = m_outside.m_center.x();
             double cy = m_outside.m_center.y();
             m_center = CircleOutline(QPointF(cx,cy),rad);
-            m_innerP1 = m_center.m_p1.m_p;
-            m_innerP2 = m_center.m_p2.m_p;
+            m_innerP1 = m_center.m_p1;
+            m_innerP2 = m_center.m_p2;
             innerPcount = 2;
             drawBoundary();
 
@@ -912,8 +912,8 @@ void IgramArea::useLastOutline(){
                 m_outside = CircleOutline(QPointF(0,0),0);
             else {
                 m_outside = CircleOutline(QPointF(cx,cy),rad);
-                m_OutterP1 = m_outside.m_p1.m_p;
-                m_OutterP2 = m_outside.m_p2.m_p;
+                m_OutterP1 = m_outside.m_p1;
+                m_OutterP2 = m_outside.m_p2;
                 outterPcount = 2;
                 drawBoundary();
             }
@@ -926,8 +926,8 @@ void IgramArea::useLastOutline(){
             double cx = set.value("lastInsideCx", 0).toDouble();
             double cy = set.value("lastInsideCy",0).toDouble();
             m_center = CircleOutline(QPointF(cx,cy),rad);
-            m_innerP1 = m_center.m_p1.m_p;
-            m_innerP2 = m_center.m_p2.m_p;
+            m_innerP1 = m_center.m_p1;
+            m_innerP2 = m_center.m_p2;
             innerPcount = 2;
             drawBoundary();
         }
@@ -949,8 +949,8 @@ void IgramArea::adjustCenterandRegions(){
         double cx = set.value("lastInsideCx", 0).toDouble();
         double cy = set.value("lastInsideCy",0).toDouble();
         m_center = CircleOutline(QPointF(cx +xoffset,cy + yoffset),m_center.m_radius);
-        m_innerP1 = m_center.m_p1.m_p;
-        m_innerP2 = m_center.m_p2.m_p;
+        m_innerP1 = m_center.m_p1;
+        m_innerP2 = m_center.m_p2;
         innerPcount = 2;
     }
 
@@ -1161,14 +1161,14 @@ void IgramArea::undo(){
         outlinePair p = m_outsideHist.undo();
         m_outside = p.m_outline;
         igramColor = p.m_image;
-        m_OutterP1 = m_outside.m_p1.m_p;
-        m_OutterP2 = m_outside.m_p2.m_p;
+        m_OutterP1 = m_outside.m_p1;
+        m_OutterP2 = m_outside.m_p2;
     } if (m_current_boundry == CenterOutline) {
         outlinePair p = m_centerHist.undo();
         m_center = p.m_outline;
         igramColor = p.m_image;
-        m_innerP1 = m_center.m_p1.m_p;
-        m_innerP2 = m_center.m_p2.m_p;
+        m_innerP1 = m_center.m_p1;
+        m_innerP2 = m_center.m_p2;
     }
     resizeImage();
 
@@ -1179,16 +1179,16 @@ void IgramArea::redo(){
 
         m_outside = p.m_outline;
         igramColor = p.m_image;
-        m_OutterP1 = m_outside.m_p1.m_p;
-        m_OutterP2 = m_outside.m_p2.m_p;
+        m_OutterP1 = m_outside.m_p1;
+        m_OutterP2 = m_outside.m_p2;
     }
     else if (m_current_boundry == CenterOutline){
         outlinePair p = m_centerHist.redo();
 
         m_center = p.m_outline;
         igramColor = p.m_image;
-        m_innerP1 = m_center.m_p1.m_p;
-        m_innerP2 = m_center.m_p2.m_p;
+        m_innerP1 = m_center.m_p1;
+        m_innerP2 = m_center.m_p2;
 
     }
     resizeImage();
@@ -1253,13 +1253,13 @@ void IgramArea::increase(int i) {
 
     if (m_current_boundry == OutSideOutline) {
         m_outside.enlarge(i);
-        m_OutterP1 = m_outside.m_p1.m_p;
-        m_OutterP2 = m_outside.m_p2.m_p;
+        m_OutterP1 = m_outside.m_p1;
+        m_OutterP2 = m_outside.m_p2;
     }
     else if (m_current_boundry == CenterOutline){
         m_center.enlarge(i);
-        m_innerP1 = m_center.m_p1.m_p;
-        m_innerP2 = m_center.m_p2.m_p;
+        m_innerP1 = m_center.m_p1;
+        m_innerP2 = m_center.m_p2;
     }
     else if (m_current_boundry == PolyArea && m_polygons.size() > 0){
         increaseRegion(polyndx,1.1);
@@ -1270,13 +1270,13 @@ void IgramArea::decrease(){
 
     if (m_current_boundry == OutSideOutline) {
         m_outside.enlarge(-1);
-        m_OutterP1 = m_outside.m_p1.m_p;
-        m_OutterP2 = m_outside.m_p2.m_p;
+        m_OutterP1 = m_outside.m_p1;
+        m_OutterP2 = m_outside.m_p2;
     }
     else if (m_current_boundry == CenterOutline) {
         m_center.enlarge(-1);
-        m_innerP1 = m_center.m_p1.m_p;
-        m_innerP2 = m_center.m_p2.m_p;
+        m_innerP1 = m_center.m_p1;
+        m_innerP2 = m_center.m_p2;
     }
     else if (m_current_boundry == PolyArea && m_polygons.size() > 0){
         increaseRegion(polyndx, .9);
@@ -1349,13 +1349,13 @@ void IgramArea::wheelEvent (QWheelEvent *e)
         setCursor(Qt::SizeAllCursor);
         if (m_current_boundry == OutSideOutline) {
             m_outside.enlarge(del);
-            m_OutterP1 = m_outside.m_p1.m_p;
-            m_OutterP2 = m_outside.m_p2.m_p;
+            m_OutterP1 = m_outside.m_p1;
+            m_OutterP2 = m_outside.m_p2;
         }
         else if (m_current_boundry == CenterOutline){
             m_center.enlarge(del);
-            m_innerP1 = m_center.m_p1.m_p;
-            m_innerP2 = m_center.m_p1.m_p;
+            m_innerP1 = m_center.m_p1;
+            m_innerP2 = m_center.m_p1;
         }
 
         drawBoundary();
@@ -2065,10 +2065,10 @@ void IgramArea::crop() {
     set.setValue("lastInsideCy", m_center.m_center.y() + crop_dy);
     // need to rescale p1 and p2 because of the crop
     scale = (double)(this->height())/y;
-    m_OutterP1 = m_outside.m_p1.m_p;
-    m_OutterP2 = m_outside.m_p2.m_p;
-    m_innerP1 = m_center.m_p1.m_p;
-    m_innerP2 = m_center.m_p2.m_p;
+    m_OutterP1 = m_outside.m_p1;
+    m_OutterP2 = m_outside.m_p2;
+    m_innerP1 = m_center.m_p1;
+    m_innerP2 = m_center.m_p2;
     resizeImage();
 
     m_outsideHist.push(igramGray, m_outside);
@@ -2137,8 +2137,8 @@ void IgramArea::loadOutlineFile(QString fileName){
     CircleOutline out(outside);
     m_outside = out;
     m_outside.translate(QPointF(-cropTotalDx, -cropTotalDy));
-    m_OutterP1 = m_outside.m_p1.m_p;
-    m_OutterP2 = m_outside.m_p2.m_p;
+    m_OutterP1 = m_outside.m_p1;
+    m_OutterP2 = m_outside.m_p2;
     outterPcount = 2;
 
     // center/inner
@@ -2147,8 +2147,8 @@ void IgramArea::loadOutlineFile(QString fileName){
     in.translate(QPointF(-cropTotalDx, -cropTotalDy));
     m_center = in;
     if (m_center.m_radius > 0) {
-        m_innerP1 = m_center.m_p1.m_p;
-        m_innerP2 = m_center.m_p2.m_p;
+        m_innerP1 = m_center.m_p1;
+        m_innerP2 = m_center.m_p2;
         innerPcount = 2;
     }
 
@@ -2197,8 +2197,8 @@ void IgramArea::loadOutlineFileOldV6(QString fileName){
 
 
     m_outside = readCircle(file, -cropTotalDx, -cropTotalDy);
-    m_OutterP1 = m_outside.m_p1.m_p;
-    m_OutterP2 = m_outside.m_p2.m_p;
+    m_OutterP1 = m_outside.m_p1;
+    m_OutterP2 = m_outside.m_p2;
     outterPcount = 2;
     CircleOutline sideLobe = readCircle(file);
     emit dftCenterFilter(sideLobe.m_radius);
@@ -2208,8 +2208,8 @@ void IgramArea::loadOutlineFileOldV6(QString fileName){
     if ((file.tellg() > 0) && (fsize > file.tellg())) {
         if ((b != 'P') && (b != 'E')){
             m_center = readCircle(file, -cropTotalDx, -cropTotalDy);
-            m_innerP1 = m_center.m_p1.m_p;
-            m_innerP2 = m_center.m_p2.m_p;
+            m_innerP1 = m_center.m_p1;
+            m_innerP2 = m_center.m_p2;
             innerPcount = 2;
         }
     }
@@ -2428,14 +2428,14 @@ void IgramArea::deleteRegions(){
 void IgramArea::shiftoutline(QPointF p) {
     if (m_current_boundry == OutSideOutline){
         m_outside.translate(p);
-        m_OutterP1 = m_outside.m_p1.m_p;
-        m_OutterP2 = m_outside.m_p2.m_p;
+        m_OutterP1 = m_outside.m_p1;
+        m_OutterP2 = m_outside.m_p2;
         m_outsideHist.push(igramGray, m_outside);
     }
     else if (m_current_boundry == CenterOutline){
         m_center.translate(p);
-        m_innerP1 = m_center.m_p1.m_p;
-        m_innerP2 = m_center.m_p2.m_p;
+        m_innerP1 = m_center.m_p1;
+        m_innerP2 = m_center.m_p2;
         m_centerHist.push(igramGray, m_center);
     }
     drawBoundary();
