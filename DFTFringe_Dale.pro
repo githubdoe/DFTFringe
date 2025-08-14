@@ -58,7 +58,6 @@ SOURCES += main.cpp \
     dftcolormap.cpp \
     surfaceanalysistools.cpp \
     surfacemanager.cpp \
-    zapm.cpp \
     zernikedlg.cpp \
     zernikepolar.cpp \
     zernikeprocess.cpp \
@@ -146,6 +145,7 @@ SOURCES += main.cpp \
     psitiltoptions.cpp \
     contourrulerparams.cpp \
     zernikesmoothingdlg.cpp \
+    zernike/zapm.cpp \
     SingleApplication/singleapplication.cpp \
     SingleApplication/singleapplication_p.cpp
 

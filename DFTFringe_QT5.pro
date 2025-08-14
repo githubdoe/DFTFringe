@@ -146,6 +146,7 @@ INCLUDEPATH += ./bezier ./SingleApplication
 
 SOURCES += SingleApplication/singleapplication.cpp \
     SingleApplication/singleapplication_p.cpp \
+    zernike/zapm.cpp \
     annulushelpdlg.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
@@ -259,7 +260,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     wavefrontloader.cpp \
     wftexaminer.cpp \
     wftstats.cpp \
-    zapm.cpp \
     zernikedlg.cpp \
     zernikeeditdlg.cpp \
     zernikepolar.cpp \
