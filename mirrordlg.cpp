@@ -300,7 +300,7 @@ void mirrorDlg::loadFile(QString & fileName){
         fliph = QJsonValue(Igram["flip horizontal"]).toBool();
         flipv = QJsonValue(Igram["flip vert"]).toBool();
         fringeSpacing = QJsonValue(Igram["fringe spacing"]).toDouble();
-        QJsonObject Ellipse = loadDoc["Ellispe"].toObject();
+        QJsonObject Ellipse = loadDoc["ellipse"].toObject();
         m_outlineShape = (outlineShape)QJsonValue(Ellipse["is ellipse"]).toInt();
         m_verticalAxis = QJsonValue(Ellipse["ellipse vert axis"]).toDouble();
         QJsonObject Annulus = loadDoc["Annulus"].toObject();
