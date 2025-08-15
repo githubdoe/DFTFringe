@@ -5,7 +5,7 @@
 #define WIDTH 12
 #define DIV 1048576ull
 
-long showmem(QString /*title*/){
+long showmem(const QString & /*title*/){
 
     //qDebug () << title;
     MEMORYSTATUSEX statex;

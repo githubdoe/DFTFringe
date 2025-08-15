@@ -294,7 +294,7 @@ void MainWindow::importIgram() {
 
 }
 
-int showmem(QString t);
+int showmem(const QString &t);
 void MainWindow::openWaveFrontonInit(QStringList args){
     QProgressDialog pd("    Loading wavefronts in progress.", "Cancel", 0, 100);
     pd.setRange(0, args.size());
@@ -1848,8 +1848,8 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
                const double& eps, const int& maxorder=12) ;
 #include "armadillo"
-void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
-              QVector<QString> RowLable = QVector<QString>(0));
+void dumpArma(const arma::mat &mm, const QString &title = "", QVector<QString> colHeading = QVector<QString>(0),
+              QVector<QString> RowLable = QVector<QString>(0)); //TODO move declaration to header
 void MainWindow::on_actionDebugStuff_triggered()
 {
     zernikeProcess *zp = zernikeProcess::get_Instance();
