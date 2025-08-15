@@ -152,7 +152,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_ogl, &OGLView::fullScreen, this, &MainWindow::zoomOgl);
 
     connect(userMapDlg, &userColorMapDlg::colorMapChanged, m_contourView->getPlot(), &ContourPlot::ContourMapColorChanged);
-    //connect(userMapDlg, SIGNAL(colorMapChanged(int)),m_ogl->m_gl, SLOT(colorMapChanged(int)));
     review = new reviewWindow(this);
     review->s1->addWidget(m_ogl);
 
@@ -179,11 +178,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView,
                                           m_ogl->m_surface, metrics);
     connect(m_contourView, &contourView::showAllContours, m_surfaceManager, &SurfaceManager::showAllContours);
-    connect(m_dftArea, SIGNAL(newWavefront(cv::Mat,CircleOutline,CircleOutline,QString, QVector<std::vector<cv::Point> >)),
-            m_surfaceManager, SLOT(createSurfaceFromPhaseMap(cv::Mat,CircleOutline,CircleOutline,QString, QVector<std::vector<cv::Point> >)));
+    connect(m_dftArea, &DFTArea::newWavefront, m_surfaceManager, &SurfaceManager::createSurfaceFromPhaseMap);
     connect(m_surfaceManager, &SurfaceManager::diameterChanged,this,&MainWindow::diameterChanged);
     connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
-    connect(m_surfTools, SIGNAL(updateSelected()), m_surfaceManager, SLOT(backGroundUpdate()));
+    connect(m_surfTools, SIGNAL(updateSelected()), m_surfaceManager, SLOT(backGroundUpdate())); //TODO test as SurfaceManager::backGroundUpdate is a private slot
     ui->tabWidget->addTab(review, "Results");
 
     ui->tabWidget->addTab(SimulationsView::getInstance(ui->tabWidget), "Star Test, PSF, MTF");
@@ -1376,7 +1374,7 @@ void MainWindow::startJitter(){
         else
             m_igramArea->m_center = saved;
 
-        m_igramArea->increase(rad);
+        m_igramArea->increaseValue(rad);
         m_igramArea->shiftoutline(QPointF(x,y));
         qApp->processEvents();
         QObject().thread()->msleep(1000);
@@ -1392,7 +1390,7 @@ void MainWindow::startJitter(){
         wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
         wf->name = QString("x:_%1_Y:_%2_radius:_%3").arg(x).arg(y).arg(rad);
         dlg->status(wf->name);
-        m_surfTools->nameChanged(m_surfaceManager->m_currentNdx, wf->name);
+        m_surfTools->nameChangedN(m_surfaceManager->m_currentNdx, wf->name);
         qApp->processEvents();
         QObject().thread()->msleep(500);
     }

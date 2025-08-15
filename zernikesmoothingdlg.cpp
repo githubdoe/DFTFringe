@@ -145,7 +145,7 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
     if (ui->showResidual->isChecked()){
         m_sm->subtract(&m_wf, m_sm->m_wavefronts.back(), false);
         m_sm->m_wavefronts.back()->name = QString("Residual_%1").arg(m_noOfTerms);
-        m_sm->m_surfaceTools->nameChanged(m_sm->m_currentNdx,  m_sm->m_wavefronts.back()->name);
+        m_sm->m_surfaceTools->nameChangedN(m_sm->m_currentNdx,  m_sm->m_wavefronts.back()->name);
         m_sm->m_surfaceTools->currentNdxChanged(m_sm->m_currentNdx);
         m_sm->previous();
         m_sm->m_surfaceTools->currentNdxChanged(m_sm->m_currentNdx);

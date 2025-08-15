@@ -48,7 +48,7 @@ public:
     double m_defocus;
     double m_defocusInmm;
     void setBlurText(const QString &txt);
-    void nameChanged(int, const QString&);
+    void nameChangedN(int, const QString&);
     void select(int item);
 
 signals:

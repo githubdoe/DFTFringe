@@ -36,7 +36,7 @@ standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent, Qt::Wind
     setPage(Page_makeAverages, new makeAverages);
     setPage(Page_define_input, new define_input);
     define_input * di = dynamic_cast<define_input *>(page(Page_define_input));
-    connect(di, SIGNAL(computeStandAstig(define_input *,QList<rotationDef *>)), sm, SLOT(computeStandAstig(define_input *,QList<rotationDef *>)));
+    connect(di, &define_input::computeStandAstig, sm, &SurfaceManager::computeStandAstig);
 
     setStartId(Page_Intro);
     //setOption(HaveHelpButton, true);

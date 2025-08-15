@@ -128,7 +128,7 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     shortcut = new QShortcut(QKeySequence(Qt::Key_Minus), this);
     QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::decrease);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(increase()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::increase);
     shortcut = new QShortcut(QKeySequence("f"), this);
     QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::zoomFull);
     shortcut = new QShortcut(QKeySequence("h"), this);
@@ -843,7 +843,7 @@ void IgramArea::findOutline(){
     m_searching_outside = false;
     shiftoutline(QPointF(set.value("autoOutlineXOffset", 0).toInt(),
                                  -set.value("autoOutlineYOffset", 0).toInt()));
-    increase(set.value("autoOutlineRadOffset", 0).toInt());
+    increaseValue(set.value("autoOutlineRadOffset", 0).toInt());
 
 
 //    ui->holeX->setValue(set.value("autoholeXOffset", 0).toInt());
@@ -1249,7 +1249,7 @@ void IgramArea::increaseRegion(int n, double scale){
 
 }
 
-void IgramArea::increase(int i) {
+void IgramArea::increaseValue(int i) {
 
     if (m_current_boundry == OutSideOutline) {
         m_outside.enlarge(i);
@@ -1266,6 +1266,11 @@ void IgramArea::increase(int i) {
     }
     drawBoundary();
 }
+
+void IgramArea::increase() {
+    increaseValue(1);
+}
+
 void IgramArea::decrease(){
 
     if (m_current_boundry == OutSideOutline) {
@@ -1984,17 +1989,6 @@ void IgramArea::saveRegions(){
     }
     QSettings set;
     set.setValue("lastRegions", text);
-}
-
-void IgramArea::createActions()
-{
-
-    fitToWindowAct = new QAction(tr("&Fit to Window"), this);
-    fitToWindowAct->setEnabled(false);
-    fitToWindowAct->setCheckable(true);
-    fitToWindowAct->setShortcut(tr("Ctrl+f"));
-    connect(fitToWindowAct, SIGNAL(triggered()), this, SLOT(fitToWindow()));
-
 }
 
 

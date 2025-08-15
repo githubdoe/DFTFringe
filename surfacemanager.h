@@ -136,6 +136,9 @@ private:
     explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
                    contourView *contourView = 0, SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
     textres Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx, int Width, QPrinter &printer);
+    void changeWavelength(wavefront *wf, double wavelength);
+    void flipHorizontal(wavefront *wf);
+    void flipVertical(wavefront *wf);
 
 signals:
     void currentNdxChanged(int);
@@ -145,7 +148,7 @@ signals:
     void progress(int);
     void diameterChanged(double);
     void rocChanged(double);
-    void nameChanged(QString, QString);
+    void nameChanged(const QString &, const QString &);
     void showTab(int);
     void enableControls(bool);
 private slots:
@@ -167,9 +170,6 @@ private slots:
     void averageComplete(wavefront *wft);
     void outputLambdaChanged(double val);
     void resize(wavefront * wf, int size);
-    void changeWavelength(wavefront *wf, double wavelength);
-    void flipHorizontal(wavefront *wf);
-    void flipVertical(wavefront *wf);
     void resizeW(int size);
     void changeWavelength(double wavelength);
     void flipHorizontal();

@@ -220,7 +220,7 @@ void OGLView::showSelected()    // show all selected wavefronts as 3D plots
     scrollArea->setAutoFillBackground(true);
     QPushButton *savePb = new QPushButton("Save as Image",w);
     SurfaceManager *sm = SurfaceManager::get_instance();
-    connect(savePb, SIGNAL(pressed()), sm, SLOT(saveAllContours()));
+    connect(savePb, SIGNAL(pressed()), sm, SLOT(saveAllContours())); //TODO test current code as saveAllContours is a private slot
     layout->addWidget(savePb,0,Qt::AlignHCenter);
     layout->addWidget(scrollArea);
     w->setLayout(layout);

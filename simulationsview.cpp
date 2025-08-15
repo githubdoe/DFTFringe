@@ -166,7 +166,7 @@ void SimulationsView::showContextMenu(QPoint pos)
     QPoint globalPos = mapToGlobal(pos);
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Save as image",  this, SLOT(saveImage()));
+    myMenu.addAction("Save as image",  this, SLOT(saveImage())); //TODO test current code as signature of saveImage(QString fileName) doesn't match QAction::triggered(bool checked = false)
 
     // Show context menu at handling position
     myMenu.exec(globalPos);

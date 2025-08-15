@@ -243,7 +243,7 @@ void surfaceAnalysisTools::on_SelectNonePB_clicked()
 {
     ui->wavefrontList->selectionModel()->reset();
 }
-void surfaceAnalysisTools::nameChanged(int ndx, const QString &newname){
+void surfaceAnalysisTools::nameChangedN(int ndx, const QString &newname){
     ui->wavefrontList->item(ndx)->setText(newname);
 }
 
