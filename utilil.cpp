@@ -5,7 +5,7 @@
 #define WIDTH 12
 #define DIV 1048576ull
 
-long showmem(QString /*title*/){
+long showmem(const QString & /*title*/){
 
     //qDebug () << title;
     MEMORYSTATUSEX statex;
@@ -28,5 +28,5 @@ long showmem(QString /*title*/){
      return statex.ullAvailVirtual/DIV;
 }
 #else
-int showmem(QString){return 1000;}
+int showmem(const QString&){return 1000;}
 #endif

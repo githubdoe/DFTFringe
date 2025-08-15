@@ -69,7 +69,7 @@ public:
     bool doCorrection;
     std::vector<double> zernikes;
     std::vector<bool> enables;
-    void setNewTerms(std::vector<double> terms);
+    void setNewTerms(const std::vector<double> &terms);
 
     double getObs();
     bool m_doEdge;

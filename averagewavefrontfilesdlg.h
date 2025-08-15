@@ -16,7 +16,7 @@ class averageWaveFrontFilesDlg : public QDialog
     SurfaceManager *sm;
 
 public:
-    explicit averageWaveFrontFilesDlg(QStringList list, SurfaceManager *sm, QWidget *parent = 0);
+    explicit averageWaveFrontFilesDlg(const QStringList &list, SurfaceManager *sm, QWidget *parent = 0);
     ~averageWaveFrontFilesDlg();
     wavefront *average;
 signals:

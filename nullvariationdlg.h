@@ -25,9 +25,9 @@ private slots:
 
     void on_useMm_clicked(bool checked);
 
-    void on_roc_textChanged(const QString);
+    void on_roc_textChanged(const QString&);
 
-    void on_diameter_textChanged(const QString );
+    void on_diameter_textChanged(const QString &);
 
     void on_rocDelta_valueChanged(double val);
 

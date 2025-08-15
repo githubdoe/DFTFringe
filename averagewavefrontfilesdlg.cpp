@@ -10,7 +10,7 @@
 #include <opencv2/imgproc.hpp>
 
 void showData(const std::string &txt, cv::Mat mat, bool useLog);
-averageWaveFrontFilesDlg::averageWaveFrontFilesDlg(QStringList list, SurfaceManager *m, QWidget *parent) :
+averageWaveFrontFilesDlg::averageWaveFrontFilesDlg(const QStringList &list, SurfaceManager *m, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::averageWaveFrontFilesDlg)
 {

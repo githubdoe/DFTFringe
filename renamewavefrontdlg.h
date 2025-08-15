@@ -29,7 +29,7 @@ class renameWavefrontDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit renameWavefrontDlg(QString name, QWidget *parent = 0);
+    explicit renameWavefrontDlg(const QString &name, QWidget *parent = 0);
     ~renameWavefrontDlg();
     QString name();
 

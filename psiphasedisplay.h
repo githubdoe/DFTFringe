@@ -13,9 +13,9 @@ class PSIphaseDisplay : public QDialog
     Q_OBJECT
 
 public:
-    explicit PSIphaseDisplay( QVector<double> phases, QWidget *parent = 0);
+    explicit PSIphaseDisplay( const QVector<double> &phases, QWidget *parent = 0);
     ~PSIphaseDisplay();
-    void setPhases(QVector<double> phases, int iteration, double sdp);
+    void setPhases(const QVector<double> &phases, int iteration, double sdp);
     void useRadians(bool use);
 private:
     Ui::PSIphaseDisplay *ui;

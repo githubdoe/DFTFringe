@@ -216,7 +216,7 @@ void statsView::on_saveImg_clicked()
 
     image.save( fName, QFileInfo( fName ).suffix().toLatin1() );
 }
-QString statsView::title(QString dir){
+QString statsView::title(const QString &dir){
 
     QString title = m_sm->m_wavefronts[0]->name;
     title = title.left(title.lastIndexOf("/"));

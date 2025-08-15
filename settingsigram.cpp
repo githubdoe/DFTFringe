@@ -184,7 +184,7 @@ void settingsIGram::eraseItem()
     lensesModel->removeRow(currentNdx.row());
     saveLensData();
 }
-void settingsIGram::showContextMenu(const QPoint &pos)
+void settingsIGram::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = ui->lenseTableView->mapToGlobal(pos);
@@ -205,7 +205,7 @@ void settingsIGram::saveLensData(){
     set.setValue("Lenses", v.join("\n"));
 }
 
-void settingsIGram::updateLenses(QString str){
+void settingsIGram::updateLenses(const QString &str){
     m_lensData.push_back(str.split(","));
     saveLensData();
     lensesModel->insertRow(m_lensData.size() -2);

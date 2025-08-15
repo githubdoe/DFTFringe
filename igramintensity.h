@@ -32,7 +32,7 @@ class igramIntensity : public QDialog
 public:
     explicit igramIntensity(QWidget *parent = 0);
     ~igramIntensity();
-    void setIgram(cv::Mat img);
+    void setIgram(const cv::Mat &img);
 private slots:
     void on_showRed_clicked(bool checked);
 

@@ -105,7 +105,7 @@ OGLView::~OGLView(){
     delete m_surface;
 }
 
-void OGLView::showContextMenu(const QPoint &pos)
+void OGLView::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = mapToGlobal(pos);

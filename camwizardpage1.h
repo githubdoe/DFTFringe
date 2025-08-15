@@ -22,17 +22,17 @@ public:
     ~CamWizardPage1();
     QStringList fileList;
     bool runCalibration(cv::Size& imageSize, cv::Mat& cameraMatrix, cv::Mat& distCoeffs,
-                                std::vector<std::vector<cv::Point2f> > imagePoints, std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs,
+                                const std::vector<std::vector<cv::Point2f> > &imagePoints, std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs,
                                 std::vector<float>& reprojErrs,  double& totalAvgErr);
 
     bool runCalibrationAndSave(cv::Size imageSize, cv::Mat&  cameraMatrix,
-                                               cv::Mat& distCoeffs,std::vector<std::vector<cv::Point2f> > imagePoints );
+                                               cv::Mat& distCoeffs,const std::vector<std::vector<cv::Point2f> > &imagePoints );
     Ui::CamWizardPage1 *ui;
     cv::Mat m_coeffs;
 private slots:
     void on_compute_clicked();
     void on_pushButton_clicked();
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
     void eraseItem();
     void on_saveParams_clicked();
     void on_rows_valueChanged(int arg1);

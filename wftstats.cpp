@@ -77,7 +77,7 @@ class ZernScaleDraw: public QwtScaleDraw
 {
 public:
     QVector<QString> m_names;
-    ZernScaleDraw(QVector<QString> names)
+    ZernScaleDraw(const QVector<QString> &names)
 
     {
         m_names = names;
@@ -182,7 +182,7 @@ void wftStats::computeZernStats( int ndx){
     }
 }
 
-QVector<int> histoz(const std::vector<double> data, int bins, double min, double max){
+QVector<int> histoz(const std::vector<double> &data, int bins, double min, double max){
     QVector<int> h(bins, 0);
     double interval = (max - min)/bins;
     for (unsigned int i = 0; i < data.size(); ++i){
@@ -233,7 +233,7 @@ void wftStats::computeWftStats( QVector<wavefront*> wavefronts, int ndx){
 
 }
 double histInterval ;
-QVector<int> histox(const std::vector<double> data, int bins){
+QVector<int> histox(const std::vector<double> &data, int bins){
     QVector<int> h(bins, 0);
 
     for (unsigned int i = 0; i < data.size(); ++i){

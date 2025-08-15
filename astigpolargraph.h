@@ -25,7 +25,7 @@ public:
     QString m_name;
     double m_xastig;
     double m_yastig;
-    astigSample(QString name, double xastig, double yastig): m_name(name), m_xastig(xastig), m_yastig(yastig){};
+    astigSample(const QString &name, double xastig, double yastig): m_name(name), m_xastig(xastig), m_yastig(yastig){};
 };
 
 class astigPolargraph : public QDialog

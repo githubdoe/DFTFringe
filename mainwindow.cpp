@@ -157,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_profilePlot =  new ProfilePlot(review->s2,m_contourTools);
     connect(m_profilePlot, SIGNAL(zoomMe(bool)), this, SLOT(zoomProfile(bool)));
     connect(m_profilePlot, SIGNAL(profileAngleChanged(double)), m_contourView->getPlot(), SLOT(drawProfileLine(double)));
-    connect(m_contourView->getPlot()    , SIGNAL(sigPointSelected(const QPointF&)), m_profilePlot, SLOT(contourPointSelected(const QPointF&)));
+    connect(m_contourView->getPlot()    , SIGNAL(sigPointSelected(QPointF)), m_profilePlot, SLOT(contourPointSelected(QPointF)));
     m_mirrorDlg = mirrorDlg::get_Instance();
     review->s2->addWidget(review->s1);
     review->s2->addWidget(m_profilePlot);
@@ -294,7 +294,7 @@ void MainWindow::importIgram() {
 
 }
 
-int showmem(QString t);
+int showmem(const QString &t);
 void MainWindow::openWaveFrontonInit(QStringList args){
     QProgressDialog pd("    Loading wavefronts in progress.", "Cancel", 0, 100);
     pd.setRange(0, args.size());
@@ -625,7 +625,7 @@ void MainWindow::selectDftTab(){
     ui->tabWidget->setCurrentIndex(1);
 }
 
-void MainWindow::updateChannels(cv::Mat img){
+void MainWindow::updateChannels(const cv::Mat &img){
 
 
     if (m_showChannels){
@@ -738,7 +738,7 @@ void MainWindow::on_actionSave_Wavefront_triggered()
 {
     m_surfaceManager->SaveWavefronts(false);
 }
-void MainWindow::showMessage(QString msg, int id){
+void MainWindow::showMessage(const QString &msg, int id){
 
     switch(id){
     case 1:
@@ -807,7 +807,7 @@ void MainWindow::on_showChannels_clicked(bool checked)
     else
         m_colorChannels->close();
 }
-void MainWindow::imageSize(QString txt){
+void MainWindow::imageSize(const QString &txt){
     ui->igramSize->setText(txt);
 }
 
@@ -821,7 +821,7 @@ void MainWindow::on_showIntensity_clicked(bool checked)
     else
         m_intensityPlot->close();
 }
-void MainWindow::newMirrorDlgPath(QString path){
+void MainWindow::newMirrorDlgPath(const QString &path){
     QFileInfo info(path);
     QSettings settings;
     settings.setValue("lastPath",info.path());
@@ -1848,8 +1848,8 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
                const double& eps, const int& maxorder=12) ;
 #include "armadillo"
-void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
-              QVector<QString> RowLable = QVector<QString>(0));
+void dumpArma(const arma::mat &mm, const QString &title = "", QVector<QString> colHeading = QVector<QString>(0),
+              QVector<QString> RowLable = QVector<QString>(0)); //TODO move declaration to header
 void MainWindow::on_actionDebugStuff_triggered()
 {
     zernikeProcess *zp = zernikeProcess::get_Instance();

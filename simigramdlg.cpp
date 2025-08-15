@@ -205,7 +205,7 @@ simIgramDlg *simIgramDlg::get_instance(){
 double simIgramDlg::getObs(){
     return ui->obsPercent->value();
 }
-void simIgramDlg::setNewTerms(std::vector<double> terms){
+void simIgramDlg::setNewTerms(const std::vector<double> &terms){
 
     zernikes = terms;
     tableModel->setValues(&zernikes);

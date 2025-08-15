@@ -18,7 +18,7 @@
 #include "counterrotationdlg.h"
 #include "ui_counterrotationdlg.h"
 
-CounterRotationDlg::CounterRotationDlg(QString fn, double rot, bool dir, QWidget *parent) :
+CounterRotationDlg::CounterRotationDlg(const QString &fn, double rot, bool dir, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CounterRotationDlg)
 {

@@ -10,7 +10,7 @@ class surfaceData {
     std::vector<double> zernvalues;
     QString m_name;
 
-    surfaceData( double igramlambda, QColor pen, std::vector<double> zernvalues, QString name): igramlambda(igramlambda),
+    surfaceData( double igramlambda, QColor pen, const std::vector<double> &zernvalues, const QString &name): igramlambda(igramlambda),
         penColor(pen), zernvalues(zernvalues){ m_name = name;};
 } ;
 #endif // PERCENTCORRECTIONSURFACE_H

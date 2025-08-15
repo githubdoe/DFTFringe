@@ -1,7 +1,7 @@
 #include "videosetupdlg.h"
 #include "ui_videosetupdlg.h"
 #include <QSettings>
-videoSetupDlg::videoSetupDlg(QImage img, QWidget *parent) :
+videoSetupDlg::videoSetupDlg(const QImage &img, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::videoSetupDlg)
 {

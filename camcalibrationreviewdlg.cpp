@@ -1,8 +1,8 @@
 #include "camcalibrationreviewdlg.h"
 #include "ui_camcalibrationreviewdlg.h"
 #include <QDebug>
-CamCalibrationReviewDlg::CamCalibrationReviewDlg(std::vector<cv::Mat> images, std::vector<cv::Mat> keypoints,
-                                                 std::vector<cv::Mat> corrected, QWidget *parent) :
+CamCalibrationReviewDlg::CamCalibrationReviewDlg(const std::vector<cv::Mat> &images, const std::vector<cv::Mat> &keypoints,
+                                                 const std::vector<cv::Mat> &corrected, QWidget *parent) :
     QDialog(parent),
     m_ndx(0), m_images(images), m_keypoints(keypoints), m_corrected(corrected),
     ui(new Ui::CamCalibrationReviewDlg), m_overlay(false), m_viewType(0)

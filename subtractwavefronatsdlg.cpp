@@ -18,7 +18,7 @@
 #include "subtractwavefronatsdlg.h"
 #include "ui_subtractwavefronatsdlg.h"
 
-subtractWavefronatsDlg::subtractWavefronatsDlg(QList<QString> list, QWidget *parent) :
+subtractWavefronatsDlg::subtractWavefronatsDlg(const QList<QString> &list, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::subtractWavefronatsDlg)
 {

@@ -56,7 +56,7 @@ public slots:
     void saveImage();
     void showSelected();
     void enableFullScreen();
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
 
 };
 

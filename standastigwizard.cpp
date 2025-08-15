@@ -168,7 +168,7 @@ void define_input::deleteSelected(){
 void define_input::changeRotation(){
 }
 
-void define_input::showContextMenu(const QPoint &pos)
+void define_input::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = listDisplay->mapToGlobal(pos);

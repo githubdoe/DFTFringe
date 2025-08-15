@@ -275,7 +275,7 @@ class comp_qual
 {
 public:
 
-    int operator() (const qual &p1, const qual &p2)
+    int operator() (qual p1, qual p2)
     {
     return (p1.m_q < p2.m_q);
     }

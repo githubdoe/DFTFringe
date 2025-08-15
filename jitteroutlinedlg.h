@@ -23,7 +23,7 @@ public:
     int getStart();
     int getEnd();
     int getType();
-    void status(QString status);
+    void status(const QString &status);
 
 private slots:
 

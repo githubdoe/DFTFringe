@@ -34,7 +34,7 @@ ColorChannelDisplay::~ColorChannelDisplay()
 {
     delete ui;
 }
-void ColorChannelDisplay::setImage(cv::Mat imgMat){
+void ColorChannelDisplay::setImage(const cv::Mat &imgMat){
 
     for (int channel = 0; channel < 3; ++channel){
         cv::Mat planes[4];

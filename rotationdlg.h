@@ -29,7 +29,7 @@ class RotationDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit RotationDlg( QList<int> list, QWidget *parent = 0);
+    explicit RotationDlg( const QList<int> &list, QWidget *parent = 0);
     ~RotationDlg();
 signals:
 

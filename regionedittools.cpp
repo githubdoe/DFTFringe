@@ -38,7 +38,7 @@ void regionEditTools::on_line_clicked(bool /*checked*/)
     m_doFreeform = false;
 }
 
-void regionEditTools::addRegion(QString text){
+void regionEditTools::addRegion(const QString &text){
     ui->listWidget->addItem(text);
 }
 

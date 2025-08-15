@@ -13,7 +13,7 @@ class videoSetupDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit videoSetupDlg(QImage img, QWidget *parent = 0);
+    explicit videoSetupDlg(const QImage &img, QWidget *parent = 0);
     ~videoSetupDlg();
     QImage m_img;
     int fps();

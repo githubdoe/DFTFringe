@@ -29,7 +29,7 @@ class subtractWavefronatsDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit subtractWavefronatsDlg(QList<QString> list, QWidget *parent = 0);
+    explicit subtractWavefronatsDlg(const QList<QString> &list, QWidget *parent = 0);
     ~subtractWavefronatsDlg();
     int getSelected();
     bool use_null;

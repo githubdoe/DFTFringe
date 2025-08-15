@@ -14,7 +14,7 @@ class CamCalibrationReviewDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit CamCalibrationReviewDlg(    std::vector<cv::Mat> images,    std::vector<cv::Mat> keypoints, std::vector<cv::Mat> corrected,QWidget *parent = 0);
+    explicit CamCalibrationReviewDlg(    const std::vector<cv::Mat> &images,    const std::vector<cv::Mat> &keypoints, const std::vector<cv::Mat> &corrected,QWidget *parent = 0);
     ~CamCalibrationReviewDlg();
     virtual void resizeEvent( QResizeEvent * );
 private slots:

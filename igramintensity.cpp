@@ -35,7 +35,7 @@ igramIntensity::~igramIntensity()
 {
     delete ui;
 }
-void igramIntensity::setIgram(cv::Mat img){
+void igramIntensity::setIgram(const cv::Mat &img){
 
     ui->plot->setSurface(img);
 

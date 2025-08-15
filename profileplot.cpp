@@ -253,7 +253,7 @@ void ProfilePlot::showAll(){
     populate();
     m_plot->replot();
 }
-void ProfilePlot::zeroOffsetChanged(QString s){
+void ProfilePlot::zeroOffsetChanged(const QString &s){
     if (offsetType == s)
         return;
     double mul = m_showNm * m_showSurface;
@@ -318,7 +318,7 @@ void ProfilePlot::setSurface(wavefront * wf){
     m_plot->replot();
 }
 
-void ProfilePlot::setDefocusWaveFront( cv::Mat_<double> wf){
+void ProfilePlot::setDefocusWaveFront( const cv::Mat_<double> &wf){
     m_defocus_wavefront = wf.clone();
 }
 
@@ -757,7 +757,7 @@ void ProfilePlot::zoom(){
     emit zoomMe(zoomed);
 }
 
-void ProfilePlot::showContextMenu(const QPoint &pos)
+void ProfilePlot::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = mapToGlobal(pos);
@@ -783,7 +783,7 @@ void ProfilePlot::resizeEvent( QResizeEvent *)
         wfs = wf;
     }
 
-void ProfilePlot::contourPointSelected(const QPointF &pos){
+void ProfilePlot::contourPointSelected(QPointF pos){
     if (m_wf == 0)
         return;
     double delx = pos.x() - m_wf->data.rows/2;

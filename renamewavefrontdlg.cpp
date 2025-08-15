@@ -18,7 +18,7 @@
 #include "renamewavefrontdlg.h"
 #include "ui_renamewavefrontdlg.h"
 
-renameWavefrontDlg::renameWavefrontDlg(QString name, QWidget *parent) :
+renameWavefrontDlg::renameWavefrontDlg(const QString &name, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::renameWavefrontDlg)
 {

@@ -77,7 +77,7 @@ class rotationDef {
 public:
     QString fname;
     double angle;
-    rotationDef(QString name, double angle) :
+    rotationDef(const QString &name, double angle) :
         fname(name), angle(angle){};
 };
 
@@ -119,7 +119,7 @@ private slots:
     void browse();
     void deleteSelected();
     void setBasePath();
-    void showContextMenu(const QPoint &pdos);
+    void showContextMenu(QPoint pdos);
     void changeRotation();
 signals:
     void computeStandAstig(define_input *,QList<rotationDef *>);

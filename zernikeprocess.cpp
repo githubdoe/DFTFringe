@@ -1145,7 +1145,7 @@ arma::mat zernikeProcess::zpmC(arma::rowvec rho, arma::rowvec theta, int maxorde
     return zm;
 }
 
-arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder) {
+arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& theta, int maxorder) {
 
   unsigned int nrow = rho.size();
   int mmax = maxorder/2;
@@ -1344,7 +1344,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
 }
 
 //debug routine to see what is matrix values.
-void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
+void dumpArma(const arma::mat &mm, const QString &title = "", QVector<QString> colHeading = QVector<QString>(0),
               QVector<QString> RowLable = QVector<QString>(0)){
     arma::mat theMat = mm;
     QString transposed(" ");

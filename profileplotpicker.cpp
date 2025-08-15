@@ -97,7 +97,7 @@ bool profilePlotPicker::eventFilter( QObject *object, QEvent *event )
 // Select the point at a position. If there is no point
 // deselect the selected point
 
-void profilePlotPicker::select( const QPoint &pos )
+void profilePlotPicker::select( QPoint pos )
 {
     QwtPlotCurve *curve = NULL;
     double dist = 10e10;
@@ -129,7 +129,7 @@ void profilePlotPicker::select( const QPoint &pos )
 
 
 // Move the selected point
-void profilePlotPicker::move( const QPoint &pos )
+void profilePlotPicker::move( QPoint pos )
 {
     qDebug() << "move pos" << pos;
     if ( !d_selectedCurve )

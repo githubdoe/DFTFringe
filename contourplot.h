@@ -86,10 +86,10 @@ signals:
     void setMinMaxValues(double,double);
     void setWaveRange(double);
     void newContourRange(double);
-    void sigPointSelected(const QPointF&);
+    void sigPointSelected(QPointF );
 
 public Q_SLOTS:
-  void selected(const QPointF& pos);
+  void selected(QPointF pos);
 
 
 public Q_SLOTS:

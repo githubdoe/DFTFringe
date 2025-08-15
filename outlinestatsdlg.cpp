@@ -97,7 +97,7 @@ QVector<int> radiusHisto(const QVector<double>& dataQVect, double *minRad, int &
     return h;
 }
 
-outlineStatsDlg::outlineStatsDlg(QStringList names, QWidget *parent) :
+outlineStatsDlg::outlineStatsDlg(const QStringList &names, QWidget *parent) :
     QDialog(parent), m_names(names),
     ui(new Ui::outlineStatsDlg)
 {

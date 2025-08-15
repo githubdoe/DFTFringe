@@ -17,11 +17,11 @@ class astigScatterPlot : public QwtPlot
     double m_max;
 public:
     astigScatterPlot(QWidget *parent = 0);
-    void addValue(QString name, QPointF p);
+    void addValue(const QString &name, QPointF p);
 signals:
     void waveSeleted(QString m);
 public slots:
-    void selectedwave(QString);
+    void selectedwave(const QString&);
 };
 
 #endif // ASTIGSCATTERPLOT_H

@@ -38,7 +38,7 @@ DFTTools::~DFTTools()
 {
     delete ui;
 }
-void DFTTools::imageSize(QString txt){
+void DFTTools::imageSize(const QString &txt){
     ui->imageSize->setText(txt);
 }
 

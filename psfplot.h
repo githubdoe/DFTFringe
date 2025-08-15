@@ -36,7 +36,7 @@ class psfPlot : public QwtPlot
 public:
     explicit psfPlot(QWidget *parent = 0);
     ~psfPlot();
-    void setData(cv::Mat wf, QString label, QPen color, bool doLog);
+    void setData(cv::Mat wf, const QString &label, const QPen &color, bool doLog);
     void clear();
 
 private:

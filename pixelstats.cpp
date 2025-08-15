@@ -124,7 +124,7 @@ bool CanvasPicker::eventFilter( QObject *object, QEvent *event )
 // Select the point at a position. If there is no point
 // deselect the selected point
 
-void CanvasPicker::select( const QPoint &pos )
+void CanvasPicker::select( QPoint pos )
 {
     QwtPlotMarker *mark = NULL;
     double dist = 10e10;
@@ -180,7 +180,7 @@ void CanvasPicker::select( const QPoint &pos )
 
 
 // Move the selected point
-void CanvasPicker::move( const QPoint &pos )
+void CanvasPicker::move( QPoint pos )
 {
     if ( !d_selectedMarker )
         return;

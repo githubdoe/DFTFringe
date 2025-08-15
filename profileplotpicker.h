@@ -20,8 +20,8 @@ public:
 
 private:
 
-    void select( const QPoint & );
-    void move( const QPoint & );
+    void select( QPoint  );
+    void move( QPoint  );
     void moveBy( int dx, int dy );
 
     void release();

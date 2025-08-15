@@ -23,7 +23,7 @@
 class imageHisto
 {
 public:
-    imageHisto(cv::Mat im);
+    imageHisto(const cv::Mat &im);
 
 };
 

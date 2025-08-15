@@ -25,7 +25,7 @@ public:
     QWidget *w1,*w2,*w3;
     ~statsView();
     void replot();
-    QString title(QString dir);
+    QString title(const QString &dir);
     void getWavefronts();
     void sresize();
 

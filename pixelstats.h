@@ -56,8 +56,8 @@ Q_SIGNALS:
     void markerMoved();
 
 private:
-    void select( const QPoint & );
-    void move( const QPoint & );
+    void select( QPoint  );
+    void move( QPoint  );
     void release();
 
     void shiftCurveCursor();
