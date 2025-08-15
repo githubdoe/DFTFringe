@@ -742,7 +742,12 @@ void astigStatsDlg::on_distribution_clicked()
         runningAvgNSB->setValue(runningAvgN);
         runningAvgNSB->setMaximum(1000);
         runningAvgNSB->setSingleStep(10);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         connect(runningAvgNSB, &QSpinBox::valueChanged, this, &astigStatsDlg::runningNChanged);
+#else
+        // QSpinBox::valueChanged is overloaded in Qt5
+        connect(runningAvgNSB, QOverload<int>::of(&QSpinBox::valueChanged), this, &astigStatsDlg::runningNChanged);
+#endif
         QCheckBox *polarCB = new QCheckBox("Polar");
         connect(polarCB, &QAbstractButton::clicked, this, &astigStatsDlg::usePolar);
 

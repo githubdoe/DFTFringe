@@ -1797,9 +1797,17 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 qDebug() << "plain text"<< text;
                 QApplication::setOverrideCursor(Qt::WaitCursor);
                 QProcess *proc = new QProcess;
-                QObject::connect(proc, &QProcess::finished, proc, &QObject::deleteLater);
+                             
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                QObject::connect(proc, &QProcess::finished, proc, &QObject::deleteLater);                
+                connect(proc, &QProcess::finished, [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus << "code" << exitCode; });
+#else
+                //QProcess::finished is overloaded in Qt5
+                QObject::connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), proc, &QObject::deleteLater);
                 connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
                     [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus << "code" << exitCode; });
+#endif
+
 
                 // ensure we kill ffmpeg if the dialog is closed
                 connect(dialog, &QDialog::finished, dialog, [=](int) {
@@ -1824,7 +1832,12 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 });
 
                 QEventLoop loop;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
                 QObject::connect(proc, &QProcess::finished, &loop, &QEventLoop::quit);
+#else
+                //QProcess::finished is overloaded in Qt5
+                QObject::connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), &loop, &QEventLoop::quit);
+#endif
                 loop.exec();
 
                 qDebug() << "done" ;

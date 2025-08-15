@@ -112,7 +112,13 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     if (!m_showSlopeError)
         slopeLimitSB->hide();
     showSlopeError->setChecked(m_showSlopeError);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(slopeLimitSB, &QDoubleSpinBox::valueChanged, this, &ProfilePlot::slopeLimit);
+#else
+        // QDoubleSpinBox::valueChanged is overloaded in Qt5
+    connect(slopeLimitSB, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &ProfilePlot::slopeLimit);
+#endif
+    // 
     connect(showSlopeError,&QAbstractButton::clicked, this, &ProfilePlot::showSlope);
     connect(showPercentCorrection,&QAbstractButton::clicked, this, &ProfilePlot::showCorrection);
     l1->addWidget(showPercentCorrection);
