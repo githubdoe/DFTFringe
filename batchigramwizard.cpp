@@ -95,7 +95,7 @@ void batchIntro::showContextMenu(QPoint pos)
 
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Erase",  this, SLOT(eraseItem()));
+    myMenu.addAction("Erase",  this, &batchIntro::eraseItem);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -136,21 +136,21 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
         filesList->addItem(itm);
     }
     filesList->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(filesList, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
+    connect(filesList, &QWidget::customContextMenuRequested, this, &batchIntro::showContextMenu);
 
-    connect(this, SIGNAL(processBatchList(QStringList)), qobject_cast<MainWindow *>(manager), SLOT(batchProcess(QStringList)));
+    connect(this, &batchIntro::processBatchList, qobject_cast<MainWindow *>(manager), &MainWindow::batchProcess);
     QSettings set;
 
     pgrBar = new QProgressBar;
     batchIgramWizard::addFiles = new QPushButton(tr("Add Files"));
     batchIgramWizard::skipFile = new QPushButton(tr("Skip"));
-    connect(batchIgramWizard::skipFile, SIGNAL(clicked(bool)), qobject_cast<MainWindow *>(manager), SLOT(skipBatchItem()));
+    connect(batchIgramWizard::skipFile, &QAbstractButton::clicked, qobject_cast<MainWindow *>(manager), &MainWindow::skipBatchItem);
     batchIgramWizard::skipFile->setEnabled(false);
-    connect(batchIgramWizard::addFiles, SIGNAL(pressed()), this, SLOT(addFiles()));
+    connect(batchIgramWizard::addFiles, &QAbstractButton::pressed, this, &batchIntro::addFiles);
     batchIgramWizard::autoCb = new QCheckBox(tr("Auto"),this);
     batchIgramWizard::filterCb = new QCheckBox(tr("Filter"),this);
     batchIgramWizard::filterCb->setChecked( set.value("batchWizardFilterFlag", false).toBool());
-    connect(batchIgramWizard::filterCb, SIGNAL(clicked(bool)), this, SLOT(on_filter(bool)));
+    connect(batchIgramWizard::filterCb, &QAbstractButton::clicked, this, &batchIntro::on_filter);
     batchIgramWizard::saveFile = new QCheckBox(tr("Save wavefront file"),this);
     batchIgramWizard::saveFile->setChecked(set.value("batchSaveFile", false).toBool());
     batchIgramWizard::deletePreviousWave = new QCheckBox(tr("Delete Prev Wave"), this);
@@ -159,13 +159,13 @@ batchIntro::batchIntro(QStringList files, QWidget *manager, QWidget *p):
     batchIgramWizard::deletePreviousWave->setChecked(set.value("deletePrevWave", false).toBool());
     batchIgramWizard::showProcessPlots = new QCheckBox(tr("Show Process Plots"));
     batchIgramWizard::showProcessPlots->setChecked(true);
-    connect(batchIgramWizard::showProcessPlots, SIGNAL(clicked(bool)),this, SLOT(showPlots(bool)));
-    connect(batchIgramWizard::saveFile, SIGNAL(clicked(bool)),this, SLOT(on_saveFiles(bool)));
-    connect(batchIgramWizard::deletePreviousWave, SIGNAL(clicked(bool)),this, SLOT(on_deletePreviousWave(bool)));
+    connect(batchIgramWizard::showProcessPlots, &QAbstractButton::clicked,this, &batchIntro::showPlots);
+    connect(batchIgramWizard::saveFile, &QAbstractButton::clicked,this, &batchIntro::on_saveFiles);
+    connect(batchIgramWizard::deletePreviousWave, &QAbstractButton::clicked,this, &batchIntro::on_deletePreviousWave);
     QHBoxLayout  *hlayout = new QHBoxLayout();
     QGroupBox  *outlineGB = new QGroupBox("Auto Outlines");
     batchIgramWizard::goPb = new QPushButton(tr("Process Igrams"),this);
-    connect(batchIgramWizard::goPb, SIGNAL(pressed()), this, SLOT(processBatch()));
+    connect(batchIgramWizard::goPb, &QAbstractButton::pressed, this, &batchIntro::processBatch);
     batchIgramWizard::goPb->setStyleSheet("QPushButton{"
                        " background-color: red;"
                         "border-style: outset;"

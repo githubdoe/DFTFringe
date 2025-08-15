@@ -106,12 +106,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     gscrollArea = scrollArea;
     m_igramArea = new IgramArea(scrollArea, this);
-    connect(m_igramArea, SIGNAL(imageSize(QString)), this, SLOT(imageSize(QString)));
-    connect(m_igramArea, SIGNAL(statusBarUpdate(QString,int)), this, SLOT(showMessage(QString, int)));
-    connect(zernikeProcess::get_Instance(), SIGNAL(statusBarUpdate(QString,int)), this,SLOT(showMessage(QString,int)));
-    connect(m_igramArea, SIGNAL(upateColorChannels(cv::Mat)), this, SLOT(updateChannels(cv::Mat)));
-    connect(m_igramArea, SIGNAL(showTab(int)),  ui->tabWidget, SLOT(setCurrentIndex(int)));
-    connect(this, SIGNAL(gammaChanged(bool,double)), m_igramArea, SLOT(gammaChanged(bool, double)));
+    connect(m_igramArea, &IgramArea::imageSize, this, &MainWindow::imageSize);
+    connect(m_igramArea, &IgramArea::statusBarUpdate, this, &MainWindow::showMessage);
+    connect(zernikeProcess::get_Instance(), &zernikeProcess::statusBarUpdate, this,&MainWindow::showMessage);
+    connect(m_igramArea, &IgramArea::upateColorChannels, this, &MainWindow::updateChannels);
+    connect(m_igramArea, &IgramArea::showTab,  ui->tabWidget, &QTabWidget::setCurrentIndex);
+    connect(this, &MainWindow::gammaChanged, m_igramArea, &IgramArea::gammaChanged);
     m_igramArea->setBackgroundRole(QPalette::Base);
     installEventFilter(m_igramArea);
     //scrollArea->setBackgroundRole(QPalette::Dark);
@@ -125,8 +125,8 @@ MainWindow::MainWindow(QWidget *parent) :
     scrollAreaDft = new QScrollArea;
     scrollAreaDft->setBackgroundRole(QPalette::Base);
     m_dftArea = DFTArea::get_Instance(scrollAreaDft, m_igramArea, m_dftTools, m_vortexDebugTool);
-    connect(m_dftArea, SIGNAL(statusBarUpdate(QString,int)), this, SLOT(showMessage(QString,int)));
-    connect(ui->pushButton, SIGNAL(clicked()), m_dftArea, SLOT(outlineDoneSig()));
+    connect(m_dftArea, &DFTArea::statusBarUpdate, this, &MainWindow::showMessage);
+    connect(ui->pushButton, &QAbstractButton::clicked, m_dftArea, &DFTArea::outlineDoneSig);
     scrollAreaDft->setWidget(m_dftArea);
     scrollAreaDft->resize(800,800);
     ui->tabWidget->addTab(scrollAreaDft, "Analyze");
@@ -138,28 +138,28 @@ MainWindow::MainWindow(QWidget *parent) :
     m_regionsEdit = new regionEditTools(this);
     m_regionsEdit->hide();
     m_igramArea->m_regionEdit = m_regionsEdit;
-    connect(m_regionsEdit, SIGNAL(addregion()),m_igramArea, SLOT(addregion()));
-    connect(m_regionsEdit, SIGNAL(deleteregion(int)), m_igramArea, SLOT(deleteregion(int)));
-    connect(m_regionsEdit, SIGNAL(selectRegion(int)), m_igramArea, SLOT(selectRegion(int)));
+    connect(m_regionsEdit, &regionEditTools::addregion,m_igramArea, &IgramArea::addregion);
+    connect(m_regionsEdit, &regionEditTools::deleteregion, m_igramArea, &IgramArea::deleteregion);
+    connect(m_regionsEdit, &regionEditTools::selectRegion, m_igramArea, &IgramArea::selectRegion);
     //DocWindows
     createDockWindows();
 
     userMapDlg = new userColorMapDlg();
 
     m_contourView = new contourView(this, m_contourTools);
-    connect(m_contourView, SIGNAL(zoomMe(bool)),this, SLOT(zoomContour(bool)));
+    connect(m_contourView, &contourView::zoomMe,this, &MainWindow::zoomContour);
     m_ogl = new OGLView(0, m_contourTools);
-    connect(m_ogl, SIGNAL(fullScreen()), this, SLOT(zoomOgl()));
+    connect(m_ogl, &OGLView::fullScreen, this, &MainWindow::zoomOgl);
 
-    connect(userMapDlg, SIGNAL(colorMapChanged(int)), m_contourView->getPlot(), SLOT(ContourMapColorChanged(int)));
+    connect(userMapDlg, &userColorMapDlg::colorMapChanged, m_contourView->getPlot(), &ContourPlot::ContourMapColorChanged);
     //connect(userMapDlg, SIGNAL(colorMapChanged(int)),m_ogl->m_gl, SLOT(colorMapChanged(int)));
     review = new reviewWindow(this);
     review->s1->addWidget(m_ogl);
 
     m_profilePlot =  new ProfilePlot(review->s2,m_contourTools);
-    connect(m_profilePlot, SIGNAL(zoomMe(bool)), this, SLOT(zoomProfile(bool)));
-    connect(m_profilePlot, SIGNAL(profileAngleChanged(double)), m_contourView->getPlot(), SLOT(drawProfileLine(double)));
-    connect(m_contourView->getPlot()    , SIGNAL(sigPointSelected(QPointF)), m_profilePlot, SLOT(contourPointSelected(QPointF)));
+    connect(m_profilePlot, &ProfilePlot::zoomMe, this, &MainWindow::zoomProfile);
+    connect(m_profilePlot, &ProfilePlot::profileAngleChanged, m_contourView->getPlot(), &ContourPlot::drawProfileLine);
+    connect(m_contourView->getPlot()    , &ContourPlot::sigPointSelected, m_profilePlot, &ProfilePlot::contourPointSelected);
     m_mirrorDlg = mirrorDlg::get_Instance();
     review->s2->addWidget(review->s1);
     review->s2->addWidget(m_profilePlot);
@@ -178,11 +178,11 @@ MainWindow::MainWindow(QWidget *parent) :
     //Surface Manager
     m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView,
                                           m_ogl->m_surface, metrics);
-    connect(m_contourView, SIGNAL(showAllContours()), m_surfaceManager, SLOT(showAllContours()));
+    connect(m_contourView, &contourView::showAllContours, m_surfaceManager, &SurfaceManager::showAllContours);
     connect(m_dftArea, SIGNAL(newWavefront(cv::Mat,CircleOutline,CircleOutline,QString, QVector<std::vector<cv::Point> >)),
             m_surfaceManager, SLOT(createSurfaceFromPhaseMap(cv::Mat,CircleOutline,CircleOutline,QString, QVector<std::vector<cv::Point> >)));
-    connect(m_surfaceManager, SIGNAL(diameterChanged(double)),this,SLOT(diameterChanged(double)));
-    connect(m_surfaceManager, SIGNAL(showTab(int)), ui->tabWidget, SLOT(setCurrentIndex(int)));
+    connect(m_surfaceManager, &SurfaceManager::diameterChanged,this,&MainWindow::diameterChanged);
+    connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
     connect(m_surfTools, SIGNAL(updateSelected()), m_surfaceManager, SLOT(backGroundUpdate()));
     ui->tabWidget->addTab(review, "Results");
 
@@ -199,24 +199,24 @@ MainWindow::MainWindow(QWidget *parent) :
     updateRecentFileActions();
     qRegisterMetaType<QVector<int> >();
 
-    connect( m_igramArea, SIGNAL(enableShiftButtons(bool)), this,SLOT(enableShiftButtons(bool)));
-    connect(m_dftArea, SIGNAL(dftReady(QImage)), m_igramArea,SLOT(dftReady(QImage)));
-    connect(m_igramArea, SIGNAL(dftCenterFilter(double)), m_dftArea, SLOT(dftCenterFilter(double)));
-    connect(m_igramArea, SIGNAL(doDFT()), m_dftArea, SLOT(doDFT()));
+    connect( m_igramArea, &IgramArea::enableShiftButtons, this,&MainWindow::enableShiftButtons);
+    connect(m_dftArea, &DFTArea::dftReady, m_igramArea,&IgramArea::dftReady);
+    connect(m_igramArea, &IgramArea::dftCenterFilter, m_dftArea, &DFTArea::dftCenterFilter);
+    connect(m_igramArea, &IgramArea::doDFT, m_dftArea, &DFTArea::doDFT);
     enableShiftButtons(true);
 
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_I), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(importIgram()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &MainWindow::importIgram);
 
     QShortcut *shortcutl = new QShortcut(QKeySequence(Qt::Key_L), this);
-    QObject::connect(shortcutl, SIGNAL(activated()), this, SLOT(on_actionLoad_Interferogram_triggered()));
+    QObject::connect(shortcutl, &QShortcut::activated, this, &MainWindow::on_actionLoad_Interferogram_triggered);
 
     QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_O), this);
-    QObject::connect(shortcut1, SIGNAL(activated()), this, SLOT(on_actionLoad_Interferogram_triggered()));
+    QObject::connect(shortcut1, &QShortcut::activated, this, &MainWindow::on_actionLoad_Interferogram_triggered);
 
-    connect(m_dftTools,SIGNAL(doDFT()),m_dftArea,SLOT(doDFT()));
+    connect(m_dftTools,&DFTTools::doDFT,m_dftArea,&DFTArea::doDFT);
     settingsDlg = Settings2::getInstance();
-    connect(settingsDlg->m_igram, SIGNAL(igramLinesChanged(outlineParms)), m_igramArea, SLOT(igramOutlineParmsChanged(outlineParms)));
+    connect(settingsDlg->m_igram, &settingsIGram::igramLinesChanged, m_igramArea, &IgramArea::igramOutlineParmsChanged);
     connect(settingsDlg->m_general, SIGNAL(updateContourPlot()),m_contourView, SLOT(updateRuler()));
 
     QSettings settings;
@@ -224,8 +224,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     restoreState(settings.value("MainWindow/windowState").toByteArray());
     restoreGeometry(settings.value("geometry").toByteArray());
-    connect(m_dftArea,SIGNAL(selectDFTTab()), this, SLOT(selectDftTab()));
-    connect(ui->tabWidget,SIGNAL(currentChanged(int)),this, SLOT(mainTabChanged(int)));
+    connect(m_dftArea,&DFTArea::selectDFTTab, this, &MainWindow::selectDftTab);
+    connect(ui->tabWidget,&QTabWidget::currentChanged,this, &MainWindow::mainTabChanged);
     tabifyDockWidget(ui->outlineTools, m_dftTools);
     setTabPosition(Qt::RightDockWidgetArea, QTabWidget::West);
     setTabShape(QTabWidget::Triangular);
@@ -251,8 +251,8 @@ MainWindow::MainWindow(QWidget *parent) :
         zernEnables[i] = false;
     }
 
-    connect(m_surfaceManager, SIGNAL(rocChanged(double)),this, SLOT(rocChanged(double)));
-    connect(m_mirrorDlg, SIGNAL(newPath(QString)),this, SLOT(newMirrorDlgPath(QString)));
+    connect(m_surfaceManager, &SurfaceManager::rocChanged,this, &MainWindow::rocChanged);
+    connect(m_mirrorDlg, &mirrorDlg::newPath,this, &MainWindow::newMirrorDlgPath);
     progBar = new QProgressBar(this);
 
     status1 = new QLabel();
@@ -492,8 +492,8 @@ void MainWindow::createActions()
     for (int i = 0; i < MaxRecentFiles; ++i) {
         recentFileActs[i] = new QAction(this);
         recentFileActs[i]->setVisible(false);
-        connect(recentFileActs[i], SIGNAL(triggered()),
-                this, SLOT(openRecentFile()));
+        connect(recentFileActs[i], &QAction::triggered,
+                this, &MainWindow::openRecentFile);
 
     }
 }
@@ -1061,15 +1061,15 @@ void MainWindow::batchConnections(bool flag){
     qDebug() << "BatchConnection " << flag;
     if (flag){
         m_inBatch = true;
-        disconnect(m_dftTools, SIGNAL(makeSurface()), m_dftArea, SIGNAL(makeSurface()));
-        connect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
-        connect(batchIgramWizard::saveZerns, SIGNAL(pressed()), this, SLOT(saveBatchZerns()));
+        disconnect(m_dftTools, &DFTTools::makeSurface, m_dftArea, &DFTArea::makeSurface);
+        connect(m_dftTools, &DFTTools::makeSurface, this, &MainWindow::batchMakeSurfaceReady);
+        connect(batchIgramWizard::saveZerns, &QAbstractButton::pressed, this, &MainWindow::saveBatchZerns);
     }
     else {
         m_inBatch = false;
-        connect(m_dftTools, SIGNAL(makeSurface()), m_dftArea, SLOT(makeSurface()));
-        disconnect(m_dftTools, SIGNAL(makeSurface()), this, SLOT(batchMakeSurfaceReady()));
-        disconnect(batchIgramWizard::saveZerns, SIGNAL(pressed()), this, SLOT(saveBatchZerns()));
+        connect(m_dftTools, &DFTTools::makeSurface, m_dftArea, &DFTArea::makeSurface);
+        disconnect(m_dftTools, &DFTTools::makeSurface, this, &MainWindow::batchMakeSurfaceReady);
+        disconnect(batchIgramWizard::saveZerns, &QAbstractButton::pressed, this, &MainWindow::saveBatchZerns);
     }
 }
 void MainWindow::saveBatchZerns(){
@@ -1307,7 +1307,7 @@ void MainWindow::Batch_Process_Interferograms()
     batchWiz = new batchIgramWizard(m_igramsToProcess, this,Qt::Window);
     batchConnections(true);
     //connect(batchIgramWizard::goPb, &QPushButton::pressed, this, &MainWindow::batchProcess);
-    connect(batchWiz, SIGNAL(finished(int)), this, SLOT(batchFinished(int)));
+    connect(batchWiz, &QDialog::finished, this, &MainWindow::batchFinished);
     batchWiz->show();
 
 }
@@ -1328,7 +1328,7 @@ void MainWindow::on_actionVersion_History_triggered()
 void MainWindow::on_actionIterate_outline_triggered()
 {
     jitterOutlineDlg *dlg = jitterOutlineDlg::getInstance(this);
-    connect(dlg,SIGNAL(finished(int)),this,SLOT(stopJitter()));
+    connect(dlg,&QDialog::finished,this,&MainWindow::stopJitter);
     dlg->show();
 }
 static bool stopJittering = false;
@@ -1442,7 +1442,7 @@ void MainWindow::zoomProfile(bool flag){
     }
     profileFv = new QWidget(0);
     profileFv->setAttribute( Qt::WA_DeleteOnClose );
-    connect(profileFv,SIGNAL(destroyed(QObject*)),this, SLOT(restoreProfile()));
+    connect(profileFv,&QObject::destroyed,this, &MainWindow::restoreProfile);
     QVBoxLayout *l = new QVBoxLayout();
     l->addWidget(m_profilePlot);
     m_profilePlot->setMinimumHeight(300);
@@ -1457,7 +1457,7 @@ void MainWindow::zoomContour(bool flag){
     }
     contourFv = new QWidget(0);
     contourFv->setAttribute( Qt::WA_DeleteOnClose );
-    connect(contourFv,SIGNAL(destroyed(QObject*)),this, SLOT(restoreContour()));
+    connect(contourFv,&QObject::destroyed,this, &MainWindow::restoreContour);
     QVBoxLayout *l = new QVBoxLayout();
     l->addWidget(m_contourView);
     m_contourView->setMinimumHeight(300);
@@ -1470,7 +1470,7 @@ void MainWindow::zoomOgl()
 
     oglFv = new QWidget(0);
     oglFv->setAttribute( Qt::WA_DeleteOnClose );
-    connect(oglFv,SIGNAL(destroyed(QObject*)),this, SLOT(restoreOgl()));
+    connect(oglFv,&QObject::destroyed,this, &MainWindow::restoreOgl);
     QVBoxLayout *l = new QVBoxLayout();
     //m_ogl->setMinimumHeight(300);
     l->addWidget(m_ogl);
@@ -1495,7 +1495,7 @@ void MainWindow::on_actionEdit_Zernike_values_triggered()
     dlg->setWindowFlags(Qt::Tool);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
-    connect(dlg, SIGNAL(termCountChanged(int)), metrics, SLOT(resizeRows(int)));
+    connect(dlg, &zernikeEditDlg::termCountChanged, metrics, &metricsDisplay::resizeRows);
 }
 
 void MainWindow::on_actionCamera_Calibration_triggered()
@@ -1797,7 +1797,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 qDebug() << "plain text"<< text;
                 QApplication::setOverrideCursor(Qt::WaitCursor);
                 QProcess *proc = new QProcess;
-                QObject::connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)), proc, SLOT(deleteLater()));
+                QObject::connect(proc, &QProcess::finished, proc, &QObject::deleteLater);
                 connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
                     [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus << "code" << exitCode; });
 
@@ -1824,7 +1824,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 });
 
                 QEventLoop loop;
-                QObject::connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)), &loop, SLOT(quit()));
+                QObject::connect(proc, &QProcess::finished, &loop, &QEventLoop::quit);
                 loop.exec();
 
                 qDebug() << "done" ;

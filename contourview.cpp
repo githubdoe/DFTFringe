@@ -34,8 +34,8 @@ contourView::contourView(QWidget *parent, ContourTools *tools) :
     ui->fillContourCB->setChecked(set.value("contourShowFill", true).toBool());
     ui->showRuler->setChecked(set.value("contourShowRuler",false).toBool());
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(this, &QWidget::customContextMenuRequested, this,
+            &contourView::showContextMenu);
     setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     ps = new pixelStats;
 
@@ -76,7 +76,7 @@ void contourView::showContextMenu(QPoint pos)
     // Create menu and insert some actions
     QMenu myMenu;
     QString txt = (zoomed)? tr("Restore to MainWindow") : tr("FullScreen");
-    myMenu.addAction(txt,  this, SLOT(zoom()));
+    myMenu.addAction(txt,  this, &contourView::zoom);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);

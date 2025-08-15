@@ -71,7 +71,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
 {
 
     m_pcdlg = new percentCorrectionDlg;
-    QObject::connect(m_pcdlg, SIGNAL(make_percent_correction()), this, SLOT(make_correction_graph()));
+    QObject::connect(m_pcdlg, &percentCorrectionDlg::make_percent_correction, this, &ProfilePlot::make_correction_graph);
     zoomed = false;
     m_defocus_mode = false;
     m_plot = new QwtPlot(this);
@@ -85,9 +85,9 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     OneOnly = new QRadioButton("one diameter of current wavefront",this);
     OneOnly->setChecked(true);
     ShowAll = new QRadioButton("All wavefronts",this);
-    connect(Show16, SIGNAL(clicked()), this, SLOT(show16()));
-    connect(OneOnly, SIGNAL(clicked()), this, SLOT(showOne()));
-    connect(ShowAll, SIGNAL(clicked()), this, SLOT(showAll()));
+    connect(Show16, &QAbstractButton::clicked, this, &ProfilePlot::show16);
+    connect(OneOnly, &QAbstractButton::clicked, this, &ProfilePlot::showOne);
+    connect(ShowAll, &QAbstractButton::clicked, this, &ProfilePlot::showAll);
     l1->addStretch();
     showSlopeError = new QCheckBox("Show Slope: ");
     showPercentCorrection = new QPushButton("Show Correction");
@@ -112,9 +112,9 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     if (!m_showSlopeError)
         slopeLimitSB->hide();
     showSlopeError->setChecked(m_showSlopeError);
-    connect(slopeLimitSB, SIGNAL(valueChanged(double)), this, SLOT(slopeLimit(double)));
-    connect(showSlopeError,SIGNAL(clicked(bool)), this, SLOT(showSlope(bool)));
-    connect(showPercentCorrection,SIGNAL(clicked()), this, SLOT(showCorrection()));
+    connect(slopeLimitSB, &QDoubleSpinBox::valueChanged, this, &ProfilePlot::slopeLimit);
+    connect(showSlopeError,&QAbstractButton::clicked, this, &ProfilePlot::showSlope);
+    connect(showPercentCorrection,&QAbstractButton::clicked, this, &ProfilePlot::showCorrection);
     l1->addWidget(showPercentCorrection);
     l1->addWidget(showSlopeError);
     l1->addWidget(slopeLimitSB);
@@ -192,12 +192,12 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
        // new QwtCompassMagnetNeedle( QwtCompassMagnetNeedle::ThinStyle ) );
     compass->setValue( 270 );
     compass->setOrigin( -90 );
-    connect(compass,SIGNAL(valueChanged(double)),this ,SLOT(angleChanged(double)));
-    connect(m_tools, SIGNAL(newDisplayErrorRange(double,double)),
-            this, SLOT(newDisplayErrorRange(double,double)));
-    connect(m_tools, SIGNAL(contourZeroOffsetChanged(QString)), this, SLOT(zeroOffsetChanged(QString)));
-    connect(showNmCB, SIGNAL(clicked(bool)), this, SLOT(showNm(bool)));
-    connect(showSurfaceCB, SIGNAL(clicked(bool)),this, SLOT(showSurface(bool)));
+    connect(compass,&QwtAbstractSlider::valueChanged,this ,&ProfilePlot::angleChanged);
+    connect(m_tools, &ContourTools::newDisplayErrorRange,
+            this, &ProfilePlot::newDisplayErrorRange);
+    connect(m_tools, &ContourTools::contourZeroOffsetChanged, this, &ProfilePlot::zeroOffsetChanged);
+    connect(showNmCB, &QAbstractButton::clicked, this, &ProfilePlot::showNm);
+    connect(showSurfaceCB, &QAbstractButton::clicked,this, &ProfilePlot::showSurface);
 
     ui->setupUi(this);
     populate();
@@ -765,7 +765,7 @@ void ProfilePlot::showContextMenu(QPoint pos)
     // Create menu and insert some actions
     QMenu myMenu;
     QString txt = (zoomed)? "Restore to MainWindow" : "FullScreen";
-    myMenu.addAction(txt,  this, SLOT(zoom()));
+    myMenu.addAction(txt,  this, &ProfilePlot::zoom);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);

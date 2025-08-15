@@ -21,10 +21,10 @@ waveFrontLoader::waveFrontLoader(QObject *parent) :
     QObject(parent),  done(true),shouldCancel(false)
 {
     pd = new QProgressDialog("    Loading wavefronts in PRogress.", "Cancel", 0, 100);
-    connect(pd, SIGNAL(canceled()), this, SLOT(cancel()));
-    connect(this, SIGNAL(status(int)), pd, SLOT(setValue(int)));
-    connect(this, SIGNAL(progressRange(int,int)), pd, SLOT(setRange(int,int)));
-    connect(this, SIGNAL(currentWavefront(QString)), pd, SLOT(setLabelText(QString)));
+    connect(pd, &QProgressDialog::canceled, this, &waveFrontLoader::cancel);
+    connect(this, &waveFrontLoader::status, pd, &QProgressDialog::setValue);
+    connect(this, &waveFrontLoader::progressRange, pd, &QProgressDialog::setRange);
+    connect(this, &waveFrontLoader::currentWavefront, pd, &QProgressDialog::setLabelText);
 }
 
 void waveFrontLoader::addWavefront(const QString &filename){

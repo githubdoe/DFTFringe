@@ -109,7 +109,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->fringeSpacingEdit->blockSignals(false);
     m_outlineShape = (outlineShape)settings.value("outlineShape", CIRCLE).toInt();
     ui->minorAxisEdit->setText(QString::number(settings.value("ellipseMinorAxis", 50.).toDouble()));
-    connect(&spacingChangeTimer, SIGNAL(timeout()), this, SLOT(spacingChangeTimeout()));
+    connect(&spacingChangeTimer, &QTimer::timeout, this, &mirrorDlg::spacingChangeTimeout);
     if (m_verticalAxis == 0)
         m_verticalAxis = diameter;
     ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);

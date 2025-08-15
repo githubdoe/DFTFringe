@@ -85,19 +85,19 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool) :
     lh->addWidget(saveImagePb);
     lh->addWidget(showSelectedPb);
     lh->addWidget(m_fullScreenPb);
-    connect(lightingPb, SIGNAL(pressed()), this,SLOT(openLightDlg()));
-    connect(saveImagePb, SIGNAL(pressed()), this, SLOT(saveImage()));
-    connect(showSelectedPb, SIGNAL(pressed()), this, SLOT(showSelected()));
-    connect(m_tool,SIGNAL(ContourMapColorChanged(int)), m_surface, SLOT(setColorMap(int)));
-    connect(m_fullScreenPb, SIGNAL(pressed()), this, SLOT(fullScreenPressed()));
+    connect(lightingPb, &QAbstractButton::pressed, this,&OGLView::openLightDlg);
+    connect(saveImagePb, &QAbstractButton::pressed, this, &OGLView::saveImage);
+    connect(showSelectedPb, &QAbstractButton::pressed, this, &OGLView::showSelected);
+    connect(m_tool,&ContourTools::ContourMapColorChanged, m_surface, &SurfaceGraph::setColorMap);
+    connect(m_fullScreenPb, &QAbstractButton::pressed, this, &OGLView::fullScreenPressed);
     lh->addStretch();
     lv->addWidget(m_container);
     topH->addLayout(lv,10);
     topH->addLayout(rightcontrols,1);
     setLayout(topH);
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(this, &QWidget::customContextMenuRequested, this,
+            &OGLView::showContextMenu);
 }
 OGLView::~OGLView(){
     m_controls->close();
@@ -113,7 +113,7 @@ void OGLView::showContextMenu(QPoint pos)
     // Create menu and insert some actions
     QMenu myMenu;
 
-    myMenu.addAction("FullScreen",  this, SLOT(fullScreenPressed()));
+    myMenu.addAction("FullScreen",  this, &OGLView::fullScreenPressed);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);

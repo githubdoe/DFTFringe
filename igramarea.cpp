@@ -112,37 +112,37 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     m_dftThumb = new dftThumb(this);
     m_dftThumb->setWindowFlags(    Qt::WindowStaysOnTopHint);
     m_outlineTimer = new QTimer(this);
-    connect(m_outlineTimer, SIGNAL(timeout()),this, SLOT(outlineTimerTimeout()));
+    connect(m_outlineTimer, &QTimer::timeout,this, &IgramArea::outlineTimerTimeout);
     m_doGamma = false;
     m_gammaValue = 2.2;
     m_lastGamma = 2.2;
     needToConvertBGR = false;
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Down), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftDown()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::shiftDown);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Up), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftUp()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::shiftUp);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftLeft()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::shiftLeft);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Right), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftRight()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::shiftRight);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Minus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(decrease()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::decrease);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(increase()));
     shortcut = new QShortcut(QKeySequence("f"), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomFull()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::zoomFull);
     shortcut = new QShortcut(QKeySequence("h"), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(toggleHideOutline()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::toggleHideOutline);
     shortcut = new QShortcut(QKeySequence::ZoomIn, this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomIn()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::zoomIn);
     shortcut = new QShortcut(QKeySequence::ZoomOut, this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomOut()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::zoomOut);
     shortcut = new QShortcut(QKeySequence("1"), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(edgeMode()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::edgeMode);
 
-    connect(colorChannel::get_instance(),SIGNAL(useChannelsChanged()), this, SLOT(colorChannelChanged()));
+    connect(colorChannel::get_instance(),&colorChannel::useChannelsChanged, this, &IgramArea::colorChannelChanged);
 
-    connect(mirrorDlg::get_Instance(), SIGNAL(aperatureChanged()), this, SLOT(aperatureChanged()));
+    connect(mirrorDlg::get_Instance(), &mirrorDlg::aperatureChanged, this, &IgramArea::aperatureChanged);
     m_edgeMaskWidth = 0;
 }
 void IgramArea::computeEdgeRadius(){

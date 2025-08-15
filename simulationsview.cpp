@@ -92,9 +92,9 @@ SimulationsView::SimulationsView(QWidget *parent) :
     ui->FFTSizeSB->blockSignals(false);
     ui->centerMagnifySB->setValue(set.value("StarTestMagnify", 4).toDouble());
     ui->gammaSB->setValue(set.value("StarTestGamma", 2.).toDouble());
-    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_MakePB_clicked()));
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(&m_guiTimer, &QTimer::timeout, this, &SimulationsView::on_MakePB_clicked);
+    connect(this, &QWidget::customContextMenuRequested, this,
+            &SimulationsView::showContextMenu);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 

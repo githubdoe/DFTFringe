@@ -261,7 +261,7 @@ void astigStatsDlg::plot(){
     QwtLegend *l = new QwtLegend();
     ui->mPlot->insertLegend( l, QwtPlot::TopLegend );
     l->setDefaultItemMode( QwtLegendData::Checkable );
-    connect(l, SIGNAL(checked(QVariant,bool,int)), this, SLOT(showItem(QVariant ,bool,int)));
+    connect(l, &QwtLegend::checked, this, &astigStatsDlg::showItem);
 
     if(picker != nullptr){
         delete picker;
@@ -734,17 +734,17 @@ void astigStatsDlg::on_distribution_clicked()
         distributionWindow->setLayout(layout);
         // build the toolBar
         QPushButton *pbMakePDF = new QPushButton("Save as PDF");
-        connect(pbMakePDF, SIGNAL(pressed()), this, SLOT(on_savePdf()));
+        connect(pbMakePDF, &QAbstractButton::pressed, this, &astigStatsDlg::on_savePdf);
         QCheckBox *showSamplesCB = new QCheckBox("Show individual samples");
         showSamplesCB->setChecked(showSamples);
-        connect(showSamplesCB, SIGNAL(clicked(bool)), this, SLOT(showSamplesChanged(bool)));
+        connect(showSamplesCB, &QAbstractButton::clicked, this, &astigStatsDlg::showSamplesChanged);
         QSpinBox *runningAvgNSB = new QSpinBox;
         runningAvgNSB->setValue(runningAvgN);
         runningAvgNSB->setMaximum(1000);
         runningAvgNSB->setSingleStep(10);
-        connect(runningAvgNSB, SIGNAL(valueChanged(int)), this, SLOT(runningNChanged(int)));
+        connect(runningAvgNSB, &QSpinBox::valueChanged, this, &astigStatsDlg::runningNChanged);
         QCheckBox *polarCB = new QCheckBox("Polar");
-        connect(polarCB, SIGNAL(clicked(bool)), this, SLOT(usePolar(bool)));
+        connect(polarCB, &QAbstractButton::clicked, this, &astigStatsDlg::usePolar);
 
 
         toolLayout->addWidget(showSamplesCB);

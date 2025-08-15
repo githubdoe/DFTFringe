@@ -47,7 +47,7 @@ nullVariationDlg::nullVariationDlg(QWidget *parent) :
     vLayout->addWidget(histo_plot);
     ui->histoPlot->setLayout(vLayout);
     qDebug() << ui->roc->text();
-    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_ComputeSim_clicked()));
+    connect(&m_guiTimer, &QTimer::timeout, this, &nullVariationDlg::on_ComputeSim_clicked);
     calculate();
 }
 

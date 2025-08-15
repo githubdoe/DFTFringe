@@ -283,7 +283,7 @@ pixelStats::pixelStats(QWidget *parent) :
     ui->verticalLayout->addWidget(scrollArea);
     scrollArea->setWidgetResizable(true);
     CanvasPicker *cp = new CanvasPicker(ui->histo);
-    connect(cp,SIGNAL(markerMoved()), this,SLOT(bounds_valueChanged()));
+    connect(cp,&CanvasPicker::markerMoved, this,&pixelStats::bounds_valueChanged);
 
     setWindowFlags(    Qt::WindowStaysOnTopHint);
 

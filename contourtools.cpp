@@ -55,7 +55,7 @@ ContourTools::ContourTools(QWidget *parent) :
     ui->lineColorDisplay->setPalette(pal);
     ui->lineColorDisplay->setAutoFillBackground( true );
     m_minmaxEditTimer = new QTimer(this);
-    connect(m_minmaxEditTimer, SIGNAL(timeout()),this, SLOT(updateMinMax()));
+    connect(m_minmaxEditTimer, &QTimer::timeout,this, &ContourTools::updateMinMax);
 
 }
 

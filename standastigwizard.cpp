@@ -175,7 +175,7 @@ void define_input::showContextMenu(QPoint pos)
 
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Erase",  this, SLOT(deleteSelected()));
+    myMenu.addAction("Erase",  this, &define_input::deleteSelected);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -189,12 +189,12 @@ define_input::define_input(QWidget *parent)
     setSubTitle(tr("Add each averaged wavefront for each rotation angle. Then Press Compute."));
     browsePb = new QPushButton("Add average Wavefront file to List");
     QString pdfNameStr = set.value("stand pdf file", "stand.pdf").toString();
-    connect(browsePb, SIGNAL(pressed()), this, SLOT(browse()));
+    connect(browsePb, &QAbstractButton::pressed, this, &define_input::browse);
     AstigReportTitle = mirrorDlg::get_Instance()->m_name;
     AstigReportPdfName = mirrorDlg::get_Instance()->getProjectPath() + "/" + pdfNameStr;
     title = new QLineEdit(AstigReportTitle);
     pdfName = new QPushButton(AstigReportPdfName);
-    connect(pdfName, SIGNAL(pressed()), this, SLOT(pdfNamesPressed()));
+    connect(pdfName, &QAbstractButton::pressed, this, &define_input::pdfNamesPressed);
     runpb = new QPushButton("Compute");
     runpb->setObjectName("Compute");
 
@@ -225,7 +225,7 @@ define_input::define_input(QWidget *parent)
                                    " }");
 
 
-    connect(runpb, SIGNAL(pressed()), this, SLOT(compute()));
+    connect(runpb, &QAbstractButton::pressed, this, &define_input::compute);
     QSettings settings;
     QString lastPath = settings.value("projectPath","").toString();
     basePath = new QLineEdit(settings.value("rotation base path",lastPath).toString());
@@ -238,7 +238,7 @@ define_input::define_input(QWidget *parent)
     else
         CWRb->setChecked(true);
 
-    connect(browsePath, SIGNAL(pressed()), this, SLOT(setBasePath()));
+    connect(browsePath, &QAbstractButton::pressed, this, &define_input::setBasePath);
 
 
 
@@ -264,8 +264,8 @@ define_input::define_input(QWidget *parent)
 //        listDisplay->addItem(set.value("item").toString());
 //    }
     set.endArray();
-    connect(listDisplay, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(listDisplay, &QWidget::customContextMenuRequested, this,
+            &define_input::showContextMenu);
 
     l->addWidget(listDisplay,8,0,10,-1);
     l->addWidget(new QLabel("Report Title:"),18,0);

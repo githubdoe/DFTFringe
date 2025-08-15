@@ -24,7 +24,7 @@ ZernikeSmoothingDlg::ZernikeSmoothingDlg(wavefront &wf, QWidget *parent) :
     m_maxOrder = set.value("Zern maxOrder", 22).toInt();
     ui->maxOrder->setValue(m_maxOrder);
     ui->termCnt->setText(QString("%1 Terms").arg(m_noOfTerms));
-    connect(&m_timer, SIGNAL(timeout()), this, SLOT(intiZernTable()));
+    connect(&m_timer, &QTimer::timeout, this, &ZernikeSmoothingDlg::intiZernTable);
     tableModel->setValues(&m_wf.InputZerns);
     m_sm = SurfaceManager::get_instance();
 
