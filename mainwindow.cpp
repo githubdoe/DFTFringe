@@ -157,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_profilePlot =  new ProfilePlot(review->s2,m_contourTools);
     connect(m_profilePlot, SIGNAL(zoomMe(bool)), this, SLOT(zoomProfile(bool)));
     connect(m_profilePlot, SIGNAL(profileAngleChanged(double)), m_contourView->getPlot(), SLOT(drawProfileLine(double)));
-    connect(m_contourView->getPlot()    , SIGNAL(sigPointSelected(const QPointF&)), m_profilePlot, SLOT(contourPointSelected(const QPointF&)));
+    connect(m_contourView->getPlot()    , SIGNAL(sigPointSelected(QPointF)), m_profilePlot, SLOT(contourPointSelected(QPointF)));
     m_mirrorDlg = mirrorDlg::get_Instance();
     review->s2->addWidget(review->s1);
     review->s2->addWidget(m_profilePlot);
