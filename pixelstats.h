@@ -52,7 +52,7 @@ public:
     virtual bool eventFilter( QObject *, QEvent * );
 
     virtual bool event( QEvent * );
-Q_SIGNALS:
+signals:
     void markerMoved();
 
 private:

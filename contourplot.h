@@ -88,11 +88,8 @@ signals:
     void newContourRange(double);
     void sigPointSelected(QPointF );
 
-public Q_SLOTS:
-  void selected(QPointF pos);
-
-
-public Q_SLOTS:
+public slots:
+    void selected(QPointF pos);
     void showContour( bool on );
     void showSpectrogram(bool on );
     void setAlpha( int );

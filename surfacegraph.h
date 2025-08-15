@@ -88,7 +88,7 @@ public:
     void setLegend(QLabel * legend) {m_legend = legend;}
     QImage render(int width, int height);
     QSize Size();
-public Q_SLOTS:
+public slots:
     void changeTheme(int theme);
     void setColorMap(int ndx);
     void yOffsetChanged(int val);
