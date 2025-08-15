@@ -70,14 +70,14 @@ public:
     void processSmoothing();
     void saveAllWaveFrontStats();
     void SaveWavefronts(bool saveNulled);
-    void writeWavefront(QString fname, wavefront *wf, bool saveNulled);
+    void writeWavefront(const QString &fname, wavefront *wf, bool saveNulled);
     void useDemoWaveFront();
     void showUnwrap();
     void initWaveFrontLoad();
-    void averageWavefrontFiles(QStringList files);
+    void averageWavefrontFiles(const QStringList &files);
     void downSizeWf(wavefront *wf);
     void process(int wavefront_index, SurfaceManager *sm);
-    wavefront *readWaveFront(QString fileName);
+    wavefront *readWaveFront(const QString &fileName);
     inline wavefront *getCurrent(){
         if (m_wavefronts.size() == 0)
             return 0;
@@ -160,7 +160,7 @@ private slots:
     void backGroundUpdate();
     void deleteWaveFronts(QList<int> list);
     void average(QList<int> list);
-    void transfrom(QList<int> list);
+    void transfrom(const QList<int> &list);
     void filter();
     void saveAllContours();
     void enableTools();
@@ -179,10 +179,10 @@ private slots:
 public slots:
     void rotateThese(double angle, QList<int> list);
     void createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
-                                   CircleOutline center, QString name,
+                                   CircleOutline center, const QString &name,
                                    QVector<std::vector<cv::Point> > polyArea= QVector<std::vector<cv::Point> >());
     void invert(QList<int> list);
-    void wftNameChanged(int, QString);
+    void wftNameChanged(int, const QString&);
     void showAllContours();
     void computeStandAstig(define_input *wizPage, QList<rotationDef *>);
     void ObstructionChanged();

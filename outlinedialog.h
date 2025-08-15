@@ -27,9 +27,9 @@ public:
     ~outlineDialog();
     double m_x, m_y, m_rad;
     cv::Mat img;
-    void setImage(cv::Mat img);
+    void setImage(const cv::Mat &img);
     void updateOutline();
-    void updateDisplay(cv::Mat img);
+    void updateDisplay(const cv::Mat &img);
 
 
 private slots:

@@ -29,8 +29,8 @@
 #include "psi_dlg.h"
 #include "psiphasedisplay.h"
 
-extern void showData(const std::string& txt, cv::Mat mat, bool useLog = false);
-extern QImage showMag(cv::Mat complexI, bool show = false, const char *title = "FFT", bool doLog = true, double gamma = 0);
+extern void showData(const std::string& txt, const cv::Mat &mat, bool useLog = false);
+extern QImage showMag(const cv::Mat &complexI, bool show = false, const char *title = "FFT", bool doLog = true, double gamma = 0);
 extern void shiftDFT(cv::Mat &magI);
 
 
@@ -67,7 +67,7 @@ public slots:
     void doPSIstep1();
     bool doPSIstep2();
     void doPSIstep3();
-    void doPSIstep4(cv::Mat images, QVector<double> phases);
+    void doPSIstep4(const cv::Mat &images, QVector<double> phases);
     void doPSITilt();
     void doDFT();
     void dftSizeChanged(const QString&);
@@ -75,7 +75,7 @@ public slots:
     void setChannel(const QString&);
     void dftCenterFilter(double v);
     void makeSurface();
-    void newIgram(QImage);
+    void newIgram(const QImage&);
     void gamma(int);
     void showResizedDlg();
     void outlineDoneSig();

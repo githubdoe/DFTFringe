@@ -29,7 +29,7 @@ class waveFrontLoader : public QObject
     Q_OBJECT
 public:
     explicit waveFrontLoader(QObject *parent = 0);
-    void addWavefront(QString filename);
+    void addWavefront(const QString &filename);
     bool done;
 signals:
     void status(int);
@@ -42,7 +42,7 @@ signals:
 
 public slots:
     void loadx(SurfaceManager *sm);
-    void loadx(QStringList list, SurfaceManager *sm);
+    void loadx(const QStringList &list, SurfaceManager *sm);
     void cancel();
 
 

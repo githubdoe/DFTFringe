@@ -625,7 +625,7 @@ void MainWindow::selectDftTab(){
     ui->tabWidget->setCurrentIndex(1);
 }
 
-void MainWindow::updateChannels(cv::Mat img){
+void MainWindow::updateChannels(const cv::Mat &img){
 
 
     if (m_showChannels){
@@ -738,7 +738,7 @@ void MainWindow::on_actionSave_Wavefront_triggered()
 {
     m_surfaceManager->SaveWavefronts(false);
 }
-void MainWindow::showMessage(QString msg, int id){
+void MainWindow::showMessage(const QString &msg, int id){
 
     switch(id){
     case 1:
@@ -807,7 +807,7 @@ void MainWindow::on_showChannels_clicked(bool checked)
     else
         m_colorChannels->close();
 }
-void MainWindow::imageSize(QString txt){
+void MainWindow::imageSize(const QString &txt){
     ui->igramSize->setText(txt);
 }
 
@@ -821,7 +821,7 @@ void MainWindow::on_showIntensity_clicked(bool checked)
     else
         m_intensityPlot->close();
 }
-void MainWindow::newMirrorDlgPath(QString path){
+void MainWindow::newMirrorDlgPath(const QString &path){
     QFileInfo info(path);
     QSettings settings;
     settings.setValue("lastPath",info.path());

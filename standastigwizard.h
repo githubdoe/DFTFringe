@@ -77,7 +77,7 @@ class rotationDef {
 public:
     QString fname;
     double angle;
-    rotationDef(QString name, double angle) :
+    rotationDef(const QString &name, double angle) :
         fname(name), angle(angle){};
 };
 

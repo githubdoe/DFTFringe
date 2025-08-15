@@ -17,15 +17,15 @@ public:
     bool shouldFilterWavefront();
     bool shouldFilterFile();
     double rms();
-    void addRMSValue(QString name, QPointF value );
-    void addAstigValue(QString name, QPointF value);
+    void addRMSValue(const QString &name, QPointF value );
+    void addAstigValue(const QString &name, QPointF value);
     void plot();
     void setRemoveFileMode();
 signals:
     void waveWasSelected(QString m);
 private slots:
     void on_rmsValue_valueChanged(double arg1);
-    void waveSelected(QString m);
+    void waveSelected(const QString &m);
     void on_beepEnable_clicked(bool checked);
 
     void on_remove_clicked(bool checked);

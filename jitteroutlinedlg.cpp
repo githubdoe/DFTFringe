@@ -24,7 +24,7 @@ jitterOutlineDlg::~jitterOutlineDlg()
 {
     delete ui;
 }
-void jitterOutlineDlg::status(QString status){
+void jitterOutlineDlg::status(const QString &status){
     ui->status->setText(status);
 }
 

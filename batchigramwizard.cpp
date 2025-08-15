@@ -27,7 +27,7 @@ QString batchIgramWizard::reviewFileName;
 QCheckBox *batchIgramWizard::autoOutlineCenter = 0;
 QCheckBox *batchIgramWizard::autoOutlineOutside = 0;
 
-batchIgramWizard::batchIgramWizard(QStringList files, QWidget *parent, Qt::WindowFlags flags) :
+batchIgramWizard::batchIgramWizard(const QStringList &files, QWidget *parent, Qt::WindowFlags flags) :
     QWizard(parent, flags),
     ui(new Ui::batchIgramWizard)
 {
@@ -257,7 +257,7 @@ bool batchIntro::shouldFilterWavefront(double rms){
     return (filterWavefront && rms > filterRms);
 }
 
-void batchIgramWizard::addAstig(QString name, QPointF value){
+void batchIgramWizard::addAstig(const QString &name, QPointF value){
 
     introPage->astigPlot->addValue(name,value);
 }
@@ -267,7 +267,7 @@ void batchIgramWizard::progressValue(int min, int max, int value){
     introPage->pgrBar->setValue(value);
 }
 
-void batchIgramWizard::addRms(QString name, QPointF p){
+void batchIgramWizard::addRms(const QString &name, QPointF p){
     introPage->m_rmsPlot->addValue(name,p);
 }
 

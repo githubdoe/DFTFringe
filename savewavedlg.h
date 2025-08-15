@@ -29,7 +29,7 @@ class SaveWaveDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit SaveWaveDlg(QString lastPath, QWidget *parent = 0);
+    explicit SaveWaveDlg(const QString &lastPath, QWidget *parent = 0);
     ~SaveWaveDlg();
     QString fileName;
     QString lastPath;

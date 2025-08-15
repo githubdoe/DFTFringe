@@ -33,7 +33,7 @@ class ColorChannelDisplay : public QDialog
 public:
     explicit ColorChannelDisplay(QWidget *parent = 0);
     ~ColorChannelDisplay();
-    void setImage(cv::Mat imgMat);
+    void setImage(const cv::Mat &imgMat);
 
 private:
     Ui::ColorChannelDisplay *ui;

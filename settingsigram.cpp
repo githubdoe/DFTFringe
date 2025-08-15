@@ -205,7 +205,7 @@ void settingsIGram::saveLensData(){
     set.setValue("Lenses", v.join("\n"));
 }
 
-void settingsIGram::updateLenses(QString str){
+void settingsIGram::updateLenses(const QString &str){
     m_lensData.push_back(str.split(","));
     saveLensData();
     lensesModel->insertRow(m_lensData.size() -2);

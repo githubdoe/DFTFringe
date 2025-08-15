@@ -39,7 +39,7 @@ class ImageViewer : public QWidget {
     }
 
 public:
-    void setImage(cv::Mat mat){
+    void setImage(const cv::Mat &mat){
         cv::Mat rgb;
         cv::cvtColor(mat,rgb, cv::COLOR_GRAY2RGB);
         QImage img= QImage((uchar*) rgb.data, rgb.cols, rgb.rows, rgb.step,

@@ -52,7 +52,7 @@ foucaultView::~foucaultView()
     delete ui;
     spdlog::get("logger")->trace("foucaultView::~foucaultView");
 }
-QString getSaveFileName(QString type){
+QString getSaveFileName(const QString &type){
     QSettings settings;
     QString path = settings.value("lastPath","").toString();
 

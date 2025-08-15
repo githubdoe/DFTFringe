@@ -143,7 +143,7 @@ double mirrorDlg::getMinorAxis(){
 bool mirrorDlg::isEllipse(){
     return m_outlineShape == ELLIPSE;
 }
-void mirrorDlg::saveJson(QString fileName){
+void mirrorDlg::saveJson(const QString &fileName){
     QJsonObject jDoc, jMirror,jIgram, jEllipse, jAnnulus;
     jDoc["name"] = m_name;
     jDoc["show units in mm"] = mm;
@@ -598,7 +598,7 @@ void mirrorDlg::on_obs_textChanged(const QString &arg1)
     obs = ((mm) ? 1: 25.4) * arg1.toDouble();
 
 }
-void mirrorDlg::newLambda(QString v){
+void mirrorDlg::newLambda(const QString &v){
     ui->lambda->setText(v);
 }
 

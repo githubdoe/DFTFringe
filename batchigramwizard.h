@@ -40,12 +40,12 @@ public:
 
     static QCheckBox *autoOutlineOutside;
     static QCheckBox *autoOutlineCenter;
-    explicit batchIgramWizard(QStringList files, QWidget *parent = 0 , Qt::WindowFlags flags = Qt::Widget);
+    explicit batchIgramWizard(const QStringList &files, QWidget *parent = 0 , Qt::WindowFlags flags = Qt::Widget);
     ~batchIgramWizard();
     void listReady(QStringList list);
 
-    void addAstig(QString name, QPointF value);
-    void addRms(QString name, QPointF p);
+    void addAstig(const QString &name, QPointF value);
+    void addRms(const QString &name, QPointF p);
     void progressValue(int min, int max, int value);
     void select(int n);
     void showPlots(bool flags);

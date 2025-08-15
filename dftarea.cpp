@@ -33,7 +33,7 @@
 using namespace cv;
 
 
-cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
+cv::Mat  makeMask(const CircleOutline &outside, const CircleOutline &center, const cv::Mat &data,
                   QVector<std::vector<cv::Point> > poly){
     int width = data.cols;
     int height = data.rows;
@@ -389,7 +389,7 @@ void shiftDFT(cv::Mat &magI){
     tmp.copyTo(q2);
 }
 
-void showData(const std::string& txt, cv::Mat mat, bool useLog){
+void showData(const std::string& txt, const cv::Mat &mat, bool useLog){
 
     cv::Mat tmp = mat.clone();
     if (useLog){
@@ -405,7 +405,7 @@ void showData(const std::string& txt, cv::Mat mat, bool useLog){
 }
 
 
-QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, double gamma){
+QImage  showMag(const cv::Mat &complexI, bool show, const char* title, bool doLog, double gamma){
     // compute the magnitude and switch to logarithmic scale
     // => log(1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2))
     Mat planes[2];
@@ -1053,7 +1053,7 @@ void DFTArea::makeSurface(){
     QApplication::restoreOverrideCursor();
     success = true;
 }
-void DFTArea::newIgram(QImage){
+void DFTArea::newIgram(const QImage&){
     doDFT();
 }
 void DFTArea::mouseReleaseEvent(QMouseEvent *)
@@ -1110,7 +1110,7 @@ void DFTArea::showResizedDlg(){
     }
 }
 
-void dumpMat(cv::Mat m, QString title = ""){
+void dumpMat(cv::Mat m, const QString &title = ""){
     qDebug() << "\r" << title << m.rows <<"X" << m.cols;
     for (int r = 0; r < m.rows; ++r){
         QString msg;
@@ -1347,7 +1347,7 @@ arma::mat zpmCxx(double rho, double theta, int maxorder) {
 }
 
 #include "outlinedialog.h"
-void DFTArea::doPSIstep4(cv::Mat images, QVector<double> phases){
+void DFTArea::doPSIstep4(const cv::Mat &images, QVector<double> phases){
 
     emit statusBarUpdate("computing surface from  interferograms.",1);
     m_outlineComplete = false;

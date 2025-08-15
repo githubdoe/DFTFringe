@@ -48,7 +48,7 @@ public:
     bool m_removeDistortion;
     bool m_autoSaveOutline;
     QStringList m_lenseParms;
-    void updateLenses(QString str);
+    void updateLenses(const QString &str);
 signals:
     void igramLinesChanged(outlineParms);
 private slots:

@@ -47,8 +47,8 @@ public:
     bool m_useDefocus;
     double m_defocus;
     double m_defocusInmm;
-    void setBlurText(QString txt);
-    void nameChanged(int, QString);
+    void setBlurText(const QString &txt);
+    void nameChanged(int, const QString&);
     void select(int item);
 
 signals:
@@ -73,7 +73,7 @@ public slots:
     void currentNdxChanged(int);
     void deleteWaveFront(int);
     void defocusTimerDone();
-    void nameChanged(QString, QString);
+    void nameChanged(const QString&, const QString&);
     void defocusControlChanged(double);
     void enableControls(bool);
 private slots:

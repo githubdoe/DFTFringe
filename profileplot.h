@@ -64,7 +64,7 @@ public:
 
     double slopeLimitArcSec;
     void setDefocusValue(double val);
-    void setDefocusWaveFront( cv::Mat_<double> wf);
+    void setDefocusWaveFront( const cv::Mat_<double> &wf);
 signals:
     void zoomMe(bool);
     void profileAngleChanged(const double ang);
@@ -74,7 +74,7 @@ public slots:
     void setWavefronts(QVector<wavefront*> *wf);
     void angleChanged(double a);
     void newDisplayErrorRange(double min, double max);
-    void zeroOffsetChanged(QString);
+    void zeroOffsetChanged(const QString&);
     void showOne();
     void show16();
     void showAll();

@@ -60,10 +60,10 @@ private:
     double dX;  // pupil sample size based on mirror size in wave front.
     double dF;  // psf sample size;
 
-    void mtf(cv::Mat magPsf, QString txt, QColor color);
+    void mtf(const cv::Mat &magPsf, const QString &txt, QColor color);
     void initMTFPlot();
 
-    void make3DPsf(cv::Mat surface);
+    void make3DPsf(const cv::Mat &surface);
 public slots:
         void on_MakePB_clicked();
 private slots:

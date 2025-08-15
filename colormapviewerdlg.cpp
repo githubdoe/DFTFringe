@@ -45,7 +45,7 @@ colorMapViewerDlg::colorMapViewerDlg(QWidget *parent) :
 
 }
 
-void colorMapViewerDlg::genList(QString path){
+void colorMapViewerDlg::genList(const QString &path){
     QStringList nameFilter("*.cmp");
     QDir directory(path);
     QStringList cmpFiles = directory.entryList(nameFilter);

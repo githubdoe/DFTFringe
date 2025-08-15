@@ -27,7 +27,7 @@ waveFrontLoader::waveFrontLoader(QObject *parent) :
     connect(this, SIGNAL(currentWavefront(QString)), pd, SLOT(setLabelText(QString)));
 }
 
-void waveFrontLoader::addWavefront(QString filename){
+void waveFrontLoader::addWavefront(const QString &filename){
     mutex.lock();
     m_list << filename;
     mutex.unlock();
@@ -38,7 +38,7 @@ void waveFrontLoader::cancel(){
     qDebug() << "trying to cancel";
 }
 
-void waveFrontLoader::loadx(QStringList list, SurfaceManager *sm){
+void waveFrontLoader::loadx(const QStringList &list, SurfaceManager *sm){
     m_list = list;
     loadx(sm);
 }

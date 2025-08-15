@@ -62,7 +62,7 @@ public:
     bool shouldFlipH();
     static QString getProjectPath();
     bool m_obsChanged;
-    void newLambda(QString v);
+    void newLambda(const QString &v);
     double getMinorAxis();
     bool m_majorHorizontal;
     double m_verticalAxis;
@@ -136,7 +136,7 @@ private:
     Ui::mirrorDlg *ui;
     bool m_aperatureReductionValueChanged;
     QTimer spacingChangeTimer;
-    void saveJson(QString fileName);
+    void saveJson(const QString &fileName);
     void enableAnnular(bool enable);
 };
 

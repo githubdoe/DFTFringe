@@ -256,7 +256,7 @@ class wftNameScaleDraw: public QwtScaleDraw
 public:
     QVector<wavefront*> names;
     int currentNdx;
-    wftNameScaleDraw(QVector<wavefront*> nameList, int nx)
+    wftNameScaleDraw(const QVector<wavefront*> &nameList, int nx)
     {
         names = nameList;
         currentNdx = nx;
@@ -302,7 +302,7 @@ class ZernScaleDraw: public QwtScaleDraw
 {
 public:
     QVector<QString> m_names;
-    ZernScaleDraw(QVector<QString> names)
+    ZernScaleDraw(const QVector<QString> &names)
 
     {
         m_names = names;
@@ -686,7 +686,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
         showData("surface manager mask",mask);
 
 }
-void SurfaceManager::wftNameChanged(int ndx, QString name){
+void SurfaceManager::wftNameChanged(int ndx, const QString &name){
     m_wavefronts[ndx]->name = name;
 
 }
@@ -905,7 +905,7 @@ void SurfaceManager::computeZerns()
     m_waveFrontTimer->start(500);
 }
 
-void SurfaceManager::writeWavefront(QString fname, wavefront *wf, bool saveNulled){
+void SurfaceManager::writeWavefront(const QString &fname, wavefront *wf, bool saveNulled){
         std::ofstream file((fname.toStdString().c_str()));
 
         if (!file.is_open()) {
@@ -1029,7 +1029,7 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
 }
 void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
                                                CircleOutline center,
-                                               QString name, QVector<std::vector<cv::Point> > polyArea){
+                                               const QString &name, QVector<std::vector<cv::Point> > polyArea){
 
     wavefront *wf;
 
@@ -1087,7 +1087,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     emit showTab(2);
 }
 
-wavefront * SurfaceManager::readWaveFront(QString fileName){
+wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     std::ifstream file(fileName.toStdString().c_str());
     if (!file) {
         QString b = "Can not read file " + fileName + " " +strerror(errno);
@@ -1383,7 +1383,7 @@ void SurfaceManager::previous(){
 
     sendSurface(m_wavefronts[m_currentNdx]);
 }
-QVector<int> histo(const std::vector<double> data, int bins, double min, double max){
+QVector<int> histo(const std::vector<double> &data, int bins, double min, double max){
     QVector<int> h(bins, 0);
     double interval = (max - min)/bins;
     for (unsigned int i = 0; i < data.size(); ++i){
@@ -1627,7 +1627,7 @@ void SurfaceManager::averageComplete(wavefront *wf){
     m_surfaceTools->select(m_currentNdx);
 }
 
-void SurfaceManager::averageWavefrontFiles(QStringList files){
+void SurfaceManager::averageWavefrontFiles(const QStringList &files){
     averageWaveFrontFilesDlg dlg(files, this);
     connect(&dlg, SIGNAL(averageComplete(wavefront*)), this, SLOT(averageComplete(wavefront *)));
     if (dlg.exec()){
@@ -1807,7 +1807,7 @@ void SurfaceManager::subtractWavefronts(){
     }
 }
 
-void SurfaceManager::transfrom(QList<int> list){
+void SurfaceManager::transfrom(const QList<int> &list){
     RotationDlg dlg(list);
     connect(&dlg, SIGNAL(rotateTheseSig(double, QList<int>)), this, SLOT(rotateThese( double, QList<int>)));
     dlg.exec();
@@ -1885,7 +1885,7 @@ void SurfaceManager::inspectWavefront(){
 
 #include <QMap>
 
-void plotlineThruAstigs(QwtPlot *plt, cv::Mat xastig, cv::Mat yastig, QList<rotationDef *>list){
+void plotlineThruAstigs(QwtPlot *plt, cv::Mat xastig, cv::Mat yastig, const QList<rotationDef *>&list){
 
   QList<rotationDef *> tmplist = list;
   QList<QPointF> values;
@@ -2770,7 +2770,7 @@ void SurfaceManager::showAllContours(){
     w->show();
     QApplication::restoreOverrideCursor();
 }
-void showImage(QImage img, QString title){
+void showImage(const QImage &img, const QString &title){
     QLabel *myLabel = new QLabel;
     myLabel->setPixmap(QPixmap::fromImage(img.scaled(1000,1000)));
     myLabel->setWindowTitle(title);

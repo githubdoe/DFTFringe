@@ -28,5 +28,5 @@ long showmem(QString /*title*/){
      return statex.ullAvailVirtual/DIV;
 }
 #else
-int showmem(QString){return 1000;}
+int showmem(const QString&){return 1000;}
 #endif

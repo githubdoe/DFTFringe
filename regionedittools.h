@@ -17,7 +17,7 @@ public:
     bool m_doLine;
     bool m_doFreeform;
     int currentNdx;
-    void addRegion(QString text);
+    void addRegion(const QString &text);
     void deleteRegion(int r);
     void clear();
 signals:

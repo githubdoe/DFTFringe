@@ -253,7 +253,7 @@ void ProfilePlot::showAll(){
     populate();
     m_plot->replot();
 }
-void ProfilePlot::zeroOffsetChanged(QString s){
+void ProfilePlot::zeroOffsetChanged(const QString &s){
     if (offsetType == s)
         return;
     double mul = m_showNm * m_showSurface;
@@ -318,7 +318,7 @@ void ProfilePlot::setSurface(wavefront * wf){
     m_plot->replot();
 }
 
-void ProfilePlot::setDefocusWaveFront( cv::Mat_<double> wf){
+void ProfilePlot::setDefocusWaveFront( const cv::Mat_<double> &wf){
     m_defocus_wavefront = wf.clone();
 }
 

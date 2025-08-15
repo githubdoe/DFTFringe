@@ -138,7 +138,7 @@ private:
 };
 
 
-astigStatsDlg::astigStatsDlg(QVector<wavefront *> wavefronts, QWidget *parent) :
+astigStatsDlg::astigStatsDlg(const QVector<wavefront *> &wavefronts, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::astigStatsDlg), m_wavefronts(wavefronts), editor(0), PDFMode(false),
     distributionWindow(0), runningAvgN(20), showSamples(false),
@@ -181,7 +181,7 @@ class measure{
 public:
     QString name;
     QPointF p;
-    measure(QString n, QPointF _p):name(n),p(_p){};
+    measure(const QString &n, QPointF _p):name(n),p(_p){};
     measure(){};
 };
 
@@ -480,7 +480,7 @@ void astigStatsDlg::plot(){
     ui->mPlot->replot();
 }
 
-void astigStatsDlg::showItem(QVariant item, bool on, int /*ndx*/){
+void astigStatsDlg::showItem(const QVariant &item, bool on, int /*ndx*/){
     qDebug() << "item " << item;
     QwtPlotItem *t = qvariant_cast<QwtPlotItem *>(item);
     t->setVisible(on);

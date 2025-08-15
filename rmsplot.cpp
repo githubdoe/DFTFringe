@@ -34,10 +34,10 @@ rmsPlot::rmsPlot(QWidget *parent):QwtPlot( parent ),m_max(.3)
     m_max = 0;
     replot();
 }
-void rmsPlot::selectedwave(QString m){
+void rmsPlot::selectedwave(const QString &m){
     emit waveSeleted(m);
 }
-void rmsPlot::addValue(QString name, QPointF p){
+void rmsPlot::addValue(const QString &name, QPointF p){
     QwtPlotMarker *m = new QwtPlotMarker(name);
     if (p.y() > m_max)
         m_max = p.y();
