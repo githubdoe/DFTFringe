@@ -81,10 +81,10 @@ public slots:
     void showNm(bool);
     void showSurface(bool);
     void zoom();
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
     void showSlope(bool);
     void slopeLimit(double);
-    void contourPointSelected(const QPointF &pos);
+    void contourPointSelected(QPointF pos);
     void populate();
     void showCorrection();
     void make_correction_graph();

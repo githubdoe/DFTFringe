@@ -44,7 +44,7 @@ signals:
     void zoomMe(bool);
 private slots:
     void on_doubleSpinBox_valueChanged(double arg1);
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
     void on_pushButton_pressed();
     void zoom();
 

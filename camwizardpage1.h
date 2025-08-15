@@ -32,7 +32,7 @@ public:
 private slots:
     void on_compute_clicked();
     void on_pushButton_clicked();
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
     void eraseItem();
     void on_saveParams_clicked();
     void on_rows_valueChanged(int arg1);

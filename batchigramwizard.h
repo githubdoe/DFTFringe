@@ -82,7 +82,7 @@ class batchIntro : public QWizardPage
 public slots:
     void processBatch();
     void addFiles();
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
     void eraseItem();
     void showPlots(bool flags);
     void on_filter(bool);

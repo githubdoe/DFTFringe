@@ -184,7 +184,7 @@ void settingsIGram::eraseItem()
     lensesModel->removeRow(currentNdx.row());
     saveLensData();
 }
-void settingsIGram::showContextMenu(const QPoint &pos)
+void settingsIGram::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = ui->lenseTableView->mapToGlobal(pos);

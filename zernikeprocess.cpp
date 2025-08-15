@@ -1145,7 +1145,7 @@ arma::mat zernikeProcess::zpmC(arma::rowvec rho, arma::rowvec theta, int maxorde
     return zm;
 }
 
-arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder) {
+arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& theta, int maxorder) {
 
   unsigned int nrow = rho.size();
   int mmax = maxorder/2;

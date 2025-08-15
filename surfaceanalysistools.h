@@ -83,7 +83,7 @@ private slots:
 
     void on_wavefrontList_activated(const QModelIndex &index);
     void on_wavefrontList_clicked(const QModelIndex &index);
-    void on_wavefrontList_customContextMenuRequested(const QPoint &pos);
+    void on_wavefrontList_customContextMenuRequested(QPoint pos);
 
     void on_blurCB_clicked(bool checked);
 

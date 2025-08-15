@@ -150,7 +150,7 @@ void CamWizardPage1::eraseItem()
     }
 }
 
-void CamWizardPage1::showContextMenu(const QPoint &pos)
+void CamWizardPage1::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = ui->listWidget->mapToGlobal(pos);

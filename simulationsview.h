@@ -76,7 +76,7 @@ private slots:
 
     void on_FFTSizeSB_valueChanged(int val);
 
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
 
     void saveImage(QString fn = "");
 

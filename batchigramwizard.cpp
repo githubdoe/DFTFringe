@@ -88,7 +88,7 @@ void batchIntro::eraseItem()
     }
 }
 
-void batchIntro::showContextMenu(const QPoint &pos)
+void batchIntro::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = filesList->mapToGlobal(pos);

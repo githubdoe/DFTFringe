@@ -65,7 +65,7 @@ QString getSaveFileName(QString type){
     return fileName;
 
 }
-void foucaultView::showContextMenu(const QPoint &pos)
+void foucaultView::showContextMenu(QPoint pos)
 {
 
 // Handle global position

@@ -3216,7 +3216,7 @@ void SurfaceManager::flipHorizontal(){
     }
     QApplication::restoreOverrideCursor();
 }
-bool QPointFLessThan(const QPointF &p1, const QPointF & p2){
+bool QPointFLessThan(QPointF p1, QPointF p2){
     return p1.x() < p2.x();
 }
 

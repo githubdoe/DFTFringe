@@ -14,8 +14,8 @@ public:
     explicit myPlotPicker( QwtPlot * plot);
     bool eventFilter( QObject *, QEvent * );
     virtual QwtText trackerTextF( const QPointF &pos ) const;
-    void select(const QPointF &p);
-    QString find(const QPointF &p)const;
+    void select(QPointF p);
+    QString find(QPointF p)const;
     QwtPlot *m_plot;
 signals:
     void mySelected(const QString);

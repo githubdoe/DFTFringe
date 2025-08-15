@@ -544,7 +544,7 @@ void DFTArea::paintEvent(QPaintEvent *)
 double *g_qmap;
 class comp_qual {
 public:
-  int operator() (const int &p1, const int &p2) {
+  int operator() (int p1, int p2) {
     return (g_qmap[p1] < g_qmap[p2]);
   }
 };

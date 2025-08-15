@@ -159,7 +159,7 @@ void SimulationsView::saveImage(QString fileName){
     svImage.save(fileName);
 }
 
-void SimulationsView::showContextMenu(const QPoint &pos)
+void SimulationsView::showContextMenu(QPoint pos)
 {
 
 // Handle global position

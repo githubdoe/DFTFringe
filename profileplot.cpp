@@ -757,7 +757,7 @@ void ProfilePlot::zoom(){
     emit zoomMe(zoomed);
 }
 
-void ProfilePlot::showContextMenu(const QPoint &pos)
+void ProfilePlot::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = mapToGlobal(pos);
@@ -783,7 +783,7 @@ void ProfilePlot::resizeEvent( QResizeEvent *)
         wfs = wf;
     }
 
-void ProfilePlot::contourPointSelected(const QPointF &pos){
+void ProfilePlot::contourPointSelected(QPointF pos){
     if (m_wf == 0)
         return;
     double delx = pos.x() - m_wf->data.rows/2;

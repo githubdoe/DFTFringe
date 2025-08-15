@@ -110,7 +110,7 @@ public:
         : QwtPlotPicker(xAxis, yAxis, QwtPicker::NoRubberBand, QwtPicker::AlwaysOn, canvas) {
     }
 
-    void addTooltipToPoint(const QPointF &point, const QString &tooltip){
+    void addTooltipToPoint(QPointF point, const QString &tooltip){
         tooltips_.emplace_back(point, tooltip);
     }
 

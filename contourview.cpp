@@ -68,7 +68,7 @@ void contourView::setSurface(wavefront *wf){
     ps->setData(wf);
 }
 
-void contourView::showContextMenu(const QPoint &pos)
+void contourView::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = mapToGlobal(pos);

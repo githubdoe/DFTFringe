@@ -67,7 +67,7 @@ private slots:
 
     void eraseItem();
 
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
 
 
     void on_lenseTableView_clicked(const QModelIndex &index);

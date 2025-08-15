@@ -156,7 +156,7 @@ void surfaceAnalysisTools::on_wavefrontList_clicked(const QModelIndex &index)
 }
 
 // this is "right click" on windows
-void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPoint &pos)
+void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(QPoint pos)
 {
     QListWidgetItem *item = ui->wavefrontList->itemAt(pos);
     if (item == 0)
