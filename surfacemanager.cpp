@@ -525,7 +525,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     connect(this, &SurfaceManager::currentNdxChanged, m_surfaceTools, &surfaceAnalysisTools::currentNdxChanged);
     connect(this, &SurfaceManager::deleteWavefront, m_surfaceTools, &surfaceAnalysisTools::deleteWaveFront);
     connect(m_surfaceTools, &surfaceAnalysisTools::deleteTheseWaveFronts, this, &SurfaceManager::deleteWaveFronts);
-    connect(m_surfaceTools, SIGNAL(average(QList<int>)),this, SLOT(average(QList<int>))); //TODO rename average
+    connect(m_surfaceTools, &surfaceAnalysisTools::average,this, &SurfaceManager::averageWavefrontIndices);
     connect(m_surfaceTools, &surfaceAnalysisTools::doxform,this, &SurfaceManager::transfrom);
     connect(m_surfaceTools, &surfaceAnalysisTools::invert,this,&SurfaceManager::invert);
     connect(m_surfaceTools, &surfaceAnalysisTools::filterWavefronts,this,&SurfaceManager::filter);
@@ -1467,7 +1467,7 @@ void SurfaceManager::backGroundUpdate(){
 
 
 
-void SurfaceManager::average(QList<int> list){
+void SurfaceManager::averageWavefrontIndices(QList<int> list){
     if (list.length() < 2){
             QMessageBox::warning(0,"Warning", "Select at least two wave fronts to be averaged.");
             return;

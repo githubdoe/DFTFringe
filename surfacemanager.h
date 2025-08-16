@@ -153,19 +153,16 @@ signals:
     void enableControls(bool);
 private slots:
     void waveFrontClickedSlot(int ndx);
-    void wavefrontDClicked(const QString & name);
     void centerMaskValue(int val);
     void outsideMaskValue(int val);
     void surfaceSmoothGBEnabled(bool b);
     void surfaceSmoothGBValue(double value);
     void computeZerns();
     void surfaceGenFinished();
-    void backGroundUpdate();
     void deleteWaveFronts(QList<int> list);
-    void average(QList<int> list);
+    void averageWavefrontIndices(QList<int> list);
     void transfrom(const QList<int> &list);
     void filter();
-    void saveAllContours();
     void enableTools();
     void averageComplete(wavefront *wft);
     void outputLambdaChanged(double val);
@@ -191,6 +188,9 @@ public slots:
     void memoryLow();
     void defocusChanged();
     void tiltAnalysis();
+    void saveAllContours();
+    void backGroundUpdate();
+    void wavefrontDClicked(const QString & name);
 };
 
 

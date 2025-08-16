@@ -181,7 +181,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_dftArea, &DFTArea::newWavefront, m_surfaceManager, &SurfaceManager::createSurfaceFromPhaseMap);
     connect(m_surfaceManager, &SurfaceManager::diameterChanged,this,&MainWindow::diameterChanged);
     connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
-    connect(m_surfTools, SIGNAL(updateSelected()), m_surfaceManager, SLOT(backGroundUpdate())); //TODO test as SurfaceManager::backGroundUpdate is a private slot
+    connect(m_surfTools, &surfaceAnalysisTools::updateSelected, m_surfaceManager, &SurfaceManager::backGroundUpdate);
     ui->tabWidget->addTab(review, "Results");
 
     ui->tabWidget->addTab(SimulationsView::getInstance(ui->tabWidget), "Star Test, PSF, MTF");
@@ -215,7 +215,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_dftTools,&DFTTools::doDFT,m_dftArea,&DFTArea::doDFT);
     settingsDlg = Settings2::getInstance();
     connect(settingsDlg->m_igram, &settingsIGram::igramLinesChanged, m_igramArea, &IgramArea::igramOutlineParmsChanged);
-    connect(settingsDlg->m_general, SIGNAL(updateContourPlot()),m_contourView, SLOT(updateRuler()));
+    connect(settingsDlg->m_general, &SettingsGeneral2::updateContourPlot, m_contourView, &contourView::updateRuler);
 
     QSettings settings;
     spdlog::get("logger")->trace("qSettings stored at: {}", settings.fileName().toStdString());
@@ -1288,8 +1288,8 @@ void MainWindow::batchProcess(QStringList fileList){
         QToolTip::showText( batchIgramWizard::saveZerns->mapToGlobal(QPoint(0,20)),batchIgramWizard::saveZerns->toolTip());
 
     }
-    connect(batchWiz->introPage->astigPlot, SIGNAL(waveSeleted(QString)), m_surfaceManager, SLOT(wavefrontDClicked(QString)));
-    connect(batchWiz->introPage->m_rmsPlot, SIGNAL(waveSeleted(QString)), m_surfaceManager, SLOT(wavefrontDClicked(QString)));
+    connect(batchWiz->introPage->astigPlot, &astigScatterPlot::waveSeleted, m_surfaceManager, &SurfaceManager::wavefrontDClicked);
+    connect(batchWiz->introPage->m_rmsPlot, &rmsPlot::waveSeleted, m_surfaceManager, &SurfaceManager::wavefrontDClicked);
     progBar->reset();
     batchIgramWizard::goPb->setEnabled(true);
     batchIgramWizard::addFiles->setEnabled(true);
@@ -2102,7 +2102,7 @@ void MainWindow::on_actionastig_in_polar_triggered()
         samples << sample;
     }
     astigPolargraph * graph = new astigPolargraph(samples);
-    connect(graph, SIGNAL(waveSeleted(QString)), m_surfaceManager, SLOT(wavefrontDClicked(QString)));
+    connect(graph, &astigPolargraph::waveSeleted, m_surfaceManager, &SurfaceManager::wavefrontDClicked);
     QScreen *screen = QGuiApplication::primaryScreen();
     QSizeF physicalSize = screen->availableSize();
     graph->resize(physicalSize.width()/2,physicalSize.height()/2);

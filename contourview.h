@@ -54,8 +54,9 @@ private slots:
 
     void on_showRuler_clicked(bool checked);
 
-    void updateRuler();
     void on_LinkProfileCB_clicked(bool checked);
+public slots:
+    void updateRuler();
 
 private:
     Ui::contourView *ui;
