@@ -2690,7 +2690,7 @@ void SurfaceManager::saveAllContours(){
     filter += imageFilter;
 
     QString fName = QFileDialog::getSaveFileName(0,
-    tr("Save stats plot"), lastPath + "//allConturs.jpg",filter.join( ";;" ));
+    tr("Save stats plot"), lastPath + "//allContours.jpg",filter.join( ";;" ));
     if (fName.isEmpty())
         return;
 
