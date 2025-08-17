@@ -49,6 +49,8 @@
 #include "colorchannel.h"
 #include "opencv2/opencv.hpp"
 #include <QUrl>
+#include "zapm_interface.h"
+#include "zernikeprocess.h"
 
 using namespace QtConcurrent;
 std::vector<wavefront*> g_wavefronts;
@@ -1845,11 +1847,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
     this->setCursor(Qt::ArrowCursor);
     QApplication::restoreOverrideCursor();
 }
-arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
-               const double& eps, const int& maxorder=12) ;
-#include "armadillo"
-void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
-              QVector<QString> RowLable = QVector<QString>(0));
+
 void MainWindow::on_actionDebugStuff_triggered()
 {
     zernikeProcess *zp = zernikeProcess::get_Instance();

@@ -32,6 +32,9 @@ extern std::vector<bool> zernEnables;
 //void gauss_jordan(int n, double* Am, double* Bm);
 
 
+void dumpArma(arma::mat mm, QString title = "",
+            QVector<QString> colHeading = QVector<QString>(0),
+            QVector<QString> RowLable = QVector<QString>(0));
 
 class zernikeProcess : public QObject
 {

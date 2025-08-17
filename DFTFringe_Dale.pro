@@ -275,10 +275,11 @@ HEADERS  += mainwindow.h \
     contourrulerparams.h \
     zernikesmoothingdlg.h \
     bezier/bezier.h \
+    zernike/zapm_interface.h \
     SingleApplication/singleapplication.h \
     SingleApplication/singleapplication_p.h
 
-INCLUDEPATH += ./bezier ./SingleApplication
+INCLUDEPATH += ./bezier ./SingleApplication ./zernike
 
 FORMS    += mainwindow.ui \
     annulushelpdlg.ui \

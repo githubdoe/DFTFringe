@@ -13,8 +13,9 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
-# include <cmath>
-# include "armadillo"
+#include "zapm_interface.h"
+#include <cmath>
+#include "armadillo"
 #include <QDebug>
 #include <QString>
 
@@ -296,7 +297,7 @@ mat rzernike_ann(const vec& rho, const double& eps, const int& n, const int& m, 
 //'
 //' @md
 // [[Rcpp::export]]
-mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorder=12) {
+mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorder) {
 
   int j, k, nmax, nz, mmax = maxorder/2;
   uword nr = rho.size();

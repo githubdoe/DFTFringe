@@ -27,6 +27,7 @@
 #include "myutils.h"
 //#include "arbitrarywavefrontdlg.h"
 #include "userdrawnprofiledlg.h"
+#include "zapm_interface.h"
 
 
 std::vector<bool> zernEnables;
@@ -47,8 +48,6 @@ std::vector<double> zNulls;
 
 
 
-arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
-               const double& eps, const int& maxorder=12) ;
 
 
 long fact( int n1, int n2)
@@ -1213,8 +1212,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
 }
 
 //debug routine to see what is matrix values.
-void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
-              QVector<QString> RowLable = QVector<QString>(0)){
+void dumpArma(arma::mat mm, QString title, QVector<QString> colHeading, QVector<QString> RowLable){
     arma::mat theMat = mm;
     QString transposed(" ");
 
