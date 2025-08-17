@@ -1,0 +1,42 @@
+Third-Party Libraries used in DFTFringe:
+
+1. Qt6 (LGPLv3)
+   DFTFringe uses Qt6 (LGPLv3). See https://www.qt.io/licensing
+   License: LICENSES/LGPLv3.txt
+
+2. Qwt Widget Library (Qwt License 1.0)
+   DFTFringe is based in part on the work of the Qwt project (http://qwt.sf.net)
+   License: LICENSES/Qwt.txt
+
+3. OpenCV > 4.4.0 (Apache 2.0)
+   Copyright (C) 2000-2022, Intel Corporation, all rights reserved.
+   Copyright (C) 2009-2011, Willow Garage Inc., all rights reserved.
+   Copyright (C) 2009-2016, NVIDIA Corporation, all rights reserved.
+   Copyright (C) 2010-2013, Advanced Micro Devices, Inc., all rights reserved.
+   Copyright (C) 2015-2023, OpenCV Foundation, all rights reserved.
+   Copyright (C) 2008-2016, Itseez Inc., all rights reserved.
+   Copyright (C) 2019-2023, Xperience AI, all rights reserved.
+   Copyright (C) 2019-2022, Shenzhen Institute of Artificial Intelligence and Robotics for Society, all rights reserved.
+   Copyright (C) 2022-2023, Southern University of Science And Technology, all rights reserved.
+   Copyright (C) 2023-2025, OpenCV AI, all rights reserved.
+   License: LICENSES/Apache-2.0.txt
+   Attribution/NOTICE included in LICENSES/Apache-2.0.txt
+
+4. Armadillo C++ Linear Algebra Library (Apache 2.0)
+   Copyright 2008-2025 Conrad Sanderson (https://conradsanderson.id.au)
+   Copyright 2008-2016 National ICT Australia (NICTA)
+   Copyright 2017-2025 Data61 / CSIRO
+   This product includes software developed by Conrad Sanderson (https://conradsanderson.id.au)
+   This product includes software developed at National ICT Australia (NICTA)
+   This product includes software developed at Data61 / CSIRO
+   License: LICENSES/Apache-2.0.txt
+
+5. LAPACK (MIT + Apache 2.0)
+   Copyright (C) 2014–2025 The LAPACK Developers
+   Licenses: LICENSES/Apache-2.0.txt
+             LICENSES/MIT.txt
+
+6. MIT-licensed components
+   bezier.h, Lapack, singleApplication, spdlog, zapm.cpp
+   License: LICENSES/MIT.txt
+   Copyright notices included in LICENSES/MIT.txt
