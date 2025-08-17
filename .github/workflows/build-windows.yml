@@ -366,7 +366,7 @@ jobs:
           Copy-Item ".\DFTFringe\res\surface_LeY_icon.ico" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res"
           Copy-Item ".\DFTFringe\res\help" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\res\help" -Recurse
           Copy-Item ".\DFTFringe\RevisionHistory.html" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
-          Copy-Item ".\DFTFringe\LICENSE.txt" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
+          Copy-Item ".\DFTFringe\COPYING.txt" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\DFTFringe\NOTICE.txt" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\"
           Copy-Item ".\DFTFringe\LICENSES" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\LICENSES" -Recurse
       - name: automatically add QT dependencies with windeployqt
