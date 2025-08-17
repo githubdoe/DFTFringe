@@ -1,3 +1,7 @@
+DFTFringe is licensed under the GNU General Public License, version 3 (GPLv3).
+See COPYING.txt for details.
+Copyright (C) 2016-2025 Dale Eason
+
 Third-Party Libraries used in DFTFringe:
 
 1. Qt6 (LGPLv3)
