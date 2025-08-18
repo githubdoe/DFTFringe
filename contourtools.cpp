@@ -17,6 +17,7 @@
 ****************************************************************************/
 #include "contourtools.h"
 #include "ui_contourtools.h"
+#include "contourplot.h"
 #include <QColorDialog>
 #include <QPalette>
 #include <QSettings>
@@ -65,17 +66,15 @@ ContourTools::~ContourTools()
     delete ui;
 }
 
-void ContourTools::connectTo(QWidget *view){
-    connect(this, SIGNAL(ContourMapColorChanged(int)), view, SLOT(ContourMapColorChanged(int)));
-    connect(this, SIGNAL(contourZeroOffsetChanged(const QString &)),
-            view, SLOT(contourZeroOffsetChanged(const QString &)));
-    connect(this, SIGNAL(contourColorRangeChanged(const QString &)),
-            view, SLOT(contourColorRangeChanged(const QString &)));
-    connect(view, SIGNAL(setMinMaxValues(double,double)),this, SLOT(setMinMaxValues(double,double)));
-    connect(this, SIGNAL(contourWaveRangeChanged(double)),view, SLOT(contourWaveRangeChanged(double)));
-    connect(view, SIGNAL(setWaveRange(double)),this, SLOT(setWaveRange(double)));
-    connect(this, SIGNAL(lineColorChanged(QColor)), view, SLOT(on_line_color_changed(QColor)));
-    connect(this, SIGNAL(newDisplayErrorRange(double,double)), view, SLOT(newDisplayErrorRange(double,double)));
+void ContourTools::connectTo(ContourPlot *view){
+    connect(this, &ContourTools::ContourMapColorChanged, view, &ContourPlot::ContourMapColorChanged);
+    connect(this, &ContourTools::contourZeroOffsetChanged, view, &ContourPlot::contourZeroOffsetChanged);
+    connect(this, &ContourTools::contourColorRangeChanged, view, &ContourPlot::contourColorRangeChanged);
+    connect(view, &ContourPlot::setMinMaxValues,this, &ContourTools::setMinMaxValues);
+    connect(this, &ContourTools::contourWaveRangeChanged, view, &ContourPlot::contourWaveRangeChanged);
+    connect(view, &ContourPlot::setWaveRange,this, &ContourTools::setWaveRange);
+    connect(this, &ContourTools::lineColorChanged, view, &ContourPlot::on_line_color_changed);
+    connect(this, &ContourTools::newDisplayErrorRange, view, &ContourPlot::newDisplayErrorRange);
     enablTools(false);
 }
 
