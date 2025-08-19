@@ -1,471 +1,555 @@
-<html><body><h1>DFTFringe Version History</h1>
-<ul>
-<li> Version v1.0  Initial release</li>
-<li> V1.1-beta  corrected saving, inport and export of Mirror dialog with OpenFringe</li> </li>
-<li> v1.2-beta
-<ul>
-<li> Added credits to about</li>
-<li> Reduced size of test stand wizard and made it more resizable</li>
-<li> Save mirror outlines for loaded interferogram every time the "Done" or "make surface" buttons are used.<br>
-Look for saved outline file associated with the loading interferogram and use it if found.</li>
-<li> Internal change to how zernike values are computed.  Now using Polar definitions. </li>
-<li> Increased zernike terms to 48 using all 6th order terms</li>
-<li> Added batch processing of interferograms both manual assist and auto mode.</li>
-<li>Added enable all and enable spherical only buttons to Metrics display</li>
-<li>Added interferogram wavelength to metrics</li>
-<li>Added average of stand/system induced terms to stand astig reporting</li>
-</ul>
-<li> Version 1.3-beta</li>
-<ul><li> Added hot keys for editing the outline.</li>
-<li> Changed outline help to a button to open a docked help window on the left side.</li>
-<li> Corrected and reworked logic to save wavefront stats. Moved display of stats to under the View Menu</li>
-<li> Added tool to jitter size of outline and save wavefronts. This helps determine if the outline is correct. Will enhance it next version.</li>
-</ul></ul>
-<ul><li>Version 1.4-beta</li>
-<ul>
-    <li> Added outline helper to shift outlines in auto mode.</li>
-    <li> Additional fixes to wavefront stats. </li>
-    <li> Added selectable background color to 3D display.</li>
-    <li> Added show all 3D wavefronts.</li>
-    <li> Corrected bug in writing outlines for center hole outline.</li>
+<html>
 
-</ul></ul>
-<ul><li>Version 1.5-beta</li>
-<ul>
-    <li>Added full sized popup windows to display 3D and contour displays using right click menus</li>
-
-
-</ul></ul>
-<ul><li>Version 1.6-beta</li>
-<ul><li>Corrected zernike calculating bug introduced in vers 1.2 Should give reliable results once again.</li>
-<li> Added software null error tolerance in view menu. </li>
-<li> Modified outline boundary slightly to eliminate fringes around mirror after DFT analysis.</li>
-<li> Added gamma (contrast) horizontal slider control to DFT tools.</li>
-<li> Corrected issues when several wavefronts are loaded and a change propigates thru all with the last one in the list
-displaying the correct metrics.Hopefully smoothing remains if enabled.</li>
-<li> Gaussian smoothing modified to not include data outise mirror outside board when calculating smoothing just inside the outline.</li>
-</ul></ul>
-<ul><li>Version 1.6A-beta</li>
-<ul><li>Bug fix for star test crash </li>
-<li>Bug fix to stop outline from changing on save and restore operations </li>
-<li>Bug fix for zernike values computation.</li>
-</ul></ul>
-<ul><li>Version 1.7-beta</li>
-<ul><li>Added cc and null values to report and metrics.</li>
-<li>Corrected loading of saved center outline.</li>
-<li>Change how igram outline is zoomed into including logic for process center outline.</li>
-<li>Added warning to averaging of wavefronts if any have different signs for primary SA</li>
-<li>Corrected save and restore of Flip igram horizontal. Deleted it from Preferences and kept it in the mirror config. </li>
-<li>changed Metric zernike term values to be read only.</li>
-<li>Added loaded igram to report</li>
-</ul></ul>
-<ul><li>Version 1.8-beta</li>
-<ul><li>Only update selected wavefront/s</li>
-<li>Added zernike based editing save and load</li>
-<li>Added Foucault and ronchi simulation</li>
-<li>Fixed bug in display of ROC in Mirror dialog when changing F number</li>
-<li>Fixed metrics and report display of Zernike terms RMS value.</li>
-<li>Fixed test stand removal when average files are a different size.  Also fixed the astig report so that text does not overlap
-in the contour plot footers.</li>
-</ul></ul>
-<ul><li>Version 1.9-beta</li>
-<ul><li>Added elliptical Flat processing</li>
-<li>Changed zernike rms values to use sign of term instead of all being positive</li>
-<li>Enabled translation support of most text strings</li>
-<li>Modified igram and wavefront simulation to use the full zernike set and added import from wavefront button.</li>
-</ul></ul>
-<ul><li>Version 1.10-beta</li>
-<ul><li>Corrected and enhanced the Null errror margin dialog.</li>
-<li>Corrected text on star test simulation.</li>
-<li>Corrected text and minor bugs on various displays.</li>
-<li>Added  more preferences to general preferences.</li>
-<li>Added view unwrap errors display</li>
-<li>Added Extensive Help</li>
-<li>Added experimental barrel and pin cushion lens distortion analysis and removal from igrams</li>
-</ul></ul>
-<ul><li>Version 1.11-beta</li>
-<ul><li>Added more help.</li>
-<li>Profile Plot Full screen button on right click.</li>
-<li>Added Unix build info to .pro file and fixed unix bugs in other files</li>
-<li>Fixed bug causing crashes in Camera distortion wizard</li>
-<li>Fixed bug when selecting all rgb color channels for DFT. Added DFT size to DFT tools display</li>
-<li>Modified save igram image dialog to show image types. Set default image format to .png</li>
-<li>Added save feature to unwrap error display.</li>
-</ul></ul>
-<ul><li>Version 1.12</li>
-<ul><li>Fixed bug where outline does not show up on interferogram during batch processing.</li>
-<li>Added ability to skip an interferogram and analysis on batch processing</li>
-<li>Fixed some bugs in test stand removal tool. Modified some of the text in associated dialogs.</li>
-<li>Added software version number to metrics display and pdf report.</li>
-<li>Fixed bug where display of multiple 3D wavfronts was not correct.</li>
-<li>Fixed bug in star test simulation of focused star.</li>
-<li>Fixed bug where stats.cvs file was not written.</li>
-<li>Fixed bug in MTF calculation.  Changed x scale on MTF plot.</li>
-<li>Moved the controls for Contour line selection to the top of the Contour display.</li>
-<li>Remembers contour control settings</li>
-<li>Added pixel histogram and excesive slope display</li>
-</ul></ul>
-
-<ul><li>Version 1.13beta</li>
-<ul><li>Changed default slope limit to 1. arc second</li>
-<li>Added slope limit display to profile plot</li>
-<li>Added slope limit display to final report pdf.</li>
-<li>Fixed bug when loading wavfront that has different diameter than the config.</li>
-<li>Added a "no to all" and a "yes to all" buttons to loading wavfront warning when config does not match</li>
-<li>Added astig statistics plot in tools section.</li>
-<li>Added astig and RMS process plots to Batch processing.</li>
-<li>Added options to store wave front file on each batch processed igram. Added option to delete loaded wavefront after saving it in Batch mode</li>
-<li>Changed way loading multiple wave front files or batch process igrams works so that more can be loaded at one
-time.  Also tried to warn when memory is getting low to let the user quit at that point but still not crash. </li>
-<li>Made vortex analysis and wavefront data a little more memory efficient.</li>
-<li>Added filter button that will remove wavefronts based on RMS threshold value.</li>
-<li>Added preference to downsize wavefront files when loading them or creating them.  This helps to load more wavefronts</li>
-<li>Fixed bug when using an off center center outline and averaging files that contain one.</li>
-</ul></ul>
-
-<ul><li>Version 1.13.1</li>
-<ul><li>Bug fixes for rotate and average</li>
-</ul></ul>
-
-<ul><li>Version 2.0</li>
-<ul><li>Added regions to ignore on interferogram</li>
-<li>Fixed rotation issues and center hole issues.</li>
-<li>Added width and height of wavefront to contour plot title.</li>
-<li>Added width and height values to status bar when wavefront is selected.</li>
-</ul></ul>
-<ul><li>Version 2.1</li>
-<ul><li>Fixed problems created by 2.0 when rotating, averaging, and writing wavefronts</li>
-<li>Added save 3d image and 3d Video creation</li>
-<li>Added options to report and added astig polar value to report</li>
-<li>Made contour settings also apply to the show all contours function.</li>
-<li>Imporved offset values for Ronchi and Foucault simulations.</li>
-<li>Corrected size of simulated interferogram to match requested size.</li>
-<li>Changed gaussian blur to not cross mirror outline thus better preserving the edge of the mirror</li>
-</ul></ul>
-<ul><li>Version 2.1</li>
-<ul><li>Fixed problems created by 2.0 when rotating, averaging, and writing wavefronts</li>
-<li>Added save 3d image and 3d Video creation</li>
-<li>Added options to report and added astig polar value to report</li>
-<li>Made contour settings also apply to the show all contours function.</li>
-<li>Imporved offset values for Ronchi and Foucault simulations.</li>
-<li>Corrected size of simulated interferogram to match requested size.</li>
-<li>Changed gaussian blur to not cross mirror outline thus better preserving the edge of the mirror</li>
-</ul></ul>
-<ul><li>Version 2.2</li>
-<ul><li>Changed averaging algorithm to update inverted wavefronts if required.</li>
-<li>Added center boundary to Gaussian blur processing to keep bluring the center hole edge improperly.</li>
-<li>Improved Foucault simulation offset slider values and settings. </li>
-<li>Added lateral knif and screen offset to Foucault and ronchi simulations.  Tweeked the starting ROC slider offset and the step size calculated by Auto Offset mode.</li>
-<li>Fixed region edge problem creating a 0 value pixel</li>
-<li>Restored contour plot scale after running test stand astig removal.</li>
-<li>Corrected center hole logic that created a bad value at the center of the hole.</li>
-<li>Added feature to display the resized interferogram that is used by the DFT analysis so that it can be compared to the full size version.
-This allows one to check for fringes that may be too thin. </li>
-<li> fixed rotation direction bug.</li>
-</ul></ul>
-<ul><li>Version 3.0</li>
-<ul>
-<li>Added auto mirror outline capability.</li>
-<li>Added stastics of outline files.</li>
-<li>Changes to igram display to display in gray using the channel selected by the user. Moved igram color channel selection to igram tools.</li>
-<li>Added filter to WaveFront average dialog</li>
-<li>Changed Best Fit CC display to "NA" when null is not selected. Added more info about Best Fit CC parameters</li>
-<li>Added user selectable output wavelength. In Preferences</li>
-<li>Several changes to Batch processing.
-<ul><li>Made the dialog more responsive.</li>
-<li>Added review movie options.</li>
-<li>Added memory usage status</li>
-</ul>
-<li>Changed Gaussian Blur filter value to be percent of mirror diameter.</li>
-<li>Fixed loading of .bmp gray igram files</li>
-<li>Fixed some coloring issues with contour and 3D plots.</li>
-<li>Added fuctions to filter wavefronts or change outline based on outline statistics. </li>
-<li>Added file command to make movies of selected wavfronts to help review results.</li>
-</ul>
-</ul></ul>
-<ul><li>Version 3.1</li>
-<ul>
-<li>Improved outline finding algorithm by using Sobel filter.</li>
-<li>Fixed bug where 3.0 igrams were analyzed wrong for some image types.  Should now agree with 2.2 for all image types.</li>
-<li>Added central outline finding option to Batch processing</li>
-<li>Changed saving of gaussian blur parameters to be compatible with older versions.</li>
-</ul></ul>
-<ul><li>Version 3.2</li>
-<ul>
-<li>Fixed some outlining bugs and batch mode outlining of central hole when not asked to.</li>
-<li>Moved auto outline options from preferences to igram control panel.</li>
-<li>Added options to limit outline scan to around user supplied outline along with adding user supplied width of scan.</li>
-<li>Added outline progress and messages</li>
-<li>Added auto outline debug display to preferences settings.</li>
-<li>Added outline process monitor plots.</li>
-<li>Added extensive help for auto outline featrue.</li>
-<li>Fixed bug about when to use previous outlines and regions</li>
-<li>Created user supplied offsets to apply to auto outline created position and radius in preferences.</li>
-</ul></ul>
-<ul><li>Version 3.2a</li>
-<ul>
-<li>Added optional ruler overlay to contour plot</li>
-<li>Corrected report pdf file page breaks so images appear in their correct borders.</li>
-</ul></ul>
-<ul><li>Version 3.2b</li>
-<ul>
-<li>Fixed close buttons on tool windows</li>
-<li>Modified auto outline algorithm to run faster and fixed bug in it.</li>
-<li>Added more detail on auto outline contols help.</li>
-</ul></ul>
-<ul><li>Version 3.2C</li>
-<ul>
-<li>Fixed bug with contour conrols where not enabled.</li>
-<li>Fixed bug creating none square wave fronts.</li>
-<li>Changed auto outline first phase to do a full scan of image. Takes a little longer but finds correct outline more often.</li>
-<li>Corrected location of center and regions to move with outside outline.</li>
-<li>Changed profile plot to not draw ends of plot to zero</li>
-<li>Fixed bug where slope error was not displayed correctly on profile plot.</li>
-<li>Rotation dialog now remembers last used rotation parameters.</li>
-</ul></ul>
-<ul><li>Version 3.3</li>
-<ul>
-<li>Major enhancment links contour plot and profile plot. <br>
-Added current profile line indicator to contour plot.  Linked contour plot and profile plot so that moving the profile angle moves the contour
-profile.<br>
-Displays error of pixel under contour plot cursor and move the profie angle to match and include that point.
-<br>Left click and drag creates a zoom rectanngle.  Right click zooms out full size.</li>
-<li>Tools menu. Added wavefront transforms to change size of wave front, to change input wave length, to flip wave front.
-    Necessare to compare wave fronts from other users done at different settings</li>
-<li>Tools menu.  Added tilt vs astig analysis.</li>
-<li>Added save Foucault and Ronchi images to the scan control.</li>
-<li> Region editing.  Pressing control key with shift and left button mouse moves all regions. </li>
-<li>Preferences DFT.  Added flip resulting analysis settings.</li>
-<li>Remembers zoom to edge setting on load of new interferogram and in batch processing.</li>
-<li>Moved progress bar for batch processing to the Batch dialog</li>
-<li>File menu Added save current profile to a text file.</li>
-<li>Corrected bug so that last used central obstruction outline is remembered correctly.</li>
-<li>Corrected issue with contour plot and 3d plot which did not show as desired in report.</ll>
-<li>Corrected obstruction shown in profile plot</li>
-<li>Inhibited asking about inverting wavefront during test stand removal process.</li>
-<li>Enhanced test stand astig circle plot to show  lines linking rotations 90 deg apart.</li>
-<li>Enhanced test stand astig circle plot to pick a better circle fit algorithm when points are mostly on a line.</li>
-<li>Fixed last outlines not being remembered correct when next igram is loaded and center outline was last selected.</li>
-<li>Fixed bug that would not invert wave fronts.</li>
-<li>Added dialog to configure size of contours in show all counters feature.</li>
-<li>Corrected calculation of polar angle of atig value displays.</li>
-<li>Batch feature.  Changed review to save indiviual images instead of making a movie.</li>
-</ul></ul>
-<ul><li>Version 3.3a</li>
-<ul>
-<li>fixed bug caused by 3.3 to not load grey scale images.</li>
-</ul></ul>
-<ul><li>Version 3.4</li>
-<ul>
-<li>fixed slow update link between contour plot and profile plot</li>
-<li>Added check box to enable contour to profile plot link.</li>
-<li>Corrected foucault roc offset calculation bugs.</li>
-<li>Added most batch controls to be remembered between runs.</li>
-<li>Changed rms filter plot max to be 1.25 times the max RMS value.</li>
-</ul></ul>
-<ul><li>Version 4.0</li>
-<ul>
-<li>Added PSI processing</li>
-<li>Fixed crash when all wave fronts are selected in profile and mouse moves over contour plot</li>
-<li>Only update contour profile line when shift is held down and mouse is ofer contour plot</li>
-<li>Add help for astig stats feature.</li>
-</ul></ul>
-<ul><li>Version 5.0</li>
-<ul>
-<li>Add first phase II (unknown phase) of PSI algorithrms (see File/process PSI interferograms)</li>
-<li>Fixed intensity color display dialog </li>
-<li>Changed contour "show all" to "show selected"</li>
-<li>Added link to second setup of youtube videos to help</li>
-<li>Added pen color and angle configuration to contour plot ruler<br> setup in preferences General.</li>
-<li>Changed profile show all to only show what is selected.</li>
-<li>Flipped star test images top to bottom.</li>
-<li>Changed to 64 bit compile.
+<body>
+    <h1>DFTFringe Version History</h1>
     <ul>
-    <li>Updated 3D to new OpenGL Qt control</li>
+        <li>Version v1.0</li>
+        <ul>
+            <li>Initial release</li>
+        </ul>
+
+        <li>Version 1.1-beta</li>
+        <ul>
+            <li>saving, inport and export of Mirror dialog with OpenFringe</li>
+        </ul>
+
+        <li>Version 1.2-beta</li>
+        <ul>
+            <li>Added credits to about</li>
+            <li>Reduced size of test stand wizard and made it more resizable</li>
+            <li>Save mirror outlines for loaded interferogram every time the "Done" or "make surface" buttons are
+                used.<br>
+                Look for saved outline file associated with the loading interferogram and use it if found.</li>
+            <li>Internal change to how zernike values are computed. Now using Polar definitions. </li>
+            <li>Increased zernike terms to 48 using all 6th order terms</li>
+            <li>Added batch processing of interferograms both manual assist and auto mode.</li>
+            <li>Added enable all and enable spherical only buttons to Metrics display</li>
+            <li>Added interferogram wavelength to metrics</li>
+            <li>Added average of stand/system induced terms to stand astig reporting</li>
+        </ul>
+
+        <li>Version 1.3-beta</li>
+        <ul>
+            <li>Added hot keys for editing the outline.</li>
+            <li>Changed outline help to a button to open a docked help window on the left side.</li>
+            <li>Corrected and reworked logic to save wavefront stats. Moved display of stats to under the View Menu</li>
+            <li>Added tool to jitter size of outline and save wavefronts. This helps determine if the outline is
+                correct.
+                Will enhance it next version.</li>
+        </ul>
+
+        <li>Version 1.4-beta</li>
+        <ul>
+            <li>Added outline helper to shift outlines in auto mode.</li>
+            <li>Additional fixes to wavefront stats. </li>
+            <li>Added selectable background color to 3D display.</li>
+            <li>Added show all 3D wavefronts.</li>
+            <li>Corrected bug in writing outlines for center hole outline.</li>
+
+        </ul>
+
+        <li>Version 1.5-beta</li>
+        <ul>
+            <li>Added full sized popup windows to display 3D and contour displays using right click menus</li>
+        </ul>
+
+        <li>Version 1.6-beta</li>
+        <ul>
+            <li>Corrected zernike calculating bug introduced in vers 1.2 Should give reliable results once again.
+            </li>
+            <li>Added software null error tolerance in view menu. </li>
+            <li>Modified outline boundary slightly to eliminate fringes around mirror after DFT analysis.</li>
+            <li>Added gamma (contrast) horizontal slider control to DFT tools.</li>
+            <li>Corrected issues when several wavefronts are loaded and a change propigates thru all with the last
+                one
+                in the list
+                displaying the correct metrics.Hopefully smoothing remains if enabled.</li>
+            <li>Gaussian smoothing modified to not include data outise mirror outside board when calculating
+                smoothing
+                just inside the outline.</li>
+        </ul>
+
+        <li>Version 1.6A-beta</li>
+        <ul>
+            <li>Bug fix for star test crash </li>
+            <li>Bug fix to stop outline from changing on save and restore operations </li>
+            <li>Bug fix for zernike values computation.</li>
+        </ul>
+
+        <li>Version 1.7-beta</li>
+        <ul>
+            <li>Added cc and null values to report and metrics.</li>
+            <li>Corrected loading of saved center outline.</li>
+            <li>Change how igram outline is zoomed into including logic for process center outline.</li>
+            <li>Added warning to averaging of wavefronts if any have different signs for primary SA</li>
+            <li>Corrected save and restore of Flip igram horizontal. Deleted it from Preferences and kept it in the
+                mirror config. </li>
+            <li>changed Metric zernike term values to be read only.</li>
+            <li>Added loaded igram to report</li>
+        </ul>
+
+        <li>Version 1.8-beta</li>
+        <ul>
+            <li>Only update selected wavefront/s</li>
+            <li>Added zernike based editing save and load</li>
+            <li>Added Foucault and ronchi simulation</li>
+            <li>Fixed bug in display of ROC in Mirror dialog when changing F number</li>
+            <li>Fixed metrics and report display of Zernike terms RMS value.</li>
+            <li>Fixed test stand removal when average files are a different size. Also fixed the astig report so that
+                text does not overlap in the contour plot footers.</li>
+        </ul>
+
+        <li>Version 1.9-beta</li>
+        <ul>
+            <li>Added elliptical Flat processing</li>
+            <li>Changed zernike rms values to use sign of term instead of all being positive</li>
+            <li>Enabled translation support of most text strings</li>
+            <li>Modified igram and wavefront simulation to use the full zernike set and added import from wavefront
+                button.</li>
+        </ul>
+
+        <li>Version 1.10-beta</li>
+        <ul>
+            <li>Corrected and enhanced the Null errror margin dialog.</li>
+            <li>Corrected text on star test simulation.</li>
+            <li>Corrected text and minor bugs on various displays.</li>
+            <li>Added more preferences to general preferences.</li>
+            <li>Added view unwrap errors display</li>
+            <li>Added Extensive Help</li>
+            <li>Added experimental barrel and pin cushion lens distortion analysis and removal from igrams</li>
+        </ul>
+
+        <li>Version 1.11-beta</li>
+        <ul>
+            <li>Added more help.</li>
+            <li>Profile Plot Full screen button on right click.</li>
+            <li>Added Unix build info to .pro file and fixed unix bugs in other files</li>
+            <li>Fixed bug causing crashes in Camera distortion wizard</li>
+            <li>Fixed bug when selecting all rgb color channels for DFT. Added DFT size to DFT tools display</li>
+            <li>Modified save igram image dialog to show image types. Set default image format to .png</li>
+            <li>Added save feature to unwrap error display.</li>
+        </ul>
+
+        <li>Version 1.12</li>
+        <ul>
+            <li>Fixed bug where outline does not show up on interferogram during batch processing.</li>
+            <li>Added ability to skip an interferogram and analysis on batch processing</li>
+            <li>Fixed some bugs in test stand removal tool. Modified some of the text in associated dialogs.</li>
+            <li>Added software version number to metrics display and pdf report.</li>
+            <li>Fixed bug where display of multiple 3D wavfronts was not correct.</li>
+            <li>Fixed bug in star test simulation of focused star.</li>
+            <li>Fixed bug where stats.cvs file was not written.</li>
+            <li>Fixed bug in MTF calculation. Changed x scale on MTF plot.</li>
+            <li>Moved the controls for Contour line selection to the top of the Contour display.</li>
+            <li>Remembers contour control settings</li>
+            <li>Added pixel histogram and excesive slope display</li>
+        </ul>
+
+        <li>Version 1.13beta</li>
+        <ul>
+            <li>Changed default slope limit to 1. arc second</li>
+            <li>Added slope limit display to profile plot</li>
+            <li>Added slope limit display to final report pdf.</li>
+            <li>Fixed bug when loading wavfront that has different diameter than the config.</li>
+            <li>Added a "no to all" and a "yes to all" buttons to loading wavfront warning when config does not match
+            </li>
+            <li>Added astig statistics plot in tools section.</li>
+            <li>Added astig and RMS process plots to Batch processing.</li>
+            <li>Added options to store wave front file on each batch processed igram. Added option to delete loaded
+                wavefront after saving it in Batch mode</li>
+            <li>Changed way loading multiple wave front files or batch process igrams works so that more can be loaded
+                at one time. Also tried to warn when memory is getting low to let the user quit at that point but still
+                not crash. </li>
+            <li>Made vortex analysis and wavefront data a little more memory efficient.</li>
+            <li>Added filter button that will remove wavefronts based on RMS threshold value.</li>
+            <li>Added preference to downsize wavefront files when loading them or creating them. This helps to load more
+                wavefronts</li>
+            <li>Fixed bug when using an off center center outline and averaging files that contain one.</li>
+        </ul>
+
+        <li>Version 1.13.1</li>
+        <ul>
+            <li>Bug fixes for rotate and average</li>
+        </ul>
+
+        <li>Version 2.0</li>
+        <ul>
+            <li>Added regions to ignore on interferogram</li>
+            <li>Fixed rotation issues and center hole issues.</li>
+            <li>Added width and height of wavefront to contour plot title.</li>
+            <li>Added width and height values to status bar when wavefront is selected.</li>
+        </ul>
+
+        <li>Version 2.1</li>
+        <ul>
+            <li>Fixed problems created by 2.0 when rotating, averaging, and writing wavefronts</li>
+            <li>Added save 3d image and 3d Video creation</li>
+            <li>Added options to report and added astig polar value to report</li>
+            <li>Made contour settings also apply to the show all contours function.</li>
+            <li>Imporved offset values for Ronchi and Foucault simulations.</li>
+            <li>Corrected size of simulated interferogram to match requested size.</li>
+            <li>Changed gaussian blur to not cross mirror outline thus better preserving the edge of the mirror</li>
+        </ul>
+
+        <li>Version 2.1</li>
+        <ul>
+            <li>Fixed problems created by 2.0 when rotating, averaging, and writing wavefronts</li>
+            <li>Added save 3d image and 3d Video creation</li>
+            <li>Added options to report and added astig polar value to report</li>
+            <li>Made contour settings also apply to the show all contours function.</li>
+            <li>Imporved offset values for Ronchi and Foucault simulations.</li>
+            <li>Corrected size of simulated interferogram to match requested size.</li>
+            <li>Changed gaussian blur to not cross mirror outline thus better preserving the edge of the mirror</li>
+        </ul>
+
+        <li>Version 2.2</li>
+        <ul>
+            <li>Changed averaging algorithm to update inverted wavefronts if required.</li>
+            <li>Added center boundary to Gaussian blur processing to keep bluring the center hole edge improperly.</li>
+            <li>Improved Foucault simulation offset slider values and settings. </li>
+            <li>Added lateral knif and screen offset to Foucault and ronchi simulations. Tweeked the starting ROC slider
+                offset and the step size calculated by Auto Offset mode.</li>
+            <li>Fixed region edge problem creating a 0 value pixel</li>
+            <li>Restored contour plot scale after running test stand astig removal.</li>
+            <li>Corrected center hole logic that created a bad value at the center of the hole.</li>
+            <li>Added feature to display the resized interferogram that is used by the DFT analysis so that it can be
+                compared to the full size version. This allows one to check for fringes that may be too thin. </li>
+            <li>fixed rotation direction bug.</li>
+        </ul>
+
+        <li>Version 3.0</li>
+        <ul>
+            <li>Added auto mirror outline capability.</li>
+            <li>Added stastics of outline files.</li>
+            <li>Changes to igram display to display in gray using the channel selected by the user. Moved igram color
+                channel selection to igram tools.</li>
+            <li>Added filter to WaveFront average dialog</li>
+            <li>Changed Best Fit CC display to "NA" when null is not selected. Added more info about Best Fit CC
+                parameters</li>
+            <li>Added user selectable output wavelength. In Preferences</li>
+            <li>Several changes to Batch processing.
+                <ul>
+                    <li>Made the dialog more responsive.</li>
+                    <li>Added review movie options.</li>
+                    <li>Added memory usage status</li>
+                </ul>
+            <li>Changed Gaussian Blur filter value to be percent of mirror diameter.</li>
+            <li>Fixed loading of .bmp gray igram files</li>
+            <li>Fixed some coloring issues with contour and 3D plots.</li>
+            <li>Added fuctions to filter wavefronts or change outline based on outline statistics. </li>
+            <li>Added file command to make movies of selected wavfronts to help review results.</li>
+        </ul>
+
+        <li>Version 3.1</li>
+        <ul>
+            <li>Improved outline finding algorithm by using Sobel filter.</li>
+            <li>Fixed bug where 3.0 igrams were analyzed wrong for some image types. Should now agree with 2.2 for all
+                image types.</li>
+            <li>Added central outline finding option to Batch processing</li>
+            <li>Changed saving of gaussian blur parameters to be compatible with older versions.</li>
+        </ul>
+
+        <li>Version 3.2</li>
+        <ul>
+            <li>Fixed some outlining bugs and batch mode outlining of central hole when not asked to.</li>
+            <li>Moved auto outline options from preferences to igram control panel.</li>
+            <li>Added options to limit outline scan to around user supplied outline along with adding user supplied
+                width of scan.</li>
+            <li>Added outline progress and messages</li>
+            <li>Added auto outline debug display to preferences settings.</li>
+            <li>Added outline process monitor plots.</li>
+            <li>Added extensive help for auto outline featrue.</li>
+            <li>Fixed bug about when to use previous outlines and regions</li>
+            <li>Created user supplied offsets to apply to auto outline created position and radius in preferences.</li>
+        </ul>
+
+        <li>Version 3.2a</li>
+        <ul>
+            <li>Added optional ruler overlay to contour plot</li>
+            <li>Corrected report pdf file page breaks so images appear in their correct borders.</li>
+        </ul>
+
+        <li>Version 3.2b</li>
+        <ul>
+            <li>Fixed close buttons on tool windows</li>
+            <li>Modified auto outline algorithm to run faster and fixed bug in it.</li>
+            <li>Added more detail on auto outline contols help.</li>
+        </ul>
+
+        <li>Version 3.2C</li>
+        <ul>
+            <li>Fixed bug with contour conrols where not enabled.</li>
+            <li>Fixed bug creating none square wave fronts.</li>
+            <li>Changed auto outline first phase to do a full scan of image. Takes a little longer but finds correct
+                outline more often.</li>
+            <li>Corrected location of center and regions to move with outside outline.</li>
+            <li>Changed profile plot to not draw ends of plot to zero</li>
+            <li>Fixed bug where slope error was not displayed correctly on profile plot.</li>
+            <li>Rotation dialog now remembers last used rotation parameters.</li>
+        </ul>
+        <li>Version 3.3</li>
+        <ul>
+            <li>Major enhancment links contour plot and profile plot. <br>
+                Added current profile line indicator to
+                contour plot. Linked contour plot and profile plot so that moving the profile angle moves the contour
+                profile.<br>
+                Displays error of pixel under contour plot cursor and move the profie angle to match and include that
+                point.
+                <br>Left click and drag creates a zoom rectanngle. Right click zooms out full size.
+            </li>
+            <li>Tools menu. Added wavefront transforms to change size of wave front, to change input wave length, to
+                flip wave front.
+                Necessare to compare wave fronts from other users done at different settings</li>
+            <li>Tools menu. Added tilt vs astig analysis.</li>
+            <li>Added save Foucault and Ronchi images to the scan control.</li>
+            <li>Region editing. Pressing control key with shift and left button mouse moves all regions. </li>
+            <li>Preferences DFT. Added flip resulting analysis settings.</li>
+            <li>Remembers zoom to edge setting on load of new interferogram and in batch processing.</li>
+            <li>Moved progress bar for batch processing to the Batch dialog</li>
+            <li>File menu Added save current profile to a text file.</li>
+            <li>Corrected bug so that last used central obstruction outline is remembered correctly.</li>
+            <li>Corrected issue with contour plot and 3d plot which did not show as desired in report.</ll>
+            <li>Corrected obstruction shown in profile plot</li>
+            <li>Inhibited asking about inverting wavefront during test stand removal process.</li>
+            <li>Enhanced test stand astig circle plot to show lines linking rotations 90 deg apart.</li>
+            <li>Enhanced test stand astig circle plot to pick a better circle fit algorithm when points are mostly on a
+                line.</li>
+            <li>Fixed last outlines not being remembered correct when next igram is loaded and center outline was last
+                selected.</li>
+            <li>Fixed bug that would not invert wave fronts.</li>
+            <li>Added dialog to configure size of contours in show all counters feature.</li>
+            <li>Corrected calculation of polar angle of atig value displays.</li>
+            <li>Batch feature. Changed review to save indiviual images instead of making a movie.</li>
+        </ul>
+
+        <li>Version 3.3a</li>
+        <ul>
+            <li>fixed bug caused by 3.3 to not load grey scale images.</li>
+        </ul>
+
+        <li>Version 3.4</li>
+        <ul>
+            <li>fixed slow update link between contour plot and profile plot</li>
+            <li>Added check box to enable contour to profile plot link.</li>
+            <li>Corrected foucault roc offset calculation bugs.</li>
+            <li>Added most batch controls to be remembered between runs.</li>
+            <li>Changed rms filter plot max to be 1.25 times the max RMS value.</li>
+        </ul>
+
+        <li>Version 4.0</li>
+        <ul>
+            <li>Added PSI processing</li>
+            <li>Fixed crash when all wave fronts are selected in profile and mouse moves over contour plot</li>
+            <li>Only update contour profile line when shift is held down and mouse is ofer contour plot</li>
+            <li>Add help for astig stats feature.</li>
+        </ul>
+
+        <li>Version 5.0</li>
+        <ul>
+            <li>Add first phase II (unknown phase) of PSI algorithrms (see File/process PSI interferograms)</li>
+            <li>Fixed intensity color display dialog </li>
+            <li>Changed contour "show all" to "show selected"</li>
+            <li>Added link to second setup of youtube videos to help</li>
+            <li>Added pen color and angle configuration to contour plot ruler<br> setup in preferences General.</li>
+            <li>Changed profile show all to only show what is selected.</li>
+            <li>Flipped star test images top to bottom.</li>
+            <li>Changed to 64 bit compile.</li>
+            <ul>
+                <li>Updated 3D to new OpenGL Qt control</li>
+            </ul>
+            <li>Changed Desired Roc offset controls</li>
+        </ul>
+
+        <li>Version 5.1</li>
+        <ul>
+            <li>Fixed save screen to actually save</li>
+            <li>Fixed left arrow auto repeat.</li>
+            <li>Added save and show all selected to 3D controls</li>
+            <li>Enlarged DFT display to use full width of window</li>
+            <li>Corrected height of auto outline button.</li>
+            <li>Corrected display of warning messages when loading wavfronts that do not match the config parameters.
+            </li>
+            <li>Fixed profile plot's error when mirror diameter is changed.</li>
+            <li>Fixed problem with transfrom wavefront buttons not being displayed</li>
+            <li>Make zoom outline fit to window</li>
+            <li>Fixed obscure bug in averaging wavefronts when the wavefronts vary in size too much</li>
+            <li>Corrected ROC offset calculations for Foucault and Ronchi simulations.</li>
+            <li>Corrected and added fullscreen version of 3D and Contour plots.</li>
+        </ul>
+
+        <li>Version 6.0</li>
+        <ul>
+            <li>Added zoom feature to DFT display using mouse wheel. Starts by zooming DFT to fill its display window.
+            </li>
+            <li>Added zernike smoothing to tools menu</li>
+            <li>Added optional 3D and log/regular displays for PSF and updated MTF display</li>
+            <li>Fixed right cliking bug when no files are in wave front list</li>
+            <li>Fixed bug where chaning mirror diameter caused profile plot to be incorrectly sized.</li>
+            <li>Right click menus added to Focault and ronchi images so they can be saved as images.</li>
+            <li>Made changes to PSI processing GUI to improve user interface including adding radian display option</li>
+            <li>Updated report.pdf and astigStats.pdf with better pictures.</li>
+        </ul>
+
+        <li>Version 6.2</li>
+        <ul>
+            <li>Enhanced report.pdf generation to make images better
+            </li>
+            <li>Remembers 3D control settings</li>
+            <li>Added file save and restore to user drawn profiles of simulation function</li>
+            <li>Added more help info to user drawn profiles</li>
+        </ul>
+
+        <li>Version 6.3.1</li>
+        <ul>
+            <li>Fixed some issues with regions that caused DFTF to crash if you didn't check them each time\</li>
+            <li>Regions are remembered better from one igram to the next</li>
+            <li>Fixed a few minor bugs related to "edge mask":
+                <ul>
+                    <li>null calculation when first opening DFTF</li>
+                    <li>saving edge mask</li>
+                    <li>improved an edge mask message wording</li>
+                </ul>
+            </li>
+            <li>Improved many things that only affect DFTFringe programming team</li>
+            <li>New windows installer</li>
+            <li>DFTF can now build and run on Linux (build is only tested on latest Ubuntu)</li>
+            <li>Move to semver format for version names</li>
+        </ul>
+
+        <li>Version 7.0.0</li>
+        <ul>
+            <li>Remove compilation warnings that only affect DFTFringe programming team</li>
+            <li>Project is now buildable on macOS</li>
+            <li>Fixed all bugs related to rotating and averaging when there are regions or central obstruction</li>
+            <ul>
+                <li>fixed issue where masked points outside mirror edge could be averaged in when rotating</li>
+                <li>made it so masked regions only grow once instead of everytime you recalculate zernike's or change
+                    blur</li>
+                <li>rotation uses only outer edge mask now as everything else should rotate</li>
+                <li>eliminates tons of bugs if the center obstruction region changes sizes or position and then we
+                    average</li>
+                <li>fixed bug when reading wavefronts where central obstruction moved due to rounding error</li>
+            </ul>
+            <li>Fixes GUI issues related to outline (oln) file</li>
+            <ul>
+                <li>Oln files are now stored in a new format. DFTFringe can still open files from previous format</li>
+                <li>Fixed bug where oln files can be read wrong (typically 12% of the time)</li>
+                <li>Fixed bug where reading and writing to oln file after cropping would move outline and region
+                    locations</li>
+            </ul>
+            <li>Fix some memory leaks</li>
+            <li>Hovering over data in "astig stats" dialog will show picture name</li>
+            <li>Automatically close some secondary windows that were not closing at end of main application</li>
+            <li>Fix issue where regions near the edge of the igram can cause a crash</li>
+        </ul>
+
+        <li>Version 7.1.1</li>
+        <ul>
+            <li>Added logging to assist with debugging, particularly if there is a crash. To view log file go to exe
+                folder then DFTFringeLogs/log.txt</li>
+            <li>Updated project dependencies</li>
+            <li>Fixed regression introduced in 7.0.0 breaking "show only average" of astig stats</li>
+            <li>Improved waveFront slection display</li>
+            <ul>
+                <li>Displayed waveFront is clearly identified with a green circle</li>
+                <li>F2 shortcut can be used to rename waveFront</li>
+                <li>delete shortcut can be used to delete waveFront</li>
+                <li>enter shortcut can be used to dispaly selected waveFront</li>
+                <li>Right click gives access to a menu for all previous shortcuts</li>
+            </ul>
+            <li>Fixed issue where regions sometimes fill in with data off by many wavelengths</li>
+            <li>Several secondary windows are now closing automatically on main window close (but not all)</li>
+            <li>Fixed issue where Foucault view display "TextLabel" instead of number</li>
+            <li>Fixed regression introduced in 7.0.0 not displaying effects of central obstruction in most displays</li>
+            <li>Removed unused interpolation drop down from rotate wavefront dialog</li>
+            <li>Linux is not case sensitive to jpg (or other extension) anymore for selecting files</li>
+            <li>Fixed regression introduced in 7.0.0 where regions might not be updated correctly when processing
+                several igram</li>
+            <li>Fixed crash if you smooth a wavefront that has an inner outline (perforated mirror). Bug existed staring
+                ver 6.3.1.</li>
+        </ul>
+
+        <li>Version 7.1.2</li>
+        <ul>
+            <li>Fixed some minor bugs with GUI regarding edge mask feature.</li>
+            <li>Removed edge mask from OLN files (was added in version 6.3.0)</li>
+        </ul>
+
+        <li>Version 7.2.1</li>
+        <ul>
+            <li>Added annulus processing for mirrors with holes in the center. Previously, mirrors with holes larger
+                than around 30% could get some error in S.A. and in defocus removal.</li>
+            <li>When saving mirror configuration parameters, file format is now .json file. DFTFringe can still read old
+                .ini format files.</li>
+            <li>Added more hover help popups (aka tooltips), particularly in mirror configuration screen.</li>
+            <li>First version that isn't compatible with Windows 7</li>
+        </ul>
+
+        <li>Version 7.2.3</li>
+        <ul>
+            <li>Improved DLL dependencies behavior for developers</li>
+            <li>Fixed a bug in mirror config when switching between inch and millimeter</li>
+            <li>Fixed a limitation in mirror config for very large mirrors</li>
+            <li>Fixed a bug where defocus adjustment would make DFTFringe crash</li>
+            <li>Improved saving speed when working on network drives</li>
+        </ul>
+
+        <li>Version 7.3.1</li>
+        <ul>
+            <li>Added zonal percent completion graph to profile options</li>
+            <li>Added polar plot of the astig of selected wave fronts under View menu.</li>
+            <li>Changed create movie feature to add user provided prefix to each from created.</li>
+            <li>Added hot keys to import interferogram</li>
+            <li>Added hot key help</li>
+            <li>User can move mouse cursor over any profile shown, click and drag it up or down. Useful for comparing
+                two work sessions results so that they match at zero height.</li>
+            <li>If mouse is over the profile plot the scroll wheel can increase or decrease the y axis range.</li>
+            <li>Added auto collimation setting to Ronchi and Foucault feature</li>
+            <li>Remembered last ROC offset value in Ronchi and Foucault feature to remember last setting when wave front
+                is changed to a different value</li>
+        </ul>
+
+        <li>Version 7.3.3</li>
+        <ul>
+            <li>Added hover and click to astig polar plot to select the wave front and show it as the currently selected
+                wave front. Added click to astig polar table to highlight the line on the plot and display as current
+                wave front.</li>
+            <li>Corrected test stand astig removal feature to display the correct image sizes on the report no matter
+                what the screen resolution is.</li>
+            <li>Corrected bug when subtracted wave front result is saved and then loaded so that it does not lose the
+                fact to use or not use the null.</LI>
+            <li>Updated the subtract dialog to display a reasonable size based on screen resolution. Improved help
+                information.</li>
+        </ul>
+
+        <li>Version 7.3.4</li>
+        <ul>
+            <li>Modified percent correction to use user settable middle exclude radius and added ability to show values
+                in inches.</li>
+        </ul>
+
+        <li>Version 7.4.0</li>
+        <ul>
+            <li>New menu item to reset wavefront auto invert.</li>
+            <li>Fixed bug that was causing intermitent crashes.</li>
+            <li>Fix discrepency in wavefront 2D cut angle versus wavefront profile.</li>
+            <li>Improved wavefront subtraction.</li>
+            <li>Minor code quality improvements.</li>
+            <li>Updated project dependencies.</li>
+        </ul>
+
+        <li>Version 8.0.0</li>
+        <ul>
+            <li>First release based in QT6 and latest dependencies.</li>
+            <li>Improved crashlog.</li>
+            <li>Slightly faster zernike computation.</li>
+            <li>Distribute DFTFringe with required licences and copyright notices.</li>
+            <li>No more support for saving mirror configuration file in .ini format. Now only .json
+                format is supported for saving. .ini files can still be loaded.</li>
+            <li>Fix wavefront selection in RMS plot. Broken in 7.4.0.</li>
+            <li>Fix reading mirro configuration files for ellipses.</li>
+        </ul>
     </ul>
-</li>
-<li>Changed Desired Roc offset controls</li>
-</ul></ul>
-<ul><li>Version 5.1</li>
-<ul>
-<li>Fixed save screen to actually save</li>
-<li>Fixed left arrow auto repeat.</li>
-<li>Added save and show all selected to 3D controls</li>
-<li>Enlarged DFT display to use full width of window</li>
-<li>Corrected height of auto outline button.</li>
-<li>Corrected display of warning messages when loading wavfronts that do not match the config parameters.</li>
-<li>Fixed profile plot's error when mirror diameter is changed.</li>
-<li>Fixed problem with transfrom wavefront buttons not being displayed</li>
-<li>Make zoom outline fit to window</li>
-<li>Fixed obscure bug in averaging wavefronts when the wavefronts vary in size too much</li>
-<li>Corrected ROC offset calculations for Foucault and Ronchi simulations.</li>
-<li>Corrected and added fullscreen version of 3D and Contour plots.</li>
-</ul></ul>
-</ul>
-</ul></ul>
-<ul><li>Version 6.0</li>
-<ul>
-<li>Added zoom feature to DFT display using mouse wheel.  Starts by zooming DFT to fill its display window.</li>
-<li>Added zernike smoothing to tools menu</li>
-<li>Added optional 3D and log/regular displays for PSF and updated MTF display</li>
-<li>Fixed right cliking bug when no files are in wave front list</li>
-<li>Fixed bug where chaning mirror diameter caused profile plot to be incorrectly sized.</li>
-<li>Right click menus added to Focault and ronchi images so they can be saved as images.</li>
-<li>Made changes to PSI processing GUI to improve user interface including adding radian display option</li>
-<li>Updated report.pdf and astigStats.pdf with better pictures.</li>
-</ul></ul>
-</ul>
+</body>
 
-<ul><li>Version 6.2</li>
-<ul>
-<li>Enhanced report.pdf generation to make images better
-</li>
-<li>Remembers 3D control settings</li>
-<li>Added file save and restore to user drawn profiles of simulation function</li>
-<li>Added more help info to user drawn profiles</li>
-</ul></ul>
-</ul>
-
-<ul><li>Version 6.3.1</li>
-<ul>
-<li>Fixed some issues with regions that caused DFTF to crash if you didn't check them each time\</li>
-<li>Regions are remembered better from one igram to the next</li>
-<li>Fixed a few minor bugs related to "edge mask":
-<ul>
-<li>null calculation when first opening DFTF</li>
-<li>saving edge mask</li>
-<li>improved an edge mask message wording</li>
-</ul>
-</li>
-<li>Improved many things that only affect DFTFringe programming team</li>
-<li>New windows installer</li>
-<li>DFTF can now build and run on Linux (build is only tested on latest Ubuntu)</li>
-<li>Move to semver format for version names</li>
-</ul>
-</ul>
-
-<ul><li>Version 7.0.0</li>
-<ul>
-<li>Remove compilation warnings that only affect DFTFringe programming team</li>
-<li>Project is now buildable on macOS</li>
-<li>Fixed all bugs related to rotating and averaging when there are regions or central obstruction</li>
-<ul>
-    <li>fixed issue where masked points outside mirror edge could be averaged in when rotating</li>
-    <li>made it so masked regions only grow once instead of everytime you recalculate zernike's or change blur</li>
-    <li>rotation uses only outer edge mask now as everything else should rotate</li>
-    <li>eliminates tons of bugs if the center obstruction region changes sizes or position and then we average</li>
-    <li>fixed bug when reading wavefronts where central obstruction moved due to rounding error</li>
-</ul>
-<li>Fixes GUI issues related to outline (oln) file</li>
-<ul>
-    <li>Oln files are now stored in a new format. DFTFringe can still open files from previous format</li>
-    <li>Fixed bug where oln files can be read wrong (typically 12% of the time)</li>
-    <li>Fixed bug where reading and writing to oln file after cropping would move outline and region locations</li>
-</ul>
-<li>Fix some memory leaks</li>
-<li>Hovering over data in "astig stats" dialog will show picture name</li>
-<li>Automatically close some secondary windows that were not closing at end of main application</li>
-<li>Fix issue where regions near the edge of the igram can cause a crash</li>
-</ul></ul>
-</ul>
-
-<ul><li>Version 7.1.1</li>
-<ul>
-<li>Added logging to assist with debugging, particularly if there is a crash. To view log file go to exe folder then DFTFringeLogs/log.txt</li>
-<li>Updated project dependencies</li>
-<li>Fixed regression introduced in 7.0.0 breaking "show only average" of astig stats</li>
-<li>Improved waveFront slection display</li>
-<ul>
-    <li>Displayed waveFront is clearly identified with a green circle</li>
-    <li>F2 shortcut can be used to rename waveFront</li>
-    <li>delete shortcut can be used to delete waveFront</li>
-    <li>enter shortcut can be used to dispaly selected waveFront</li>
-    <li>Right click gives access to a menu for all previous shortcuts</li>
-</ul>
-<li>Fixed issue where regions sometimes fill in with data off by many wavelengths</li>
-<li>Several secondary windows are now closing automatically on main window close (but not all)</li>
-<li>Fixed issue where Foucault view display "TextLabel" instead of number</li>
-<li>Fixed regression introduced in 7.0.0 not displaying effects of central obstruction in most displays</li>
-<li>Removed unused interpolation drop down from rotate wavefront dialog</li>
-<li>Linux is not case sensitive to jpg (or other extension) anymore for selecting files</li>
-<li>Fixed regression introduced in 7.0.0 where regions might not be updated correctly when processing several igram</li>
-<li>Fixed crash if you smooth a wavefront that has an inner outline (perforated mirror). Bug existed staring ver 6.3.1.</li>
-</ul></ul>
-</ul>
-
-<ul><li>Version 7.1.2</li>
-<ul>
-<li>Fixed some minor bugs with GUI regarding edge mask feature.</li>
-<li>Removed edge mask from OLN files (was added in version 6.3.0)</li>
-</ul>
-</ul>
-
-<ul><li>Version 7.2.1</li>
-<ul>
-<li>Added annulus processing for mirrors with holes in the center. Previously, mirrors with holes larger than around 30% could get some error in S.A. and in defocus removal.</li>
-<li>When saving mirror configuration parameters, file format is now .json file.  DFTFringe can still read old .ini format files.</li>
-<li>Added more hover help popups (aka tooltips), particularly in mirror configuration screen.</li>
-<li>First version that isn't compatible with Windows 7</li>
-</ul>
-</ul>
-
-<ul><li>Version 7.2.3</li>
-<ul>
-<li>Improved DLL dependencies behavior for developers</li>
-<li>Fixed a bug in mirror config when switching between inch and millimeter</li>
-<li>Fixed a limitation in mirror config for very large mirrors</li>
-<li>Fixed a bug where defocus adjustment would make DFTFringe crash</li>
-<li>Improved saving speed when working on network drives</li>
-</ul>
-</ul>
-
-<ul><li>Version 7.3.1</li>
-<ul>
-<li>Added zonal percent completion graph to profile options</li>
-<li>Added polar plot of the astig of selected wave fronts under View menu.</li>
-<li>Changed create movie feature to add user provided prefix to each from created.</li>
-<li>Added hot keys to import interferogram</li>
-<li>Added hot key help</li>
-<li>User can move mouse cursor over any profile shown,  click and drag it up or down.  Useful for comparing two work sessions results so that they match at zero height.</li>
-<li>If mouse is over the profile plot the scroll wheel can increase or decrease the y axis range.</li>
-<li>Added auto collimation setting to Ronchi and Foucault feature</li>
-<li>Remembered last ROC offset value in Ronchi and Foucault feature to remember last setting when wave front is changed to a different value</li>
-</ul>
-</ul>
-
-<ul><li>Version 7.3.3</li>
-
-<ul>
-<li>Added hover and click to astig polar plot to select the wave front and show it as the currently selected wave front.  Added click to astig polar table to highlight the line on the plot and display as current wave front.</li>
-<li>Corrected test stand astig removal feature to display the correct image sizes on the report no matter what the screen resolution is.</li>
-<li>Corrected bug when subtracted wave front result is saved and then loaded so that it does not lose the fact to use or not use the null.</LI>
-<li>Updated the subtract dialog to display a reasonable size based on screen resolution.  Improved help information.</li>
-</ul>
-</ul>
-
-<ul><li>Version 7.3.4</li>
-<ul>
-<li>Modified percent correction to use user settable middle exclude radius and added ability to show values in inches.</li>
-</ul>
-</ul>
-
-<ul><li>Version 7.4.0</li>
-<ul>
-<li>New menu item to reset wavefront auto invert.</li>
-<li>Fixed bug that was causing intermitent crashes.</li>
-<li>Fix discrepency in wavefront 2D cut angle versus wavefront profile.</li>
-<li>Improved wavefront subtraction.</li>
-<li>Minor code quality improvements.</li>
-<li>Updated project dependencies.</li>
-</ul>
-</ul>
-
-<ul><li>Version 8.0.0</li>
-<ul>
-<li>First release based in QT6 and latest dependencies.</li>
-<li>Improved crashlog.</li>
-<li>Slightly faster zernike computation.</li>
-</ul>
-</ul>
-
-</ul>
+</html>
