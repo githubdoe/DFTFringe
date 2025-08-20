@@ -55,7 +55,7 @@ void psfPlot::clear(){
 
 }
 
-void psfPlot::setData(cv::Mat wf, QString label, QPen color, bool doLog){
+void psfPlot::setData(cv::Mat wf, const QString &label, const QPen &color, bool doLog){
     int nx = wf.cols/2;
     QwtPlotCurve *curve1 = new QwtPlotCurve(label);
     QPolygonF points1;

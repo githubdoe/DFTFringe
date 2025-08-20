@@ -1212,7 +1212,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
 }
 
 //debug routine to see what is matrix values.
-void dumpArma(arma::mat mm, QString title, QVector<QString> colHeading, QVector<QString> RowLable){
+void dumpArma(const arma::mat &mm, const QString &title, QVector<QString> colHeading, QVector<QString> RowLable){
     arma::mat theMat = mm;
     QString transposed(" ");
 

@@ -32,7 +32,7 @@ extern std::vector<bool> zernEnables;
 //void gauss_jordan(int n, double* Am, double* Bm);
 
 
-void dumpArma(arma::mat mm, QString title = "",
+void dumpArma(const arma::mat &mm, const QString &title = "",
             QVector<QString> colHeading = QVector<QString>(0),
             QVector<QString> RowLable = QVector<QString>(0));
 

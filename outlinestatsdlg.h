@@ -13,7 +13,7 @@ class outlineStatsDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit outlineStatsDlg(QStringList names, QWidget *parent = 0);
+    explicit outlineStatsDlg(const QStringList &names, QWidget *parent = 0);
     ~outlineStatsDlg();
     QStringList m_names;
     QVector<double> xvals;

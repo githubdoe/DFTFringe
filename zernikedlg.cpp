@@ -38,7 +38,7 @@ ZernTableModel::ZernTableModel(QObject *parent, std::vector<bool> *enables, bool
 }
 
 
-void ZernTableModel::setValues(std::vector<double> vals, bool nulled){
+void ZernTableModel::setValues(const std::vector<double> &vals, bool nulled){
     m_nulled = nulled;
     values = vals;
     m_enables->resize(vals.size(),true);

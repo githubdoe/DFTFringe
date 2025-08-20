@@ -159,7 +159,7 @@ void SimulationsView::saveImage(QString fileName){
     svImage.save(fileName);
 }
 
-void SimulationsView::showContextMenu(const QPoint &pos)
+void SimulationsView::showContextMenu(QPoint pos)
 {
 
 // Handle global position
@@ -455,7 +455,7 @@ void etoxplusy(cv::Mat data)
         }
     }
 }
-void SimulationsView::mtf(cv::Mat star, QString txt, QColor color){
+void SimulationsView::mtf(const cv::Mat &star, const QString &txt, QColor color){
     cv::Mat planes[2];
     cv::Mat mtfIn, mtfOut, mtfMag;
     split(star,planes);
@@ -517,7 +517,7 @@ int stalkWidth;
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 using namespace cv;
-cv::Mat make_obstructionMask(cv::Mat mask){
+cv::Mat make_obstructionMask(const cv::Mat &mask){
     //return;
     cv::Mat out = mask.clone();
     int s = mask.size[0];
@@ -533,7 +533,7 @@ cv::Mat make_obstructionMask(cv::Mat mask){
 
 
 //3D psf
-void SimulationsView::make3DPsf(cv::Mat surface){
+void SimulationsView::make3DPsf(const cv::Mat &surface){
 
     int nx = surface.size[0];
     int start = nx/2 - nx/4;

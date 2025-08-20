@@ -50,7 +50,7 @@ class iSurfaceData: public QwtSyntheticPointData
 public:
     cv::Mat m_plane;
     int m_rad;
-    iSurfaceData(cv::Mat plane):
+    iSurfaceData(const cv::Mat &plane):
         QwtSyntheticPointData( plane.cols ),
       m_plane(plane), m_rad(plane.cols/2)
     {
@@ -159,7 +159,7 @@ void intensityPlot::angleChanged(double a){
 
 
 
-void intensityPlot::setSurface(cv::Mat imgMat){
+void intensityPlot::setSurface(const cv::Mat &imgMat){
 
     m_img = imgMat;
     split(imgMat,planes);

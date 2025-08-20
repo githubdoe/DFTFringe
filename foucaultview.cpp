@@ -52,7 +52,7 @@ foucaultView::~foucaultView()
     delete ui;
     spdlog::get("logger")->trace("foucaultView::~foucaultView");
 }
-QString getSaveFileName(QString type){
+QString getSaveFileName(const QString &type){
     QSettings settings;
     QString path = settings.value("lastPath","").toString();
 
@@ -65,7 +65,7 @@ QString getSaveFileName(QString type){
     return fileName;
 
 }
-void foucaultView::showContextMenu(const QPoint &pos)
+void foucaultView::showContextMenu(QPoint pos)
 {
 
 // Handle global position

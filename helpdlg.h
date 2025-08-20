@@ -31,7 +31,7 @@ class HelpDlg : public QDialog
 
 public:
     explicit HelpDlg(QWidget *parent = 0);
-    void setHelpText(QString txt);
+    void setHelpText(const QString &txt);
     ~HelpDlg();
 
 private:

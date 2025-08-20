@@ -18,7 +18,7 @@
 #include "savewavedlg.h"
 #include "ui_savewavedlg.h"
 #include <QFileDialog>
-SaveWaveDlg::SaveWaveDlg(QString lastPath, QWidget *parent) :
+SaveWaveDlg::SaveWaveDlg(const QString &lastPath, QWidget *parent) :
      QDialog(parent),lastPath(lastPath),
     ui(new Ui::SaveWaveDlg)
 {

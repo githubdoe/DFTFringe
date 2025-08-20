@@ -32,7 +32,7 @@ public:
     explicit DFTTools(QWidget *parent = 0);
     void connectTo(QWidget *view);
     bool wasPressed;
-    void imageSize(QString txt);
+    void imageSize(const QString &txt);
     void setDFTSize(int val);
     ~DFTTools();
 signals:

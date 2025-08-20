@@ -27,7 +27,7 @@ dftThumb::dftThumb(QWidget *parent) :
     //ui->label->setSizePolicy( QSizePolicy::Ignored, QSizePolicy::Ignored );
 }
 
-void dftThumb::setImage(QImage img){
+void dftThumb::setImage(const QImage &img){
     m_img = img.scaled(300, 300, Qt::KeepAspectRatio);;
 
     ui->label->setPixmap(QPixmap::fromImage(m_img));//.scaled(labelSize, Qt::KeepAspectRatio)));

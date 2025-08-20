@@ -24,7 +24,7 @@ class astigStatsDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit astigStatsDlg( QVector<wavefront *> wavefronts,QWidget *parent = 0);
+    explicit astigStatsDlg( const QVector<wavefront *> &wavefronts,QWidget *parent = 0);
     ~astigStatsDlg();
     void plot();
 private slots:
@@ -41,7 +41,7 @@ private slots:
     void on_clearPb_clicked();
 
     void on_onlyAverages_clicked();
-    void showItem(QVariant item, bool on, int ndx);
+    void showItem(const QVariant &item, bool on, int ndx);
 
     void on_savePB_clicked();
     void showSamplesChanged(bool);

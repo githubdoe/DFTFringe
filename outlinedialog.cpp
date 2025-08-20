@@ -100,7 +100,7 @@ outlineDialog::~outlineDialog()
 }
 
 
-void outlineDialog::updateDisplay(cv::Mat img){
+void outlineDialog::updateDisplay(const cv::Mat &img){
 
     QImage tmp = QImage((uchar*)img.data,
                         img.cols,
@@ -112,7 +112,7 @@ void outlineDialog::updateDisplay(cv::Mat img){
                                                                                   Qt::KeepAspectRatio));
 }
 
-void outlineDialog::setImage(cv::Mat img){
+void outlineDialog::setImage(const cv::Mat &img){
     cv::Mat tmp;
     img.convertTo(tmp, CV_8UC1);
     cv::cvtColor(tmp,m_igram, cv::COLOR_GRAY2RGB);

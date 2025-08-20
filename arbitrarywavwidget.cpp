@@ -54,7 +54,7 @@ ArbitraryWavWidget::~ArbitraryWavWidget(){
     pts.empty();
 }
 
-bool comparePoints(const QPointF &a, const QPointF &b) {
+bool comparePoints(QPointF a, QPointF b) {
     return a.x() < b.x();
 }
 

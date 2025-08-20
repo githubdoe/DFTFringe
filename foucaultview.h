@@ -28,7 +28,7 @@ public slots:
     QImage *render();
 
 private slots:
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
 
     void on_gammaSb_valueChanged(double arg1);
 

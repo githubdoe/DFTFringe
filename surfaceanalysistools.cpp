@@ -66,7 +66,7 @@ void surfaceAnalysisTools::enableControls(bool flag){
 }
 
 
-void surfaceAnalysisTools::setBlurText(QString txt){
+void surfaceAnalysisTools::setBlurText(const QString &txt){
     ui->blurMm->setText(txt);
 }
 
@@ -156,7 +156,7 @@ void surfaceAnalysisTools::on_wavefrontList_clicked(const QModelIndex &index)
 }
 
 // this is "right click" on windows
-void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(const QPoint &pos)
+void surfaceAnalysisTools::on_wavefrontList_customContextMenuRequested(QPoint pos)
 {
     QListWidgetItem *item = ui->wavefrontList->itemAt(pos);
     if (item == 0)
@@ -243,11 +243,11 @@ void surfaceAnalysisTools::on_SelectNonePB_clicked()
 {
     ui->wavefrontList->selectionModel()->reset();
 }
-void surfaceAnalysisTools::nameChanged(int ndx, QString newname){
+void surfaceAnalysisTools::nameChanged(int ndx, const QString &newname){
     ui->wavefrontList->item(ndx)->setText(newname);
 }
 
-void surfaceAnalysisTools::nameChanged(QString old, QString newname){
+void surfaceAnalysisTools::nameChanged(const QString &old, const QString &newname){
 
     // first look for full length name match
     QList<QListWidgetItem *> ql = ui->wavefrontList->findItems(old,Qt::MatchExactly);
