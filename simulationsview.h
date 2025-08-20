@@ -60,6 +60,7 @@ private:
     double dX;  // pupil sample size based on mirror size in wave front.
     double dF;  // psf sample size;
 
+    void saveImageNamed(QString fn);
     void mtf(const cv::Mat &magPsf, const QString &txt, QColor color);
     void initMTFPlot();
 
@@ -78,7 +79,7 @@ private slots:
 
     void showContextMenu(QPoint pos);
 
-    void saveImage(QString fn = "");
+    void saveImage();
 
     void on_film_clicked();
 

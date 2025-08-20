@@ -385,7 +385,6 @@ HEADERS += bezier/bezier.h \
     wavefrontaveragefilterdlg.h \
     wavefrontfilterdlg.h \
     wavefrontloader.h \
-    wavefrontstats.h \
     wftexaminer.h \
     wftstats.h \
     zernikedlg.h \
