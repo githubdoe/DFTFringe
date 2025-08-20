@@ -1105,7 +1105,7 @@ void MainWindow::batchProcess(QStringList fileList){
     m_contourView->getPlot()->blockSignals(true);
     QSettings settings;
     bool shouldBeep = settings.value("RMSBeep>", true).toBool();
-    this->setCursor(Qt::WaitCursor);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     batchIgramWizard::goPb->setEnabled(false);
     batchIgramWizard::addFiles->setEnabled(false);
     batchIgramWizard::skipFile->setEnabled(true);
@@ -1147,11 +1147,11 @@ void MainWindow::batchProcess(QStringList fileList){
         //QObject().thread()->msleep(1000);
         ui->SelectOutSideOutline->setChecked(true);
         if (!batchIgramWizard::autoCb->isChecked()){
-            this->setCursor(Qt::ArrowCursor);
+            QApplication::restoreOverrideCursor();
             while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
                 QApplication::processEvents();
             }
-            this->setCursor(Qt::WaitCursor);
+            QApplication::setOverrideCursor(Qt::WaitCursor);
         }
         if (m_skipItem){
             cnt++;
@@ -1167,11 +1167,11 @@ void MainWindow::batchProcess(QStringList fileList){
 
         m_batchMakeSurfaceReady = false;
         if (!batchIgramWizard::autoCb->isChecked() && !m_skipItem){
-            this->setCursor(Qt::ArrowCursor);
+            QApplication::restoreOverrideCursor();
             while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {
                 QApplication::processEvents();
             }
-            this->setCursor(Qt::WaitCursor);
+            QApplication::setOverrideCursor(Qt::WaitCursor);
         }
         if (m_skipItem){
             m_skipItem = false;
@@ -1301,7 +1301,7 @@ void MainWindow::batchProcess(QStringList fileList){
     batchIgramWizard::addFiles->setEnabled(true);
     batchIgramWizard::skipFile->setEnabled(false);
 
-    this->setCursor(Qt::ArrowCursor);
+    QApplication::restoreOverrideCursor();
     m_contourView->getPlot()->blockSignals(false);
 
 }
