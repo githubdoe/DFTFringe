@@ -13,8 +13,9 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
-# include <cmath>
-# include "armadillo"
+#include "zapm_interface.h"
+#include <cmath>
+#include "armadillo"
 #include <QDebug>
 #include <QString>
 
@@ -296,7 +297,7 @@ mat rzernike_ann(const vec& rho, const double& eps, const int& n, const int& m, 
 //'
 //' @md
 // [[Rcpp::export]]
-mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorder=12) {
+mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorder) {
 
   int j, k, nmax, nz, mmax = maxorder/2;
   uword nr = rho.size();
@@ -337,7 +338,8 @@ mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorde
   RZ = rzernike_ann(rho, eps, maxorder, 0, xq, qwts);
   for (int n=0; n<=maxorder; n += 2) {
     k = (n*n)/4 + n;
-    zm.col(k) = RZ.col(n/2);
+    // Dale: normalizers aka m_norms[] are not used here in DFTFringe
+    zm.col(k) = /* std::sqrt(n+1.)* */RZ.col(n/2);
   }
 
   for (int m=1; m<=mmax; m++) {
@@ -348,9 +350,11 @@ mat zapm(const vec& rho, const vec& theta, const double& eps, const int& maxorde
     j = 0;
     for (int n=m; n<= nmax; n += 2) {
       k = ((n+m)*(n+m))/4 + n - m;
-      zm.col(k) = RZ.col(j) % cosmtheta.col(m-1);
+      // Dale: normalizers aka m_norms[] are not used here in DFTFringe
+      zm.col(k) = /* std::sqrt(2.*(n+1.)) * */ RZ.col(j) % cosmtheta.col(m-1);
       k++;
-      zm.col(k) =  RZ.col(j) % sinmtheta.col(m-1);
+      // Dale: normalizers aka m_norms[] are not used here in DFTFringe
+      zm.col(k) = /* std::sqrt(2.*(n+1.)) * */ RZ.col(j) % sinmtheta.col(m-1);
       j++;
     }
   }

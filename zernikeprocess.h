@@ -32,6 +32,9 @@ extern std::vector<bool> zernEnables;
 //void gauss_jordan(int n, double* Am, double* Bm);
 
 
+void dumpArma(arma::mat mm, QString title = "",
+            QVector<QString> colHeading = QVector<QString>(0),
+            QVector<QString> RowLable = QVector<QString>(0));
 
 class zernikeProcess : public QObject
 {
@@ -62,7 +65,6 @@ public:
     arma::mat rhotheta( int width, double radius, double cx, double cy, const wavefront *wf = 0);
 
     arma::mat zpmC(arma::rowvec rho, arma::rowvec theta, int maxorder);
-    arma::mat zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder=12);
     void fillVoid(wavefront &wf);
     void setMaxOrder(int n);
     int getNumberOfTerms();

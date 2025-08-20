@@ -58,7 +58,6 @@ SOURCES += main.cpp \
     dftcolormap.cpp \
     surfaceanalysistools.cpp \
     surfacemanager.cpp \
-    zapm.cpp \
     zernikedlg.cpp \
     zernikepolar.cpp \
     zernikeprocess.cpp \
@@ -146,6 +145,7 @@ SOURCES += main.cpp \
     psitiltoptions.cpp \
     contourrulerparams.cpp \
     zernikesmoothingdlg.cpp \
+    zernike/zapm.cpp \
     SingleApplication/singleapplication.cpp \
     SingleApplication/singleapplication_p.cpp
 
@@ -272,10 +272,11 @@ HEADERS  += mainwindow.h \
     contourrulerparams.h \
     zernikesmoothingdlg.h \
     bezier/bezier.h \
+    zernike/zapm_interface.h \
     SingleApplication/singleapplication.h \
     SingleApplication/singleapplication_p.h
 
-INCLUDEPATH += ./bezier ./SingleApplication
+INCLUDEPATH += ./bezier ./SingleApplication ./zernike
 
 FORMS    += mainwindow.ui \
     annulushelpdlg.ui \
