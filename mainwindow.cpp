@@ -1147,9 +1147,11 @@ void MainWindow::batchProcess(QStringList fileList){
         //QObject().thread()->msleep(1000);
         ui->SelectOutSideOutline->setChecked(true);
         if (!batchIgramWizard::autoCb->isChecked()){
+            this->setCursor(Qt::ArrowCursor);
             while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
                 QApplication::processEvents();
             }
+            this->setCursor(Qt::WaitCursor);
         }
         if (m_skipItem){
             cnt++;
@@ -1165,9 +1167,11 @@ void MainWindow::batchProcess(QStringList fileList){
 
         m_batchMakeSurfaceReady = false;
         if (!batchIgramWizard::autoCb->isChecked() && !m_skipItem){
+            this->setCursor(Qt::ArrowCursor);
             while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {
                 QApplication::processEvents();
             }
+            this->setCursor(Qt::WaitCursor);
         }
         if (m_skipItem){
             m_skipItem = false;
