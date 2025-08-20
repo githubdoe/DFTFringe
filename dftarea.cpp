@@ -1271,7 +1271,9 @@ cv::Mat atan2Mat(cv::Mat y, cv::Mat x){
 }
 #include <armadillo>
 
-
+// zpmCxx commented out, not used, might be needed in doPSIstep4
+// I (atsju) recommend deleting this part and add original or modified file from Mike when/if needed
+/*
 arma::mat zpmCxx(double rho, double theta, int maxorder) {
 
   int m, n, n0, mmax = maxorder/2;
@@ -1345,6 +1347,7 @@ arma::mat zpmCxx(double rho, double theta, int maxorder) {
   }
   return zm;
 }
+*/
 
 #include "outlinedialog.h"
 void DFTArea::doPSIstep4(const cv::Mat &images, QVector<double> phases){

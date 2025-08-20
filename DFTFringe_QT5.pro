@@ -142,10 +142,11 @@ RESOURCES += DFTResources.qrc
 
 TRANSLATIONS += dftfringe_fr.ts
 
-INCLUDEPATH += ./bezier ./SingleApplication
+INCLUDEPATH += ./bezier ./SingleApplication ./zernike
 
 SOURCES += SingleApplication/singleapplication.cpp \
     SingleApplication/singleapplication_p.cpp \
+    zernike/zapm.cpp \
     annulushelpdlg.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
@@ -259,7 +260,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     wavefrontloader.cpp \
     wftexaminer.cpp \
     wftstats.cpp \
-    zapm.cpp \
     zernikedlg.cpp \
     zernikeeditdlg.cpp \
     zernikepolar.cpp \
@@ -270,6 +270,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
 HEADERS += bezier/bezier.h \
     SingleApplication/singleapplication_p.h \
     SingleApplication/singleapplication.h \
+    zernike/zapm_interface.h \
     annulushelpdlg.h \
     arbitrarywavefronthelp.h \
     astigpolargraph.h \
