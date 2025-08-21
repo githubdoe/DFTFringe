@@ -347,6 +347,7 @@ jobs:
       - name: copy needed dlls not found by windeployqt
         run: |
           Copy-Item ".\DFTFringe\Release\DFTFringe.exe.debug" -Destination ".\"
+          Rename-Item DFTFringe.exe.debug Z_DFTFringe.exe.debug
           mkdir ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\DFTFringe\Release\DFTFringe.exe" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
           Copy-Item ".\build_lapack\bin\liblapack.dll" -Destination ".\DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data"
@@ -382,5 +383,5 @@ jobs:
           name: DFTFringe-windows-build-artifact
           path: |
             DFTFringeInstaller_${{env.WORKFLOW_VERSION}}.exe
-            DFTFringe.exe.debug
+            Z_DFTFringe.exe.debug
 
