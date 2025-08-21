@@ -8,9 +8,9 @@ wavefrontFilterDlg::wavefrontFilterDlg(QWidget *parent) :
     ui->setupUi(this);
     ui->deleteFile->hide();
     ui->astigPlot->hide();
-    connect(ui->astigPlot, SIGNAL(waveSeleted(QString)), this, SLOT(waveSelected(QString)));
+    connect(ui->astigPlot, &astigScatterPlot::waveSeleted, this, &wavefrontFilterDlg::waveSelected);
     ui->rmSPlot->hide();
-    connect(ui->rmSPlot, SIGNAL(waveSeleted(QString)), this, SLOT(waveSelected(QString)));
+    connect(ui->rmSPlot, &rmsPlot::waveSeleted, this, &wavefrontFilterDlg::waveSelected);
     QSettings set;
     ui->rmsValue->blockSignals(true);
     ui->rmsValue->setValue(set.value("filterRMS", .1).toDouble());

@@ -52,9 +52,9 @@ surfaceAnalysisTools::surfaceAnalysisTools(QWidget *parent) :
     ui->blurCB->setCheckState((ch) ? Qt::Checked : Qt::Unchecked);
     m_useDefocus = false;
     m_defocus = 0.;
-    connect(&m_defocusTimer, SIGNAL(timeout()), this, SLOT(defocusTimerDone()));
-    connect(ui->wavefrontList->itemDelegate(), SIGNAL(closeEditor(QWidget*, QAbstractItemDelegate::EndEditHint)), this,
-            SLOT(ListWidgetEditEnd(QWidget*, QAbstractItemDelegate::EndEditHint)));
+    connect(&m_defocusTimer, &QTimer::timeout, this, &surfaceAnalysisTools::defocusTimerDone);
+    connect(ui->wavefrontList->itemDelegate(), &QAbstractItemDelegate::closeEditor, this,
+            &surfaceAnalysisTools::ListWidgetEditEnd);
     ui->wavefrontList->setContextMenuPolicy(Qt::CustomContextMenu);
     QShortcut* delShortcut = new QShortcut(QKeySequence::Delete, this);
     connect(delShortcut, &QShortcut::activated, this, &surfaceAnalysisTools::on_deleteWave_clicked);
@@ -243,7 +243,7 @@ void surfaceAnalysisTools::on_SelectNonePB_clicked()
 {
     ui->wavefrontList->selectionModel()->reset();
 }
-void surfaceAnalysisTools::nameChanged(int ndx, const QString &newname){
+void surfaceAnalysisTools::nameChangedN(int ndx, const QString &newname){
     ui->wavefrontList->item(ndx)->setText(newname);
 }
 
@@ -345,8 +345,8 @@ void surfaceAnalysisTools::on_defocus_clicked()
     emit defocusSetup();
 
     defocusDlg *dlg = new defocusDlg();
-    connect(dlg, SIGNAL(defocus(double)), this, SLOT(defocusControlChanged(double)));
-    connect(dlg, SIGNAL(finished(int)), this, SLOT(closeDefocus(int)) );
+    connect(dlg, &defocusDlg::defocus, this, &surfaceAnalysisTools::defocusControlChanged);
+    connect(dlg, &QDialog::finished, this, &surfaceAnalysisTools::closeDefocus );
     dlg->show();
 
 return;

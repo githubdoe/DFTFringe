@@ -42,17 +42,17 @@ outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
     ui->showEdgePixelsCB->blockSignals(false);
     hideSearchcontrole(true);
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Down), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftDown()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::shiftDown);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Up), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftUp()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::shiftUp);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftLeft()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::shiftLeft);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Right), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftRight()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::shiftRight);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Minus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(decrease()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::decrease);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(increase()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::increase);
     //ui->display->resize(QSize(height - 100, height - 100));
 }
 void outlineDialog::shiftDown(){

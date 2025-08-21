@@ -87,7 +87,7 @@ signals:
     void setDftSizeVal(int);
     void selectDFTTab();
     void updateFilterSize(int);
-    void newWavefront(cv::Mat, CircleOutline, CircleOutline, QString,
+    void newWavefront(cv::Mat, CircleOutline, CircleOutline, const QString &,
                       QVector<std::vector<cv::Point> >);
     void dftReady(QImage);
     void statusBarUpdate(QString, int);

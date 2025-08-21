@@ -20,6 +20,8 @@
 
 #include <QDockWidget>
 
+class DFTArea;
+
 namespace Ui {
 class DFTTools;
 }
@@ -30,7 +32,7 @@ class DFTTools : public QDockWidget
 
 public:
     explicit DFTTools(QWidget *parent = 0);
-    void connectTo(QWidget *view);
+    void connectTo(DFTArea *view);
     bool wasPressed;
     void imageSize(const QString &txt);
     void setDFTSize(int val);

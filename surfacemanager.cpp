@@ -502,36 +502,36 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     pd = new QProgressDialog();
     pd->reset();
 
-    connect (this,SIGNAL(progress(int)), pd, SLOT(setValue(int)));
+    connect (this,&SurfaceManager::progress, pd, &QProgressDialog::setValue);
 
     m_profilePlot->setWavefronts(&m_wavefronts);
     // create a timer for surface change update to all non current wave fronts
     m_waveFrontTimer = new QTimer(this);
     m_toolsEnableTimer = new QTimer(this);
     // setup signal and slot
-    connect(m_waveFrontTimer, SIGNAL(timeout()),this, SLOT(backGroundUpdate()));
-    connect(m_toolsEnableTimer, SIGNAL(timeout()), this, SLOT(enableTools()));
+    connect(m_waveFrontTimer, &QTimer::timeout,this, &SurfaceManager::backGroundUpdate);
+    connect(m_toolsEnableTimer, &QTimer::timeout, this, &SurfaceManager::enableTools);
 
-    connect(m_surfaceTools, SIGNAL(waveFrontClicked(int)), this, SLOT(waveFrontClickedSlot(int)));
-    connect(m_surfaceTools, SIGNAL(centerMaskValue(int)),this, SLOT(centerMaskValue(int)));
-    connect(m_surfaceTools, SIGNAL(outsideMaskValue(int)),this, SLOT(outsideMaskValue(int)));
-    connect(m_surfaceTools, SIGNAL(surfaceSmoothGBEnabled(bool)), this, SLOT(surfaceSmoothGBEnabled(bool)));
-    connect(m_surfaceTools, SIGNAL(surfaceSmoothGBValue(double)), this, SLOT(surfaceSmoothGBValue(double)));
-    connect(m_surfaceTools, SIGNAL(wftNameChanged(int,QString)), this, SLOT(wftNameChanged(int,QString)));
-    connect(this, SIGNAL(nameChanged(QString, QString)), m_surfaceTools, SLOT(nameChanged(QString,QString)));
-    connect(m_metrics, SIGNAL(recomputeZerns()), this, SLOT(computeZerns()));
-    connect(m_surfaceTools, SIGNAL(defocusChanged()), this, SLOT(defocusChanged()));
-    connect(m_surfaceTools, SIGNAL(defocusSetup()), this, SLOT(defocusSetup()));
-    connect(this, SIGNAL(currentNdxChanged(int)), m_surfaceTools, SLOT(currentNdxChanged(int)));
-    connect(this, SIGNAL(deleteWavefront(int)), m_surfaceTools, SLOT(deleteWaveFront(int)));
-    connect(m_surfaceTools, SIGNAL(deleteTheseWaveFronts(QList<int>)), this, SLOT(deleteWaveFronts(QList<int>)));
-    connect(m_surfaceTools, SIGNAL(average(QList<int>)),this, SLOT(average(QList<int>)));
-    connect(m_surfaceTools, SIGNAL(doxform(QList<int>)),this, SLOT(transfrom(QList<int>)));
-    connect(m_surfaceTools, SIGNAL(invert(QList<int>)),this,SLOT(invert(QList<int>)));
-    connect(m_surfaceTools, SIGNAL(filterWavefronts()),this,SLOT(filter()));
-    connect(this, SIGNAL(enableControls(bool)),m_surfaceTools, SLOT(enableControls(bool)));
-    connect(mirrorDlg::get_Instance(),SIGNAL(recomputeZerns()), this, SLOT(computeZerns()));
-    connect(mirrorDlg::get_Instance(),SIGNAL(obstructionChanged()), this, SLOT(ObstructionChanged()));
+    connect(m_surfaceTools, &surfaceAnalysisTools::waveFrontClicked, this, &SurfaceManager::waveFrontClickedSlot);
+    connect(m_surfaceTools, &surfaceAnalysisTools::centerMaskValue,this, &SurfaceManager::centerMaskValue);
+    connect(m_surfaceTools, &surfaceAnalysisTools::outsideMaskValue,this, &SurfaceManager::outsideMaskValue);
+    connect(m_surfaceTools, &surfaceAnalysisTools::surfaceSmoothGBEnabled, this, &SurfaceManager::surfaceSmoothGBEnabled);
+    connect(m_surfaceTools, &surfaceAnalysisTools::surfaceSmoothGBValue, this, &SurfaceManager::surfaceSmoothGBValue);
+    connect(m_surfaceTools, &surfaceAnalysisTools::wftNameChanged, this, &SurfaceManager::wftNameChanged);
+    connect(this, &SurfaceManager::nameChanged, m_surfaceTools, &surfaceAnalysisTools::nameChanged);
+    connect(m_metrics, &metricsDisplay::recomputeZerns, this, &SurfaceManager::computeZerns);
+    connect(m_surfaceTools, &surfaceAnalysisTools::defocusChanged, this, &SurfaceManager::defocusChanged);
+    connect(m_surfaceTools, &surfaceAnalysisTools::defocusSetup, this, &SurfaceManager::defocusSetup);
+    connect(this, &SurfaceManager::currentNdxChanged, m_surfaceTools, &surfaceAnalysisTools::currentNdxChanged);
+    connect(this, &SurfaceManager::deleteWavefront, m_surfaceTools, &surfaceAnalysisTools::deleteWaveFront);
+    connect(m_surfaceTools, &surfaceAnalysisTools::deleteTheseWaveFronts, this, &SurfaceManager::deleteWaveFronts);
+    connect(m_surfaceTools, &surfaceAnalysisTools::average,this, &SurfaceManager::averageWavefrontIndices);
+    connect(m_surfaceTools, &surfaceAnalysisTools::doxform,this, &SurfaceManager::transfrom);
+    connect(m_surfaceTools, &surfaceAnalysisTools::invert,this,&SurfaceManager::invert);
+    connect(m_surfaceTools, &surfaceAnalysisTools::filterWavefronts,this,&SurfaceManager::filter);
+    connect(this, &SurfaceManager::enableControls,m_surfaceTools, &surfaceAnalysisTools::enableControls);
+    connect(mirrorDlg::get_Instance(),&mirrorDlg::recomputeZerns, this, &SurfaceManager::computeZerns);
+    connect(mirrorDlg::get_Instance(),&mirrorDlg::obstructionChanged, this, &SurfaceManager::ObstructionChanged);
     QSettings settings;
     m_GB_enabled = settings.value("GBlur", true).toBool();
     if (!settings.contains("gaussianRadiusConverted")){
@@ -540,7 +540,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     }
     m_gbValue = settings.value("GBValue", 20).toInt();
     //useDemoWaveFront();
-    connect(Settings2::getInstance()->m_general, SIGNAL(outputLambdaChanged(double)), this, SLOT(outputLambdaChanged(double)));
+    connect(Settings2::getInstance()->m_general, &SettingsGeneral2::outputLambdaChanged, this, &SurfaceManager::outputLambdaChanged);
     outputLambda = settings.value("outputLambda", 550.).toDouble();
     //useDemoWaveFront();
     surfaceSmoothGBValue(m_gbValue);
@@ -1467,7 +1467,7 @@ void SurfaceManager::backGroundUpdate(){
 
 
 
-void SurfaceManager::average(QList<int> list){
+void SurfaceManager::averageWavefrontIndices(QList<int> list){
     if (list.length() < 2){
             QMessageBox::warning(0,"Warning", "Select at least two wave fronts to be averaged.");
             return;
@@ -1629,7 +1629,7 @@ void SurfaceManager::averageComplete(wavefront *wf){
 
 void SurfaceManager::averageWavefrontFiles(const QStringList &files){
     averageWaveFrontFilesDlg dlg(files, this);
-    connect(&dlg, SIGNAL(averageComplete(wavefront*)), this, SLOT(averageComplete(wavefront *)));
+    connect(&dlg, &averageWaveFrontFilesDlg::averageComplete, this, &SurfaceManager::averageComplete);
     if (dlg.exec()){
 
     }
@@ -1809,7 +1809,7 @@ void SurfaceManager::subtractWavefronts(){
 
 void SurfaceManager::transfrom(const QList<int> &list){
     RotationDlg dlg(list);
-    connect(&dlg, SIGNAL(rotateTheseSig(double, QList<int>)), this, SLOT(rotateThese( double, QList<int>)));
+    connect(&dlg, &RotationDlg::rotateTheseSig, this, &SurfaceManager::rotateThese);
     dlg.exec();
 
 }
@@ -1831,7 +1831,7 @@ void SurfaceManager::invert(QList<int> list){
 void SurfaceManager::filter(){
     wavefrontFilterDlg dlg;
     dlg.setRemoveFileMode();
-    connect(&dlg, SIGNAL(waveWasSelected(QString)),this, SLOT(wavefrontDClicked(QString)));
+    connect(&dlg, &wavefrontFilterDlg::waveWasSelected,this, &SurfaceManager::wavefrontDClicked);
 
     for (int ndx= 0; ndx < m_wavefronts.size(); ++ndx) {
         wavefront *wf = m_wavefronts[ndx];
@@ -2758,7 +2758,7 @@ void SurfaceManager::showAllContours(){
     scrollArea->setAutoFillBackground(true);
     QPushButton *savePb = new QPushButton("Save as Image",w);
 
-    connect(savePb, SIGNAL(pressed()), this, SLOT(saveAllContours()));
+    connect(savePb, &QAbstractButton::pressed, this, &SurfaceManager::saveAllContours);
     layout->addWidget(savePb,0,Qt::AlignHCenter);
     layout->addWidget(scrollArea);
     w->setLayout(layout);
@@ -3057,10 +3057,10 @@ void SurfaceManager::transform(){
         return;
     }
     TransformWaveFrontDlg dlg;
-    connect(&dlg, SIGNAL(flipLR()), this, SLOT(flipHorizontal()));
-    connect(&dlg, SIGNAL(flipV()),this,   SLOT(flipVertical()));
-    connect(&dlg, SIGNAL(resizeW(int)), this, SLOT(resizeW(int)));
-    connect(&dlg, SIGNAL(changeWavelength(double)), this, SLOT(changeWavelength(double)));
+    connect(&dlg, &TransformWaveFrontDlg::flipLR, this, QOverload<>::of(&SurfaceManager::flipHorizontal));
+    connect(&dlg, &TransformWaveFrontDlg::flipV, this,  QOverload<>::of(&SurfaceManager::flipVertical));
+    connect(&dlg, &TransformWaveFrontDlg::resizeW, this, &SurfaceManager::resizeW);
+    connect(&dlg, &TransformWaveFrontDlg::changeWavelength, this, QOverload<double>::of(&SurfaceManager::changeWavelength));
 
     dlg.exec();
 }

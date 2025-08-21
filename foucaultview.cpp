@@ -21,7 +21,7 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     ui->setupUi(this);
     QSettings set;
     ui->lpiSb->setValue(set.value("ronchiLPI", 100).toDouble());
-    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_makePb_clicked()));
+    connect(&m_guiTimer, &QTimer::timeout, this, &foucaultView::on_makePb_clicked);
     ui->rocOffsetSb->setSuffix(" inch");
     ui->useMM->setChecked(set.value("simUseMM",false).toBool());
     ui->RonchiX->blockSignals(true);
@@ -30,8 +30,8 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     if (ui->useMM->isChecked()){
         on_useMM_clicked(true);
     }
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(this, &QWidget::customContextMenuRequested, this,
+            &foucaultView::showContextMenu);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
@@ -72,8 +72,8 @@ void foucaultView::showContextMenu(QPoint pos)
     QPoint globalPos = mapToGlobal(pos);
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Save Ronchi image",  this, SLOT(saveRonchiImage()));
-    myMenu.addAction("Save Foucault Image", this,  SLOT(saveFoucaultImage()));
+    myMenu.addAction("Save Ronchi image",  this, &foucaultView::saveRonchiImage);
+    myMenu.addAction("Save Foucault Image", this,  &foucaultView::saveFoucaultImage);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);

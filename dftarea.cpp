@@ -117,23 +117,23 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     m_Psidlg->setGeometry(rec);
 
 
-    connect(m_Psidlg, SIGNAL(computePhase()),this, SLOT(computePhases()));
+    connect(m_Psidlg, &PSI_dlg::computePhase,this, &DFTArea::computePhases);
     ui->setupUi(this);
     m_gamma = 2.5;
 
-    connect(tools,SIGNAL(dftChannel(const QString&)), this, SLOT(setChannel(const QString&)));
-    connect(tools,SIGNAL(dftSizeVal(int)), this, SLOT(dftSizeVal(int)));
-    connect(tools,SIGNAL(dftCenterFilter(double)), this, SLOT(dftCenterFilter(double)));
-    connect(tools,SIGNAL(makeSurface()), this,SLOT(makeSurface()));
-    connect(tools,SIGNAL(doDFT()), this,SLOT(doDFT()));
-    connect(tools,SIGNAL(showResized()),this, SLOT(showResizedDlg()));
+    connect(tools,&DFTTools::dftChannel, this, &DFTArea::setChannel);
+    connect(tools,&DFTTools::dftSizeVal, this, &DFTArea::dftSizeVal);
+    connect(tools,&DFTTools::dftCenterFilter, this, &DFTArea::dftCenterFilter);
+    connect(tools,&DFTTools::makeSurface, this,&DFTArea::makeSurface);
+    connect(tools,&DFTTools::doDFT, this,&DFTArea::doDFT);
+    connect(tools,&DFTTools::showResized,this, &DFTArea::showResizedDlg);
 
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomPlus()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &DFTArea::zoomPlus);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Minus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomMinus()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &DFTArea::zoomMinus);
     shortcut = new QShortcut(QKeySequence(Qt::Key_F), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomFit()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &DFTArea::zoomFit);
 
     tools->connectTo(this);
     capture = false;

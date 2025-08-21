@@ -92,9 +92,9 @@ SimulationsView::SimulationsView(QWidget *parent) :
     ui->FFTSizeSB->blockSignals(false);
     ui->centerMagnifySB->setValue(set.value("StarTestMagnify", 4).toDouble());
     ui->gammaSB->setValue(set.value("StarTestGamma", 2.).toDouble());
-    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_MakePB_clicked()));
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(&m_guiTimer, &QTimer::timeout, this, &SimulationsView::on_MakePB_clicked);
+    connect(this, &QWidget::customContextMenuRequested, this,
+            &SimulationsView::showContextMenu);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
@@ -145,12 +145,17 @@ void SimulationsView::setSurface(wavefront *wf){
     if (!isHidden())
         on_MakePB_clicked();
 }
-void SimulationsView::saveImage(QString fileName){
+
+void SimulationsView::saveImage(){
     QSettings settings;
     QString path = settings.value("lastPath","").toString();
-    if (fileName == "")
-        fileName = QFileDialog::getSaveFileName(0,
+    QString fileName = QFileDialog::getSaveFileName(0,
                                         "File name for image to be saved", path);
+
+    saveImageNamed(fileName);
+}
+
+void SimulationsView::saveImageNamed(QString fileName){
     if (!fileName.endsWith(".jpg"))
         fileName = fileName + ".jpg";
     QImage svImage = QImage(size(),QImage::Format_ARGB32 );
@@ -159,14 +164,12 @@ void SimulationsView::saveImage(QString fileName){
     svImage.save(fileName);
 }
 
-void SimulationsView::showContextMenu(QPoint pos)
-{
-
-// Handle global position
+void SimulationsView::showContextMenu(QPoint pos){
+    // Handle global position
     QPoint globalPos = mapToGlobal(pos);
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Save as image",  this, SLOT(saveImage()));
+    myMenu.addAction("Save as image", this, &SimulationsView::saveImage); // connects to QAction::triggered(bool checked = false)
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -509,7 +512,7 @@ void SimulationsView::on_film_clicked()
         QApplication::processEvents();
         QString name = QString("/frame%1").arg(cnt++, 3 ,10, QLatin1Char('0'));
 
-        saveImage(filmDir+name);
+        saveImageNamed(filmDir+name);
     }
 }
 int offset = 0;

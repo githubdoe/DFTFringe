@@ -31,7 +31,7 @@ CamWizardPage1::CamWizardPage1(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->listWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
+    connect(ui->listWidget, &QWidget::customContextMenuRequested, this, &CamWizardPage1::showContextMenu);
     QSettings set;
     Pattern p = (Pattern)(set.value("camCalibratePattern", CIRCLES_GRID).toInt());
     ui->columns->blockSignals(true);

@@ -20,6 +20,9 @@
 
 #include <QDockWidget>
 #include <QTimer>
+
+class ContourPlot;
+
 namespace Ui {
 class ContourTools;
 }
@@ -31,7 +34,7 @@ class ContourTools : public QDockWidget
 public:
     explicit ContourTools(QWidget *parent = 0);
     ~ContourTools();
-    void connectTo(QWidget *view);
+    void connectTo(ContourPlot *view);
     double m_interval;
     void enablTools(bool b);
     double m_min;

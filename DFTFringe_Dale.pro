@@ -189,7 +189,6 @@ HEADERS  += mainwindow.h \
     metricsdisplay.h \
     reviewwindow.h \
     vortex.h \
-    wavefrontstats.h \
     wavefrontloader.h \
     rotationdlg.h \
     wftstats.h \

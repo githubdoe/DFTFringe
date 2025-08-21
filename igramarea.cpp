@@ -112,37 +112,37 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     m_dftThumb = new dftThumb(this);
     m_dftThumb->setWindowFlags(    Qt::WindowStaysOnTopHint);
     m_outlineTimer = new QTimer(this);
-    connect(m_outlineTimer, SIGNAL(timeout()),this, SLOT(outlineTimerTimeout()));
+    connect(m_outlineTimer, &QTimer::timeout,this, &IgramArea::outlineTimerTimeout);
     m_doGamma = false;
     m_gammaValue = 2.2;
     m_lastGamma = 2.2;
     needToConvertBGR = false;
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Down), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftDown()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::shiftDown);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Up), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftUp()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::shiftUp);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftLeft()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::shiftLeft);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Right), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftRight()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::shiftRight);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Minus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(decrease()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::decrease);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(increase()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::increase);
     shortcut = new QShortcut(QKeySequence("f"), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomFull()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::zoomFull);
     shortcut = new QShortcut(QKeySequence("h"), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(toggleHideOutline()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::toggleHideOutline);
     shortcut = new QShortcut(QKeySequence::ZoomIn, this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomIn()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::zoomIn);
     shortcut = new QShortcut(QKeySequence::ZoomOut, this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomOut()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::zoomOut);
     shortcut = new QShortcut(QKeySequence("1"), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(edgeMode()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::edgeMode);
 
-    connect(colorChannel::get_instance(),SIGNAL(useChannelsChanged()), this, SLOT(colorChannelChanged()));
+    connect(colorChannel::get_instance(),&colorChannel::useChannelsChanged, this, &IgramArea::colorChannelChanged);
 
-    connect(mirrorDlg::get_Instance(), SIGNAL(aperatureChanged()), this, SLOT(aperatureChanged()));
+    connect(mirrorDlg::get_Instance(), &mirrorDlg::aperatureChanged, this, &IgramArea::aperatureChanged);
     m_edgeMaskWidth = 0;
 }
 void IgramArea::computeEdgeRadius(){
@@ -843,7 +843,7 @@ void IgramArea::findOutline(){
     m_searching_outside = false;
     shiftoutline(QPointF(set.value("autoOutlineXOffset", 0).toInt(),
                                  -set.value("autoOutlineYOffset", 0).toInt()));
-    increase(set.value("autoOutlineRadOffset", 0).toInt());
+    increaseValue(set.value("autoOutlineRadOffset", 0).toInt());
 
 
 //    ui->holeX->setValue(set.value("autoholeXOffset", 0).toInt());
@@ -1249,7 +1249,7 @@ void IgramArea::increaseRegion(int n, double scale){
 
 }
 
-void IgramArea::increase(int i) {
+void IgramArea::increaseValue(int i) {
 
     if (m_current_boundry == OutSideOutline) {
         m_outside.enlarge(i);
@@ -1266,6 +1266,11 @@ void IgramArea::increase(int i) {
     }
     drawBoundary();
 }
+
+void IgramArea::increase() {
+    increaseValue(1);
+}
+
 void IgramArea::decrease(){
 
     if (m_current_boundry == OutSideOutline) {
@@ -1984,17 +1989,6 @@ void IgramArea::saveRegions(){
     }
     QSettings set;
     set.setValue("lastRegions", text);
-}
-
-void IgramArea::createActions()
-{
-
-    fitToWindowAct = new QAction(tr("&Fit to Window"), this);
-    fitToWindowAct->setEnabled(false);
-    fitToWindowAct->setCheckable(true);
-    fitToWindowAct->setShortcut(tr("Ctrl+f"));
-    connect(fitToWindowAct, SIGNAL(triggered()), this, SLOT(fitToWindow()));
-
 }
 
 
