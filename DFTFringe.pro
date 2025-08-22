@@ -244,7 +244,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
     surfacemanager.cpp \
-    surfacepropertiesdlg.cpp \
     transformwavefrontdlg.cpp \
     unwraperrorsview.cpp \
     usercolormapdlg.cpp \
@@ -365,7 +364,6 @@ HEADERS += bezier/bezier.h \
     surfacegraph.h \
     surfacelightingproxy.h \
     surfacemanager.h \
-    surfacepropertiesdlg.h \
     transformwavefrontdlg.h \
     unwraperrorsview.h \
     usercolormapdlg.h \
@@ -458,7 +456,6 @@ FORMS += arbitrarywavefronthelp.ui \
     subtractwavefronatsdlg.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
-    surfacepropertiesdlg.ui \
     transformwavefrontdlg.ui \
     unwraperrorsview.ui \
     usercolormapdlg.ui \

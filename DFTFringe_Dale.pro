@@ -68,7 +68,6 @@ SOURCES += main.cpp \
     wavefrontloader.cpp \
     rotationdlg.cpp \
     wftstats.cpp \
-    surfacepropertiesdlg.cpp \
     imagehisto.cpp \
     colorchanneldisplay.cpp \
     intensityplot.cpp \
@@ -188,7 +187,6 @@ HEADERS  += mainwindow.h \
     wavefrontloader.h \
     rotationdlg.h \
     wftstats.h \
-    surfacepropertiesdlg.h \
     punwrap.h \
     imagehisto.h \
     colorchanneldisplay.h \
@@ -295,7 +293,6 @@ FORMS    += mainwindow.ui \
     wavefrontnulldlg.ui \
     reviewwindow.ui \
     rotationdlg.ui \
-    surfacepropertiesdlg.ui \
     colorchanneldisplay.ui \
     igramintensity.ui \
     dftthumb.ui \
