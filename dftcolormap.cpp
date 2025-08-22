@@ -24,9 +24,6 @@
 
 QList<colorStop> dftColorMap::userStops;
 
-void dftColorMap::setUserStops(QList<colorStop> &stops) {
-    dftColorMap::userStops = stops;
-}
 
 
 dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMargin, double scale,
