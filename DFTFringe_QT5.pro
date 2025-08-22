@@ -153,7 +153,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     astigpolargraph.cpp \
     astigscatterplot.cpp \
     astigstatsdlg.cpp \
-    astigzoomer.cpp \
     averagewavefrontfilesdlg.cpp \
     batchigramwizard.cpp \
     bathastigdlg.cpp \
@@ -189,7 +188,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     imagehisto.cpp \
     intensityplot.cpp \
     jitteroutlinedlg.cpp \
-    lensdialog.cpp \
     lensetablemodel.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -215,17 +213,14 @@ SOURCES += SingleApplication/singleapplication.cpp \
     psfplot.cpp \
     psi_dlg.cpp \
     psiphasedisplay.cpp \
-    psiresizeimagesdlg.cpp \
     psitiltoptions.cpp \
     punwrap.cpp \
     regionedittools.cpp \
     rejectedwavefrontsdlg.cpp \
-    renamewavefrontdlg.cpp \
     reportdlg.cpp \
     reviewwindow.cpp \
     rmsplot.cpp \
     rotationdlg.cpp \
-    savewavedlg.cpp \
     settings2.cpp \
     settingsdebug.cpp \
     settingsdft.cpp \
@@ -237,7 +232,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     showallcontoursdlg.cpp \
     simigramdlg.cpp \
     simulationsview.cpp \
-    squareimage.cpp \
     standastigwizard.cpp \
     statsview.cpp \
     subtractwavefronatsdlg.cpp \
@@ -246,18 +240,15 @@ SOURCES += SingleApplication/singleapplication.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
     surfacemanager.cpp \
-    surfacepropertiesdlg.cpp \
     transformwavefrontdlg.cpp \
     unwraperrorsview.cpp \
     usercolormapdlg.cpp \
     userdrawnprofiledlg.cpp \
-    utilil.cpp \
-    videosetupdlg.cpp \
+    utils.cpp \
     vortexdebug.cpp \
     wavefront.cpp \
     wavefrontaveragefilterdlg.cpp \
     wavefrontfilterdlg.cpp \
-    wavefrontloader.cpp \
     wftexaminer.cpp \
     wftstats.cpp \
     zernikedlg.cpp \
@@ -277,7 +268,6 @@ HEADERS += bezier/bezier.h \
     arbitrarywavwidget.h \
     astigscatterplot.h \
     astigstatsdlg.h \
-    astigzoomer.h \
     averagewavefrontfilesdlg.h \
     batchigramwizard.h \
     bathastigdlg.h \
@@ -314,7 +304,6 @@ HEADERS += bezier/bezier.h \
     imagehisto.h \
     intensityplot.h \
     jitteroutlinedlg.h \
-    lensdialog.h \
     lensetablemodel.h \
     mainwindow.h \
     messagereceiver.h \
@@ -340,17 +329,14 @@ HEADERS += bezier/bezier.h \
     psfplot.h \
     psi_dlg.h \
     psiphasedisplay.h \
-    psiresizeimagesdlg.h \
     psitiltoptions.h \
     punwrap.h \
     regionedittools.h \
     rejectedwavefrontsdlg.h \
-    renamewavefrontdlg.h \
     reportdlg.h \
     reviewwindow.h \
     rmsplot.h \
     rotationdlg.h \
-    savewavedlg.h \
     settings2.h \
     settingsdebug.h \
     settingsdft.h \
@@ -362,7 +348,6 @@ HEADERS += bezier/bezier.h \
     showallcontoursdlg.h \
     simigramdlg.h \
     simulationsview.h \
-    squareimage.h \
     standastigwizard.h \
     statsview.h \
     subtractwavefronatsdlg.h \
@@ -371,19 +356,15 @@ HEADERS += bezier/bezier.h \
     surfacegraph.h \
     surfacelightingproxy.h \
     surfacemanager.h \
-    surfacepropertiesdlg.h \
     transformwavefrontdlg.h \
     unwraperrorsview.h \
     usercolormapdlg.h \
     userdrawnprofiledlg.h \
     utils.h \
-    videosetupdlg.h \
-    vortex.h \
     vortexdebug.h \
     wavefront.h \
     wavefrontaveragefilterdlg.h \
     wavefrontfilterdlg.h \
-    wavefrontloader.h \
     wftexaminer.h \
     wftstats.h \
     zernikedlg.h \
@@ -422,7 +403,6 @@ FORMS += arbitrarywavefronthelp.ui \
     hotkeysdlg.ui \
     igramintensity.ui \
     jitteroutlinedlg.ui \
-    lensdialog.ui \
     mainwindow.ui \
     metricsdisplay.ui \
     mirrordlg.ui \
@@ -436,20 +416,16 @@ FORMS += arbitrarywavefronthelp.ui \
     pdfcalibrationdlg.ui \
     percentcorrectiondlg.ui \
     pixelstats.ui \
-    profilearea.ui \
     profileplot.ui \
     psfplot.ui \
     psi_dlg.ui \
     psiphasedisplay.ui \
-    psiresizeimagesdlg.ui \
     psitiltoptions.ui \
     regionedittools.ui \
     rejectedwavefrontsdlg.ui \
-    renamewavefrontdlg.ui \
     reportdlg.ui \
     reviewwindow.ui \
     rotationdlg.ui \
-    savewavedlg.ui \
     settings2.ui \
     settingsdebug.ui \
     settingsdft.ui \
@@ -466,16 +442,13 @@ FORMS += arbitrarywavefronthelp.ui \
     subtractwavefronatsdlg.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
-    surfacepropertiesdlg.ui \
     transformwavefrontdlg.ui \
     unwraperrorsview.ui \
     usercolormapdlg.ui \
     userdrawnprofiledlg.ui \
-    videosetupdlg.ui \
     vortexdebug.ui \
     wavefrontaveragefilterdlg.ui \
     wavefrontfilterdlg.ui \
-    wavefrontnulldlg.ui \
     wftexaminer.ui \
     zernikedlg.ui \
     zernikeeditdlg.ui \
@@ -559,7 +532,6 @@ DISTFILES += buildingDFTFringe64.txt \
     ColorMaps/spring.cmp \
     COPYING.LESSER.txt \
     COPYING.txt \
-    helptext.txt \
     README.md \
     RevisionHistory.html
 
