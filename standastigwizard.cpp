@@ -318,7 +318,7 @@ void define_input::compute(){
 QString getNumberFromQString(const QString &xString) {
     QStringList l = xString.split("/");
     QString fn = l[l.size()-1];
-    QRegularExpression xRegExp("(\\d+(?:[\\.p]\\d+)?)");
+    static const QRegularExpression xRegExp("(\\d+(?:[\\.p]\\d+)?)");
     QRegularExpressionMatch match = xRegExp.match(fn);
     QString c;
     if(match.hasMatch()) {
