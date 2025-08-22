@@ -46,7 +46,6 @@ SOURCES += main.cpp \
     percentcorrectiondlg.cpp \
     profileplot.cpp \
     profileplotpicker.cpp \
-    psiresizeimagesdlg.cpp \
     settingsigramimportconfig.cpp \
     surface3dcontrolsdlg.cpp \
     surfacegraph.cpp \
@@ -163,7 +162,6 @@ HEADERS  += mainwindow.h \
     percentcorrectiondlg.h \
     profileplot.h \
     profileplotpicker.h \
-    psiresizeimagesdlg.h \
     settingsigramimportconfig.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
@@ -280,7 +278,6 @@ FORMS    += mainwindow.ui \
     profilearea.ui \
     profileplot.ui \
     contourtools.ui \
-    psiresizeimagesdlg.ui \
     settingsigramimportconfig.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \

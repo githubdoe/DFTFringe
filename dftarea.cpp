@@ -1175,7 +1175,7 @@ void DFTArea::doPSIstep3(){
 
 
 }
-#include "psiresizeimagesdlg.h"
+
 cv::Mat DFTArea::PSILoadFullImages(){
     int cnt = 0;
     cv::Mat data;

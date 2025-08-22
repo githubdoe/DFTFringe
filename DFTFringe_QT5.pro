@@ -213,7 +213,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     psfplot.cpp \
     psi_dlg.cpp \
     psiphasedisplay.cpp \
-    psiresizeimagesdlg.cpp \
     psitiltoptions.cpp \
     punwrap.cpp \
     regionedittools.cpp \
@@ -332,7 +331,6 @@ HEADERS += bezier/bezier.h \
     psfplot.h \
     psi_dlg.h \
     psiphasedisplay.h \
-    psiresizeimagesdlg.h \
     psitiltoptions.h \
     punwrap.h \
     regionedittools.h \
@@ -428,7 +426,6 @@ FORMS += arbitrarywavefronthelp.ui \
     psfplot.ui \
     psi_dlg.ui \
     psiphasedisplay.ui \
-    psiresizeimagesdlg.ui \
     psitiltoptions.ui \
     regionedittools.ui \
     rejectedwavefrontsdlg.ui \
