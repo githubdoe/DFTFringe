@@ -245,7 +245,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     unwraperrorsview.cpp \
     usercolormapdlg.cpp \
     userdrawnprofiledlg.cpp \
-    utilil.cpp \
+    utils.cpp \
     vortexdebug.cpp \
     wavefront.cpp \
     wavefrontaveragefilterdlg.cpp \
@@ -362,7 +362,6 @@ HEADERS += bezier/bezier.h \
     usercolormapdlg.h \
     userdrawnprofiledlg.h \
     utils.h \
-    vortex.h \
     vortexdebug.h \
     wavefront.h \
     wavefrontaveragefilterdlg.h \

@@ -18,7 +18,6 @@
 #include "dftarea.h"
 #include "ui_dftarea.h"
 #include "dfttools.h"
-#include "vortex.h"
 #include <queue>
 #include "punwrap.h"
 #include "zernikeprocess.h"

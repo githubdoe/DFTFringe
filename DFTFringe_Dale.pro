@@ -111,7 +111,7 @@ SOURCES += main.cpp \
     messagereceiver.cpp \
     myutils.cpp \
     pixelstats.cpp \
-    utilil.cpp \
+    utils.cpp \
     circlefit.cpp \
     astigstatsdlg.cpp \
     averagewavefrontfilesdlg.cpp \
@@ -178,7 +178,6 @@ HEADERS  += mainwindow.h \
     zernikes.h \
     metricsdisplay.h \
     reviewwindow.h \
-    vortex.h \
     rotationdlg.h \
     wftstats.h \
     punwrap.h \
