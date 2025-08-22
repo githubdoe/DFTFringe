@@ -662,14 +662,6 @@ void foucaultView::on_SaveImageCB_clicked(bool checked)
     if (!dir.isEmpty())
         imageDir = dir;
 }
-bool foucaultView::saveOnlyFoucault(){
-    return ui->saveOnlyFouccault->isChecked();
-}
-
-void foucaultView::on_saveOnlyFouccault_clicked(bool /*checked*/)
-{
-
-}
 
 void foucaultView::on_overlayProfile_stateChanged(int /*arg1*/)
 {

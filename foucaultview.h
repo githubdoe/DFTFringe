@@ -68,8 +68,6 @@ private slots:
 
     void on_SaveImageCB_clicked(bool checked);
 
-    void on_saveOnlyFouccault_clicked(bool checked);
-
     void saveRonchiImage();
 
     void saveFoucaultImage();
