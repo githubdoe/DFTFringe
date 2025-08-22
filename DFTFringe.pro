@@ -218,7 +218,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     punwrap.cpp \
     regionedittools.cpp \
     rejectedwavefrontsdlg.cpp \
-    renamewavefrontdlg.cpp \
     reportdlg.cpp \
     reviewwindow.cpp \
     rmsplot.cpp \
@@ -336,7 +335,6 @@ HEADERS += bezier/bezier.h \
     punwrap.h \
     regionedittools.h \
     rejectedwavefrontsdlg.h \
-    renamewavefrontdlg.h \
     reportdlg.h \
     reviewwindow.h \
     rmsplot.h \
@@ -430,7 +428,6 @@ FORMS += arbitrarywavefronthelp.ui \
     psitiltoptions.ui \
     regionedittools.ui \
     rejectedwavefrontsdlg.ui \
-    renamewavefrontdlg.ui \
     reportdlg.ui \
     reviewwindow.ui \
     rotationdlg.ui \

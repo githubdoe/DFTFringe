@@ -88,7 +88,6 @@ SOURCES += main.cpp \
     psfplot.cpp \
     standastigwizard.cpp \
     counterrotationdlg.cpp \
-    renamewavefrontdlg.cpp \
     subtractwavefronatsdlg.cpp \
     helpdlg.cpp \
     settingsprofile.cpp \
@@ -205,7 +204,6 @@ HEADERS  += mainwindow.h \
     psfplot.h \
     standastigwizard.h \
     counterrotationdlg.h \
-    renamewavefrontdlg.h \
     subtractwavefronatsdlg.h \
     helpdlg.h \
     settingsprofile.h \
@@ -306,7 +304,6 @@ FORMS    += mainwindow.ui \
     psfplot.ui \
     standastigwizard.ui \
     counterrotationdlg.ui \
-    renamewavefrontdlg.ui \
     subtractwavefronatsdlg.ui \
     helpdlg.ui \
     settingsprofile.ui \

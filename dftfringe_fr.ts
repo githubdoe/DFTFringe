@@ -2743,19 +2743,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>renameWavefrontDlg</name>
-    <message>
-        <location filename="renamewavefrontdlg.ui" line="14"/>
-        <source>Rename Wavefront</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="renamewavefrontdlg.ui" line="20"/>
-        <source>Enter new wavefront name:</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>reviewWindow</name>
     <message>
         <location filename="reviewwindow.ui" line="14"/>
