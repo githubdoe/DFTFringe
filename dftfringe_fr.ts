@@ -1195,39 +1195,6 @@
     </message>
 </context>
 <context>
-    <name>SaveWaveDlg</name>
-    <message>
-        <location filename="savewavedlg.ui" line="14"/>
-        <source>Dialog</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.ui" line="52"/>
-        <source>Browse</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.ui" line="65"/>
-        <source>Normal</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.ui" line="81"/>
-        <source>Nulled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.cpp" line="42"/>
-        <source>Write wave font file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.cpp" line="43"/>
-        <source>wft (*.wft)</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>Settings2</name>
     <message>
         <location filename="settings2.ui" line="14"/>
