@@ -237,7 +237,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     showallcontoursdlg.cpp \
     simigramdlg.cpp \
     simulationsview.cpp \
-    squareimage.cpp \
     standastigwizard.cpp \
     statsview.cpp \
     subtractwavefronatsdlg.cpp \
@@ -362,7 +361,6 @@ HEADERS += bezier/bezier.h \
     showallcontoursdlg.h \
     simigramdlg.h \
     simulationsview.h \
-    squareimage.h \
     standastigwizard.h \
     statsview.h \
     subtractwavefronatsdlg.h \

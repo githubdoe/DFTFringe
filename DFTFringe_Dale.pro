@@ -102,7 +102,6 @@ SOURCES += main.cpp \
     nullvariationdlg.cpp \
     ccswappeddlg.cpp \
     foucaultview.cpp \
-    squareimage.cpp \
     bathastigdlg.cpp \
     zernikeeditdlg.cpp \
     settingsGeneral2.cpp \
@@ -226,7 +225,6 @@ HEADERS  += mainwindow.h \
     nullvariationdlg.h \
     ccswappeddlg.h \
     foucaultview.h \
-    squareimage.h \
     bathastigdlg.h \
     zernikeeditdlg.h \
     settingsGeneral2.h \
