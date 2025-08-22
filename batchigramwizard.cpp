@@ -25,7 +25,7 @@ QLabel *batchIgramWizard::memStatus = 0;
 QCheckBox *batchIgramWizard::makeReviewAvi = 0;
 QString batchIgramWizard::reviewFileName;
 QCheckBox *batchIgramWizard::autoOutlineCenter = 0;
-QCheckBox *batchIgramWizard::autoOutlineOutside = 0;
+//QCheckBox *batchIgramWizard::autoOutlineOutside = 0;
 
 batchIgramWizard::batchIgramWizard(const QStringList &files, QWidget *parent, Qt::WindowFlags flags) :
     QWizard(parent, flags),
