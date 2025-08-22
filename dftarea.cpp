@@ -140,7 +140,9 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     QSettings set;
     m_center_filter = set.value("DFT Center Filter", 10).toDouble();
     qDebug() << "init center" << m_center_filter;
-    emit updateFilterSize(m_center_filter);
+    // TODO I muted clazy warning as this is a false positive.
+    // It might be good to find a different way to call setCenterFilterValue
+    emit updateFilterSize(m_center_filter); // clazy:exclude=incorrect-emit
     installEventFilter(this);
 
     /*

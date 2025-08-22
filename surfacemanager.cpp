@@ -379,9 +379,14 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         if (!m_ignoreInverse && (md->cc != 0.0) && md->cc * wf->InputZerns[8] < 0.){
             bool reverse = false;
             if (m_askAboutReverse){
-                if (QMessageBox::Yes == QMessageBox::question(0,"should invert?","Wavefront seems inverted.  Do you want to invert it?"))
+                // Temporarily restore cursor so QMessageBox does not show waitCursor
+                // QGuiApplication::setOverrideCursor do stack so we will go back to previous state (any state)
+                QGuiApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
+                bool msgResult = (QMessageBox::Yes == QMessageBox::question(0,"should invert?","Wavefront seems inverted.  Do you want to invert it?"));
+                QGuiApplication::restoreOverrideCursor();
+                if (msgResult)
                 {
-                   reverse = true;
+                    reverse = true;
                     m_askAboutReverse = false;
                 }else
                 {

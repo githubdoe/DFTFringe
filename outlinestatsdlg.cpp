@@ -279,7 +279,6 @@ void outlineStatsDlg::on_pushButton_clicked()
                     break;
                 }
                 outside = readCircle(file);
-                CircleOutline sideLobe = readCircle(file);
 
                 if ((file.tellg() > 0) && (fsize > file.tellg())) {
                     if (file.peek() != 'P'){
