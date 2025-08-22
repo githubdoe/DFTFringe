@@ -20,6 +20,10 @@ qtHaveModule(printsupport): QT += printsupport
 
 QMAKE_CXXFLAGS += -std=c++17
 
+# Enable function/data sectioning and garbage collection by linker.
+QMAKE_CXXFLAGS += -ffunction-sections -fdata-sections
+QMAKE_LFLAGS += -Wl,--gc-sections
+
 # disable qDebug() in release
 CONFIG( release, debug|release ) {
     message("Release build")
