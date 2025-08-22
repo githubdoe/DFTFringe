@@ -189,7 +189,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     imagehisto.cpp \
     intensityplot.cpp \
     jitteroutlinedlg.cpp \
-    lensdialog.cpp \
     lensetablemodel.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -312,7 +311,6 @@ HEADERS += bezier/bezier.h \
     imagehisto.h \
     intensityplot.h \
     jitteroutlinedlg.h \
-    lensdialog.h \
     lensetablemodel.h \
     mainwindow.h \
     messagereceiver.h \
@@ -419,7 +417,6 @@ FORMS += arbitrarywavefronthelp.ui \
     hotkeysdlg.ui \
     igramintensity.ui \
     jitteroutlinedlg.ui \
-    lensdialog.ui \
     mainwindow.ui \
     metricsdisplay.ui \
     mirrordlg.ui \

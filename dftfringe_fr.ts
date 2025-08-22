@@ -2173,79 +2173,6 @@ Try it and if you find no difference in wavefront values then you do not need to
     </message>
 </context>
 <context>
-    <name>lensDialog</name>
-    <message>
-        <location filename="lensdialog.ui" line="14"/>
-        <source>Lens parameters</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="22"/>
-        <source>Lens Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="34"/>
-        <source>Lens Distortion Matrix</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="40"/>
-        <source>K1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="50"/>
-        <source>K2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="60"/>
-        <source>P1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="70"/>
-        <source>P2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="80"/>
-        <source>K3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="87"/>
-        <source>K</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="97"/>
-        <source>Camera Matrix</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="103"/>
-        <source>Y Focal Length pixels</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="113"/>
-        <source>X center pixel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="123"/>
-        <source>Y center pixel  </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="133"/>
-        <source>X  Focal Length pixels</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>makeAverages</name>
     <message>
         <location filename="standastigwizard.cpp" line="101"/>
@@ -3794,7 +3721,7 @@ p, li { white-space: pre-wrap; }
         <source>You can set a RMS threshold that will delete any loaded wavefronts and optionally any
  saved wavefronts that have RMS values over the threshold.
 
-You can hover the mouse over a dot on the plots to see the wavefront name. 
+You can hover the mouse over a dot on the plots to see the wavefront name.
 
 You can click on the dot and it will be set as the current displayed wavefront.</source>
         <translation type="unfinished"></translation>

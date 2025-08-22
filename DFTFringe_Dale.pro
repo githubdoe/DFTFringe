@@ -113,7 +113,6 @@ SOURCES += main.cpp \
     generatetargetdlg.cpp \
     lensetablemodel.cpp \
     unwraperrorsview.cpp \
-    lensdialog.cpp \
     messagereceiver.cpp \
     myutils.cpp \
     pixelstats.cpp \
@@ -235,7 +234,6 @@ HEADERS  += mainwindow.h \
     generatetargetdlg.h \
     lensetablemodel.h \
     unwraperrorsview.h \
-    lensdialog.h \
     messagereceiver.h \
     myutils.h \
     pixelstats.h \
@@ -338,7 +336,6 @@ FORMS    += mainwindow.ui \
     camcalibrationreviewdlg.ui \
     generatetargetdlg.ui \
     unwraperrorsview.ui \
-    lensdialog.ui \
     pixelstats.ui \
     astigstatsdlg.ui \
     averagewavefrontfilesdlg.ui \
