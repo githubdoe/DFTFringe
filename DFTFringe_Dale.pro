@@ -279,7 +279,6 @@ FORMS    += mainwindow.ui \
     userdrawnprofiledlg.ui \
     zernikedlg.ui \
     mirrordlg.ui \
-    wavefrontnulldlg.ui \
     reviewwindow.ui \
     rotationdlg.ui \
     colorchanneldisplay.ui \

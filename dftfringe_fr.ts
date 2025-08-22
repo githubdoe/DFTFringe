@@ -3519,19 +3519,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>waveFrontNullDlg</name>
-    <message>
-        <location filename="wavefrontnulldlg.ui" line="14"/>
-        <source>Wavefront Null Enables</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="wavefrontnulldlg.ui" line="17"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specifies what to remove from the wavefront.  Normally this is the first 8 Zernike terms.&lt;/p&gt;&lt;p&gt;Except the x and y astig.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>wavefrontFilterDlg</name>
     <message>
         <location filename="wavefrontfilterdlg.ui" line="20"/>

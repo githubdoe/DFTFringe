@@ -449,7 +449,6 @@ FORMS += arbitrarywavefronthelp.ui \
     vortexdebug.ui \
     wavefrontaveragefilterdlg.ui \
     wavefrontfilterdlg.ui \
-    wavefrontnulldlg.ui \
     wftexaminer.ui \
     zernikedlg.ui \
     zernikeeditdlg.ui \
