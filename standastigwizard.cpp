@@ -22,7 +22,7 @@
 #include <QDebug>
 #include <counterrotationdlg.h>
 #include <QString>
-#include <QRegExp>
+#include <QRegularExpression>
 #include "surfacemanager.h"
 
 QString AstigReportTitle = "";
@@ -304,22 +304,36 @@ void define_input::compute(){
     emit computeStandAstig( this, rotationList);
 }
 
-QString getNumberFromQString(const QString &xString)
-{
 
-  QStringList l = xString.split("/");
-  QString fn = l[l.size()-1];
-  QRegExp xRegExp("(\\d+([\\.p]\\d+)?)");
-  xRegExp.indexIn(fn);
-  QString c = xRegExp.cap();
-  c.replace("p",".");
-  if (c == ""){
-      xRegExp.indexIn(l[l.size()-2]);
-      c = xRegExp.cap();
-      c.replace("p",".");
-  }
-  return c;
+/**
+ * @brief Extracts a numeric value from a given QString, replacing 'p' with '.' for decimal representation.
+ *
+ * This function splits the input string by '/' and attempts to find a number (integer or decimal)
+ * in the last segment. If not found, it checks the second-to-last segment. The number can contain
+ * digits and may use 'p' as a decimal separator, which will be replaced by '.' in the output.
+ *
+ * @param xString The input QString from which to extract the number.
+ * @return QString The extracted number as a string, or an empty string if no number is found.
+ */
+QString getNumberFromQString(const QString &xString) {
+    QStringList l = xString.split("/");
+    QString fn = l[l.size()-1];
+    static const QRegularExpression xRegExp("(\\d+(?:[\\.p]\\d+)?)");
+    QRegularExpressionMatch match = xRegExp.match(fn);
+    QString c;
+    if(match.hasMatch()) {
+        c = match.captured(1).replace("p",".");
+    } else {
+        match = xRegExp.match(l[l.size()-2]);
+        if(match.hasMatch()) {
+            c = match.captured(1).replace("p",".");
+        } else {
+            c = "";
+        }
+    }
+    return c;
 }
+
 void define_input::browse(){
 
     QStringList fileNames = QFileDialog::getOpenFileNames(this,

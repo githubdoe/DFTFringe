@@ -92,7 +92,7 @@ jobs:
         run: pip install aqtinstall
       - name: install QT
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
-        run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw -m qtcharts qtdatavis3d qt5compat
+        run: aqt install-qt windows desktop ${{env.QT_version}} win64_mingw -m qtcharts qtdatavis3d
       - uses: actions/checkout@v4
         if: steps.cache-openCV-QT.outputs.cache-hit != 'true'
         with:

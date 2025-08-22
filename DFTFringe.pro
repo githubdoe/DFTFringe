@@ -14,7 +14,7 @@ DEFINES += QAPPLICATION_CLASS=QApplication
 
 TEMPLATE = app
 
-QT += charts concurrent core core5compat datavisualization gui network opengl widgets xml
+QT += charts concurrent core datavisualization gui network opengl widgets xml
 
 qtHaveModule(printsupport): QT += printsupport
 
