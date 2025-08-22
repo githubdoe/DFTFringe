@@ -153,7 +153,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     astigpolargraph.cpp \
     astigscatterplot.cpp \
     astigstatsdlg.cpp \
-    astigzoomer.cpp \
     averagewavefrontfilesdlg.cpp \
     batchigramwizard.cpp \
     bathastigdlg.cpp \
@@ -276,7 +275,6 @@ HEADERS += bezier/bezier.h \
     arbitrarywavwidget.h \
     astigscatterplot.h \
     astigstatsdlg.h \
-    astigzoomer.h \
     averagewavefrontfilesdlg.h \
     batchigramwizard.h \
     bathastigdlg.h \

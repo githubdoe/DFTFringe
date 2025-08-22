@@ -121,7 +121,6 @@ SOURCES += main.cpp \
     circlefit.cpp \
     astigstatsdlg.cpp \
     averagewavefrontfilesdlg.cpp \
-    astigzoomer.cpp \
     astigscatterplot.cpp \
     wavefrontfilterdlg.cpp \
     myplotpicker.cpp \
@@ -245,7 +244,6 @@ HEADERS  += mainwindow.h \
     circle.h \
     astigstatsdlg.h \
     averagewavefrontfilesdlg.h \
-    astigzoomer.h \
     astigscatterplot.h \
     wavefrontfilterdlg.h \
     myplotpicker.h \
