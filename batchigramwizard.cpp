@@ -250,9 +250,7 @@ void batchIntro::on_filter(bool flag){
         }
     }
 }
-bool batchIntro::shouldFilterFile(double rms){
-    return (filterFile && rms > filterRms);
-}
+
 bool batchIntro::shouldFilterWavefront(double rms){
     return (filterWavefront && rms > filterRms);
 }
