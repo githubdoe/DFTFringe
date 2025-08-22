@@ -3611,39 +3611,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>videoSetupDlg</name>
-    <message>
-        <location filename="videosetupdlg.ui" line="14"/>
-        <source>Video setup</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="24"/>
-        <source>angle per step</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="51"/>
-        <source>Frames per Second</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="72"/>
-        <source>Full Size</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="79"/>
-        <source>Size</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="96"/>
-        <source>X</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>vortexDebug</name>
     <message>
         <location filename="vortexdebug.ui" line="17"/>

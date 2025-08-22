@@ -126,7 +126,6 @@ SOURCES += main.cpp \
     rmsplot.cpp \
     regionedittools.cpp \
     reportdlg.cpp \
-    videosetupdlg.cpp \
     showaliasdlg.cpp \
     colorchannel.cpp \
     wavefrontaveragefilterdlg.cpp \
@@ -248,7 +247,6 @@ HEADERS  += mainwindow.h \
     rmsplot.h \
     regionedittools.h \
     reportdlg.h \
-    videosetupdlg.h \
     showaliasdlg.h \
     colorchannel.h \
     wavefrontaveragefilterdlg.h \
@@ -342,7 +340,6 @@ FORMS    += mainwindow.ui \
     wavefrontfilterdlg.ui \
     regionedittools.ui \
     reportdlg.ui \
-    videosetupdlg.ui \
     showaliasdlg.ui \
     wavefrontaveragefilterdlg.ui \
     rejectedwavefrontsdlg.ui \
