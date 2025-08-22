@@ -65,7 +65,6 @@ SOURCES += main.cpp \
     zernikes.cpp \
     metricsdisplay.cpp \
     reviewwindow.cpp \
-    wavefrontloader.cpp \
     rotationdlg.cpp \
     wftstats.cpp \
     imagehisto.cpp \
@@ -184,7 +183,6 @@ HEADERS  += mainwindow.h \
     metricsdisplay.h \
     reviewwindow.h \
     vortex.h \
-    wavefrontloader.h \
     rotationdlg.h \
     wftstats.h \
     punwrap.h \

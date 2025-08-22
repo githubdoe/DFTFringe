@@ -35,7 +35,6 @@
 #include "metricsdisplay.h"
 #include "reviewwindow.h"
 #include "settings2.h"
-#include "wavefrontloader.h"
 #include "colorchanneldisplay.h"
 #include "igramintensity.h"
 #include "vortexdebug.h"

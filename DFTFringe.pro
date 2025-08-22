@@ -253,7 +253,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     wavefront.cpp \
     wavefrontaveragefilterdlg.cpp \
     wavefrontfilterdlg.cpp \
-    wavefrontloader.cpp \
     wftexaminer.cpp \
     wftstats.cpp \
     zernikedlg.cpp \
@@ -374,7 +373,6 @@ HEADERS += bezier/bezier.h \
     wavefront.h \
     wavefrontaveragefilterdlg.h \
     wavefrontfilterdlg.h \
-    wavefrontloader.h \
     wftexaminer.h \
     wftstats.h \
     zernikedlg.h \
