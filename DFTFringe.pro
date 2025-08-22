@@ -222,7 +222,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     reviewwindow.cpp \
     rmsplot.cpp \
     rotationdlg.cpp \
-    savewavedlg.cpp \
     settings2.cpp \
     settingsdebug.cpp \
     settingsdft.cpp \
@@ -339,7 +338,6 @@ HEADERS += bezier/bezier.h \
     reviewwindow.h \
     rmsplot.h \
     rotationdlg.h \
-    savewavedlg.h \
     settings2.h \
     settingsdebug.h \
     settingsdft.h \
@@ -431,7 +429,6 @@ FORMS += arbitrarywavefronthelp.ui \
     reportdlg.ui \
     reviewwindow.ui \
     rotationdlg.ui \
-    savewavedlg.ui \
     settings2.ui \
     settingsdebug.ui \
     settingsdft.ui \

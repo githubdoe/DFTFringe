@@ -75,7 +75,6 @@ SOURCES += main.cpp \
     simigramdlg.cpp \
     punwrap.cpp \
     wftexaminer.cpp \
-    savewavedlg.cpp \
     usercolormapdlg.cpp \
     colormapviewerdlg.cpp \
     oglview.cpp \
@@ -191,7 +190,6 @@ HEADERS  += mainwindow.h \
     vortexdebug.h \
     simigramdlg.h \
     wftexaminer.h \
-    savewavedlg.h \
     usercolormapdlg.h \
     colormapviewerdlg.h \
     oglview.h \
@@ -292,7 +290,6 @@ FORMS    += mainwindow.ui \
     vortexdebug.ui \
     simigramdlg.ui \
     wftexaminer.ui \
-    savewavedlg.ui \
     usercolormapdlg.ui \
     colormapviewerdlg.ui \
     settingsigram.ui \
