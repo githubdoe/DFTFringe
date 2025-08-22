@@ -418,7 +418,6 @@ FORMS += arbitrarywavefronthelp.ui \
     pdfcalibrationdlg.ui \
     percentcorrectiondlg.ui \
     pixelstats.ui \
-    profilearea.ui \
     profileplot.ui \
     psfplot.ui \
     psi_dlg.ui \
@@ -536,7 +535,6 @@ DISTFILES += buildingDFTFringe64.txt \
     ColorMaps/spring.cmp \
     COPYING.LESSER.txt \
     COPYING.txt \
-    helptext.txt \
     README.md \
     RevisionHistory.html
 

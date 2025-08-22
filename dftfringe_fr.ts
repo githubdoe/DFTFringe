@@ -2671,14 +2671,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>profileArea</name>
-    <message>
-        <location filename="profilearea.ui" line="16"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>psfPlot</name>
     <message>
         <location filename="psfplot.ui" line="14"/>

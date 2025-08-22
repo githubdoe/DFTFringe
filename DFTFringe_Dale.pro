@@ -271,7 +271,6 @@ FORMS    += mainwindow.ui \
     oglrendered.ui \
     pdfcalibrationdlg.ui \
     percentcorrectiondlg.ui \
-    profilearea.ui \
     profileplot.ui \
     contourtools.ui \
     settingsigramimportconfig.ui \
