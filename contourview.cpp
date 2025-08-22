@@ -100,35 +100,7 @@ void contourView::on_pushButton_pressed()
 {
     emit showAllContours();
 }
-#include <qwt_plot_histogram.h>
-#include <opencv2/highgui/highgui.hpp>
-cv::Mat orientationMap(const cv::Mat& mag, const cv::Mat& ori, double thresh = 1.0)
-{
-    cv::Mat oriMap = cv::Mat::zeros(ori.size(), CV_8UC3);
-    cv::Vec3b red(0, 0, 255);
-    cv::Vec3b cyan(255, 255, 0);
-    cv::Vec3b green(0, 255, 0);
-    cv::Vec3b yellow(0, 255, 255);
-    for(int i = 0; i < mag.rows*mag.cols; i++)
-    {
-        float* magPixel = reinterpret_cast<float*>(mag.data + i*sizeof(float));
-        if(*magPixel > thresh)
-        {
-            float* oriPixel = reinterpret_cast<float*>(ori.data + i*sizeof(float));
-            cv::Vec3b* mapPixel = reinterpret_cast<cv::Vec3b*>(oriMap.data + i*3*sizeof(char));
-            if(*oriPixel < 90.0)
-                *mapPixel = red;
-            else if(*oriPixel >= 90.0 && *oriPixel < 180.0)
-                *mapPixel = cyan;
-            else if(*oriPixel >= 180.0 && *oriPixel < 270.0)
-                *mapPixel = green;
-            else if(*oriPixel >= 270.0 && *oriPixel < 360.0)
-                *mapPixel = yellow;
-        }
-    }
 
-    return oriMap;
-}
 void contourView::on_histogram_clicked()
 {
     ps->show();
