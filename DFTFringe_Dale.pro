@@ -408,7 +408,6 @@ DEFINES += QAPPLICATION_CLASS=QApplication
 DEFINES += DALE_DO_NOT_LOG
 DISTFILES += \
     buildingDFTFringe64.txt \
-    helptext.txt \
     ColorMaps/Dale1.cmp \
     ColorMaps/Dale2.cmp \
     ColorMaps/Dale3.cmp \
