@@ -380,6 +380,8 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             if (m_inverseMode==invNOTSET)
             {
                 autoInvertDlg *dlg_ai = autoInvertDlg::get_Instance();
+                dlg_ai->setMainLabel("Your wavefront may be inverted.  What do you want to do?");
+                dlg_ai->enableConic(md->cc != 0);
                 dlg_ai->exec();
                 md->updateAutoInvertStatus();
             }
@@ -500,9 +502,9 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
                                ProfilePlot *profilePlot, contourView *contourView,
                                SurfaceGraph *glPlot, metricsDisplay *mets): QObject(parent),
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
-    m_SurfaceGraph(glPlot), m_metrics(mets),m_inverseMode(invNOTSET),
-    m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
-    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
+    m_SurfaceGraph(glPlot), m_metrics(mets),m_gbValue(21),
+    m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),outsideOffset(0),
+    m_inverseMode(invNOTSET),m_askAboutReverse(true),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {
 
     okToUpdateSurfacesOnGenerateComplete = true;

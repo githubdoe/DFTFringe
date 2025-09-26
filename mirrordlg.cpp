@@ -664,6 +664,12 @@ void mirrorDlg::on_buttonBox_accepted()
     setclearAp();
     updateZ8();
 
+    SurfaceManager * sm = SurfaceManager::get_instance();
+    if (sm->m_inverseMode == invCONIC && cc==0) {
+        sm->m_inverseMode = invNOTSET; // don't allow inverse mode to be conic if conic constant is zero
+        updateAutoInvertStatus();
+    }
+
     settings.setValue("config mirror name", ui->name->text());
     settings.setValue("config roc", roc);
     settings.setValue("config lambda",lambda);
@@ -862,7 +868,7 @@ void mirrorDlg::updateAutoInvertStatus()
             ui->lblAutoInvert->setText("Autoinvert: Manual");
             break;
         case invCONIC:
-            ui->lblAutoInvert->setText("Autoinvert: Parabolic");
+            ui->lblAutoInvert->setText("Autoinvert: Conic");
             break;
         case invINSIDE:
             ui->lblAutoInvert->setText("Autoinvert: Inside Focus");
@@ -876,6 +882,8 @@ void mirrorDlg::updateAutoInvertStatus()
 
 void mirrorDlg::on_btnChangeAutoInvert_clicked()
 {
+    m_autoInvertDlg->setMainLabel("How should DFTFringe choose to auto invert?");
+    m_autoInvertDlg->enableConic(cc != 0);
     m_autoInvertDlg->exec();
     updateAutoInvertStatus();
 }

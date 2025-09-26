@@ -15,6 +15,8 @@ public:
     explicit autoInvertDlg(QWidget *parent = nullptr);
     ~autoInvertDlg();
     static autoInvertDlg *get_Instance();
+    void setMainLabel(const QString & str);
+    void enableConic(bool b);
 
 
 private slots:

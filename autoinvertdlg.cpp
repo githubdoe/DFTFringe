@@ -50,3 +50,10 @@ void autoInvertDlg::on_btnOutside_clicked()
     accept();
 }
 
+void autoInvertDlg::setMainLabel(const QString & str) {
+    ui->lblMain->setText(str);
+}
+
+void autoInvertDlg::enableConic(bool b) {
+    ui->btnUseConic->setEnabled(b);
+}
