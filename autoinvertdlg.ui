@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>487</width>
-    <height>410</height>
+    <width>678</width>
+    <height>464</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,9 +19,9 @@
   <widget class="QPushButton" name="btnManual">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>130</y>
-     <width>81</width>
+     <x>20</x>
+     <y>150</y>
+     <width>111</width>
      <height>24</height>
     </rect>
    </property>
@@ -32,22 +32,22 @@
   <widget class="QPushButton" name="btnUseConic">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>60</y>
-     <width>81</width>
+     <x>20</x>
+     <y>80</y>
+     <width>111</width>
      <height>24</height>
     </rect>
    </property>
    <property name="text">
-    <string>Parabolized</string>
+    <string>Match Conic</string>
    </property>
   </widget>
   <widget class="QPushButton" name="btnInside">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>180</y>
-     <width>81</width>
+     <x>20</x>
+     <y>200</y>
+     <width>111</width>
      <height>24</height>
     </rect>
    </property>
@@ -58,9 +58,9 @@
   <widget class="QPushButton" name="btnOutside">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>260</y>
-     <width>81</width>
+     <x>20</x>
+     <y>280</y>
+     <width>111</width>
      <height>24</height>
     </rect>
    </property>
@@ -72,13 +72,16 @@
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>120</y>
-     <width>261</width>
+     <y>150</y>
+     <width>521</width>
      <height>41</height>
     </rect>
    </property>
    <property name="text">
     <string>I'll invert the wavefront myself as needed</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
@@ -88,13 +91,16 @@
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>50</y>
-     <width>291</width>
+     <y>80</y>
+     <width>521</width>
      <height>61</height>
     </rect>
    </property>
    <property name="text">
     <string>Most common. This mirror is at least partially figured. DFTFringe will invert the wavefront if S.A. sign doesn't match mirror configuration conic constant sign. This option disabled if CC=0.</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
@@ -104,13 +110,16 @@
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>170</y>
-     <width>261</width>
-     <height>61</height>
+     <y>200</y>
+     <width>521</width>
+     <height>71</height>
     </rect>
    </property>
    <property name="text">
     <string>This and future interferograms of this mirror are inside focus (interferometer closer to mirror).  DFTFringe will use that fact to invert as needed.</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
@@ -120,13 +129,16 @@
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>250</y>
-     <width>261</width>
+     <y>280</y>
+     <width>521</width>
      <height>61</height>
     </rect>
    </property>
    <property name="text">
     <string>This and future interferograms of this mirror are outside focus (interferometer farther from mirror).  DFTFringe will use that fact to invert as needed.</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
@@ -137,8 +149,8 @@
     <rect>
      <x>20</x>
      <y>0</y>
-     <width>411</width>
-     <height>41</height>
+     <width>641</width>
+     <height>61</height>
     </rect>
    </property>
    <property name="font">
@@ -157,9 +169,9 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>340</y>
-     <width>441</width>
-     <height>71</height>
+     <y>350</y>
+     <width>631</width>
+     <height>91</height>
     </rect>
    </property>
    <property name="text">
