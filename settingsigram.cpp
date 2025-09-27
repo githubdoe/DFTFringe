@@ -17,12 +17,12 @@
 ****************************************************************************/
 #include "settingsigram.h"
 #include "ui_settingsigram.h"
+#include "spdlog/spdlog.h"
 #include <QSettings>
 #include <QColorDialog>
 #include <QPen>
 #include <QPainter>
 #include <QMenu>
-#include "spdlog/spdlog.h"
 #include "settingsigramimportconfig.h"
 static inline QString colorButtonStyleSheet(const QColor &bgColor)
 {

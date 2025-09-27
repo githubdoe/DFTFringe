@@ -41,7 +41,7 @@
 #include <qwt_scale_draw.h>
 #include "opencv2/opencv.hpp"
 
-#define PITORAD  M_PI/180.
+#define DEGTORAD  M_PI/180.
 static double i_angle;
 
 class iSurfaceData: public QwtSyntheticPointData
@@ -52,7 +52,7 @@ public:
     int m_rad;
     iSurfaceData(cv::Mat plane):
         QwtSyntheticPointData( plane.cols ),
-      m_plane(plane), m_rad(plane.cols/2),m_angle(90)
+      m_plane(plane), m_rad(plane.cols/2)
     {
 
     }
@@ -73,9 +73,8 @@ public:
 
     }
 
-
 private:
-    double m_angle;
+
 };
 
 bool intensityPlot::eventFilter( QObject *object, QEvent *event )
@@ -154,7 +153,7 @@ intensityPlot::intensityPlot(QWidget *parent):
 
 
 void intensityPlot::angleChanged(double a){
-    i_angle = (a * PITORAD - M_PI_2);
+    i_angle = (a * DEGTORAD - M_PI_2);
     replot();
 }
 

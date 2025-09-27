@@ -64,12 +64,11 @@ void PSI_dlg::on_browse_clicked()
                           });
     dialog.setNameFilters(filters);
     if (dialog.exec()){
-            QFileInfo a(dialog.selectedFiles().first());
+            QStringList files = dialog.selectedFiles();
+            QFileInfo a(files.constFirst());
             settings.setValue("lastPath",a.absoluteFilePath());
             //m_surfaceManager->process_psi(dialog.selectedFiles());
-            QStringList files = dialog.selectedFiles();
             ui->igramList->addItems(files);
-            QStringList phases;
             double deltaAngle = ui->PSIPhaseValue->value();
             int index = 0;
             double startAngle = 0;
@@ -174,13 +173,13 @@ double PSI_dlg::tolerance(){
     return ui->tolerance->value();
 }
 
-void PSI_dlg::on_PSIPhaseValue_valueChanged(const QString &arg1)
+void PSI_dlg::on_PSIPhaseValue_valueChanged(double arg1)
 {
     QSettings set;
 
     ui->PhaseList->clear();
     m_phases.clear();
-    double angle = arg1.toDouble();
+    double angle = arg1;
     set.setValue("PSIPhaseValue", angle);
     for (int i = 0; i < ui->igramList->count(); ++i){
         double ang2 = angle * i;

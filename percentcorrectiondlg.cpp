@@ -345,8 +345,6 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
 
     QVector<double> IdealzoneKnife;
     QVector<double> ActualZoneKnife;
-    QVector<double> idealDelta;
-    QVector<double> actualDelta;
     IdealzoneKnife << 0.;
     ActualZoneKnife << 0.0;
 

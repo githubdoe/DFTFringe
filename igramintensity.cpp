@@ -22,6 +22,8 @@
 #include <qwt_plot_renderer.h>
 #include <QSettings>
 #include <QLabel>
+#include <QPainter>
+
 igramIntensity::igramIntensity(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::igramIntensity)

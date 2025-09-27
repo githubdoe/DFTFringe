@@ -51,7 +51,6 @@ public:
     void showPlots(bool flags);
     batchIntro *introPage;
 signals:
-    void swapBathConnections(bool);
     void abort();
 
 

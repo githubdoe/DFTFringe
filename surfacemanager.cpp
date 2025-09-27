@@ -16,6 +16,7 @@
 
 ****************************************************************************/
 #include "surfacemanager.h"
+#include "spdlog/spdlog.h"
 #include <limits>
 #include <cmath>
 #include <QWidget>
@@ -71,7 +72,6 @@
 #include "transformwavefrontdlg.h"
 #include "oglrendered.h"
 #include "ui_oglrendered.h"
-#include "spdlog/spdlog.h"
 #include "astigpolargraph.h"
 
 cv::Mat theMask;
@@ -358,7 +358,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 
                 ++gaussianRad;
                     cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
-                                      cv::Size( gaussianRad, gaussianRad ),0,0,BORDER_REFLECT);
+                                      cv::Size( gaussianRad, gaussianRad ),0,0,cv::BORDER_REFLECT);
             }
             else {
                 wf->workData = wf->data.clone();
@@ -430,7 +430,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             gaussianRad &= 0xfffffffe;
             ++gaussianRad;
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
-                              cv::Size( gaussianRad, gaussianRad ),0,0,BORDER_REFLECT);
+                              cv::Size( gaussianRad, gaussianRad ),0,0,cv::BORDER_REFLECT);
     }
 
     wf->nulledData.release();
@@ -584,10 +584,10 @@ void DrawPoly(cv::Mat &data, QVector<std::vector<cv::Point> > poly){
             cv::line(data, points[0][j], points[0][j+1], cv::Scalar(0));
 
         }
-        const Point* ppt[1] = { points[0]};
+        const cv::Point* ppt[1] = { points[0]};
         int npt[] = {(int) (poly[n].size()) };
 
-        fillPoly( data, ppt, npt, 1, Scalar(0), 8 );
+        fillPoly( data, ppt, npt, 1, cv::Scalar(0), 8 );
 
     }
 }
@@ -690,7 +690,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     if (r > 0){
 
         cv::Mat m = wf->workMask;
-        circle(m,Point((m.cols-1)/2,(m.cols-1)/2),r, Scalar(0),-1);
+        circle(m,cv::Point((m.cols-1)/2,(m.cols-1)/2),r, cv::Scalar(0),-1);
     }
 
     if (Settings2::showMask())
@@ -1041,14 +1041,14 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
 }
 void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
                                                CircleOutline center,
-                                               QString name, QVector<std::vector<Point> > polyArea){
+                                               QString name, QVector<std::vector<cv::Point> > polyArea){
 
     wavefront *wf;
 
     int newrows = Settings2::getInstance()->m_general->wavefrontSize();
     if (Settings2::getInstance()->m_general->shouldDownsize() && ( phase.rows > newrows)){
         double scaleFactor = (double)newrows/double(phase.rows);
-        cv::resize(phase,phase, cv::Size(newrows,newrows), 0, 0,INTER_AREA);
+        cv::resize(phase,phase, cv::Size(newrows,newrows), 0, 0,cv::INTER_AREA);
         outside.scale(scaleFactor);
         center.scale(scaleFactor);
 
@@ -1125,7 +1125,7 @@ wavefront * SurfaceManager::readWaveFront(QString fileName){
     mirrorDlg *md = mirrorDlg::get_Instance();
 
     double xm = (width-1)/2.,ym = (height-1)/2.,
-            radm = min(xm,ym)-2 ,
+            radm = cv::min(xm,ym)-2 ,
             roc = md->roc,
             lambda = md->lambda,
             diam = md->diameter;
@@ -1277,7 +1277,7 @@ void SurfaceManager::downSizeWf(wavefront *wf){
         double xscale;
         xscale = (double)newcols/wf->data.cols;
         cv::Mat resized = wf->data.clone();
-        cv::resize(wf->data, wf->data, Size(newrows, newcols));
+        cv::resize(wf->data, wf->data, cv::Size(newrows, newcols));
 
         // change outside and inside boundaries
         wf->m_outside.scale(xscale);
@@ -1362,7 +1362,7 @@ void SurfaceManager::processSmoothing(){
             gaussianRad &= 0xfffffffe;
             ++gaussianRad;
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
-                              cv::Size( gaussianRad, gaussianRad ),0,0,BORDER_REFLECT);
+                              cv::Size( gaussianRad, gaussianRad ),0,0,cv::BORDER_REFLECT);
         }
     }
     else if (wf->wasSmoothed == true) {
@@ -1579,7 +1579,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
     cv::Mat mask = wfList[sizes[maxkey][0]]->workMask.clone();
     if (mask.cols != rcols || mask.rows != rrows){
-        cv::resize(mask,mask,Size(rrows,rcols));
+        cv::resize(mask,mask,cv::Size(rrows,rcols));
     }
 
     cv::Mat sum = cv::Mat::zeros(rrows,rcols, m_wavefronts[m_currentNdx]->data.type());
@@ -1590,8 +1590,8 @@ void SurfaceManager::average(QList<wavefront *> wfList){
         cv::Mat resizedMask = wfList[j]->workMask.clone();
         resizedImage = wfList[j]->data;
         if (resizedMask.cols != rcols || resizedMask.rows != rrows){
-            cv::resize(wfList[j]->workMask,resizedMask,Size(rrows,rcols));
-            cv::resize(wfList[j]->data, resizedImage, Size(rrows,rcols));
+            cv::resize(wfList[j]->workMask,resizedMask, cv::Size(rrows,rcols));
+            cv::resize(wfList[j]->data, resizedImage, cv::Size(rrows,rcols));
         }
         cv::bitwise_and(mask, resizedMask, mask);
 
@@ -1799,8 +1799,9 @@ void SurfaceManager::subtractWavefronts(){
     QList<QString> list;
     QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
     for (int i = 0; i < m_wavefronts.size(); ++i){
-        if (!m_wavefronts[i]->name.contains(doThese[0]))
+        if (!doThese.contains(i)) {
              list.append(m_wavefronts[i]->name);
+        }
     }
     subtractWavefronatsDlg dlg(list);
     QScreen *screen = QGuiApplication::primaryScreen();
@@ -2004,7 +2005,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         while(!m_surface_finished){qApp->processEvents();}
         cv::Mat resized = m_wavefronts[ndx]->workData.clone();
         if (standavg.cols != m_wavefronts[ndx]->workData.cols || standavg.rows != m_wavefronts[ndx]->workData.rows){
-            cv::resize(m_wavefronts[ndx]->workData, resized, Size(standavg.cols, standavg.rows));
+            cv::resize(m_wavefronts[ndx]->workData, resized, cv::Size(standavg.cols, standavg.rows));
         }
         standavg += resized;
         //create contour of astig
@@ -2725,7 +2726,7 @@ void SurfaceManager::showAllContours(){
     QList<int> list = saTools->SelectedWaveFronts();
 
     int rows =  ceil((double)list.size()/cols);
-    int columns = min(list.size(),int(ceil((double)list.size()/rows)));
+    int columns = std::min((int)list.size(),int(ceil((double)list.size()/rows)));
     const QSizeF size(columns * (width + 10), rows * (height + 10));
     const QRect imageRect = QRect(0,0,size.width(),size.height());
     qDebug() << "save all" << imageRect;

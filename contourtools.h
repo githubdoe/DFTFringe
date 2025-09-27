@@ -56,9 +56,9 @@ private slots:
     void setWaveRange(double val);
     void on_ColorMapCB_activated(int index);
 
-    void on_zeroOffsetCB_activated(const QString &arg1);
+    void on_zeroOffsetCB_textActivated(const QString &arg1);
 
-    void on_colorRangeCB_activated(const QString &arg1);
+    void on_colorRangeCB_textActivated(const QString &arg1);
 
     void on_errorRangeSpin_valueChanged(double arg1);
 
