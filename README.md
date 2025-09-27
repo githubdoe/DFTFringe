@@ -33,10 +33,20 @@ Additional information and help is availlable at https://groups.io/g/Interferome
 
 # How to build DFTFringe on Linux
 
+
+We need to manually build Qwt as distributed library does not support Qt6
+
 ```
-sudo apt update
-sudo apt install -y apt-utils build-essential wget qt5-qmake qt5-qmake-bin qt5-assistant qtbase5-dev qtmultimedia5-dev libqt5charts5 libqt5charts5-dev libqt5multimedia* libqt5datavisualization5-dev libqt5datavisualization5 libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev
-qmake
+sudo apt update  
+sudo apt install -y apt-utils build-essential wget qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libqt6core5compat6-dev libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev
+wget -O qwt-6.3.0.zip https://sourceforge.net/projects/qwt/files/qwt/6.3.0/qwt-6.3.0.zip/download?use_mirror=pilotfiber
+7z x qwt-6.3.0.zip
+cd qwt-6.3.0 
+/usr/lib/qt6/bin/qmake
+make -j4
+sudo make install
+cd ..
+/usr/lib/qt6/bin/qmake
 make -j4
 ```
 
@@ -73,11 +83,11 @@ The easiest way I have found to install it from command line requires to have Py
 From within `C:\buildingDFTFringe` do the following:  
 ```
 pip install aqtinstall
-aqt install-tool windows desktop tools_mingw qt.tools.win64_mingw810
+aqt install-tool windows desktop tools_mingw1310 qt.tools.win64_mingw1310
 ```
 
-Add minGW to your Path: `C:\buildingDFTFringe\Tools\mingw810_64\bin`
-Add Qmake to your Path: `C:\buildingDFTFringe\5.15.2\mingw81_64\bin`
+Add minGW to your Path: `C:\buildingDFTFringe\Tools\mingw1310_64\bin`
+Add Qmake to your Path: `C:\buildingDFTFringe\6.8.3\mingw_64\bin`
 
 #### Get QT
 
@@ -85,8 +95,8 @@ Here again, I have found easier to use Python and [aqtinstall](https://aqtinstal
 
 From within `C:\buildingDFTFringe` do the following:
 ```
-aqt install-qt windows desktop 5.15.2 win64_mingw81 -m qtcharts qtdatavis3d
-aqt install-qt windows desktop 5.15.2 win64_mingw81 --archives qtbase qtsvg
+aqt install-qt windows desktop 6.8.3 win64_mingw -m qtcharts qtdatavis3d qt5compat
+aqt install-qt windows desktop 6.8.3 win64_mingw --archives qtbase qtsvg
 ```
 
 #### Get Qt creator
@@ -99,13 +109,12 @@ aqt install-tool windows desktop tools_qtcreator
 ### Option B: using QT IDE
 
 Download the **open source** version of Qt framework https://www.qt.io/download-open-source
-Run the installer and go through it.
-When it's time to select which components to install in custom installation you must first tick the `archive` checkbox and click on `filter`. Without this, you won't be able to install the old Qt 5.15.2 version.  
+Run the installer and go through it. You will need to do a custom installation to get Qt version 6.8.3. you might be able to compile with a different version.
 
 **Which components to choose ?**  
-You will need `QT 5.15.2`.  
+You will need `QT 6.8.3`.  
 For faster installation, you probably do not need `Qt design studio`.   
-In the details of Qt 5.15.2 you only need `MinGW 8.1.0 64-bit`, `QT Charts` and `Qt Data Visualization`.  
+In the details of Qt 6.8.3 you only need `MinGW 13.1.0 64-bit`, `Qt 5 Compatibility module`, `QT Charts` and `Qt Data Visualization`.  
 You probably want to install `Qt Creator`. This is Qt's IDE and if you are here it's probably because you need to debug (breakpoints, step by step, variables, ...).  
 You may want to install `Cmake`, `Ninja` and `Qt Installer Framework`.
 
@@ -136,23 +145,23 @@ If you haven't already, you will need to install latest version of [CMake](https
 
 #### Build OpenCV
 
-Get [OpenCV](https://opencv.org/) source code version 4.6.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\openCV`
+Get [OpenCV](https://opencv.org/) source code version 4.12.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\openCV`
 
 Then from within `C:\buildingDFTFringe` do the following:  
 
 ``` 
-cmake -G "MinGW Makefiles" -S openCV -B build_openCV -D WITH_QT=ON -D WITH_OPENGL=ON -D Qt5_DIR=:./5.15.2/mingw81_64/lib/cmake/Qt5
+cmake -G "MinGW Makefiles" -S openCV -B build_openCV -D WITH_QT=ON -D WITH_OPENGL=ON -D Qt6_DIR=:./6.8.3/mingw_64/lib/cmake/Qt6
 cmake -G "MinGW Makefiles" -S openCV -B build_openCV
 cmake --build ./build_openCV -j4
 cmake --install ./build_openCV
 ```
-You may need to adapt `Qt5_DIR` to you actual installation directory. If you installed Qt with the official isntaller the path is `C:/Qt/5.15.2/mingw81_64/lib/cmake/Qt5`.
+You may need to adapt `Qt6_DIR` to you actual installation directory. If you installed Qt with the official isntaller the path is `C:/Qt/6.8.3/mingw_64/lib/cmake/Qt6`.
 
 #### Build Qwt
 
-Get [Qwt](https://qwt.sourceforge.io/) source code version 6.1.6 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.1.6`.
+Get [Qwt](https://qwt.sourceforge.io/) source code version 6.3.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.3.0`.
 
-Then from within `C:\buildingDFTFringe\qwt-6.1.6` do the following:  
+Then from within `C:\buildingDFTFringe\qwt-6.3.0` do the following:  
 ```
 qmake.exe
 mingw32-make -j4
@@ -184,13 +193,13 @@ It's important that Armadillo knows the path to Lapack to work correctly. Here w
 
 #### Build OpenCV
 
-Get [OpenCV](https://opencv.org/) **installer (not source code)** 4.6.0 in your prefered way (typically from their [GitHub](https://github.com/opencv/opencv/releases) or [website](https://opencv.org/releases/)). Run the installer `opencv-4.6.0-vc14_vc15.exe`.
+Get [OpenCV](https://opencv.org/) **installer (not source code)** 4.12.0 in your prefered way (typically from their [GitHub](https://github.com/opencv/opencv/releases) or [website](https://opencv.org/releases/)). Run the installer `opencv-4.12.0-windows.exe`.
 
 Copy content from `yourExtractionLocation\opencv\build\include` to `C:\buildingDFTFringe\build_openCV\install\include`.  
 
 #### Build Qwt
 
-Get [Qwt](https://qwt.sourceforge.io/) source code version 6.1.6 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.1.6`.
+Get [Qwt](https://qwt.sourceforge.io/) source code version 6.3.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.3.0`.
 
 No additional modification required here.
 
@@ -206,15 +215,15 @@ Copy content from `armadillo-14.4.0\include` to `build_armadillo\tmp\include`.
 Previous steps have permitted to get necessary header files to build the code. DLLs are still requires.  
 Install DFTFringe from official installer and copy the DLLs from install folder to the folder expected by `DFTFringe.pro`:  
 ```
-qwt-6.1.6\lib\qwt.dll
+qwt-6.3.0\lib\qwt.dll
 build_lapack\bin\libblas.dll
 build_lapack\bin\liblapack.dll
-build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll
-build_openCV\install\x64\mingw\bin\libopencv_core460.dll
-build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll
-build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll
-build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll
-build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll
+build_openCV\install\x64\mingw\bin\libopencv_calib3d4110.dll
+build_openCV\install\x64\mingw\bin\libopencv_core4110.dll
+build_openCV\install\x64\mingw\bin\libopencv_features2d4110.dll
+build_openCV\install\x64\mingw\bin\libopencv_highgui4110.dll
+build_openCV\install\x64\mingw\bin\libopencv_imgcodecs4110.dll
+build_openCV\install\x64\mingw\bin\libopencv_imgproc4110.dll
 ```
 
 ## Stage 3: Building DFTFringe
@@ -248,16 +257,16 @@ windeployqt.exe DFTFringe\Release\DFTFringe.exe
 
 Copy-Item ".\build_lapack\bin\liblapack.dll" -Destination ".\DFTFringe\Release"
 Copy-Item ".\build_lapack\bin\libblas.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_calib3d460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_core460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_features2d460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_flann460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_highgui460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgproc460.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\qwt-6.1.6\lib\qwt.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\5.15.2\mingw81_64\bin\Qt5OpenGL.dll" -Destination ".\DFTFringe\Release"
-Copy-Item ".\tools\mingw810_64\bin\libquadmath-0.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_calib3d4110.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_core4110.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_features2d4110.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_flann4110.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_highgui4110.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgcodecs4110.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\build_openCV\install\x64\mingw\bin\libopencv_imgproc4110.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\qwt-6.3.0\lib\qwt.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\6.8.3\mingw1_64\bin\Qt6OpenGL.dll" -Destination ".\DFTFringe\Release"
+Copy-Item ".\tools\mingw1310_64\bin\libquadmath-0.dll" -Destination ".\DFTFringe\Release"
 Copy-Item ".\DFTFringe\ColorMaps" -Destination ".\DFTFringe\Release\ColorMaps" -Recurse
 mkdir ".\DFTFringe\Release\res"
 Copy-Item ".\DFTFringe\res\help" -Destination ".\DFTFringe\Release\res\help" -Recurse

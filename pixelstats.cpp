@@ -124,7 +124,7 @@ bool CanvasPicker::eventFilter( QObject *object, QEvent *event )
 // Select the point at a position. If there is no point
 // deselect the selected point
 
-void CanvasPicker::select( const QPoint &pos )
+void CanvasPicker::select( QPoint pos )
 {
     QwtPlotMarker *mark = NULL;
     double dist = 10e10;
@@ -180,7 +180,7 @@ void CanvasPicker::select( const QPoint &pos )
 
 
 // Move the selected point
-void CanvasPicker::move( const QPoint &pos )
+void CanvasPicker::move( QPoint pos )
 {
     if ( !d_selectedMarker )
         return;
@@ -283,7 +283,7 @@ pixelStats::pixelStats(QWidget *parent) :
     ui->verticalLayout->addWidget(scrollArea);
     scrollArea->setWidgetResizable(true);
     CanvasPicker *cp = new CanvasPicker(ui->histo);
-    connect(cp,SIGNAL(markerMoved()), this,SLOT(bounds_valueChanged()));
+    connect(cp,&CanvasPicker::markerMoved, this,&pixelStats::bounds_valueChanged);
 
     setWindowFlags(    Qt::WindowStaysOnTopHint);
 

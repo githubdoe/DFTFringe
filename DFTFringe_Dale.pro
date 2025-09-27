@@ -39,7 +39,6 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     igramarea.cpp \
     circleoutline.cpp \
-    gplus.cpp \
     graphicsutilities.cpp \
     dfttools.cpp \
     dftarea.cpp \
@@ -60,8 +59,8 @@ SOURCES += main.cpp \
     dftcolormap.cpp \
     surfaceanalysistools.cpp \
     surfacemanager.cpp \
-    zapm.cpp \
     zernikedlg.cpp \
+    zernikepolar.cpp \
     zernikeprocess.cpp \
     mirrordlg.cpp \
     zernikes.cpp \
@@ -147,6 +146,7 @@ SOURCES += main.cpp \
     psitiltoptions.cpp \
     contourrulerparams.cpp \
     zernikesmoothingdlg.cpp \
+    zernike/zapm.cpp \
     SingleApplication/singleapplication.cpp \
     SingleApplication/singleapplication_p.cpp
 
@@ -161,7 +161,6 @@ HEADERS  += mainwindow.h \
     edgeplot.h \
     IgramArea.h \
     circleoutline.h \
-    gplus.h \
     graphicsutilities.h \
     dfttools.h \
     dftarea.h \
@@ -185,13 +184,13 @@ HEADERS  += mainwindow.h \
     surfaceanalysistools.h \
     surfacemanager.h \
     zernikedlg.h \
+    zernikepolar.h \
     zernikeprocess.h \
     mirrordlg.h \
     zernikes.h \
     metricsdisplay.h \
     reviewwindow.h \
     vortex.h \
-    wavefrontstats.h \
     wavefrontloader.h \
     rotationdlg.h \
     wftstats.h \
@@ -243,7 +242,6 @@ HEADERS  += mainwindow.h \
     unwraperrorsview.h \
     lensdialog.h \
     messagereceiver.h \
-    boundary.h \
     myutils.h \
     pixelstats.h \
     utils.h \
@@ -275,10 +273,11 @@ HEADERS  += mainwindow.h \
     contourrulerparams.h \
     zernikesmoothingdlg.h \
     bezier/bezier.h \
+    zernike/zapm_interface.h \
     SingleApplication/singleapplication.h \
     SingleApplication/singleapplication_p.h
 
-INCLUDEPATH += ./bezier ./SingleApplication
+INCLUDEPATH += ./bezier ./SingleApplication ./zernike
 
 FORMS    += mainwindow.ui \
     annulushelpdlg.ui \
@@ -395,6 +394,8 @@ LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
 #LIBS += D:\armadillo\bin\libarmadillo.dll
 LIBS += D:\lapack\build64\bin\liblapack.dll
 LIBS += D:\lapack\build64\bin\libblas.dll
+
+LIBS += -ldbghelp # for SetUnhandledExceptionFilter
 }
 
 

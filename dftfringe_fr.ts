@@ -2473,7 +2473,7 @@ Wave Length nm</source>
     </message>
     <message>
         <location filename="mirrordlg.cpp" line="335"/>
-        <source>Read mirror configuratoin file</source>
+        <source>Read mirror configuration file</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

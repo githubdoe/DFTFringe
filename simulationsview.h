@@ -23,8 +23,14 @@
 #include <opencv2/opencv.hpp>
 #include <QTimer>
 #include <QtDataVisualization/Q3DSurface>
+
 class arcSecScaleDraw;
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+//keep compatiblity with Qt5
 using namespace QtDataVisualization;
+#endif
+
 namespace Ui {
 class SimulationsView;
 }
@@ -54,10 +60,11 @@ private:
     double dX;  // pupil sample size based on mirror size in wave front.
     double dF;  // psf sample size;
 
-    void mtf(cv::Mat magPsf, QString txt, QColor color);
+    void saveImageNamed(QString fn);
+    void mtf(const cv::Mat &magPsf, const QString &txt, QColor color);
     void initMTFPlot();
 
-    void make3DPsf(cv::Mat surface);
+    void make3DPsf(const cv::Mat &surface);
 public slots:
         void on_MakePB_clicked();
 private slots:
@@ -70,9 +77,9 @@ private slots:
 
     void on_FFTSizeSB_valueChanged(int val);
 
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
 
-    void saveImage(QString fn = "");
+    void saveImage();
 
     void on_film_clicked();
 

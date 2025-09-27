@@ -52,7 +52,7 @@ settingsIGram::settingsIGram(QWidget *parent) :
     ui->centerSpinBox->setValue(centerWidth);
     ui->zoomBoxWidthSb->setValue(set.value("igramZoomBoxWidth", 200).toDouble());
 
-    connect(ui->buttonBox->button(QDialogButtonBox::Apply), SIGNAL(clicked()), SLOT(on_buttonBox_accepted()));
+    connect(ui->buttonBox->button(QDialogButtonBox::Apply), &QAbstractButton::clicked, this, &settingsIGram::on_buttonBox_accepted);
     ui->styleCB->setEditable(false);
     ui->styleCB->setIconSize(QSize(80,14));
     ui->styleCB->setMinimumWidth(80);
@@ -103,7 +103,7 @@ settingsIGram::settingsIGram(QWidget *parent) :
         ui->currentlense->setText(m_lenseParms[0]);
     }
     ui->lenseTableView->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->lenseTableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
+    connect(ui->lenseTableView, &QWidget::customContextMenuRequested, this, &settingsIGram::showContextMenu);
     ui->lenseTableView->selectRow(currentLensNdx);
     ui->lenseTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     selectionModel = ui->lenseTableView->selectionModel();
@@ -184,14 +184,14 @@ void settingsIGram::eraseItem()
     lensesModel->removeRow(currentNdx.row());
     saveLensData();
 }
-void settingsIGram::showContextMenu(const QPoint &pos)
+void settingsIGram::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = ui->lenseTableView->mapToGlobal(pos);
 
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Erase",  this, SLOT(eraseItem()));
+    myMenu.addAction("Erase",  this, &settingsIGram::eraseItem);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -205,7 +205,7 @@ void settingsIGram::saveLensData(){
     set.setValue("Lenses", v.join("\n"));
 }
 
-void settingsIGram::updateLenses(QString str){
+void settingsIGram::updateLenses(const QString &str){
     m_lensData.push_back(str.split(","));
     saveLensData();
     lensesModel->insertRow(m_lensData.size() -2);

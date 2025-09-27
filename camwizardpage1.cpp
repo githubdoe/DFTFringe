@@ -31,7 +31,7 @@ CamWizardPage1::CamWizardPage1(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->listWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
+    connect(ui->listWidget, &QWidget::customContextMenuRequested, this, &CamWizardPage1::showContextMenu);
     QSettings set;
     Pattern p = (Pattern)(set.value("camCalibratePattern", CIRCLES_GRID).toInt());
     ui->columns->blockSignals(true);
@@ -108,7 +108,7 @@ double computeReprojectionErrors( const std::vector<std::vector<cv::Point3f> >& 
     return std::sqrt(totalErr/totalPoints);
 }
 bool CamWizardPage1::runCalibration( cv::Size& imageSize, cv::Mat& cameraMatrix, cv::Mat& distCoeffs,
-                            std::vector<std::vector<cv::Point2f> > imagePoints, std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs,
+                            const std::vector<std::vector<cv::Point2f> > &imagePoints, std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs,
                             std::vector<float>& reprojErrs,  double& totalAvgErr)
 {
 
@@ -150,7 +150,7 @@ void CamWizardPage1::eraseItem()
     }
 }
 
-void CamWizardPage1::showContextMenu(const QPoint &pos)
+void CamWizardPage1::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = ui->listWidget->mapToGlobal(pos);
@@ -162,7 +162,7 @@ void CamWizardPage1::showContextMenu(const QPoint &pos)
     myMenu.exec(globalPos);
 }
 
-bool CamWizardPage1::runCalibrationAndSave(cv::Size imageSize, cv::Mat&  cameraMatrix, cv::Mat& distCoeffs,std::vector<std::vector<cv::Point2f> > imagePoints )
+bool CamWizardPage1::runCalibrationAndSave(cv::Size imageSize, cv::Mat&  cameraMatrix, cv::Mat& distCoeffs,const std::vector<std::vector<cv::Point2f> > &imagePoints )
 {
     std::vector<cv::Mat> rvecs, tvecs;
     std::vector<float> reprojErrs;

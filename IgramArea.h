@@ -85,7 +85,7 @@ class outlinePair{
 public:
     QImage m_image;
     CircleOutline m_outline;
-    outlinePair(QImage img, CircleOutline outline): m_image(img), m_outline(outline){}
+    outlinePair(const QImage &img, const CircleOutline &outline): m_image(img), m_outline(outline){}
 };
 
 class undoStack {
@@ -94,7 +94,7 @@ class undoStack {
 
 public:
     undoStack(){};
-    void push(QImage img, CircleOutline outline);
+    void push(const QImage &img, const CircleOutline &outline);
     outlinePair  current(){return m_stack.back();};
     outlinePair undo();
     outlinePair redo();
@@ -142,8 +142,8 @@ public:
     CircleOutline m_center;
     void hideOutline(bool checked);
     bool m_hideOutlines;
-    void loadOutlineFileOldV6(QString filename);
-    void loadOutlineFile(QString filename);
+    void loadOutlineFileOldV6(const QString &filename);
+    void loadOutlineFile(const QString &filename);
     void undo();
     void redo();
     void writeOutlinesOldV6(QString fileName);
@@ -152,7 +152,7 @@ public:
     void shiftoutline(QPointF p);
     void setZoomMode(zoomMode mode);
     void showAliasDialog();
-    cv::Mat igramToGray(cv::Mat roi);
+    cv::Mat igramToGray(const cv::Mat &roi);
     cv::Mat qImageToMat(QImage &roi);
 private slots:
     void aperatureChanged();
@@ -160,7 +160,7 @@ public slots:
     void gammaChanged(bool, double);
     void generateSimIgram();
     void clearImage();
-    void dftReady(QImage img);
+    void dftReady(const QImage &img);
     void outlineTimerTimeout();
     void shiftUp();
     void shiftDown();
@@ -168,8 +168,9 @@ public slots:
     void shiftLeft();
     void zoomIn();
     void zoomOut();
-    void igramOutlineParmsChanged(outlineParms parms);
-    void increase( int i = 1);
+    void igramOutlineParmsChanged(const outlineParms &parms);
+    void increaseValue(int);
+    void increase();
     void decrease();
     void zoomFull();
     void toggleHideOutline();
@@ -201,7 +202,6 @@ private:
     QDockWidget *dock;
     void drawBoundary();
     void resizeImage();
-    void createActions();
     void zoom(int del, QPointF zoompt);
     bool modified;
     bool scribbling;
@@ -218,8 +218,8 @@ private:
 
     double leftMargin;
     double searchOutlineScale;
-    cv::Point2d findBestOutsideOutline(cv::Mat gray, int start, int end, int step, int *radius, int pass);
-    cv::Point2d findBestCenterOutline(cv::Mat gray, int start, int end, int step, int *radius, bool useExisting);
+    cv::Point2d findBestOutsideOutline(const cv::Mat &gray, int start, int end, int step, int *radius, int pass);
+    cv::Point2d findBestCenterOutline(const cv::Mat &gray, int start, int end, int step, int *radius, bool useExisting);
     QString m_outlineMsg;
     double m_edgeMaskWidth;
     void saveRegions();

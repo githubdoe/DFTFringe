@@ -15,20 +15,21 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
-#ifndef GPLUS_H
-#define GPLUS_H
-#include <QPainter>
-#include <QPointF>
-class gPlus
+
+#ifndef ZERNIKEPOLAR_H
+#define ZERNIKEPOLAR_H
+
+#include <cstddef>
+
+class zernikePolar
 {
-    public:
-        gPlus(QPointF p);
-        gPlus();
-        virtual ~gPlus();
-        void draw(QPainter& dc, double scale, int size = 10);
-        QPointF m_p;
-    protected:
-    private:
+public:
+    zernikePolar(double rho, double theta, size_t nbTerms = 48);
+    double zernike(size_t z);
+private:
+     size_t m_nbTermsComputed = 0;
+     double zernTerms[49];
 };
 
-#endif // GPLUS_H
+
+#endif

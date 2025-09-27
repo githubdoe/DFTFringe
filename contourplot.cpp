@@ -106,11 +106,54 @@ SpectrogramData::SpectrogramData(): m_wf(0)
 
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+// keep compatibility with newer version of QWT used in QT6
+QwtInterval SpectrogramData::interval(Qt::Axis axis) const
+{
+    switch (axis)
+    {
+        case Qt::XAxis:
+            return m_xInterval;
+        case Qt::YAxis:
+            return m_yInterval;
+        case Qt::ZAxis:
+            return m_zInterval;
+        default:
+            return QwtInterval();
+    }
+}
+
+void SpectrogramData::setInterval(Qt::Axis axis, const QwtInterval &interval)
+{
+    switch (axis)
+    {
+        case Qt::XAxis:
+            m_xInterval = interval;
+            break;
+        case Qt::YAxis:
+            m_yInterval = interval;
+            break;
+        case Qt::ZAxis:
+            m_zInterval = interval;
+            break;
+        default:
+            break;
+    }
+}
+#endif
 
 void SpectrogramData::setSurface(wavefront *surface) {
     m_wf = surface;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+
+    // Store interval info for use in `interval()`
+    m_xInterval = QwtInterval(0, m_wf->workData.cols);
+    m_yInterval = QwtInterval(0, m_wf->workData.rows);
+#else
     setInterval( Qt::XAxis, QwtInterval(0,m_wf->workData.cols));
     setInterval( Qt::YAxis, QwtInterval(0, m_wf->workData.rows));
+#endif
 }
 #include <qwt_round_scale_draw.h>
 extern double g_angle;
@@ -335,7 +378,7 @@ void ContourPlot::ruler(){
     }
 }
 
-void ContourPlot::selected(const QPointF& pos){
+void ContourPlot::selected(QPointF pos){
     if (m_wf==0)
         return;
 
@@ -449,8 +492,7 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     tracker_ = new MyZoomer(this->canvas(), this);
 
 
-    connect(picker_, SIGNAL(selected(const QPointF&)),
-            SLOT(selected(const QPointF&)));
+    connect(picker_, QOverload<const QPointF&>::of(&QwtPlotPicker::selected), this, &ContourPlot::selected);
 
     QSettings settings;
     m_colorMapNdx = settings.value("colorMapType",0).toInt();

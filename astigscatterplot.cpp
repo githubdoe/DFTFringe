@@ -12,7 +12,7 @@ astigScatterPlot::astigScatterPlot(QWidget *parent):QwtPlot( parent ),m_max(.3)
 {
 
     Picker = new myPlotPicker( this );
-    connect(Picker, SIGNAL(mySelected(QString)),this,SLOT(selectedwave(QString)));
+    connect(Picker, &myPlotPicker::mySelected,this,&astigScatterPlot::selectedwave);
 
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->setPen( Qt::gray, 0.0, Qt::DotLine );
@@ -46,12 +46,12 @@ astigScatterPlot::astigScatterPlot(QWidget *parent):QwtPlot( parent ),m_max(.3)
     replot();
 }
 
-void astigScatterPlot::selectedwave(QString m){
+void astigScatterPlot::selectedwave(const QString &m){
     emit waveSeleted(m);
 }
 
 
-void astigScatterPlot::addValue(QString name, QPointF p){
+void astigScatterPlot::addValue(const QString &name, QPointF p){
     QwtPlotMarker *m = new QwtPlotMarker(name);
     if (fabs(p.x()) > m_max)
         m_max = fabs(p.x());

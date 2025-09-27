@@ -21,9 +21,9 @@ public:
     explicit rmsPlot(QWidget *parent = 0);
 
 public:
-    void addValue(QString name, QPointF p);
+    void addValue(const QString &name, QPointF p);
 private slots:
-    void selectedwave(QString m);
+    void selectedwave(const QString &m);
 signals:
     void waveSeleted(QString);
 };

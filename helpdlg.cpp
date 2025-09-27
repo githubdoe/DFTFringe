@@ -29,6 +29,6 @@ HelpDlg::~HelpDlg()
 {
     delete ui;
 }
-void HelpDlg::setHelpText(QString txt){
+void HelpDlg::setHelpText(const QString &txt){
     ui->textEdit->setHtml(txt);
 }

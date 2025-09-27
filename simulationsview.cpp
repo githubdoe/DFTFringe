@@ -92,9 +92,9 @@ SimulationsView::SimulationsView(QWidget *parent) :
     ui->FFTSizeSB->blockSignals(false);
     ui->centerMagnifySB->setValue(set.value("StarTestMagnify", 4).toDouble());
     ui->gammaSB->setValue(set.value("StarTestGamma", 2.).toDouble());
-    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_MakePB_clicked()));
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(&m_guiTimer, &QTimer::timeout, this, &SimulationsView::on_MakePB_clicked);
+    connect(this, &QWidget::customContextMenuRequested, this,
+            &SimulationsView::showContextMenu);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
@@ -115,7 +115,12 @@ void SimulationsView::initMTFPlot(){
     m_arcSecScaleDraw  =  new arcSecScaleDraw(mirrorDlg::get_Instance()->diameter);
     ui->MTF->setAxisScaleDraw(ui->MTF->xBottom, m_arcSecScaleDraw);
     QwtPlotLegendItem *customLegend = new QwtPlotLegendItem();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+    customLegend->setAlignmentInCanvas(Qt::AlignLeft | Qt::AlignBottom);
+#else
     customLegend->setAlignment(Qt::AlignLeft | Qt::AlignBottom);
+#endif
     customLegend->attach(ui->MTF);
     QwtPlotTextLabel *t = new QwtPlotTextLabel();
     QwtText title( "MTF" );
@@ -140,12 +145,17 @@ void SimulationsView::setSurface(wavefront *wf){
     if (!isHidden())
         on_MakePB_clicked();
 }
-void SimulationsView::saveImage(QString fileName){
+
+void SimulationsView::saveImage(){
     QSettings settings;
     QString path = settings.value("lastPath","").toString();
-    if (fileName == "")
-        fileName = QFileDialog::getSaveFileName(0,
+    QString fileName = QFileDialog::getSaveFileName(0,
                                         "File name for image to be saved", path);
+
+    saveImageNamed(fileName);
+}
+
+void SimulationsView::saveImageNamed(QString fileName){
     if (!fileName.endsWith(".jpg"))
         fileName = fileName + ".jpg";
     QImage svImage = QImage(size(),QImage::Format_ARGB32 );
@@ -154,14 +164,12 @@ void SimulationsView::saveImage(QString fileName){
     svImage.save(fileName);
 }
 
-void SimulationsView::showContextMenu(const QPoint &pos)
-{
-
-// Handle global position
+void SimulationsView::showContextMenu(QPoint pos){
+    // Handle global position
     QPoint globalPos = mapToGlobal(pos);
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Save as image",  this, SLOT(saveImage()));
+    myMenu.addAction("Save as image", this, &SimulationsView::saveImage); // connects to QAction::triggered(bool checked = false)
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -450,7 +458,7 @@ void etoxplusy(cv::Mat data)
         }
     }
 }
-void SimulationsView::mtf(cv::Mat star, QString txt, QColor color){
+void SimulationsView::mtf(const cv::Mat &star, const QString &txt, QColor color){
     cv::Mat planes[2];
     cv::Mat mtfIn, mtfOut, mtfMag;
     split(star,planes);
@@ -504,7 +512,7 @@ void SimulationsView::on_film_clicked()
         QApplication::processEvents();
         QString name = QString("/frame%1").arg(cnt++, 3 ,10, QLatin1Char('0'));
 
-        saveImage(filmDir+name);
+        saveImageNamed(filmDir+name);
     }
 }
 int offset = 0;
@@ -512,7 +520,7 @@ int stalkWidth;
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 using namespace cv;
-cv::Mat make_obstructionMask(cv::Mat mask){
+cv::Mat make_obstructionMask(const cv::Mat &mask){
     //return;
     cv::Mat out = mask.clone();
     int s = mask.size[0];
@@ -528,7 +536,7 @@ cv::Mat make_obstructionMask(cv::Mat mask){
 
 
 //3D psf
-void SimulationsView::make3DPsf(cv::Mat surface){
+void SimulationsView::make3DPsf(const cv::Mat &surface){
 
     int nx = surface.size[0];
     int start = nx/2 - nx/4;

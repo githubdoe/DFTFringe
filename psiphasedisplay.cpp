@@ -12,7 +12,7 @@
     #define M_PI 3.14159265358979323846
 #endif
 
-PSIphaseDisplay::PSIphaseDisplay(QVector<double> phases,QWidget *parent) :
+PSIphaseDisplay::PSIphaseDisplay(const QVector<double> &phases,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::PSIphaseDisplay),m_useRadians(false)
 {
@@ -30,7 +30,7 @@ PSIphaseDisplay::~PSIphaseDisplay()
 void PSIphaseDisplay::useRadians(bool /*use*/){
     // TODO PSIphaseDisplay doesn't take into account m_useRadians from psi_dlg (JST 2023/07/11)
 }
-void PSIphaseDisplay::setPhases(QVector<double> phases, int iteration, double sdp){
+void PSIphaseDisplay::setPhases(const QVector<double> &phases, int iteration, double sdp){
     plot(phases, iteration, sdp);
 }
 void PSIphaseDisplay::plot(QVector<double> phases, int iteration, double sdp){

@@ -111,7 +111,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->fringeSpacingEdit->blockSignals(false);
     m_outlineShape = (outlineShape)settings.value("outlineShape", CIRCLE).toInt();
     ui->minorAxisEdit->setText(QString::number(settings.value("ellipseMinorAxis", 50.).toDouble()));
-    connect(&spacingChangeTimer, SIGNAL(timeout()), this, SLOT(spacingChangeTimeout()));
+    connect(&spacingChangeTimer, &QTimer::timeout, this, &mirrorDlg::spacingChangeTimeout);
     if (m_verticalAxis == 0)
         m_verticalAxis = diameter;
     ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
@@ -145,7 +145,7 @@ double mirrorDlg::getMinorAxis(){
 bool mirrorDlg::isEllipse(){
     return m_outlineShape == ELLIPSE;
 }
-void mirrorDlg::saveJson(QString fileName){
+void mirrorDlg::saveJson(const QString &fileName){
     QJsonObject jDoc, jMirror,jIgram, jEllipse, jAnnulus;
     jDoc["name"] = m_name;
     jDoc["show units in mm"] = mm;
@@ -187,65 +187,23 @@ void mirrorDlg:: on_saveBtn_clicked()
 {
     QSettings settings;
     QString path = settings.value("mirrorConfigFile").toString();
-    if (m_useAnnular){
-        path.replace(".ini",".json");
-    }
-    QString extensionTypes(tr((m_useAnnular)? "config file (*.json)" : "config file (*.ini *.json)"));
-    QString fileName = QFileDialog::getSaveFileName(0,
+    QString extensionTypes("config file (*.json)");
+    QString fileName = QFileDialog::getSaveFileName(this,
                         tr("Save config file"), path,
                         extensionTypes);
-    if (fileName.isEmpty())
-        return;
-    if (QFileInfo(fileName).suffix().isEmpty()) { fileName.append(".json"); }
-    std::ofstream file(fileName.toStdString().c_str(),std::ios_base::out|std::ios_base::binary);
-    if (!file.is_open()) {
-        QMessageBox::warning(0, tr("Save mirror config."),
-                             tr("Cannot write file %1: ")
-                             .arg(fileName));
+    if (fileName.isEmpty()){
+        // cancel has been pressed
         return;
     }
-    if (fileName.endsWith(".json" )){
-        saveJson(fileName);
+    if (!fileName.endsWith(".json" )){
+        // filename.extension => filename.extension.json
+        // filename           => filename.json
+        // filename.json      => filename.json (unchanged)
+        fileName.append(".json");
     }
-    else {
-        if (m_useAnnular){
-            QMessageBox::warning(0, tr("Save Mirror config."),
-                                 tr(".ini file can not save annular data.  Chose file type of .json instead"));
-            return;
-        }
-        const unsigned char flag[] = {0xFF,0xFE,0xFF};
-        const unsigned char zeros[] = {0,0,0,0};
-        file.write((char*)flag,3);
-
-        int cnt = m_name.length();
-
-        file.write((char*)(&cnt),1);
-        const ushort *m = m_name.utf16();
-        file.write((char*)m,2 * cnt);
-        file.write((char *)&doNull, 1); // OpenFringe size of bool was 4 bytes but modern size is 1;
-        file.write((char *)zeros, 3);  // fill out to size of 4 bytes;
-
-        file.write((char*)&fringeSpacing,8);
-        file.write((char*)&diameter,8);
-        file.write((char*)&lambda,8);
-        file.write((char*)&mm,4);
-        file.write((char*)&obs,8);
-        file.write((char*)&roc,8);
-        file.write((char*)&cc,8);
-        file.write((char*)&z8,8);
-        file.write((char*)&zeros,4); // double pass
-        file.write((char*)&zeros,4); // two colors traced
-        file.write((char*)&fliph,1); // flip lr
-        file.write((char*)&zeros,3); // remainder of flip
-        file.write((char*)&flipv,1);
-        file.write((char*)&zeros,3); // remainder vr
-        file.write((char*)&m_outlineShape,4);  // use ellipse
-        file.write((char*)&m_verticalAxis,8);  // minor axis
-
-        file.close();
-    }
+    saveJson(fileName);
     QFileInfo info(fileName);
-    settings.setValue("mirrorConfigFile",fileName);
+    settings.setValue("mirrorConfigFile", fileName);
     settings.setValue("projectPath", info.absolutePath());
     m_projectPath = info.absolutePath();
 }
@@ -302,7 +260,7 @@ void mirrorDlg::loadFile(QString & fileName){
         fliph = QJsonValue(Igram["flip horizontal"]).toBool();
         flipv = QJsonValue(Igram["flip vert"]).toBool();
         fringeSpacing = QJsonValue(Igram["fringe spacing"]).toDouble();
-        QJsonObject Ellipse = loadDoc["Ellispe"].toObject();
+        QJsonObject Ellipse = loadDoc["ellipse"].toObject();
         m_outlineShape = (outlineShape)QJsonValue(Ellipse["is ellipse"]).toInt();
         m_verticalAxis = QJsonValue(Ellipse["ellipse vert axis"]).toDouble();
         QJsonObject Annulus = loadDoc["Annulus"].toObject();
@@ -486,7 +444,7 @@ void mirrorDlg::on_ReadBtn_clicked()
     QSettings settings;
     QString lastPath = settings.value("lastPath",".").toString();
     QString fileName = QFileDialog::getOpenFileName(this,
-                        tr("Read mirror configuratoin file"), lastPath,
+                        tr("Read mirror configuration file"), lastPath,
                         tr("ini (*.ini *.json)"));
     if (fileName.isEmpty())
         return;
@@ -600,7 +558,7 @@ void mirrorDlg::on_obs_textChanged(const QString &arg1)
     obs = ((mm) ? 1: 25.4) * arg1.toDouble();
 
 }
-void mirrorDlg::newLambda(QString v){
+void mirrorDlg::newLambda(const QString &v){
     ui->lambda->setText(v);
 }
 

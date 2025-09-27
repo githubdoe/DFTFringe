@@ -8,9 +8,9 @@ wavefrontFilterDlg::wavefrontFilterDlg(QWidget *parent) :
     ui->setupUi(this);
     ui->deleteFile->hide();
     ui->astigPlot->hide();
-    connect(ui->astigPlot, SIGNAL(waveSeleted(QString)), this, SLOT(waveSelected(QString)));
+    connect(ui->astigPlot, &astigScatterPlot::waveSeleted, this, &wavefrontFilterDlg::waveSelected);
     ui->rmSPlot->hide();
-    connect(ui->rmSPlot, SIGNAL(waveSeleted(QString)), this, SLOT(waveSelected(QString)));
+    connect(ui->rmSPlot, &rmsPlot::waveSeleted, this, &wavefrontFilterDlg::waveSelected);
     QSettings set;
     ui->rmsValue->blockSignals(true);
     ui->rmsValue->setValue(set.value("filterRMS", .1).toDouble());
@@ -24,7 +24,7 @@ wavefrontFilterDlg::~wavefrontFilterDlg()
 {
     delete ui;
 }
-void wavefrontFilterDlg::waveSelected(QString w){
+void wavefrontFilterDlg::waveSelected(const QString &w){
     emit waveWasSelected(w);
 }
 void wavefrontFilterDlg::setRemoveFileMode(){
@@ -46,10 +46,10 @@ void wavefrontFilterDlg::on_rmsValue_valueChanged(double arg1)
     QSettings set;
     set.setValue("filterRMS", arg1);
 }
-void wavefrontFilterDlg::addAstigValue(QString name, QPointF value){
+void wavefrontFilterDlg::addAstigValue(const QString &name, QPointF value){
     ui->astigPlot->addValue(name,value);
 }
-void wavefrontFilterDlg::addRMSValue(QString name, QPointF value){
+void wavefrontFilterDlg::addRMSValue(const QString &name, QPointF value){
     ui->rmSPlot->addValue(name, value);
 }
 void wavefrontFilterDlg::plot(){

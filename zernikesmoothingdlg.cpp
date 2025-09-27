@@ -24,7 +24,7 @@ ZernikeSmoothingDlg::ZernikeSmoothingDlg(wavefront &wf, QWidget *parent) :
     m_maxOrder = set.value("Zern maxOrder", 22).toInt();
     ui->maxOrder->setValue(m_maxOrder);
     ui->termCnt->setText(QString("%1 Terms").arg(m_noOfTerms));
-    connect(&m_timer, SIGNAL(timeout()), this, SLOT(intiZernTable()));
+    connect(&m_timer, &QTimer::timeout, this, &ZernikeSmoothingDlg::intiZernTable);
     tableModel->setValues(&m_wf.InputZerns);
     m_sm = SurfaceManager::get_instance();
 
@@ -145,7 +145,7 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
     if (ui->showResidual->isChecked()){
         m_sm->subtract(&m_wf, m_sm->m_wavefronts.back(), false);
         m_sm->m_wavefronts.back()->name = QString("Residual_%1").arg(m_noOfTerms);
-        m_sm->m_surfaceTools->nameChanged(m_sm->m_currentNdx,  m_sm->m_wavefronts.back()->name);
+        m_sm->m_surfaceTools->nameChangedN(m_sm->m_currentNdx,  m_sm->m_wavefronts.back()->name);
         m_sm->m_surfaceTools->currentNdxChanged(m_sm->m_currentNdx);
         m_sm->previous();
         m_sm->m_surfaceTools->currentNdxChanged(m_sm->m_currentNdx);
