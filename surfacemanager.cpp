@@ -438,6 +438,13 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
 
     double rho;
 
+    int maxZernToUse = 0;
+    for (int value : zernsToUse) {
+            if (value > maxZernToUse)
+            maxZernToUse = value;
+    }
+
+
     std::vector<bool> &en = zernEnables;
     mirrorDlg *md = mirrorDlg::get_Instance();
     for (int i = 0; i <  wx; ++i)
@@ -452,7 +459,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
             {
                 double S1 = 0;
                 double theta = atan2(y1,x1);
-                zernikePolar zpolar(rho, theta, zernsToUse.size());
+                zernikePolar zpolar(rho, theta, maxZernToUse+1);
                 for (int ii = 0; ii < zernsToUse.size(); ++ii) {
                     int z = zernsToUse[ii];
 
