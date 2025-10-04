@@ -1107,12 +1107,14 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
         return 0;
     }
+    spdlog::get("logger")->trace("readWaveFront() step 1");
     wavefront *wf = new wavefront();
     double width;
     double height;
     file >> width;
     file >> height;
     cv::Mat data(height,width, numType,0.);
+    spdlog::get("logger")->trace("readWaveFront() width {} height {}", width, height);
 
     for( size_t y = 0; y < height; y++ ) {
         for( size_t x = 0; x < width; x++ ) {
@@ -1120,6 +1122,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             //data.at<double>(height - y - 1, x) += dist(generator);
         }
     }
+    spdlog::get("logger")->trace("readWaveFront() step 2");
 
     std::string line;
     QString l;
@@ -1168,6 +1171,8 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         }
     }
 
+    spdlog::get("logger")->trace("readWaveFront() step 3");
+
     wf->m_outside = CircleOutline(QPointF(xm,ym), radm);
     if (rado == 0){
         xo = xm;
@@ -1178,6 +1183,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     }
     wf->m_inside = CircleOutline(QPointF(xo,yo), rado);
 
+    spdlog::get("logger")->trace("readWaveFront() step 4");
 
     if (lambda != md->lambda){
         if (lambdResp == ASK){
@@ -1267,6 +1273,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     wf->roc = roc;
     wf->lambda = lambda;
     wf->wasSmoothed = false;
+    spdlog::get("logger")->trace("readWaveFront() step 5");
 
     return wf;
 }
@@ -1298,11 +1305,13 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
     }
     wavefront *wf;
-
+    spdlog::get("logger")->trace("loadWavefront() step 1");
     if (m_currentNdx == 0 &&  m_wavefronts[0]->name == "Demo"){
+        spdlog::get("logger")->trace("loadWavefront() delete current");
         deleteCurrent();
     }
 
+        spdlog::get("logger")->trace("loadWavefront() step 2");
         wf = readWaveFront(fileName);
         m_wavefronts << wf;
 
@@ -1310,20 +1319,24 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
 
         m_surfaceTools->addWaveFront(wf->name);
         m_currentNdx = m_wavefronts.size()-1;
+        spdlog::get("logger")->trace("loadWavefront() step 3");
         m_surfaceTools->select(m_currentNdx);
 
     // if resize to smaller
     if (Settings2::getInstance()->m_general->shouldDownsize()){
+        spdlog::get("logger")->trace("loadWavefront() downSize");
         downSizeWf(wf);
     }
     makeMask(m_currentNdx);
-
+    spdlog::get("logger")->trace("loadWavefront() step 4");
     m_surface_finished = false;
     try {
+        spdlog::get("logger")->trace("loadWavefront() step 5");
         generateSurfacefromWavefront(m_currentNdx);
     }
     catch (int i){
         deleteCurrent();
+        spdlog::get("logger")->critical("loadWavefront() crash while generating surface");
         throw i;
     }
 
@@ -2426,7 +2439,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     while (lookat.size()){
         for (int i = 0; i < lookat.size(); ++i){
             double angle1 = wrapAngle(lookat[i]->angle);
-            spdlog::get("logger")->trace("computeStandAstig() angle ", i);
+            spdlog::get("logger")->trace("computeStandAstig() angle {}", i);
 
             double found = false;
             for (int j = i+1; j < lookat.size(); ++j){
