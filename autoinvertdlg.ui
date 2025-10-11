@@ -175,7 +175,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Once you choose an option you won't be bothered again about this until you restart the program.  You can also get back to this window from within the mirror configuration window.</string>
+    <string>Once you choose an option you won't be asked again until you restart the program.  You can get back to this window from within the mirror configuration window.</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
