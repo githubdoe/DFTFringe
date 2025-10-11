@@ -292,7 +292,7 @@ Wave Length nm</string>
       <item>
        <widget class="QCheckBox" name="unitsCB">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If set units are displayed in mm.   If not then units are in inches.  But only for this mirror configurion dialog.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If set units are displayed in mm.   If not, then units are in inches.  But only for this mirror configuration dialog.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Units in mm</string>
