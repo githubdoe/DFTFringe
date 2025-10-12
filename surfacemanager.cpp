@@ -1171,7 +1171,6 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         }
     }
 
-    spdlog::get("logger")->trace("readWaveFront() step 3");
 
     wf->m_outside = CircleOutline(QPointF(xm,ym), radm);
     if (rado == 0){
@@ -1183,7 +1182,6 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     }
     wf->m_inside = CircleOutline(QPointF(xo,yo), rado);
 
-    spdlog::get("logger")->trace("readWaveFront() step 4");
 
     if (lambda != md->lambda){
         if (lambdResp == ASK){
@@ -1273,7 +1271,6 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     wf->roc = roc;
     wf->lambda = lambda;
     wf->wasSmoothed = false;
-    spdlog::get("logger")->trace("readWaveFront() step 5");
 
     return wf;
 }
@@ -1305,13 +1302,12 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
     }
     wavefront *wf;
-    spdlog::get("logger")->trace("loadWavefront() step 1");
+    spdlog::get("logger")->trace("loadWavefront()");
     if (m_currentNdx == 0 &&  m_wavefronts[0]->name == "Demo"){
         spdlog::get("logger")->trace("loadWavefront() delete current");
         deleteCurrent();
     }
 
-        spdlog::get("logger")->trace("loadWavefront() step 2");
         wf = readWaveFront(fileName);
         m_wavefronts << wf;
 
@@ -1319,7 +1315,6 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
 
         m_surfaceTools->addWaveFront(wf->name);
         m_currentNdx = m_wavefronts.size()-1;
-        spdlog::get("logger")->trace("loadWavefront() step 3");
         m_surfaceTools->select(m_currentNdx);
 
     // if resize to smaller
@@ -1328,10 +1323,8 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         downSizeWf(wf);
     }
     makeMask(m_currentNdx);
-    spdlog::get("logger")->trace("loadWavefront() step 4");
     m_surface_finished = false;
     try {
-        spdlog::get("logger")->trace("loadWavefront() step 5");
         generateSurfacefromWavefront(m_currentNdx);
     }
     catch (int i){
@@ -2439,7 +2432,6 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     while (lookat.size()){
         for (int i = 0; i < lookat.size(); ++i){
             double angle1 = wrapAngle(lookat[i]->angle);
-            spdlog::get("logger")->trace("computeStandAstig() angle {}", i);
 
             double found = false;
             for (int j = i+1; j < lookat.size(); ++j){
@@ -2475,10 +2467,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     QPrinter printer(QPrinter::HighResolution);
     printer.setColorMode( QPrinter::Color );
     printer.setFullPage( true );
-    spdlog::get("logger")->trace("computeStandAstig() create printer step 2");
     printer.setOutputFileName( "stand.pdf" );
     printer.setOutputFormat( QPrinter::PdfFormat );
-    spdlog::get("logger")->trace("computeStandAstig() create printer step 3");
 
     int Width = getImageSize(printer);
 
@@ -2497,7 +2487,6 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     plot->m_minimal = true;
     QList<int> unrotatedNdxs;
 
-    spdlog::get("logger")->trace("computeStandAstig() create html step 1");
     QString html = ("<html><head/><body><h1><center>Test Stand Astig Removal</center></h1>"
                     "<h2><center>" + AstigReportTitle);
            html.append("    <font color='grey'>" + QDate::currentDate().toString() +
@@ -2510,7 +2499,6 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
             " 'width='100%' cellspacing='2' cellpadding='0'>");
     html.append("<tr><td><p align='center'><b>Unrotated inputs</b></p></td>");
     html.append("<td><p align='center'><b> Counter Rotated </b></p></td></tr>");
-    spdlog::get("logger")->trace("computeStandAstig() create html step 2");
 
 
 
@@ -2520,11 +2508,9 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     QList<wavefront *> rotated;
     QList<wavefront *> inputs;
     editor->append("<tr>");
-    spdlog::get("logger")->trace("computeStandAstig() create html step 3");
     int startingNdx = m_wavefronts.size() -1;
 
     for (int i = 0; i < list.size(); ++i){
-        spdlog::get("logger")->trace("computeStandAstig() wavefront ",i);
         contour.fill( QColor( Qt::white ).rgb() );
         QPainter painter( &contour );
         int ndx = m_wavefronts.size();
@@ -2533,22 +2519,15 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         QStringList loadList;
         loadList << list[i]->fname;
         wizPage->m_log->append("Loading  " + list[i]->fname);
-        spdlog::get("logger")->trace("computeStandAstig() loading file");
         QApplication::processEvents();
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 2");
         loadWavefront(list[i]->fname);
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 2b");
         wavefront * wf = m_wavefronts[m_currentNdx];
         inputs.append(wf);
         unrotatedNdxs.append(m_currentNdx);
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 3");
         plot->setSurface(wf);
         plot->resize(Width, .8 * Width);
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 4");
         plot->replot();
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 5");
         renderer.render( plot, &painter, QRect(0,0,Width,.8 * Width) );
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 6");
 
         QString imageName = QString("mydata://%1.png").arg(list[i]->fname);
         QString angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
@@ -2557,7 +2536,6 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         html.append("<tr><td><p align='center'> <img src='" +imageName + "' /><br><b>" + angle + "</b></p></td>");
 
         // counter rotate it
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 7");
 
         wizPage->m_log->setText(QString("Counter Rotating ") + list[i]->fname.right(list[i]->fname.size() - list[i]->fname.lastIndexOf("/")-1));
         QApplication::processEvents();
@@ -2565,14 +2543,11 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         l.append(ndx);
         ndx = m_wavefronts.size();
 
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 8");
         rotateThese(wrapAngle(list[i]->angle),l);
         rotated.append(m_wavefronts[ndx]);
         wf = m_wavefronts[ndx];
 
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 9");
         loadComplete();
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 10");
         plot->setSurface(wf);
         plot->resize(Width, .8 * Width);
         plot->replot();
@@ -2582,7 +2557,6 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
         imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname).arg(angle); // clazy:exclude=qstring-arg
 
-        spdlog::get("logger")->trace("computeStandAstig() loading file step 11");
         doc->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
         doc1Res.append(imageName);
         html.append("<td><p align='center'> <img src='" +imageName + "' /><br><b>Counter " + angle + "</b></p></td>");
