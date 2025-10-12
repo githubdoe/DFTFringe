@@ -19,6 +19,7 @@
 #include "zernikepolar.h"
 #include <cmath>
 #include <QDebug>
+#include "spdlog/spdlog.h"
 
 zernikePolar::zernikePolar(double rho, double theta, size_t nbTerms) {
     // Having all terms computed at once here let's compiler optimize the code better
@@ -61,7 +62,7 @@ zernikePolar::zernikePolar(double rho, double theta, size_t nbTerms) {
 
     // only compute what is actually needed
     // but to avoid complex code I use only 4 ranges
-    if(nbTerms > 8)
+    if(nbTerms > 9)
     {
         rho3 = rho2 * rho;
         rho4 = rho3 * rho;
@@ -91,7 +92,7 @@ zernikePolar::zernikePolar(double rho, double theta, size_t nbTerms) {
         zernTerms[24] = 1. - 20. * rho2 + 90. *  rho4 - 140. * rho6 + 70. * rho8;
     }
 
-    if(nbTerms > 24) {
+    if(nbTerms > 25) {
         rho10 = rho8 * rho2;
         cos5theta = std::cos(5. * theta);
         sin5theta = std::sin(5. * theta);
@@ -109,7 +110,7 @@ zernikePolar::zernikePolar(double rho, double theta, size_t nbTerms) {
         zernTerms[35] = -1 + 30. * rho2 -210 * rho4 + 560. * rho6 - 630 * rho8 + 252. * rho10;
     }
 
-    if(nbTerms > 35)
+    if(nbTerms > 36)
     {
         zernTerms[36] = rho6 * std::cos(6. * theta);
         zernTerms[37] = rho6 * std::sin(6. * theta);
@@ -133,6 +134,7 @@ double zernikePolar::zernike(size_t n){
     }
     else
     {
+        spdlog::get("logger")->critical("zernikePolar() Zernike order exceeds maximum computed.");
         throw std::out_of_range("Zernike order exceeds maximum computed order");
         return 0.;
     }

@@ -75,6 +75,7 @@
 #include "ui_oglrendered.h"
 #include "astigpolargraph.h"
 
+
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -438,6 +439,13 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
 
     double rho;
 
+    int maxZernToUse = 0;
+    for (int value : zernsToUse) {
+        if (value > maxZernToUse)
+            maxZernToUse = value;
+    }
+
+
     std::vector<bool> &en = zernEnables;
     mirrorDlg *md = mirrorDlg::get_Instance();
     for (int i = 0; i <  wx; ++i)
@@ -452,7 +460,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
             {
                 double S1 = 0;
                 double theta = atan2(y1,x1);
-                zernikePolar zpolar(rho, theta, zernsToUse.size());
+                zernikePolar zpolar(rho, theta, maxZernToUse+1);
                 for (int ii = 0; ii < zernsToUse.size(); ++ii) {
                     int z = zernsToUse[ii];
 
@@ -1099,12 +1107,14 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
         return 0;
     }
+    spdlog::get("logger")->trace("readWaveFront() step 1");
     wavefront *wf = new wavefront();
     double width;
     double height;
     file >> width;
     file >> height;
     cv::Mat data(height,width, numType,0.);
+    spdlog::get("logger")->trace("readWaveFront() width {} height {}", width, height);
 
     for( size_t y = 0; y < height; y++ ) {
         for( size_t x = 0; x < width; x++ ) {
@@ -1112,6 +1122,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             //data.at<double>(height - y - 1, x) += dist(generator);
         }
     }
+    spdlog::get("logger")->trace("readWaveFront() step 2");
 
     std::string line;
     QString l;
@@ -1159,6 +1170,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             wf->useSANull = false;
         }
     }
+
 
     wf->m_outside = CircleOutline(QPointF(xm,ym), radm);
     if (rado == 0){
@@ -1290,8 +1302,9 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
     }
     wavefront *wf;
-
+    spdlog::get("logger")->trace("loadWavefront()");
     if (m_currentNdx == 0 &&  m_wavefronts[0]->name == "Demo"){
+        spdlog::get("logger")->trace("loadWavefront() delete current");
         deleteCurrent();
     }
 
@@ -1306,16 +1319,17 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
 
     // if resize to smaller
     if (Settings2::getInstance()->m_general->shouldDownsize()){
+        spdlog::get("logger")->trace("loadWavefront() downSize");
         downSizeWf(wf);
     }
     makeMask(m_currentNdx);
-
     m_surface_finished = false;
     try {
         generateSurfacefromWavefront(m_currentNdx);
     }
     catch (int i){
         deleteCurrent();
+        spdlog::get("logger")->critical("loadWavefront() crash while generating surface");
         throw i;
     }
 
@@ -2414,7 +2428,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef *> list){
     // check for pairs
     QVector<rotationDef*> lookat = list.toVector();
-
+	spdlog::get("logger")->trace("computeStandAstig()");
     while (lookat.size()){
         for (int i = 0; i < lookat.size(); ++i){
             double angle1 = wrapAngle(lookat[i]->angle);
@@ -2449,6 +2463,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         }
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
+    spdlog::get("logger")->trace("computeStandAstig() create printer step 1");
     QPrinter printer(QPrinter::HighResolution);
     printer.setColorMode( QPrinter::Color );
     printer.setFullPage( true );
@@ -2484,6 +2499,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
             " 'width='100%' cellspacing='2' cellpadding='0'>");
     html.append("<tr><td><p align='center'><b>Unrotated inputs</b></p></td>");
     html.append("<td><p align='center'><b> Counter Rotated </b></p></td></tr>");
+
 
 
     QTextDocument *doc = editor->document();
