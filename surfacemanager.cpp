@@ -441,7 +441,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
 
     int maxZernToUse = 0;
     for (int value : zernsToUse) {
-            if (value > maxZernToUse)
+        if (value > maxZernToUse)
             maxZernToUse = value;
     }
 
