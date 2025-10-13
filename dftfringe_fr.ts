@@ -3875,7 +3875,7 @@ You can click on the dot and it will be set as the current displayed wavefront.<
     <name>zernikeEditDlg</name>
     <message>
         <location filename="zernikeeditdlg.ui" line="14"/>
-        <source>Edit Zernike Val;ues</source>
+        <source>Edit Zernike Values</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
