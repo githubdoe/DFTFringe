@@ -383,11 +383,11 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
                 // Temporarily restore cursor so QMessageBox does not show waitCursor
                 // QGuiApplication::setOverrideCursor do stack so we will go back to previous state (any state)
                 QGuiApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
-                autoInvertDlg *dlg_ai = autoInvertDlg::get_Instance();
-                dlg_ai->setMainLabel("Your wavefront may be inverted.  What do you want to do?");
-                dlg_ai->enableConic(md->cc != 0);
-                dlg_ai->exec();
-				QGuiApplication::restoreOverrideCursor();
+                autoInvertDlg dlg_ai;
+                dlg_ai.setMainLabel("Your wavefront may be inverted.  What do you want to do?");
+                dlg_ai.enableConic(md->cc != 0);
+                dlg_ai.exec();
+                QGuiApplication::restoreOverrideCursor();
                 md->updateAutoInvertStatus();
             }
             bool reverse = false;
@@ -508,7 +508,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
     m_SurfaceGraph(glPlot), m_metrics(mets),m_gbValue(21),
     m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),outsideOffset(0),
-    m_inverseMode(invNOTSET),m_askAboutReverse(true),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
+    m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {
 
     okToUpdateSurfacesOnGenerateComplete = true;

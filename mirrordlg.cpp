@@ -53,7 +53,6 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->useAnnulus->setChecked(m_useAnnular);
     enableAnnular(m_useAnnular);
     ui->annulusPercent->setValue(settings.value("md annulus percent",0.).toDouble() * 100   );
-    m_autoInvertDlg = autoInvertDlg::get_Instance();
 
     ui->nullCB->setChecked(doNull);
     diameter = settings.value("config diameter", 200.).toDouble();
@@ -840,9 +839,10 @@ void mirrorDlg::updateAutoInvertStatus()
 
 void mirrorDlg::on_btnChangeAutoInvert_clicked()
 {
-    m_autoInvertDlg->setMainLabel("How should DFTFringe choose to auto invert?");
-    m_autoInvertDlg->enableConic(cc != 0);
-    m_autoInvertDlg->exec();
+    autoInvertDlg dlg;
+    dlg.setMainLabel("How should DFTFringe choose to auto invert?");
+    dlg.enableConic(cc != 0);
+    dlg.exec();
     updateAutoInvertStatus();
 }
 

@@ -14,11 +14,6 @@ autoInvertDlg::~autoInvertDlg()
     delete ui;
 }
 
-autoInvertDlg *autoInvertDlg::get_Instance(){
-    static autoInvertDlg m_Instance{};
-    return &m_Instance;
-}
-
 void autoInvertDlg::on_btnUseConic_clicked()
 {
     SurfaceManager *sm = SurfaceManager::get_instance();

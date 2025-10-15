@@ -112,7 +112,6 @@ public:
     void subtractWavefronts();
 
     AutoInvertMode m_inverseMode;
-    bool m_askAboutReverse;
     bool m_ignoreInverse;
     bool m_surface_finished;
     configRESPONSE diamResp;

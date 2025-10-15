@@ -49,7 +49,6 @@
 #include "colorchannel.h"
 #include "opencv2/opencv.hpp"
 #include <QUrl>
-#include "autoinvertdlg.h"
 #include "zapm_interface.h"
 #include "zernikeprocess.h"
 
@@ -354,7 +353,6 @@ MainWindow::~MainWindow()
     delete m_ogl;
     userMapDlg->close();
     mirrorDlg::get_Instance()->close();
-    autoInvertDlg::get_Instance()->close();
     settingsDlg->close();
     delete settingsDlg;
     delete ui;
