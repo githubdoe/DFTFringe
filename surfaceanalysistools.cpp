@@ -357,3 +357,6 @@ void surfaceAnalysisTools::closeDefocus(int /*result*/){
     m_defocus = 0.;
     emit defocusChanged();
 }
+
+
+

@@ -155,6 +155,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     astigscatterplot.cpp \
     astigstatsdlg.cpp \
     astigzoomer.cpp \
+	autoinvertdlg.cpp \
     averagewavefrontfilesdlg.cpp \
     batchigramwizard.cpp \
     bathastigdlg.cpp \
@@ -279,6 +280,7 @@ HEADERS += bezier/bezier.h \
     astigscatterplot.h \
     astigstatsdlg.h \
     astigzoomer.h \
+	autoinvertdlg.h \
     averagewavefrontfilesdlg.h \
     batchigramwizard.h \
     bathastigdlg.h \
@@ -398,6 +400,7 @@ FORMS += arbitrarywavefronthelp.ui \
     annulushelpdlg.ui \
     astigpolargraph.ui \
     astigstatsdlg.ui \
+	autoinvertdlg.ui \
     averagewavefrontfilesdlg.ui \
     batchigramwizard.ui \
     bathastigdlg.ui \

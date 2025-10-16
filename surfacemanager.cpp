@@ -377,31 +377,41 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         mirrorDlg *md = mirrorDlg::get_Instance();
         zp.unwrap_to_zernikes(*wf);
         // check for swapped conic value
-        if (!m_ignoreInverse && (md->cc != 0.0) && md->cc * wf->InputZerns[8] < 0.){
-            bool reverse = false;
-            if (m_askAboutReverse){
+        if (!m_ignoreInverse)
+        {
+            if (m_inverseMode==invNOTSET)
+            {
                 // Temporarily restore cursor so QMessageBox does not show waitCursor
                 // QGuiApplication::setOverrideCursor do stack so we will go back to previous state (any state)
                 QGuiApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
-                bool msgResult = (QMessageBox::Yes == QMessageBox::question(0,"should invert?","Wavefront seems inverted.  Do you want to invert it?"));
+                autoInvertDlg dlg_ai;
+                dlg_ai.setMainLabel("Your wavefront may be inverted.  What do you want to do?");
+                dlg_ai.enableConic(md->cc != 0);
+                dlg_ai.exec();
                 QGuiApplication::restoreOverrideCursor();
-                if (msgResult)
-                {
-                    reverse = true;
-                    m_askAboutReverse = false;
-                }else
-                {
-                    reverse = false;
-                }
+                md->updateAutoInvertStatus();
             }
-            else {
-                reverse = true;
+            bool reverse = false;
+            if (m_inverseMode == invCONIC)
+            {
+                if (md->cc != 0.0 && md->cc * wf->InputZerns[8] < 0.)
+                    reverse = true;
+            } else if (m_inverseMode == invINSIDE)
+            {
+                if (wf->InputZerns[3]>0)
+                    reverse = true;
+            } else if (m_inverseMode == invOUTSIDE)
+            {
+                if (wf->InputZerns[3]<0)
+                    reverse = true;
             }
             if (reverse){
                 wf->data *= -1;
+                zp.unwrap_to_zernikes(*wf);
             }
-            zp.unwrap_to_zernikes(*wf);
         }
+
+
         ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
         ((MainWindow*)parent())-> zernTablemodel->update();
         // fill in void from obstruction of igram.
@@ -504,9 +514,9 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
                                ProfilePlot *profilePlot, contourView *contourView,
                                SurfaceGraph *glPlot, metricsDisplay *mets): QObject(parent),
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
-    m_SurfaceGraph(glPlot), m_metrics(mets),
-    m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
-    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
+    m_SurfaceGraph(glPlot), m_metrics(mets),m_gbValue(21),
+    m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),outsideOffset(0),
+    m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {
 
     okToUpdateSurfacesOnGenerateComplete = true;
