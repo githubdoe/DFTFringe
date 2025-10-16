@@ -142,7 +142,6 @@ private:
     QTimer spacingChangeTimer;
     void saveJson(const QString &fileName);
     void enableAnnular(bool enable);
-    autoInvertDlg *m_autoInvertDlg;
 };
 
 #endif // MIRRORDLG_H
