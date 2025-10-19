@@ -263,7 +263,7 @@ define_input::define_input(QWidget *parent)
 //        set.setArrayIndex(i);
 //        listDisplay->addItem(set.value("item").toString());
 //    }
-    set.endArray();
+//    set.endArray();
     connect(listDisplay, &QWidget::customContextMenuRequested, this,
             &define_input::showContextMenu);
 
@@ -291,13 +291,13 @@ void define_input::compute(){
     }
     QSettings set;
     set.setValue("stand astig ccw",CCWRb->isChecked() );
-    set.beginWriteArray("stand astig removal files");
-    // save the listDisplay of files to process
-    for (int i = 0; i < listDisplay->count(); ++i) {
-        set.setArrayIndex(i);
-        set.setValue("item", listDisplay->item(i)->text());
-    }
-    set.endArray();
+//    set.beginWriteArray("stand astig removal files");
+//    // save the listDisplay of files to process
+//    for (int i = 0; i < listDisplay->count(); ++i) {
+//        set.setArrayIndex(i);
+//        set.setValue("item", listDisplay->item(i)->text());
+//    }
+//    set.endArray();
     AstigReportTitle = title->text();
     runpb->setText("Working");
     runpb->setEnabled(false);
