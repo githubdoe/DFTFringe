@@ -434,7 +434,8 @@ void ContourPlot::setSurface(wavefront * wf) {
         return;
 
     initPlot();
-    m_tools->enablTools(true);
+    if(m_tools != nullptr)
+        m_tools->enablTools(true);
     m_zOffset = 0.;
     ruler();
 
