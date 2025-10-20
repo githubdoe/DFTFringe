@@ -145,7 +145,12 @@ intensityPlot::intensityPlot(QWidget *parent):
         new QwtCompassMagnetNeedle( QwtCompassMagnetNeedle::ThinStyle ) );
     compass->setValue( 0 );
     compass->setOrigin( -90 );
-    connect(compass,&QwtAbstractSlider::valueChanged,this ,&intensityPlot::angleChanged);
+
+    // Using the old SIGNAL/SLOT syntax because problems with QWT.
+    // Qt is not able to match signal at runtime even if compile time checks all passed.
+    // ChatGPT tells it might be an ABI problem with QWT library but I (JST) have been unable to fix for now (2025-10-20).
+    connect(compass, SIGNAL(valueChanged(double)), this ,SLOT(angleChanged(double)));
+    //connect(compass,&QwtAbstractSlider::valueChanged,this ,&intensityPlot::angleChanged);
 
     populate();
     resize(QGuiApplication::primaryScreen()->availableSize() * 1./ 5.);
