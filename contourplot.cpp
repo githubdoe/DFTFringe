@@ -492,8 +492,11 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
 
     tracker_ = new MyZoomer(this->canvas(), this);
 
-
-    connect(picker_, QOverload<const QPointF&>::of(&QwtPlotPicker::selected), this, &ContourPlot::selected);
+    // Using the old SIGNAL/SLOT syntax because problems with QWT.
+    // Qt is not able to match signal at runtime even if compile time checks all passed.
+    // ChatGPT tells it might be an ABI problem with QWT library but I (JST) have been unable to fix for now (2025-10-20).
+    connect(picker_, SIGNAL(selected(const QPointF&)), SLOT(selected(const QPointF&)));
+    //connect(picker_, QOverload<const QPointF&>::of(&QwtPlotPicker::selected), this, &ContourPlot::selected);
 
     QSettings settings;
     m_colorMapNdx = settings.value("colorMapType",0).toInt();
