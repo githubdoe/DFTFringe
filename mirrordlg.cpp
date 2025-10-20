@@ -29,6 +29,8 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include "annulushelpdlg.h"
+#include "surfacemanager.h"
+
 QString mirrorDlg::m_projectPath = "";
 
 mirrorDlg *mirrorDlg::get_Instance(){
@@ -51,7 +53,6 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->useAnnulus->setChecked(m_useAnnular);
     enableAnnular(m_useAnnular);
     ui->annulusPercent->setValue(settings.value("md annulus percent",0.).toDouble() * 100   );
-
 
     ui->nullCB->setChecked(doNull);
     diameter = settings.value("config diameter", 200.).toDouble();
@@ -620,6 +621,12 @@ void mirrorDlg::on_buttonBox_accepted()
     setclearAp();
     updateZ8();
 
+    SurfaceManager * sm = SurfaceManager::get_instance();
+    if (sm->m_inverseMode == invCONIC && cc==0) {
+        sm->m_inverseMode = invNOTSET; // don't allow inverse mode to be conic if conic constant is zero
+        updateAutoInvertStatus();
+    }
+
     settings.setValue("config mirror name", ui->name->text());
     settings.setValue("config roc", roc);
     settings.setValue("config lambda",lambda);
@@ -806,4 +813,37 @@ void mirrorDlg::on_annularDiameter_valueChanged(double arg1)
 void mirrorDlg::setObsPercent(double obs){
     ui->annulusPercent->setValue(obs);
 }
+
+void mirrorDlg::updateAutoInvertStatus()
+{
+    switch(SurfaceManager::get_instance()->m_inverseMode)
+    {
+        case invNOTSET:
+            ui->lblAutoInvert->setText("Autoinvert: Not Set");
+            break;
+        case invMANUAL:
+            ui->lblAutoInvert->setText("Autoinvert: Manual");
+            break;
+        case invCONIC:
+            ui->lblAutoInvert->setText("Autoinvert: Conic");
+            break;
+        case invINSIDE:
+            ui->lblAutoInvert->setText("Autoinvert: Inside Focus");
+            break;
+        case invOUTSIDE:
+            ui->lblAutoInvert->setText("Autoinvert: Outside Focus");
+            break;
+    }
+
+}
+
+void mirrorDlg::on_btnChangeAutoInvert_clicked()
+{
+    autoInvertDlg dlg;
+    dlg.setMainLabel("How should DFTFringe choose to auto invert?");
+    dlg.enableConic(cc != 0);
+    dlg.exec();
+    updateAutoInvertStatus();
+}
+
 

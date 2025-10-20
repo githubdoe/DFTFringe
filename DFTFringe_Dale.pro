@@ -31,6 +31,7 @@ SOURCES += main.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
     astigpolargraph.cpp \
+	autoinvertdlg.cpp \
     cpoint.cpp \
     defocusdlg.cpp \
     edgeplot.cpp \
@@ -145,6 +146,7 @@ HEADERS  += mainwindow.h \
     arbitrarywavefronthelp.h \
     arbitrarywavwidget.h \
     astigpolargraph.h \
+	autoinvertdlg.h \
     cpoint.h \
     defocusdlg.h \
     edgeplot.h \
@@ -262,6 +264,7 @@ FORMS    += mainwindow.ui \
     annulushelpdlg.ui \
     arbitrarywavefronthelp.ui \
     astigpolargraph.ui \
+	autoinvertdlg.ui \
     defocusdlg.ui \
     dfttools.ui \
     dftarea.ui \
@@ -360,7 +363,6 @@ LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgcodecs3412.dll
 LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgproc3412.dll
 LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_features2d3412.dll
 LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
-
 
 #LIBS += D:\armadillo\bin\libarmadillo.dll
 LIBS += D:\lapack\build64\bin\liblapack.dll

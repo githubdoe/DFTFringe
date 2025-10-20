@@ -44,6 +44,7 @@
 #include <QPointF>
 #include "surfacegraph.h"
 enum configRESPONSE { YES, NO, ASK};
+enum AutoInvertMode {invNOTSET, invMANUAL, invCONIC, invINSIDE, invOUTSIDE};
 struct textres {
     QTextEdit *Edit;
     QList<QString> res;
@@ -110,7 +111,7 @@ public:
     void average(QList<wavefront *> wfList);
     void subtractWavefronts();
 
-    bool m_askAboutReverse;
+    AutoInvertMode m_inverseMode;
     bool m_ignoreInverse;
     bool m_surface_finished;
     configRESPONSE diamResp;

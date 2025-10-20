@@ -20,6 +20,7 @@
 
 #include <QDialog>
 #include <QTimer>
+#include "autoinvertdlg.h"
 
 namespace Ui {
 class mirrorDlg;
@@ -37,6 +38,7 @@ public:
 
     void loadFile(QString & fileName);
     void updateZ8();
+    void updateAutoInvertStatus();
 
     QString m_name;
     bool mm;
@@ -117,6 +119,8 @@ private slots:
     void on_annulusHelp_clicked();
 
     void on_annularDiameter_valueChanged(double arg1);
+
+    void on_btnChangeAutoInvert_clicked();
 
 signals:
     void diameterChanged(double);

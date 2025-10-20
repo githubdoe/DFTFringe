@@ -1103,7 +1103,7 @@ void MainWindow::batchProcess(QStringList fileList){
     m_contourView->getPlot()->blockSignals(true);
     QSettings settings;
     bool shouldBeep = settings.value("RMSBeep>", true).toBool();
-    this->setCursor(Qt::WaitCursor);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     batchIgramWizard::goPb->setEnabled(false);
     batchIgramWizard::addFiles->setEnabled(false);
     batchIgramWizard::skipFile->setEnabled(true);
@@ -1145,9 +1145,11 @@ void MainWindow::batchProcess(QStringList fileList){
         //QObject().thread()->msleep(1000);
         ui->SelectOutSideOutline->setChecked(true);
         if (!batchIgramWizard::autoCb->isChecked()){
+            QApplication::restoreOverrideCursor();
             while (m_inBatch && !m_OutlineDoneInBatch && !m_skipItem) {
                 QApplication::processEvents();
             }
+            QApplication::setOverrideCursor(Qt::WaitCursor);
         }
         if (m_skipItem){
             cnt++;
@@ -1163,9 +1165,11 @@ void MainWindow::batchProcess(QStringList fileList){
 
         m_batchMakeSurfaceReady = false;
         if (!batchIgramWizard::autoCb->isChecked() && !m_skipItem){
+            QApplication::restoreOverrideCursor();
             while (m_inBatch && !m_batchMakeSurfaceReady && !m_skipItem) {
                 QApplication::processEvents();
             }
+            QApplication::setOverrideCursor(Qt::WaitCursor);
         }
         if (m_skipItem){
             m_skipItem = false;
@@ -1295,7 +1299,7 @@ void MainWindow::batchProcess(QStringList fileList){
     batchIgramWizard::addFiles->setEnabled(true);
     batchIgramWizard::skipFile->setEnabled(false);
 
-    this->setCursor(Qt::ArrowCursor);
+    QApplication::restoreOverrideCursor();
     m_contourView->getPlot()->blockSignals(false);
 
 }
@@ -2115,7 +2119,8 @@ void MainWindow::on_actionastig_in_polar_triggered()
 
 void MainWindow::on_actionStop_auto_invert_triggered()
 {
-    m_surfaceManager->m_askAboutReverse = true;
-    QMessageBox::information(this, "auto invert", "DFTFringe will now ask if it thinks it needs to invert a wave front.");
+    m_surfaceManager->m_inverseMode = invNOTSET;
+    m_mirrorDlg->updateAutoInvertStatus();
+    //QMessageBox::information(this, "auto invert", "DFTFringe will now ask if it thinks it needs to invert a wave front.");
 }
 

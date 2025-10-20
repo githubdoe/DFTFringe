@@ -75,6 +75,7 @@
 #include "ui_oglrendered.h"
 #include "astigpolargraph.h"
 
+
 cv::Mat theMask;
 cv::Mat deb;
 double outputLambda;
@@ -376,26 +377,41 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         mirrorDlg *md = mirrorDlg::get_Instance();
         zp.unwrap_to_zernikes(*wf);
         // check for swapped conic value
-        if (!m_ignoreInverse && (md->cc != 0.0) && md->cc * wf->InputZerns[8] < 0.){
-            bool reverse = false;
-            if (m_askAboutReverse){
-                if (QMessageBox::Yes == QMessageBox::question(0,"should invert?","Wavefront seems inverted.  Do you want to invert it?"))
-                {
-                   reverse = true;
-                    m_askAboutReverse = false;
-                }else
-                {
-                    reverse = false;
-                }
+        if (!m_ignoreInverse)
+        {
+            if (m_inverseMode==invNOTSET)
+            {
+                // Temporarily restore cursor so QMessageBox does not show waitCursor
+                // QGuiApplication::setOverrideCursor do stack so we will go back to previous state (any state)
+                QGuiApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
+                autoInvertDlg dlg_ai;
+                dlg_ai.setMainLabel("Your wavefront may be inverted.  What do you want to do?");
+                dlg_ai.enableConic(md->cc != 0);
+                dlg_ai.exec();
+                QGuiApplication::restoreOverrideCursor();
+                md->updateAutoInvertStatus();
             }
-            else {
-                reverse = true;
+            bool reverse = false;
+            if (m_inverseMode == invCONIC)
+            {
+                if (md->cc != 0.0 && md->cc * wf->InputZerns[8] < 0.)
+                    reverse = true;
+            } else if (m_inverseMode == invINSIDE)
+            {
+                if (wf->InputZerns[3]>0)
+                    reverse = true;
+            } else if (m_inverseMode == invOUTSIDE)
+            {
+                if (wf->InputZerns[3]<0)
+                    reverse = true;
             }
             if (reverse){
                 wf->data *= -1;
+                zp.unwrap_to_zernikes(*wf);
             }
-            zp.unwrap_to_zernikes(*wf);
         }
+
+
         ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
         ((MainWindow*)parent())-> zernTablemodel->update();
         // fill in void from obstruction of igram.
@@ -433,6 +449,13 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
 
     double rho;
 
+    int maxZernToUse = 0;
+    for (int value : zernsToUse) {
+        if (value > maxZernToUse)
+            maxZernToUse = value;
+    }
+
+
     std::vector<bool> &en = zernEnables;
     mirrorDlg *md = mirrorDlg::get_Instance();
     for (int i = 0; i <  wx; ++i)
@@ -447,7 +470,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
             {
                 double S1 = 0;
                 double theta = atan2(y1,x1);
-                zernikePolar zpolar(rho, theta, zernsToUse.size());
+                zernikePolar zpolar(rho, theta, maxZernToUse+1);
                 for (int ii = 0; ii < zernsToUse.size(); ++ii) {
                     int z = zernsToUse[ii];
 
@@ -491,9 +514,9 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
                                ProfilePlot *profilePlot, contourView *contourView,
                                SurfaceGraph *glPlot, metricsDisplay *mets): QObject(parent),
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
-    m_SurfaceGraph(glPlot), m_metrics(mets),
-    m_gbValue(21),m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),
-    outsideOffset(0),m_askAboutReverse(true),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
+    m_SurfaceGraph(glPlot), m_metrics(mets),m_gbValue(21),
+    m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),outsideOffset(0),
+    m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {
 
     okToUpdateSurfacesOnGenerateComplete = true;
@@ -1094,12 +1117,14 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
         return 0;
     }
+    spdlog::get("logger")->trace("readWaveFront() step 1");
     wavefront *wf = new wavefront();
     double width;
     double height;
     file >> width;
     file >> height;
     cv::Mat data(height,width, numType,0.);
+    spdlog::get("logger")->trace("readWaveFront() width {} height {}", width, height);
 
     for( size_t y = 0; y < height; y++ ) {
         for( size_t x = 0; x < width; x++ ) {
@@ -1107,6 +1132,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             //data.at<double>(height - y - 1, x) += dist(generator);
         }
     }
+    spdlog::get("logger")->trace("readWaveFront() step 2");
 
     std::string line;
     QString l;
@@ -1154,6 +1180,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             wf->useSANull = false;
         }
     }
+
 
     wf->m_outside = CircleOutline(QPointF(xm,ym), radm);
     if (rado == 0){
@@ -1285,8 +1312,9 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
         QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
     }
     wavefront *wf;
-
+    spdlog::get("logger")->trace("loadWavefront()");
     if (m_currentNdx == 0 &&  m_wavefronts[0]->name == "Demo"){
+        spdlog::get("logger")->trace("loadWavefront() delete current");
         deleteCurrent();
     }
 
@@ -1301,16 +1329,17 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
 
     // if resize to smaller
     if (Settings2::getInstance()->m_general->shouldDownsize()){
+        spdlog::get("logger")->trace("loadWavefront() downSize");
         downSizeWf(wf);
     }
     makeMask(m_currentNdx);
-
     m_surface_finished = false;
     try {
         generateSurfacefromWavefront(m_currentNdx);
     }
     catch (int i){
         deleteCurrent();
+        spdlog::get("logger")->critical("loadWavefront() crash while generating surface");
         throw i;
     }
 
@@ -2409,7 +2438,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef *> list){
     // check for pairs
     QVector<rotationDef*> lookat = list.toVector();
-
+	spdlog::get("logger")->trace("computeStandAstig()");
     while (lookat.size()){
         for (int i = 0; i < lookat.size(); ++i){
             double angle1 = wrapAngle(lookat[i]->angle);
@@ -2444,6 +2473,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         }
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
+    spdlog::get("logger")->trace("computeStandAstig() create printer step 1");
     QPrinter printer(QPrinter::HighResolution);
     printer.setColorMode( QPrinter::Color );
     printer.setFullPage( true );
@@ -2479,6 +2509,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
             " 'width='100%' cellspacing='2' cellpadding='0'>");
     html.append("<tr><td><p align='center'><b>Unrotated inputs</b></p></td>");
     html.append("<td><p align='center'><b> Counter Rotated </b></p></td></tr>");
+
 
 
     QTextDocument *doc = editor->document();
