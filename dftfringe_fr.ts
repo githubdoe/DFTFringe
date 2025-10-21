@@ -1195,39 +1195,6 @@
     </message>
 </context>
 <context>
-    <name>SaveWaveDlg</name>
-    <message>
-        <location filename="savewavedlg.ui" line="14"/>
-        <source>Dialog</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.ui" line="52"/>
-        <source>Browse</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.ui" line="65"/>
-        <source>Normal</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.ui" line="81"/>
-        <source>Nulled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.cpp" line="42"/>
-        <source>Write wave font file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="savewavedlg.cpp" line="43"/>
-        <source>wft (*.wft)</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>Settings2</name>
     <message>
         <location filename="settings2.ui" line="14"/>
@@ -2173,79 +2140,6 @@ Try it and if you find no difference in wavefront values then you do not need to
     </message>
 </context>
 <context>
-    <name>lensDialog</name>
-    <message>
-        <location filename="lensdialog.ui" line="14"/>
-        <source>Lens parameters</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="22"/>
-        <source>Lens Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="34"/>
-        <source>Lens Distortion Matrix</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="40"/>
-        <source>K1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="50"/>
-        <source>K2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="60"/>
-        <source>P1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="70"/>
-        <source>P2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="80"/>
-        <source>K3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="87"/>
-        <source>K</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="97"/>
-        <source>Camera Matrix</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="103"/>
-        <source>Y Focal Length pixels</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="113"/>
-        <source>X center pixel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="123"/>
-        <source>Y center pixel  </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="lensdialog.ui" line="133"/>
-        <source>X  Focal Length pixels</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>makeAverages</name>
     <message>
         <location filename="standastigwizard.cpp" line="101"/>
@@ -2777,14 +2671,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>profileArea</name>
-    <message>
-        <location filename="profilearea.ui" line="16"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>psfPlot</name>
     <message>
         <location filename="psfplot.ui" line="14"/>
@@ -2812,19 +2698,6 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="regionedittools.ui" line="47"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>renameWavefrontDlg</name>
-    <message>
-        <location filename="renamewavefrontdlg.ui" line="14"/>
-        <source>Rename Wavefront</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="renamewavefrontdlg.ui" line="20"/>
-        <source>Enter new wavefront name:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3461,97 +3334,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>surfacePropertiesDlg</name>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="14"/>
-        <source>3D surface lighting and material properties</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="22"/>
-        <source>Lighting properties</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="28"/>
-        <source>X</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="48"/>
-        <source>Y</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="68"/>
-        <source>Z</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="88"/>
-        <location filename="surfacepropertiesdlg.ui" line="154"/>
-        <source>Ambient</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="108"/>
-        <location filename="surfacepropertiesdlg.ui" line="171"/>
-        <source>Diffuse</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="125"/>
-        <location filename="surfacepropertiesdlg.ui" line="185"/>
-        <source>Specular:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="148"/>
-        <source>Surface Properties</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="199"/>
-        <source>shine</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="216"/>
-        <source>Emission</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="256"/>
-        <source>Predefined</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="262"/>
-        <source>Plastic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="269"/>
-        <source>Satin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="276"/>
-        <source>Brushed Metal</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="283"/>
-        <source>Ceramic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="surfacepropertiesdlg.ui" line="290"/>
-        <source>Matt</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>unwrapErrorsView</name>
     <message>
         <location filename="unwraperrorsview.ui" line="14"/>
@@ -3684,39 +3466,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>videoSetupDlg</name>
-    <message>
-        <location filename="videosetupdlg.ui" line="14"/>
-        <source>Video setup</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="24"/>
-        <source>angle per step</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="51"/>
-        <source>Frames per Second</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="72"/>
-        <source>Full Size</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="79"/>
-        <source>Size</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="videosetupdlg.ui" line="96"/>
-        <source>X</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>vortexDebug</name>
     <message>
         <location filename="vortexdebug.ui" line="17"/>
@@ -3770,19 +3519,6 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
-    <name>waveFrontNullDlg</name>
-    <message>
-        <location filename="wavefrontnulldlg.ui" line="14"/>
-        <source>Wavefront Null Enables</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="wavefrontnulldlg.ui" line="17"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specifies what to remove from the wavefront.  Normally this is the first 8 Zernike terms.&lt;/p&gt;&lt;p&gt;Except the x and y astig.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>wavefrontFilterDlg</name>
     <message>
         <location filename="wavefrontfilterdlg.ui" line="20"/>
@@ -3794,7 +3530,7 @@ p, li { white-space: pre-wrap; }
         <source>You can set a RMS threshold that will delete any loaded wavefronts and optionally any
  saved wavefronts that have RMS values over the threshold.
 
-You can hover the mouse over a dot on the plots to see the wavefront name. 
+You can hover the mouse over a dot on the plots to see the wavefront name.
 
 You can click on the dot and it will be set as the current displayed wavefront.</source>
         <translation type="unfinished"></translation>

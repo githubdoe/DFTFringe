@@ -26,7 +26,6 @@
 #include <QSpinBox>
 #include <QList>
 #include <QImageWriter>
-#include "videosetupdlg.h"
 #include <QtDataVisualization/Q3DSurface>
 #include <QtDataVisualization/QSurfaceDataProxy>
 #include <QtDataVisualization/QHeightMapSurfaceDataProxy>

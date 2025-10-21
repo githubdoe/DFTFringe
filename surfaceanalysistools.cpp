@@ -25,7 +25,6 @@
 #include <QtAlgorithms>
 #include <QLineEdit>
 #include "mirrordlg.h"
-#include "renamewavefrontdlg.h"
 #include <QMessageBox>
 surfaceAnalysisTools *surfaceAnalysisTools::m_Instance = NULL;
 
