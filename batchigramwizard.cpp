@@ -25,7 +25,7 @@ QLabel *batchIgramWizard::memStatus = 0;
 QCheckBox *batchIgramWizard::makeReviewAvi = 0;
 QString batchIgramWizard::reviewFileName;
 QCheckBox *batchIgramWizard::autoOutlineCenter = 0;
-QCheckBox *batchIgramWizard::autoOutlineOutside = 0;
+//QCheckBox *batchIgramWizard::autoOutlineOutside = 0;
 
 batchIgramWizard::batchIgramWizard(const QStringList &files, QWidget *parent, Qt::WindowFlags flags) :
     QWizard(parent, flags),
@@ -250,9 +250,7 @@ void batchIntro::on_filter(bool flag){
         }
     }
 }
-bool batchIntro::shouldFilterFile(double rms){
-    return (filterFile && rms > filterRms);
-}
+
 bool batchIntro::shouldFilterWavefront(double rms){
     return (filterWavefront && rms > filterRms);
 }

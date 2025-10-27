@@ -18,7 +18,6 @@
 #include "dftarea.h"
 #include "ui_dftarea.h"
 #include "dfttools.h"
-#include "vortex.h"
 #include <queue>
 #include "punwrap.h"
 #include "zernikeprocess.h"
@@ -1177,7 +1176,7 @@ void DFTArea::doPSIstep3(){
 
 
 }
-#include "psiresizeimagesdlg.h"
+
 cv::Mat DFTArea::PSILoadFullImages(){
     int cnt = 0;
     cv::Mat data;

@@ -17,7 +17,6 @@
 ****************************************************************************/
 #include "dfttools.h"
 #include "ui_dfttools.h"
-#include "vortex.h"
 #include <QSettings>
 #include "settings2.h"
 #include "dftarea.h"

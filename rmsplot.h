@@ -8,7 +8,6 @@
 #include <QObject>
 
 class QwtPlotCurve;
-class astigZoomer;
 class myPlotPicker;
 class rmsPlot : public QwtPlot
 {
