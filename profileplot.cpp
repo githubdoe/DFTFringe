@@ -198,7 +198,13 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
        // new QwtCompassMagnetNeedle( QwtCompassMagnetNeedle::ThinStyle ) );
     compass->setValue( 270 );
     compass->setOrigin( -90 );
-    connect(compass,&QwtAbstractSlider::valueChanged,this ,&ProfilePlot::angleChanged);
+    
+    // Using the old SIGNAL/SLOT syntax because problems with QWT.
+    // Qt is not able to match signal at runtime even if compile time checks all passed.
+    // ChatGPT tells it might be an ABI problem with QWT library but I (JST) have been unable to fix for now (2025-10-20).
+    connect(compass, SIGNAL(valueChanged(double)), this ,SLOT(angleChanged(double)));
+    //connect(compass,&QwtAbstractSlider::valueChanged,this ,&ProfilePlot::angleChanged);
+    
     connect(m_tools, &ContourTools::newDisplayErrorRange,
             this, &ProfilePlot::newDisplayErrorRange);
     connect(m_tools, &ContourTools::contourZeroOffsetChanged, this, &ProfilePlot::zeroOffsetChanged);
