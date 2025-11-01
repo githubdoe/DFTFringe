@@ -87,7 +87,7 @@ QImage cvMatToImage(cv::Mat out){
 IgramArea::IgramArea(QWidget *parent, void *mw)
     : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0),
       zoomIndex(1),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
-      m_edgeMode(false), m_zoomMode(NORMALZOOM),m_current_boundry(OutSideOutline)
+      m_zoomMode(NORMALZOOM),m_current_boundry(OutSideOutline)
 {
     leftMargin = 0;
     searchOutlineScale = 1.;
@@ -137,7 +137,7 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomIn()));
     shortcut = new QShortcut(QKeySequence::ZoomOut, this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomOut()));
-    shortcut = new QShortcut(QKeySequence("1"), this);
+    shortcut = new QShortcut(QKeySequence("e"), this);
     QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(edgeMode()));
 
     connect(colorChannel::get_instance(),SIGNAL(useChannelsChanged()), this, SLOT(colorChannelChanged()));
@@ -179,8 +179,9 @@ void IgramArea::generateSimIgram()
 }
 
 void IgramArea::edgeMode(){
-    m_edgeMode = !m_edgeMode;
-    update();
+
+    setZoomMode(EDGEZOOM);
+
 }
 
 void IgramArea::DrawSimIgram(void){

@@ -63,6 +63,7 @@ public:
     bool zoomed;
     bool m_showSlopeError;
 
+
     double slopeLimitArcSec;
     void setDefocusValue(double val);
     void setDefocusWaveFront( cv::Mat_<double> wf);
@@ -89,19 +90,24 @@ public slots:
     void populate();
     void showCorrection();
     void make_correction_graph();
+    void showXPercent();
+    void showXInches();
+    void showXMM();
     //QPolygonF createZernProfile(wavefront *wf);
 private:
 
     void updateGradient();
+    void saveXscaleSettings();
     bool dragging;
     QPoint startPos;
     QString offsetType;
     QwtCompass *compass;
     QCheckBox *showSlopeError;
-    QPushButton *showPercentCorrection;
+
     QDoubleSpinBox *slopeLimitSB;
     double m_defocusValue;
-
+    bool m_displayPercent = false;
+    bool m_displayInches = false;
 private:
     Ui::ProfilePlot *ui;
     bool m_defocus_mode;

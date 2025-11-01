@@ -493,11 +493,10 @@ void  pixelStats::updateHisto(){
     ui->histo->detachItems( QwtPlotItem::Rtti_PlotCurve);
     ui->histo->detachItems( QwtPlotItem::Rtti_PlotMarker);
     ui->histo->detachItems(QwtPlotItem::Rtti_PlotItem);
-    // Quantize the hue to 30 levels
-    // and the saturation to 32 levels
-    int hbins = 1000, sbins = 32;
-    int histSize[] = {hbins, sbins};
-    // hue varies from 0 to 179, see cvtColor
+
+    int hbins = 1000;
+    int histSize[] = {hbins};
+
 
 
     cv::Mat hist;

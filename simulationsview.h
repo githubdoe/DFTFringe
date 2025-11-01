@@ -23,6 +23,7 @@
 #include <opencv2/opencv.hpp>
 #include <QTimer>
 #include <QtDataVisualization/Q3DSurface>
+#include "startestmoviedlg.h"
 class arcSecScaleDraw;
 using namespace QtDataVisualization;
 namespace Ui {
@@ -53,6 +54,7 @@ private:
     Q3DSurface *m_PSF_3Dgraph;
     double dX;  // pupil sample size based on mirror size in wave front.
     double dF;  // psf sample size;
+    startestMovieDlg *m_movieDlg;
 
     void mtf(cv::Mat magPsf, QString txt, QColor color);
     void initMTFPlot();
@@ -60,6 +62,7 @@ private:
     void make3DPsf(cv::Mat surface);
 public slots:
         void on_MakePB_clicked();
+        void makeFrame(double wave, startestMovieDlg * dlg);
 private slots:
 
     void on_defocusSB_valueChanged(double);

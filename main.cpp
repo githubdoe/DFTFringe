@@ -68,6 +68,7 @@ static int myCvErrorCallback( int /*status*/, const char* /*func_name*/,
 
 int main(int argc, char *argv[])
 {   
+   // QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     // Allow secondary instances
     SingleApplication app( argc, argv, true );
 
