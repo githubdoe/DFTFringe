@@ -23,9 +23,16 @@
 #include <opencv2/opencv.hpp>
 #include <QTimer>
 #include <QtDataVisualization/Q3DSurface>
+
 #include "startestmoviedlg.h"
+
 class arcSecScaleDraw;
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+//keep compatiblity with Qt5
 using namespace QtDataVisualization;
+#endif
+
 namespace Ui {
 class SimulationsView;
 }
@@ -56,10 +63,11 @@ private:
     double dF;  // psf sample size;
     startestMovieDlg *m_movieDlg;
 
-    void mtf(cv::Mat magPsf, QString txt, QColor color);
+    void saveImageNamed(QString fn);
+    void mtf(const cv::Mat &magPsf, const QString &txt, QColor color);
     void initMTFPlot();
 
-    void make3DPsf(cv::Mat surface);
+    void make3DPsf(const cv::Mat &surface);
 public slots:
         void on_MakePB_clicked();
         void makeFrame(double wave, startestMovieDlg * dlg);
@@ -73,9 +81,10 @@ private slots:
 
     void on_FFTSizeSB_valueChanged(int val);
 
+
     void showContextMenu(const QPoint &pos);
 
-    void saveImage(QString fn = "");
+    void saveImage(QString fname = "");
 
     void on_film_clicked();
 

@@ -44,6 +44,7 @@
 #include <QPointF>
 #include "surfacegraph.h"
 enum configRESPONSE { YES, NO, ASK};
+enum AutoInvertMode {invNOTSET, invMANUAL, invCONIC, invINSIDE, invOUTSIDE};
 struct textres {
     QTextEdit *Edit;
     QList<QString> res;
@@ -70,14 +71,14 @@ public:
     void processSmoothing();
     void saveAllWaveFrontStats();
     void SaveWavefronts(bool saveNulled);
-    void writeWavefront(QString fname, wavefront *wf, bool saveNulled);
+    void writeWavefront(const QString &fname, wavefront *wf, bool saveNulled);
     void useDemoWaveFront();
     void showUnwrap();
     void initWaveFrontLoad();
-    void averageWavefrontFiles(QStringList files);
+    void averageWavefrontFiles(const QStringList &files);
     void downSizeWf(wavefront *wf);
     void process(int wavefront_index, SurfaceManager *sm);
-    wavefront *readWaveFront(QString fileName);
+    wavefront *readWaveFront(const QString &fileName);
     inline wavefront *getCurrent(){
         if (m_wavefronts.size() == 0)
             return 0;
@@ -110,7 +111,7 @@ public:
     void average(QList<wavefront *> wfList);
     void subtractWavefronts();
 
-    bool m_askAboutReverse;
+    AutoInvertMode m_inverseMode;
     bool m_ignoreInverse;
     bool m_surface_finished;
     configRESPONSE diamResp;
@@ -136,6 +137,9 @@ private:
     explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
                    contourView *contourView = 0, SurfaceGraph *glPlot = 0, metricsDisplay *mets = 0);
     textres Phase2(QList<rotationDef *> list, QList<wavefront *> inputs, int avgNdx, int Width, QPrinter &printer);
+    void changeWavelength(wavefront *wf, double wavelength);
+    void flipHorizontal(wavefront *wf);
+    void flipVertical(wavefront *wf);
 
 signals:
     void currentNdxChanged(int);
@@ -145,31 +149,25 @@ signals:
     void progress(int);
     void diameterChanged(double);
     void rocChanged(double);
-    void nameChanged(QString, QString);
+    void nameChanged(const QString &, const QString &);
     void showTab(int);
     void enableControls(bool);
 private slots:
     void waveFrontClickedSlot(int ndx);
-    void wavefrontDClicked(const QString & name);
     void centerMaskValue(int val);
     void outsideMaskValue(int val);
     void surfaceSmoothGBEnabled(bool b);
     void surfaceSmoothGBValue(double value);
     void computeZerns();
     void surfaceGenFinished();
-    void backGroundUpdate();
     void deleteWaveFronts(QList<int> list);
-    void average(QList<int> list);
-    void transfrom(QList<int> list);
+    void averageWavefrontIndices(QList<int> list);
+    void transfrom(const QList<int> &list);
     void filter();
-    void saveAllContours();
     void enableTools();
     void averageComplete(wavefront *wft);
     void outputLambdaChanged(double val);
     void resize(wavefront * wf, int size);
-    void changeWavelength(wavefront *wf, double wavelength);
-    void flipHorizontal(wavefront *wf);
-    void flipVertical(wavefront *wf);
     void resizeW(int size);
     void changeWavelength(double wavelength);
     void flipHorizontal();
@@ -179,10 +177,10 @@ private slots:
 public slots:
     void rotateThese(double angle, QList<int> list);
     void createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
-                                   CircleOutline center, QString name,
+                                   CircleOutline center, const QString &name,
                                    QVector<std::vector<cv::Point> > polyArea= QVector<std::vector<cv::Point> >());
     void invert(QList<int> list);
-    void wftNameChanged(int, QString);
+    void wftNameChanged(int, const QString&);
     void showAllContours();
     void computeStandAstig(define_input *wizPage, QList<rotationDef *>);
     void ObstructionChanged();
@@ -191,6 +189,9 @@ public slots:
     void memoryLow();
     void defocusChanged();
     void tiltAnalysis();
+    void saveAllContours();
+    void backGroundUpdate();
+    void wavefrontDClicked(const QString & name);
 };
 
 

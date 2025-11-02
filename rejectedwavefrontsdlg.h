@@ -12,7 +12,7 @@ class rejectedWavefrontsDlg : public QDialog
     Q_OBJECT
 
 public:
-    explicit rejectedWavefrontsDlg(QStringList list, QWidget *parent = 0);
+    explicit rejectedWavefrontsDlg(const QStringList &list, QWidget *parent = 0);
     ~rejectedWavefrontsDlg();
 
 private:

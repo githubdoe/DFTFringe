@@ -20,6 +20,9 @@
 
 #include <QDockWidget>
 #include <QTimer>
+
+class ContourPlot;
+
 namespace Ui {
 class ContourTools;
 }
@@ -31,7 +34,7 @@ class ContourTools : public QDockWidget
 public:
     explicit ContourTools(QWidget *parent = 0);
     ~ContourTools();
-    void connectTo(QWidget *view);
+    void connectTo(ContourPlot *view);
     double m_interval;
     void enablTools(bool b);
     double m_min;
@@ -56,9 +59,9 @@ private slots:
     void setWaveRange(double val);
     void on_ColorMapCB_activated(int index);
 
-    void on_zeroOffsetCB_activated(const QString &arg1);
+    void on_zeroOffsetCB_textActivated(const QString &arg1);
 
-    void on_colorRangeCB_activated(const QString &arg1);
+    void on_colorRangeCB_textActivated(const QString &arg1);
 
     void on_errorRangeSpin_valueChanged(double arg1);
 

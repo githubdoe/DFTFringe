@@ -5,6 +5,7 @@
 #include <qwt_plot_curve.h>
 #include <qwt_plot_grid.h>
 #include <QMessageBox>
+#include <QPen>
 #include <qwt_scale_draw.h>
 #include <qwt_legend.h>
 #include <qwt_plot_zoomer.h>
@@ -18,7 +19,7 @@ public:
     outlineZoomer(outlineStatsDlg *dlg, QWidget *canvas, QwtPlot * plot ):
         QwtPlotZoomer( canvas ), mPlot(plot), m_outlines(*dlg)
     {
-        setRubberBandPen( QColor( Qt::lightGray ) );
+        setRubberBandPen( QPen( Qt::lightGray ) );
         setTrackerMode( QwtPlotPicker::AlwaysOn );
     }
 
@@ -96,7 +97,7 @@ QVector<int> radiusHisto(const QVector<double>& dataQVect, double *minRad, int &
     return h;
 }
 
-outlineStatsDlg::outlineStatsDlg(QStringList names, QWidget *parent) :
+outlineStatsDlg::outlineStatsDlg(const QStringList &names, QWidget *parent) :
     QDialog(parent), m_names(names),
     ui(new Ui::outlineStatsDlg)
 {
@@ -278,7 +279,6 @@ void outlineStatsDlg::on_pushButton_clicked()
                     break;
                 }
                 outside = readCircle(file);
-                CircleOutline sideLobe = readCircle(file);
 
                 if ((file.tellg() > 0) && (fsize > file.tellg())) {
                     if (file.peek() != 'P'){

@@ -222,8 +222,8 @@ cv::Mat SimulationsView:: computeStarTest(cv::Mat surface, int pupil_size, doubl
     int nx = surface.size().width;//pupil_size;
     int ny = surface.size().height;
 
-    cv::Mat tmp[] = {cv::Mat::zeros(Size(nx,ny),CV_64FC1)
-                    ,cv::Mat::zeros(Size(nx,ny),CV_64FC1)};
+    cv::Mat tmp[] = {cv::Mat::zeros(cv::Size(nx,ny),CV_64FC1)
+                    ,cv::Mat::zeros(cv::Size(nx,ny),CV_64FC1)};
 
     for (int y = 0; y < ny; ++y){
         for (int x = 0; x < nx; ++x){
@@ -252,8 +252,8 @@ cv::Mat SimulationsView:: computeStarTest(cv::Mat surface, int pupil_size, doubl
     cv::resize(tmp[1],tmp[1],cv::Size(padSize,padSize),cv::INTER_AREA);
 
 
-    cv::Mat in[] = {cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)
-                    ,cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)};
+    cv::Mat in[] = {cv::Mat::zeros(cv::Size(pupil_size,pupil_size),CV_64FC1)
+                    ,cv::Mat::zeros(cv::Size(pupil_size,pupil_size),CV_64FC1)};
 
     tmp[0].copyTo(in[0](cv::Rect(0,0,tmp[0].cols,tmp[0].cols)));
     tmp[1].copyTo(in[1](cv::Rect(0,0,tmp[0].cols,tmp[0].cols)));
@@ -264,7 +264,7 @@ cv::Mat SimulationsView:: computeStarTest(cv::Mat surface, int pupil_size, doubl
     dft(complexIn,out);
     shiftDFT(out);
     //cv::flip(out,out,0);      // needs work.
-    Mat planes[2];
+    cv::Mat planes[2];
     split(out, planes);
     magnitude(planes[0], planes[1], planes[0]);
 
@@ -348,20 +348,21 @@ void etoxplusy(cv::Mat data)
         {
             if (((j + i) & 0x01) == 1)
             {
-                data.at<Vec2d>(i,j)[0] *= -1.;
-                data.at<Vec2d>(i,j)[1]= -1.;
+                data.at<cv::Vec2d>(i,j)[0] *= -1.;
+                data.at<cv::Vec2d>(i,j)[1]= -1.;
 
             }
         }
     }
 }
-void SimulationsView::mtf(cv::Mat star, QString txt, QColor color){
+
+void SimulationsView::mtf(const cv::Mat &star, const QString &txt, QColor color){
     cv::Mat planes[2];
     cv::Mat mtfIn, mtfOut, mtfMag;
     split(star,planes);
     cv::magnitude(planes[0],planes[1], planes[0]);
     cv::pow(planes[0],2,planes[0]);
-    planes[1] = Scalar(0.);
+    planes[1] = cv::Scalar(0.);
     cv::Mat in;
     merge(planes,2,in);
     shiftDFT(in);
@@ -447,7 +448,7 @@ cv::Mat make_obstructionMask(cv::Mat mask){
 
 
 //3D psf
-void SimulationsView::make3DPsf(cv::Mat surface){
+void SimulationsView::make3DPsf(const cv::Mat &surface){
 
     int nx = surface.size[0];
     int start = nx/2 - nx/4;

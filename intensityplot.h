@@ -27,7 +27,7 @@ Q_OBJECT
 public:
     intensityPlot(QWidget *parent = NULL);
     virtual ~intensityPlot() {}
-    void setSurface(cv::Mat imgMat);
+    void setSurface(const cv::Mat &imgMat);
     virtual void resizeEvent( QResizeEvent * );
     void showRed(bool);
     void showBlue(bool);

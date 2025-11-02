@@ -119,6 +119,6 @@ void metricsDisplay::on_sphericalPb_pressed()
     }
     emit recomputeZerns();
 }
-void metricsDisplay::setZernTitle(QString title){
+void metricsDisplay::setZernTitle(const QString &title){
     ui->zernTitle->setText(title);
 }

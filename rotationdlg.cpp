@@ -20,7 +20,7 @@
 #include <opencv2/opencv.hpp>
 #include <qsettings.h>
 
-RotationDlg::RotationDlg( QList<int> list, QWidget *parent) :
+RotationDlg::RotationDlg( const QList<int> &list, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RotationDlg), list(list)
 {

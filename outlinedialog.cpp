@@ -2,7 +2,6 @@
 #include "ui_outlinedialog.h"
 #include <QSettings>
 #include <QDebug>
-#include <QDesktopWidget>
 #include <QMessageBox>
 #include <QShortcut>
 #include <QMouseEvent>
@@ -43,17 +42,17 @@ outlineDialog::outlineDialog(double x, double y, double rad, QWidget *parent) :
     ui->showEdgePixelsCB->blockSignals(false);
     hideSearchcontrole(true);
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Down), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftDown()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::shiftDown);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Up), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftUp()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::shiftUp);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Left), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftLeft()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::shiftLeft);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Right), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(shiftRight()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::shiftRight);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Minus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(decrease()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::decrease);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(increase()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &outlineDialog::increase);
     //ui->display->resize(QSize(height - 100, height - 100));
 }
 void outlineDialog::shiftDown(){
@@ -101,7 +100,7 @@ outlineDialog::~outlineDialog()
 }
 
 
-void outlineDialog::updateDisplay(cv::Mat img){
+void outlineDialog::updateDisplay(const cv::Mat &img){
 
     QImage tmp = QImage((uchar*)img.data,
                         img.cols,
@@ -113,7 +112,7 @@ void outlineDialog::updateDisplay(cv::Mat img){
                                                                                   Qt::KeepAspectRatio));
 }
 
-void outlineDialog::setImage(cv::Mat img){
+void outlineDialog::setImage(const cv::Mat &img){
     cv::Mat tmp;
     img.convertTo(tmp, CV_8UC1);
     cv::cvtColor(tmp,m_igram, cv::COLOR_GRAY2RGB);

@@ -25,9 +25,9 @@ settingsIgramImportConfig::~settingsIgramImportConfig()
 
 void settingsIgramImportConfig::on_browse_clicked()
 {
-    QSettings set;
-    QString defaultPath = set.value("lastPath",".").toString();
-    QString path = set.value("importIgramPath",defaultPath).toString();
+    //QSettings set;
+    //QString defaultPath = set.value("lastPath",".").toString();
+    //QString path = set.value("importIgramPath",defaultPath).toString(); //unused
     QString directory = QFileDialog::getExistingDirectory(
         0, "Choose directory", "",
         QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);

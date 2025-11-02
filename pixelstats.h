@@ -52,12 +52,12 @@ public:
     virtual bool eventFilter( QObject *, QEvent * );
 
     virtual bool event( QEvent * );
-Q_SIGNALS:
+signals:
     void markerMoved();
 
 private:
-    void select( const QPoint & );
-    void move( const QPoint & );
+    void select( QPoint  );
+    void move( QPoint  );
     void release();
 
     void shiftCurveCursor();

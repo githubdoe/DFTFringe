@@ -13,8 +13,8 @@ jitterOutlineDlg::jitterOutlineDlg(QWidget *parent) :
 jitterOutlineDlg *jitterOutlineDlg::getInstance(MainWindow *mw){
     if (m_instance ==0){
         m_instance=  new jitterOutlineDlg;
-        connect(m_instance->ui->startPb, SIGNAL(clicked(bool)), mw,SLOT(startJitter()));
-        connect(m_instance->ui->StopPb, SIGNAL(clicked(bool)),mw,SLOT(stopJitter()));
+        connect(m_instance->ui->startPb, &QAbstractButton::clicked, mw,&MainWindow::startJitter);
+        connect(m_instance->ui->StopPb, &QAbstractButton::clicked,mw,&MainWindow::stopJitter);
     }
     return m_instance;
 
@@ -24,7 +24,7 @@ jitterOutlineDlg::~jitterOutlineDlg()
 {
     delete ui;
 }
-void jitterOutlineDlg::status(QString status){
+void jitterOutlineDlg::status(const QString &status){
     ui->status->setText(status);
 }
 

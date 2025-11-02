@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
   workflow_call:
 
+env:
+  QWT_version: 6.3.0
+
 jobs:
   build-linux-clazy:
     # This build is only done on one Linux version as it is here only to get the warnings from clazy.
@@ -15,9 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt update
-      - run: sudo apt install -y clazy apt-utils build-essential wget qt5-qmake qt5-qmake-bin qt5-assistant qtbase5-dev qtmultimedia5-dev libqt5charts5 libqt5charts5-dev libqt5multimedia* libqt5datavisualization5-dev libqt5datavisualization5 libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev
-      - run: qmake -spec linux-clang QMAKE_CXX="clazy"
-      #- uses: ammaraskar/gcc-problem-matcher@master  #TODO 2023/08/05 re-enable problem matcher when all warnings are fixed
+      - run: sudo apt install -y clazy apt-utils build-essential wget qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev
+      - run: wget -O qwt-${{env.QWT_version}}.zip https://sourceforge.net/projects/qwt/files/qwt/${{env.QWT_version}}/qwt-${{env.QWT_version}}.zip/download?use_mirror=pilotfiber
+      - run: 7z x qwt-${{env.QWT_version}}.zip
+      - run: cd qwt-${{env.QWT_version}} ; /usr/lib/qt6/bin/qmake
+      - run: cd qwt-${{env.QWT_version}} ; make -j4
+      - run: cd qwt-${{env.QWT_version}} ; sudo make install
+      - run: /usr/lib/qt6/bin/qmake  -spec linux-clang QMAKE_CXX="clazy"
+      - uses: ammaraskar/gcc-problem-matcher@master
       # ignore noisy dirs from QT files itself
       # all level 1 checks but ignore clazy-no-connect-by-name
       # no parallel make with clazy to not mess log

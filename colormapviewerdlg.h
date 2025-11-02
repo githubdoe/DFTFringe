@@ -34,7 +34,7 @@ public:
     ~colorMapViewerDlg();
     QString m_selection;
 
-void genList(QString path);
+void genList(const QString &path);
 private slots:
     void on_browsePb_clicked();
 

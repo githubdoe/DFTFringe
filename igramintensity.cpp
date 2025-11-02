@@ -22,6 +22,8 @@
 #include <qwt_plot_renderer.h>
 #include <QSettings>
 #include <QLabel>
+#include <QPainter>
+
 igramIntensity::igramIntensity(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::igramIntensity)
@@ -33,7 +35,7 @@ igramIntensity::~igramIntensity()
 {
     delete ui;
 }
-void igramIntensity::setIgram(cv::Mat img){
+void igramIntensity::setIgram(const cv::Mat &img){
 
     ui->plot->setSurface(img);
 

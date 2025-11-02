@@ -28,7 +28,7 @@ public slots:
     QImage *render();
 
 private slots:
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
 
     void on_gammaSb_valueChanged(double arg1);
 
@@ -67,8 +67,6 @@ private slots:
     void on_lateralOffset_valueChanged(int arg1);
 
     void on_SaveImageCB_clicked(bool checked);
-
-    void on_saveOnlyFouccault_clicked(bool checked);
 
     void saveRonchiImage();
 

@@ -16,6 +16,7 @@
 #include <qwt_plot_canvas.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_directpainter.h>
+#include <qwt_text.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -123,7 +124,7 @@ bool CanvasPicker::eventFilter( QObject *object, QEvent *event )
 // Select the point at a position. If there is no point
 // deselect the selected point
 
-void CanvasPicker::select( const QPoint &pos )
+void CanvasPicker::select( QPoint pos )
 {
     QwtPlotMarker *mark = NULL;
     double dist = 10e10;
@@ -179,7 +180,7 @@ void CanvasPicker::select( const QPoint &pos )
 
 
 // Move the selected point
-void CanvasPicker::move( const QPoint &pos )
+void CanvasPicker::move( QPoint pos )
 {
     if ( !d_selectedMarker )
         return;
@@ -210,7 +211,7 @@ void CanvasPicker::move( const QPoint &pos )
     plot()->replot();
     plotCanvas->setPaintAttribute( QwtPlotCanvas::ImmediatePaint, false );
 
-    emit(markerMoved());
+    emit markerMoved();
 }
 
 
@@ -282,7 +283,7 @@ pixelStats::pixelStats(QWidget *parent) :
     ui->verticalLayout->addWidget(scrollArea);
     scrollArea->setWidgetResizable(true);
     CanvasPicker *cp = new CanvasPicker(ui->histo);
-    connect(cp,SIGNAL(markerMoved()), this,SLOT(bounds_valueChanged()));
+    connect(cp,&CanvasPicker::markerMoved, this,&pixelStats::bounds_valueChanged);
 
     setWindowFlags(    Qt::WindowStaysOnTopHint);
 
@@ -494,10 +495,8 @@ void  pixelStats::updateHisto(){
     ui->histo->detachItems( QwtPlotItem::Rtti_PlotMarker);
     ui->histo->detachItems(QwtPlotItem::Rtti_PlotItem);
 
-    int hbins = 1000;
+    int hbins = 1000; // make histogram with 1000 bins
     int histSize[] = {hbins};
-
-
 
     cv::Mat hist;
 
@@ -509,7 +508,7 @@ void  pixelStats::updateHisto(){
 
     float hranges[] = { (float)m_wf->min, (float)m_wf->max};
     const float* ranges[] = { hranges };
-    int channels[] = {0, 1};
+    int channels[] = { 0 };
     cv::calcHist( &values, 1, channels, m_wf->workMask, // do not use mask
              hist, 1, histSize, ranges,
              true, // the histogram is uniform

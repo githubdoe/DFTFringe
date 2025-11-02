@@ -25,67 +25,16 @@
 #include "mainwindow.h"
 #include "armadillo"
 #include <stdlib.h>
+
+//TODO remove this if possible and use a class. It's undocumented, difficult to undesrstand and maintain
 extern std::vector<bool> zernEnables;
-extern int Zw[];
-extern double BestSC;
-double zernike(int n, double x, double y);
-void gauss_jordan(int n, double* Am, double* Bm);
-void ZernikeSmooth(Mat wf, Mat mask);
+//double zernike(int n, double x, double y);
+//void gauss_jordan(int n, double* Am, double* Bm);
 
-typedef struct  {
-    std::vector<bool> enables;
-    std::vector<double> norms;
-    int maxOrder;
-    int noOfTerms;
-    std::vector<int> rowIndex;
-    std::vector<int> colIndex;
-    arma::mat zernsArSample;
-    arma::mat rhoTheta;
-    int widthOfMatrix;
-    double radius;
-    double centerX;
-    double centerY;
-    double insideRadius;
-    bool valid;
-} zernikeData;
 
-class zernProcess : public QObject
-{
-    Q_OBJECT
-private:
-    static zernProcess *m_Instance;
-    bool m_needsInit;
-
-public:
-    zernikeData m_zData;
-
-    explicit zernProcess(QObject *parent = 0);
-    static zernProcess *get_Instance();
-    void unwrap_to_zernikes(wavefront &wf, int zterms = Z_TERMS);
-    cv::Mat null_unwrapped(wavefront&wf,  std::vector<double> zerns, std::vector<bool> enables,int start_term =0, int last_term = Z_TERMS);
-    void ZernFitWavefront( wavefront &wf);
-    void initGrid(wavefront &wf, int maxOrder);
-    void initGrid(int width, double radius, double cx, double cy, int maxOrder, double inside = 0);
-    void unwrap_to_zernikes(zern_generator *zg, cv::Mat wf, cv::Mat mask);
-    cv::Mat makeSurfaceFromZerns(int border, bool doColor);
-    //arma::mat rhotheta( int width, double radius, double cx, double cy,
-                                       //double insideRad, const wavefront *wf = 0);
-    //arma::mat zpmC(arma::rowvec rho, arma::rowvec theta, int maxorder);
-    //arma::mat zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder=12);
-    void fillVoid(wavefront &wf);
-    void setMaxOrder(int n);
-    int getNumberOfTerms();
-    int m_abc;
-    mirrorDlg *md;
-    MainWindow *mw;
-    //arma::mat m_zerns;
-    QVector<double> m_norms;
-signals:
-void statusBarUpdate(QString, int);
-public slots:
-
-};
-
+void dumpArma(const arma::mat &mm, const QString &title = "",
+            QVector<QString> colHeading = QVector<QString>(0),
+            QVector<QString> RowLable = QVector<QString>(0));
 
 class zernikeProcess : public QObject
 {
@@ -116,7 +65,6 @@ public:
     arma::mat rhotheta( int width, double radius, double cx, double cy, const wavefront *wf = 0);
 
     arma::mat zpmC(arma::rowvec rho, arma::rowvec theta, int maxorder);
-    arma::mat zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder=12);
     void fillVoid(wavefront &wf);
     void setMaxOrder(int n);
     int getNumberOfTerms();
@@ -137,35 +85,5 @@ public slots:
 
 };
 
-class zernikePolar : public QObject
-{
-    Q_OBJECT
-public:
-    explicit zernikePolar(){};
-    static zernikePolar *get_Instance();
-    void init(double rho, double theta);
-    double zernike(int z, double rho, double theta);
-private:
-     static zernikePolar *m_instance;
-     double rho2;
-     double rho3;
-     double rho4;
-     double rho5;
-     double rho6;
-     double rho8;
-     double rho10;
-     double costheta;
-     double sintheta;
-     double cos2theta;
-     double sin2theta;
-     double cos3theta;
-     double sin3theta;
-     double cos4theta;
-     double sin4theta;
-     double cos5theta;
-     double sin5theta;
-};
-
-void debugZernRoutines();
 
 #endif // ZERNIKEPROCESS_H

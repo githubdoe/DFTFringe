@@ -55,13 +55,13 @@ bool myPlotPicker::eventFilter( QObject *object, QEvent *event )
     return QObject::eventFilter( object, event );
 }
 
-void myPlotPicker::select(const QPointF &p){
+void myPlotPicker::select(QPointF p){
     QString s = find(p);
     if (s == "")
         return;
-    emit selected(s);
+    emit mySelected(s);
 }
-QString myPlotPicker::find(const QPointF &p)const{
+QString myPlotPicker::find(QPointF p)const{
 
     QString s("");
     const QwtScaleMap xMap = m_plot->canvasMap(2);

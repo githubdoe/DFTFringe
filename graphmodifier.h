@@ -40,7 +40,11 @@
 #include <QtCore/QPointer>
 #include <QtCore/QPropertyAnimation>
 #include "percentCorrectionSurface.h"
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+//keep compatiblity with Qt5
 using namespace QtDataVisualization;
+#endif
 
 class GraphModifier : public QObject
 {
@@ -63,7 +67,7 @@ public:
     void setReverseValueAxis(int enabled);
     void setReflection(bool enabled);
 
-public Q_SLOTS:
+public slots:
     void changeRange(int range);
     void changeStyle(int style);
     void changeSelectionMode(int selectionMode);
@@ -75,7 +79,7 @@ public Q_SLOTS:
     void setAxisTitleFixed(bool enabled);
     void zoomToSelectedBar();
 
-Q_SIGNALS:
+signals:
     void shadowQualityChanged(int quality);
     void backgroundEnabledChanged(bool enabled);
     void gridEnabledChanged(bool enabled);

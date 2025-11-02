@@ -44,7 +44,7 @@ signals:
     void zoomMe(bool);
 private slots:
     void on_doubleSpinBox_valueChanged(double arg1);
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
     void on_pushButton_pressed();
     void zoom();
 
@@ -54,8 +54,9 @@ private slots:
 
     void on_showRuler_clicked(bool checked);
 
-    void updateRuler();
     void on_LinkProfileCB_clicked(bool checked);
+public slots:
+    void updateRuler();
 
 private:
     Ui::contourView *ui;

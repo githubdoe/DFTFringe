@@ -1,9 +1,9 @@
 #include "settingsGeneral2.h"
 #include "ui_settingsgeneral2.h"
+#include "spdlog/spdlog.h"
 #include <QSettings>
 #include "contourrulerparams.h"
 #include <QMessageBox>
-#include "spdlog/spdlog.h"
 
 extern double outputLambda;
 
@@ -61,7 +61,7 @@ void SettingsGeneral2::updateContour(){
 
 void SettingsGeneral2::on_rulerParms_clicked(){
     ContourRulerParams dlg;
-    connect(&dlg, SIGNAL(updateParms()), this, SLOT(updateContour()));
+    connect(&dlg, &ContourRulerParams::updateParms, this, &SettingsGeneral2::updateContour);
     dlg.exec();
 
 }

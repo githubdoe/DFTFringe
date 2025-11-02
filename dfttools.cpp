@@ -17,9 +17,10 @@
 ****************************************************************************/
 #include "dfttools.h"
 #include "ui_dfttools.h"
-#include "vortex.h"
 #include <QSettings>
 #include "settings2.h"
+#include "dftarea.h"
+
 DFTTools::DFTTools(QWidget *parent) :
     QDockWidget(parent),
     ui(new Ui::DFTTools)
@@ -30,15 +31,15 @@ DFTTools::DFTTools(QWidget *parent) :
     ui->dftSizeSB->setValue(set.value("DFTSize", 640).toInt());
 
 }
-void DFTTools::connectTo(QWidget *view){
-    connect(view, SIGNAL(updateFilterSize(int)),this, SLOT(setCenterFilterValue(int)));
-    connect(ui->gammaSl, SIGNAL(valueChanged(int)), view, SLOT(gamma(int)));
+void DFTTools::connectTo(DFTArea *view){
+    connect(view, &DFTArea::updateFilterSize, this, &DFTTools::setCenterFilterValue);
+    connect(ui->gammaSl, &QSlider::valueChanged, view, &DFTArea::gamma);
 }
 DFTTools::~DFTTools()
 {
     delete ui;
 }
-void DFTTools::imageSize(QString txt){
+void DFTTools::imageSize(const QString &txt){
     ui->imageSize->setText(txt);
 }
 

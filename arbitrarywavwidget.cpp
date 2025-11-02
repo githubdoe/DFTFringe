@@ -45,16 +45,11 @@ void ArbitraryWavWidget::showPrepare() {
     update(); // redraw
 }
 
-void ArbitraryWavWidget::setMode(int _mode) {
-    mode = _mode;
-    update(); // redraw
-    }
-
 ArbitraryWavWidget::~ArbitraryWavWidget(){
     pts.empty();
 }
 
-bool comparePoints(const QPointF &a, const QPointF &b) {
+bool comparePoints(QPointF a, QPointF b) {
     return a.x() < b.x();
 }
 
@@ -754,7 +749,7 @@ void ArbitraryWavWidget::prepare(int size) {
             wf_array[index] = p.y;
         }
     }
-    
+
     // fill in leading points with first filled value
     int first_valid_entry;
     for(first_valid_entry=0; first_valid_entry<wf_array_size; first_valid_entry++)
@@ -762,7 +757,7 @@ void ArbitraryWavWidget::prepare(int size) {
             break;
     for (int i=0; i < first_valid_entry; i++)
         wf_array[i] = wf_array[first_valid_entry];
-    
+
     // now fill in trailing points with last filled value
     int last_valid_entry;
     for(last_valid_entry=wf_array_size-1; last_valid_entry>=0; last_valid_entry--)
@@ -770,7 +765,7 @@ void ArbitraryWavWidget::prepare(int size) {
             break;
     for (int i=last_valid_entry+1; i < wf_array_size; i++)
         wf_array[i] = wf_array[last_valid_entry];
-    
+
     // now fill in gaps with interpolated values
     for (int i=0; i<wf_array_size; i++) {
         if (wf_array[i] != empty_val)

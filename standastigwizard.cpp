@@ -17,12 +17,13 @@
 ****************************************************************************/
 #include "standastigwizard.h"
 #include "ui_standastigwizard.h"
+#include "spdlog/spdlog.h"
 #include <QtWidgets>
 #include <QDebug>
 #include <counterrotationdlg.h>
 #include <QString>
+#include <QRegularExpression>
 #include "surfacemanager.h"
-#include "spdlog/spdlog.h"
 
 QString AstigReportTitle = "";
 QString AstigReportPdfName = "stand.pdf";
@@ -35,7 +36,7 @@ standAstigWizard::standAstigWizard(SurfaceManager *sm, QWidget *parent, Qt::Wind
     setPage(Page_makeAverages, new makeAverages);
     setPage(Page_define_input, new define_input);
     define_input * di = dynamic_cast<define_input *>(page(Page_define_input));
-    connect(di, SIGNAL(computeStandAstig(define_input *,QList<rotationDef *>)), sm, SLOT(computeStandAstig(define_input *,QList<rotationDef *>)));
+    connect(di, &define_input::computeStandAstig, sm, &SurfaceManager::computeStandAstig);
 
     setStartId(Page_Intro);
     //setOption(HaveHelpButton, true);
@@ -167,14 +168,14 @@ void define_input::deleteSelected(){
 void define_input::changeRotation(){
 }
 
-void define_input::showContextMenu(const QPoint &pos)
+void define_input::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = listDisplay->mapToGlobal(pos);
 
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Erase",  this, SLOT(deleteSelected()));
+    myMenu.addAction("Erase",  this, &define_input::deleteSelected);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -188,12 +189,12 @@ define_input::define_input(QWidget *parent)
     setSubTitle(tr("Add each averaged wavefront for each rotation angle. Then Press Compute."));
     browsePb = new QPushButton("Add average Wavefront file to List");
     QString pdfNameStr = set.value("stand pdf file", "stand.pdf").toString();
-    connect(browsePb, SIGNAL(pressed()), this, SLOT(browse()));
+    connect(browsePb, &QAbstractButton::pressed, this, &define_input::browse);
     AstigReportTitle = mirrorDlg::get_Instance()->m_name;
     AstigReportPdfName = mirrorDlg::get_Instance()->getProjectPath() + "/" + pdfNameStr;
     title = new QLineEdit(AstigReportTitle);
     pdfName = new QPushButton(AstigReportPdfName);
-    connect(pdfName, SIGNAL(pressed()), this, SLOT(pdfNamesPressed()));
+    connect(pdfName, &QAbstractButton::pressed, this, &define_input::pdfNamesPressed);
     runpb = new QPushButton("Compute");
     runpb->setObjectName("Compute");
 
@@ -224,7 +225,7 @@ define_input::define_input(QWidget *parent)
                                    " }");
 
 
-    connect(runpb, SIGNAL(pressed()), this, SLOT(compute()));
+    connect(runpb, &QAbstractButton::pressed, this, &define_input::compute);
     QSettings settings;
     QString lastPath = settings.value("projectPath","").toString();
     basePath = new QLineEdit(settings.value("rotation base path",lastPath).toString());
@@ -237,7 +238,7 @@ define_input::define_input(QWidget *parent)
     else
         CWRb->setChecked(true);
 
-    connect(browsePath, SIGNAL(pressed()), this, SLOT(setBasePath()));
+    connect(browsePath, &QAbstractButton::pressed, this, &define_input::setBasePath);
 
 
 
@@ -262,9 +263,9 @@ define_input::define_input(QWidget *parent)
 //        set.setArrayIndex(i);
 //        listDisplay->addItem(set.value("item").toString());
 //    }
-    set.endArray();
-    connect(listDisplay, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+//    set.endArray();
+    connect(listDisplay, &QWidget::customContextMenuRequested, this,
+            &define_input::showContextMenu);
 
     l->addWidget(listDisplay,8,0,10,-1);
     l->addWidget(new QLabel("Report Title:"),18,0);
@@ -290,35 +291,49 @@ void define_input::compute(){
     }
     QSettings set;
     set.setValue("stand astig ccw",CCWRb->isChecked() );
-    set.beginWriteArray("stand astig removal files");
-    // save the listDisplay of files to process
-    for (int i = 0; i < listDisplay->count(); ++i) {
-        set.setArrayIndex(i);
-        set.setValue("item", listDisplay->item(i)->text());
-    }
-    set.endArray();
+//    set.beginWriteArray("stand astig removal files");
+//    // save the listDisplay of files to process
+//    for (int i = 0; i < listDisplay->count(); ++i) {
+//        set.setArrayIndex(i);
+//        set.setValue("item", listDisplay->item(i)->text());
+//    }
+//    set.endArray();
     AstigReportTitle = title->text();
     runpb->setText("Working");
     runpb->setEnabled(false);
     emit computeStandAstig( this, rotationList);
 }
 
-QString getNumberFromQString(const QString &xString)
-{
 
-  QStringList l = xString.split("/");
-  QString fn = l[l.size()-1];
-  QRegExp xRegExp("(\\d+([\\.p]\\d+)?)");
-  xRegExp.indexIn(fn);
-  QString c = xRegExp.cap();
-  c.replace("p",".");
-  if (c == ""){
-      xRegExp.indexIn(l[l.size()-2]);
-      c = xRegExp.cap();
-      c.replace("p",".");
-  }
-  return c;
+/**
+ * @brief Extracts a numeric value from a given QString, replacing 'p' with '.' for decimal representation.
+ *
+ * This function splits the input string by '/' and attempts to find a number (integer or decimal)
+ * in the last segment. If not found, it checks the second-to-last segment. The number can contain
+ * digits and may use 'p' as a decimal separator, which will be replaced by '.' in the output.
+ *
+ * @param xString The input QString from which to extract the number.
+ * @return QString The extracted number as a string, or an empty string if no number is found.
+ */
+QString getNumberFromQString(const QString &xString) {
+    QStringList l = xString.split("/");
+    QString fn = l[l.size()-1];
+    static const QRegularExpression xRegExp("(\\d+(?:[\\.p]\\d+)?)");
+    QRegularExpressionMatch match = xRegExp.match(fn);
+    QString c;
+    if(match.hasMatch()) {
+        c = match.captured(1).replace("p",".");
+    } else {
+        match = xRegExp.match(l[l.size()-2]);
+        if(match.hasMatch()) {
+            c = match.captured(1).replace("p",".");
+        } else {
+            c = "";
+        }
+    }
+    return c;
 }
+
 void define_input::browse(){
 
     QStringList fileNames = QFileDialog::getOpenFileNames(this,

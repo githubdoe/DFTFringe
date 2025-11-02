@@ -41,7 +41,7 @@
 #include <qwt_scale_draw.h>
 #include "opencv2/opencv.hpp"
 
-#define PITORAD  M_PI/180.
+#define DEGTORAD  M_PI/180.
 static double i_angle;
 
 class iSurfaceData: public QwtSyntheticPointData
@@ -50,9 +50,9 @@ class iSurfaceData: public QwtSyntheticPointData
 public:
     cv::Mat m_plane;
     int m_rad;
-    iSurfaceData(cv::Mat plane):
+    iSurfaceData(const cv::Mat &plane):
         QwtSyntheticPointData( plane.cols ),
-      m_plane(plane), m_rad(plane.cols/2),m_angle(90)
+      m_plane(plane), m_rad(plane.cols/2)
     {
 
     }
@@ -73,9 +73,8 @@ public:
 
     }
 
-
 private:
-    double m_angle;
+
 };
 
 bool intensityPlot::eventFilter( QObject *object, QEvent *event )
@@ -146,7 +145,12 @@ intensityPlot::intensityPlot(QWidget *parent):
         new QwtCompassMagnetNeedle( QwtCompassMagnetNeedle::ThinStyle ) );
     compass->setValue( 0 );
     compass->setOrigin( -90 );
-    connect(compass,SIGNAL(valueChanged(double)),this ,SLOT(angleChanged(double)));
+
+    // Using the old SIGNAL/SLOT syntax because problems with QWT.
+    // Qt is not able to match signal at runtime even if compile time checks all passed.
+    // ChatGPT tells it might be an ABI problem with QWT library but I (JST) have been unable to fix for now (2025-10-20).
+    connect(compass, SIGNAL(valueChanged(double)), this ,SLOT(angleChanged(double)));
+    //connect(compass,&QwtAbstractSlider::valueChanged,this ,&intensityPlot::angleChanged);
 
     populate();
     resize(QGuiApplication::primaryScreen()->availableSize() * 1./ 5.);
@@ -154,13 +158,13 @@ intensityPlot::intensityPlot(QWidget *parent):
 
 
 void intensityPlot::angleChanged(double a){
-    i_angle = (a * PITORAD - M_PI_2);
+    i_angle = (a * DEGTORAD - M_PI_2);
     replot();
 }
 
 
 
-void intensityPlot::setSurface(cv::Mat imgMat){
+void intensityPlot::setSurface(const cv::Mat &imgMat){
 
     m_img = imgMat;
     split(imgMat,planes);

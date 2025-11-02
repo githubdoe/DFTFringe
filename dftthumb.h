@@ -31,7 +31,7 @@ class dftThumb : public QDialog
 public:
     explicit dftThumb(QWidget *parent = 0);
     ~dftThumb();
-void setImage(QImage img);
+void setImage(const QImage &img);
 private:
     Ui::dftThumb *ui;
     double scale;

@@ -9,6 +9,7 @@
 #include <qwt_plot_grid.h>
 #include <qwt_plot_marker.h>
 #include <qwt_symbol.h>
+#include <qwt_text.h>
 #include <QSettings>
 #include "QLayout"
 #include "plotcolor.h"
@@ -46,7 +47,7 @@ nullVariationDlg::nullVariationDlg(QWidget *parent) :
     vLayout->addWidget(histo_plot);
     ui->histoPlot->setLayout(vLayout);
     qDebug() << ui->roc->text();
-    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_ComputeSim_clicked()));
+    connect(&m_guiTimer, &QTimer::timeout, this, &nullVariationDlg::on_ComputeSim_clicked);
     calculate();
 }
 
@@ -94,12 +95,12 @@ void nullVariationDlg::on_useMm_clicked(bool checked)
     on_useInch_clicked(!checked);
 }
 
-void nullVariationDlg::on_roc_textChanged(const QString )
+void nullVariationDlg::on_roc_textChanged(const QString &)
 {
         calculate();
 }
 
-void nullVariationDlg::on_diameter_textChanged(const QString)
+void nullVariationDlg::on_diameter_textChanged(const QString&)
 {
     calculate();
 }
@@ -119,7 +120,7 @@ void nullVariationDlg::on_diameterDelta_valueChanged(double val)
 }
 #include <qmap.h>
 #include <qwt_plot_histogram.h>
-QMap<double,int > histo(const QList<double> data, int bins){
+QMap<double,int > histo(const QList<double> &data, int bins){
     auto minma = std::minmax_element( data.begin(), data.end());
     double range = *minma.second - *minma.first;
     double histInterval = range/bins;
@@ -128,10 +129,10 @@ QMap<double,int > histo(const QList<double> data, int bins){
     {
         intervals[ *minma.first + histInterval * (i+1)] = 0;
     }
-    QVector<double> keys = intervals.keys().toVector();
+    const QList<double>& keys = intervals.keys();
     for (int i = 0; i < data.size(); ++i){
         for (int j = 0; j < bins; ++j){
-            if (data[i]<= keys[j]) {
+            if (data[i] <= keys[j]) {
                 ++intervals[keys[j]];
                 break;
             }

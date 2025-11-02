@@ -14,11 +14,11 @@ DEFINES += QAPPLICATION_CLASS=QApplication
 
 TEMPLATE = app
 
-QT += charts concurrent core datavisualization gui multimedia multimediawidgets network opengl widgets xml
+QT += charts concurrent core datavisualization gui network opengl widgets xml
 
 qtHaveModule(printsupport): QT += printsupport
 
-QMAKE_CXXFLAGS += -std=c++14
+QMAKE_CXXFLAGS += -std=c++17
 
 # disable qDebug() in release
 CONFIG( release, debug|release ) {
@@ -33,9 +33,9 @@ win32 {
     message("Using WINDOWS project configuration.")
 
     CONFIG( debug, debug|release ) {
-        LIBS += -L..\qwt-6.1.6\lib -lqwtd # debug
+        LIBS += -L..\qwt-6.3.0\lib -lqwtd # debug
     } else {
-        LIBS += -L..\qwt-6.1.6\lib -lqwt # release
+        LIBS += -L..\qwt-6.3.0\lib -lqwt # release
         CONFIG+=force_debug_info # keep debug infos (even in release build) to be able to link stacktrace address to actual function
         CONFIG+=separate_debug_info # separate debug infos into a .exe.debug to not grow the .exe
     }
@@ -43,18 +43,19 @@ win32 {
     # NOTE: RC_FILE is Windows only, breaks Mac (and Linux?) builds if it in their scope.
     RC_FILE = DFTFringe.rc
 
-    INCLUDEPATH += ..\qwt-6.1.6\src
+    INCLUDEPATH += ..\qwt-6.3.0\src
     INCLUDEPATH += ..\build_armadillo\tmp\include
     INCLUDEPATH += ..\build_openCV\install\include
 
     LIBS += -L..\build_lapack\bin -llibblas
     LIBS += -L..\build_lapack\bin -lliblapack
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs460
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4120
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4120
+    LIBS += -ldbghelp # for SetUnhandledExceptionFilter
 
 
     # This is for armadillo to not use wrapper. See https://gitlab.com/conradsnicta/armadillo-code#6-linux-and-macos-compiling-and-linking
@@ -67,7 +68,9 @@ unix: !mac {
     contains( CONFIG,debug ) { message("no extra debug libraries") }
 
     INCLUDEPATH += /usr/include/opencv4
-    INCLUDEPATH += /usr/include/qwt
+    INCLUDEPATH += /usr/local/qwt-6.3.0/include
+
+    QMAKE_RPATHDIR += /usr/local/qwt-6.3.0/lib
 
     LIBS += -larmadillo
     LIBS += -lGLU
@@ -77,8 +80,7 @@ unix: !mac {
     LIBS += -lopencv_highgui
     LIBS += -lopencv_imgcodecs
     LIBS += -lopencv_imgproc
-    LIBS += -lopencv_imgproc
-    LIBS += -lqwt-qt5
+    LIBS += -L/usr/local/qwt-6.3.0/lib -lqwt
 }
 
 # MAC ##############
@@ -141,17 +143,18 @@ RESOURCES += DFTResources.qrc
 
 TRANSLATIONS += dftfringe_fr.ts
 
-INCLUDEPATH += ./bezier ./SingleApplication
+INCLUDEPATH += ./bezier ./SingleApplication ./zernike
 
 SOURCES += SingleApplication/singleapplication.cpp \
     SingleApplication/singleapplication_p.cpp \
+    zernike/zapm.cpp \
     annulushelpdlg.cpp \
     arbitrarywavefronthelp.cpp \
     arbitrarywavwidget.cpp \
     astigpolargraph.cpp \
     astigscatterplot.cpp \
     astigstatsdlg.cpp \
-    astigzoomer.cpp \
+	  autoinvertdlg.cpp \
     averagewavefrontfilesdlg.cpp \
     batchigramwizard.cpp \
     bathastigdlg.cpp \
@@ -179,7 +182,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     filteroutlinesdlg.cpp \
     foucaultview.cpp \
     generatetargetdlg.cpp \
-    gplus.cpp \
     graphicsutilities.cpp \
     helpdlg.cpp \
     hotkeysdlg.cpp \
@@ -188,7 +190,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     imagehisto.cpp \
     intensityplot.cpp \
     jitteroutlinedlg.cpp \
-    lensdialog.cpp \
     lensetablemodel.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -214,17 +215,14 @@ SOURCES += SingleApplication/singleapplication.cpp \
     psfplot.cpp \
     psi_dlg.cpp \
     psiphasedisplay.cpp \
-    psiresizeimagesdlg.cpp \
     psitiltoptions.cpp \
     punwrap.cpp \
     regionedittools.cpp \
     rejectedwavefrontsdlg.cpp \
-    renamewavefrontdlg.cpp \
     reportdlg.cpp \
     reviewwindow.cpp \
     rmsplot.cpp \
     rotationdlg.cpp \
-    savewavedlg.cpp \
     settings2.cpp \
     settingsdebug.cpp \
     settingsdft.cpp \
@@ -236,7 +234,6 @@ SOURCES += SingleApplication/singleapplication.cpp \
     showallcontoursdlg.cpp \
     simigramdlg.cpp \
     simulationsview.cpp \
-    squareimage.cpp \
     standastigwizard.cpp \
     statsview.cpp \
     subtractwavefronatsdlg.cpp \
@@ -245,23 +242,20 @@ SOURCES += SingleApplication/singleapplication.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
     surfacemanager.cpp \
-    surfacepropertiesdlg.cpp \
     transformwavefrontdlg.cpp \
     unwraperrorsview.cpp \
     usercolormapdlg.cpp \
     userdrawnprofiledlg.cpp \
-    utilil.cpp \
-    videosetupdlg.cpp \
+    utils.cpp \
     vortexdebug.cpp \
     wavefront.cpp \
     wavefrontaveragefilterdlg.cpp \
     wavefrontfilterdlg.cpp \
-    wavefrontloader.cpp \
     wftexaminer.cpp \
     wftstats.cpp \
-    zapm.cpp \
     zernikedlg.cpp \
     zernikeeditdlg.cpp \
+    zernikepolar.cpp \
     zernikeprocess.cpp \
     zernikes.cpp \
     zernikesmoothingdlg.cpp
@@ -269,17 +263,17 @@ SOURCES += SingleApplication/singleapplication.cpp \
 HEADERS += bezier/bezier.h \
     SingleApplication/singleapplication_p.h \
     SingleApplication/singleapplication.h \
+    zernike/zapm_interface.h \
     annulushelpdlg.h \
     arbitrarywavefronthelp.h \
     astigpolargraph.h \
     arbitrarywavwidget.h \
     astigscatterplot.h \
     astigstatsdlg.h \
-    astigzoomer.h \
+	  autoinvertdlg.h \
     averagewavefrontfilesdlg.h \
     batchigramwizard.h \
     bathastigdlg.h \
-    boundary.h \
     camcalibrationreviewdlg.h \
     cameracalibwizard.h \
     camwizardpage1.h \
@@ -305,7 +299,6 @@ HEADERS += bezier/bezier.h \
     filteroutlinesdlg.h \
     foucaultview.h \
     generatetargetdlg.h \
-    gplus.h \
     graphicsutilities.h \
     helpdlg.h \
     hotkeysdlg.h \
@@ -314,7 +307,6 @@ HEADERS += bezier/bezier.h \
     imagehisto.h \
     intensityplot.h \
     jitteroutlinedlg.h \
-    lensdialog.h \
     lensetablemodel.h \
     mainwindow.h \
     messagereceiver.h \
@@ -340,17 +332,14 @@ HEADERS += bezier/bezier.h \
     psfplot.h \
     psi_dlg.h \
     psiphasedisplay.h \
-    psiresizeimagesdlg.h \
     psitiltoptions.h \
     punwrap.h \
     regionedittools.h \
     rejectedwavefrontsdlg.h \
-    renamewavefrontdlg.h \
     reportdlg.h \
     reviewwindow.h \
     rmsplot.h \
     rotationdlg.h \
-    savewavedlg.h \
     settings2.h \
     settingsdebug.h \
     settingsdft.h \
@@ -362,7 +351,6 @@ HEADERS += bezier/bezier.h \
     showallcontoursdlg.h \
     simigramdlg.h \
     simulationsview.h \
-    squareimage.h \
     standastigwizard.h \
     statsview.h \
     subtractwavefronatsdlg.h \
@@ -371,24 +359,20 @@ HEADERS += bezier/bezier.h \
     surfacegraph.h \
     surfacelightingproxy.h \
     surfacemanager.h \
-    surfacepropertiesdlg.h \
     transformwavefrontdlg.h \
     unwraperrorsview.h \
     usercolormapdlg.h \
     userdrawnprofiledlg.h \
     utils.h \
-    videosetupdlg.h \
-    vortex.h \
     vortexdebug.h \
     wavefront.h \
     wavefrontaveragefilterdlg.h \
     wavefrontfilterdlg.h \
-    wavefrontloader.h \
-    wavefrontstats.h \
     wftexaminer.h \
     wftstats.h \
     zernikedlg.h \
     zernikeeditdlg.h \
+    zernikepolar.h \
     zernikeprocess.h \
     zernikes.h \
     zernikesmoothingdlg.h
@@ -397,6 +381,7 @@ FORMS += arbitrarywavefronthelp.ui \
     annulushelpdlg.ui \
     astigpolargraph.ui \
     astigstatsdlg.ui \
+	  autoinvertdlg.ui \
     averagewavefrontfilesdlg.ui \
     batchigramwizard.ui \
     bathastigdlg.ui \
@@ -422,7 +407,6 @@ FORMS += arbitrarywavefronthelp.ui \
     hotkeysdlg.ui \
     igramintensity.ui \
     jitteroutlinedlg.ui \
-    lensdialog.ui \
     mainwindow.ui \
     metricsdisplay.ui \
     mirrordlg.ui \
@@ -436,20 +420,16 @@ FORMS += arbitrarywavefronthelp.ui \
     pdfcalibrationdlg.ui \
     percentcorrectiondlg.ui \
     pixelstats.ui \
-    profilearea.ui \
     profileplot.ui \
     psfplot.ui \
     psi_dlg.ui \
     psiphasedisplay.ui \
-    psiresizeimagesdlg.ui \
     psitiltoptions.ui \
     regionedittools.ui \
     rejectedwavefrontsdlg.ui \
-    renamewavefrontdlg.ui \
     reportdlg.ui \
     reviewwindow.ui \
     rotationdlg.ui \
-    savewavedlg.ui \
     settings2.ui \
     settingsdebug.ui \
     settingsdft.ui \
@@ -466,16 +446,13 @@ FORMS += arbitrarywavefronthelp.ui \
     subtractwavefronatsdlg.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
-    surfacepropertiesdlg.ui \
     transformwavefrontdlg.ui \
     unwraperrorsview.ui \
     usercolormapdlg.ui \
     userdrawnprofiledlg.ui \
-    videosetupdlg.ui \
     vortexdebug.ui \
     wavefrontaveragefilterdlg.ui \
     wavefrontfilterdlg.ui \
-    wavefrontnulldlg.ui \
     wftexaminer.ui \
     zernikedlg.ui \
     zernikeeditdlg.ui \
@@ -559,7 +536,6 @@ DISTFILES += buildingDFTFringe64.txt \
     ColorMaps/spring.cmp \
     COPYING.LESSER.txt \
     COPYING.txt \
-    helptext.txt \
     README.md \
     RevisionHistory.html
 

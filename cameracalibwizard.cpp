@@ -1,9 +1,9 @@
 #include "cameracalibwizard.h"
 #include "ui_cameracalibwizard.h"
+#include "spdlog/spdlog.h"
 #include <QLabel>
 #include <QLayout>
 #include "camwizardpage1.h"
-#include "spdlog/spdlog.h"
 
 cameraCalibWizard::cameraCalibWizard(QWidget *parent) :
     QWizard(parent),

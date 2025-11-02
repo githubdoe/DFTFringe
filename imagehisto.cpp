@@ -71,7 +71,7 @@ static void updateBrightnessContrast( int /*arg*/, void* )
 
 
 
-imageHisto::imageHisto( Mat im)
+imageHisto::imageHisto( const Mat &im)
 {
     image = im;
     namedWindow("image", 0);

@@ -13,7 +13,6 @@
 #include <QVBoxLayout>
 #include "graphmodifier.h"
 #include "percentCorrectionSurface.h"
-using namespace QtDataVisualization;
 
 namespace Ui {
 class percentCorrectionDlg;
@@ -50,7 +49,7 @@ class percentCorrectionDlg : public QDialog
     QVector<surfaceData *>  surfs;
     QPolygonF makePercentages(surfaceData *);
 
-    double getnormalSlope(double RoC, double radius, std::vector<double> Zernikes, double x, double null, bool use_avg);
+    double getnormalSlope(double RoC, double radius, const std::vector<double> &Zernikes, double x, double null, bool use_avg);
     double getZernSurface( double RoC, double MirrorRad, std::vector<double> Zernikes, double x,
                            double null, bool useavg);
     double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, double x);
@@ -74,13 +73,13 @@ public:
     ~percentCorrectionDlg();
     std::vector<double> m_zerns;
     void setData(QVector< surfaceData *> );
-    void setProfile(QPolygonF profile);
+    void setProfile(const QPolygonF &profile);
     void plot();
     void plotProfile();
     void plotSlope();
     void updateZoneTable();
-    QJsonDocument loadZonesFromJson(QString str);
-    double GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes,  double x, double nulll, bool use_avg);
+    QJsonDocument loadZonesFromJson(const QString &str);
+    double GetActualKE(double RoC, double MirrorRad, const std::vector<double> &Zernikes,  double x, double nulll, bool use_avg);
     QList<double> generateZoneCenters(double radius, int number_of_zones, bool makenew = true);
 private slots:
     void on_percentTable_itemChanged(QTableWidgetItem *item);

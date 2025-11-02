@@ -25,8 +25,10 @@
 #include "contourtools.h"
 #include "usercolormapdlg.h"
 #include "wavefront.h"
-# include <qwt_picker.h>
-# include <qwt_plot_picker.h>
+#include <qwt_picker.h>
+#include <qwt_plot_picker.h>
+#include <qwt_interval.h>
+
 class MyZoomer;
 class SpectrogramData: public QwtRasterData
 {
@@ -34,9 +36,20 @@ public:
     SpectrogramData();
     wavefront *m_wf;
     void setSurface(wavefront *surface);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+    QwtInterval interval(Qt::Axis axis) const override;
+    void setInterval(Qt::Axis axis, const QwtInterval &interval);
+#endif
+    virtual double value( double x, double y ) const override;
 
-    virtual double value( double x, double y ) const;
-
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+private:
+    QwtInterval m_xInterval;
+    QwtInterval m_yInterval;
+    QwtInterval m_zInterval;
+#endif
 };
 class ContourPlot: public QwtPlot
 {
@@ -73,13 +86,10 @@ signals:
     void setMinMaxValues(double,double);
     void setWaveRange(double);
     void newContourRange(double);
-    void sigPointSelected(const QPointF&);
+    void sigPointSelected(QPointF );
 
-public Q_SLOTS:
-  void selected(const QPointF& pos);
-
-
-public Q_SLOTS:
+public slots:
+    void selected(QPointF pos);
     void showContour( bool on );
     void showSpectrogram(bool on );
     void setAlpha( int );

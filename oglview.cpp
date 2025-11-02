@@ -26,7 +26,6 @@
 #include <QSpinBox>
 #include <QList>
 #include <QImageWriter>
-#include "videosetupdlg.h"
 #include <QtDataVisualization/Q3DSurface>
 #include <QtDataVisualization/QSurfaceDataProxy>
 #include <QtDataVisualization/QHeightMapSurfaceDataProxy>
@@ -37,7 +36,6 @@
 #include <QFileDialog>
 #include "surfacemanager.h"
 
-using namespace QtDataVisualization;
 OGLView::OGLView(QWidget *parent, ContourTools *m_tool) :
     QWidget(parent), m_spinRate(5)
 {
@@ -86,19 +84,19 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool) :
     lh->addWidget(saveImagePb);
     lh->addWidget(showSelectedPb);
     lh->addWidget(m_fullScreenPb);
-    connect(lightingPb, SIGNAL(pressed()), this,SLOT(openLightDlg()));
-    connect(saveImagePb, SIGNAL(pressed()), this, SLOT(saveImage()));
-    connect(showSelectedPb, SIGNAL(pressed()), this, SLOT(showSelected()));
-    connect(m_tool,SIGNAL(ContourMapColorChanged(int)), m_surface, SLOT(setColorMap(int)));
-    connect(m_fullScreenPb, SIGNAL(pressed()), this, SLOT(fullScreenPressed()));
+    connect(lightingPb, &QAbstractButton::pressed, this,&OGLView::openLightDlg);
+    connect(saveImagePb, &QAbstractButton::pressed, this, &OGLView::saveImage);
+    connect(showSelectedPb, &QAbstractButton::pressed, this, &OGLView::showSelected);
+    connect(m_tool,&ContourTools::ContourMapColorChanged, m_surface, &SurfaceGraph::setColorMap);
+    connect(m_fullScreenPb, &QAbstractButton::pressed, this, &OGLView::fullScreenPressed);
     lh->addStretch();
     lv->addWidget(m_container);
     topH->addLayout(lv,10);
     topH->addLayout(rightcontrols,1);
     setLayout(topH);
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(this, &QWidget::customContextMenuRequested, this,
+            &OGLView::showContextMenu);
 }
 OGLView::~OGLView(){
     m_controls->close();
@@ -106,7 +104,7 @@ OGLView::~OGLView(){
     delete m_surface;
 }
 
-void OGLView::showContextMenu(const QPoint &pos)
+void OGLView::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = mapToGlobal(pos);
@@ -114,7 +112,7 @@ void OGLView::showContextMenu(const QPoint &pos)
     // Create menu and insert some actions
     QMenu myMenu;
 
-    myMenu.addAction("FullScreen",  this, SLOT(fullScreenPressed()));
+    myMenu.addAction("FullScreen",  this, &OGLView::fullScreenPressed);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -167,7 +165,6 @@ void OGLView::saveImage(){
 }
 #include <QApplication>
 #include "wavefront.h"
-#include <QDesktopWidget>
 void OGLView::showSelected()    // show all selected wavefronts as 3D plots
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -222,7 +219,7 @@ void OGLView::showSelected()    // show all selected wavefronts as 3D plots
     scrollArea->setAutoFillBackground(true);
     QPushButton *savePb = new QPushButton("Save as Image",w);
     SurfaceManager *sm = SurfaceManager::get_instance();
-    connect(savePb, SIGNAL(pressed()), sm, SLOT(saveAllContours()));
+    connect(savePb, &QPushButton::pressed, sm, &SurfaceManager::saveAllContours);
     layout->addWidget(savePb,0,Qt::AlignHCenter);
     layout->addWidget(scrollArea);
     w->setLayout(layout);

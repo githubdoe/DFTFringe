@@ -31,7 +31,7 @@ CamWizardPage1::CamWizardPage1(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->listWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
+    connect(ui->listWidget, &QWidget::customContextMenuRequested, this, &CamWizardPage1::showContextMenu);
     QSettings set;
     Pattern p = (Pattern)(set.value("camCalibratePattern", CIRCLES_GRID).toInt());
     ui->columns->blockSignals(true);
@@ -108,7 +108,7 @@ double computeReprojectionErrors( const std::vector<std::vector<cv::Point3f> >& 
     return std::sqrt(totalErr/totalPoints);
 }
 bool CamWizardPage1::runCalibration( cv::Size& imageSize, cv::Mat& cameraMatrix, cv::Mat& distCoeffs,
-                            std::vector<std::vector<cv::Point2f> > imagePoints, std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs,
+                            const std::vector<std::vector<cv::Point2f> > &imagePoints, std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs,
                             std::vector<float>& reprojErrs,  double& totalAvgErr)
 {
 
@@ -150,7 +150,7 @@ void CamWizardPage1::eraseItem()
     }
 }
 
-void CamWizardPage1::showContextMenu(const QPoint &pos)
+void CamWizardPage1::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = ui->listWidget->mapToGlobal(pos);
@@ -162,7 +162,7 @@ void CamWizardPage1::showContextMenu(const QPoint &pos)
     myMenu.exec(globalPos);
 }
 
-bool CamWizardPage1::runCalibrationAndSave(cv::Size imageSize, cv::Mat&  cameraMatrix, cv::Mat& distCoeffs,std::vector<std::vector<cv::Point2f> > imagePoints )
+bool CamWizardPage1::runCalibrationAndSave(cv::Size imageSize, cv::Mat&  cameraMatrix, cv::Mat& distCoeffs,const std::vector<std::vector<cv::Point2f> > &imagePoints )
 {
     std::vector<cv::Mat> rvecs, tvecs;
     std::vector<float> reprojErrs;
@@ -240,13 +240,13 @@ void CamWizardPage1::on_compute_clicked()
                 if (found)
                     break;
                 if ( i == 1){
-                    cv::SimpleBlobDetector detector;
+                    static Ptr<SimpleBlobDetector> detector = cv::SimpleBlobDetector::create();
 
                     // Detect blobs.
                     std::vector<cv::KeyPoint> keypoints;
-                    detector.detect( dial, keypoints);
+                    detector->detect( dial, keypoints);
 
-                    int horz = 1;
+                    /*int horz = 1;
                     int vert = 1;
                     for (std::size_t ndx = 1; ndx < keypoints.size(); ++ndx){
                         float del = keypoints[ndx-1].pt.x - keypoints[ndx].pt.x;
@@ -258,7 +258,7 @@ void CamWizardPage1::on_compute_clicked()
                             horz = 1;
                             ++vert;
                         }
-                    }
+                    }*/
 
                 }
             }
@@ -329,13 +329,13 @@ void CamWizardPage1::on_compute_clicked()
             msg << "Grid of " << ui->columns->value() << " X " << ui->rows->value() << " not found. Press any key.";
             ui->Results->append("Pattern not found. Calibration failed.");
             // Set up the detector with default parameters.
-            cv::SimpleBlobDetector detector;
+            static Ptr<SimpleBlobDetector> detector = cv::SimpleBlobDetector::create();
 
             cv::threshold(raw,view, 200, 255, cv::THRESH_BINARY);
 
             // Detect blobs.
             std::vector<cv::KeyPoint> keypoints;
-            detector.detect( view, keypoints);
+            detector->detect( view, keypoints);
 
             // Draw detected blobs as red circles.
             // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
@@ -462,7 +462,6 @@ void CamWizardPage1::on_pushButton_2_clicked()
 
 void CamWizardPage1::showResuslts()
 {
-    QStringList parms;
     ui->xFv->setText(QString().number(cameraMatrix.at<double>(0,0)));
     ui->yFv->setText(QString().number(cameraMatrix.at<double>(1,1)));
     ui->XFc->setText(QString().number(cameraMatrix.at<double>(0,2)));
@@ -473,7 +472,6 @@ void CamWizardPage1::showResuslts()
     ui->P1->setText(QString().number(distCoeffs.at<double>(0,2)));
     ui->P2->setText(QString().number(distCoeffs.at<double>(0,3)));
     ui->K3->setText(QString().number(distCoeffs.at<double>(0,4)));
-
 }
 
 void CamWizardPage1::on_currentLens_clicked()

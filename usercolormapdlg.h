@@ -32,14 +32,36 @@ class userColorMapDlg;
 class SpectrogramData2: public QwtRasterData
 {
 public:
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+    SpectrogramData2()
+    {
+    }
+
+    QwtInterval interval(Qt::Axis axis) const override
+    {
+        switch (axis)
+        {
+            case Qt::XAxis:
+                return QwtInterval(-5, 5);
+            case Qt::YAxis:
+                return QwtInterval(-5, 5);
+            case Qt::ZAxis:
+                return QwtInterval(-25, 25);
+            default:
+                return QwtInterval();
+        }
+    }
+#else
     SpectrogramData2()
     {
         setInterval( Qt::XAxis, QwtInterval( -5, 5 ) );
         setInterval( Qt::YAxis, QwtInterval( -5, 5 ) );
         setInterval( Qt::ZAxis, QwtInterval( -25, 25) );
     }
+#endif
 
-    virtual double value( double x, double y ) const
+    virtual double value( double x, double y ) const override
     {
         return x  * y;
 

@@ -35,7 +35,6 @@
 #include "metricsdisplay.h"
 #include "reviewwindow.h"
 #include "settings2.h"
-#include "wavefrontloader.h"
 #include "colorchanneldisplay.h"
 #include "igramintensity.h"
 #include "vortexdebug.h"
@@ -82,7 +81,7 @@ public:
 
 public slots:
     void enableShiftButtons(bool enable);
-    void showMessage(QString, int id);
+    void showMessage(const QString&, int id);
     void diameterChanged(double);
     void rocChanged(double);
     void batchProcess(QStringList fileList);
@@ -97,7 +96,7 @@ public slots:
     void zoomContour(bool flag);
     void zoomOgl();
     void zoomProfile(bool flag);
-    void imageSize(QString txt);
+    void imageSize(const QString &txt);
     void skipBatchItem();
     int  getCurrentTab();
     void setTab(int ndx);
@@ -107,7 +106,7 @@ signals:
     void messageResult(int);
     void gammaChanged(bool, double);
 private slots:
-    void updateChannels(cv::Mat);
+    void updateChannels(const cv::Mat&);
     void openRecentFile();
     void on_actionLoad_Interferogram_triggered();
     void on_pushButton_5_clicked();
@@ -119,7 +118,7 @@ private slots:
     void on_shiftDown_clicked();
     void on_shiftRight_clicked();
     void selectDftTab();
-    void newMirrorDlgPath(QString path);
+    void newMirrorDlgPath(const QString &path);
     void on_actionRead_WaveFront_triggered();
 
     void on_actionPreferences_triggered();
@@ -272,8 +271,6 @@ private slots:
     void on_actionLoad_wave_fronts_from_multiple_directories_triggered();
 
     void on_actionastig_in_polar_triggered();
-
-    void on_actiondebugSomething_triggered();
 
     void on_actionStop_auto_invert_triggered();
 

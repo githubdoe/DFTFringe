@@ -16,6 +16,7 @@
 
 ****************************************************************************/
 #include "zernikeprocess.h"
+#include "zernikepolar.h"
 #include <opencv2/opencv.hpp>
 #include <cmath>
 #include "mainwindow.h"
@@ -26,19 +27,11 @@
 #include "myutils.h"
 //#include "arbitrarywavefrontdlg.h"
 #include "userdrawnprofiledlg.h"
+#include "zapm_interface.h"
+
+
 std::vector<bool> zernEnables;
 std::vector<double> zNulls;
-double BestSC = -1.;
-int Zw[] = {								/*  n    */
-    1,									  //    0
-    4,4,3,								  //	1
-    6,6,8,8,5,  //8						  //	2
-    8,8,10,10,12,12,7, // 15					3
-    10,10,12,12,14,14,16,16,9,  //24			4
-    12,12,14,14,16,16,18,18,20,20,11,  //35		5
-    14,14,16,16,18,18,20,20,22,22,24,24,13  // 48
-};
-
 
 
 //
@@ -55,91 +48,7 @@ int Zw[] = {								/*  n    */
 
 
 
-arma::mat zapm(const arma::vec& rho, const arma::vec& theta,
-               const double& eps, const int& maxorder=12) ;
-cv::Mat zpmCx(QVector<double> rho, QVector<double> theta, int maxorder) {
 
-  int m, n, n0, mmax = maxorder/2;
-  int i, imax = rho.size();
-  int order, nm, nm1mm1, nm1mp1, nm2m;
-  int ncol = (mmax+1)*(mmax+1);
-  double a0;
-  double cosmtheta[mmax], sinmtheta[mmax];
-  cv::Mat_<double>  zm(imax, ncol);
-
-  //do some rudimentary error checking
-
-  //if (rho.length() != theta.length()) stop("Numeric vectors must be same length");
-  //if ((maxorder % 2) != 0) stop("maxorder must be even");
-
-  //good enough
-
-
-  for (i=0; i<imax; i++) {
-
-    //cache values of cos and sin
-    cosmtheta[0] = std::cos(theta[i]);
-    sinmtheta[0] = std::sin(theta[i]);
-    for (m=1; m<mmax; m++) {
-      cosmtheta[m] = cosmtheta[m-1]*cosmtheta[0] - sinmtheta[m-1]*sinmtheta[0];
-      sinmtheta[m] = sinmtheta[m-1]*cosmtheta[0] + cosmtheta[m-1]*sinmtheta[0];
-    }
-
-    zm(i, 0) = 1.0;                     //piston term
-    zm(i, 3) = 2. * rho[i] * rho[i] - 1.; //defocus
-
-    // now fill in columns with m=n for n>0
-
-    for (m=1; m <= mmax; m++) {
-      zm(i, m*m) = rho[i] * zm(i, (m-1)*(m-1));
-    }
-
-    // non-symmetric terms
-
-    for (order=4; order<=maxorder; order+=2) {
-      for (m=order/2-1; m>0; m--) {
-        n=order-m;
-        nm = order*order/4 + n - m;
-        nm1mm1 = (order-2)*(order-2)/4 + n - m;
-        nm1mp1 = nm - 2;
-        nm2m = nm1mm1 - 2;
-        zm(i, nm) = rho[i]*(zm(i, nm1mm1) + zm(i, nm1mp1)) - zm(i, nm2m);
-      }
-
-      // m=0 (symmetric) term
-      nm = order*order/4 + order;
-      nm1mp1 = nm-2;
-      nm2m = (order-2)*(order-2)/4+order-2;
-      zm(i, nm) = 2.*rho[i]*zm(i, nm1mp1) - zm(i, nm2m);
-    }
-
-    // now multiply each column by normalizing factor and cos, sin
-
-    n0 = 1;
-    for (order=2; order <= maxorder; order+=2) {
-      for(m=order/2; m>0; m--) {
-        n=order-m;
-        a0 = sqrt(2.*(n+1));
-        zm(i, n0+1) = a0*sinmtheta[m-1]*zm(i, n0);
-        zm(i, n0) *= a0*cosmtheta[m-1];
-        n0 += 2;
-      }
-      n = order;
-      zm(i, n0) *= sqrt(n+1.);
-      n0++;
-    }
-  }
-  return zm;
-}
-/*
-Public Function ZernikeW(n As Integer) As Double
-' N is Zernike number as given by James Wyant
-' routine calculates the inverse of the weight in the variance computation
-*/
-int ZernikeW(int n)
-{
-    return(Zw[n]);
-}
 
 long fact( int n1, int n2)
 {
@@ -151,9 +60,8 @@ long fact( int n1, int n2)
     return f;
 
 }
-void gauss_jordan(int n, double* Am, double* Bm)
-{
-    /*
+
+/*
 Private Sub GJ(n As Integer)
 Dim indxc(50) As Integer, indxr(50) As Integer, ipiv(50) As Integer
 Dim i As Integer, icol As Integer, irow As Integer, j As Integer
@@ -167,6 +75,10 @@ Dim big As Double, dum As Double, pivinv As Double, temp As Double
    'on entry, Am(1 to N, 1 to N) is the matrix coefficients
    'on exit, Am is the inverse matrix
  */
+/*
+void gauss_jordan(int n, double* Am, double* Bm)
+{
+    
     int* ipiv = new int[n];
     int* indxr = new int[n];
     int* indxc = new int[n];
@@ -260,166 +172,15 @@ Dim big As Double, dum As Double, pivinv As Double, temp As Double
     delete[] ipiv;
     delete[] indxr;
     delete[] indxc;
-}
+}*/
+
+
 /*
 Public Function Zernike(n As Integer, X As Double, Y As Double) As Double
 ' N is Zernike number as given by James Wyant
 */
-zernikePolar *zernikePolar::m_instance = 0;
-zernikePolar *zernikePolar::get_Instance(){
-    if (m_instance == 0){
-        m_instance = new zernikePolar;
-    }
-    return m_instance;
-}
-
-void zernikePolar::init(double rho, double theta){
-        rho2 = rho * rho;
-        rho3 = pow(rho,3.);
-        rho4 = pow(rho,4.);
-        rho5 = pow(rho,5.);
-        rho6 = pow(rho,6.);
-        rho8 = pow(rho,8.);
-        rho10 = pow(rho,10.);
-        costheta = cos(theta);
-        sintheta = sin(theta);
-        cos2theta = cos(2. * theta);
-        sin2theta = sin(2. * theta);
-        cos3theta = cos(3. * theta);
-        sin3theta = sin(3. * theta);
-        cos4theta = cos(4. * theta);
-        sin4theta = sin(4. * theta);
-        cos5theta = cos(5. * theta);
-        sin5theta = sin(5. * theta);
-    }
-
-double zernikePolar::zernike(int n, double rho, double theta){
-
-    switch(n){
-    case 0: return 1.;
-        break;
-    case 1: return rho * costheta;
-        break;
-    case 2: return rho * sintheta;
-        break;
-    case 3: return -1. + 2. * rho * rho;
-        break;
-    case 4: return rho2 * cos2theta;
-        break;
-    case 5: return rho2 * sin2theta;
-        break;
-    case 6: return rho * (-2. + 3. * rho2) * costheta;
-        break;
-    case 7: return rho * (-2. + 3. * rho2) * sintheta;
-        break;
-    case 8:
-    {
-        return 1. + rho2 * (-6 + 6. * rho2);
-        break;
-    }
-    case 9: return rho * rho * rho * cos3theta;
-        break;
-    case 10: return rho * rho * rho * sin3theta;
-        break;
-
-    case 11:
-
-        return rho2 * (-3 + 4 * rho2) * cos2theta;
-
-        break;
-    case 12:
-
-        return rho2 * (-3 + 4 * rho2) * sin2theta ;
-
-        break;
-
-    case 13:
-        return rho * (3. - 12. * rho2 + 10. * rho4) * costheta;
-        break;
-    case 14:
-        return rho * (3. - 12. * rho2 + 10. * rho4) * sintheta;
-        break;
-    case 15:
-        return -1 + 12 * rho2 - 30. * rho4 + 20. * rho6;
-        break;
-    case 16: return rho4 * cos4theta;
-        break;
-    case 17: return rho4 * sin4theta;
-        break;
-    case 18: return rho3 *( -4. + 5. * rho2) * cos3theta;
-        break;
-    case 19: return rho3 *( -4. + 5. * rho2) * sin3theta;
-        break;
-    case 20: return rho2 * (6. - 20. * rho2 + 15 * rho4)* cos2theta;
-        break;
-    case 21: return rho2 * (6. - 20. * rho2 + 15 * rho4)* sin2theta;
-        break;
-    case 22: return rho * (-4. + 30. * rho2 - 60. * rho4 + 35 * rho6)* costheta;
-        break;
-    case 23: return rho * (-4. + 30. * rho2 - 60. * rho4 + 35 * rho6)* sintheta;
-        break;
-    case 24: return 1. - 20. * rho2 + 90. *  rho4 - 140. * rho6 + 70. * rho8;
-        break;
-    case 25: return rho5 * cos5theta;
-        break;
-    case 26: return rho5 * sin5theta;
-        break;
-    case 27: return rho4 * (-5. + 6. * rho2) * cos4theta;
-        break;
-    case 28: return rho4 * (-5. + 6. * rho2) * sin4theta;
-        break;
-    case 29: return rho3 * (10. - 30. * rho2 + 21. * rho4) * cos3theta;
-        break;
-    case 30: return rho3 * (10. - 30. * rho2 + 21. * rho4) * sin3theta;
-        break;
-    case 31: return rho2 *(-10. + 60. * rho2 - 105. * rho4 + 56. * rho6) * cos2theta;
-        break;
-    case 32: return rho2 *(-10. + 60. * rho2 - 105. * rho4 + 56. * rho6) * sin2theta;
-        break;
-    case 33: return rho * (5. - 60. * rho2 + 210 * rho4 -280. * rho6 + 126. * rho8) * costheta;
-        break;
-    case 34: return rho * (5. - 60. * rho2 + 210 * rho4 -280. * rho6 + 126. * rho8) * sintheta;
-        break;
-    case 35: return -1 + 30. * rho2 -210 * rho4 + 560. * rho6 - 630 * rho8 + 252. * rho10;
-        break;
-    case 36: return rho6 * cos(6. * theta);
-        break;
-    case 37: return rho6 * sin(6. * theta);
-        break;
-    case 38: return rho5 * (-6. + 7 * rho2) * cos5theta;
-        break;
-    case 39: return rho5 * (-6. + 7 * rho2) * sin5theta;
-        break;
-    case 40: return rho4 * (15. -42. * rho2 + 28. * rho4) * cos4theta;
-        break;
-    case 41: return rho4 * (15. -42. * rho2 + 28. * rho4) * sin4theta;
-        break;
-    case 42: return rho3 * (-20 + 105. * rho2 - 168. * rho4 + 84 * rho6) * cos3theta;
-        break;
-    case 43: return rho3 * (-20. + 105. * rho2 - 168. * rho4 + 84. * rho6) * sin3theta;
-        break;
-    case 44: return rho2 * (15. - 140. * rho2 + 420. * rho4 - 504. * rho6 +  210. * rho8) * cos2theta;
-        break;
-    case 45: return rho2 * (15. - 140. * rho2 + 420. * rho4 - 504. * rho6 +  210. * rho8) * sin2theta;
-        break;
-    case 46: return rho *(-6. + 105 * rho2 - 560. * rho4 + 1260. * rho6 -1260. * rho8 +462. * rho10) * costheta;
-        break;
-    case 47: return rho *(-6. + 105 * rho2 - 560. * rho4 + 1260. * rho6 -1260. * rho8 +462. * rho10) * sintheta;
-        break;
-    case 48: return 1. - 42. * rho2 + 420. * rho4 - 1680. * rho6 + 3150. * rho8 -2772. * rho10 + 924. * pow(rho,12.);
-        break;
-
-    }
-    return 0.;
-
-
-}
-
-
-double Zernike(int n, double X, double Y)
+/*double Zernike(int n, double X, double Y)
 {
-
-
     static double X2 = 0., X3 = 0., X4 = 0.;
     static double Y2 = 0., Y3 = 0., Y4 = 0.;
     static double R2 = 0.;
@@ -584,9 +345,7 @@ double Zernike(int n, double X, double Y)
         return(0.);
     }
     return d;
-
-
-}
+}*/
 
 
 
@@ -663,7 +422,6 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
     }
 
     double delta = 1./(wf.m_outside.m_radius);
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
     int sampleCnt = 0;
     for(int y = 0; y < ny; y += step) //for each point on the surface
     {
@@ -676,21 +434,21 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
 
             if ( rho <= 1. && (wf.mask.at<uchar>(y,x) != 0) && wf.data.at<double>(y,x) != 0.0){
                 double theta = atan2(uy,ux);
-                zpolar.init(rho, theta);
+                zernikePolar zpolar(rho, theta, zterms);
                 for ( int i = 0; i < zterms; ++i)
                 {
 
                     if (useSvd){
-                        double t = zpolar.zernike(i, rho, theta);
+                        double t = zpolar.zernike(i);
                         A(sampleCnt,i) = t;
                     }
                     else {
 
-                        double t = zpolar.zernike(i, rho, theta);
+                        double t = zpolar.zernike(i);
                         for (int j = 0; j < zterms; ++j)
                         {
-                            //Am[ndx] = Am[ndx] + t * zpolar.zernike(j, rho, theta);
-                            A(i,j) +=  t * zpolar.zernike(j, rho, theta);
+                            //Am[ndx] = Am[ndx] + t * zpolar.zernike(j);
+                            A(i,j) +=  t * zpolar.zernike(j);
                         }
                         // FN is the OPD at (Xn,Yn)
                         //Bm[i] = Bm[i] + surface.at<double>(y,x) * t;
@@ -709,12 +467,12 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
         }
     }
 
-    cv::solve(A,B,X,(useSvd)? DECOMP_SVD : DECOMP_LU);
+    cv::solve(A,B,X,(useSvd)? cv::DECOMP_SVD : cv::DECOMP_LU);
     if (settings.m_general->showConditionNumbers()){
         cv::Mat Ai;
 
-        double conditionNumber = 1./cv::invert(A,Ai,DECOMP_SVD);
-        double c2 = cv::norm(A,NORM_L2) * cv::norm(Ai,NORM_L2);
+        double conditionNumber = 1./cv::invert(A,Ai,cv::DECOMP_SVD);
+        double c2 = cv::norm(A,cv::NORM_L2) * cv::norm(Ai,cv::NORM_L2);
         emit statusBarUpdate(QString(" Zernike LSF matrix Condition Numbers %1 %2").arg(conditionNumber, 6, 'f', 3).arg(c2, 6, 'f', 3),1);
     }
     wf.InputZerns = std::vector<double>(zterms,0);
@@ -763,7 +521,6 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
         double sz,nz;
         double rho,theta;
         std::vector<int> rows, cols;
-        zernikePolar &zpolar = *zernikePolar::get_Instance();
         // make a list of points on the surface containing their rho and theta values as well as their
         // row column indexes in the matix that contanis the wave front.
         // annular wave fronts already have this made elsewhere.
@@ -779,11 +536,14 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
             // this mask test may not be needed any longer but don't have time to check that.
             if (mask.at<uint8_t>(y,x) != 0 && wf.data.at<double>(y,x) != 0.0){
 
-                    rho = m_rhoTheta.row(0)(i);
-                    theta = m_rhoTheta.row(1)(i);
-                    if (!md->m_useAnnular){
-                        zpolar.init(rho,theta);
-                    }
+                // Declare zernikePolar pointer, construct later if needed
+                zernikePolar* zpolar = nullptr;
+                
+                rho = m_rhoTheta.row(0)(i);
+                theta = m_rhoTheta.row(1)(i);
+                if (!md->m_useAnnular){
+                    zpolar = new zernikePolar(rho,theta, Z_TERMS);
+                }
 
                 sz = unwrapped.at<double>(y,x);
                 nz = 0;
@@ -792,7 +552,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 {
                     if (md->doNull && enables[8]){
                         if (!md->m_useAnnular)
-                            nz -= scz8 * zpolar.zernike(8,rho, theta);
+                            nz -= scz8 * zpolar->zernike(8);
                         else {
                             nz -= scz8 * m_zerns(i, 8);
                         }
@@ -802,21 +562,27 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 for (int z = start_term; z < Z_TERMS; ++z)
                 {
                     if ((z == 3) && doDefocus){
-                        nz += defocus * zpolar.zernike(z,rho, theta);
-                        nz -= zerns[z] * zpolar.zernike(z,rho,theta);
-
-                    }
-
-                    else if (!enables[z]){
-                        if (!md->m_useAnnular)
-                             nz -= zerns[z] * zpolar.zernike(z,rho, theta);
+                        if (!md->m_useAnnular) {
+                            nz += defocus * zpolar->zernike(z);
+                            nz -= zerns[z] * zpolar->zernike(z);
+                        }
                         else {
-
-                            nz -= zerns[z] * m_zerns(i,z) ;
-
+                            nz += defocus * m_zerns(i,z);
+                            nz -= zerns[z] * m_zerns(i,z);
                         }
                     }
+                    else if (!enables[z]){
+                        if (!md->m_useAnnular) {
+                            nz -= zerns[z] * zpolar->zernike(z);
+                        }
+                        else {
+                            nz -= zerns[z] * m_zerns(i,z);
+                        }
+                    }
+                }
 
+                if (!md->m_useAnnular){
+                    delete zpolar;
                 }
 
                 nulled.at<double>(y,x) = sz +nz;
@@ -832,8 +598,6 @@ void zernikeProcess::fillVoid(wavefront &wf){
     double rho,theta;
     mirrorDlg *md = mirrorDlg::get_Instance();
     bool useannular = md->m_useAnnular;
-
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
 
     if (wf.regions.size() > 0){
         int x = wf.regions[0][0].x;
@@ -885,11 +649,11 @@ void zernikeProcess::fillVoid(wavefront &wf){
                             theY.push_back(y);
                         }
                         else {
-                            zpolar.init(rho,theta);
+                            zernikePolar zpolar(rho, theta, wf.InputZerns.size());
                             double v = 0.;
 
                             for (size_t z = 0; z < wf.InputZerns.size(); ++z){
-                                v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
+                                v += wf.InputZerns[z] * zpolar.zernike(z);
                             }
                             wf.data.at<double>(y,x) = v;
                         }
@@ -969,11 +733,11 @@ void zernikeProcess::fillVoid(wavefront &wf){
                         theY.push_back(y);
                     }
                     else{
-                        zpolar.init(rho,theta);
+                        zernikePolar zpolar(rho, theta, wf.InputZerns.size());
                         double v = 0.;
 
                         for (size_t z = 0; z < wf.InputZerns.size(); ++z){
-                            v += wf.InputZerns[z] * zpolar.zernike(z,rho, theta);
+                            v += wf.InputZerns[z] * zpolar.zernike(z);
                         }
                         wf.data.at<double>(y,x) = v;
                     }
@@ -1113,7 +877,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
     double r,g,b;
     spectral_color(r,g,b, md->lambda);
     if (doColor) {
-        result =  Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
+        result =  cv::Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
     }
 
 
@@ -1163,9 +927,9 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
                 if (rho < obs)
                     continue;
                 int iv = cos(spacing *2 * M_PI * S1) * 100 + 120;
-                result.at<Vec4b>(y,x)[0] = iv * b;
-                result.at<Vec4b>(y,x)[1] = iv * g;
-                result.at<Vec4b>(y,x)[2] = iv * r;
+                result.at<cv::Vec4b>(y,x)[0] = iv * b;
+                result.at<cv::Vec4b>(y,x)[1] = iv * g;
+                result.at<cv::Vec4b>(y,x)[2] = iv * r;
             }
             else {
                 if (S1 == 0.0) S1 += .0000001;
@@ -1306,63 +1070,6 @@ arma::mat zernikeProcess::zpmC(arma::rowvec rho, arma::rowvec theta, int maxorde
     return zm;
 }
 
-arma::mat zernikeProcess::zapmC(const arma::rowvec& rho, const arma::rowvec& theta, const int& maxorder) {
-
-  unsigned int nrow = rho.size();
-  int mmax = maxorder/2;
-  int ncol = (mmax+1)*(mmax+1);
-  int i, j, m, nj;
-  double zpnorm = std::sqrt((double) nrow);
-  arma::mat zm(nrow, ncol), annzm(nrow, ncol);
-
-  //do some rudimentary error checking
-
-//  if (rho.size() != theta.size()) stop("Numeric vectors must be same length");
-//  if ((maxorder % 2) != 0) stop("maxorder must be even");
-
-  //good enough
-
-  zm = zpmC(rho, theta, maxorder);
-
-  // for each azimuthal index m find the column indexes
-  // of the zp matrix having that value of m. That
-  // subset is what we need to orthogonalize.
-  // Note this is done separately for "sine" and "cosine" components.
-
-  nj = maxorder/2 + 1;
-  for (m=0; m<mmax; m++) {
-    arma::uvec jsin(nj);
-    arma::uvec jcos(nj);
-    arma::mat Q(nrow, nj);
-    arma::mat R(nj, nj);
-    arma::vec sgn(nj);
-    for (i=0; i<nj; i++) {
-      jcos(i) = (m+i+1)*(m+i+1) - 2*m -1;
-      jsin(i) = jcos(i) + 1;
-    }
-
-    qr_econ(Q, R, zm.cols(jcos));
-    sgn = sign(R.diag());
-
-    annzm.cols(jcos) = zpnorm * Q * diagmat(sgn);
-    if (m > 0) {
-      qr_econ(Q, R, zm.cols(jsin));
-      sgn = sign(R.diag());
-      annzm.cols(jsin) = zpnorm * Q * diagmat(sgn);
-    }
-    --nj;
-  }
-
-  //  highest order only has one term
-
-  j = mmax*mmax;
-
-  annzm.col(j) = zm.col(j) * zpnorm / norm(zm.col(j));
-  annzm.col(j+1) = zm.col(j+1) * zpnorm / norm(zm.col(j+1));
-
-  return annzm;
-}
-
 
 
 void zernikeProcess::initGrid(int width, double radius, double cx, double cy, int maxOrder,
@@ -1490,7 +1197,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
         }
 
 
-    cv::solve(A,B,X, DECOMP_QR);
+    cv::solve(A,B,X, cv::DECOMP_QR);
 
     wf.InputZerns = std::vector<double>(ztermCnt,0);
     for (std::size_t z = 0;  z < static_cast<std::size_t>(X.rows); ++z){
@@ -1505,8 +1212,7 @@ std::vector<double>  zernikeProcess::ZernFitWavefront(wavefront &wf){
 }
 
 //debug routine to see what is matrix values.
-void dumpArma(arma::mat mm, QString title = "", QVector<QString> colHeading = QVector<QString>(0),
-              QVector<QString> RowLable = QVector<QString>(0)){
+void dumpArma(const arma::mat &mm, const QString &title, QVector<QString> colHeading, QVector<QString> RowLable){
     arma::mat theMat = mm;
     QString transposed(" ");
 

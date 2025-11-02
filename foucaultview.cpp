@@ -1,5 +1,6 @@
 #include "foucaultview.h"
 #include "ui_foucaultview.h"
+#include "spdlog/spdlog.h"
 #include "mirrordlg.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -7,7 +8,6 @@
 #include <QVector>
 #include <QMenu>
 #include "zernikeprocess.h"
-#include "spdlog/spdlog.h"
 
 extern double outputLambda;
 
@@ -21,7 +21,7 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     ui->setupUi(this);
     QSettings set;
     ui->lpiSb->setValue(set.value("ronchiLPI", 100).toDouble());
-    connect(&m_guiTimer, SIGNAL(timeout()), this, SLOT(on_makePb_clicked()));
+    connect(&m_guiTimer, &QTimer::timeout, this, &foucaultView::on_makePb_clicked);
     ui->rocOffsetSb->setSuffix(" inch");
     ui->useMM->setChecked(set.value("simUseMM",false).toBool());
     ui->RonchiX->blockSignals(true);
@@ -30,8 +30,8 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     if (ui->useMM->isChecked()){
         on_useMM_clicked(true);
     }
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(this, &QWidget::customContextMenuRequested, this,
+            &foucaultView::showContextMenu);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
@@ -52,7 +52,7 @@ foucaultView::~foucaultView()
     delete ui;
     spdlog::get("logger")->trace("foucaultView::~foucaultView");
 }
-QString getSaveFileName(QString type){
+QString getSaveFileName(const QString &type){
     QSettings settings;
     QString path = settings.value("lastPath","").toString();
 
@@ -65,15 +65,15 @@ QString getSaveFileName(QString type){
     return fileName;
 
 }
-void foucaultView::showContextMenu(const QPoint &pos)
+void foucaultView::showContextMenu(QPoint pos)
 {
 
 // Handle global position
     QPoint globalPos = mapToGlobal(pos);
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Save Ronchi image",  this, SLOT(saveRonchiImage()));
-    myMenu.addAction("Save Foucault Image", this,  SLOT(saveFoucaultImage()));
+    myMenu.addAction("Save Ronchi image",  this, &foucaultView::saveRonchiImage);
+    myMenu.addAction("Save Foucault Image", this,  &foucaultView::saveFoucaultImage);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -220,17 +220,17 @@ void foucaultView::on_makePb_clicked()
     double hy = hx;
 
     cv::Mat vknife[] = {cv::Mat::zeros(size,size,CV_64FC1)
-                        ,cv::Mat::zeros(Size(size,size),CV_64FC1)};
+                        ,cv::Mat::zeros(cv::Size(size,size),CV_64FC1)};
 
     cv::Mat ronchiGrid[] = {cv::Mat::zeros(size,size,CV_64FC1)
-                            ,cv::Mat::zeros(Size(size,size),CV_64FC1)};
+                            ,cv::Mat::zeros(cv::Size(size,size),CV_64FC1)};
 
     cv::Mat slit[] = {cv::Mat::zeros(size,size,CV_64FC1)
-                   ,cv::Mat::zeros(Size(size,size),CV_64FC1)};
+                   ,cv::Mat::zeros(cv::Size(size,size),CV_64FC1)};
 
 
     cv::Mat ronchiSlit[] = {cv::Mat::zeros(size,size,CV_64FC1)
-                   ,cv::Mat::zeros(Size(size,size),CV_64FC1)};
+                   ,cv::Mat::zeros(cv::Size(size,size),CV_64FC1)};
 
     // compute real world pixel width.
     double pixwidth =  outputLambda * 1.E-6* Fnumber * 2./(25.4 * pad);
@@ -311,7 +311,7 @@ void foucaultView::on_makePb_clicked()
             }
         }
 
-    Mat FFT1, FFT2;
+    cv::Mat FFT1, FFT2;
     //fftw_plan p;
     cv::Mat complexIn;
     cv::Mat complexIn2;
@@ -323,18 +323,18 @@ void foucaultView::on_makePb_clicked()
     //showData("rslit", ronchiSlit[0]);
 
 
-    dft(complexIn, FFT1, DFT_REAL_OUTPUT);
+    dft(complexIn, FFT1, cv::DFT_REAL_OUTPUT);
     shiftDFT(FFT1);
-    dft(complexIn2, FFT2, DFT_REAL_OUTPUT);
+    dft(complexIn2, FFT2, cv::DFT_REAL_OUTPUT);
     shiftDFT(FFT2);
     cv::Mat knifeSlit;
     mulSpectrums(FFT1, FFT2, knifeSlit, 0, true);
-    idft(knifeSlit, knifeSlit, DFT_SCALE); // gives us the correlation result...
+    idft(knifeSlit, knifeSlit, cv::DFT_SCALE); // gives us the correlation result...
     shiftDFT(knifeSlit);
     cv::Mat knifeSurf;
 
     mulSpectrums(knifeSlit, surf_fftRonchi, knifeSurf,0,true);
-    idft(knifeSurf, knifeSurf, DFT_SCALE);
+    idft(knifeSurf, knifeSurf, cv::DFT_SCALE);
     shiftDFT(knifeSurf);
 
     QImage ronchi = showMag(knifeSurf, false,"", false, gamma);
@@ -372,15 +372,15 @@ void foucaultView::on_makePb_clicked()
     merge(slit,2,complexIn2);
 
 
-    dft(complexIn, FFT1, DFT_REAL_OUTPUT);
-    dft(complexIn2, FFT2, DFT_REAL_OUTPUT);
+    dft(complexIn, FFT1, cv::DFT_REAL_OUTPUT);
+    dft(complexIn2, FFT2, cv::DFT_REAL_OUTPUT);
 
     mulSpectrums(FFT1, FFT2, knifeSlit, 0, true);
-    idft(knifeSlit, knifeSlit, DFT_SCALE); // gives us the correlation result...
+    idft(knifeSlit, knifeSlit, cv::DFT_SCALE); // gives us the correlation result...
 
 
     mulSpectrums(knifeSlit, surf_fft, knifeSurf,0,true);
-    idft(knifeSurf, knifeSurf, DFT_SCALE);
+    idft(knifeSurf, knifeSurf, cv::DFT_SCALE);
 
     m_foucultQimage = showMag(knifeSurf, false,"", false, gamma);
 
@@ -661,14 +661,6 @@ void foucaultView::on_SaveImageCB_clicked(bool checked)
                                                  | QFileDialog::DontResolveSymlinks);
     if (!dir.isEmpty())
         imageDir = dir;
-}
-bool foucaultView::saveOnlyFoucault(){
-    return ui->saveOnlyFouccault->isChecked();
-}
-
-void foucaultView::on_saveOnlyFouccault_clicked(bool /*checked*/)
-{
-
 }
 
 void foucaultView::on_overlayProfile_stateChanged(int /*arg1*/)

@@ -18,7 +18,6 @@
 #include "dftarea.h"
 #include "ui_dftarea.h"
 #include "dfttools.h"
-#include "vortex.h"
 #include <queue>
 #include "punwrap.h"
 #include "zernikeprocess.h"
@@ -33,7 +32,7 @@
 using namespace cv;
 
 
-cv::Mat  makeMask(CircleOutline outside, CircleOutline center, cv::Mat data,
+cv::Mat  makeMask(const CircleOutline &outside, const CircleOutline &center, const cv::Mat &data,
                   QVector<std::vector<cv::Point> > poly){
     int width = data.cols;
     int height = data.rows;
@@ -117,30 +116,32 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     m_Psidlg->setGeometry(rec);
 
 
-    connect(m_Psidlg, SIGNAL(computePhase()),this, SLOT(computePhases()));
+    connect(m_Psidlg, &PSI_dlg::computePhase,this, &DFTArea::computePhases);
     ui->setupUi(this);
     m_gamma = 2.5;
 
-    connect(tools,SIGNAL(dftChannel(const QString&)), this, SLOT(setChannel(const QString&)));
-    connect(tools,SIGNAL(dftSizeVal(int)), this, SLOT(dftSizeVal(int)));
-    connect(tools,SIGNAL(dftCenterFilter(double)), this, SLOT(dftCenterFilter(double)));
-    connect(tools,SIGNAL(makeSurface()), this,SLOT(makeSurface()));
-    connect(tools,SIGNAL(doDFT()), this,SLOT(doDFT()));
-    connect(tools,SIGNAL(showResized()),this, SLOT(showResizedDlg()));
+    connect(tools,&DFTTools::dftChannel, this, &DFTArea::setChannel);
+    connect(tools,&DFTTools::dftSizeVal, this, &DFTArea::dftSizeVal);
+    connect(tools,&DFTTools::dftCenterFilter, this, &DFTArea::dftCenterFilter);
+    connect(tools,&DFTTools::makeSurface, this,&DFTArea::makeSurface);
+    connect(tools,&DFTTools::doDFT, this,&DFTArea::doDFT);
+    connect(tools,&DFTTools::showResized,this, &DFTArea::showResizedDlg);
 
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomPlus()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &DFTArea::zoomPlus);
     shortcut = new QShortcut(QKeySequence(Qt::Key_Minus), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomMinus()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &DFTArea::zoomMinus);
     shortcut = new QShortcut(QKeySequence(Qt::Key_F), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomFit()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &DFTArea::zoomFit);
 
     tools->connectTo(this);
     capture = false;
     QSettings set;
     m_center_filter = set.value("DFT Center Filter", 10).toDouble();
     qDebug() << "init center" << m_center_filter;
-    emit updateFilterSize(m_center_filter);
+    // TODO I muted clazy warning as this is a false positive.
+    // It might be good to find a different way to call setCenterFilterValue
+    emit updateFilterSize(m_center_filter); // clazy:exclude=incorrect-emit
     installEventFilter(this);
 
     /*
@@ -389,7 +390,7 @@ void shiftDFT(cv::Mat &magI){
     tmp.copyTo(q2);
 }
 
-void showData(const std::string& txt, cv::Mat mat, bool useLog){
+void showData(const std::string& txt, const cv::Mat &mat, bool useLog){
 
     cv::Mat tmp = mat.clone();
     if (useLog){
@@ -405,7 +406,7 @@ void showData(const std::string& txt, cv::Mat mat, bool useLog){
 }
 
 
-QImage  showMag(cv::Mat complexI, bool show, const char* title, bool doLog, double gamma){
+QImage  showMag(const cv::Mat &complexI, bool show, const char* title, bool doLog, double gamma){
     // compute the magnitude and switch to logarithmic scale
     // => log(1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2))
     Mat planes[2];
@@ -544,7 +545,7 @@ void DFTArea::paintEvent(QPaintEvent *)
 double *g_qmap;
 class comp_qual {
 public:
-  int operator() (const int &p1, const int &p2) {
+  int operator() (int p1, int p2) {
     return (g_qmap[p1] < g_qmap[p2]);
   }
 };
@@ -720,8 +721,6 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     dft(imageMat,fdomMat);
     imageMat.release();
 
-    double dc = fdomMat.at<double>(0,0,0);
-    dc/=size;
     int count = 0;
     bool *bp = m_mask.ptr<bool>(0);
     for (int i = 0; i < size; ++i){
@@ -1055,7 +1054,7 @@ void DFTArea::makeSurface(){
     QApplication::restoreOverrideCursor();
     success = true;
 }
-void DFTArea::newIgram(QImage){
+void DFTArea::newIgram(const QImage&){
     doDFT();
 }
 void DFTArea::mouseReleaseEvent(QMouseEvent *)
@@ -1112,7 +1111,7 @@ void DFTArea::showResizedDlg(){
     }
 }
 
-void dumpMat(cv::Mat m, QString title = ""){
+void dumpMat(cv::Mat m, const QString &title = ""){
     qDebug() << "\r" << title << m.rows <<"X" << m.cols;
     for (int r = 0; r < m.rows; ++r){
         QString msg;
@@ -1177,7 +1176,7 @@ void DFTArea::doPSIstep3(){
 
 
 }
-#include "psiresizeimagesdlg.h"
+
 cv::Mat DFTArea::PSILoadFullImages(){
     int cnt = 0;
     cv::Mat data;
@@ -1273,7 +1272,9 @@ cv::Mat atan2Mat(cv::Mat y, cv::Mat x){
 }
 #include <armadillo>
 
-
+// zpmCxx commented out, not used, might be needed in doPSIstep4
+// I (atsju) recommend deleting this part and add original or modified file from Mike when/if needed
+/*
 arma::mat zpmCxx(double rho, double theta, int maxorder) {
 
   int m, n, n0, mmax = maxorder/2;
@@ -1347,9 +1348,10 @@ arma::mat zpmCxx(double rho, double theta, int maxorder) {
   }
   return zm;
 }
+*/
 
 #include "outlinedialog.h"
-void DFTArea::doPSIstep4(cv::Mat images, QVector<double> phases){
+void DFTArea::doPSIstep4(const cv::Mat &images, QVector<double> phases){
 
     emit statusBarUpdate("computing surface from  interferograms.",1);
     m_outlineComplete = false;
@@ -1473,13 +1475,11 @@ qDebug() << "rec" << left << top << width << height;
     qDebug() << "Rho " << r0 << "Theta" << t0;
 
 
-
-    zernikePolar &zpolar = *zernikePolar::get_Instance();
-    zpolar.init(r0,t0);
+    zernikePolar zpolar(r0,t0,100);
 
 // debug print the difference
 //    for (int i = 0; i < 100; ++i){
-//        qDebug() << "psi Zernike" <<i <<  coords(0,i) << zpolar.zernike(i,r0, t0);
+//        qDebug() << "psi Zernike" <<i <<  coords(0,i) << zpolar.zernike(i);
 //    }
 
     //cv::Mat modul = modu.reshape(0,rows);

@@ -57,7 +57,6 @@ public:
     QRadioButton *OneOnly;
     QRadioButton *Show16;
     QRadioButton *ShowAll;
-    int type;
     double m_showSurface;
     double m_showNm;
     bool zoomed;
@@ -66,7 +65,7 @@ public:
 
     double slopeLimitArcSec;
     void setDefocusValue(double val);
-    void setDefocusWaveFront( cv::Mat_<double> wf);
+    void setDefocusWaveFront( const cv::Mat_<double> &wf);
 signals:
     void zoomMe(bool);
     void profileAngleChanged(const double ang);
@@ -76,17 +75,17 @@ public slots:
     void setWavefronts(QVector<wavefront*> *wf);
     void angleChanged(double a);
     void newDisplayErrorRange(double min, double max);
-    void zeroOffsetChanged(QString);
+    void zeroOffsetChanged(const QString&);
     void showOne();
     void show16();
     void showAll();
     void showNm(bool);
     void showSurface(bool);
     void zoom();
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
     void showSlope(bool);
     void slopeLimit(double);
-    void contourPointSelected(const QPointF &pos);
+    void contourPointSelected(QPointF pos);
     void populate();
     void showCorrection();
     void make_correction_graph();
@@ -95,6 +94,11 @@ public slots:
     void showXMM();
     //QPolygonF createZernProfile(wavefront *wf);
 private:
+    enum class ProfileType {
+        SHOW_ONE = 0,
+        SHOW_16 = 1,
+        SHOW_ALL = 2
+    };
 
     void updateGradient();
     void saveXscaleSettings();
@@ -106,9 +110,14 @@ private:
 
     QDoubleSpinBox *slopeLimitSB;
     double m_defocusValue;
+
     bool m_displayPercent = false;
     bool m_displayInches = false;
 private:
+
+    ProfileType type;
+
+
     Ui::ProfilePlot *ui;
     bool m_defocus_mode;
     cv::Mat_<double> m_defocus_wavefront;

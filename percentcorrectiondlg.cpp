@@ -162,7 +162,7 @@ void percentCorrectionDlg::updateZoneTable(){
     ui->percentTable->setColumnCount(m_zoneCenters.size());
     ui->percentTable->blockSignals(false);
 }
-QJsonDocument percentCorrectionDlg::loadZonesFromJson(QString str){
+QJsonDocument percentCorrectionDlg::loadZonesFromJson(const QString &str){
     QJsonParseError jsonError;
     QJsonDocument jsonDoc = QJsonDocument::fromJson(str.toUtf8(), &jsonError);
     QJsonObject jsonData=jsonDoc.object();
@@ -284,13 +284,13 @@ double percentCorrectionDlg::getZernSurface( double RoC, double /*MirrorRad*/, s
 }
 
 // profile from profile plot with null removed
-void percentCorrectionDlg::setProfile(QPolygonF profile){
+void percentCorrectionDlg::setProfile(const QPolygonF &profile){
     m_avg = profile;
 
 }
 // will use zernike values to compute two surface points x+- .01x  away from x
 //      then compute normal slope from that.
-double percentCorrectionDlg::getnormalSlope(double RoC, double radius, std::vector<double> Zernikes, double x, double null = 0, bool useAvg = false){
+double percentCorrectionDlg::getnormalSlope(double RoC, double radius, const std::vector<double> &Zernikes, double x, double null = 0, bool useAvg = false){
 
     double num1 = x / 100.0;
     double surface1 = getZernSurface(RoC, radius, Zernikes, x - num1, null,useAvg);  // problem  with zonendx  (the delta is not same as zonendx)
@@ -304,7 +304,7 @@ double percentCorrectionDlg::getnormalSlope(double RoC, double radius, std::vect
 // y = mx + b
 // b = y - mx
 
-double percentCorrectionDlg::GetActualKE(double RoC, double MirrorRad, std::vector<double> Zernikes, double x, double null, bool use_avg)
+double percentCorrectionDlg::GetActualKE(double RoC, double MirrorRad, const std::vector<double> &Zernikes, double x, double null, bool use_avg)
 {
 
     double slope = getnormalSlope(RoC, MirrorRad, Zernikes, x, null, use_avg);
@@ -345,8 +345,6 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
 
     QVector<double> IdealzoneKnife;
     QVector<double> ActualZoneKnife;
-    QVector<double> idealDelta;
-    QVector<double> actualDelta;
     IdealzoneKnife << 0.;
     ActualZoneKnife << 0.0;
 

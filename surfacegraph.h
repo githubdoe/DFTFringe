@@ -39,7 +39,11 @@
 #include "dftcolormap.h"
 #include <QLabel>
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+//keep compatiblity with Qt5
 using namespace QtDataVisualization;
+#endif
+
 extern double maxHeightSelections[];
 class SurfaceGraph : public QObject
 {
@@ -84,7 +88,7 @@ public:
     void setLegend(QLabel * legend) {m_legend = legend;}
     QImage render(int width, int height);
     QSize Size();
-public Q_SLOTS:
+public slots:
     void changeTheme(int theme);
     void setColorMap(int ndx);
     void yOffsetChanged(int val);

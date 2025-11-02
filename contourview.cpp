@@ -34,8 +34,8 @@ contourView::contourView(QWidget *parent, ContourTools *tools) :
     ui->fillContourCB->setChecked(set.value("contourShowFill", true).toBool());
     ui->showRuler->setChecked(set.value("contourShowRuler",false).toBool());
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this,
-            SLOT(showContextMenu(QPoint)));
+    connect(this, &QWidget::customContextMenuRequested, this,
+            &contourView::showContextMenu);
     setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     ps = new pixelStats;
 
@@ -68,7 +68,7 @@ void contourView::setSurface(wavefront *wf){
     ps->setData(wf);
 }
 
-void contourView::showContextMenu(const QPoint &pos)
+void contourView::showContextMenu(QPoint pos)
 {
     // Handle global position
     QPoint globalPos = mapToGlobal(pos);
@@ -76,7 +76,7 @@ void contourView::showContextMenu(const QPoint &pos)
     // Create menu and insert some actions
     QMenu myMenu;
     QString txt = (zoomed)? tr("Restore to MainWindow") : tr("FullScreen");
-    myMenu.addAction(txt,  this, SLOT(zoom()));
+    myMenu.addAction(txt,  this, &contourView::zoom);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -100,35 +100,7 @@ void contourView::on_pushButton_pressed()
 {
     emit showAllContours();
 }
-#include <qwt_plot_histogram.h>
-#include <opencv2/highgui/highgui.hpp>
-cv::Mat orientationMap(const cv::Mat& mag, const cv::Mat& ori, double thresh = 1.0)
-{
-    cv::Mat oriMap = cv::Mat::zeros(ori.size(), CV_8UC3);
-    cv::Vec3b red(0, 0, 255);
-    cv::Vec3b cyan(255, 255, 0);
-    cv::Vec3b green(0, 255, 0);
-    cv::Vec3b yellow(0, 255, 255);
-    for(int i = 0; i < mag.rows*mag.cols; i++)
-    {
-        float* magPixel = reinterpret_cast<float*>(mag.data + i*sizeof(float));
-        if(*magPixel > thresh)
-        {
-            float* oriPixel = reinterpret_cast<float*>(ori.data + i*sizeof(float));
-            cv::Vec3b* mapPixel = reinterpret_cast<cv::Vec3b*>(oriMap.data + i*3*sizeof(char));
-            if(*oriPixel < 90.0)
-                *mapPixel = red;
-            else if(*oriPixel >= 90.0 && *oriPixel < 180.0)
-                *mapPixel = cyan;
-            else if(*oriPixel >= 180.0 && *oriPixel < 270.0)
-                *mapPixel = green;
-            else if(*oriPixel >= 270.0 && *oriPixel < 360.0)
-                *mapPixel = yellow;
-        }
-    }
 
-    return oriMap;
-}
 void contourView::on_histogram_clicked()
 {
     ps->show();
