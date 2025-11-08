@@ -82,9 +82,9 @@ private slots:
     void on_FFTSizeSB_valueChanged(int val);
 
 
-    void showContextMenu(const QPoint &pos);
+    void showContextMenu(QPoint pos);
 
-    void saveImage(QString fname = "");
+    void saveImage();
 
     void on_film_clicked();
 

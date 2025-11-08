@@ -120,9 +120,6 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
         slopeLimitSB->hide();
     showSlopeError->setChecked(m_showSlopeError);
 
-    connect(slopeLimitSB, SIGNAL(valueChanged(double)), this, SLOT(slopeLimit(double)));
-    connect(showSlopeError,SIGNAL(clicked(bool)), this, SLOT(showSlope(bool)));
-
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(slopeLimitSB, &QDoubleSpinBox::valueChanged, this, &ProfilePlot::slopeLimit);
 #else
@@ -592,8 +589,8 @@ void ProfilePlot::populate()
     double lower = -m_wf->diameter/2 - 10;
     double upper = m_wf->diameter/2 + 10;
     if (m_displayInches){
-        lower = lower /= 25.4;
-        upper = upper /= 25.4;
+        lower /= 25.4;
+        upper /= 25.4;
     }
     if (m_displayPercent){
         lower = -100;
@@ -813,7 +810,7 @@ void ProfilePlot::showContextMenu(QPoint pos)
     myMenu.setToolTipsVisible(true);
     QString txt = (zoomed)? "Restore to MainWindow" : "FullScreen";
 
-    myMenu.addAction(txt,  this, SLOT(zoom()));
+    myMenu.addAction(txt,  this, &ProfilePlot::zoom);
     myMenu.addAction("Change X axis to show percentage", this, SLOT(showXPercent()));
     myMenu.addAction("Change X asix to show inches",this, SLOT(showXInches()));
     myMenu.addAction("Change X axis to show mm",this, SLOT(showXMM()));

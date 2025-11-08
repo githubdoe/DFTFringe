@@ -137,9 +137,9 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
     QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::zoomIn);
     shortcut = new QShortcut(QKeySequence::ZoomOut, this);
 
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(zoomOut()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::zoomOut);
     shortcut = new QShortcut(QKeySequence("e"), this);
-    QObject::connect(shortcut, SIGNAL(activated()), this, SLOT(edgeMode()));
+    QObject::connect(shortcut, &QShortcut::activated, this, &IgramArea::edgeMode);
 
 
     connect(colorChannel::get_instance(),&colorChannel::useChannelsChanged, this, &IgramArea::colorChannelChanged);
