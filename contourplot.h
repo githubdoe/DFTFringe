@@ -27,6 +27,7 @@
 #include "wavefront.h"
 #include <qwt_picker.h>
 #include <qwt_plot_picker.h>
+#include <qwt_plot_rescaler.h>
 #include <qwt_interval.h>
 
 class MyZoomer;
@@ -112,6 +113,7 @@ private:
 
 
     QColor m_contourPen;
+    QwtPlotRescaler *d_rescaler;  // Added to maintain 1:1 aspect ratio
 
     void ruler();
     double m_min;
