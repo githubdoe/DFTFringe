@@ -472,6 +472,11 @@ void ContourPlot::setSurface(wavefront * wf) {
     setFooter(name + QString(" %1 rms %2 X %3").arg(wf->std, 6, 'f', 3).arg(wf->data.cols).arg(wf->data.rows));
 
     plotLayout()->setAlignCanvasToScales(true);
+    
+    // Update rescaler reference interval to match data dimensions
+    d_rescaler->setIntervalHint(QwtPlot::xBottom, QwtInterval(0, wf->data.cols));
+    d_rescaler->setIntervalHint(QwtPlot::yLeft, QwtInterval(0, wf->data.rows));
+    
     showContoursChanged(contourRange);
     tracker_->setZoomBase(true);
     replot();
@@ -507,6 +512,11 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     m_radialDeg = settings.value("contourRulerRadialDeg", 30).toInt();
     m_linkProfile = settings.value("linkProfilePlot", true).toBool();
     plotLayout()->setAlignCanvasToScales( true );
+    
+    // Setup rescaler to maintain aspect ratio
+    d_rescaler = new QwtPlotRescaler(canvas());
+    d_rescaler->setRescalePolicy(QwtPlotRescaler::Fitting);
+    
     initPlot();
 
 }
