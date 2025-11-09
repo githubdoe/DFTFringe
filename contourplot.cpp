@@ -471,11 +471,16 @@ void ContourPlot::setSurface(wavefront * wf) {
 
     setFooter(name + QString(" %1 rms %2 X %3").arg(wf->std, 6, 'f', 3).arg(wf->data.cols).arg(wf->data.rows));
 
-    plotLayout()->setAlignCanvasToScales(true);
-    
     // Update rescaler reference interval to match data dimensions
     d_rescaler->setIntervalHint(QwtPlot::xBottom, QwtInterval(0, wf->data.cols));
     d_rescaler->setIntervalHint(QwtPlot::yLeft, QwtInterval(0, wf->data.rows));
+    // Force an immediate rescale
+    d_rescaler->rescale();
+    
+    // Set canvas alignment after rescale
+    plotLayout()->setAlignCanvasToScales(true);
+    
+    spdlog::get("logger")->trace("ContourPlot::setSurface {}x{}", wf->data.cols, wf->data.rows);
     
     showContoursChanged(contourRange);
     tracker_->setZoomBase(true);
@@ -491,6 +496,7 @@ double ContourPlot::m_zOffset = 0.;
 ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     QwtPlot( parent ),m_wf(0),m_tools(tools), m_autoInterval(false),m_minimal(minimal), m_linkProfile(true),m_contourPen(Qt::white)
 {
+    spdlog::get("logger")->trace("ContourPlot::ContourPlot");
     d_spectrogram = new QwtPlotSpectrogram();
     picker_ = new QwtPlotPicker(this->canvas());
     picker_->setStateMachine(new QwtPickerClickPointMachine);
