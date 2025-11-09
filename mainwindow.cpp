@@ -49,8 +49,13 @@
 #include "colorchannel.h"
 #include "opencv2/opencv.hpp"
 #include <QUrl>
+
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+
 #include "zapm_interface.h"
 #include "zernikeprocess.h"
+
 
 using namespace QtConcurrent;
 std::vector<wavefront*> g_wavefronts;
@@ -206,13 +211,22 @@ MainWindow::MainWindow(QWidget *parent) :
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_I), this);
     QObject::connect(shortcut, &QShortcut::activated, this, &MainWindow::importIgram);
 
+    shortcut = new QShortcut(QKeySequence(Qt::Key_U), this);
+    QObject::connect(shortcut, &QShortcut::activated, this, &MainWindow::load_from_url);
+
     QShortcut *shortcutl = new QShortcut(QKeySequence(Qt::Key_L), this);
     QObject::connect(shortcutl, &QShortcut::activated, this, &MainWindow::on_actionLoad_Interferogram_triggered);
 
     QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_O), this);
     QObject::connect(shortcut1, &QShortcut::activated, this, &MainWindow::on_actionLoad_Interferogram_triggered);
 
+
+    QShortcut *shortcut2 = new QShortcut(QKeySequence(Qt::Key_S), this);
+    QObject::connect(shortcut2, &QShortcut::activated, this, &MainWindow::on_actionSave_Wavefront_triggered);
+
+
     connect(m_dftTools,&DFTTools::doDFT,m_dftArea,&DFTArea::doDFT);
+
     settingsDlg = Settings2::getInstance();
     connect(settingsDlg->m_igram, &settingsIGram::igramLinesChanged, m_igramArea, &IgramArea::igramOutlineParmsChanged);
     connect(settingsDlg->m_general, &SettingsGeneral2::updateContourPlot, m_contourView, &contourView::updateRuler);
@@ -2124,3 +2138,54 @@ void MainWindow::on_actionStop_auto_invert_triggered()
     //QMessageBox::information(this, "auto invert", "DFTFringe will now ask if it thinks it needs to invert a wave front.");
 }
 
+/*
+    This is called iwth shortcut Qt::Key_U
+    It's a sort of easter egg for people using skysolve camera with their Bath setup.
+ */
+void MainWindow::load_from_url(){
+
+    // Construct the URL with IP address and port
+    QUrl url;
+    url.setScheme("http"); // or "https" if using SSL
+    url.setHost("192.168.50.5"); // Replace with your IP address
+    url.setPort(5000); // Specify the port
+    url.setPath("/downloadImage");
+    showMessage("Connecting to " + url.toString(),1);
+    //downloader.startDownload(url);
+
+    QEventLoop loop;
+    QNetworkAccessManager nam;
+    QNetworkRequest req(url);
+    QNetworkReply *reply = nam.get(req);
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    //connect(reply, &QNetworkReply::downloadProgress, this, [&](qint64 bytesReceived, qint64 bytesTotal){
+    //    showMessage(QString("byes received %1").arg( bytesReceived) + QString(" total %1").arg(bytesTotal),1);
+    //});
+    loop.exec();
+    QByteArray buffer = reply->readAll();
+    QImage b(buffer);
+    QSettings set;
+    QString dirPath = set.value("importIgramPath",".").toString();
+    // Get the current date and time
+    QDateTime currentDateTime = QDateTime::currentDateTime();
+
+    // Format the date and time into a string suitable for a filename
+    // Using "yyyyMMdd_HHmmss" for a clear, sortable format without illegal characters
+    QString dateTimeString = currentDateTime.toString("yyyyMMdd_HHmmss");
+
+    // Construct the full filename
+    QString fileName = dirPath + "/" + dateTimeString +".jpg";
+    qDebug() << "download filename" << fileName;
+    // Create a QImage from the QByteArray
+    QImage image;
+    if (image.loadFromData(buffer, "jpg")) { // Specify format if known, otherwise omit
+        showMessage("Image loaded successfully " + fileName,1);
+        // Now you can use the 'image' QImage object
+        // Example: Save it to another file
+        image.save(fileName, "JPG");
+        importIgram();
+    } else {
+        showMessage("Failed to load image!",2);
+    }
+
+}

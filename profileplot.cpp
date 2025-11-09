@@ -75,6 +75,9 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     zoomed = false;
     m_defocus_mode = false;
     m_plot = new QwtPlot(this);
+    m_plot->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_plot, &QwtPlot::customContextMenuRequested, this, &ProfilePlot::showContextMenu);
+
     new profilePlotPicker(m_plot);
     type = ProfileType::SHOW_ONE;
     QHBoxLayout * l1 = new QHBoxLayout();
@@ -85,17 +88,21 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     OneOnly = new QRadioButton("one diameter of current wavefront",this);
     OneOnly->setChecked(true);
     ShowAll = new QRadioButton("All wavefronts",this);
+
     connect(Show16, &QAbstractButton::clicked, this, &ProfilePlot::show16);
     connect(OneOnly, &QAbstractButton::clicked, this, &ProfilePlot::showOne);
     connect(ShowAll, &QAbstractButton::clicked, this, &ProfilePlot::showAll);
     l1->addStretch();
+
     showSlopeError = new QCheckBox("Show Slope: ");
-    showPercentCorrection = new QPushButton("Show Correction");
-    showPercentCorrection->setToolTip("Show % correction of zone areas used in the Zambuto method of mirror figuring.");
+
+
     slopeLimitSB = new QDoubleSpinBox();
 
 
     QSettings set;
+    m_displayPercent = set.value("xScalepercent", false).toBool();
+    m_displayInches = set.value("xScaleInches", false).toBool();
     slopeLimitArcSec = set.value("slopeLimitArcSec", 1.).toDouble();
     slopeLimitSB->setValue(slopeLimitArcSec);
     slopeLimitSB->setPrefix(" > ");
@@ -112,6 +119,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     if (!m_showSlopeError)
         slopeLimitSB->hide();
     showSlopeError->setChecked(m_showSlopeError);
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(slopeLimitSB, &QDoubleSpinBox::valueChanged, this, &ProfilePlot::slopeLimit);
 #else
@@ -120,8 +128,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
 #endif
     // 
     connect(showSlopeError,&QAbstractButton::clicked, this, &ProfilePlot::showSlope);
-    connect(showPercentCorrection,&QAbstractButton::clicked, this, &ProfilePlot::showCorrection);
-    l1->addWidget(showPercentCorrection);
+
     l1->addWidget(showSlopeError);
     l1->addWidget(slopeLimitSB);
     l1->addWidget(showNmCB);
@@ -218,6 +225,10 @@ ProfilePlot::~ProfilePlot(){
     delete ui;
     delete m_pcdlg;
 }
+
+
+
+
 
 void ProfilePlot::showSlope(bool val){
     m_showSlopeError = val;
@@ -414,17 +425,23 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffs
     if (!allowOffset) offset = 0.;
     double radius = md.m_clearAperature/2.;
     double obs_radius = md.obs/2.;
-
+qDebug() << "create Profile";
     for (double rad = -1.; rad < 1.; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
         double radx = rad * radius;
+        if (m_displayInches){
+            radx /= 25.4;
+        }
         double e = 1.;
-
+        if (m_displayPercent){
+            radx = 100. * radx/radius;
+        }
 
         if (md.isEllipse()){
             e = md.m_verticalAxis/md.diameter;
         }
+
         dx = radn * cos(g_angle + M_PI_2) + wf->m_outside.m_center.x();
         dy = -radn * e * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y();
         if (dy >= wf->data.rows || dx >= wf->data.cols || dy < 0 || dx < 0){
@@ -441,7 +458,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffs
 
                 if (m_defocus_mode){
                     defocus = (m_defocusValue)* (-1. + 2. * rad * rad);
-                    points << QPointF(radx,(units * (m_defocus_wavefront((int)dy,(int)dx) + defocus ) *
+                    points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) + defocus ) *
                                             wf->lambda/outputLambda)  +offset * units);
                 }
                 else {
@@ -532,7 +549,13 @@ void ProfilePlot::populate()
     if (m_showNm == 1.)
         tmp = QString("waves of %1 nm").arg(outputLambda, 6, 'f', 1);
     m_plot->setAxisTitle( m_plot->yLeft, "Error in " + tmp );
-    m_plot->setAxisTitle( m_plot->xBottom, "Radius mm" );
+    QString XaxisTitle("Radius mm");
+    if (m_displayInches)
+        XaxisTitle = "Radius Inches";
+    if (m_displayPercent)
+        XaxisTitle = "Radius Percent";
+
+    m_plot->setAxisTitle( m_plot->xBottom, XaxisTitle );
 
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->enableXMin(true);
@@ -565,6 +588,14 @@ void ProfilePlot::populate()
     // axes
     double lower = -m_wf->diameter/2 - 10;
     double upper = m_wf->diameter/2 + 10;
+    if (m_displayInches){
+        lower /= 25.4;
+        upper /= 25.4;
+    }
+    if (m_displayPercent){
+        lower = -100;
+        upper = 100;
+    }
     m_plot->setAxisScale(QwtPlot::xBottom, lower, upper);
     QwtScaleEngine * se1 = m_plot->axisScaleEngine(QwtPlot::xBottom);
     QwtScaleDiv sd1 = se1->divideScale(lower,upper, 40,5);
@@ -686,7 +717,7 @@ void ProfilePlot::populate()
         for (int i = 0; i < list.size(); ++i){
             QStringList path = wfs->at(list[i])->name.split("/");
             QString name = path.last().replace(".wft","");
-
+qDebug() << "name " << name;
             QwtPlotCurve *cprofile = new QwtPlotCurve(name );
             int width = Settings2::m_profile->lineWidth();
             if (name == m_wf->name.split("/").last().replace(".wft",""))
@@ -776,13 +807,47 @@ void ProfilePlot::showContextMenu(QPoint pos)
 
     // Create menu and insert some actions
     QMenu myMenu;
+    myMenu.setToolTipsVisible(true);
     QString txt = (zoomed)? "Restore to MainWindow" : "FullScreen";
+
     myMenu.addAction(txt,  this, &ProfilePlot::zoom);
+    myMenu.addAction("Change X axis to show percentage", this, SLOT(showXPercent()));
+    myMenu.addAction("Change X asix to show inches",this, SLOT(showXInches()));
+    myMenu.addAction("Change X axis to show mm",this, SLOT(showXMM()));
+    QAction *correctionAction = myMenu.addAction("show percent of correction",this, SLOT(showCorrection()));
+    correctionAction->setToolTip("Show % correction of zone areas used in the Zambuto method of mirror figuring.");
+
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
 }
+void ProfilePlot::saveXscaleSettings(){
+    QSettings set;
+    set.setValue("xScalepercent", m_displayPercent);
+    set.setValue("xScaleInches", m_displayInches);
+}
+void ProfilePlot::showXPercent(){
+    m_displayPercent = true;
+    m_displayInches = false;
+    populate();
+    m_plot->replot();
+    saveXscaleSettings();
+}
+void ProfilePlot::showXInches(){
+    m_displayInches = true;
+    m_displayPercent = false;
+    populate();
+    m_plot->replot();
+    saveXscaleSettings();
+}
+void ProfilePlot::showXMM(){
+    m_displayInches = false;
+    m_displayPercent = false;
+    populate();
+    m_plot->replot();
+    saveXscaleSettings();
 
+}
 void ProfilePlot::resizeEvent( QResizeEvent *)
 {
     //m_plot->resizeEvent( event );

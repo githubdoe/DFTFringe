@@ -35,6 +35,10 @@
 #include <QTextDocument>
 #include <QtMath>
 #include <opencv2/core/core_c.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 double M2PI = M_PI * 2.;
 SimulationsView *SimulationsView::m_Instance = 0;
 class arcSecScaleDraw: public QwtScaleDraw
@@ -164,8 +168,10 @@ void SimulationsView::saveImageNamed(QString fileName){
     svImage.save(fileName);
 }
 
-void SimulationsView::showContextMenu(QPoint pos){
-    // Handle global position
+void SimulationsView::showContextMenu(QPoint pos)
+{
+
+// Handle global position
     QPoint globalPos = mapToGlobal(pos);
     // Create menu and insert some actions
     QMenu myMenu;
@@ -206,116 +212,20 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
     cv::Mat nulled_surface = zp.null_unwrapped( *(m_Instance->m_wf), newZerns, zernEnables);
     zernEnables[3] = saved_defocus_enable;
     if (GB_enabled){
-        double gbValue = settings.value("GBValue", 21).toInt();
-        int blurRad = .01 * gbValue * md->diameter;
+       double gbValue = settings.value("GBValue", 21).toInt();
+       int blurRad = 2 *(m_Instance->m_wf)->m_outside.m_radius * gbValue * .01;
+
         blurRad &= 0xfffffffe;
         ++blurRad;
+
+
+        qDebug() << "Blurr" << blurRad;
         cv::GaussianBlur( nulled_surface, nulled_surface , cv::Size( blurRad, blurRad ),0,0);
     }
     nulled_surface  *= M2PI * md->lambda/outputLambda;
     return nulled_surface;
 }
-#ifdef trialVersion
-// create star test using pupil_size which is usually smaller than the wavefront being sampled.
-cv::Mat SimulationsView::computeStarTest(cv::Mat surface, int pupil_size, double pad , bool returnComplex){
-    alias = false;
-    cv::Mat out;
 
-
-    int nx = surface.size().width;//pupil_size;
-    int ny = surface.size().height;
-
-    cv::Mat tmp[] = {cv::Mat::zeros(Size(nx,ny),CV_64FC1)
-                    ,cv::Mat::zeros(Size(nx,ny),CV_64FC1)};
-
-    for (int y = 0; y < ny; ++y){
-        for (int x = 0; x < nx; ++x){
-            tmp[1].at<double>(y,x) =  cos(surface.at<double>(y,x));
-            tmp[0].at<double>(y,x) = -sin(surface.at<double>(y,x));
-
-        }
-    }
-
-    // apply the mask
-    cv::Mat tmp2;
-
-    tmp[0].copyTo(tmp2, m_wf->workMask);
-    tmp[0] = tmp2.clone();
-    tmp[1].copyTo(tmp2, m_wf->workMask);
-    tmp[1] = tmp2.clone();
-    //pupil_size += 1;
-    // now reduce the wavefront with pad to fit into the fft size;
-    // new padSize is fft_size/pad;
-
-
-        int padSize =  pupil_size;
-
-        dX = (m_wf->diameter/2.)/m_wf->m_outside.m_radius;
-        if (nx > padSize/3.){
-            cv::resize(tmp[0],tmp[0],cv::Size(padSize/3.,padSize/3.),cv::INTER_AREA);
-            cv::resize(tmp[1],tmp[1],cv::Size(padSize/3.,padSize/3.),cv::INTER_AREA);
-        }
-
-
-    cv::Mat in[] = {cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)
-                    ,cv::Mat::zeros(Size(pupil_size,pupil_size),CV_64FC1)};
-
-    tmp[0].copyTo(in[0](cv::Rect(0,0,tmp[0].cols,tmp[0].cols)));
-    tmp[1].copyTo(in[1](cv::Rect(0,0,tmp[0].cols,tmp[0].cols)));
-    //showData("xxxxff", in[0].clone());
-    cv::Mat complexIn;
-
-    cv::merge(in,2,complexIn);
-    dft(complexIn,out);
-    shiftDFT(out);
-
-    //cv::flip(out,out,0);      // needs work.
-    Mat planes[2];
-    split(out, planes);
-    magnitude(planes[0], planes[1], planes[0]);
-
-
-    // check for aliasing
-    // compute edge
-    double edge_avg = 0.;
-    double center_avg = 0.;
-    int half = out.size[0] /2;
-    int last = out.size[0] * .3;
-
-    for (int i = 0; i < last; ++i)
-    {
-        edge_avg += planes[0].at<double>(half,i);
-        center_avg += planes[0].at<double>(half, i+half);
-
-    }
-
-    double ddd = center_avg/edge_avg;
-
-    if (ddd < 2)
-    {
-        alias = true;
-/*
-        AfxMessageBox(L"Warning, computed PSF was too large for the selected size of the simulation.\n"
-                        L"Select larger simulation size from the Configuration Menu\n"
-                        L"and try again.\n\n"
-                        L"Note: PSF is also used to compute Foucault, Ronchi, and MTF\n"
-                        L" Computeing MTF may cause this message 3 times\n"
-                        L"Sometime this message is caused by the errors on the surface and so the simulatin may still be usable.\n"
-                        L"The error usually shows up as a series of light and dark horizontal bands.");
-
-        //throw FFT_ERROR();
-        */
-    }
-
-    if (returnComplex)
-        return out;
-    int start = (pupil_size/2)-pupil_size/8;
-
-
-    return (planes[0]);
-
-}
-#endif
 // create star test using pupil_size which is usually smaller than the wavefront being sampled.
 cv::Mat SimulationsView:: computeStarTest(cv::Mat surface, int pupil_size, double pad , bool returnComplex){
     alias = false;
@@ -458,6 +368,7 @@ void etoxplusy(cv::Mat data)
         }
     }
 }
+
 void SimulationsView::mtf(const cv::Mat &star, const QString &txt, QColor color){
     cv::Mat planes[2];
     cv::Mat mtfIn, mtfOut, mtfMag;
@@ -492,29 +403,40 @@ void SimulationsView::mtf(const cv::Mat &star, const QString &txt, QColor color)
     curve1->setSamples(points1);
     curve1->attach(ui->MTF);
 }
+
+void SimulationsView::makeFrame(double defocus, startestMovieDlg * dlg){
+
+
+    double fftSize = ui->FFTSizeSB->value();
+    double gamma = ui->gammaSB->value();
+
+    QApplication::processEvents();
+
+    cv::Mat inside = computeStarTest(nulledSurface(defocus), fftSize, 3);
+    QScreen *screen = QGuiApplication::primaryScreen();
+    int size = screen->availableSize().height()/2;
+    cv::Mat t = fitStarTest(inside, size,gamma);
+    cv::putText(t,QString("%1 waves").arg(2 * defocus, 5, 'f', 2).toStdString(),cv::Point(50,60),1,3,cv::Scalar(255, 255,255),3);
+
+
+    QImage outdisplay((uchar*)t.data, t.cols, t.rows, t.step, QImage::Format_RGB888);
+
+
+    QApplication::processEvents();
+
+    dlg->setImage(outdisplay);
+
+}
 void SimulationsView::on_film_clicked()
 {
-    QSettings settings;
-    QString filmDir = settings.value("lastPath","").toString();
+    ui->film->setChecked(false);
+    m_movieDlg = new startestMovieDlg(this);
 
-    filmDir = QFileDialog::getExistingDirectory(this, tr("Directory where images are to be saved"),
-                                                 filmDir,
-                                                 QFileDialog::ShowDirsOnly
-                                                 | QFileDialog::DontResolveSymlinks);
-    if (filmDir.isEmpty())
-        return;
-    int cnt = 0;
-    for (double wave = .1; wave < 10. ; wave+= .2){
+    m_movieDlg->exec();
 
-        ui->defocusSB->setValue(wave);
-        QApplication::processEvents();
-        on_MakePB_clicked();
-        QApplication::processEvents();
-        QString name = QString("/frame%1").arg(cnt++, 3 ,10, QLatin1Char('0'));
-
-        saveImageNamed(filmDir+name);
-    }
+    delete m_movieDlg;
 }
+
 int offset = 0;
 int stalkWidth;
 #include <opencv2/highgui/highgui.hpp>
@@ -630,6 +552,7 @@ cv::Mat zoomMat(cv::Mat &mat, double zoom){
 void SimulationsView::on_MakePB_clicked()
 {
     m_guiTimer.stop();
+    ui->MakePB->setChecked(false);
     /**************************  special test code for PSF  */
 
 
@@ -647,9 +570,11 @@ void SimulationsView::on_MakePB_clicked()
     QString strehl = doc.toPlainText();
     doc.setHtml(metrics->mCC->text());
     QString bestFit = doc.toPlainText();
+    QFileInfo fileInfo(m_wf->name);
 
+    QString fileName = fileInfo.fileName();
     QString caption = QString("%1   Diameter: %2 ROC: %3 Best Fit CC: %4 Strehl: %5").arg(
-                                        m_wf->name).arg(
+                                        fileName).arg(
                                         m_wf->diameter, 6, 'f', 1).arg(
                                         m_wf->roc, 6, 'f', 1).arg(
                                         bestFit).arg(  // clazy:exclude=qstring-arg

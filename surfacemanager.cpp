@@ -359,6 +359,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
                 gaussianRad &= 0xfffffffe;
 
                 ++gaussianRad;
+                        qDebug() << "Blurr" << gaussianRad;
                     cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
                                       cv::Size( gaussianRad, gaussianRad ),0,0,cv::BORDER_REFLECT);
             }
@@ -435,6 +436,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 
             gaussianRad &= 0xfffffffe;
             ++gaussianRad;
+
             cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
                               cv::Size( gaussianRad, gaussianRad ),0,0,cv::BORDER_REFLECT);
     }
@@ -1075,7 +1077,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     }
 
     if (m_wavefronts.size() >0 && (m_currentNdx == 0 &&  m_wavefronts[0]->name == "Demo")){
-        qDebug() << "using demo";
+
         wf = m_wavefronts[0];
         emit nameChanged(wf->name, name);
         wf->name = name;

@@ -274,6 +274,8 @@ private slots:
 
     void on_actionStop_auto_invert_triggered();
 
+    void load_from_url();
+
 private:
 
     Ui::MainWindow *ui;

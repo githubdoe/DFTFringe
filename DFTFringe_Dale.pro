@@ -48,6 +48,7 @@ SOURCES += main.cpp \
     profileplot.cpp \
     profileplotpicker.cpp \
     settingsigramimportconfig.cpp \
+    startestmoviedlg.cpp \
     surface3dcontrolsdlg.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
@@ -163,6 +164,7 @@ HEADERS  += mainwindow.h \
     profileplot.h \
     profileplotpicker.h \
     settingsigramimportconfig.h \
+    startestmoviedlg.h \
     surface3dcontrolsdlg.h \
     surfacegraph.h \
     surfacelightingproxy.h \
@@ -276,6 +278,7 @@ FORMS    += mainwindow.ui \
     profileplot.ui \
     contourtools.ui \
     settingsigramimportconfig.ui \
+    startestmoviedlg.ui \
     surface3dcontrolsdlg.ui \
     surfaceanalysistools.ui \
     metricsdisplay.ui \

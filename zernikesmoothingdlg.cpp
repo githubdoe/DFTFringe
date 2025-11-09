@@ -28,11 +28,6 @@ ZernikeSmoothingDlg::ZernikeSmoothingDlg(wavefront &wf, QWidget *parent) :
     tableModel->setValues(&m_wf.InputZerns);
     m_sm = SurfaceManager::get_instance();
 
-
-    m_originalSize = wf.data.cols;
-    m_xCen = wf.m_outside.m_center.x();
-    m_yCen = wf.m_outside.m_center.y();
-    m_rad = wf.m_outside.m_radius;
 }
 
 ZernikeSmoothingDlg::~ZernikeSmoothingDlg()

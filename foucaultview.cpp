@@ -546,7 +546,7 @@ void foucaultView::on_scanPb_clicked()
         if (ui->SaveImageCB->isChecked()){
             QString num = QString("%1").arg(v, 6, 'f', 4).replace(".","_");
             num.replace("-","n");
-            QString fvpng = QString("%1//%2_%3.png").arg(imageDir).arg(cnt++, 6, 10, QLatin1Char('0')).arg(num);
+            QString fvpng = QString("%1//%2.png").arg(imageDir).arg(cnt++, 6, 10, QLatin1Char('0'));
             qDebug() << "fn"<< fvpng;
             if (ui->saveOnlyFouccault->isChecked()){
                 fv->m_foucultQimage.save(fvpng);

@@ -235,6 +235,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     simigramdlg.cpp \
     simulationsview.cpp \
     standastigwizard.cpp \
+    startestmoviedlg.cpp \
     statsview.cpp \
     subtractwavefronatsdlg.cpp \
     surface3dcontrolsdlg.cpp \
@@ -352,6 +353,7 @@ HEADERS += bezier/bezier.h \
     simigramdlg.h \
     simulationsview.h \
     standastigwizard.h \
+    startestmoviedlg.h \
     statsview.h \
     subtractwavefronatsdlg.h \
     surface3dcontrolsdlg.h \
@@ -442,6 +444,7 @@ FORMS += arbitrarywavefronthelp.ui \
     simigramdlg.ui \
     simulationsview.ui \
     standastigwizard.ui \
+    startestmoviedlg.ui \
     statsview.ui \
     subtractwavefronatsdlg.ui \
     surface3dcontrolsdlg.ui \
