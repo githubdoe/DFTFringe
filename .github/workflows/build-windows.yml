@@ -389,7 +389,9 @@ jobs:
       - name: Get short SHA
         id: short_sha
         shell: bash
-        run: echo "short_sha=${{github.event.pull_request.head.sha::7}}" >> $GITHUB_OUTPUT
+        run: |
+          SHA="${{ github.event.pull_request.head.sha }}"
+          echo "short_sha=${SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Comment PR with artifact link
         if: github.event_name == 'pull_request'
