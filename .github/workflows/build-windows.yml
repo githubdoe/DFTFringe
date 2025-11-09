@@ -385,6 +385,10 @@ jobs:
             DFTFringeInstaller_${{env.WORKFLOW_VERSION}}.exe
             Z_DFTFringe.exe.debug
 
+      - name: Get short SHA
+        id: short_sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+        
       - name: Comment PR with artifact link
         if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
@@ -392,5 +396,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            🚀 New build available for commit ${{ github.sha.substring(0,7) }}
+            🚀 New build available for commit `${{ steps.short_sha.outputs.short_sha }}`
             [Download installer here](${{ steps.upload_artifact.outputs.artifact-url }})
