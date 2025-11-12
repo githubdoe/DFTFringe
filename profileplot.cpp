@@ -428,17 +428,22 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffs
     if (!allowOffset) offset = 0.;
     double radius = md.m_clearAperature/2.;
     double obs_radius = md.obs/2.;
-qDebug() << "create Profile";
+    if (m_displayInches){
+        obs_radius /= 25.4;
+    }
+
     for (double rad = -1.; rad < 1.; rad += steps){
         int dx, dy;
         double radn = rad * wf->m_outside.m_radius;
         double radx = rad * radius;
         if (m_displayInches){
             radx /= 25.4;
+
         }
         double e = 1.;
         if (m_displayPercent){
             radx = 100. * radx/radius;
+            obs_radius = 100 *( md.obs/2)/radius;
         }
 
         if (md.isEllipse()){
@@ -451,6 +456,8 @@ qDebug() << "create Profile";
             continue;
 
         }
+
+
         if (abs(radx) < obs_radius){
             points << QPointF(radx,0.0);
             continue;
