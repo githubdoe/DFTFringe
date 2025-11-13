@@ -68,7 +68,7 @@ public:
     void previous();
     void next();
     void deleteCurrent();
-    void processSmoothing();
+    //void processSmoothing();
     void saveAllWaveFrontStats();
     void SaveWavefronts(bool saveNulled);
     void writeWavefront(const QString &fname, wavefront *wf, bool saveNulled);
