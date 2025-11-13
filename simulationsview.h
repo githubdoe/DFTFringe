@@ -24,6 +24,8 @@
 #include <QTimer>
 #include <QtDataVisualization/Q3DSurface>
 
+#include "startestmoviedlg.h"
+
 class arcSecScaleDraw;
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
@@ -59,6 +61,7 @@ private:
     Q3DSurface *m_PSF_3Dgraph;
     double dX;  // pupil sample size based on mirror size in wave front.
     double dF;  // psf sample size;
+    startestMovieDlg *m_movieDlg;
 
     void saveImageNamed(QString fn);
     void mtf(const cv::Mat &magPsf, const QString &txt, QColor color);
@@ -67,6 +70,7 @@ private:
     void make3DPsf(const cv::Mat &surface);
 public slots:
         void on_MakePB_clicked();
+        void makeFrame(double wave, startestMovieDlg * dlg);
 private slots:
 
     void on_defocusSB_valueChanged(double);
@@ -76,6 +80,7 @@ private slots:
     void on_centerMagnifySB_valueChanged(double value);
 
     void on_FFTSizeSB_valueChanged(int val);
+
 
     void showContextMenu(QPoint pos);
 

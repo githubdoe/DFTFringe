@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>828</width>
+    <width>935</width>
     <height>516</height>
    </rect>
   </property>
@@ -21,9 +21,18 @@
                         font: normal 12px;
                            padding: 2px; }</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,100,100,1">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="5,100,100,1">
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="bottomMargin">
+    <number>2</number>
+   </property>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,20,0,1,1,1,1,1,1,1,1,0">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetNoConstraint</enum>
+     </property>
      <item>
       <widget class="QLabel" name="caption">
        <property name="text">
@@ -45,9 +54,12 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="film">
+      <widget class="QCheckBox" name="film">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This will scan defocus through inside to outside defocus and make images to be used in a movie to simulate moving the defocuser and watching for astig and center obstruction breakout.  &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="text">
-        <string>film</string>
+        <string>Make Defocus Scan film</string>
        </property>
       </widget>
      </item>
@@ -156,12 +168,24 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="MakePB">
+      <widget class="QCheckBox" name="MakePB">
        <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>4</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="toolTip">
-        <string>Generat star tests.</string>
+        <string>Generate star tests.</string>
        </property>
        <property name="text">
         <string>Make</string>

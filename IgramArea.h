@@ -150,13 +150,14 @@ public:
     void writeOutlines(QString fileName);
     QString makeOutlineName();
     void shiftoutline(QPointF p);
-    void setZoomMode(zoomMode mode);
+
     void showAliasDialog();
     cv::Mat igramToGray(const cv::Mat &roi);
     cv::Mat qImageToMat(QImage &roi);
 private slots:
     void aperatureChanged();
 public slots:
+    void setZoomMode(zoomMode mode);
     void gammaChanged(bool, double);
     void generateSimIgram();
     void clearImage();
@@ -270,7 +271,6 @@ private:
     dftThumb *m_dftThumb;
     QTimer *m_outlineTimer;
     bool hasBeenCropped;
-    bool m_edgeMode;
     int m_zoomBoxWidth;
     int m_usingChannel;
     zoomMode m_zoomMode;

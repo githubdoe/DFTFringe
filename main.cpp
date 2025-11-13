@@ -122,7 +122,7 @@ static int myCvErrorCallback( int /*status*/, const char* /*func_name*/,
 }
 
 int main(int argc, char *argv[])
-{   
+{
     // Allow secondary instances
     SingleApplication app( argc, argv, true );
 

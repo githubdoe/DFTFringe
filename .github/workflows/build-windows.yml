@@ -378,6 +378,7 @@ jobs:
         run: Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{env.WORKFLOW_VERSION}}
 
       - name: Upload Artifact
+        id: upload_artifact
         uses: actions/upload-artifact@v4
         with:
           name: DFTFringe-windows-build-artifact
@@ -385,3 +386,19 @@ jobs:
             DFTFringeInstaller_${{env.WORKFLOW_VERSION}}.exe
             Z_DFTFringe.exe.debug
 
+      - name: Get short SHA
+        id: short_sha
+        shell: bash
+        run: |
+          SHA="${{ github.event.pull_request.head.sha }}"
+          echo "short_sha=${SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with artifact link
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            🚀 New build available for commit `${{ steps.short_sha.outputs.short_sha }}`
+            [Download installer here](${{ steps.upload_artifact.outputs.artifact-url }})

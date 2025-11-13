@@ -360,6 +360,8 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
                 gaussianRad &= 0xfffffffe;
 
                 ++gaussianRad;
+
+                qDebug() << "Blurr" << gaussianRad;
                 cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
                                       cv::Size( gaussianRad, gaussianRad ),0,0,cv::BORDER_REFLECT);
             }
@@ -1084,7 +1086,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     }
 
     if (m_wavefronts.size() >0 && (m_currentNdx == 0 &&  m_wavefronts[0]->name == "Demo")){
-        qDebug() << "using demo";
+
         wf = m_wavefronts[0];
         emit nameChanged(wf->name, name);
         wf->name = name;
@@ -2447,7 +2449,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef *> list){
     // check for pairs
     QVector<rotationDef*> lookat = list.toVector();
-	spdlog::get("logger")->trace("computeStandAstig()");
+    spdlog::get("logger")->trace("computeStandAstig()");
     while (lookat.size()){
         for (int i = 0; i < lookat.size(); ++i){
             double angle1 = wrapAngle(lookat[i]->angle);

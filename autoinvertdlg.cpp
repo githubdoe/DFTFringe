@@ -7,6 +7,7 @@ autoInvertDlg::autoInvertDlg(QWidget *parent) :
     ui(new Ui::autoInvertDlg)
 {
     ui->setupUi(this);
+    setSizeGripEnabled(true);
 }
 
 autoInvertDlg::~autoInvertDlg()

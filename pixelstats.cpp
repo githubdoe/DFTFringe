@@ -494,9 +494,9 @@ void  pixelStats::updateHisto(){
     ui->histo->detachItems( QwtPlotItem::Rtti_PlotCurve);
     ui->histo->detachItems( QwtPlotItem::Rtti_PlotMarker);
     ui->histo->detachItems(QwtPlotItem::Rtti_PlotItem);
+
     int hbins = 1000; // make histogram with 1000 bins
     int histSize[] = {hbins};
-
 
     cv::Mat hist;
 
