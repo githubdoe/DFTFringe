@@ -40,7 +40,7 @@ void startestMovieDlg::on_start_clicked()
 }
 
 
-QImage brighten(QImage image ,int brightness_factor){
+QImage brighten(const QImage &image ,int brightness_factor){
     QImage imaget = image.copy();
 
     for (int y = 0; y < imaget.height(); ++y) {
@@ -61,7 +61,7 @@ QImage brighten(QImage image ,int brightness_factor){
     return imaget;
 }
 
-void startestMovieDlg::setImage(QImage image){
+void startestMovieDlg::setImage(const QImage &image){
     m_image = image.copy();
 
 
