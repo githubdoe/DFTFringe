@@ -15,7 +15,7 @@ class startestMovieDlg : public QDialog
 public:
     explicit startestMovieDlg(SimulationsView *view);
     ~startestMovieDlg();
-    void setImage(QImage image);
+    void setImage(const QImage &image);
     bool m_recording = false;
     int m_frameNumber = 0;
     int m_bright = 1;

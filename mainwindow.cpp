@@ -15,7 +15,7 @@
 ** along with DFTFringe.  If not, see <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
-#include "mainwindow.h" 
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "spdlog/spdlog.h"
 #include <QtWidgets>
@@ -1782,7 +1782,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
 
         {
             QString cmd = QString("ffmpeg -framerate 1 -i %1%03d.jpg -c:v libx264 -vf format=yuv420p -y -r 25 %2")
-                .arg(dowavefront ? waveprefix : astigprefix, 
+                .arg(dowavefront ? waveprefix : astigprefix,
                     dowavefront ? "waveFronts.mp4" : "astig.mp4");
 
             bool ok = false;
@@ -1813,9 +1813,9 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 qDebug() << "plain text"<< text;
                 QApplication::setOverrideCursor(Qt::WaitCursor);
                 QProcess *proc = new QProcess;
-                             
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-                QObject::connect(proc, &QProcess::finished, proc, &QObject::deleteLater);                
+                QObject::connect(proc, &QProcess::finished, proc, &QObject::deleteLater);
                 connect(proc, &QProcess::finished, [=](int exitCode, QProcess::ExitStatus exitStatus){ qDebug() << "what" << exitStatus << "code" << exitCode; });
 #else
                 //QProcess::finished is overloaded in Qt5
@@ -1857,7 +1857,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 loop.exec();
 
                 qDebug() << "done" ;
-       
+
 
                 QApplication::restoreOverrideCursor();
 
@@ -2163,7 +2163,6 @@ void MainWindow::load_from_url(){
     //});
     loop.exec();
     QByteArray buffer = reply->readAll();
-    QImage b(buffer);
     QSettings set;
     QString dirPath = set.value("importIgramPath",".").toString();
     // Get the current date and time
