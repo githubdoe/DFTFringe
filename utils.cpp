@@ -195,7 +195,7 @@ void debugshow(const cv::Mat &m) {
 */
 
 
-void CropGaussianBlur(cv::Mat in, cv::Mat out, int kernelSize, const CircleOutline &outside, const CircleOutline &center)
+void CropGaussianBlur(const cv::Mat &in_, cv::Mat &out, int kernelSize, const CircleOutline &outside, const CircleOutline &center)
 {
     // Warning - this function is extremely sensitive to getting the mask off by even just a few pixels out of all 360k or so.  The mask
     // must be perfect to every last pixel.  If the outer mask zeros some valid pixels we get a turned edge.  Very visible in the 3d view.
@@ -213,6 +213,7 @@ void CropGaussianBlur(cv::Mat in, cv::Mat out, int kernelSize, const CircleOutli
     // we also zero out the input data which probably is already zeroed but we can't take that chance particularly if there were wavefronts averaged
     // because the average feature fills in the center and outside the outer outline.
 
+    cv::Mat in = in_.clone();
     const int height = in.rows;
     const int width = in.cols;
     cv::Mat mask = cv::Mat::ones(height,width,CV_64F);
@@ -257,8 +258,20 @@ void CropGaussianBlur(cv::Mat in, cv::Mat out, int kernelSize, const CircleOutli
 
 
 
-    // these next 3 lines of code are brilliant and from julien asking chatgpt but I get it completely - if someone wants an explanation
-    // I'll have to draw some pictures...  Although I try to explain with words farther below
+    // these next 3 lines of code are brilliant and from chatgpt but I get it completely.  But it's very hard to explain without pictures.
+    // here's an attempt: When you are getting the gaussian blur of a pixel near the edge (near the edge of the mirror or other mask edge) you are adding
+    // up a bunch of points convolved (multiplied) by the kernel shape.  But the pixels outside the mask should be ignored. and because the kernel is
+    // normalized (adds up to 1) you normally don't have to divide by the sum of the kernel values. but you don't want to use the kernel values for points outside
+    // the mirror edge so we set those to zero in the "in" matrix in code above (and you sort of haven't used them because they are all multiplied by zero) but
+    // in this case you need to divide by the kernel values that fall inside the mirror outline.  So we make a mask (with 1s for valid data) and blur it
+    // the same amount and this gives us the proper weighting. In the blurred mask, points far from the edge will all be set to 1 so it won't affect the weighting.
+    // Points just inside the edge of the mirror will have a smaller weighting value. These points near the edge will have a value of the sum of kernel points.  Just
+    // what we need to divide the points by.
+    // This is "mask" in the division below.  To be clear, "mask" will have values less than 1 (greater than 0) near the edge of the mask and is the perfect amount
+    // to divide into "out" to get the properly weighted final result.
+    //
+    // Note the 3 lines of code below can have a very complicated mask with many masked regions and it all still just works and in fact cropGaussianBlur() supports
+    // the inner outline as well as part of the mask.
 
     cv::GaussianBlur(in,out,cv::Size(kernelSize,kernelSize),0);
     cv::GaussianBlur(mask,mask,cv::Size(kernelSize,kernelSize),0);
@@ -306,13 +319,6 @@ void CropGaussianBlur(cv::Mat in, cv::Mat out, int kernelSize, const CircleOutli
         }
     }
 
-    // here's an attempt at an explanation of the 3 "magic" lines of code.  When you are getting the gaussian blur of a pixel near the edge you are adding
-    // up a bunch of points convolved (multiplied) by the kernel shape.  But the pixels outside the circle are all zero and because the kernel is
-    // normalized you normally don't have to divide by the sum of the kernel values. but you don't want to use the kernel values for points outside
-    // the circle (and you sort of haven't used them because they are all multiplied by zero) but in this case you need to divide by the kernel
-    // values that fall inside the circle.  So we make a mask and blur it the same amount and this gives us the proper weighting.  Points far from
-    // the edge will all be set to 1 so it won't affect the weighting.  Points near the edge will have a smaller weighting value.  aka normalizing
-    // value aka sum of kernel points.
 
 
 }

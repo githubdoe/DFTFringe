@@ -218,7 +218,7 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
         int blurRad = .01 * gbValue * m_wf->m_outside.m_radius * 2;
         blurRad &= 0xfffffffe;
         ++blurRad;
-        CropGaussianBlur(nulled_surface.clone(), nulled_surface, blurRad, m_wf->m_outside, m_wf->m_inside);
+        CropGaussianBlur(nulled_surface, nulled_surface, blurRad, m_wf->m_outside, m_wf->m_inside);
     }
 
     nulled_surface  *= M2PI * md->lambda/outputLambda;

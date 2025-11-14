@@ -440,7 +440,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             //std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
             //    std::chrono::system_clock::now().time_since_epoch());
 
-            CropGaussianBlur(wf->nulledData.clone(), wf->workData, gaussianRad, wf->m_outside, wf->m_inside);
+            CropGaussianBlur(wf->nulledData, wf->workData, gaussianRad, wf->m_outside, wf->m_inside);
 
             //std::chrono::milliseconds ms2 = std::chrono::duration_cast< std::chrono::milliseconds >(
             //    std::chrono::system_clock::now().time_since_epoch());
