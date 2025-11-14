@@ -74,7 +74,6 @@
 #include "oglrendered.h"
 #include "ui_oglrendered.h"
 #include "astigpolargraph.h"
-#include <chrono>
 #include "utils.h"
 
 cv::Mat theMask;
