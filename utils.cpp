@@ -213,8 +213,8 @@ void CropGaussianBlur(cv::Mat in, cv::Mat out, int kernelSize, const CircleOutli
     // we also zero out the input data which probably is already zeroed but we can't take that chance particularly if there were wavefronts averaged
     // because the average feature fills in the center and outside the outer outline.
 
-    int height = in.rows;
-    int width = in.cols;
+    const int height = in.rows;
+    const int width = in.cols;
     cv::Mat mask = cv::Mat::ones(height,width,CV_64F);
 
     //
