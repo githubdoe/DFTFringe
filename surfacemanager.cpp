@@ -74,7 +74,7 @@
 #include "oglrendered.h"
 #include "ui_oglrendered.h"
 #include "astigpolargraph.h"
-
+#include "utils.h"
 
 cv::Mat theMask;
 cv::Mat deb;
@@ -359,8 +359,9 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
                 gaussianRad &= 0xfffffffe;
 
                 ++gaussianRad;
-                        qDebug() << "Blurr" << gaussianRad;
-                    cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
+
+                qDebug() << "Blurr" << gaussianRad;
+                cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
                                       cv::Size( gaussianRad, gaussianRad ),0,0,cv::BORDER_REFLECT);
             }
             else {
@@ -430,15 +431,22 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 
 
     if (m_GB_enabled){
-            expandBorder(wf);
             // compute blur radius
             int gaussianRad = 2 * wf->m_outside.m_radius * m_gbValue * .01;
 
             gaussianRad &= 0xfffffffe;
             ++gaussianRad;
 
-            cv::GaussianBlur( wf->nulledData.clone(), wf->workData,
-                              cv::Size( gaussianRad, gaussianRad ),0,0,cv::BORDER_REFLECT);
+            //std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
+            //    std::chrono::system_clock::now().time_since_epoch());
+
+            CropGaussianBlur(wf->nulledData, wf->workData, gaussianRad, wf->m_outside, wf->m_inside);
+
+            //std::chrono::milliseconds ms2 = std::chrono::duration_cast< std::chrono::milliseconds >(
+            //    std::chrono::system_clock::now().time_since_epoch());
+
+            //int duration = ms2.count() - ms.count();
+            //spdlog::get("logger")->trace("guassian blur time in ms: {}", duration);
     }
 
     wf->nulledData.release();
@@ -1368,7 +1376,7 @@ void SurfaceManager::deleteCurrent(){
 
     emit currentNdxChanged(m_currentNdx);
 }
-
+/*
 void SurfaceManager::processSmoothing(){
     if (m_wavefronts.size() == 0)
         return;
@@ -1389,7 +1397,7 @@ void SurfaceManager::processSmoothing(){
     }
 
     sendSurface(wf);
-}
+}*/
 
 void SurfaceManager::next(){
     if (m_wavefronts.size() == 0)
@@ -2440,7 +2448,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef *> list){
     // check for pairs
     QVector<rotationDef*> lookat = list.toVector();
-	spdlog::get("logger")->trace("computeStandAstig()");
+    spdlog::get("logger")->trace("computeStandAstig()");
     while (lookat.size()){
         for (int i = 0; i < lookat.size(); ++i){
             double angle1 = wrapAngle(lookat[i]->angle);
