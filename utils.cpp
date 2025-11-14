@@ -36,7 +36,7 @@ int showmem(const QString&){return 1000;}
 
 
 /*
-void debugshow(cv::Mat m) {
+void debugshow(const cv::Mat &m) {
     // PLEASE DON'T DELETE
     // outputs do debug stream several key areas of a matrix - mainly helps figure out where the edge of the data is
     int height = m.rows;
