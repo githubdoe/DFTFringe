@@ -17,20 +17,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, ubuntu-22.04]
+        # not using ubuntu 22.04 due to false positive bug in clang
+        os: [ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt update
-      - run: sudo apt install -y clazy apt-utils build-essential wget qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev
-      - run: wget -O qwt-${{env.QWT_version}}.zip https://sourceforge.net/projects/qwt/files/qwt/${{env.QWT_version}}/qwt-${{env.QWT_version}}.zip/download?use_mirror=pilotfiber
-      - run: 7z x qwt-${{env.QWT_version}}.zip
-      - run: cd qwt-${{env.QWT_version}} ; /usr/lib/qt6/bin/qmake
-      - run: cd qwt-${{env.QWT_version}} ; make -j4
-      - run: cd qwt-${{env.QWT_version}} ; sudo make install
-      - run: /usr/lib/qt6/bin/qmake  -spec linux-clang QMAKE_CXX="clazy"
+      - run: |
+          sudo apt update
+          sudo apt install -y clazy apt-utils build-essential wget qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev
+          wget -O qwt-${{env.QWT_version}}.zip https://sourceforge.net/projects/qwt/files/qwt/${{env.QWT_version}}/qwt-${{env.QWT_version}}.zip/download?use_mirror=pilotfiber
+          7z x qwt-${{env.QWT_version}}.zip
+          cd qwt-${{env.QWT_version}}
+          /usr/lib/qt6/bin/qmake
+          make -j4
+          sudo make install
+      - run: /usr/lib/qt6/bin/qmake -spec linux-clang QMAKE_CXX="clazy"
       - uses: ammaraskar/gcc-problem-matcher@master
       # ignore noisy dirs from QT files itself
       # all level 1 checks but ignore clazy-no-connect-by-name
       # no parallel make with clazy to not mess log
-      - run: export CLAZY_IGNORE_DIRS=".*usr.*|.*bezier.*|.*boost.*|.*SingleApplication.*|.*spdlog.*|.*zernike.*" && export CLAZY_CHECKS="level1,no-connect-by-name,function-args-by-value,function-args-by-ref,incorrect-emit,old-style-connect" && make
+      - run: |
+          export CLAZY_IGNORE_DIRS=".*usr.*|.*bezier.*|.*boost.*|.*SingleApplication.*|.*spdlog.*|.*zernike.*" \
+          && export CLAZY_CHECKS="level1,no-connect-by-name,function-args-by-value,function-args-by-ref,incorrect-emit,old-style-connect" \
+          && make
