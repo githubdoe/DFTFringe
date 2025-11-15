@@ -35,6 +35,7 @@
 #include <QTextDocument>
 #include <QtMath>
 #include <opencv2/core/core_c.h>
+#include "utils.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -211,17 +212,15 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
     zernEnables[3] = false;
     cv::Mat nulled_surface = zp.null_unwrapped( *(m_Instance->m_wf), newZerns, zernEnables);
     zernEnables[3] = saved_defocus_enable;
-    if (GB_enabled){
-       double gbValue = settings.value("GBValue", 21).toInt();
-       int blurRad = 2 *(m_Instance->m_wf)->m_outside.m_radius * gbValue * .01;
 
+    if (GB_enabled){
+        double gbValue = settings.value("GBValue", 21).toInt();
+        int blurRad = .01 * gbValue * m_wf->m_outside.m_radius * 2;
         blurRad &= 0xfffffffe;
         ++blurRad;
-
-
-        qDebug() << "Blurr" << blurRad;
-        cv::GaussianBlur( nulled_surface, nulled_surface , cv::Size( blurRad, blurRad ),0,0);
+        CropGaussianBlur(nulled_surface, nulled_surface, blurRad, m_wf->m_outside, m_wf->m_inside);
     }
+
     nulled_surface  *= M2PI * md->lambda/outputLambda;
     return nulled_surface;
 }
