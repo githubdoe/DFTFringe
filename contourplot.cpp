@@ -39,15 +39,22 @@
 #include <QDebug>
 #include <math.h>
 #include "utils.h"
+#include <qwt_round_scale_draw.h>
 #include <qwt_plot_shapeitem.h>
 #include <QSettings>
 #include <qwt_picker_machine.h>
+#include <QPainterPath>
+#include <qwt_plot_marker.h>
 #include "spdlog/spdlog.h"
 
 
 double zOffset = 0;
 double lastx = -1.;
 double lasty = -1.;
+
+// ============================================================================
+// MyZommer - Custom zoomer to show data value at cursor
+// ============================================================================
 class MyZoomer: public QwtPlotZoomer
 {
 public:
@@ -100,6 +107,30 @@ signals:
     void select(QString);
 };
 
+// ============================================================================
+// SpectrogramData - Raster data provider for the spectrogram display
+// ============================================================================
+class SpectrogramData: public QwtRasterData
+{
+public:
+    SpectrogramData();
+    wavefront *m_wf;
+    void setSurface(wavefront *surface);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+    QwtInterval interval(Qt::Axis axis) const override;
+    void setInterval(Qt::Axis axis, const QwtInterval &interval);
+#endif
+    virtual double value( double x, double y ) const override;
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+private:
+    QwtInterval m_xInterval;
+    QwtInterval m_yInterval;
+    QwtInterval m_zInterval;
+#endif
+};
 
 SpectrogramData::SpectrogramData(): m_wf(0)
 {
@@ -155,8 +186,7 @@ void SpectrogramData::setSurface(wavefront *surface) {
     setInterval( Qt::YAxis, QwtInterval(0, m_wf->workData.rows));
 #endif
 }
-#include <qwt_round_scale_draw.h>
-extern double g_angle;
+
 double SpectrogramData::value( double x, double y ) const
 {
 
@@ -173,6 +203,10 @@ double SpectrogramData::value( double x, double y ) const
 
 }
 
+// ============================================================================
+// ContourPlot - Main contour plot class
+// ============================================================================
+
 void ContourPlot::setColorMap(int ndx){
     QwtInterval iz = d_spectrogram->data()->interval( Qt::ZAxis );
     d_spectrogram->setColorMap( new dftColorMap(ndx,m_wf,!m_useMiddleOffset ));
@@ -181,8 +215,6 @@ void ContourPlot::setColorMap(int ndx){
     if (!m_minimal)
         setAxisScale( QwtPlot::yRight, iz.minValue()  ,iz.maxValue() );
 }
-
-
 
 void ContourPlot::ContourMapColorChanged(int ndx) {
     m_colorMapNdx = ndx;
@@ -298,10 +330,6 @@ void ContourPlot::drawCanvas(QPainter* p)
 {
     QwtPlot::drawCanvas( p );  // <<---
 }
-
-#include <QPainterPath>
-#include <qwt_plot_shapeitem.h>
-#include <qwt_plot_marker.h>
 
 void ContourPlot::ruler(){
 
