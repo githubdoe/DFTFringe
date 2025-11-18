@@ -7,13 +7,20 @@
     <x>0</x>
     <y>0</y>
     <width>210</width>
-    <height>96</height>
+    <height>136</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Horizontal Row (0 is at top)</string>
+     </property>
+    </widget>
+   </item>
    <item>
     <widget class="QSpinBox" name="spinBox">
      <property name="maximum">
