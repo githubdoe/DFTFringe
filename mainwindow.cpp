@@ -1052,6 +1052,12 @@ void MainWindow::on_pushButton_clicked(bool checked)
     m_igramArea->hideOutline(checked);
 }
 
+void MainWindow::setHiddenCheckbox(bool checked)
+{
+    ui->checkBox->setChecked(checked);
+}
+
+
 void MainWindow::on_checkBox_clicked(bool checked)
 {
     m_igramArea->hideOutline(checked);
