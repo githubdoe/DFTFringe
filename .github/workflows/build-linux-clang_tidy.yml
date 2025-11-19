@@ -1,0 +1,35 @@
+name: build-linux-clang_tidy
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+env:
+  QWT_version: 6.3.0
+
+jobs:
+  build-linux-clazy:
+    # This build is only done on one Linux version as it is here only to get the warnings from clazy.
+    # For other versions see build-linux.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt update
+      - run: sudo apt install -y clazy apt-utils build-essential wget qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev
+      - run: sudo apt install -y bear
+      - run: wget -O qwt-${{env.QWT_version}}.zip https://sourceforge.net/projects/qwt/files/qwt/${{env.QWT_version}}/qwt-${{env.QWT_version}}.zip/download?use_mirror=pilotfiber
+      - run: 7z x qwt-${{env.QWT_version}}.zip
+      - run: cd qwt-${{env.QWT_version}} ; /usr/lib/qt6/bin/qmake
+      - run: cd qwt-${{env.QWT_version}} ; make -j4
+      - run: cd qwt-${{env.QWT_version}} ; sudo make install
+      - run: /usr/lib/qt6/bin/qmake  -spec linux-clang
+      - name: capture compile_commands.json from build
+        run: bear -- make -j4
+      - name: Run C++ Linter (clang-tidy)
+        uses: cpp-linter/cpp-linter-action@v2
+        with:
+          style: '' # we don't want check from clang-format
+          lines-changed-only: 'diff' # check only lines changed in PR to not flood with warnings
