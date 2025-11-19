@@ -92,7 +92,7 @@ static void my_terminate_handler() {
 static void myQtMessageOutput(QtMsgType type, const QMessageLogContext &/*context*/, const QString &msg)
 {
     const std::string localMsg = msg.toStdString();
-    
+
     switch (type) {
     case QtDebugMsg:
         spdlog::get("logger")->debug("QT message handler: {}", localMsg);
@@ -116,15 +116,29 @@ static int myCvErrorCallback( int /*status*/, const char* /*func_name*/,
             int line, void* /*userdata*/ )
 {
     spdlog::get("logger")->critical("CV error :{} in {} on line {}", err_msg, file_name, line);
-    
+
     my_terminate_handler();
     return 0;   //Return value is not used
 }
 
 int main(int argc, char *argv[])
 {
+    // DFTFringe doesn't have a good darkmode palette
+    // one could call "DFTFringe.exe -platform windows:darkmode=1" to disable dark mode (except for app borders)
+    // Following code adds the platform argument programmatically
+    char *platformArg = "-platform";
+    char *platformValue = "windows:darkmode=1";
+    // Create a new argv array with existing args plus platform args
+    int newArgc = argc + 2;
+    char *newArgv[newArgc];
+    for(size_t i = 0; i < argc; i++) {
+        newArgv[i] = argv[i];
+    }
+    newArgv[argc] = platformArg;
+    newArgv[argc + 1] = platformValue;
+
     // Allow secondary instances
-    SingleApplication app( argc, argv, true );
+    SingleApplication app( newArgc, newArgv, true );
 
     MessageReceiver msgReceiver;
 
@@ -148,7 +162,7 @@ int main(int argc, char *argv[])
     auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("DFTFringeLogs/log.txt", 1048576 * 5, 3);
 
     auto combined_logger = std::make_shared<spdlog::logger>("logger", spdlog::sinks_init_list({console_sink, file_sink}));
-    
+
     // Combined logger needs to be manually registered or it won't be found by "get"
     spdlog::register_logger(combined_logger);
 
@@ -159,7 +173,7 @@ int main(int argc, char *argv[])
 #ifndef DALE_DO_NOT_LOG
     // Set the logging format
     spdlog::get("logger")->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
-#endif 
+#endif
 
     // Set logger level
     settingsDebug::setLogLevel(settingsDebug::getLogLevel());
