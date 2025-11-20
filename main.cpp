@@ -126,19 +126,27 @@ int main(int argc, char *argv[])
     // DFTFringe doesn't have a good darkmode palette
     // one could call "DFTFringe.exe -platform windows:darkmode=1" to disable dark mode (except for app borders)
     // Following code adds the platform argument programmatically
-    char *platformArg = "-platform";
-    char *platformValue = "windows:darkmode=1";
+
     // Create a new argv array with existing args plus platform args
     int newArgc = argc + 2;
-    char *newArgv[newArgc];
-    for(size_t i = 0; i < argc; i++) {
-        newArgv[i] = argv[i];
+    std::vector<std::string> args;
+    args.reserve(newArgc);
+    // Copy existing arguments
+    for (int i = 0; i < argc; ++i) {
+        args.emplace_back(argv[i]);
     }
-    newArgv[argc] = platformArg;
-    newArgv[argc + 1] = platformValue;
+    // Add new arguments
+    args.emplace_back("-platform");
+    args.emplace_back("windows:darkmode=1");
+    // Build non-const char* array
+    std::vector<char*> newArgv;
+    newArgv.reserve(newArgc);
+    for (auto &arg : args) {
+        newArgv.push_back(&arg[0]); // C++11 guarantees contiguous storage
+    }
 
     // Allow secondary instances
-    SingleApplication app( newArgc, newArgv, true );
+    SingleApplication app( newArgc, newArgv.data(), true );
 
     MessageReceiver msgReceiver;
 
