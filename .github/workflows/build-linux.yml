@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt update
-      - run: sudo apt install -y apt-utils build-essential wget qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev
+      - run: sudo apt install -y apt-utils build-essential wget qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev bear
       - run: wget -O qwt-${{env.QWT_version}}.zip https://sourceforge.net/projects/qwt/files/qwt/${{env.QWT_version}}/qwt-${{env.QWT_version}}.zip/download?use_mirror=pilotfiber
       - run: 7z x qwt-${{env.QWT_version}}.zip
       - run: cd qwt-${{env.QWT_version}} ; /usr/lib/qt6/bin/qmake
@@ -29,5 +29,18 @@ jobs:
       - run: /usr/lib/qt6/bin/qmake
       - uses: ammaraskar/gcc-problem-matcher@master
       - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
-      - run: make -j4
+
+      - name: capture compile_commands.json from build
+        run: bear -- make -j4
       - run: echo "::remove-matcher owner=uic-problem-matcher::"
+
+      - name: Run C++ Linter (clang-tidy)
+        if: strategy.job-index == 0 #run only for first OS of the matrix
+        uses: cpp-linter/cpp-linter-action@v2
+        with:
+          style: '' # we don't want check from clang-format
+          # TODO commented out for testing
+          #lines-changed-only: 'diff' # check only lines changed in PR to not flood with warnings
+          # TODO these are additional configs for testing the features. To be removed
+          thread-comments: 'update'
+          files-changed-only: false
