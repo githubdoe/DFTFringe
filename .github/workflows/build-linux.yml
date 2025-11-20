@@ -44,3 +44,4 @@ jobs:
           # TODO these are additional configs for testing the features. To be removed
           thread-comments: 'update'
           files-changed-only: false
+          ignore: 'bezier|boost|SingleApplication|spdlog|zernike|moc_*|qwt*'
