@@ -12,6 +12,9 @@ env:
 
 jobs:
   build-linux:
+    permissions: #TODO required by cpp-linter/cpp-linter-action for "thread-comments" option
+      metadata: read
+      contents: write
     strategy:
       fail-fast: false
       matrix:
