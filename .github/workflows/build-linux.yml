@@ -12,9 +12,9 @@ env:
 
 jobs:
   build-linux:
-    permissions: #TODO required by cpp-linter/cpp-linter-action for "thread-comments" option
-      metadata: read
-      contents: write
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -40,6 +40,8 @@ jobs:
       - name: Run C++ Linter (clang-tidy)
         if: strategy.job-index == 0 #run only for first OS of the matrix
         uses: cpp-linter/cpp-linter-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           style: '' # we don't want check from clang-format
           # TODO commented out for testing
