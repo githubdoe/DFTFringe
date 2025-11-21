@@ -43,7 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          style: '' # we don't want check from clang-format
+          #style: '' # we don't want check from clang-format
           # TODO commented out for testing
           #lines-changed-only: 'diff' # check only lines changed in PR to not flood with warnings
           # TODO these are additional configs for testing the features. To be removed
@@ -51,5 +51,5 @@ jobs:
           files-changed-only: true
           tidy-review: true
           passive-reviews: true
-          format-review: true
+          #format-review: true
           ignore: 'bezier|boost|SingleApplication|spdlog|zernike|moc_*|ui_*|qwt*'
