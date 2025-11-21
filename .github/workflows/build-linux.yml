@@ -50,6 +50,6 @@ jobs:
           thread-comments: 'update'
           files-changed-only: true
           tidy-review: true
-          passive-reviews: true
+          #passive-reviews: true
           #format-review: true
           ignore: 'bezier|boost|SingleApplication|spdlog|zernike|moc_*|ui_*|qwt*'
