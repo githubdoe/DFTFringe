@@ -27,30 +27,11 @@
 #include "wavefront.h"
 #include <qwt_picker.h>
 #include <qwt_plot_picker.h>
+#include <qwt_plot_rescaler.h>
 #include <qwt_interval.h>
 
 class MyZoomer;
-class SpectrogramData: public QwtRasterData
-{
-public:
-    SpectrogramData();
-    wavefront *m_wf;
-    void setSurface(wavefront *surface);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    // keep compatibility with newer version of QWT used in QT6
-    QwtInterval interval(Qt::Axis axis) const override;
-    void setInterval(Qt::Axis axis, const QwtInterval &interval);
-#endif
-    virtual double value( double x, double y ) const override;
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    // keep compatibility with newer version of QWT used in QT6
-private:
-    QwtInterval m_xInterval;
-    QwtInterval m_yInterval;
-    QwtInterval m_zInterval;
-#endif
-};
 class ContourPlot: public QwtPlot
 {
     Q_OBJECT
@@ -112,6 +93,7 @@ private:
 
 
     QColor m_contourPen;
+    QwtPlotRescaler *d_rescaler;  // Added to maintain 1:1 aspect ratio
 
     void ruler();
     double m_min;

@@ -81,6 +81,7 @@ void contourView::showContextMenu(QPoint pos)
     // Show context menu at handling position
     myMenu.exec(globalPos);
 }
+
 ContourPlot *contourView::getPlot(){
     return ui->widget;
 }
