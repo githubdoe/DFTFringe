@@ -48,5 +48,8 @@ jobs:
           #lines-changed-only: 'diff' # check only lines changed in PR to not flood with warnings
           # TODO these are additional configs for testing the features. To be removed
           thread-comments: 'update'
-          files-changed-only: false
+          files-changed-only: true
+          tidy-review: true
+          passive-reviews: true
+          format-review: true
           ignore: 'bezier|boost|SingleApplication|spdlog|zernike|moc_*|ui_*|qwt*'
