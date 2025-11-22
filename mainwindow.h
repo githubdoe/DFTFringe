@@ -77,6 +77,7 @@ public:
     wavefront *getCurrentWavefront();
     void openWaveFrontonInit(QStringList args);
     QStringList SelectWaveFrontFiles();
+    void setHiddenCheckbox(bool checked);
 
 
 public slots:

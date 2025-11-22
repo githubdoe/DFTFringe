@@ -2510,6 +2510,7 @@ void IgramArea::save(){
 }
 void IgramArea::toggleHideOutline(){
     m_hideOutlines = !m_hideOutlines;
+    MainWindow::me->setHiddenCheckbox(m_hideOutlines);
     drawBoundary();
 }
 
