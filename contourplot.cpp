@@ -39,15 +39,22 @@
 #include <QDebug>
 #include <math.h>
 #include "utils.h"
+#include <qwt_round_scale_draw.h>
 #include <qwt_plot_shapeitem.h>
 #include <QSettings>
 #include <qwt_picker_machine.h>
+#include <QPainterPath>
+#include <qwt_plot_marker.h>
 #include "spdlog/spdlog.h"
 
 
 double zOffset = 0;
 double lastx = -1.;
 double lasty = -1.;
+
+// ============================================================================
+// MyZommer - Custom zoomer to show data value at cursor
+// ============================================================================
 class MyZoomer: public QwtPlotZoomer
 {
 public:
@@ -58,6 +65,7 @@ public:
         setTrackerMode( AlwaysOn );
     }
 
+    // when holding shift key, show data value at cursor
     virtual QwtText trackerTextF( const QPointF &pos ) const
     {
         if (thePlot->m_wf == 0)
@@ -100,6 +108,30 @@ signals:
     void select(QString);
 };
 
+// ============================================================================
+// SpectrogramData - Raster data provider for the spectrogram display
+// ============================================================================
+class SpectrogramData: public QwtRasterData
+{
+public:
+    SpectrogramData();
+    wavefront *m_wf;
+    void setSurface(wavefront *surface);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+    QwtInterval interval(Qt::Axis axis) const override;
+    void setInterval(Qt::Axis axis, const QwtInterval &interval);
+#endif
+    virtual double value( double x, double y ) const override;
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // keep compatibility with newer version of QWT used in QT6
+private:
+    QwtInterval m_xInterval;
+    QwtInterval m_yInterval;
+    QwtInterval m_zInterval;
+#endif
+};
 
 SpectrogramData::SpectrogramData(): m_wf(0)
 {
@@ -142,7 +174,7 @@ void SpectrogramData::setInterval(Qt::Axis axis, const QwtInterval &interval)
 }
 #endif
 
-void SpectrogramData::setSurface(wavefront *surface) {
+void SpectrogramData::setSurface(wavefront *surface) { //TODO check if we can const as much as possible
     m_wf = surface;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // keep compatibility with newer version of QWT used in QT6
@@ -155,8 +187,7 @@ void SpectrogramData::setSurface(wavefront *surface) {
     setInterval( Qt::YAxis, QwtInterval(0, m_wf->workData.rows));
 #endif
 }
-#include <qwt_round_scale_draw.h>
-extern double g_angle;
+
 double SpectrogramData::value( double x, double y ) const
 {
 
@@ -173,6 +204,10 @@ double SpectrogramData::value( double x, double y ) const
 
 }
 
+// ============================================================================
+// ContourPlot - Main contour plot class
+// ============================================================================
+
 void ContourPlot::setColorMap(int ndx){
     QwtInterval iz = d_spectrogram->data()->interval( Qt::ZAxis );
     d_spectrogram->setColorMap( new dftColorMap(ndx,m_wf,!m_useMiddleOffset ));
@@ -181,8 +216,6 @@ void ContourPlot::setColorMap(int ndx){
     if (!m_minimal)
         setAxisScale( QwtPlot::yRight, iz.minValue()  ,iz.maxValue() );
 }
-
-
 
 void ContourPlot::ContourMapColorChanged(int ndx) {
     m_colorMapNdx = ndx;
@@ -197,8 +230,6 @@ void ContourPlot::contourWaveRangeChanged(double val ){
     setZRange();
     replot();
 }
-
-
 
 void ContourPlot::showContoursChanged(double val){
     QSettings set;
@@ -299,10 +330,6 @@ void ContourPlot::drawCanvas(QPainter* p)
     QwtPlot::drawCanvas( p );  // <<---
 }
 
-#include <QPainterPath>
-#include <qwt_plot_shapeitem.h>
-#include <qwt_plot_marker.h>
-
 void ContourPlot::ruler(){
 
     detachItems(QwtPlotItem::Rtti_PlotShape);
@@ -372,9 +399,6 @@ void ContourPlot::ruler(){
         xAxis->setYValue(m_wf->data.rows/2);
         xAxis->setLinePen(Qt::black,2);
         xAxis->attach(this);
-
-
-
     }
 }
 
@@ -394,7 +418,6 @@ void ContourPlot::selected(QPointF pos){
         if (m_linkProfile)
             emit sigPointSelected(pos);
         m_lastAngle = angle;
-
     }
 }
 
@@ -451,11 +474,10 @@ void ContourPlot::setSurface(wavefront * wf) {
     rightAxis->setColorBarEnabled( true );
     rightAxis->setColorBarWidth(30);
     if (!m_minimal){
-        enableAxis( QwtPlot::yRight );
+        enableAxis(QwtPlot::yRight);
         enableAxis(QwtPlot::yLeft);
     }
-    else
-    {
+    else{
         enableAxis(QwtPlot::yLeft, false);
         enableAxis(QwtPlot::xBottom, false);
     }
@@ -471,21 +493,34 @@ void ContourPlot::setSurface(wavefront * wf) {
 
     setFooter(name + QString(" %1 rms %2 X %3").arg(wf->std, 6, 'f', 3).arg(wf->data.cols).arg(wf->data.rows));
 
+    // Update rescaler reference interval to match data dimensions
+    d_rescaler->setIntervalHint(QwtPlot::xBottom, QwtInterval(0, wf->data.cols));
+    d_rescaler->setIntervalHint(QwtPlot::yLeft, QwtInterval(0, wf->data.rows));
+    // Force an immediate rescale
+    d_rescaler->rescale();
+
+    // Set canvas alignment after rescale
     plotLayout()->setAlignCanvasToScales(true);
-    showContoursChanged(contourRange);
-    tracker_->setZoomBase(true);
+
+    spdlog::get("logger")->trace("ContourPlot::setSurface {}x{}", wf->data.cols, wf->data.rows);
+
+    showContoursChanged(contourRange); //TODO setSurface should not have to call showContoursChanged
+    tracker_->setZoomBase(true); //TODO I need to detect when canva moves to set zoom base
     replot();
     //resize(QSize(width()-1,height()-1));
     //resize(QSize(width()+1,height()+1));
 }
+
 double ContourPlot::m_waveRange;
 bool ContourPlot::m_useMiddleOffset = true;
 int ContourPlot::m_colorMapNdx = 0;
 QString ContourPlot::m_zRangeMode("Auto");
 double ContourPlot::m_zOffset = 0.;
+
 ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     QwtPlot( parent ),m_wf(0),m_tools(tools), m_autoInterval(false),m_minimal(minimal), m_linkProfile(true),m_contourPen(Qt::white)
 {
+    spdlog::get("logger")->trace("ContourPlot::ContourPlot");
     d_spectrogram = new QwtPlotSpectrogram();
     picker_ = new QwtPlotPicker(this->canvas());
     picker_->setStateMachine(new QwtPickerClickPointMachine);
@@ -507,6 +542,11 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     m_radialDeg = settings.value("contourRulerRadialDeg", 30).toInt();
     m_linkProfile = settings.value("linkProfilePlot", true).toBool();
     plotLayout()->setAlignCanvasToScales( true );
+
+    // Setup rescaler to maintain aspect ratio
+    d_rescaler = new QwtPlotRescaler(canvas());
+    d_rescaler->setRescalePolicy(QwtPlotRescaler::Fitting);
+
     initPlot();
 
 }
@@ -628,4 +668,3 @@ void ContourPlot::printPlot()
 }
 
 #endif
-
