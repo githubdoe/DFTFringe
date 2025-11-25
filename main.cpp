@@ -128,7 +128,11 @@ int main(int argc, char *argv[])
     // Following code adds the platform argument programmatically
 
     // Create a new argv array with existing args plus platform args
-    int newArgc = argc + 2;
+    #ifdef Q_OS_WIN
+     int newArgc = argc + 2;
+    #else
+     int newArgc = argc;
+    #endif
     std::vector<std::string> args;
     args.reserve(newArgc);
     // Copy existing arguments
@@ -136,8 +140,10 @@ int main(int argc, char *argv[])
         args.emplace_back(argv[i]);
     }
     // Add new arguments
+    #ifdef Q_OS_WIN
     args.emplace_back("-platform");
     args.emplace_back("windows:darkmode=1");
+    #endif
     // Build non-const char* array
     std::vector<char*> newArgv;
     newArgv.reserve(newArgc);
