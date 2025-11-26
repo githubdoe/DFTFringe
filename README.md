@@ -46,7 +46,7 @@ cd qwt-6.3.0
 make -j4
 sudo make install
 cd ..
-/usr/lib/qt6/bin/qmake
+/usr/lib/qt6/bin/qmake DFTFringe.pro
 make -j4
 ```
 

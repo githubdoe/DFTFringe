@@ -26,7 +26,7 @@ jobs:
       - run: cd qwt-${{env.QWT_version}} ; /usr/lib/qt6/bin/qmake
       - run: cd qwt-${{env.QWT_version}} ; make -j4
       - run: cd qwt-${{env.QWT_version}} ; sudo make install
-      - run: /usr/lib/qt6/bin/qmake
+      - run: /usr/lib/qt6/bin/qmake DFTFringe.pro
       - uses: ammaraskar/gcc-problem-matcher@master
       - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
       - run: make -j4

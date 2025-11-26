@@ -31,7 +31,7 @@ jobs:
           /usr/lib/qt6/bin/qmake
           make -j4
           sudo make install
-      - run: /usr/lib/qt6/bin/qmake -spec linux-clang QMAKE_CXX="clazy"
+      - run: /usr/lib/qt6/bin/qmake DFTFringe.pro -spec linux-clang QMAKE_CXX="clazy"
       - uses: ammaraskar/gcc-problem-matcher@master
       # ignore noisy dirs from QT files itself
       # all level 1 checks but ignore clazy-no-connect-by-name
