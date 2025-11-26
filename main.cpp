@@ -123,36 +123,32 @@ static int myCvErrorCallback( int /*status*/, const char* /*func_name*/,
 
 int main(int argc, char *argv[])
 {
-    // DFTFringe doesn't have a good darkmode palette
-    // one could call "DFTFringe.exe -platform windows:darkmode=1" to disable dark mode (except for app borders)
-    // Following code adds the platform argument programmatically
-
-    // Create a new argv array with existing args plus platform args
-    #ifdef Q_OS_WIN
-     int newArgc = argc + 2;
+    #ifdef _WIN32
+        // DFTFringe doesn't have a good darkmode palette
+        // one could call "DFTFringe.exe -platform windows:darkmode=1" to disable dark mode (except for app borders)
+        // Following code adds the platform argument programmatically
+        // Create a new argv array with existing args plus platform args
+        int newArgc = argc + 2;
+        std::vector<std::string> args;
+        args.reserve(newArgc);
+        // Copy existing arguments
+        for (int i = 0; i < argc; ++i) {
+            args.emplace_back(argv[i]);
+        }
+        // Add new arguments
+        args.emplace_back("-platform");
+        args.emplace_back("windows:darkmode=1");
+        // Build non-const char* array
+        std::vector<char*> newArgv;
+        newArgv.reserve(newArgc);
+        for (auto &arg : args) {
+            newArgv.push_back(&arg[0]); // C++11 guarantees contiguous storage
+        }
+        // Allow secondary instances
+        SingleApplication app( newArgc, newArgv.data(), true );
     #else
-     int newArgc = argc;
+        SingleApplication app( argc, argv, true );
     #endif
-    std::vector<std::string> args;
-    args.reserve(newArgc);
-    // Copy existing arguments
-    for (int i = 0; i < argc; ++i) {
-        args.emplace_back(argv[i]);
-    }
-    // Add new arguments
-    #ifdef Q_OS_WIN
-    args.emplace_back("-platform");
-    args.emplace_back("windows:darkmode=1");
-    #endif
-    // Build non-const char* array
-    std::vector<char*> newArgv;
-    newArgv.reserve(newArgc);
-    for (auto &arg : args) {
-        newArgv.push_back(&arg[0]); // C++11 guarantees contiguous storage
-    }
-
-    // Allow secondary instances
-    SingleApplication app( newArgc, newArgv.data(), true );
 
     MessageReceiver msgReceiver;
 
