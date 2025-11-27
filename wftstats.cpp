@@ -261,12 +261,12 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
     QHash<QString,int> sizes;
     for (int i = 0; i < last; ++i){
         QString size = QString("%1 %2").arg(wavefronts[i]->workData.rows).arg(wavefronts[i]->workData.cols);
-        if (*sizes.find(size))
-        {
+        if (sizes.contains(size)) {
             ++sizes[size];
         }
-        else
+        else {
             sizes[size] = 1;
+        }
     }
     int max = 0;
     QString maxkey;
