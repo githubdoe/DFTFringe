@@ -257,31 +257,22 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
     outliersInner.clear();
     outliersOuter.clear();
     // normalize the size to the most common size
-    int last = wavefronts.length();
-    QHash<QString,int> sizes;
-    for (int i = 0; i < last; ++i){
-        QString size = QString("%1 %2").arg(wavefronts[i]->workData.rows).arg(wavefronts[i]->workData.cols);
-        if (sizes.contains(size)) {
-            ++sizes[size];
-        }
-        else {
-            sizes[size] = 1;
+    std::map<std::pair<int,int>, int> sizes;
+    int maxCount = 0;
+    int rrows = 0;
+    int rcols = 0;
+
+    for (wavefront* wf : wavefronts) {
+        auto key = std::make_pair(wf->workData.rows, wf->workData.cols);
+        int newCount = ++sizes[key];          // operator[] inserts default 0 then increments
+        // keep track of the size that occurs most often
+        if (newCount > maxCount) {
+            maxCount = newCount;
+            rrows = wf->workData.rows;
+            rcols = wf->workData.cols;
         }
     }
-    int max = 0;
-    QString maxkey;
-    foreach(QString v, sizes.keys()){
-        int a = sizes[v];
-        if (a > max) {
-            max = a;
-            maxkey = v;
-        }
-    }
-    int rrows, rcols;
 
-    QTextStream s(&maxkey);
-
-    s >> rrows >> rcols;
     cv::Mat mask = wavefronts[0]->workMask.clone();
     cv::resize(mask,mask,cv::Size(rcols,rrows));
     QVector<wavefront*> twaves = wavefronts;
@@ -291,6 +282,7 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
     wftPoints.clear();
     trueNdx.clear();
     inrange.clear();
+    int last = wavefronts.length();
     for (int j = 0; j < last; ++j){
         int i = (ndx + j) % wavefronts.size();
         //i = samndx[j];
