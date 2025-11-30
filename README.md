@@ -201,7 +201,7 @@ Copy content from `yourExtractionLocation\opencv\build\include` to `C:\buildingD
 
 Get [Qwt](https://qwt.sourceforge.io/) source code version 6.3.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\qwt-6.3.0`.
 
-No additional modification required here.
+Note: this method doesn't get you qwtd.dll. You will need to build DFTFringe in realase or modify .pro file to use qwt.dll.
 
 #### Build Armadillo
 
@@ -221,6 +221,7 @@ build_lapack\bin\liblapack.dll
 build_openCV\install\x64\mingw\bin\libopencv_calib3d4120.dll
 build_openCV\install\x64\mingw\bin\libopencv_core4120.dll
 build_openCV\install\x64\mingw\bin\libopencv_features2d4120.dll
+build_openCV\install\x64\mingw\bin\libopencv_flann4120.dll
 build_openCV\install\x64\mingw\bin\libopencv_highgui4120.dll
 build_openCV\install\x64\mingw\bin\libopencv_imgcodecs4120.dll
 build_openCV\install\x64\mingw\bin\libopencv_imgproc4120.dll
