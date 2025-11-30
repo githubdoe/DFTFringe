@@ -173,7 +173,7 @@ Get [Lapack](https://www.netlib.org/lapack/) source code version 3.12.1 in your 
 
 Then from within `C:\buildingDFTFringe` do the following:  
 ```
-cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON -D CMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"
+cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON
 cmake --build ./build_lapack -j4
 ```
 

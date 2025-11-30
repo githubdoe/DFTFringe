@@ -203,10 +203,9 @@ jobs:
           repository: 'Reference-LAPACK/lapack'
           ref: 'v${{env.lapack_version}}'
           path: './lapack'
-      # See https://github.com/Reference-LAPACK/lapack/issues/305 : CMAKE_SHARED_LINKER_FLAGS is fixing a build issue
       - name: cmake generate
         if: steps.cache-lapack.outputs.cache-hit != 'true'
-        run: cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON -D CMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"
+        run: cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON
       - name: cmake build
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         run: cmake --build ./build_lapack -j4
