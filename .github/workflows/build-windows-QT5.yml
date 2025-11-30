@@ -12,7 +12,7 @@ env:
   QWT_version: 6.1.6
   openCV_version: 4.6.0
   QT_version: 5.15.2
-  lapack_version: 3.11.0
+  lapack_version: 3.12.1
   mingw_version: 810
   python_version: 3.13
 
@@ -375,4 +375,3 @@ jobs:
           path: |
             DFTFringeInstaller_QT5_${{env.WORKFLOW_VERSION}}.exe
             DFTFringe.exe.debug
-

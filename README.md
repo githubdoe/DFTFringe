@@ -169,7 +169,7 @@ mingw32-make -j4
 
 #### Build Lapack and Blas
 
-Get [Lapack](https://www.netlib.org/lapack/) source code version 3.11.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\lapack`. Lapack comes with Blas.
+Get [Lapack](https://www.netlib.org/lapack/) source code version 3.12.1 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\lapack`. Lapack comes with Blas.
 
 Then from within `C:\buildingDFTFringe` do the following:  
 ```
