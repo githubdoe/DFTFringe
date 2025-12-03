@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1065</width>
+    <width>667</width>
     <height>905</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>640</width>
+    <width>250</width>
     <height>640</height>
    </size>
   </property>
@@ -58,8 +58,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1065</width>
-     <height>19</height>
+     <width>667</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFiles">
@@ -161,7 +161,7 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>475</width>
+     <width>250</width>
      <height>791</height>
     </size>
    </property>
@@ -430,7 +430,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
             </property>
             <property name="minimumSize">
              <size>
-              <width>74</width>
+              <width>82</width>
               <height>0</height>
              </size>
             </property>
@@ -502,7 +502,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
             </property>
             <property name="minimumSize">
              <size>
-              <width>74</width>
+              <width>82</width>
               <height>30</height>
              </size>
             </property>
@@ -608,7 +608,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -654,7 +654,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -697,7 +697,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -746,7 +746,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -789,7 +789,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -838,7 +838,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>74</width>
+            <width>82</width>
             <height>0</height>
            </size>
           </property>
@@ -881,7 +881,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>46</width>
+            <width>50</width>
             <height>0</height>
            </size>
           </property>
@@ -972,7 +972,7 @@ em;
          </property>
          <property name="minimumSize">
           <size>
-           <width>74</width>
+           <width>82</width>
            <height>0</height>
           </size>
          </property>
