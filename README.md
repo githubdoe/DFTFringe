@@ -169,11 +169,11 @@ mingw32-make -j4
 
 #### Build Lapack and Blas
 
-Get [Lapack](https://www.netlib.org/lapack/) source code version 3.11.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\lapack`. Lapack comes with Blas.
+Get [Lapack](https://www.netlib.org/lapack/) source code version 3.12.1 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\lapack`. Lapack comes with Blas.
 
 Then from within `C:\buildingDFTFringe` do the following:  
 ```
-cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON -D CMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"
+cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON
 cmake --build ./build_lapack -j4
 ```
 

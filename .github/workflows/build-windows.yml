@@ -12,7 +12,7 @@ env:
   QWT_version: 6.3.0
   openCV_version: 4.12.0
   QT_version: 6.8.3
-  lapack_version: 3.11.0
+  lapack_version: 3.12.1
   mingw_version: 1310
   python_version: 3.13
 
@@ -203,10 +203,9 @@ jobs:
           repository: 'Reference-LAPACK/lapack'
           ref: 'v${{env.lapack_version}}'
           path: './lapack'
-      # See https://github.com/Reference-LAPACK/lapack/issues/305 : CMAKE_SHARED_LINKER_FLAGS is fixing a build issue
       - name: cmake generate
         if: steps.cache-lapack.outputs.cache-hit != 'true'
-        run: cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON -D CMAKE_SHARED_LINKER_FLAGS="-Wl,--allow-multiple-definition"
+        run: cmake -G "MinGW Makefiles" -S lapack -B build_lapack -D BUILD_SHARED_LIBS=ON
       - name: cmake build
         if: steps.cache-lapack.outputs.cache-hit != 'true'
         run: cmake --build ./build_lapack -j4
