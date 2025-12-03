@@ -33,9 +33,9 @@ win32 {
     message("Using WINDOWS project configuration.")
 
     CONFIG( debug, debug|release ) {
-        LIBS += -L..\qwt-6.3.0\lib -lqwtd # debug
+        LIBS += -L$$PWD\..\qwt-6.3.0\lib -lqwtd # debug
     } else {
-        LIBS += -L..\qwt-6.3.0\lib -lqwt # release
+        LIBS += -L$$PWD\..\qwt-6.3.0\lib -lqwt # release
         CONFIG+=force_debug_info # keep debug infos (even in release build) to be able to link stacktrace address to actual function
         CONFIG+=separate_debug_info # separate debug infos into a .exe.debug to not grow the .exe
     }
@@ -47,14 +47,14 @@ win32 {
     INCLUDEPATH += ..\build_armadillo\tmp\include
     INCLUDEPATH += ..\build_openCV\install\include
 
-    LIBS += -L..\build_lapack\bin -llibblas
-    LIBS += -L..\build_lapack\bin -lliblapack
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_core4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_features2d4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4120
-    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4120
+    LIBS += -L$$PWD\..\build_lapack\bin -llibblas
+    LIBS += -L$$PWD\..\build_lapack\bin -lliblapack
+    LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_calib3d4120
+    LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_core4120
+    LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_features2d4120
+    LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_highgui4120
+    LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4120
+    LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4120
     LIBS += -ldbghelp # for SetUnhandledExceptionFilter
 
 
