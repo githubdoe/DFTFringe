@@ -179,11 +179,11 @@ cmake --build ./build_lapack -j4
 
 #### Build Armadillo
 
-Get [Armadillo](https://arma.sourceforge.net/) source code version 14.4.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-14.4.0`.
+Get [Armadillo](https://arma.sourceforge.net/) source code version 15.2.2 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-15.2.2`.
 
 Then from within `C:\buildingDFTFringe` do the following:  
 ```
-cmake -D CMAKE_PREFIX_PATH=C:/buildingDFTFringe/build_lapack -G "MinGW Makefiles" -S armadillo-14.4.0 -B build_armadillo
+cmake -D CMAKE_PREFIX_PATH=C:/buildingDFTFringe/build_lapack -G "MinGW Makefiles" -S armadillo-15.2.2 -B build_armadillo
 cmake --build ./build_armadillo -j4
 ```
 
@@ -205,10 +205,10 @@ No additional modification required here.
 
 #### Build Armadillo
 
-Get [Armadillo](https://arma.sourceforge.net/) source code version 14.4.0 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-14.4.0`.
+Get [Armadillo](https://arma.sourceforge.net/) source code version 15.2.2 in your prefered way (clone the repo, download the archive, homing pigeon, ...) and have it in folder named `C:\buildingDFTFringe\armadillo-15.2.2`.
 
 Then follow the information in `DFTFringe.pro` to create appropriate folders for header files and DLLs.  
-Copy content from `armadillo-14.4.0\include` to `build_armadillo\tmp\include`. 
+Copy content from `armadillo-15.2.2\include` to `build_armadillo\tmp\include`. 
 
 #### Copy all the DLLs
 

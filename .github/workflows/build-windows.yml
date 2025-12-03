@@ -8,7 +8,7 @@ on:
   workflow_call:
 
 env:
-  armadillo_version: 14.4.0
+  armadillo_version: 15.2.2
   QWT_version: 6.3.0
   openCV_version: 4.12.0
   QT_version: 6.8.3

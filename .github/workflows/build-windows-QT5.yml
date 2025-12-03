@@ -8,7 +8,7 @@ on:
   workflow_call:
 
 env:
-  armadillo_version: 14.4.0
+  armadillo_version: 15.2.2
   QWT_version: 6.1.6
   openCV_version: 4.6.0
   QT_version: 5.15.2
@@ -375,4 +375,3 @@ jobs:
           path: |
             DFTFringeInstaller_QT5_${{env.WORKFLOW_VERSION}}.exe
             DFTFringe.exe.debug
-
