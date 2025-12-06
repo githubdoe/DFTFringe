@@ -639,50 +639,62 @@ void ContourPlot::setAlpha( int alpha )
 
 void ContourPlot::updateAspectRatio()
 {
+    static bool isReentering = false;
+    
     if (!m_wf)
         return;
+
+    // Prevent re-entrancy
+    if (isReentering)
+        return;
+    isReentering = true;
 
     QWidget *c = canvas();
     int w = c->width();
     int h = c->height();
-    if (w <= 0 || h <= 0)
+    if (w <= 0 || h <= 0){
+        isReentering = false;
         return;
+    }
 
-    // Current ranges
-    double x1 = axisScaleDiv(QwtPlot::xBottom).lowerBound();
-    double x2 = axisScaleDiv(QwtPlot::xBottom).upperBound();
-    double y1 = axisScaleDiv(QwtPlot::yLeft).lowerBound();
-    double y2 = axisScaleDiv(QwtPlot::yLeft).upperBound();
+    double imgWidth  = m_wf->data.cols;
+    double imgHeight = m_wf->data.rows;
 
-    double dx = x2 - x1;
-    double dy = y2 - y1;
+    double dataRatio = imgWidth / imgHeight;
+    double pixRatio  = double(w) / double(h);
 
-    double ratioData = dx / dy;
-    double ratioPix  = double(w) / double(h);
+    double x1, x2, y1, y2;
 
-    if (ratioData > ratioPix)
+    if (pixRatio > dataRatio)
     {
-        // expand Y
-        double newDy = dx / ratioPix;
-        double cy = (y1 + y2) * 0.5;
-        y1 = cy - newDy * 0.5;
-        y2 = cy + newDy * 0.5;
+        // Canvas is wider → Y fits perfectly, X must be expanded
+        double scaledWidth = imgHeight * pixRatio;  // what X must become
+        double extra = (scaledWidth - imgWidth) * 0.5;
+        x1 = -extra;
+        x2 = imgWidth + extra;
+
+        y1 = 0;
+        y2 = imgHeight;
     }
     else
     {
-        // expand X
-        double newDx = dy * ratioPix;
-        double cx = (x1 + x2) * 0.5;
-        x1 = cx - newDx * 0.5;
-        x2 = cx + newDx * 0.5;
+        // Canvas is taller → X fits perfectly, Y must be expanded
+        double scaledHeight = imgWidth / pixRatio;
+        double extra = (scaledHeight - imgHeight) * 0.5;
+        y1 = -extra;
+        y2 = imgHeight + extra;
+
+        x1 = 0;
+        x2 = imgWidth;
     }
 
     setAxisScale(QwtPlot::xBottom, x1, x2);
     setAxisScale(QwtPlot::yLeft,  y1, y2);
 
     replot();
+    
+    isReentering = false;
 }
-
 
 bool ContourPlot::eventFilter(QObject *obj, QEvent *event)
 {
