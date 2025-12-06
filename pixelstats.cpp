@@ -20,7 +20,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "contourplot.h"
 #include "wavefront.h"
 #include "math.h"
 #include "utils.h"
@@ -296,7 +295,7 @@ pixelStats::~pixelStats()
 
 }
 
-void pixelStats::setData(wavefront *w){
+void pixelStats::setData(const wavefront *w){
    m_wf = w;
    g_ub = m_wf->min +  (m_wf->max-m_wf->min) * .9;
    g_lb = m_wf->min +  (m_wf->max-m_wf->min) * .1;
@@ -312,7 +311,7 @@ cv::Mat mat2gray(const cv::Mat& src)
     return dst;
 }
 
-cv::Mat slope(wavefront * wf){
+cv::Mat slope(const wavefront * wf){
     int half = wf->data.cols/2;
     cv::Mat gradx = cv::Mat::zeros(wf->data.rows,wf->data.cols, CV_64FC1);
     cv::Mat grady = cv::Mat::zeros(wf->data.rows,wf->data.cols, CV_64FC1);
@@ -406,7 +405,7 @@ cv::Mat slope(wavefront * wf){
 */
     return mag;
 }
-#include "dftarea.h"
+
 void pixelStats::updateSurface(){
     try {
         cv::Mat sur = cv::Mat::zeros(m_wf->data.rows, m_wf->data.cols, CV_8UC3);

@@ -26,7 +26,7 @@ QList<colorStop> dftColorMap::userStops;
 
 
 
-dftColorMap::dftColorMap(int type, wavefront *wf, bool zeroBased, double errorMargin, double scale,
+dftColorMap::dftColorMap(int type, const wavefront *wf, bool zeroBased, double errorMargin, double scale,
                          QColor less, QColor more):
         QwtLinearColorMap( less, more ),m_wf(wf)
 {

@@ -19,7 +19,7 @@ class pixelStats : public QWidget
 public:
     explicit pixelStats(QWidget *parent = 0);
     ~pixelStats();
-    void setData(wavefront *w);
+    void setData(const wavefront *w);
 private slots:
     void bounds_valueChanged();
 
@@ -33,7 +33,7 @@ private slots:
 
 private:
     Ui::pixelStats *ui;
-    wavefront *m_wf;
+    const wavefront *m_wf;
     cv::Mat mask;
     void updateHisto();
     void updateSurface();
