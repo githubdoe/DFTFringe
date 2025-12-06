@@ -64,6 +64,56 @@ public:
         setTrackerMode( AlwaysOn );
     }
 
+    // Override zoom rectangle to maintain image aspect ratio
+    virtual void zoom(const QRectF &rect)
+    {
+        if (!thePlot || !thePlot->m_wf)
+        {
+            QwtPlotZoomer::zoom(rect);
+            return;
+        }
+
+        // Get the canvas dimensions and aspect ratio (accounts for axes, labels, colorbar, etc.)
+        QWidget *canvas = thePlot->canvas();
+        double canvasWidth = canvas->width();
+        double canvasHeight = canvas->height();
+        if (canvasWidth <= 0 || canvasHeight <= 0)
+        {
+            QwtPlotZoomer::zoom(rect);
+            return;
+        }
+        double canvasRatio = canvasWidth / canvasHeight;
+
+        // Get the selected zoom rectangle dimensions and its aspect ratio
+        double selWidth = rect.width();
+        double selHeight = rect.height();
+        double selRatio = selWidth / selHeight;
+
+        QRectF adjustedRect = rect;
+
+        // The zoom rectangle should have the same aspect ratio as the canvas
+        // to ensure no distortion when displayed
+        if (selRatio > canvasRatio)
+        {
+            // Selected rect is wider than canvas → expand height to match canvas ratio
+            double newHeight = selWidth / canvasRatio;
+            double extra = (newHeight - selHeight) / 2.0;
+            adjustedRect.setTop(rect.top() - extra);
+            adjustedRect.setBottom(rect.bottom() + extra);
+        }
+        else if (selRatio < canvasRatio)
+        {
+            // Selected rect is taller than canvas → expand width to match canvas ratio
+            double newWidth = selHeight * canvasRatio;
+            double extra = (newWidth - selWidth) / 2.0;
+            adjustedRect.setLeft(rect.left() - extra);
+            adjustedRect.setRight(rect.right() + extra);
+        }
+        // If ratios match, no adjustment needed
+
+        QwtPlotZoomer::zoom(adjustedRect);
+    }
+
     // Override zoom state change to reapply aspect ratio when unzooming
     virtual void rescale()
     {
