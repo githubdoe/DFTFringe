@@ -64,27 +64,38 @@ public:
         setTrackerMode( AlwaysOn );
     }
 
+    // Override zoom state change to reapply aspect ratio when unzooming
+    virtual void rescale()
+    {
+        QwtPlotZoomer::rescale();
+        // Check if we're back at the base zoom level
+        if (thePlot && zoomRectIndex() == 0)
+        {
+            thePlot->updateAspectRatio();
+        }
+    }
+
     // when holding shift key, show data value at cursor
     virtual QwtText trackerTextF( const QPointF &pos ) const
     {
         if (thePlot->m_wf == 0)
-                return QwtText("");
+            return QwtText("");
         if(!QGuiApplication::keyboardModifiers().testFlag(Qt::ShiftModifier))
             return QwtText("");
         if (pos.x() == lastx && pos.y() == lasty){
-                    double v = thePlot->d_spectrogram->data()->value(pos.x(),pos.y());
-          QString t =  QString("%1").arg(v, 0, 'f');
+            double v = thePlot->d_spectrogram->data()->value(pos.x(),pos.y());
+            QString t =  QString("%1").arg(v, 0, 'f');
 
-          QwtText label(t);
+            QwtText label(t);
 
-          label.setColor(QColor(255,255,255));
-          label.setBorderPen(QPen(QColor(100,0,0), 3));
-          label.setBorderRadius(5);
-          label.setBackgroundBrush(QColor(65, 177, 225, 150));
+            label.setColor(QColor(255,255,255));
+            label.setBorderPen(QPen(QColor(100,0,0), 3));
+            label.setBorderRadius(5);
+            label.setBackgroundBrush(QColor(65, 177, 225, 150));
 
-          QFont font("MS Shell Dlg 2", 18);
-          label.setFont(font);
-          return QwtText(label);
+            QFont font("MS Shell Dlg 2", 18);
+            label.setFont(font);
+            return QwtText(label);
         }
         lastx = pos.x();
         lasty = pos.y();
@@ -692,7 +703,7 @@ void ContourPlot::updateAspectRatio()
     setAxisScale(QwtPlot::yLeft,  y1, y2);
 
     replot();
-    
+
     isReentering = false;
 }
 

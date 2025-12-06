@@ -55,6 +55,7 @@ public:
     void setZRange();
     void setColorMap(int ndx);
     void setTool(ContourTools* tool);
+    void updateAspectRatio();
     bool m_autoInterval;
     bool m_minimal;
     bool m_linkProfile;
@@ -90,7 +91,6 @@ public slots:
 private:
     void drawCanvas(QPainter* p);
     void initPlot();
-    void updateAspectRatio();
     bool eventFilter(QObject *obj, QEvent *event);
 
 
