@@ -32,7 +32,6 @@
 #include <opencv2/opencv.hpp>
 #include "wavefront.h"
 #include <QtGui/qevent.h>
-#include <qwt_plot_rescaler.h>
 #include <QtGui>
 #include <opencv2/highgui/highgui.hpp>
 #include "dftcolormap.h"
@@ -493,11 +492,11 @@ void ContourPlot::setSurface(wavefront * wf) {
 
     setFooter(name + QString(" %1 rms %2 X %3").arg(wf->std, 6, 'f', 3).arg(wf->data.cols).arg(wf->data.rows));
 
-    // Update rescaler reference interval to match data dimensions
-    d_rescaler->setIntervalHint(QwtPlot::xBottom, QwtInterval(0, wf->data.cols));
-    d_rescaler->setIntervalHint(QwtPlot::yLeft, QwtInterval(0, wf->data.rows));
-    // Force an immediate rescale
-    d_rescaler->rescale();
+    setAxisScale(QwtPlot::xBottom, 0, wf->data.cols);
+    setAxisScale(QwtPlot::yLeft, 0, wf->data.rows);
+
+    // Enforce aspect ratio on first draw
+    updateAspectRatio();
 
     // Set canvas alignment after rescale
     plotLayout()->setAlignCanvasToScales(true);
@@ -543,11 +542,8 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     m_linkProfile = settings.value("linkProfilePlot", true).toBool();
     plotLayout()->setAlignCanvasToScales( true );
 
-    // Setup rescaler to maintain aspect ratio
-    d_rescaler = new QwtPlotRescaler(canvas());
-    d_rescaler->setRescalePolicy(QwtPlotRescaler::Fitting);
-
     initPlot();
+    canvas()->installEventFilter(this);
 
 }
 void ContourPlot::initPlot(){
@@ -641,6 +637,62 @@ void ContourPlot::setAlpha( int alpha )
     replot();
 }
 
+void ContourPlot::updateAspectRatio()
+{
+    if (!m_wf)
+        return;
+
+    QWidget *c = canvas();
+    int w = c->width();
+    int h = c->height();
+    if (w <= 0 || h <= 0)
+        return;
+
+    // Current ranges
+    double x1 = axisScaleDiv(QwtPlot::xBottom).lowerBound();
+    double x2 = axisScaleDiv(QwtPlot::xBottom).upperBound();
+    double y1 = axisScaleDiv(QwtPlot::yLeft).lowerBound();
+    double y2 = axisScaleDiv(QwtPlot::yLeft).upperBound();
+
+    double dx = x2 - x1;
+    double dy = y2 - y1;
+
+    double ratioData = dx / dy;
+    double ratioPix  = double(w) / double(h);
+
+    if (ratioData > ratioPix)
+    {
+        // expand Y
+        double newDy = dx / ratioPix;
+        double cy = (y1 + y2) * 0.5;
+        y1 = cy - newDy * 0.5;
+        y2 = cy + newDy * 0.5;
+    }
+    else
+    {
+        // expand X
+        double newDx = dy * ratioPix;
+        double cx = (x1 + x2) * 0.5;
+        x1 = cx - newDx * 0.5;
+        x2 = cx + newDx * 0.5;
+    }
+
+    setAxisScale(QwtPlot::xBottom, x1, x2);
+    setAxisScale(QwtPlot::yLeft,  y1, y2);
+
+    replot();
+}
+
+
+bool ContourPlot::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj == canvas() && event->type() == QEvent::Resize)
+    {
+        updateAspectRatio();
+        return false;
+    }
+    return QwtPlot::eventFilter(obj, event);
+}
 
 #ifndef QT_NO_PRINTER
 

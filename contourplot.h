@@ -90,10 +90,11 @@ public slots:
 private:
     void drawCanvas(QPainter* p);
     void initPlot();
+    void updateAspectRatio();
+    bool eventFilter(QObject *obj, QEvent *event);
 
 
     QColor m_contourPen;
-    QwtPlotRescaler *d_rescaler;  // Added to maintain 1:1 aspect ratio
 
     void ruler();
     double m_min;
