@@ -175,8 +175,8 @@ class SpectrogramData: public QwtRasterData
 {
 public:
     SpectrogramData();
-    wavefront *m_wf;
-    void setSurface(wavefront *surface);
+    const wavefront *m_wf;
+    void setSurface(const wavefront *surface);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // keep compatibility with newer version of QWT used in QT6
     QwtInterval interval(Qt::Axis axis) const override;
@@ -234,7 +234,7 @@ void SpectrogramData::setInterval(Qt::Axis axis, const QwtInterval &interval)
 }
 #endif
 
-void SpectrogramData::setSurface(wavefront *surface) { //TODO check if we can const as much as possible
+void SpectrogramData::setSurface(const wavefront *surface) {
     m_wf = surface;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // keep compatibility with newer version of QWT used in QT6
@@ -511,7 +511,7 @@ void ContourPlot::drawProfileLine(const double angle){
 }
 
 
-void ContourPlot::setSurface(wavefront * wf) {
+void ContourPlot::setSurface(const wavefront * wf) {
     m_wf = wf;
     if (wf == 0)
         return;
@@ -565,7 +565,7 @@ void ContourPlot::setSurface(wavefront * wf) {
     spdlog::get("logger")->trace("ContourPlot::setSurface {}x{}", wf->data.cols, wf->data.rows);
 
     showContoursChanged(contourRange); //TODO setSurface should not have to call showContoursChanged
-    tracker_->setZoomBase(true); //TODO I need to detect when canva moves to set zoom base
+    tracker_->setZoomBase(true);
     replot();
     //resize(QSize(width()-1,height()-1));
     //resize(QSize(width()+1,height()+1));

@@ -41,7 +41,7 @@ class ContourPlot: public QwtPlot
 
 public:
     QwtPlotSpectrogram *d_spectrogram;
-    wavefront* m_wf;
+    const wavefront* m_wf;
     ContourTools *m_tools;
     static bool m_useMiddleOffset;
     static int m_colorMapNdx;
@@ -50,7 +50,7 @@ public:
     double contourRange;
     static QString m_zRangeMode;
     ContourPlot(QWidget * = NULL, ContourTools *tools  = 0, bool minimal = false);
-    void setSurface(wavefront * mat);
+    void setSurface(const wavefront * mat);
     void applyZeroOffset(bool useMiddle);
     void setZRange();
     void setColorMap(int ndx);

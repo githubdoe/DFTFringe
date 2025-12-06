@@ -63,7 +63,7 @@ QImage contourView::getPixstatsImage(){
 }
 
 
-void contourView::setSurface(wavefront *wf){
+void contourView::setSurface(const wavefront *wf){
     getPlot()->setSurface(wf);
     ps->setData(wf);
 }

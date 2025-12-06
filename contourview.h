@@ -34,7 +34,7 @@ public:
     explicit contourView(QWidget *parent = 0, ContourTools *tools = 0);
     ~contourView();
     ContourPlot *getPlot();
-    void setSurface(wavefront * wf);
+    void setSurface(const wavefront * wf);
     bool zoomed; // this is not about zooming in the plot, but zooming the contour view to full screen
     QImage getPixstatsImage();
     pixelStats *getPixelstats(){ return ps;}
