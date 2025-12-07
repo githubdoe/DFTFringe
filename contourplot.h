@@ -50,13 +50,12 @@ public:
     double contourRange;
     static QString m_zRangeMode;
     ContourPlot(QWidget *parent = NULL, ContourTools *tools  = 0, bool minimal = false);
-    void setSurface(const wavefront * mat);
+    void setSurface(const wavefront * wft);
     void applyZeroOffset(bool useMiddle);
     void setZRange();
     void setColorMap(int ndx);
     void setTool(ContourTools* tool);
     void updateAspectRatio();
-    bool m_autoInterval;
     bool m_minimal; // when true, hide axes and colorbar
     bool m_linkProfile;
     QPen m_rulerPen;

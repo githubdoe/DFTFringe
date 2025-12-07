@@ -65,9 +65,9 @@ public:
     }
 
     // Override zoom rectangle to maintain image aspect ratio
-    virtual void zoom(const QRectF &rect)
+    void zoom(const QRectF &rect) override
     {
-        if (!thePlot || !thePlot->m_wf)
+        if ((thePlot == nullptr) || (thePlot->m_wf == nullptr))
         {
             QwtPlotZoomer::zoom(rect);
             return;
@@ -115,18 +115,18 @@ public:
     }
 
     // Override zoom state change to reapply aspect ratio when unzooming
-    virtual void rescale()
+    void rescale() override
     {
         QwtPlotZoomer::rescale();
         // Check if we're back at the base zoom level
-        if (thePlot && zoomRectIndex() == 0)
+        if ((thePlot!=nullptr) && zoomRectIndex() == 0)
         {
             thePlot->updateAspectRatio();
         }
     }
 
     // when holding shift key, show data value at cursor
-    virtual QwtText trackerTextF( const QPointF &pos ) const
+    QwtText trackerTextF( const QPointF &pos ) const override
     {
         if (thePlot->m_wf == 0)
             return QwtText("");
@@ -578,7 +578,7 @@ QString ContourPlot::m_zRangeMode("Auto");
 double ContourPlot::m_zOffset = 0.;
 
 ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
-    QwtPlot( parent ),m_wf(0),m_tools(tools), m_autoInterval(false),m_minimal(minimal), m_linkProfile(true),m_contourPen(Qt::white)
+    QwtPlot( parent ),m_wf(0),m_tools(tools),m_minimal(minimal), m_linkProfile(true),m_contourPen(Qt::white)
 {
     spdlog::get("logger")->trace("ContourPlot::ContourPlot");
     d_spectrogram = new QwtPlotSpectrogram();
@@ -702,12 +702,14 @@ void ContourPlot::updateAspectRatio()
 {
     static bool isReentering = false;
     
-    if (!m_wf)
+    if (m_wf == nullptr){
         return;
+    }
 
     // Prevent re-entrancy
-    if (isReentering)
+    if (isReentering){
         return;
+    }
     isReentering = true;
 
     QWidget *c = canvas();
@@ -724,7 +726,10 @@ void ContourPlot::updateAspectRatio()
     double dataRatio = imgWidth / imgHeight;
     double pixRatio  = double(w) / double(h);
 
-    double x1, x2, y1, y2;
+    double x1;
+    double x2;
+    double y1;
+    double y2;
 
     if (pixRatio > dataRatio)
     {
