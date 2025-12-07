@@ -49,7 +49,7 @@ public:
     static double m_waveRange;
     double contourRange;
     static QString m_zRangeMode;
-    ContourPlot(QWidget * = NULL, ContourTools *tools  = 0, bool minimal = false);
+    ContourPlot(QWidget *parent = NULL, ContourTools *tools  = 0, bool minimal = false);
     void setSurface(const wavefront * mat);
     void applyZeroOffset(bool useMiddle);
     void setZRange();
@@ -57,7 +57,7 @@ public:
     void setTool(ContourTools* tool);
     void updateAspectRatio();
     bool m_autoInterval;
-    bool m_minimal;
+    bool m_minimal; // when true, hide axes and colorbar
     bool m_linkProfile;
     QPen m_rulerPen;
     int m_radialDeg;

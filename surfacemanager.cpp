@@ -2738,24 +2738,24 @@ void SurfaceManager::saveAllContours(){
     m_allContours.save( fName );
 }
 
-#include "showallcontoursdlg.h"
-void SurfaceManager::showAllContours(){
-    showAllContoursDlg dlg;
+#include "showallcontoursdlg.h" //TODO move
+void SurfaceManager::showAllContours(){ //TODO move to contourview would make more sense as use only there
+    showAllContoursDlg dlg; //TODO not closing on app close
     if (!dlg.exec()) {
         return;
     }
     QRect rec = QGuiApplication::primaryScreen()->geometry();
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot;
-    //plot->m_minimal = true;
-    int cols = dlg.getColumns();
+    ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot; //TODO leaking ? 
+    //plot->m_minimal = true; 
+    int cols = dlg.getColumns(); //TODO parameter number of pixels unused here. update the dlg ui
     int width = rec.width()/cols;
     int height = width * .82;
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     QList<int> list = saTools->SelectedWaveFronts();
 
-    int rows =  ceil((double)list.size()/cols);
-    int columns = std::min((int)list.size(),int(ceil((double)list.size()/rows)));
+    int rows =  ceil((float)list.size()/cols);
+    int columns = std::min((int)list.size(),int(ceil((float)list.size()/rows)));
     const QSizeF size(columns * (width + 10), rows * (height + 10));
     const QRect imageRect = QRect(0,0,size.width(),size.height());
     qDebug() << "save all" << imageRect;
@@ -2774,11 +2774,27 @@ void SurfaceManager::showAllContours(){
     {
         wavefront * wf = m_wavefronts[list[i]];
         plot->setSurface(wf);
+
+        //All these replots and updates are necessary to get the canvas updateAspectRatio to work properly.
+
+        // Resize the outer plot so its internal canvas area will match
+        // the requested image size.
+        plot->resize(width, height);
+        QCoreApplication::processEvents();
+        // Now ensure the canvas is the target size
+        if (plot->canvas())
+            plot->canvas()->resize(width, height);
+        plot->updateAspectRatio();
         plot->replot();
+        plot->updateAspectRatio();
+        plot->replot();
+
+
         int y_offset =  height * (i/columns) + 10;
         int x_offset = width * (i%columns) + 10;
         const QRectF topRect( x_offset, y_offset, width, height );
         renderer.render( plot, &painter, topRect );
+
     }
     painter.end();
 
