@@ -33,7 +33,7 @@ win32 {
     message("Using WINDOWS project configuration.")
 
     CONFIG( debug, debug|release ) {
-        LIBS += -L$$PWD\..\qwt-6.3.0\lib -lqwtd # debug
+        LIBS += -L$$PWD\..\qwt-6.3.0\lib -lqwt # debug
     } else {
         LIBS += -L$$PWD\..\qwt-6.3.0\lib -lqwt # release
         CONFIG+=force_debug_info # keep debug infos (even in release build) to be able to link stacktrace address to actual function

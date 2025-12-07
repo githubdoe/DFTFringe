@@ -2738,7 +2738,9 @@ void SurfaceManager::saveAllContours(){
     m_allContours.save( fName );
 }
 
-#include "showallcontoursdlg.h"
+#include "showallcontoursdlg.h" //TODO move
+#include <qwt_scale_widget.h>
+#include <qwt_plot_layout.h>
 void SurfaceManager::showAllContours(){
     showAllContoursDlg dlg;
     if (!dlg.exec()) {
@@ -2746,16 +2748,16 @@ void SurfaceManager::showAllContours(){
     }
     QRect rec = QGuiApplication::primaryScreen()->geometry();
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot;
-    //plot->m_minimal = true;
-    int cols = dlg.getColumns();
+    ContourPlot *plot =new ContourPlot();//m_contourPlot; //TODO leaking ?
+    //plot->m_minimal = true; //TODO document
+    int cols = dlg.getColumns(); //TODO parameter number of pixels unused here. Used elsewhere?
     int width = rec.width()/cols;
     int height = width * .82;
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     QList<int> list = saTools->SelectedWaveFronts();
 
-    int rows =  ceil((double)list.size()/cols);
-    int columns = std::min((int)list.size(),int(ceil((double)list.size()/rows)));
+    int rows =  ceil((float)list.size()/cols);
+    int columns = std::min((int)list.size(), rows);
     const QSizeF size(columns * (width + 10), rows * (height + 10));
     const QRect imageRect = QRect(0,0,size.width(),size.height());
     qDebug() << "save all" << imageRect;
@@ -2772,8 +2774,56 @@ void SurfaceManager::showAllContours(){
     renderer.setLayoutFlag( QwtPlotRenderer::FrameWithScales,false );
     for (int i = 0; i < list.size(); ++i)
     {
+        //wavefront * wf = m_wavefronts[list[i]];
+        //plot->setSurface(wf);
+        //plot->replot();
+        //int y_offset =  height * (i/columns) + 10;
+        //int x_offset = width * (i%columns) + 10;
+        //const QRectF topRect( x_offset, y_offset, width, height );
+        //renderer.render( plot, &painter, topRect );
+
         wavefront * wf = m_wavefronts[list[i]];
         plot->setSurface(wf);
+
+        // We need the plot's canvas (where the image is drawn) to be exactly
+        // `width x height` pixels. The total QwtPlot widget includes scale
+        // widgets (axes, colorbar etc) so resize the outer widget so the
+        // internal canvas ends up at the desired size.
+        int leftW = 0, rightW = 0, topH = 0, bottomH = 0;
+        QwtScaleWidget *leftAxis = plot->axisWidget(QwtPlot::yLeft);
+        QwtScaleWidget *rightAxis = plot->axisWidget(QwtPlot::yRight);
+        QwtScaleWidget *topAxis = plot->axisWidget(QwtPlot::xTop);
+        QwtScaleWidget *bottomAxis = plot->axisWidget(QwtPlot::xBottom);
+        if (leftAxis)   leftW = leftAxis->sizeHint().width();
+        if (rightAxis)  rightW = rightAxis->sizeHint().width();
+        if (topAxis)    topH = topAxis->sizeHint().height();
+        if (bottomAxis) bottomH = bottomAxis->sizeHint().height();
+        spdlog::get("logger")->trace("showAllContours: i={}, leftW={}, rightW={}, topH={}, bottomH={}", i, leftW, rightW, topH, bottomH);
+
+        int totalW = width - leftW - rightW;
+        int totalH = height - topH - bottomH;
+
+        // Resize the outer plot so its internal canvas area will match
+        // the requested image size.
+        //plot->resize(totalW, totalH);
+
+        plot->resize(width, height);
+         // Set canvas alignment after rescale
+        plot->plotLayout()->setAlignCanvasToScales(true);
+        QCoreApplication::processEvents();
+
+        // Now ensure the canvas is the target size
+        if (plot->canvas())
+            plot->canvas()->resize(totalW, totalH);
+
+        // Force aspect-ratio recomputation for the new pixel size
+        plot->updateAspectRatio();
+
+        // Allow the UI/layout machinery to process the resize so the
+        // renderer sees the consistent state (important when running
+        // off-screen rendering in a tight loop).
+        QCoreApplication::processEvents();
+
         plot->replot();
         int y_offset =  height * (i/columns) + 10;
         int x_offset = width * (i%columns) + 10;
@@ -3324,4 +3374,3 @@ void SurfaceManager::tiltAnalysis(){
    yTilt->attach(pl1);
    pl1->show();
 }
-

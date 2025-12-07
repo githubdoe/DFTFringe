@@ -49,7 +49,7 @@ public:
     static double m_waveRange;
     double contourRange;
     static QString m_zRangeMode;
-    ContourPlot(QWidget * = NULL, ContourTools *tools  = 0, bool minimal = false);
+    ContourPlot(QWidget *parent = NULL, ContourTools *tools  = 0, bool minimal = false);
     void setSurface(const wavefront * mat);
     void applyZeroOffset(bool useMiddle);
     void setZRange();

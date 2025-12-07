@@ -701,7 +701,7 @@ void ContourPlot::setAlpha( int alpha )
 void ContourPlot::updateAspectRatio()
 {
     static bool isReentering = false;
-    
+
     if (!m_wf)
         return;
 
@@ -713,6 +713,7 @@ void ContourPlot::updateAspectRatio()
     QWidget *c = canvas();
     int w = c->width();
     int h = c->height();
+    spdlog::get("logger")->trace("Canvas size: {}x{}", w, h);
     if (w <= 0 || h <= 0){
         isReentering = false;
         return;
