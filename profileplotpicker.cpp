@@ -131,10 +131,10 @@ void profilePlotPicker::select( QPoint pos )
 // Move the selected point
 void profilePlotPicker::move( QPoint pos )
 {
-    qDebug() << "move pos" << pos;
+
     if ( !d_selectedCurve )
         return;
-qDebug() << "Move" << plot()->invTransform(d_selectedCurve->yAxis(), pos.y());
+
     double last = plot()->invTransform( d_selectedCurve->yAxis(), m_lastMousePos.y() );
     double current = plot()->invTransform( d_selectedCurve->yAxis(), pos.y() );
     double delta = current - last;

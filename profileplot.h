@@ -54,13 +54,13 @@ public:
     double m_waveRange;
     QCheckBox *showNmCB;
     QCheckBox *showSurfaceCB;
-    QRadioButton *OneOnly;
-    QRadioButton *Show16;
-    QRadioButton *ShowAll;
+
     double m_showSurface;
     double m_showNm;
     bool zoomed;
     bool m_showSlopeError;
+    bool m_showOnlyAvg = false;
+    bool m_show_16_diameters = false;
 
 
     double slopeLimitArcSec;
@@ -92,6 +92,9 @@ public slots:
     void showXPercent();
     void showXInches();
     void showXMM();
+    void toggleShowAvgOnly();
+    void toggleShow16();
+
     //QPolygonF createZernProfile(wavefront *wf);
 private:
     enum class ProfileType {
