@@ -59,8 +59,9 @@ public:
     double m_showNm;
     bool zoomed;
     bool m_showSlopeError;
-    bool m_showOnlyAvg = false;
+    bool m_showAvg = false;
     bool m_show_16_diameters = false;
+    bool m_show_oneAngle = true;
 
 
     double slopeLimitArcSec;
@@ -76,9 +77,7 @@ public slots:
     void angleChanged(double a);
     void newDisplayErrorRange(double min, double max);
     void zeroOffsetChanged(const QString&);
-    void showOne();
-    void show16();
-    void showAll();
+
     void showNm(bool);
     void showSurface(bool);
     void zoom();
@@ -92,16 +91,13 @@ public slots:
     void showXPercent();
     void showXInches();
     void showXMM();
-    void toggleShowAvgOnly();
+    void toggleShowAvg();
     void toggleShow16();
+    void toggleOneAngle();
 
     //QPolygonF createZernProfile(wavefront *wf);
 private:
-    enum class ProfileType {
-        SHOW_ONE = 0,
-        SHOW_16 = 1,
-        SHOW_ALL = 2
-    };
+
 
     void updateGradient();
     void saveXscaleSettings();
@@ -117,9 +113,6 @@ private:
     bool m_displayPercent = false;
     bool m_displayInches = false;
 private:
-
-    ProfileType type;
-
 
     Ui::ProfilePlot *ui;
     bool m_defocus_mode;

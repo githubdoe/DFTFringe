@@ -83,7 +83,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     connect(m_plot, &QwtPlot::customContextMenuRequested, this, &ProfilePlot::showContextMenu);
 
     new profilePlotPicker(m_plot);
-    type = ProfileType::SHOW_ONE;
+
     QHBoxLayout * l1 = new QHBoxLayout();
     QVBoxLayout *v1 = new QVBoxLayout();
     showNmCB = new QCheckBox("Show in Nanometers",this);
@@ -254,23 +254,7 @@ void ProfilePlot::showSurface(bool flag){
     setSurface(m_wf);
 }
 
-void ProfilePlot::showOne(){
-    type = ProfileType::SHOW_ONE;
-    m_pcdlg->close();
-    populate();
-    m_plot->replot();
-}
-void ProfilePlot::show16(){
-    type = ProfileType::SHOW_16;
-    populate();
-    m_plot->replot();
-}
-void ProfilePlot::showAll(){
-    type = ProfileType::SHOW_ALL;
-    m_pcdlg->close();
-    populate();
-    m_plot->replot();
-}
+
 void ProfilePlot::zeroOffsetChanged(const QString &s){
     if (offsetType == s)
         return;
@@ -302,7 +286,7 @@ void ProfilePlot::angleChanged(double a){
         return;
     g_angle = a * DEGTORAD;
 
-    if (type == ProfileType::SHOW_ONE || type == ProfileType::SHOW_ALL)
+
         populate();
     m_plot->replot();
     emit profileAngleChanged(M_PI_2 - g_angle);
@@ -719,20 +703,15 @@ void ProfilePlot::populate()
             double units = m_showNm * m_showSurface;
 
 
-            // if not show 16 diam
-            if (!(m_show_16_diameters or m_showOnlyAvg)){
+            // if show one angle
+            if (m_show_oneAngle or (!m_showAvg and !m_show_16_diameters & !m_show_oneAngle)){
+
                 cprofile->setSamples( createProfile( units,wf, true));
                 cprofile->attach( m_plot );
             }
-            else {
+            if (m_show_16_diameters){
               // compute 16 diameters
-              // if only one wave front is selected then use blue for the average
-              QColor penColor = QColor("blue");
-
-              // if more than one wave front is selected then used color table.
-              penColor = QColor(plotColors[i % 10]);
-
-
+              QColor penColor = QColor(Settings2::m_profile->getColor(i%10));
 
               QString t = "Average of all 16 diameters";
               QwtText title(t);
@@ -757,7 +736,7 @@ void ProfilePlot::populate()
                   cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
                   cprofile->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
                   cprofile->setItemAttribute(QwtPlotItem::Legend, false);
-                  cprofile->setPen( QColor(plotColors[i % 10]));
+                  cprofile->setPen( penColor);
 
                   points = createProfile( m_showNm * m_showSurface,wf);
                   if (i == 0) {
@@ -773,13 +752,16 @@ void ProfilePlot::populate()
                           else count[j] = 1;
                       }
                   }
-                  if (!m_showOnlyAvg){
+                  if (m_show_16_diameters){
                     cprofile->setSamples( points);
                     cprofile->attach( m_plot );
                   }
 
               }
-
+            }
+          if (m_showAvg){
+              qDebug() << "pen color" << i << plotColors[i];
+              QColor penColor = QColor(Settings2::m_profile->getColor(i%10));
               // plot the average profile
               std::vector<double> avgRadius = compute_average_radial_profile(wf->workData,
                                             cv::Point(wf->m_outside.m_center.x(),wf->m_outside.m_center.y()), wf->m_outside.m_radius);
@@ -811,10 +793,10 @@ void ProfilePlot::populate()
               cprofileavg->setPen( QPen(penColor, Settings2::m_profile->avgProfileWidth()) );
               cprofileavg->setSamples( left);
               cprofileavg->attach( m_plot );
-              g_angle = startAngle;
-            }
+              //g_angle = startAngle;
         }
 
+    }
     // Insert markers
 
     //  ...a horizontal line at y = 0...
@@ -907,6 +889,11 @@ void ProfilePlot::showContextMenu(QPoint pos)
     connect(showMM, &QAction::triggered, this, &ProfilePlot::showXMM);
     myMenu.addAction(showMM);
 
+    QAction *showOneAngle = new QAction("show one angle",this);
+    showOneAngle->setCheckable(true);
+    showOneAngle->setChecked(m_show_oneAngle);
+    connect(showOneAngle, &QAction::triggered, this, &ProfilePlot::toggleOneAngle);
+    myMenu.addAction(showOneAngle);
 
     QAction *show16 = new QAction("show 16 diameters",this);
     show16->setCheckable(true);
@@ -914,15 +901,15 @@ void ProfilePlot::showContextMenu(QPoint pos)
     connect(show16, &QAction::triggered, this, &ProfilePlot::toggleShow16);
     myMenu.addAction(show16);
 
-    QAction *showAvgOnly = new QAction("Show only avg", this);
-    showAvgOnly->setCheckable(true);
-    showAvgOnly->setChecked(m_showOnlyAvg);
-    showAvgOnly->setToolTip("Shows only the average of all diameters");
-    connect(showAvgOnly, &QAction::triggered, this, &ProfilePlot::toggleShowAvgOnly);
-    myMenu.addAction(showAvgOnly);
+    QAction *showAvg = new QAction("Show avg", this);
+    showAvg->setCheckable(true);
+    showAvg->setChecked(m_showAvg);
+    showAvg->setToolTip("Shows only the average of all diameters");
+    connect(showAvg, &QAction::triggered, this, &ProfilePlot::toggleShowAvg);
+    myMenu.addAction(showAvg);
 
     QAction* showCorrection = new QAction("show percent of correction",this);
-    connect(showCorrection, &QAction::trigger, this, &ProfilePlot::showCorrection);
+    connect(showCorrection, &QAction::triggered, this, &ProfilePlot::showCorrection);
     showCorrection->setToolTip("Show % correction of zone areas used in the Zambuto method of mirror figuring.");
     myMenu.addAction(showCorrection);
 
@@ -936,13 +923,19 @@ void ProfilePlot::saveXscaleSettings(){
 }
 void ProfilePlot::toggleShow16(){
     m_show_16_diameters = !m_show_16_diameters;
+qDebug() << "show 16";
+    populate();
+    m_plot->replot();
+}
+void ProfilePlot::toggleShowAvg(){
+    m_showAvg = !m_showAvg;
 
     populate();
     m_plot->replot();
 }
-void ProfilePlot::toggleShowAvgOnly(){
-    m_showOnlyAvg = !m_showOnlyAvg;
-
+void ProfilePlot::toggleOneAngle(){
+    m_show_oneAngle = !m_show_oneAngle;
+qDebug() << "show one";
     populate();
     m_plot->replot();
 }
