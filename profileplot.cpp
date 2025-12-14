@@ -81,7 +81,7 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     m_plot = new QwtPlot(this);
     m_plot->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_plot, &QwtPlot::customContextMenuRequested, this, &ProfilePlot::showContextMenu);
-
+    m_plot->setCanvasBackground(Qt::darkGray);
     new profilePlotPicker(m_plot);
 
     QHBoxLayout * l1 = new QHBoxLayout();
@@ -622,7 +622,7 @@ std::vector<double> compute_average_radial_profile(
 
 void ProfilePlot::populate()
 {
-
+qDebug() << "Populate";
     m_plot->detachItems(QwtPlotItem::Rtti_PlotItem);
     compass->setGeometry(QRect(80,80,70,70));
     QString tmp("nanometers");
@@ -687,6 +687,7 @@ void ProfilePlot::populate()
         m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
         surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
         QList<int> list = saTools->SelectedWaveFronts();
+        // if no wave front was selected then use the last one
 
         for (int i = 0; i < list.size(); ++i){
             wavefront* wf = wfs->at(list[i]);
@@ -756,7 +757,6 @@ void ProfilePlot::populate()
                     cprofile->setSamples( points);
                     cprofile->attach( m_plot );
                   }
-
               }
             }
           if (m_showAvg){
@@ -769,7 +769,16 @@ void ProfilePlot::populate()
               QPolygonF right;  //right half of profile
 
               for (size_t i = 0; i < avgRadius.size(); ++i) {
-                  double rr = (double)(i)/avgRadius.size() * wf->diameter/2.;
+                  double rr  = 100. * (double)(i)/(avgRadius.size()-1);
+
+                  if(m_displayInches){
+                      rr *= wf->diameter/2;
+                      rr /=25.4;
+                  }
+                  else if (!m_displayPercent){  // convert rr into mm.
+                    rr *= wf->diameter/2;
+
+                  }
                   double val = (units * avgRadius[i] * wf->lambda/outputLambda)  + y_offset * units;
 
                   right <<  QPointF(rr, val);
