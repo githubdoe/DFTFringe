@@ -55,6 +55,8 @@ public:
     void setZRange();
     void setColorMap(int ndx);
     void setTool(ContourTools* tool);
+    QRectF adjustRectToAspectRatio(double baseWidth, double baseHeight,
+                                    double canvasWidth, double canvasHeight) const;
     void updateAspectRatio();
     bool m_minimal; // when true, hide axes and colorbar
     bool m_linkProfile;
@@ -93,7 +95,6 @@ private:
     void drawCanvas(QPainter* p);
     void initPlot();
     bool eventFilter(QObject *obj, QEvent *event);
-
 
     QColor m_contourPen;
 

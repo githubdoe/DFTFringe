@@ -74,7 +74,7 @@ public:
             return;
         }
 
-        // Get the canvas dimensions and aspect ratio (accounts for axes, labels, colorbar, etc.)
+        // Get the canvas dimensions
         QWidget *canvas = thePlot->canvas();
         double canvasWidth = canvas->width();
         double canvasHeight = canvas->height();
@@ -83,36 +83,24 @@ public:
             QwtPlotZoomer::zoom(rect);
             return;
         }
-        double canvasRatio = canvasWidth / canvasHeight;
 
-        // Get the selected zoom rectangle dimensions and its aspect ratio
+        // Get the selected zoom rectangle dimensions
         double selWidth = rect.width();
         double selHeight = rect.height();
-        double selRatio = selWidth / selHeight;
 
-        QRectF adjustedRect = rect;
+        // Use shared aspect ratio adjustment logic to match canvas aspect ratio
+        QRectF adjustedRect = thePlot->adjustRectToAspectRatio(
+            selWidth, selHeight, canvasWidth, canvasHeight);
 
-        // The zoom rectangle should have the same aspect ratio as the canvas
-        // to ensure no distortion when displayed
-        if (selRatio > canvasRatio)
-        {
-            // Selected rect is wider than canvas → expand height to match canvas ratio
-            double newHeight = selWidth / canvasRatio;
-            double extra = (newHeight - selHeight) / 2.0;
-            adjustedRect.setTop(rect.top() - extra);
-            adjustedRect.setBottom(rect.bottom() + extra);
-        }
-        else if (selRatio < canvasRatio)
-        {
-            // Selected rect is taller than canvas → expand width to match canvas ratio
-            double newWidth = selHeight * canvasRatio;
-            double extra = (newWidth - selWidth) / 2.0;
-            adjustedRect.setLeft(rect.left() - extra);
-            adjustedRect.setRight(rect.right() + extra);
-        }
+        // Translate adjusted dimensions back to rect position
+        QRectF zoomRect(rect.left() + adjustedRect.left(),
+                       rect.top() + adjustedRect.top(),
+                       adjustedRect.width(),
+                       adjustedRect.height());
+
         // Set guard to prevent intermediate aspect-ratio updates while zooming
         thePlot->m_inZoomOperation = true;
-        QwtPlotZoomer::zoom(adjustedRect);
+        QwtPlotZoomer::zoom(zoomRect);
         // Ensure guard is cleared on next event loop tick in case rescale() isn't called
         QTimer::singleShot(0, thePlot, SLOT(clearZoomFlag()));
     }
@@ -587,7 +575,7 @@ QString ContourPlot::m_zRangeMode("Auto");
 double ContourPlot::m_zOffset = 0.;
 
 ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
-    QwtPlot( parent ),m_wf(0),m_tools(tools),m_minimal(minimal), m_linkProfile(true),m_contourPen(Qt::white), m_inZoomOperation(false)
+    QwtPlot( parent ),m_wf(0),m_tools(tools),m_minimal(minimal), m_linkProfile(true), m_inZoomOperation(false), m_contourPen(Qt::white)
 {
     spdlog::get("logger")->trace("ContourPlot::ContourPlot");
     d_spectrogram = new QwtPlotSpectrogram();
@@ -707,6 +695,37 @@ void ContourPlot::setAlpha( int alpha )
     replot();
 }
 
+// Helper: Adjust rect to match aspect ratio of canvas, given wavefront data
+// Takes wavefront dimensions and canvas, returns adjusted rect maintaining aspect ratio
+QRectF ContourPlot::adjustRectToAspectRatio(
+    double baseWidth, double baseHeight, double canvasWidth, double canvasHeight) const
+{
+    double dataRatio = baseWidth / baseHeight;
+    double canvasRatio = canvasWidth / canvasHeight;
+
+    double x1 = 0, x2 = baseWidth;
+    double y1 = 0, y2 = baseHeight;
+
+    if (canvasRatio > dataRatio)
+    {
+        // Canvas is wider → expand X symmetrically
+        double newWidth = baseHeight * canvasRatio;
+        double extra = (newWidth - baseWidth) / 2.0;
+        x1 = -extra;
+        x2 = baseWidth + extra;
+    }
+    else if (canvasRatio < dataRatio)
+    {
+        // Canvas is taller → expand Y symmetrically
+        double newHeight = baseWidth / canvasRatio;
+        double extra = (newHeight - baseHeight) / 2.0;
+        y1 = -extra;
+        y2 = baseHeight + extra;
+    }
+
+    return QRectF(x1, y1, x2 - x1, y2 - y1);
+}
+
 void ContourPlot::updateAspectRatio()
 {
     static bool isReentering = false;
@@ -722,10 +741,10 @@ void ContourPlot::updateAspectRatio()
     isReentering = true;
 
     QWidget *c = canvas();
-    int w = c->width();
-    int h = c->height();
+    int canvas_w = c->width();
+    int canvas_h = c->height();
 
-    if (w <= 0 || h <= 0){
+    if (canvas_w <= 0 || canvas_h <= 0){
         isReentering = false;
         return;
     }
@@ -733,39 +752,10 @@ void ContourPlot::updateAspectRatio()
     double imgWidth  = m_wf->data.cols;
     double imgHeight = m_wf->data.rows;
 
-    double dataRatio = imgWidth / imgHeight;
-    double pixRatio  = double(w) / double(h);
+    QRectF adjustedRect = adjustRectToAspectRatio(imgWidth, imgHeight, canvas_w, canvas_h);
 
-    double x1;
-    double x2;
-    double y1;
-    double y2;
-
-    if (pixRatio > dataRatio)
-    {
-        // Canvas is wider → Y fits perfectly, X must be expanded
-        double scaledWidth = imgHeight * pixRatio;  // what X must become
-        double extra = (scaledWidth - imgWidth) * 0.5;
-        x1 = -extra;
-        x2 = imgWidth + extra;
-
-        y1 = 0;
-        y2 = imgHeight;
-    }
-    else
-    {
-        // Canvas is taller → X fits perfectly, Y must be expanded
-        double scaledHeight = imgWidth / pixRatio;
-        double extra = (scaledHeight - imgHeight) * 0.5;
-        y1 = -extra;
-        y2 = imgHeight + extra;
-
-        x1 = 0;
-        x2 = imgWidth;
-    }
-
-    setAxisScale(QwtPlot::xBottom, x1, x2);
-    setAxisScale(QwtPlot::yLeft,  y1, y2);
+    setAxisScale(QwtPlot::xBottom, adjustedRect.left(), adjustedRect.right());
+    setAxisScale(QwtPlot::yLeft,  adjustedRect.top(), adjustedRect.bottom());
 
     replot();
 
