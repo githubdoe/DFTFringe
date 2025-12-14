@@ -769,13 +769,18 @@ qDebug() << "Populate";
               QPolygonF right;  //right half of profile
 
               for (size_t i = 0; i < avgRadius.size(); ++i) {
-                  double rr  = 100. * (double)(i)/(avgRadius.size()-1);
-
-                  if(m_displayInches){
+                  double rr  = (double)(i)/(avgRadius.size()-1);
+                  if (m_displayPercent){
+                      rr *= 100.;
+                  }
+                  else if(m_displayInches){
+                      qDebug() << "percent" << rr << wf->diameter/2;
                       rr *= wf->diameter/2;
                       rr /=25.4;
+
+                      qDebug() << "Inches" << rr;
                   }
-                  else if (!m_displayPercent){  // convert rr into mm.
+                  else {  // convert rr into mm.
                     rr *= wf->diameter/2;
 
                   }
