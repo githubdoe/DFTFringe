@@ -45,6 +45,7 @@
 #include <QPainterPath>
 #include <qwt_plot_marker.h>
 #include "spdlog/spdlog.h"
+#include <QTimer>
 
 
 double zOffset = 0;
@@ -109,19 +110,27 @@ public:
             adjustedRect.setLeft(rect.left() - extra);
             adjustedRect.setRight(rect.right() + extra);
         }
-        // If ratios match, no adjustment needed
-
+        // Set guard to prevent intermediate aspect-ratio updates while zooming
+        thePlot->m_inZoomOperation = true;
         QwtPlotZoomer::zoom(adjustedRect);
+        // Ensure guard is cleared on next event loop tick in case rescale() isn't called
+        QTimer::singleShot(0, thePlot, SLOT(clearZoomFlag()));
     }
 
     // Override zoom state change to reapply aspect ratio when unzooming
     void rescale() override
     {
         QwtPlotZoomer::rescale();
+
         // Check if we're back at the base zoom level
-        if ((thePlot!=nullptr) && zoomRectIndex() == 0)
+        if ((thePlot != nullptr) && zoomRectIndex() == 0)
         {
             thePlot->updateAspectRatio();
+        }
+
+        // Clear zoom guard (may have been set in zoom())
+        if (thePlot != nullptr){
+            thePlot->clearZoomFlag();
         }
     }
 
@@ -578,7 +587,7 @@ QString ContourPlot::m_zRangeMode("Auto");
 double ContourPlot::m_zOffset = 0.;
 
 ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
-    QwtPlot( parent ),m_wf(0),m_tools(tools),m_minimal(minimal), m_linkProfile(true),m_contourPen(Qt::white)
+    QwtPlot( parent ),m_wf(0),m_tools(tools),m_minimal(minimal), m_linkProfile(true),m_contourPen(Qt::white), m_inZoomOperation(false)
 {
     spdlog::get("logger")->trace("ContourPlot::ContourPlot");
     d_spectrogram = new QwtPlotSpectrogram();
@@ -701,7 +710,7 @@ void ContourPlot::setAlpha( int alpha )
 void ContourPlot::updateAspectRatio()
 {
     static bool isReentering = false;
-    
+
     if (m_wf == nullptr){
         return;
     }
@@ -715,6 +724,7 @@ void ContourPlot::updateAspectRatio()
     QWidget *c = canvas();
     int w = c->width();
     int h = c->height();
+
     if (w <= 0 || h <= 0){
         isReentering = false;
         return;
@@ -766,10 +776,17 @@ bool ContourPlot::eventFilter(QObject *obj, QEvent *event)
 {
     if (obj == canvas() && event->type() == QEvent::Resize)
     {
-        updateAspectRatio();
+        if (!m_inZoomOperation) {
+            updateAspectRatio();
+        }
         return false;
     }
     return QwtPlot::eventFilter(obj, event);
+}
+
+void ContourPlot::clearZoomFlag()
+{
+    m_inZoomOperation = false;
 }
 
 #ifndef QT_NO_PRINTER

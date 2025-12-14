@@ -61,6 +61,7 @@ public:
     QPen m_rulerPen;
     int m_radialDeg;
     bool m_do_fill;
+    bool m_inZoomOperation;
 
 
 signals:
@@ -83,6 +84,7 @@ public slots:
     void contourFillChanged(int);
     void newDisplayErrorRange(double min, double max);
     void drawProfileLine(const double ang);
+    void clearZoomFlag();
 #ifndef QT_NO_PRINTER
     void printPlot();
 #endif
