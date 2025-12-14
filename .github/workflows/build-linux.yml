@@ -46,6 +46,7 @@ jobs:
           style: '' # we don't want check from clang-format
           lines-changed-only: 'true' # Only lines in the diff that contain additions are analyzed. Avoid noise from existing code.
           thread-comments: 'update'
+          tidy-checks: '' # rely solely on .clang-tidy file
           tidy-review: true
           passive-reviews: true
           ignore: 'bezier|boost|SingleApplication|spdlog|zernike|moc_*|ui_*|qwt*'
