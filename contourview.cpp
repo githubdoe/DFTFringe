@@ -63,7 +63,7 @@ QImage contourView::getPixstatsImage(){
 }
 
 
-void contourView::setSurface(wavefront *wf){
+void contourView::setSurface(const wavefront *wf){
     getPlot()->setSurface(wf);
     ps->setData(wf);
 }
@@ -81,6 +81,7 @@ void contourView::showContextMenu(QPoint pos)
     // Show context menu at handling position
     myMenu.exec(globalPos);
 }
+
 ContourPlot *contourView::getPlot(){
     return ui->widget;
 }

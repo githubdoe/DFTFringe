@@ -34,19 +34,19 @@ public:
     explicit contourView(QWidget *parent = 0, ContourTools *tools = 0);
     ~contourView();
     ContourPlot *getPlot();
-    void setSurface(wavefront * wf);
-    bool zoomed;
+    void setSurface(const wavefront * wf);
+    bool zoomed; // this is not about zooming in the plot, but zooming the contour view to full screen
     QImage getPixstatsImage();
     pixelStats *getPixelstats(){ return ps;}
 signals:
     void lineSpacingChanged(double);
     void showAllContours();
-    void zoomMe(bool);
+    void zoomMe(bool); // full screen related
 private slots:
     void on_doubleSpinBox_valueChanged(double arg1);
     void showContextMenu(QPoint pos);
     void on_pushButton_pressed();
-    void zoom();
+    void zoom(); // full screen related
 
     void on_histogram_clicked();
 

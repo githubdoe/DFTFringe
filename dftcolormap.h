@@ -24,11 +24,11 @@
 class dftColorMap: public QwtLinearColorMap
 {
 public:
-    dftColorMap(int type = 0, wavefront *wf= 0, bool zeroBased = true,
+    dftColorMap(int type = 0, const wavefront *wf= 0, bool zeroBased = true,
                 double errorMargin = .125, double scale = 1., QColor less = Qt::black,
                 QColor more = Qt::white);
     void setRange(double low, double high);
-    wavefront *m_wf;
+    const wavefront *m_wf;
     static QList<colorStop> userStops;
 };
 #endif // DFTCOLORMAP_H
