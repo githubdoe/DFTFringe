@@ -86,7 +86,7 @@ void zernikeEditDlg::on_createSurface_clicked()
 
     m_sm->createSurfaceFromPhaseMap(result, CircleOutline(QPointF(xcen,ycen),rad),
                                                 CircleOutline(QPointF(0,0),0),
-                                                QString("Zernike_Wavefront"), wfZernikes);
+                                                QString("Zernike_Wavefront"), WavefrontOrigin::Zernikes);
 }
 
 void zernikeEditDlg::on_clearAll_clicked()

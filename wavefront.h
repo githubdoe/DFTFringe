@@ -20,7 +20,18 @@
 #include <opencv2/opencv.hpp>
 #include "Circleoutline.h"
 #include <QPointF>
-enum WavefrontOrigin {wfUnknown, wfIgram, wfFile, wfSimulation, wfAverage, wfSubtraction, wfDemo, wfZernikes, wfSmoothed};
+
+enum class WavefrontOrigin : std::uint8_t {
+    Unknown = 0,
+    Igram,
+    File,
+    Simulation,
+    Demo,
+    Average,
+    Subtraction,
+    Zernikes,
+    Smoothed
+};
 class wavefront
 {
 public:

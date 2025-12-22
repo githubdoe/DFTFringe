@@ -1049,7 +1049,7 @@ void DFTArea::makeSurface(){
         showData("result surface", result.clone());
     }
 
-    emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName(), wfIgram,
+    emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName(), WavefrontOrigin::Igram,
                         m_poly);
     QApplication::restoreOverrideCursor();
     success = true;
@@ -1514,7 +1514,7 @@ qDebug() << "rec" << left << top << width << height;
         m_center.m_center.rx() =  (result.cols-1) - m_center.m_center.x();
     }
     QString wfname = QString("PSI")+ finfo.baseName() + QString("-") + QFileInfo(m_psiFiles[imagecount-1]).baseName();
-    emit newWavefront(result, m_outside, m_center, wfname, wfIgram, m_poly);
+    emit newWavefront(result, m_outside, m_center, wfname, WavefrontOrigin::Igram, m_poly);
     QApplication::restoreOverrideCursor();
 }
 

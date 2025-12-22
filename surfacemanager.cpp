@@ -384,8 +384,8 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 		//
 
         if (!m_ignoreInverse &&
-		    wf->m_manuallyInverted == false && // don't auto-invert if user already manually inverted
-			wf->m_origin == wfIgram)           // only auto-invert if wavefront created from processed igram
+		    wf->m_manuallyInverted == false &&      // don't auto-invert if user already manually inverted
+			wf->m_origin == WavefrontOrigin::Igram) // only auto-invert if wavefront created from processed igram
         {
             if (m_inverseMode==invNOTSET)
             {
@@ -815,7 +815,7 @@ void SurfaceManager::useDemoWaveFront(){
     createSurfaceFromPhaseMap(result,
                               CircleOutline(QPointF(xcen,ycen),rad),
                               CircleOutline(QPointF(0,0),0),
-                              QString("Demo"), wfDemo);
+                              QString("Demo"), WavefrontOrigin::Demo);
 }
 
 void SurfaceManager::waveFrontClickedSlot(int ndx)
@@ -1140,7 +1140,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     }
     spdlog::get("logger")->trace("readWaveFront() step 1");
     wavefront *wf = new wavefront();
-	wf->m_origin = wfFile;
+	wf->m_origin = WavefrontOrigin::File;
     double width;
     double height;
     file >> width;
@@ -1646,7 +1646,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     wf->data = sum.clone();
     wf->mask = mask;
     wf->workMask = mask.clone();
-    wf->m_origin = wfAverage;
+    wf->m_origin = WavefrontOrigin::Average;
     m_wavefronts << wf;
     wf->wasSmoothed = false;
     wf->name = "Average.wft";
@@ -1671,7 +1671,7 @@ void SurfaceManager::averageComplete(wavefront *wf){
     wf->wasSmoothed = false;
     wf->name = "Average.wft";
     wf->dirtyZerns = true;
-    wf->m_origin = wfAverage;
+    wf->m_origin = WavefrontOrigin::Average;
     m_surfaceTools->addWaveFront(wf->name);
     m_currentNdx = m_wavefronts.size()-1;
     //makeMask(m_currentNdx);
@@ -1816,7 +1816,7 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
     resultwf->data = result.clone();
     resultwf->mask = mask.clone();
     resultwf->workMask = mask.clone();
-    resultwf->m_origin = wfSubtraction;
+    resultwf->m_origin = WavefrontOrigin::Subtraction;
     m_wavefronts << resultwf;
     m_currentNdx = m_wavefronts.size() -1;
 

@@ -18,7 +18,7 @@
 #include "wavefront.h"
 
 wavefront::wavefront():
-    gaussian_diameter(0.),useSANull(true),m_origin(wfUnknown),m_manuallyInverted(false),dirtyZerns(true),regions_have_been_expanded(false)
+    gaussian_diameter(0.),useSANull(true),m_origin(WavefrontOrigin::Unknown),m_manuallyInverted(false),dirtyZerns(true),regions_have_been_expanded(false)
 {
 }
 
