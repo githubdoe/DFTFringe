@@ -149,7 +149,7 @@ void profilePlotPicker::move( QPoint pos )
         yData[i] = d_selectedCurve->sample(i).y() + delta;
     }
     d_selectedCurve->setSamples( xData, yData );
-
+    emit offset(d_selectedCurve->title().text(), delta);
     /*
        Enable QwtPlotCanvas::ImmediatePaint, so that the canvas has been
        updated before we paint the cursor on it.

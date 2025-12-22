@@ -17,7 +17,8 @@ public:
     virtual bool eventFilter( QObject *, QEvent * );
 
     virtual bool event( QEvent * );
-
+signals:
+    void offset(QString wavefrontName, double delta);
 private:
 
     void select( QPoint  );

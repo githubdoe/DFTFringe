@@ -31,6 +31,7 @@
 #include <QCheckBox>
 #include <QDoubleSpinBox>
 #include "percentcorrectiondlg.h"
+#include "profileplotpicker.h"
 namespace Ui {
 class ProfilePlot;
 }
@@ -94,7 +95,8 @@ public slots:
     void toggleShowAvg();
     void toggleShow16();
     void toggleOneAngle();
-
+    void CreateWaveFrontFromAverage();
+    void SetYoffset(QString name, double value);
     //QPolygonF createZernProfile(wavefront *wf);
 private:
 
@@ -117,6 +119,8 @@ private:
     Ui::ProfilePlot *ui;
     bool m_defocus_mode;
     cv::Mat_<double> m_defocus_wavefront;
+    QMap<QString,double> m_waveFrontyOffsets;
+    profilePlotPicker *m_pk;
 };
 
 #endif // PROFILEPLOT_H

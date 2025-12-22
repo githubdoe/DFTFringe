@@ -59,6 +59,7 @@ SOURCES += main.cpp \
     dftcolormap.cpp \
     surfaceanalysistools.cpp \
     surfacemanager.cpp \
+    wavefrontloaderworker.cpp \
     zernikedlg.cpp \
     zernikepolar.cpp \
     zernikeprocess.cpp \
@@ -175,6 +176,7 @@ HEADERS  += mainwindow.h \
     dftcolormap.h \
     surfaceanalysistools.h \
     surfacemanager.h \
+    wavefrontloaderworker.h \
     zernikedlg.h \
     zernikepolar.h \
     zernikeprocess.h \
