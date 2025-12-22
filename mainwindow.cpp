@@ -862,7 +862,7 @@ void MainWindow::on_actionWavefront_triggered()
     m_surfaceManager->createSurfaceFromPhaseMap(result,
                                                 CircleOutline(QPointF(xcen,ycen),rad),
                                                 CircleOutline(QPointF(0,0),0),
-                                                QString("Simulated_Wavefront"));
+                                                QString("Simulated_Wavefront"), wfSimulation);
 }
 
 void MainWindow::on_actionIgram_triggered()

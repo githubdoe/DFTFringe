@@ -378,8 +378,14 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 
         mirrorDlg *md = mirrorDlg::get_Instance();
         zp.unwrap_to_zernikes(*wf);
-        // check for swapped conic value
-        if (!m_ignoreInverse)
+
+		//
+		// AUTO INVERT CODE STARTS HERE
+		//
+
+        if (!m_ignoreInverse &&
+		    wf->m_manuallyInverted == false && // don't auto-invert if user already manually inverted
+			wf->m_origin == wfIgram)           // only auto-invert if wavefront created from processed igram
         {
             if (m_inverseMode==invNOTSET)
             {
@@ -413,6 +419,9 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             }
         }
 
+		//
+		// AUTO INVERT CODE ENDS HERE/
+		//
 
         ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
         ((MainWindow*)parent())-> zernTablemodel->update();
@@ -806,7 +815,7 @@ void SurfaceManager::useDemoWaveFront(){
     createSurfaceFromPhaseMap(result,
                               CircleOutline(QPointF(xcen,ycen),rad),
                               CircleOutline(QPointF(0,0),0),
-                              QString("Demo"));
+                              QString("Demo"), wfDemo);
 }
 
 void SurfaceManager::waveFrontClickedSlot(int ndx)
@@ -1062,7 +1071,8 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
 }
 void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
                                                CircleOutline center,
-                                               const QString &name, QVector<std::vector<cv::Point> > polyArea){
+                                               const QString &name, WavefrontOrigin origin,
+                                               QVector<std::vector<cv::Point> > polyArea){
 
     wavefront *wf;
 
@@ -1100,6 +1110,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
         m_surfaceTools->addWaveFront(wf->name);
         m_currentNdx = m_wavefronts.size()-1;
     }
+    wf->m_origin = origin;
     wf->m_outside = outside;
     wf->m_inside = center;
     wf->data = phase;
@@ -1129,6 +1140,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     }
     spdlog::get("logger")->trace("readWaveFront() step 1");
     wavefront *wf = new wavefront();
+	wf->m_origin = wfFile;
     double width;
     double height;
     file >> width;
@@ -1634,6 +1646,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     wf->data = sum.clone();
     wf->mask = mask;
     wf->workMask = mask.clone();
+    wf->m_origin = wfAverage;
     m_wavefronts << wf;
     wf->wasSmoothed = false;
     wf->name = "Average.wft";
@@ -1658,6 +1671,7 @@ void SurfaceManager::averageComplete(wavefront *wf){
     wf->wasSmoothed = false;
     wf->name = "Average.wft";
     wf->dirtyZerns = true;
+    wf->m_origin = wfAverage;
     m_surfaceTools->addWaveFront(wf->name);
     m_currentNdx = m_wavefronts.size()-1;
     //makeMask(m_currentNdx);
@@ -1726,7 +1740,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         QStringList l = oldWf->name.split('.');
         QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0')); // clazy:exclude=qstring-arg
         wavefront *wf = new wavefront();
-        *wf = *oldWf; // copy everything to new wavefront including basic things like diameter,wavelength
+        *wf = *oldWf; // copy everything to new wavefront including basic things like diameter,wavelength,origin
         //emit nameChanged(wf->name, newName);
 
         wf->name = newName;
@@ -1802,6 +1816,7 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
     resultwf->data = result.clone();
     resultwf->mask = mask.clone();
     resultwf->workMask = mask.clone();
+    resultwf->m_origin = wfSubtraction;
     m_wavefronts << resultwf;
     m_currentNdx = m_wavefronts.size() -1;
 
@@ -1861,8 +1876,7 @@ void SurfaceManager::invert(QList<int> list){
         m_wavefronts[list[i]]->data *= -1;
         m_wavefronts[list[i]]->dirtyZerns = true;
         m_wavefronts[list[i]]->wasSmoothed = false;
-        m_ignoreInverse = true;
-
+        m_wavefronts[list[i]]->m_manuallyInverted = true;
     }
     m_waveFrontTimer->start(500);
 }
