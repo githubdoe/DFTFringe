@@ -20,6 +20,18 @@
 #include <opencv2/opencv.hpp>
 #include "Circleoutline.h"
 #include <QPointF>
+
+enum class WavefrontOrigin : std::uint8_t {
+    Unknown = 0,
+    Igram,
+    File,
+    Simulation,
+    Demo,
+    Average,
+    Subtraction,
+    Zernikes,
+    Smoothed
+};
 class wavefront
 {
 public:
@@ -40,6 +52,8 @@ public:
     bool wasSmoothed;
     bool useSANull;
     double GBSmoothingValue;
+    WavefrontOrigin m_origin;
+    bool m_manuallyInverted; // true if user inverted this wavefront
 
     QString name;
     double lambda;

@@ -18,7 +18,7 @@
 #include "wavefront.h"
 
 wavefront::wavefront():
-    gaussian_diameter(0.),useSANull(true),dirtyZerns(true),regions_have_been_expanded(false)
+    gaussian_diameter(0.),useSANull(true),m_origin(WavefrontOrigin::Unknown),m_manuallyInverted(false),dirtyZerns(true),regions_have_been_expanded(false)
 {
 }
 
@@ -44,6 +44,8 @@ wavefront::wavefront( const wavefront &wf):
     wasSmoothed(wf.wasSmoothed),
     useSANull(wf.useSANull),
     GBSmoothingValue(wf.GBSmoothingValue),
+    m_origin(wf.m_origin),
+    m_manuallyInverted(wf.m_manuallyInverted),
     lambda(wf.lambda),
     m_outside(wf.m_outside),
     m_inside(wf.m_inside),
