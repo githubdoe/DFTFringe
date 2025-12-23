@@ -17,28 +17,28 @@
    <item>
     <widget class="QCheckBox" name="ShowDFTTHumbCB">
      <property name="text">
-      <string>Show DFT Thumnail once Mirror is outlined in Igram.</string>
+      <string>Show DFT Thumbnail once Mirror is outlined in interferogram.</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QCheckBox" name="showDownSizedIgram">
      <property name="text">
-      <string>SHow Down sized interferogram.</string>
+      <string>Show downsized interferogram.</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QCheckBox" name="flipVert">
      <property name="text">
-      <string>Flip analysis vertical</string>
+      <string>Flip analysis vertically</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QCheckBox" name="flipHorizontal">
      <property name="text">
-      <string>Flip analysis horizontal</string>
+      <string>Flip analysis horizontally</string>
      </property>
     </widget>
    </item>

@@ -2718,12 +2718,12 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="settingsdft.ui" line="20"/>
-        <source>Show DFT Thumnail once Mirror is outlined in Igram.</source>
+        <source>Show DFT Thumbnail once Mirror is outlined in interferogram.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="settingsdft.ui" line="27"/>
-        <source>SHow Down sized interferogram.</source>
+        <source>Show downsized interferogram.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
