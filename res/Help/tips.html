@@ -1,15 +1,15 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <HTML>
 <HEAD>
-<style> 
+<style>
 p
 {
-    width:600px; 
+    width:600px;
     word-wrap:break-word;
 }
 p.ex
 {
-    width:300px; 
+    width:300px;
     word-wrap:break-word;
 }
 td {
@@ -30,7 +30,7 @@ td {
 <P>Blurry fringes on part of the interferogram are usually caused by vibration of the mirror or interferometer.  Faster shutter speed is required to reduce the issue if the vibrations can not be reduced.</p>
 </li><li>
 <h2>Zernike terms to ignore</h2>
-<p> Zernike terms of piston, tilt, defocus, and coma are usually disabled because except for coma they are the result of the setup and not the mirror itself.  Coma values depend on tilt values and the outline position of the mirror.  It is next to impossible to determine the correct value.  For mirrors used in Newtonian collimation will compensate for any coma in the mirror.</p> 
+<p> Zernike terms of piston, tilt, defocus, and coma are usually disabled because except for coma they are the result of the setup and not the mirror itself.  Coma values depend on tilt values and the outline position of the mirror.  It is next to impossible to determine the correct value.  For mirrors used in Newtonian collimation will compensate for any coma in the mirror.</p>
 </li>
 
 
@@ -67,7 +67,7 @@ Example:  300 mm f/5 mirror, if  D<sub>err</sub>/D = 1% then  Z<sub>8 err</sub> 
     </dl>
   </li>
 
-	
+
   <li>Artificial nulling has accuracy issues for large, fast mirrors</li>
 
 </ul>
@@ -81,8 +81,8 @@ Example:  300 mm f/5 mirror, if  D<sub>err</sub>/D = 1% then  Z<sub>8 err</sub> 
 <li>The surface analysis is inverted and needs to be inverted back to the correct one.</li>
 <li>The surface is not inverted and truly has a conic with the wrong sign from the desired surface.</li>
 </ol>
-<p>When the sign of Z8 does not match the sign of the desired conic the software will ask the user if the surface should be inverted. 
-The user then needs to decide.  For cases where a known paraboloidial mirror is being measured the answer will be yes. 
+<p>When the sign of Z8 does not match the sign of the desired conic the software will ask the user if the surface should be inverted.
+The user then needs to decide.  For cases where a known paraboloidial mirror is being measured the answer will be yes.
 If one is testing a sphere (Desired conic of 0.) or a mirror just staring to be corrected the user has a harder time deciding. One method is to heat a portion of the surface with a thumb before taking the interferogram.  That will raise the surface slightly.  If in the analysis that area is raise then the Z8 sign is correct.  If instead there is a dent then the z8 sign is inverted and the wavefront should been inverted.
 </p>
 <p>For convience the program remembers the answer to the question and will invert any other wavefront it thinks are inverted (sign of Z8 does not match sign of desired conic and you answered yes to the prompt to invert) util the program is restarted.</p>
@@ -97,7 +97,7 @@ If one is testing a sphere (Desired conic of 0.) or a mirror just staring to be 
 
 <li>
 <h2> How to deal with out of memory issues </h2>
-<p>As igrams get bigger DFTFring can run out of memory and crash when loading several
+<p>As igrams get bigger DFTFringe can run out of memory and crash when loading several
 wavefronts.  The wave front file is the size the mirror is in pixels in the interferogram.  There are a few things you can do to help.</p>
 <p>After you have a wavefront file save it, then delete it from the program before analyzing another.  If you are using the batch analyze feature you can select to save the wavefront file and delete it automatically on each interferogram. When you want to average them all together use the Average wave front command from the Files menu. It will average them all without keeping them all in memory.
 </p>
@@ -115,7 +115,7 @@ details of small thin zones like sharp turned edge.</p>
 <ul>
 <p>You can tell the program to reduce the size of the interferogram before it analyzes it. Change the DFT control's "DFT Size" on the DFT Tab.  This will reduce the size of the image before it make the DFT.  The wave front size will match the DFT Size.</p>
 <p>You can only do this if the fringes are wide enough to still contain several pixels
-ofter the resize.  If the fringes become too small then you should not use this method.</P>  
+after the resize.  If the fringes become too small then you should not use this method.</P>
 </ul>
 </li>
 </ol></p>

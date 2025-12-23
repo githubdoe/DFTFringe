@@ -1198,7 +1198,7 @@
     <name>Settings2</name>
     <message>
         <location filename="settings2.ui" line="14"/>
-        <source>DFTFring Settings</source>
+        <source>DFTFringe Settings</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
