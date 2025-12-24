@@ -378,8 +378,14 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 
         mirrorDlg *md = mirrorDlg::get_Instance();
         zp.unwrap_to_zernikes(*wf);
-        // check for swapped conic value
-        if (!m_ignoreInverse)
+
+		//
+		// AUTO INVERT CODE STARTS HERE
+		//
+
+        if (!m_ignoreInverse &&
+		    wf->m_manuallyInverted == false &&      // don't auto-invert if user already manually inverted
+			wf->m_origin == WavefrontOrigin::Igram) // only auto-invert if wavefront created from processed igram
         {
             if (m_inverseMode==invNOTSET)
             {
@@ -413,6 +419,9 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             }
         }
 
+		//
+		// AUTO INVERT CODE ENDS HERE/
+		//
 
         ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
         ((MainWindow*)parent())-> zernTablemodel->update();
@@ -806,7 +815,7 @@ void SurfaceManager::useDemoWaveFront(){
     createSurfaceFromPhaseMap(result,
                               CircleOutline(QPointF(xcen,ycen),rad),
                               CircleOutline(QPointF(0,0),0),
-                              QString("Demo"));
+                              QString("Demo"), WavefrontOrigin::Demo);
 }
 
 void SurfaceManager::waveFrontClickedSlot(int ndx)
@@ -1062,7 +1071,8 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
 }
 void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
                                                CircleOutline center,
-                                               const QString &name, QVector<std::vector<cv::Point> > polyArea){
+                                               const QString &name, WavefrontOrigin origin,
+                                               QVector<std::vector<cv::Point> > polyArea){
 
     wavefront *wf;
 
@@ -1101,6 +1111,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
         m_currentNdx = m_wavefronts.size()-1;
         m_surfaceTools->select(m_currentNdx);
     }
+    wf->m_origin = origin;
     wf->m_outside = outside;
     wf->m_inside = center;
     wf->data = phase;
@@ -1130,6 +1141,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     }
     spdlog::get("logger")->trace("readWaveFront() step 1");
     wavefront *wf = new wavefront();
+	wf->m_origin = WavefrontOrigin::File;
     double width;
     double height;
     file >> width;
@@ -1635,6 +1647,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     wf->data = sum.clone();
     wf->mask = mask;
     wf->workMask = mask.clone();
+    wf->m_origin = WavefrontOrigin::Average;
     m_wavefronts << wf;
     wf->wasSmoothed = false;
     wf->name = "Average.wft";
@@ -1659,6 +1672,7 @@ void SurfaceManager::averageComplete(wavefront *wf){
     wf->wasSmoothed = false;
     wf->name = "Average.wft";
     wf->dirtyZerns = true;
+    wf->m_origin = WavefrontOrigin::Average;
     m_surfaceTools->addWaveFront(wf->name);
     m_currentNdx = m_wavefronts.size()-1;
     //makeMask(m_currentNdx);
@@ -1727,7 +1741,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         QStringList l = oldWf->name.split('.');
         QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0')); // clazy:exclude=qstring-arg
         wavefront *wf = new wavefront();
-        *wf = *oldWf; // copy everything to new wavefront including basic things like diameter,wavelength
+        *wf = *oldWf; // copy everything to new wavefront including basic things like diameter,wavelength,origin
         //emit nameChanged(wf->name, newName);
 
         wf->name = newName;
@@ -1803,6 +1817,7 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
     resultwf->data = result.clone();
     resultwf->mask = mask.clone();
     resultwf->workMask = mask.clone();
+    resultwf->m_origin = WavefrontOrigin::Subtraction;
     m_wavefronts << resultwf;
     m_currentNdx = m_wavefronts.size() -1;
 
@@ -1862,8 +1877,7 @@ void SurfaceManager::invert(QList<int> list){
         m_wavefronts[list[i]]->data *= -1;
         m_wavefronts[list[i]]->dirtyZerns = true;
         m_wavefronts[list[i]]->wasSmoothed = false;
-        m_ignoreInverse = true;
-
+        m_wavefronts[list[i]]->m_manuallyInverted = true;
     }
     m_waveFrontTimer->start(500);
 }
@@ -2739,24 +2753,24 @@ void SurfaceManager::saveAllContours(){
     m_allContours.save( fName );
 }
 
-#include "showallcontoursdlg.h"
-void SurfaceManager::showAllContours(){
-    showAllContoursDlg dlg;
+#include "showallcontoursdlg.h" //TODO move
+void SurfaceManager::showAllContours(){ //TODO move to contourview would make more sense as use only there
+    showAllContoursDlg dlg; //TODO not closing on app close
     if (!dlg.exec()) {
         return;
     }
     QRect rec = QGuiApplication::primaryScreen()->geometry();
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot;
-    //plot->m_minimal = true;
-    int cols = dlg.getColumns();
+    ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot; //TODO leaking ? 
+    //plot->m_minimal = true; 
+    int cols = dlg.getColumns(); //TODO parameter number of pixels unused here. update the dlg ui
     int width = rec.width()/cols;
     int height = width * .82;
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     QList<int> list = saTools->SelectedWaveFronts();
 
-    int rows =  ceil((double)list.size()/cols);
-    int columns = std::min((int)list.size(),int(ceil((double)list.size()/rows)));
+    int rows =  ceil((float)list.size()/cols);
+    int columns = std::min((int)list.size(),int(ceil((float)list.size()/rows)));
     const QSizeF size(columns * (width + 10), rows * (height + 10));
     const QRect imageRect = QRect(0,0,size.width(),size.height());
     qDebug() << "save all" << imageRect;
@@ -2775,11 +2789,27 @@ void SurfaceManager::showAllContours(){
     {
         wavefront * wf = m_wavefronts[list[i]];
         plot->setSurface(wf);
+
+        //All these replots and updates are necessary to get the canvas updateAspectRatio to work properly.
+
+        // Resize the outer plot so its internal canvas area will match
+        // the requested image size.
+        plot->resize(width, height);
+        QCoreApplication::processEvents();
+        // Now ensure the canvas is the target size
+        if (plot->canvas())
+            plot->canvas()->resize(width, height);
+        plot->updateAspectRatio();
         plot->replot();
+        plot->updateAspectRatio();
+        plot->replot();
+
+
         int y_offset =  height * (i/columns) + 10;
         int x_offset = width * (i%columns) + 10;
         const QRectF topRect( x_offset, y_offset, width, height );
         renderer.render( plot, &painter, topRect );
+
     }
     painter.end();
 

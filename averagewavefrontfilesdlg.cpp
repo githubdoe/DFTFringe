@@ -123,7 +123,8 @@ void averageWaveFrontFilesDlg::on_process_clicked()
         ui->progressBar->setValue(0);
         ui->progressBar->setFormat("Done");
 
-        emit averageComplete( average );
+        if (average)
+            emit averageComplete( average );
     }
     if (rejects.size() > 0){
         rejectedWavefrontsDlg dlg(rejects);

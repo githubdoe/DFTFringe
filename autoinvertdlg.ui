@@ -77,7 +77,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>I'll invert the wavefront myself as needed</string>
+        <string>The user will invert the wavefront as needed.</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

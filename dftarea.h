@@ -28,6 +28,7 @@
 #include <string>
 #include "psi_dlg.h"
 #include "psiphasedisplay.h"
+#include "wavefront.h"
 
 extern void showData(const std::string& txt, const cv::Mat &mat, bool useLog = false);
 extern QImage showMag(const cv::Mat &complexI, bool show = false, const char *title = "FFT", bool doLog = true, double gamma = 0);
@@ -87,7 +88,7 @@ signals:
     void setDftSizeVal(int);
     void selectDFTTab();
     void updateFilterSize(int);
-    void newWavefront(cv::Mat, CircleOutline, CircleOutline, const QString &,
+    void newWavefront(cv::Mat, CircleOutline, CircleOutline, const QString &, WavefrontOrigin origin,
                       QVector<std::vector<cv::Point> >);
     void dftReady(QImage);
     void statusBarUpdate(QString, int);

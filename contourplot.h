@@ -27,30 +27,11 @@
 #include "wavefront.h"
 #include <qwt_picker.h>
 #include <qwt_plot_picker.h>
+#include <qwt_plot_rescaler.h>
 #include <qwt_interval.h>
 
 class MyZoomer;
-class SpectrogramData: public QwtRasterData
-{
-public:
-    SpectrogramData();
-    wavefront *m_wf;
-    void setSurface(wavefront *surface);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    // keep compatibility with newer version of QWT used in QT6
-    QwtInterval interval(Qt::Axis axis) const override;
-    void setInterval(Qt::Axis axis, const QwtInterval &interval);
-#endif
-    virtual double value( double x, double y ) const override;
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    // keep compatibility with newer version of QWT used in QT6
-private:
-    QwtInterval m_xInterval;
-    QwtInterval m_yInterval;
-    QwtInterval m_zInterval;
-#endif
-};
 class ContourPlot: public QwtPlot
 {
     Q_OBJECT
@@ -60,7 +41,7 @@ class ContourPlot: public QwtPlot
 
 public:
     QwtPlotSpectrogram *d_spectrogram;
-    wavefront* m_wf;
+    const wavefront* m_wf;
     ContourTools *m_tools;
     static bool m_useMiddleOffset;
     static int m_colorMapNdx;
@@ -68,18 +49,21 @@ public:
     static double m_waveRange;
     double contourRange;
     static QString m_zRangeMode;
-    ContourPlot(QWidget * = NULL, ContourTools *tools  = 0, bool minimal = false);
-    void setSurface(wavefront * mat);
+    ContourPlot(QWidget *parent = NULL, ContourTools *tools  = 0, bool minimal = false);
+    void setSurface(const wavefront * wft);
     void applyZeroOffset(bool useMiddle);
     void setZRange();
     void setColorMap(int ndx);
     void setTool(ContourTools* tool);
-    bool m_autoInterval;
-    bool m_minimal;
+    QRectF adjustRectToAspectRatio(double baseWidth, double baseHeight,
+                                    double canvasWidth, double canvasHeight) const;
+    void updateAspectRatio();
+    bool m_minimal; // when true, hide axes and colorbar
     bool m_linkProfile;
     QPen m_rulerPen;
     int m_radialDeg;
     bool m_do_fill;
+    bool m_inZoomOperation;
 
 
 signals:
@@ -102,6 +86,7 @@ public slots:
     void contourFillChanged(int);
     void newDisplayErrorRange(double min, double max);
     void drawProfileLine(const double ang);
+    void clearZoomFlag();
 #ifndef QT_NO_PRINTER
     void printPlot();
 #endif
@@ -109,7 +94,7 @@ public slots:
 private:
     void drawCanvas(QPainter* p);
     void initPlot();
-
+    bool eventFilter(QObject *obj, QEvent *event);
 
     QColor m_contourPen;
 

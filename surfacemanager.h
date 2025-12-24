@@ -179,7 +179,7 @@ private slots:
 public slots:
     void rotateThese(double angle, QList<int> list);
     void createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
-                                   CircleOutline center, const QString &name,
+                                   CircleOutline center, const QString &name, WavefrontOrigin origin,
                                    QVector<std::vector<cv::Point> > polyArea= QVector<std::vector<cv::Point> >());
     void invert(QList<int> list);
     void wftNameChanged(int, const QString&);
