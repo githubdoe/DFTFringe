@@ -242,6 +242,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
     surfacemanager.cpp \
+    wavefrontloaderworker.cpp \
     transformwavefrontdlg.cpp \
     unwraperrorsview.cpp \
     usercolormapdlg.cpp \
@@ -360,6 +361,7 @@ HEADERS += bezier/bezier.h \
     surfacegraph.h \
     surfacelightingproxy.h \
     surfacemanager.h \
+    wavefrontloaderworker.h \
     transformwavefrontdlg.h \
     unwraperrorsview.h \
     usercolormapdlg.h \

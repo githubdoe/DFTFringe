@@ -1156,5 +1156,5 @@ void ProfilePlot::CreateWaveFrontFromAverage(){
     sm->createSurfaceFromPhaseMap(result,
                               m_wf->m_outside,
                               m_wf->m_inside,
-                              QString("avg"));
+                              QString("avg"), WavefrontOrigin::Average);
 }
