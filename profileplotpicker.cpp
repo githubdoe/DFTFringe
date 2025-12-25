@@ -8,6 +8,7 @@
 #include <qwt_plot_canvas.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_directpainter.h>
+#include <qwt_text.h>
 
 profilePlotPicker::profilePlotPicker( QwtPlot *plot ):
     QObject( plot ),
@@ -163,7 +164,3 @@ void profilePlotPicker::move( QPoint pos )
 
 
 }
-
-
-
-
