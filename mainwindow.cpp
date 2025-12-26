@@ -170,7 +170,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_profilePlot->setStyleSheet( {"border: 3px outset darkgrey;"});
     review->s1->addWidget(m_contourView);
     QRect rec = QGuiApplication::primaryScreen()->geometry();
-    review->s1->setSizes({INT_MAX, INT_MAX});
+    review->s1->setSizes({INT_MAX, INT_MAX}); // because these numbers are identical it will default split the 3d view and contour view 50/50
     review->s2->setSizes({ rec.height()/2,  rec.height()/2});
     review->s2->setStyleSheet(
         "QSplitter::handle:vertical{ border: 3px outset #004545; background: #ccffff }"
@@ -178,6 +178,10 @@ MainWindow::MainWindow(QWidget *parent) :
     review->s1->setStyleSheet(
           "QSplitter::handle:horizontal{ border: 3px outset #004545; background: #ccffff }"
     );
+
+    // make docking border separators larger and teal so they are more obvious to users
+    setStyleSheet(
+        "QMainWindow::separator { width: 4px; border: 3px outset #004545; background: #ccffff }");
 
     //Surface Manager
     m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView,
