@@ -13,15 +13,6 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true"> QPushButton{ border-style: outset;
-	background-color: rgb(0, 0, 0);
-                        border-width: 3px;
-                        border-radius: 7px;
-                        border-color: darkgray;
-                        font: normal 12px;
-                           padding: 2px; }</string>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,9">
    <item>
     <widget class="QGroupBox" name="groupBox_5">
@@ -523,7 +514,6 @@
         </property>
         <property name="font">
          <font>
-          <pointsize>-1</pointsize>
           <italic>false</italic>
           <bold>false</bold>
          </font>

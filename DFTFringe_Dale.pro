@@ -47,6 +47,7 @@ SOURCES += main.cpp \
     percentcorrectiondlg.cpp \
     profileplot.cpp \
     profileplotpicker.cpp \
+    ronchicomparedialog.cpp \
     settingsigramimportconfig.cpp \
     startestmoviedlg.cpp \
     surface3dcontrolsdlg.cpp \
@@ -164,6 +165,7 @@ HEADERS  += mainwindow.h \
     percentcorrectiondlg.h \
     profileplot.h \
     profileplotpicker.h \
+    ronchicomparedialog.h \
     settingsigramimportconfig.h \
     startestmoviedlg.h \
     surface3dcontrolsdlg.h \
