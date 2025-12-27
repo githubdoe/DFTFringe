@@ -535,7 +535,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
     m_SurfaceGraph(glPlot), m_metrics(mets),m_gbValue(21),
     m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),outsideOffset(0),
-    m_inverseMode(invCONIC),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
+    m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {
 
     okToUpdateSurfacesOnGenerateComplete = true;
