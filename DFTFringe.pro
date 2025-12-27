@@ -212,6 +212,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     plotcolor.cpp \
     profileplot.cpp \
     profileplotpicker.cpp \
+    ronchicomparedialog.cpp \
     psfplot.cpp \
     psi_dlg.cpp \
     psiphasedisplay.cpp \
@@ -331,6 +332,7 @@ HEADERS += bezier/bezier.h \
     plotcolor.h \
     profileplot.h \
     profileplotpicker.h \
+    ronchicomparedialog.h \
     psfplot.h \
     psi_dlg.h \
     psiphasedisplay.h \
