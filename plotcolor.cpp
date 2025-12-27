@@ -1,6 +1,6 @@
 #include "plotcolor.h"
 const char *plotColors[]=
-{   "BLack",
+{   "Black",
     "Red",
     "Green",
     "LightSalmon",
