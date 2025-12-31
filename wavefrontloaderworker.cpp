@@ -9,7 +9,7 @@ WavefrontLoaderWorker::WavefrontLoaderWorker(QObject *parent)
 {
 }
 
-void WavefrontLoaderWorker::process(QStringList args, SurfaceManager* manager) {
+void WavefrontLoaderWorker::process(const QStringList& args, SurfaceManager* manager) {
     m_isCancelled = false; // Reset the flag for this run
     int cnt = 0;
 

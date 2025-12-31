@@ -96,7 +96,7 @@ public slots:
     void toggleShow16();
     void toggleOneAngle();
     void CreateWaveFrontFromAverage();
-    void SetYoffset(QString name, double value);
+    void SetYoffset(const QString& name, double value);
     //QPolygonF createZernProfile(wavefront *wf);
 private:
 

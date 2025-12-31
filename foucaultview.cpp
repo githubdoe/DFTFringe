@@ -213,7 +213,7 @@ QImage foucaultView::generateOpticalTestImage(OpticalTestType type, wavefront* w
         double lpi_val = s.lpi * (s.useMM ? 25.4 : 1.0);
         int ppl = std::max(1, (int)((0.5 / lpi_val) / pixwidth));
         int start = (size / 2) - (ppl / 2);
-        bool even = ((start / ppl) % 2 == 0) ^ s.clearCenter;
+        bool even = ((start / ppl) % 2 == 0) != s.clearCenter;
         int roffset_start = ppl - (start % ppl);
 
         for (int y = 0; y < size; ++y) {
@@ -298,10 +298,10 @@ void foucaultView::on_makePb_clicked()
     QImage foucaultImg = generateOpticalTestImage(OpticalTestType::Foucault, m_wf, settings);
 
     // Store for potential saving/external access
-    m_foucultQimage = foucaultImg;
+    m_foucaultQimage = foucaultImg;
 
     // 3. UI Painting Helper (to avoid duplicating the Painter logic)
-    auto paintAndDisplay = [&](QLabel* label, QImage img, double offsetValue) {
+    auto paintAndDisplay = [&](QLabel* label, const QImage& img, double offsetValue) {
         if (img.isNull()) return;
 
         QSize s = label->size();
@@ -637,7 +637,7 @@ void foucaultView::on_scanPb_clicked()
             QString fvpng = QString("%1//%2.png").arg(imageDir).arg(cnt++, 6, 10, QLatin1Char('0'));
             qDebug() << "fn"<< fvpng;
             if (ui->saveOnlyFouccault->isChecked()){
-                fv->m_foucultQimage.save(fvpng);
+                fv->m_foucaultQimage.save(fvpng);
             }
             else {
                 fvImage.save(fvpng);
