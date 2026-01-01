@@ -11,8 +11,8 @@ class RonchiCompareDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit RonchiCompareDialog(const QImage& img1, const QString name1, const QImage &img2,
-                                                      const QString name2, QWidget* parent);
+    explicit RonchiCompareDialog(const QImage& img1, const QString& name1, const QImage &img2,
+                                                      const QString& name2, QWidget* parent);
     virtual ~RonchiCompareDialog();
 
 private slots:

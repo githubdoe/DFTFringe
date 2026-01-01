@@ -56,6 +56,6 @@ void autoInvertDlg::enableConic(bool b) {
 
 void autoInvertDlg::on_InvertWithoutAskingRb_clicked(bool checked)
 {
-
+    Q_UNUSED(checked);
 }
 
