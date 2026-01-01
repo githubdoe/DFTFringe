@@ -92,7 +92,7 @@ private:
     Ui::foucaultView *ui;
     SurfaceManager *m_sm;
     QString imageDir;
-    QImage m_foucultQimage;
+    QImage m_foucaultQimage;
     QTimer m_guiTimer;
     int heightMultiply;
     double m_sag;
