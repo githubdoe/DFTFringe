@@ -490,7 +490,7 @@ void foucaultView::generateBatchRonchiImage(const QList<wavefront*>& wavefrontLi
     layout->addLayout(btns);
 
     // Connect the comparison trigger
-    connect(compareBtn, &QPushButton::clicked, [=, &previewDlg]() {
+    connect(compareBtn, &QPushButton::clicked, &previewDlg, [=, &previewDlg]() {
         // [=] copies individualRonchis and names so they stay
         // valid even after generateBatchRonchiImage() returns.
         if (individualRonchis.size() >= 2) {
