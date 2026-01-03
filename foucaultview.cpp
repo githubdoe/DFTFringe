@@ -290,8 +290,7 @@ void foucaultView::on_makePb_clicked()
     // Pass the class members that aren't driven by UI widgets
     settings.heightMultiply = this->heightMultiply;
     settings.lateralOffset  = this->lateralOffset;
-    // Note: outputLambda should be defined/accessible in your scope
-    settings.outputLambda   = 550.0;
+    settings.outputLambda   = outputLambda;
 
     // 2. Call the refactored static engine for both images
     QImage ronchiImg = generateOpticalTestImage(OpticalTestType::Ronchi, m_wf, settings);
@@ -359,7 +358,7 @@ void foucaultView::generateBatchRonchiImage(const QList<wavefront*>& wavefrontLi
     s.clearCenter    = ui->clearCenterCb->isChecked();
     s.heightMultiply = this->heightMultiply;
     s.lateralOffset  = this->lateralOffset;
-    s.outputLambda   = 550.0;
+    s.outputLambda   = outputLambda;
 
     // 4. Calculate Grid and Canvas Geometry
     int count = wavefrontList.size();
