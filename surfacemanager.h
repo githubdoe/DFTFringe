@@ -45,7 +45,6 @@
 #include "surfacegraph.h"
 enum configRESPONSE { YES, NO, ASK};
 enum AutoInvertMode {invNOTSET, invMANUAL, invCONIC, invINSIDE, invOUTSIDE};
-enum askAboutInversion {ask, doNotAskDoNotInvert, doNotAskbutInvert};
 struct textres {
     QTextEdit *Edit;
     QList<QString> res;
