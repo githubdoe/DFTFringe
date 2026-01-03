@@ -17,7 +17,7 @@ public slots:
     /**
      * @brief The main loop that processes the wavefront files.
      */
-    void process(QStringList args, SurfaceManager* manager);
+    void process(const QStringList& args, SurfaceManager* manager);
 
     /**
      * @brief Slot to trigger a safe exit of the loop.

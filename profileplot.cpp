@@ -224,7 +224,7 @@ ProfilePlot::~ProfilePlot(){
 
 
 
-void ProfilePlot::SetYoffset(QString name, double value){
+void ProfilePlot::SetYoffset(const QString& name, double value){
     if (m_waveFrontyOffsets.contains(name)){
         m_waveFrontyOffsets[name] += value;
     }
@@ -560,7 +560,7 @@ struct RadialBin {
  */
 std::vector<double> compute_average_radial_profile(
     const cv::Mat& matrix,
-    const cv::Point& center,
+    cv::Point center,
     int radius)
 {
     // Check matrix validity
@@ -721,7 +721,7 @@ qDebug() << "Populate";
             }
 qDebug() << "offsets" << m_waveFrontyOffsets<< y_offset;
             // if show one angle
-            if (m_show_oneAngle or (!m_showAvg and !m_show_16_diameters & !m_show_oneAngle)){
+            if (m_show_oneAngle or (!m_showAvg and !m_show_16_diameters and !m_show_oneAngle)){
 
                 cprofile->setSamples( createProfile( units,wf, true));
                 cprofile->attach( m_plot );

@@ -6,8 +6,8 @@
 #include <QWidget>
 #include <QGuiApplication>
 #include <QScreen>
-RonchiCompareDialog::RonchiCompareDialog(const QImage& img1, const QString name1, const QImage &img2,
-                                         const QString name2, QWidget* parent)
+RonchiCompareDialog::RonchiCompareDialog(const QImage& img1, const QString& name1, const QImage &img2,
+                                         const QString& name2, QWidget* parent)
     : QDialog(parent), m_q1(img1), m_q2(img2)
 {
     setWindowTitle(tr("Ronchi Comparison Overlay"));
