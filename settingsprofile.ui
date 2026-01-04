@@ -7,34 +7,18 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>364</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Profile line colors</string>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>260</y>
-     <width>111</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::NoButton</set>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_8">
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>0</y>
-     <width>231</width>
+     <y>10</y>
+     <width>361</width>
      <height>16</height>
     </rect>
    </property>
@@ -45,10 +29,10 @@
   <widget class="QLabel" name="label_11">
    <property name="geometry">
     <rect>
-     <x>180</x>
-     <y>10</y>
+     <x>170</x>
+     <y>20</y>
      <width>191</width>
-     <height>61</height>
+     <height>81</height>
     </rect>
    </property>
    <property name="text">
@@ -62,9 +46,9 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>20</y>
+     <y>30</y>
      <width>121</width>
-     <height>266</height>
+     <height>288</height>
     </rect>
    </property>
    <layout class="QFormLayout" name="formLayout">
@@ -117,13 +101,6 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="1">
-     <widget class="QPushButton" name="pushButton_4">
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
     <item row="4" column="0">
      <widget class="QLabel" name="label_5">
       <property name="text">
@@ -145,31 +122,17 @@
       </property>
      </widget>
     </item>
-    <item row="6" column="0">
-     <widget class="QLabel" name="label_10">
-      <property name="text">
-       <string>Color 7:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="0">
-     <widget class="QLabel" name="label_6">
-      <property name="text">
-       <string>Color 8:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="8" column="0">
-     <widget class="QLabel" name="label_7">
-      <property name="text">
-       <string>Color 9:</string>
-      </property>
-     </widget>
-    </item>
     <item row="5" column="1">
      <widget class="QPushButton" name="pushButton_6">
       <property name="text">
        <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0">
+     <widget class="QLabel" name="label_10">
+      <property name="text">
+       <string>Color 7:</string>
       </property>
      </widget>
     </item>
@@ -180,10 +143,24 @@
       </property>
      </widget>
     </item>
+    <item row="7" column="0">
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>Color 8:</string>
+      </property>
+     </widget>
+    </item>
     <item row="7" column="1">
      <widget class="QPushButton" name="pushButton_8">
       <property name="text">
        <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="0">
+     <widget class="QLabel" name="label_7">
+      <property name="text">
+       <string>Color 9:</string>
       </property>
      </widget>
     </item>
@@ -194,55 +171,68 @@
       </property>
      </widget>
     </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="">
-   <property name="geometry">
-    <rect>
-     <x>190</x>
-     <y>100</y>
-     <width>95</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="QLabel" name="label_12">
+    <item row="3" column="1">
+     <widget class="QPushButton" name="pushButton_4">
       <property name="text">
-       <string>Line Width</string>
+       <string/>
       </property>
      </widget>
     </item>
-    <item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>171</x>
+     <y>150</y>
+     <width>191</width>
+     <height>52</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="3" column="1">
+     <widget class="QSpinBox" name="selectedWidth">
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+      <property name="value">
+       <number>5</number>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
      <widget class="QSpinBox" name="lineWidth">
+      <property name="minimumSize">
+       <size>
+        <width>40</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
       <property name="value">
        <number>2</number>
       </property>
      </widget>
     </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="">
-   <property name="geometry">
-    <rect>
-     <x>190</x>
-     <y>140</y>
-     <width>150</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_2">
-    <item>
-     <widget class="QLabel" name="label_13">
+    <item row="2" column="0" alignment="Qt::AlignmentFlag::AlignRight">
+     <widget class="QLabel" name="label_12">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
-       <string>Selected Profile Width</string>
+       <string>Line width</string>
       </property>
      </widget>
     </item>
-    <item>
-     <widget class="QSpinBox" name="selectedWidth">
-      <property name="value">
-       <number>5</number>
+    <item row="3" column="0" alignment="Qt::AlignmentFlag::AlignRight">
+     <widget class="QLabel" name="label_13">
+      <property name="text">
+       <string>Selected profile width</string>
       </property>
      </widget>
     </item>
@@ -250,38 +240,5 @@
   </widget>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>settingsProfile</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>settingsProfile</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
