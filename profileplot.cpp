@@ -50,13 +50,17 @@
 #include "zernikeprocess.h"
 #include <QAbstractTableModel>
 #include "plotcolor.h"
-#include "profileplotpicker.h"
+
 extern double outputLambda;
 
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
+
+#include <vector>
 #include <cmath>
+#include <algorithm>
+#include <map>
 #include "percentcorrectiondlg.h"
 #define DEGTORAD  M_PI/180.;
 double g_angle = 270. * DEGTORAD; //start at 90 deg (pointing east)
@@ -77,21 +81,14 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
     m_plot = new QwtPlot(this);
     m_plot->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_plot, &QwtPlot::customContextMenuRequested, this, &ProfilePlot::showContextMenu);
-
-    new profilePlotPicker(m_plot);
-    type = ProfileType::SHOW_ONE;
+    m_plot->setCanvasBackground(Qt::darkGray);
+    m_pk = new profilePlotPicker(m_plot);
+    QObject::connect(m_pk, &profilePlotPicker::offset, this, &ProfilePlot::SetYoffset);
     QHBoxLayout * l1 = new QHBoxLayout();
     QVBoxLayout *v1 = new QVBoxLayout();
     showNmCB = new QCheckBox("Show in Nanometers",this);
     showSurfaceCB =  new QCheckBox("Surface error");
-    Show16 = new QRadioButton("16 diameters of current wavefront",this);
-    OneOnly = new QRadioButton("one diameter of current wavefront",this);
-    OneOnly->setChecked(true);
-    ShowAll = new QRadioButton("All wavefronts",this);
 
-    connect(Show16, &QAbstractButton::clicked, this, &ProfilePlot::show16);
-    connect(OneOnly, &QAbstractButton::clicked, this, &ProfilePlot::showOne);
-    connect(ShowAll, &QAbstractButton::clicked, this, &ProfilePlot::showAll);
     l1->addStretch();
 
     showSlopeError = new QCheckBox("Show Slope: ");
@@ -126,16 +123,14 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
         // QDoubleSpinBox::valueChanged is overloaded in Qt5
     connect(slopeLimitSB, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &ProfilePlot::slopeLimit);
 #endif
-    // 
+    //
     connect(showSlopeError,&QAbstractButton::clicked, this, &ProfilePlot::showSlope);
 
     l1->addWidget(showSlopeError);
     l1->addWidget(slopeLimitSB);
     l1->addWidget(showNmCB);
     l1->addWidget(showSurfaceCB);
-    l1->addWidget(OneOnly);
-    l1->addWidget(Show16);
-    l1->addWidget(ShowAll);
+    l1->addStretch();
     v1->addLayout(l1);
     v1->addWidget(m_plot,10);
 
@@ -205,13 +200,13 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
        // new QwtCompassMagnetNeedle( QwtCompassMagnetNeedle::ThinStyle ) );
     compass->setValue( 270 );
     compass->setOrigin( -90 );
-    
+
     // Using the old SIGNAL/SLOT syntax because problems with QWT.
     // Qt is not able to match signal at runtime even if compile time checks all passed.
     // ChatGPT tells it might be an ABI problem with QWT library but I (JST) have been unable to fix for now (2025-10-20).
     connect(compass, SIGNAL(valueChanged(double)), this ,SLOT(angleChanged(double)));
     //connect(compass,&QwtAbstractSlider::valueChanged,this ,&ProfilePlot::angleChanged);
-    
+
     connect(m_tools, &ContourTools::newDisplayErrorRange,
             this, &ProfilePlot::newDisplayErrorRange);
     connect(m_tools, &ContourTools::contourZeroOffsetChanged, this, &ProfilePlot::zeroOffsetChanged);
@@ -224,11 +219,20 @@ ProfilePlot::ProfilePlot(QWidget *parent , ContourTools *tools):
 ProfilePlot::~ProfilePlot(){
     delete ui;
     delete m_pcdlg;
+    delete m_pk;
 }
 
 
 
+void ProfilePlot::SetYoffset(const QString& name, double value){
+    if (m_waveFrontyOffsets.contains(name)){
+        m_waveFrontyOffsets[name] += value;
+    }
+    else{
+        m_waveFrontyOffsets.insert(name,value);
+    }
 
+}
 
 void ProfilePlot::showSlope(bool val){
     m_showSlopeError = val;
@@ -259,23 +263,7 @@ void ProfilePlot::showSurface(bool flag){
     setSurface(m_wf);
 }
 
-void ProfilePlot::showOne(){
-    type = ProfileType::SHOW_ONE;
-    m_pcdlg->close();
-    populate();
-    m_plot->replot();
-}
-void ProfilePlot::show16(){
-    type = ProfileType::SHOW_16;
-    populate();
-    m_plot->replot();
-}
-void ProfilePlot::showAll(){
-    type = ProfileType::SHOW_ALL;
-    m_pcdlg->close();
-    populate();
-    m_plot->replot();
-}
+
 void ProfilePlot::zeroOffsetChanged(const QString &s){
     if (offsetType == s)
         return;
@@ -307,7 +295,7 @@ void ProfilePlot::angleChanged(double a){
         return;
     g_angle = a * DEGTORAD;
 
-    if (type == ProfileType::SHOW_ONE || type == ProfileType::SHOW_ALL)
+
         populate();
     m_plot->replot();
     emit profileAngleChanged(M_PI_2 - g_angle);
@@ -337,6 +325,7 @@ void ProfilePlot::setSurface(wavefront * wf){
     double mul = m_showNm * m_showSurface;
     m_plot->setAxisScale( m_plot->yLeft, fmin(-.125,m_tools->m_min) * 1.2 * mul ,
                           fmax(.125,m_tools->m_max) * 1.2 * mul);
+    m_waveFrontyOffsets.clear();
     populate();
     m_plot->replot();
 }
@@ -422,6 +411,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffs
     mirrorDlg &md = *mirrorDlg::get_Instance();
     double steps = 1./wf->m_outside.m_radius;
     double offset = y_offset;
+
     if (!allowOffset) offset = 0.;
     double radius = md.m_clearAperature/2.;
     double obs_radius = md.obs/2.;
@@ -479,6 +469,7 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffs
     }
 
     if (m_showSlopeError){
+
         double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
         double xDel = points[0].x() - points[1].x();
         double hDelLimit =m_showNm *  m_showSurface * ((outputLambda/m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /(outputLambda * 1.e-6));
@@ -494,12 +485,11 @@ QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffs
                 pts<< points[i] << points[i+1];
                 limitCurve->setSamples(pts);
 
-                limitCurve->setPen(QPen(QColor("orange"),4));
+                limitCurve->setPen(QPen(QColor("orange"),Settings2::m_profile->slopeErrorWidth()));
                 limitCurve->setLegendAttribute(QwtPlotCurve::LegendShowSymbol,false );
                 limitCurve->setLegendAttribute(QwtPlotCurve::LegendShowLine,false );
                 limitCurve->setItemAttribute(QwtPlotCurve::Legend,false);
                 limitCurve->attach( m_plot);
-
             }
         }
     }
@@ -547,9 +537,103 @@ void ProfilePlot::make_correction_graph(){
     m_pcdlg->setData(surfs);
 }
 
+
+
+
+
+
+
+// Struct to hold the sum of heights and the count for each distance bin
+struct RadialBin {
+    double sum = 0.0;
+    int count = 0;
+};
+// the following code was generated by AI and may be used in the future to show the average profile
+/**
+ * @brief Computes the average height profile along all radial lines,
+ * returning a vector where index r is the average height at radius r.
+ * It assumes the input matrix is of type CV_64FC1 (double).
+ * * @param matrix The 2D matrix (cv::Mat, expected CV_64FC1).
+ * @param center The center point of the circular surface (cv::Point).
+ * @param radius The radius of the circular surface in pixels.
+ * @return A std::vector<double> where index r contains the average height at integer radius r.
+ */
+std::vector<double> compute_average_radial_profile(
+    const cv::Mat& matrix,
+    cv::Point center,
+    int radius)
+{
+    // Check matrix validity
+    if (matrix.empty() || matrix.channels() != 1 || matrix.type() != CV_64FC1) {
+        qDebug() << "Error: Matrix must be non-empty, single-channel, and of type CV_64FC1.";
+        return {};
+    }
+
+    int rows = matrix.rows;
+    int cols = matrix.cols;
+
+    double center_x = (double)center.x;
+    double center_y = (double)center.y;
+
+    // 1. Define the Bounding Box (ROI) for optimized iteration
+    int min_y = std::max(0, center.y - radius);
+    int max_y = std::min(rows - 1, center.y + radius);
+    int min_x = std::max(0, center.x - radius);
+    int max_x = std::min(cols - 1, center.x + radius);
+
+    // Use a map to consolidate sums and counts for all points grouped by
+    // their final integer radius (r = round(sqrt(r^2)))
+    // Key: Integer Radius (r). Value: RadialBin struct.
+    std::map<int, RadialBin> radial_bins_by_int_radius;
+
+    // 2. Optimized Iteration and Binning
+    for (int y = min_y; y <= max_y; ++y) {
+        for (int x = min_x; x <= max_x; ++x) {
+
+            double dx = x - center_x;
+            double dy = y - center_y;
+
+            double dist_sq_float = dx * dx + dy * dy;
+
+            // Only process points within the defined radius
+            if (dist_sq_float <= (double)radius * radius) {
+
+                double value = matrix.at<double>(y, x);
+                double radius_actual = std::sqrt(dist_sq_float);
+
+                // Determine the bin index by rounding the actual radius
+                int profile_index = static_cast<int>(std::round(radius_actual));
+
+                // Ensure the index doesn't exceed the intended maximum radius R
+                if (profile_index <= radius) {
+                    radial_bins_by_int_radius[profile_index].sum += value;
+                    radial_bins_by_int_radius[profile_index].count += 1;
+                }
+            }
+        }
+    }
+
+    // 3. Compute the Final Profile Vector
+    // Size is radius + 1 (for indices 0 up to radius R)
+    std::vector<double> radial_profile(radius + 1, 0.0);
+
+    for (const auto& pair : radial_bins_by_int_radius) {
+        int r_index = pair.first;
+        const RadialBin& bin = pair.second;
+
+        // Calculate the average height for this integer radius bin
+        double average_height = bin.sum / bin.count;
+
+        // Store the result directly at the integer radius index
+        radial_profile[r_index] = average_height;
+    }
+
+    return radial_profile;
+}
+
 void ProfilePlot::populate()
 {
-
+qDebug() << "Populate";
     m_plot->detachItems(QwtPlotItem::Rtti_PlotItem);
     compass->setGeometry(QRect(80,80,70,70));
     QString tmp("nanometers");
@@ -611,120 +695,15 @@ void ProfilePlot::populate()
     m_plot->detachItems( QwtPlotItem::Rtti_PlotMarker);
 
 
-
-        switch (type) {
-    case ProfileType::SHOW_ONE:{
-        QStringList path = wfs->at(0)->name.split("/");
-        QString name;
-        int l = path.length();
-        if (l >= 2){
-            name = path[l-2] + "/" + path[l-1];
-        }
-        else
-            name = wfs->at(0)->name;
-        QwtPlotCurve *cprofile = new QwtPlotCurve( name );
-        cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
-        //m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
-        //cprofile->setLegendAttribute( QwtPlotCurve::LegendShowLine, false );
-        cprofile->setPen( Qt::black );
-        cprofile->attach( m_plot );
-        QPolygonF points = createProfile( m_showNm * m_showSurface,m_wf);
-
-        cprofile->setSamples( points );
-
-        break;
-    }
-
-        case ProfileType::SHOW_16: {
-
-            surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
-              QList<int> list = saTools->SelectedWaveFronts();
-              QColor penColor = QColor("blue");
-
-              for (int indx = 0; indx < list.size(); ++indx){
-                  if (indx > 0) penColor = QColor(plotColors[indx % 10]);
-                  QPolygonF avg;
-                  QString t = "Average of all 16 diameters";
-                  QwtText title(t);
-                  title.setRenderFlags( Qt::AlignHCenter | Qt::AlignBottom );
-
-                  QFont font;
-                  font.setPointSize(12);
-                  title.setFont( font );
-                  title.setColor(Qt::blue);
-                  QwtPlotTextLabel *titleItem = new QwtPlotTextLabel();
-                  titleItem->setText( title );
-                  titleItem->attach( m_plot );
-
-                  double startAngle = g_angle;
-                  QPolygonF sum;
-                  QMap<int,int> count;
-                  for (int i = 0; i < 16; ++i){
-                      QPolygonF points;
-                      g_angle = startAngle + i * M_PI/ 16;
-
-                      QwtPlotCurve *cprofile = new QwtPlotCurve( );
-                      cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
-                      cprofile->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
-                      cprofile->setPen( Qt::black );
-
-                      points = createProfile( m_showNm * m_showSurface,wfs->at(list[indx]));
-                      if (i == 0) {
-                          sum = points;
-                          for (int j = 0; j < sum.length(); ++j)
-                              count[j] = 1;
-                      }
-                      else {
-                          for(int j = 0; j < fmin(sum.length(),points.length());++j){
-                              sum[j].ry()  += points[j].y();;
-
-                              if (count.contains(j)) count[j] += 1 ;
-                              else count[j] = 1;
-                          }
-                      }
-
-                      cprofile->setSamples( points);
-                      cprofile->attach( m_plot );
-
-                  }
-
-                  // plot the average profile
-                  int i = 0;
-                  foreach(QPointF p, sum){
-                      avg << QPointF(p.x(),p.y()/(count[i++]));
-                  }
-                  QString name("average");
-
-                  QwtPlotCurve *cprofileavg = new QwtPlotCurve( name);
-                  cprofileavg->setRenderHint( QwtPlotItem::RenderAntialiased );
-                  cprofileavg->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
-                  cprofileavg->setLegendIconSize(QSize(50,20));
-                  cprofileavg->setPen( QPen(penColor,5) );
-                  cprofileavg->setSamples( avg);
-                  cprofileavg->attach( m_plot );
-                  g_angle = startAngle;
-
-
-              }
-
-
-              break;
-          }
-    case ProfileType::SHOW_ALL:{
-
         m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
         surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
         QList<int> list = saTools->SelectedWaveFronts();
-        if (list.size() <2){
-            list.clear();
-            for (int i = 0; i < wfs->size(); ++i){
-                list << i;
-            }
-        }
+        // if no wave front was selected then use the last one
+
         for (int i = 0; i < list.size(); ++i){
-            QStringList path = wfs->at(list[i])->name.split("/");
+            wavefront* wf = wfs->at(list[i]);
+            QStringList path = wf->name.split("/");
             QString name = path.last().replace(".wft","");
-qDebug() << "name " << name;
             QwtPlotCurve *cprofile = new QwtPlotCurve(name );
             int width = Settings2::m_profile->lineWidth();
             if (name == m_wf->name.split("/").last().replace(".wft",""))
@@ -732,16 +711,121 @@ qDebug() << "name " << name;
             cprofile->setLegendIconSize(QSize(50,20));
             cprofile->setPen(QPen(Settings2::m_profile->getColor(i),width));
             cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
-            cprofile->setSamples( createProfile( m_showNm * m_showSurface,wfs->at(list[i]), i==0));
-            cprofile->attach( m_plot );
+
+            double units = m_showNm * m_showSurface;
+            if (m_waveFrontyOffsets.contains(name))
+                y_offset = m_waveFrontyOffsets[name];
+            else if (m_waveFrontyOffsets.contains(name + " avg")){
+                y_offset = m_waveFrontyOffsets[name + " avg"];
+                qDebug() << "using avg";
+            }
+qDebug() << "offsets" << m_waveFrontyOffsets<< y_offset;
+            // if show one angle
+            if (m_show_oneAngle or (!m_showAvg and !m_show_16_diameters and !m_show_oneAngle)){
+
+                cprofile->setSamples( createProfile( units,wf, true));
+                cprofile->attach( m_plot );
+            }
+            if (m_show_16_diameters){
+              // compute 16 diameters
+              QColor penColor = QColor(Settings2::m_profile->getColor(i%10));
+
+              QString t = "Average of all 16 diameters";
+              QwtText title(t);
+              title.setRenderFlags( Qt::AlignHCenter | Qt::AlignBottom );
+
+              QFont font;
+              font.setPointSize(12);
+              title.setFont( font );
+              title.setColor(Qt::blue);
+              QwtPlotTextLabel *titleItem = new QwtPlotTextLabel();
+              titleItem->setText( title );
+              //titleItem->attach( m_plot );
+
+              double startAngle = g_angle;
+              QPolygonF sum;
+              QMap<int,int> count;
+              qDebug() << "yoffsets" << m_waveFrontyOffsets << title.text();
+              for (int idx = 0; idx < 16; ++idx){
+                  QPolygonF points;
+                  g_angle = startAngle + idx * M_PI/ 16;
+
+                  QwtPlotCurve *cprofile = new QwtPlotCurve( );
+                  cprofile->setRenderHint( QwtPlotItem::RenderAntialiased );
+                  cprofile->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
+                  cprofile->setItemAttribute(QwtPlotItem::Legend, false);
+                  cprofile->setPen( penColor);
+                  if (m_waveFrontyOffsets.contains(name))
+                    y_offset = m_waveFrontyOffsets[name];
+                  points = createProfile( m_showNm * m_showSurface,wf,true);
+                  if (i == 0) {
+                      sum = points;
+                      for (int j = 0; j < sum.length(); ++j)
+                          count[j] = 1;
+                  }
+                  else {
+                      for(int j = 0; j < fmin(sum.length(),points.length());++j){
+                          sum[j].ry()  += points[j].y();;
+
+                          if (count.contains(j)) count[j] += 1 ;
+                          else count[j] = 1;
+                      }
+                  }
+                  if (m_show_16_diameters){
+                    cprofile->setSamples( points);
+                    cprofile->attach( m_plot );
+                  }
+              }
+            }
+          if (m_showAvg){
+              qDebug() << "inside avg" << y_offset;
+              QColor penColor = QColor(Settings2::m_profile->getColor(i%10));
+              // plot the average profile
+              std::vector<double> avgRadius = compute_average_radial_profile(wf->workData,
+                                            cv::Point(wf->m_outside.m_center.x(),wf->m_outside.m_center.y()), wf->m_outside.m_radius);
+
+              QPolygonF right;  //right half of profile
+              int edgeMaskWidth = 4;
+              for (size_t i = 0; i < avgRadius.size()-edgeMaskWidth; ++i) {
+                  double rr  = (double)(i)/(avgRadius.size()-edgeMaskWidth-1);
+                  if (m_displayPercent){
+                      rr *= 100.;
+                  }
+                  else if(m_displayInches){
+                      rr *= wf->diameter/2;
+                      rr /=25.4;
+                  }
+                  else {  // convert rr into mm.
+                    rr *= wf->diameter/2;
+
+                  }
+                  double val = (units * avgRadius[i] * wf->lambda/outputLambda)  + y_offset * units;
+
+                  right <<  QPointF(rr, val);
+              }
+              // make left have of profile
+              QPolygonF left = right;
+              std::reverse(left.begin(), left.end());
+              left.pop_back();
+              // Create a transform that scales the X axis by -1 and the Y axis by 1 (no scaling)
+              QTransform transform;
+              transform.scale(-1.0, 1.0);
+
+              // Apply the transform to the polygon
+              left = transform.map(left);
+              left.append(right);
+
+              QwtPlotCurve *cprofileavg = new QwtPlotCurve( name + " avg");
+              cprofileavg->setRenderHint( QwtPlotItem::RenderAntialiased );
+              cprofileavg->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
+              cprofileavg->setLegendIconSize(QSize(50,20));
+              cprofileavg->setPen( QPen(penColor, Settings2::m_profile->avgProfileWidth()) );
+              cprofileavg->setSamples( left);
+              cprofileavg->attach( m_plot );
+              //g_angle = startAngle;
         }
 
-            break;
-        }
-    default:
-        break;
     }
-
     // Insert markers
 
     //  ...a horizontal line at y = 0...
@@ -815,15 +899,52 @@ void ProfilePlot::showContextMenu(QPoint pos)
     // Create menu and insert some actions
     QMenu myMenu;
     myMenu.setToolTipsVisible(true);
-    QString txt = (zoomed)? "Restore to MainWindow" : "FullScreen";
 
-    myMenu.addAction(txt,  this, &ProfilePlot::zoom);
-    myMenu.addAction("Change X axis to show percentage", this, SLOT(showXPercent()));
-    myMenu.addAction("Change X asix to show inches",this, SLOT(showXInches()));
-    myMenu.addAction("Change X axis to show mm",this, SLOT(showXMM()));
-    QAction *correctionAction = myMenu.addAction("show percent of correction",this, SLOT(showCorrection()));
-    correctionAction->setToolTip("Show % correction of zone areas used in the Zambuto method of mirror figuring.");
+    QAction* showFull = new QAction("FullScreen", this);
+    showFull->setCheckable(true);
+    showFull->setChecked(zoomed);
+    connect(showFull, &QAction::triggered, this, &ProfilePlot::zoom);
+    myMenu.addAction(showFull);
 
+    QAction* showPercentage = new QAction("Change X axis to show percentage", this);
+    connect(showPercentage, &QAction::triggered, this, &ProfilePlot::showXPercent);
+    myMenu.addAction(showPercentage);
+
+    QAction* showInches = new QAction("Change X asix to show inches",this);
+    connect(showInches, &QAction::triggered, this, &ProfilePlot::showXInches);
+    myMenu.addAction(showInches);
+
+    QAction* showMM = new QAction("Change X axis to show mm",this);
+    connect(showMM, &QAction::triggered, this, &ProfilePlot::showXMM);
+    myMenu.addAction(showMM);
+
+    QAction *showOneAngle = new QAction("show one angle",this);
+    showOneAngle->setCheckable(true);
+    showOneAngle->setChecked(m_show_oneAngle);
+    connect(showOneAngle, &QAction::triggered, this, &ProfilePlot::toggleOneAngle);
+    myMenu.addAction(showOneAngle);
+
+    QAction *show16 = new QAction("show 16 diameters",this);
+    show16->setCheckable(true);
+    show16->setChecked(m_show_16_diameters);
+    connect(show16, &QAction::triggered, this, &ProfilePlot::toggleShow16);
+    myMenu.addAction(show16);
+
+    QAction *showAvg = new QAction("Show avg", this);
+    showAvg->setCheckable(true);
+    showAvg->setChecked(m_showAvg);
+    showAvg->setToolTip("Shows only the average of all diameters");
+    connect(showAvg, &QAction::triggered, this, &ProfilePlot::toggleShowAvg);
+    myMenu.addAction(showAvg);
+
+    QAction *createAvg = new QAction("make surface from average profile", this);
+    connect(createAvg, &QAction::triggered, this, &ProfilePlot::CreateWaveFrontFromAverage);
+    myMenu.addAction(createAvg);
+
+    QAction* showCorrection = new QAction("show percent of correction",this);
+    connect(showCorrection, &QAction::triggered, this, &ProfilePlot::showCorrection);
+    showCorrection->setToolTip("Show % correction of zone areas used in the Zambuto method of mirror figuring.");
+    myMenu.addAction(showCorrection);
 
     // Show context menu at handling position
     myMenu.exec(globalPos);
@@ -832,6 +953,24 @@ void ProfilePlot::saveXscaleSettings(){
     QSettings set;
     set.setValue("xScalepercent", m_displayPercent);
     set.setValue("xScaleInches", m_displayInches);
+}
+void ProfilePlot::toggleShow16(){
+    m_show_16_diameters = !m_show_16_diameters;
+qDebug() << "show 16";
+    populate();
+    m_plot->replot();
+}
+void ProfilePlot::toggleShowAvg(){
+    m_showAvg = !m_showAvg;
+
+    populate();
+    m_plot->replot();
+}
+void ProfilePlot::toggleOneAngle(){
+    m_show_oneAngle = !m_show_oneAngle;
+qDebug() << "show one";
+    populate();
+    m_plot->replot();
 }
 void ProfilePlot::showXPercent(){
     m_displayPercent = true;
@@ -899,4 +1038,123 @@ void ProfilePlot::showCorrection(){
     make_correction_graph();
 
 
+}
+
+/**
+ * @brief Performs linear interpolation between two values.
+ * @param a The value at index floor(x).
+ * @param b The value at index ceil(x).
+ * @param t The fractional part of x (t = x - floor(x)).
+ * @return The interpolated value.
+ */
+double lerp(double a, double b, double t) {
+    return a + t * (b - a);
+}
+
+/**
+ * @brief Creates an OpenCV matrix representing a radially symmetric circular surface,
+ * using linear interpolation for sub-integer radial distances.
+ *
+ * @param radialProfile The vector of doubles representing the value from center to edge (index 0 to N-1).
+ * @return cv::Mat The square matrix representing the circular surface.
+ */
+cv::Mat createInterpolatedCircularSurface(const std::vector<double>& radialProfile) {
+    if (radialProfile.empty()) {
+        std::cerr << "Error: Input radialProfile vector is empty." << std::endl;
+        return cv::Mat();
+    }
+
+    // The radius of the circle is determined by the max index in the profile.
+    // Max distance is profile size - 1.
+    const int profileSize = radialProfile.size();
+    const double maxRadiusDistance = static_cast<double>(profileSize - 1);
+
+    // The surface size (diameter) will be twice the radius + 1 (for the center pixel).
+    int surfaceSize = 2 * static_cast<int>(maxRadiusDistance) + 1;
+
+    // 1. Initialize the output matrix
+    cv::Mat surface = cv::Mat::zeros(surfaceSize, surfaceSize, CV_64FC1);
+
+    // Center coordinates
+    double centerX = maxRadiusDistance;
+    double centerY = maxRadiusDistance;
+
+    // 2. Iterate over all pixels in the matrix
+    for (int y = 0; y < surfaceSize; ++y) {
+        // Get a pointer to the current row for fast access
+        double* rowPtr = surface.ptr<double>(y);
+
+        for (int x = 0; x < surfaceSize; ++x) {
+            // Calculate coordinates relative to the center
+            double dx = x - centerX;
+            double dy = y - centerY;
+
+            // Calculate the current pixel's distance from the center (r_pixel)
+            double r_pixel = std::sqrt(dx * dx + dy * dy);
+
+            // 3. Boundary Check and Interpolation
+
+            // Check if the pixel is within the circular area defined by the profile length
+            if (r_pixel <= maxRadiusDistance) {
+
+                // --- Perform Linear Interpolation ---
+
+                // Index 1 (Lower bound)
+                int index1 = static_cast<int>(std::floor(r_pixel));
+
+                // Index 2 (Upper bound)
+                int index2 = static_cast<int>(std::ceil(r_pixel));
+
+                // Fractional part 't' used for interpolation
+                double t = r_pixel - index1;
+
+                // Value for the pixel
+                double interpolatedValue = 0.0;
+
+                if (index1 == index2) {
+                    // This happens when r_pixel is an exact integer distance (e.g., 5.0).
+                    // We only need to use the single value.
+                    interpolatedValue = radialProfile[index1];
+                } else {
+                    // Get the values at the two surrounding integer indices
+                    double value1 = radialProfile[index1];
+                    // Ensure index2 is within bounds (only fails if r_pixel > maxRadiusDistance,
+                    // but boundary check above already handles this for the last element).
+                    double value2 = radialProfile[index2];
+
+                    // Apply linear interpolation
+                    interpolatedValue = lerp(value1, value2, t);
+                }
+
+                rowPtr[x] = interpolatedValue;
+
+            } else {
+                // The pixel is outside the circular surface area. Value remains 0.0.
+            }
+        }
+    }
+
+    return surface;
+}
+void ProfilePlot::CreateWaveFrontFromAverage(){
+
+    std::vector<double> avgRadius = compute_average_radial_profile(m_wf->workData,
+                                  cv::Point(m_wf->m_outside.m_center.x(),m_wf->m_outside.m_center.y()), m_wf->m_outside.m_radius);
+
+    //create a matrix from the avgRadius profile.
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    // first add the null back into it.
+    if (md->doNull){
+        for (unsigned int i = 0; i < avgRadius.size(); ++i) {
+            double R2 = (double(i))/(avgRadius.size() -1);
+            R2 *= R2;
+            avgRadius[i] += md->z8 * md->cc * (1. + R2 * (-6 + 6. * R2));;
+        }
+    }
+    cv::Mat result = createInterpolatedCircularSurface(avgRadius);
+    SurfaceManager *sm = SurfaceManager::get_instance();
+    sm->createSurfaceFromPhaseMap(result,
+                              m_wf->m_outside,
+                              m_wf->m_inside,
+                              QString("avg"), WavefrontOrigin::Average);
 }

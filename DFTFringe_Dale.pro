@@ -47,6 +47,7 @@ SOURCES += main.cpp \
     percentcorrectiondlg.cpp \
     profileplot.cpp \
     profileplotpicker.cpp \
+    ronchicomparedialog.cpp \
     settingsigramimportconfig.cpp \
     startestmoviedlg.cpp \
     surface3dcontrolsdlg.cpp \
@@ -59,6 +60,7 @@ SOURCES += main.cpp \
     dftcolormap.cpp \
     surfaceanalysistools.cpp \
     surfacemanager.cpp \
+    wavefrontloaderworker.cpp \
     zernikedlg.cpp \
     zernikepolar.cpp \
     zernikeprocess.cpp \
@@ -163,6 +165,7 @@ HEADERS  += mainwindow.h \
     percentcorrectiondlg.h \
     profileplot.h \
     profileplotpicker.h \
+    ronchicomparedialog.h \
     settingsigramimportconfig.h \
     startestmoviedlg.h \
     surface3dcontrolsdlg.h \
@@ -175,6 +178,7 @@ HEADERS  += mainwindow.h \
     dftcolormap.h \
     surfaceanalysistools.h \
     surfacemanager.h \
+    wavefrontloaderworker.h \
     zernikedlg.h \
     zernikepolar.h \
     zernikeprocess.h \

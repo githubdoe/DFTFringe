@@ -1109,6 +1109,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
 
         m_surfaceTools->addWaveFront(wf->name);
         m_currentNdx = m_wavefronts.size()-1;
+        m_surfaceTools->select(m_currentNdx);
     }
     wf->m_origin = origin;
     wf->m_outside = outside;

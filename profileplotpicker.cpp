@@ -8,6 +8,7 @@
 #include <qwt_plot_canvas.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_directpainter.h>
+#include <qwt_text.h>
 
 profilePlotPicker::profilePlotPicker( QwtPlot *plot ):
     QObject( plot ),
@@ -131,10 +132,10 @@ void profilePlotPicker::select( QPoint pos )
 // Move the selected point
 void profilePlotPicker::move( QPoint pos )
 {
-    qDebug() << "move pos" << pos;
+
     if ( !d_selectedCurve )
         return;
-qDebug() << "Move" << plot()->invTransform(d_selectedCurve->yAxis(), pos.y());
+
     double last = plot()->invTransform( d_selectedCurve->yAxis(), m_lastMousePos.y() );
     double current = plot()->invTransform( d_selectedCurve->yAxis(), pos.y() );
     double delta = current - last;
@@ -149,7 +150,7 @@ qDebug() << "Move" << plot()->invTransform(d_selectedCurve->yAxis(), pos.y());
         yData[i] = d_selectedCurve->sample(i).y() + delta;
     }
     d_selectedCurve->setSamples( xData, yData );
-
+    emit offset(d_selectedCurve->title().text(), delta);
     /*
        Enable QwtPlotCanvas::ImmediatePaint, so that the canvas has been
        updated before we paint the cursor on it.
@@ -163,7 +164,3 @@ qDebug() << "Move" << plot()->invTransform(d_selectedCurve->yAxis(), pos.y());
 
 
 }
-
-
-
-
