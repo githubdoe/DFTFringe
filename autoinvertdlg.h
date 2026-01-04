@@ -27,6 +27,8 @@ private slots:
 
     void on_btnOutside_clicked();
 
+    void on_InvertWithoutAskingRb_clicked(bool checked);
+
 private:
     Ui::autoInvertDlg *ui;
 };

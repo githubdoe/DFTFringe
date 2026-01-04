@@ -35,6 +35,8 @@ public:
     QColor getColor(int num);
     int lineWidth();
     int selectedWidth();
+    int slopeErrorWidth();
+    int avgProfileWidth();
 private slots:
     void on_pushButton_1_pressed();
 
@@ -53,6 +55,10 @@ private slots:
     void on_pushButton_4_pressed();
 
     void on_pushButton_3_pressed();
+
+    void on_SlopeErrorWidth_valueChanged(int arg1);
+
+    void on_AvgProfileWidth_valueChanged(int arg1);
 
 private:
     Ui::settingsProfile *ui;

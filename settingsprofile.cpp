@@ -21,7 +21,7 @@
 #include <QSettings>
 #include <QColorDialog>
 #include <QWidget>
-
+#include <QDebug>
 static inline QString colorButtonStyleSheet(const QColor &bgColor)
 {
     if (bgColor.isValid()) {
@@ -46,7 +46,15 @@ settingsProfile::settingsProfile(QWidget *parent) :
         color = QColor(set.value("profile color "+name, color).toString());
         btn->setStyleSheet(colorButtonStyleSheet(color));
     }
+    ui->SlopeErrorWidth->blockSignals(true);
+    ui->SlopeErrorWidth->setValue(set.value("profileSlopeErrorLineWidth", 3).toInt());
+    ui->SlopeErrorWidth->blockSignals(false);
+
+    ui->AvgProfileWidth->blockSignals(true);
+    ui->AvgProfileWidth->setValue(set.value("profileAveLineWidth", 3).toInt());
+    ui->AvgProfileWidth->blockSignals(false);
 }
+
 QColor settingsProfile::getColor(int num){
     QString name = QString("pushButton_%1").arg(1 + num%7);
     QPushButton *btn = findChild<QPushButton *>(name);
@@ -67,7 +75,13 @@ int settingsProfile::lineWidth(){
 int settingsProfile::selectedWidth(){
     return ui->selectedWidth->value();
 }
+int settingsProfile::slopeErrorWidth(){
 
+    return ui->SlopeErrorWidth->value();
+}
+int settingsProfile::avgProfileWidth(){
+    return ui->AvgProfileWidth->value();
+}
 settingsProfile::~settingsProfile()
 {
     spdlog::get("logger")->trace("settingsProfile::~settingsProfile");
@@ -119,4 +133,18 @@ void settingsProfile::on_pushButton_3_pressed()
     setColor(3);
 }
 
+
+
+void settingsProfile::on_SlopeErrorWidth_valueChanged(int arg1)
+{
+    QSettings set;
+    set.setValue("profileSlopeErrorLineWidth", arg1);
+}
+
+
+void settingsProfile::on_AvgProfileWidth_valueChanged(int arg1)
+{
+    QSettings set;
+    set.setValue("profileAveLineWidth", arg1);
+}
 
