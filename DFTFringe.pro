@@ -208,6 +208,8 @@ SOURCES += SingleApplication/singleapplication.cpp \
     outlinestatsdlg.cpp \
     pdfcalibrationdlg.cpp \
     percentcorrectiondlg.cpp \
+    profilecurve.cpp \
+    profileplot.cpp \
     pixelstats.cpp \
     plotcolor.cpp \
     profileplot.cpp \
@@ -330,6 +332,7 @@ HEADERS += bezier/bezier.h \
     percentCorrectionSurface.h \
     pixelstats.h \
     plotcolor.h \
+    profilecurve.h \
     profileplot.h \
     profileplotpicker.h \
     ronchicomparedialog.h \
