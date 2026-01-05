@@ -50,6 +50,7 @@
 #include "zernikeprocess.h"
 #include <QAbstractTableModel>
 #include "plotcolor.h"
+#include <QtGlobal>
 
 extern double outputLambda;
 
@@ -62,6 +63,8 @@ extern double outputLambda;
 #include <algorithm>
 #include <map>
 #include "percentcorrectiondlg.h"
+#include "profilecurve.h"
+
 #define DEGTORAD  M_PI/180.;
 double g_angle = 270. * DEGTORAD; //start at 90 deg (pointing east)
 double y_offset = 0.;
@@ -406,95 +409,82 @@ QPolygonF ProfilePlot::createAverageProfile(double /*umnits*/, wavefront * /*wf*
 
     return avg;
 }
-QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffset){
+
+
+// creates set of points for a profile at a given angle.  Adds NaN values to points in the obstruction or outside the mirror
+// Tee angle for the diameter is given in a global.
+QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool allowOffset) {
     QPolygonF points;
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    double steps = 1./wf->m_outside.m_radius;
-    double offset = y_offset;
 
-    if (!allowOffset) offset = 0.;
-    double radius = md.m_clearAperature/2.;
-    double obs_radius = md.obs/2.;
-    if (m_displayInches){
+    // 1. Setup constants
+    double steps = 1.0 / wf->m_outside.m_radius;
+    double offset = allowOffset ? y_offset : 0.0;
+    double radius = md.m_clearAperature / 2.0;
+    double obs_radius = md.obs / 2.0;
+
+    if (m_displayInches) {
         obs_radius /= 25.4;
     }
 
-    for (double rad = -1.; rad < 1.; rad += steps){
-        int dx, dy;
+    // Main Sampling Loop
+    for (double rad = -1.0; rad < 1.0; rad += steps) {
         double radn = rad * wf->m_outside.m_radius;
         double radx = rad * radius;
-        if (m_displayInches){
-            radx /= 25.4;
 
-        }
-        double e = 1.;
-        if (m_displayPercent){
-            radx = 100. * radx/radius;
-            obs_radius = 100 *( md.obs/2)/radius;
+        if (m_displayInches) radx /= 25.4;
+
+        if (m_displayPercent) {
+            radx = 100.0 * radx / radius;
+            obs_radius = 100.0 * (md.obs / 2.0) / radius;
         }
 
-        if (md.isEllipse()){
-            e = md.m_verticalAxis/md.diameter;
+        double e = 1.0;
+        if (md.isEllipse()) {
+            e = md.m_verticalAxis / md.diameter;
         }
 
-        dx = radn * cos(g_angle + M_PI_2) + wf->m_outside.m_center.x();
-        dy = -radn * e * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y();
-        if (dy >= wf->data.rows || dx >= wf->data.cols || dy < 0 || dx < 0){
-            continue;
+        // Calculate matrix coordinates
+        int dx = radn * cos(g_angle + M_PI_2) + wf->m_outside.m_center.x();
+        int dy = -radn * e * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y();
 
-        }
-
-
-        if (abs(radx) < obs_radius){
-            points << QPointF(radx,0.0);
+        // Boundary Check: Ignore points outside the matrix
+        if (dy >= wf->data.rows || dx >= wf->data.cols || dy < 0 || dx < 0) {
             continue;
         }
 
-        if (wf->workMask.at<bool>(dy,dx)){
-                double defocus = 0.;
-
-                if (m_defocus_mode){
-                    defocus = (m_defocusValue)* (-1. + 2. * rad * rad);
-                    points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) + defocus ) *
-                                            wf->lambda/outputLambda)  +offset * units);
-                }
-                else {
-
-                    points << QPointF(radx,(units * (wf->workData((int)dy,(int)dx) ) *
-                                        wf->lambda/outputLambda)  +offset * units);
-
-                }
+        // Handle the obstruction (The Hole)
+        if (std::abs(radx) < obs_radius) {
+            // Only add a NaN if the very last point was a real number.
+            // This "lifts the pen" once and then skips the rest of the hole.
+            if (!points.isEmpty() && !std::isnan(points.last().y())) {
+                points << QPointF(radx, qQNaN());
             }
-            //else points << QPointF(radx,0.0);
-    }
+            continue;
+        }
 
-    if (m_showSlopeError){
+        // Mask and Data Processing
+        if (wf->workMask.at<bool>(dy, dx)) {
+            double val = (units * (wf->workData(dy, dx)) * wf->lambda / outputLambda) + (offset * units);
 
-        double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
-        double xDel = points[0].x() - points[1].x();
-        double hDelLimit =m_showNm *  m_showSurface * ((outputLambda/m_wf->lambda)*fabs(xDel * tan(arcsecLimit)) /(outputLambda * 1.e-6));
+            if (m_defocus_mode) {
+                double defocus = (m_defocusValue) * (-1.0 + 2.0 * rad * rad);
+                val += (units * defocus * wf->lambda / outputLambda);
+            }
 
-        for (int i = 0; i < points.size() - 1; ++i){
-            double hdel = (points[i].y()- points[i+1].y());
-            if (fabs(points[i].x()) < obs_radius || fabs(points[i+1].x()) < obs_radius)
-                continue;
-            if (fabs(hdel) > hDelLimit){
-
-                QVector<QPointF> pts;
-                QwtPlotCurve *limitCurve = new QwtPlotCurve;
-                pts<< points[i] << points[i+1];
-                limitCurve->setSamples(pts);
-
-                limitCurve->setPen(QPen(QColor("orange"),Settings2::m_profile->slopeErrorWidth()));
-                limitCurve->setLegendAttribute(QwtPlotCurve::LegendShowSymbol,false );
-                limitCurve->setLegendAttribute(QwtPlotCurve::LegendShowLine,false );
-                limitCurve->setItemAttribute(QwtPlotCurve::Legend,false);
-                limitCurve->attach( m_plot);
+            points << QPointF(radx, val);
+        } else {
+            // Lift the pen if we hit a mask gap outside the center hole
+            if (!points.isEmpty() && !std::isnan(points.last().y())) {
+                points << QPointF(radx, qQNaN());
             }
         }
     }
+
     return points;
 }
+
+
 // create a smoothed wave front with only spherical terms.
 //  Use that to get zernike values to send to percent completion feature
 // display the profile and then send the zerns to percent completion
@@ -660,6 +650,8 @@ qDebug() << "Populate";
     double smoothing = settings.value("GBValue", 20).toInt();
     m_plot->detachItems(QwtPlotItem::Rtti_PlotTextLabel);
 
+
+
     if (m_wf->m_outside.m_radius > 0 && settings.value("GBlur", false).toBool()){
         double val = .01 * (m_wf->diameter) * smoothing;
         QString t = QString("Surface Smoothing diameter %1% of surface diameter %2 mm")
@@ -694,6 +686,7 @@ qDebug() << "Populate";
     m_plot->detachItems( QwtPlotItem::Rtti_PlotCurve);
     m_plot->detachItems( QwtPlotItem::Rtti_PlotMarker);
 
+    double arcsecLimit = (slopeLimitArcSec/3600) * M_PI/180;
 
         m_plot->insertLegend( new QwtLegend() , QwtPlot::BottomLegend);
         surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
@@ -704,7 +697,7 @@ qDebug() << "Populate";
             wavefront* wf = wfs->at(list[i]);
             QStringList path = wf->name.split("/");
             QString name = path.last().replace(".wft","");
-            QwtPlotCurve *cprofile = new QwtPlotCurve(name );
+            ProfileCurve *cprofile = new ProfileCurve(name );
             int width = Settings2::m_profile->lineWidth();
             if (name == m_wf->name.split("/").last().replace(".wft",""))
                 width = Settings2::m_profile->selectedWidth();
@@ -719,11 +712,23 @@ qDebug() << "Populate";
                 y_offset = m_waveFrontyOffsets[name + " avg"];
                 qDebug() << "using avg";
             }
-qDebug() << "offsets" << m_waveFrontyOffsets<< y_offset;
+
             // if show one angle
             if (m_show_oneAngle or (!m_showAvg and !m_show_16_diameters and !m_show_oneAngle)){
 
-                cprofile->setSamples( createProfile( units,wf, true));
+                QPolygonF points = createProfile(units, wf, true);
+                if (points.size() >= 2) {
+                    // Distance between two samples
+                    double xDel = fabs(points[0].x() - points[1].x());
+
+                    // Recalculate hDelLimit using this specific xDel
+                    double hDelLimit = m_showNm * m_showSurface * ((outputLambda/m_wf->lambda) * fabs(xDel * tan(arcsecLimit)) / (outputLambda * 1.e-6));
+
+                    cprofile->setSlopeSettings(m_showSlopeError, hDelLimit, Settings2::m_profile->slopeErrorWidth());
+                }
+                cprofile->setSamples(points);
+
+
                 cprofile->attach( m_plot );
             }
             if (m_show_16_diameters){

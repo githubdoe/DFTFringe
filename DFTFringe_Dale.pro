@@ -45,6 +45,7 @@ SOURCES += main.cpp \
     oglrendered.cpp \
     pdfcalibrationdlg.cpp \
     percentcorrectiondlg.cpp \
+    profilecurve.cpp \
     profileplot.cpp \
     profileplotpicker.cpp \
     ronchicomparedialog.cpp \
@@ -163,6 +164,7 @@ HEADERS  += mainwindow.h \
     pdfcalibrationdlg.h \
     percentCorrectionSurface.h \
     percentcorrectiondlg.h \
+    profilecurve.h \
     profileplot.h \
     profileplotpicker.h \
     ronchicomparedialog.h \

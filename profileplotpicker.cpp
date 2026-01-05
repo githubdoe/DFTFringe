@@ -111,7 +111,7 @@ void profilePlotPicker::select( QPoint pos )
         if ( ( *it )->rtti() == QwtPlotItem::Rtti_PlotCurve )
         {
             QwtPlotCurve *c = static_cast<QwtPlotCurve *>( *it );
-
+            if (c->title().text() == "slope") continue;
             double d;
             int idx = c->closestPoint( pos, &d );
             if ( d < dist )

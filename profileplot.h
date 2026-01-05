@@ -49,7 +49,7 @@ public:
     QVector<wavefront*> *wfs;
     void setSurface(wavefront * wf);
     virtual void resizeEvent( QResizeEvent * );
-    QPolygonF createProfile(double units, wavefront *wf, bool allowOffset = true);
+    QPolygonF createProfile(double units, const wavefront *wf, bool allowOffset = true);
     QPolygonF createAverageProfile(double umnits, wavefront *wf, bool removeNull);
     ContourTools *m_tools;
     double m_waveRange;
