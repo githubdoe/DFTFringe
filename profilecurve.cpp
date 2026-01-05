@@ -35,6 +35,7 @@ void ProfileCurve::drawLines(QPainter *painter,
                              const QRectF &canvasRect,
                              int from, int to) const
 {
+    Q_UNUSED(canvasRect); // drawLines is an override function, we shall not change args
     if (to <= from) return;
 
     painter->save();
