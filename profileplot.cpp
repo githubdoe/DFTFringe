@@ -413,7 +413,7 @@ QPolygonF ProfilePlot::createAverageProfile(double /*umnits*/, wavefront * /*wf*
 
 // creates set of points for a profile at a given angle.  Adds NaN values to points in the obstruction or outside the mirror
 // Tee angle for the diameter is given in a global.
-QPolygonF ProfilePlot::createProfile(double units, wavefront *wf, bool allowOffset) {
+QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool allowOffset) {
     QPolygonF points;
     mirrorDlg &md = *mirrorDlg::get_Instance();
 
