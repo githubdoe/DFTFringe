@@ -32,6 +32,9 @@ jobs:
     uses: ./.github/workflows/build-windows.yml
   # linux build is mainly here to check it builds. We have no acrtifact now.
   call-build-linux:
+    permissions:
+      contents: read
+      pull-requests: write
     needs: check-semver
     uses: ./.github/workflows/build-linux.yml
 

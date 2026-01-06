@@ -38,7 +38,7 @@ jobs:
       - run: echo "::remove-matcher owner=uic-problem-matcher::"
 
       - name: Run C++ Linter (clang-tidy)
-        if: strategy.job-index == 0 #run only for first OS of the matrix
+        if: strategy.job-index == 0 && github.event_name == 'pull_request' #run only for first OS of the matrix
         uses: cpp-linter/cpp-linter-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
