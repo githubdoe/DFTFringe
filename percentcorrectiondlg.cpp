@@ -54,6 +54,8 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
     sizes << 500 << 100;
     ui->splitter->setSizes(sizes);
     m_number_of_zones = set.value("percent number of zones", 5).toInt();
+    if (m_number_of_zones <= 0)
+        m_number_of_zones = 5;
     m_exclusionRadius = ui->exclusionRadius->value();
     ui->numberOfZones->blockSignals(true);
     ui->numberOfZones->setValue(m_number_of_zones);
@@ -105,11 +107,13 @@ QList<double> percentCorrectionDlg::generateZoneCenters(double radius, int numbe
             QJsonObject jsonData=doc.object();
 
             QJsonArray zones = jsonData["zones"].toArray();
-            m_number_of_zones = zones.size();
-            ui->numberOfZones->blockSignals(true);
-            ui->numberOfZones->setValue(m_number_of_zones);
-            ui->numberOfZones->blockSignals(false);
-            return m_zoneCenters;
+            if (zones.size() > 0) {
+                m_number_of_zones = zones.size();
+                ui->numberOfZones->blockSignals(true);
+                ui->numberOfZones->setValue(m_number_of_zones);
+                ui->numberOfZones->blockSignals(false);
+                return m_zoneCenters;
+            }
         }
 
     }
