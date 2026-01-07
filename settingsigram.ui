@@ -331,6 +331,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="importConfig">
+     <property name="text">
+      <string>Import interferogram configuration (what hot key &quot;i&quot; does)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
       <widget class="QLabel" name="label_8">
@@ -355,13 +362,6 @@
     <widget class="QCheckBox" name="removeDistortion">
      <property name="text">
       <string>Remove lens distortion</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="importConfig">
-     <property name="text">
-      <string>Import interferogram configuration (what hot key &quot;i&quot; does)</string>
      </property>
     </widget>
    </item>

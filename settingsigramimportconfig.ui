@@ -11,13 +11,13 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>&quot;I&quot; hot key config</string>
+   <string>&quot;i&quot; hot key config</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Choose what the hot key &quot;I&quot; does when pressed on the main window.</string>
+      <string>Choose what the hot key &quot;i&quot; does when pressed on the main window.</string>
      </property>
     </widget>
    </item>
@@ -47,7 +47,7 @@
      <item>
       <widget class="QRadioButton" name="openPath">
        <property name="text">
-        <string>Just Open Dir</string>
+        <string>Just open dir</string>
        </property>
       </widget>
      </item>

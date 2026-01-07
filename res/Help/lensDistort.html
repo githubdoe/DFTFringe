@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <HTML>
 <HEAD>
-<style> 
+<style>
 
 p.ex
 {
-    width:800px; 
+    width:800px;
     word-wrap:break-word;
 }
 
@@ -14,7 +14,7 @@ p.ex
 <p class = "ex"> <i><b><font color = "Red">
 This is an experimental feature.  I do not know if it is accurate or helpful.  What I tried to do to verify it was to create a grid target
 with DFTFringe and then add barrel or pincushin distortion using Imagick.  Then used DFTFringe to find and remove that distortion.  That created a straight grid with no visible distorion.  So at least I know the distorion can be determined and removed.  </p>
-<p class = "ex"> Next I tried to measure the distortion of the lens I use to take interferograms a Nikon 200mm zoom at 120 mm fl.  DFTFringe measured a very small barrel disitortion.  I tried removing that from several igrams I had taken and compared it to the original analysis.  The RMS value of the spherical term and final RMS value changed by about .5%. 
+<p class = "ex"> Next I tried to measure the distortion of the lens I use to take interferograms a Nikon 200mm zoom at 120 mm fl.  DFTFringe measured a very small barrel disitortion.  I tried removing that from several igrams I had taken and compared it to the original analysis.  The RMS value of the spherical term and final RMS value changed by about .5%.
 <p class = "ex"> The biggest issue I have at this point is that ImageMagic and OpenCV (used by DFTFringe) have different distortion coefficience.  I don't know how to convert from one to the other.  So that makes it hard to experiment with them.</P>
 <p class = "ex"> I am stoping development on this feature at this point to let other experiment with it.</i></b></font></p>
 
@@ -25,7 +25,7 @@ with DFTFringe and then add barrel or pincushin distortion using Imagick.  Then 
 <h2> Target creation</h2>
 <p class = "ex"> You can use DFTFringe to create a target eithier on a computer screen or on a printer.  Because computer screens can be bigger than most home printer paper you might want to use the computer screen.</p>
 <br>
-You can select from three target styles.<p class = "ex"> 
+You can select from three target styles.<p class = "ex">
 <style>
 table, th, td {
     border: 1px solid black;
@@ -43,10 +43,10 @@ table, th, td {
 </tr>
 </table>
 </p>
-<p class = "ex"> 
+<p class = "ex">
 
 The circle grid and chess board images can be used by the automatic calibration feature.<br>
-The line grid can be used for manual inspection or used with <a href = http://hugin.sourceforge.net/tutorials/calibration/en.shtml>Hugins lens Calibration tutorial</a>.
+The line grid can be used for manual inspection or used with <a href = http://hugin.sourceforge.net/tutorials/calibration/en.shtml>Hugin lens Calibration tutorial</a>.
 <h2>Calibration procedure</h2>
 </P>
 <p class = "ex">
@@ -64,7 +64,7 @@ The line grid can be used for manual inspection or used with <a href = http://hu
 <li>You can then save the results by pressing the "Save lens parms" button. Give the lens a name and press "OK"
 </li>
 </ul>
-<h3>Manual data entry</h3><p class = "ex"> 
+<h3>Manual data entry</h3><p class = "ex">
 You can also edit or enter all you lens data manually if you know them already.
 </P>
 <h3>Camera matrix FL value explained
@@ -74,14 +74,14 @@ You can also edit or enter all you lens data manually if you know them already.
 	That will give you the focal length in mm the the target image was taken.
 </p>
 <h3>Removing distortion from an interferogram</h3>
-<p class = "ex"> 
+<p class = "ex">
 The purpose of the above was to measure the distorion of a lens so that it can be removed from an interferogram. You can enable distortion removal when the interferogram is first loaded.  To do that go to the configuration/preferences menu and select interferogram.  Click on the
 <a href = igramSettingsLens.png>"Remove lens distortion" </a>checkbox.  You will see a list of lenses that you have calibrated.  You can click on one and then the program will use those values to remove distortion from any interferogram you load until you change the settings.</P>
 <h2>References</h2>
 <ol><li><a href = http://www.imagemagick.org/Usage/lens/>ImageMagic</a></li>
 <li><a href = http://docs.opencv.org/2.4/doc/tutorials/calib3d/camera_calibration/camera_calibration.html>Opencv</a></li>
-<li>Hugins<ul>
-<li><a href = http://hugin.sourceforge.net/tutorials/calibration/en.shtml>Hugins lens Calibration tutorial</a>
+<li>Hugin<ul>
+<li><a href = http://hugin.sourceforge.net/tutorials/calibration/en.shtml>Hugin lens Calibration tutorial</a>
 <li><a href = http://hugin.sourceforge.net/docs/manual/Lens_correction_model.html>Lens model</a></li>
 <li><a href = https://vimeo.com/51999287>setting controls points in Hugin</a></li>
 </ul>
