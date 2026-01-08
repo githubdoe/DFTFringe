@@ -171,7 +171,7 @@ QVector<QPoint> scaleProfile(QPolygonF points, int width,
 }
 
 
-QImage foucaultView::generateOpticalTestImage(OpticalTestType type, wavefront* wf, const OpticalTestSettings& s)
+QImage foucaultView::generateOpticalTestImage(OpticalTestType type, wavefront* wf, const OpticalTestSettings& s, bool bAutoCollimate)
 {
     if (!wf || wf->data.cols == 0) return QImage();
 
@@ -200,8 +200,15 @@ QImage foucaultView::generateOpticalTestImage(OpticalTestType type, wavefront* w
 
     SimulationsView *sv = SimulationsView::getInstance(0);
     sv->setSurface(wf);
+
+    bool oldDoNull = md->doNull;
+    if (bAutoCollimate == false)
+        md->doNull = false; // this is normal foucault/ronchi so we *don't* subtract the null (autcoCollimate ronchi or foucault mode will typically subtract the null)
+
     cv::Mat surf_fft = sv->computeStarTest(s.heightMultiply * sv->nulledSurface(effectiveZ3), size, actualPad, true);
+
     wf->InputZerns = originalZerns; // Restore state immediately
+    md->doNull = oldDoNull;
 
     // 3. Mask Generation
     cv::Mat mask = cv::Mat::zeros(size, size, CV_64FC1);
@@ -275,6 +282,7 @@ void foucaultView::on_makePb_clicked()
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
+
     // 1. Pack the current UI state into the settings struct
     OpticalTestSettings settings;
     settings.rocOffset    = ui->rocOffsetSb->value();
@@ -293,8 +301,8 @@ void foucaultView::on_makePb_clicked()
     settings.outputLambda   = outputLambda;
 
     // 2. Call the refactored static engine for both images
-    QImage ronchiImg = generateOpticalTestImage(OpticalTestType::Ronchi, m_wf, settings);
-    QImage foucaultImg = generateOpticalTestImage(OpticalTestType::Foucault, m_wf, settings);
+    QImage ronchiImg = generateOpticalTestImage(OpticalTestType::Ronchi, m_wf, settings, ui->autocollimation->isChecked());
+    QImage foucaultImg = generateOpticalTestImage(OpticalTestType::Foucault, m_wf, settings, ui->autocollimation->isChecked());
 
     // Store for potential saving/external access
     m_foucaultQimage = foucaultImg;
@@ -402,7 +410,7 @@ void foucaultView::generateBatchRonchiImage(const QList<wavefront*>& wavefrontLi
         int row = i / cols;
         int col = i % cols;
 
-        QImage ronchi = generateOpticalTestImage(OpticalTestType::Ronchi, currentWf, s);
+        QImage ronchi = generateOpticalTestImage(OpticalTestType::Ronchi, currentWf, s, ui->autocollimation->isChecked());
 
         if (!ronchi.isNull()) {
             // Store a copy for the comparison feature
