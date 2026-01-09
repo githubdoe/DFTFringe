@@ -4,6 +4,8 @@
 #include <qpainter.h>
 #include <qpainterpath.h>
 #include <qwt_scale_map.h>
+#include <qpainter.h>
+
 
 // creates a curve of the profile and will highlight segments where the slope is violated if the user has that feature enabled.
 // uses the base class for most of the work.  Overrides the actual painting of the line.
@@ -24,10 +26,7 @@ void ProfileCurve::setSlopeSettings(bool show, double limit, int highlightWidth)
     m_highlightWidth = highlightWidth;
 }
 
-#include <QPainterPath> // Ensure this is at the top of profilecurve.cpp
 
-#include <qwt_scale_map.h>
-#include <qpainter.h>
 
 void ProfileCurve::drawLines(QPainter *painter,
                              const QwtScaleMap &xMap,
