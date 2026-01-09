@@ -208,10 +208,9 @@ SOURCES += SingleApplication/singleapplication.cpp \
     outlinestatsdlg.cpp \
     pdfcalibrationdlg.cpp \
     percentcorrectiondlg.cpp \
-    profilecurve.cpp \
-    profileplot.cpp \
     pixelstats.cpp \
     plotcolor.cpp \
+    profilecurve.cpp \
     profileplot.cpp \
     profileplotpicker.cpp \
     ronchicomparedialog.cpp \
