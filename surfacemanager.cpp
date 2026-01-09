@@ -1199,7 +1199,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             md->m_outlineShape = ELLIPSE;
             iss >> dummy >> md->m_verticalAxis;
         }
-        if (l.startsWith("Do Not use null")){
+        if (l.startsWith("Do Not use null") || l.startsWith("nulled") ){
             wf->useSANull = false;
         }
     }
