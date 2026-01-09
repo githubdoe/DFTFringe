@@ -52,7 +52,7 @@ public:
     bool needsDrawing;
 
     // The Refactored Static Engine - Callable from other classes
-    static QImage generateOpticalTestImage(OpticalTestType type, wavefront* wf, const OpticalTestSettings& settings);
+    static QImage generateOpticalTestImage(OpticalTestType type, wavefront* wf, const OpticalTestSettings& settings, bool bAutoCollimate);
 
 public slots:
     void on_makePb_clicked();

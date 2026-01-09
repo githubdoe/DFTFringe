@@ -820,7 +820,17 @@ qDebug() << "Populate";
               left = transform.map(left);
               left.append(right);
 
-              QwtPlotCurve *cprofileavg = new QwtPlotCurve( name + " avg");
+              ProfileCurve *cprofileavg = new ProfileCurve( name + " avg");
+              if (left.size() >= 2) {
+                  // Distance between two samples
+                  double xDel = fabs(left[0].x() - left[1].x());
+
+                  // Recalculate hDelLimit using this specific xDel
+                  double hDelLimit = m_showNm * m_showSurface * ((outputLambda/m_wf->lambda) * fabs(xDel * tan(arcsecLimit)) / (outputLambda * 1.e-6));
+
+                  cprofileavg->setSlopeSettings(m_showSlopeError, hDelLimit, Settings2::m_profile->slopeErrorWidth());
+              }
+
               cprofileavg->setRenderHint( QwtPlotItem::RenderAntialiased );
               cprofileavg->setLegendAttribute( QwtPlotCurve::LegendShowSymbol, false );
               cprofileavg->setLegendIconSize(QSize(50,20));
