@@ -710,7 +710,7 @@ qDebug() << "Populate";
                 y_offset = m_waveFrontyOffsets[name];
             else if (m_waveFrontyOffsets.contains(name + " avg")){
                 y_offset = m_waveFrontyOffsets[name + " avg"];
-                qDebug() << "using avg";
+
             }
 
             // if show one angle
@@ -1171,5 +1171,5 @@ void ProfilePlot::CreateWaveFrontFromAverage(){
     sm->createSurfaceFromPhaseMap(result,
                               m_wf->m_outside,
                               m_wf->m_inside,
-                              QString("avg"), WavefrontOrigin::Average);
+                              QString(m_wf->name.replace(".wft","")  + "_avg"), WavefrontOrigin::Average);
 }
