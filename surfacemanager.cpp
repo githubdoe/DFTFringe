@@ -1841,9 +1841,11 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
 void SurfaceManager::subtractWavefronts(){
     QList<QString> list;
     QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
+    QList<int> indexes;
     for (int i = 0; i < m_wavefronts.size(); ++i){
         if (!doThese.contains(i)) {
              list.append(m_wavefronts[i]->name);
+             indexes.append(i);
         }
     }
     subtractWavefronatsDlg dlg(list);
@@ -1857,7 +1859,7 @@ void SurfaceManager::subtractWavefronts(){
             return;
         }
         wavefront *wf1 = m_wavefronts[m_currentNdx];
-        wavefront *wf2 = m_wavefronts[ndx2];
+        wavefront *wf2 = m_wavefronts[indexes[ndx2]];
         subtract(wf1,wf2, dlg.use_null);
     }
 }
