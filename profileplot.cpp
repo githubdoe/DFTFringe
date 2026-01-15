@@ -623,7 +623,7 @@ std::vector<double> compute_average_radial_profile(
 
 void ProfilePlot::populate()
 {
-qDebug() << "Populate";
+
     m_plot->detachItems(QwtPlotItem::Rtti_PlotItem);
     compass->setGeometry(QRect(80,80,70,70));
     QString tmp("nanometers");

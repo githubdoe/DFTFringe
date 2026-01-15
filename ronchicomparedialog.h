@@ -36,6 +36,7 @@ private:
     bool blinkone = true;
     bool blinking = false;
     QTimer *blinkTimer;
+    QPushButton* m_saveBtn;
 };
 
 #endif // RONCHICOMPAREDIALOG_H
