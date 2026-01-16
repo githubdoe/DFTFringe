@@ -33,6 +33,16 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     connect(this, &QWidget::customContextMenuRequested, this,
             &foucaultView::showContextMenu);
     setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // Load Grid Settings with the "ronchiGrid" key
+    m_gridMode       = static_cast<GridMode>(set.value("ronchiGrid/mode", (int)GridMode::None).toInt());
+    m_gridSpacing    = set.value("ronchiGrid/spacing", 10.0).toDouble();
+    m_gridLineWidth  = set.value("ronchiGrid/lineWidth", 1).toInt();
+    m_showUnitLabels = set.value("ronchiGrid/showLabels", true).toBool();
+
+    // Using name() and string check for robust color persistence
+    m_gridColor      = QColor(set.value("ronchiGrid/color", "#00FFFF").toString()); // Default Cyan
+    m_textColor      = QColor(set.value("ronchiGrid/textColor", "#FFFFFF").toString()); // Default White
 }
 
 
@@ -78,10 +88,176 @@ void foucaultView::showContextMenu(QPoint pos)
     connect (showAllRonchi, &QAction::triggered,this, &foucaultView::showSelectedRonchiImages);
     myMenu.addAction(showAllRonchi);
 
+    QAction *showGrid = new QAction("Show Circular Grid");
+    connect(showGrid, &QAction::triggered, this, &foucaultView::showGrid);
+    myMenu.addSeparator();
+    myMenu.addAction(showGrid);
+
     // Show context menu at handling position
     myMenu.exec(globalPos);
 }
 
+void foucaultView::showGrid() {
+    QDialog dlg(this);
+    dlg.setWindowTitle("Ronchi Grid Settings");
+    QFormLayout form(&dlg);
+
+    // Create UI Elements
+    QComboBox *unitCombo = new QComboBox(&dlg);
+    unitCombo->addItems({"None", "Inches", "Millimeters", "Percentage"});
+    unitCombo->setCurrentIndex((int)m_gridMode);
+
+    QDoubleSpinBox *spacingSpin = new QDoubleSpinBox(&dlg);
+    spacingSpin->setRange(0.01, 1000.0);
+    spacingSpin->setValue(m_gridSpacing);
+
+    QSpinBox *widthSpin = new QSpinBox(&dlg);
+    widthSpin->setRange(1, 10);
+    widthSpin->setValue(m_gridLineWidth);
+
+    QCheckBox *textToggle = new QCheckBox("Show unit labels", &dlg);
+    textToggle->setChecked(m_showUnitLabels);
+
+    // Color storage (using local temps for the dialog session)
+    struct State { QColor grid; QColor text; } colors = { m_gridColor, m_textColor };
+
+    QPushButton *btnGridCol = new QPushButton("Grid Color");
+    QPushButton *btnTextCol = new QPushButton("Text Color");
+
+    connect(btnGridCol, &QPushButton::clicked, [&]() {
+        QColor c = QColorDialog::getColor(colors.grid, this);
+        if (c.isValid()) colors.grid = c;
+    });
+    connect(btnTextCol, &QPushButton::clicked, [&]() {
+        QColor c = QColorDialog::getColor(colors.text, this);
+        if (c.isValid()) colors.text = c;
+    });
+
+    form.addRow("Grid Units:", unitCombo);
+    form.addRow("Spacing Value:", spacingSpin);
+    form.addRow("Line Width (px):", widthSpin);
+    form.addRow("Labels:", textToggle);
+    form.addRow("Grid Color:", btnGridCol);
+    form.addRow("Text Color:", btnTextCol);
+
+    // Button Box with Reset
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &dlg);
+    QPushButton *resetBtn = buttonBox.addButton("Reset to Defaults", QDialogButtonBox::ResetRole);
+    form.addRow(&buttonBox);
+
+    // Reset Logic
+    connect(resetBtn, &QPushButton::clicked, [&]() {
+        unitCombo->setCurrentIndex(0); // None
+        spacingSpin->setValue(10.0);
+        widthSpin->setValue(1);
+        textToggle->setChecked(true);
+        colors.grid = Qt::cyan;
+        colors.text = Qt::white;
+    });
+
+    connect(&buttonBox, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(&buttonBox, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+
+    if (dlg.exec() == QDialog::Accepted) {
+        m_gridMode = (GridMode)unitCombo->currentIndex();
+        m_gridSpacing = spacingSpin->value();
+        m_gridLineWidth = widthSpin->value();
+        m_showUnitLabels = textToggle->isChecked();
+        m_gridColor = colors.grid;
+        m_textColor = colors.text;
+
+        // Save to QSettings with "ronchiGrid" prefix
+        QSettings set;
+        set.setValue("ronchiGrid/mode", (int)m_gridMode);
+        set.setValue("ronchiGrid/spacing", m_gridSpacing);
+        set.setValue("ronchiGrid/lineWidth", m_gridLineWidth);
+        set.setValue("ronchiGrid/showLabels", m_showUnitLabels);
+        set.setValue("ronchiGrid/color", m_gridColor.name());
+        set.setValue("ronchiGrid/textColor", m_textColor.name());
+
+        on_makePb_clicked();
+    }
+}
+
+void foucaultView::drawGridOverlay(QImage &img) {
+    if (m_gridMode == GridMode::None || !m_wf || m_gridSpacing <= 0) return;
+
+    QPainter painter(&img);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::TextAntialiasing);
+
+    // 1. Grid Pen (Using your saved settings)
+    QPen gridPen(m_gridColor, m_gridLineWidth, Qt::DotLine);
+    painter.setPen(gridPen);
+
+    // 2. Dynamic Font Scaling
+    // Scales between 10pt and 16pt based on image height to stay proportional
+    int dynamicSize = qBound(10, img.height() / 33, 16);
+    QFont font("Arial", dynamicSize, QFont::Bold);
+    painter.setFont(font);
+
+    int w = img.width();
+    int h = img.height();
+    int centerX = w / 2;
+    int centerY = h / 2;
+    int maxPixelRadius = w / 2;
+
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    double mirrorRadiusMM = md->diameter / 2.0;
+
+    // 3. Determine physics-to-pixel scale
+    double stepSizeMM = 0;
+    if (m_gridMode == GridMode::Millimeters) stepSizeMM = m_gridSpacing;
+    else if (m_gridMode == GridMode::Inches) stepSizeMM = m_gridSpacing * 25.4;
+    else if (m_gridMode == GridMode::Percentage) stepSizeMM = (m_gridSpacing / 100.0) * mirrorRadiusMM;
+
+    if (stepSizeMM <= 0) return;
+
+    // 4. Draw Rings and Labels
+    for (double currentMM = stepSizeMM; currentMM <= mirrorRadiusMM; currentMM += stepSizeMM) {
+        int rPx = (int)((currentMM / mirrorRadiusMM) * maxPixelRadius);
+
+        painter.setPen(gridPen);
+        painter.drawEllipse(QPoint(centerX, centerY), rPx, rPx);
+
+        if (m_showUnitLabels) {
+            QString label;
+            if (m_gridMode == GridMode::Millimeters)
+                label = QString::number(currentMM, 'f', 1);
+            else if (m_gridMode == GridMode::Inches)
+                label = QString::number(currentMM / 25.4, 'f', 2);
+            else
+                label = QString::number((currentMM / mirrorRadiusMM) * 100.0, 'f', 0) + "%";
+
+            // Determine initial Y position at the top of the ring
+            int yPos = centerY - rPx;
+
+            // EDGE CLIPPING FIX:
+            // If the label is too close to the top edge (within 30 pixels),
+            // shift it down so the text box doesn't get cut off.
+            if (yPos < 30) {
+                yPos = 30;
+            }
+
+            // Define a wide bounding box for the text
+            // Centered on X, and centered vertically on our adjusted yPos
+            QRect textRect(centerX - 60, yPos - 15, 120, 30);
+
+            // Draw shadow for legibility (Black offset)
+            painter.setPen(Qt::black);
+            painter.drawText(textRect.translated(1, 1), Qt::AlignCenter, label);
+
+            // Draw actual colored text from your settings
+            painter.setPen(m_textColor);
+            painter.drawText(textRect, Qt::AlignCenter, label);
+        }
+    }
+
+    // 5. Center Crosshair
+    painter.setPen(QPen(m_gridColor, 1, Qt::SolidLine));
+    painter.drawLine(centerX - 12, centerY, centerX + 12, centerY);
+    painter.drawLine(centerX, centerY - 12, centerX, centerY + 12);
+}
 void foucaultView::showSelectedRonchiImages(){
 
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
@@ -312,8 +488,12 @@ void foucaultView::on_makePb_clicked()
         if (img.isNull()) return;
 
         QSize s = label->size();
-        QPixmap pix = QPixmap::fromImage(img.scaledToWidth(s.width()));
+            QImage displayImg = img.scaled(s, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
+            // Overlay grid
+            drawGridOverlay(displayImg);
+
+        QPixmap pix = QPixmap::fromImage(displayImg);
         QPainter painter(&pix);
         painter.save();
         painter.setPen(QPen(QColor(Qt::white)));
@@ -375,11 +555,9 @@ void foucaultView::generateBatchRonchiImage(const QList<wavefront*>& wavefrontLi
 
     int headerHeight = 70;
     int textBuffer = 40;
-
     int cellW = imgDim;
     int cellH = imgDim + textBuffer;
 
-    // Total Canvas size
     QImage canvas(cellW * cols, (cellH * rows) + headerHeight, QImage::Format_RGB32);
     canvas.fill(Qt::black);
 
@@ -387,9 +565,9 @@ void foucaultView::generateBatchRonchiImage(const QList<wavefront*>& wavefrontLi
     painter.setRenderHint(QPainter::Antialiasing);
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
-    // NEW: Container for individual Ronchi images to be used in comparison
     QList<QImage> individualRonchis;
     QList<QString> names;
+
     // 5. Draw Simulation Header
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 12, QFont::Bold));
@@ -410,20 +588,30 @@ void foucaultView::generateBatchRonchiImage(const QList<wavefront*>& wavefrontLi
         int row = i / cols;
         int col = i % cols;
 
+        // Generate the raw Ronchi image
         QImage ronchi = generateOpticalTestImage(OpticalTestType::Ronchi, currentWf, s, ui->autocollimation->isChecked());
 
         if (!ronchi.isNull()) {
-            // Store a copy for the comparison feature
+            // STORE RAW: Add to list for the Compare Dialog (Prevents crash & artifacting)
             individualRonchis.append(ronchi);
+
+            // STORE NAME: Essential for the Compare Dialog to avoid out-of-bounds crash
+            QFileInfo fileInfo(currentWf->name);
+            QString displayName = fileInfo.baseName();
+            names.append(displayName);
+
+            // GRID OVERLAY: Apply only to a copy for the batch preview canvas
+            QImage displayCopy = ronchi;
+            if (m_gridMode != GridMode::None) {
+                drawGridOverlay(displayCopy);
+            }
 
             int xPos = col * cellW;
             int yPos = headerHeight + (row * cellH);
 
-            painter.drawImage(xPos, yPos, ronchi);
+            painter.drawImage(xPos, yPos, displayCopy);
 
-            QFileInfo fileInfo(currentWf->name);
-            QString displayName = fileInfo.baseName();
-            names << displayName;
+            // Draw Label on Canvas
             int textWidth = fm.horizontalAdvance(displayName);
             int xText = xPos + (cellW - textWidth) / 2;
             int yText = yPos + imgDim + (textBuffer / 2) + (fm.ascent() / 2);
@@ -448,14 +636,13 @@ void foucaultView::generateBatchRonchiImage(const QList<wavefront*>& wavefrontLi
     QScrollArea *scroll = new QScrollArea(&previewDlg);
     scroll->setWidgetResizable(true);
     scroll->setAlignment(Qt::AlignCenter);
-    //scroll->setStyleSheet("background-color: #1a1a1a;");
 
     QLabel *imgLabel = new QLabel();
     imgLabel->setAlignment(Qt::AlignCenter);
     scroll->setWidget(imgLabel);
     layout->addWidget(scroll);
 
-    // 8. Zoom Slider Integration
+    // 8. Zoom Slider
     QPixmap previewPixmap = QPixmap::fromImage(canvas);
     QHBoxLayout *zoomLayout = new QHBoxLayout();
     QSlider *slider = new QSlider(Qt::Horizontal);
@@ -479,13 +666,10 @@ void foucaultView::generateBatchRonchiImage(const QList<wavefront*>& wavefrontLi
     connect(slider, &QSlider::valueChanged, updateZoom);
     updateZoom(100);
 
-    // 9. Navigation and Comparison Buttons
+    // 9. Buttons
     QHBoxLayout *btns = new QHBoxLayout();
-
-    // NEW: Comparison button
     QPushButton *compareBtn = new QPushButton(tr("Compare Top Two Patterns"));
     compareBtn->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
-    // Feature only enabled if 2 or more wavefronts were processed
     compareBtn->setEnabled(individualRonchis.size() >= 2);
 
     QPushButton *saveBtn = new QPushButton(tr("Save Grid Image"));
@@ -497,23 +681,18 @@ void foucaultView::generateBatchRonchiImage(const QList<wavefront*>& wavefrontLi
     btns->addWidget(cancelBtn);
     layout->addLayout(btns);
 
-    // Connect the comparison trigger
+    // Comparison Trigger (Uses captured lists)
     connect(compareBtn, &QPushButton::clicked, &previewDlg, [=, &previewDlg]() {
-        // [=] copies individualRonchis and names so they stay
-        // valid even after generateBatchRonchiImage() returns.
-        if (individualRonchis.size() >= 2) {
+        if (individualRonchis.size() >= 2 && names.size() >= 2) {
             RonchiCompareDialog compDlg(individualRonchis[0], names[0],
                                         individualRonchis[1], names[1], &previewDlg);
             compDlg.exec();
         }
     });
 
-
     connect(saveBtn, &QPushButton::clicked, &previewDlg, &QDialog::accept);
     connect(cancelBtn, &QPushButton::clicked, &previewDlg, &QDialog::reject);
 
-
-    // 10. Execute Dialog and Save Grid
     if (previewDlg.exec() == QDialog::Accepted) {
         QString path = QFileDialog::getSaveFileName(this, tr("Save Ronchi Grid"),
                                                     imageDir, tr("Images (*.png *.jpg)"));
