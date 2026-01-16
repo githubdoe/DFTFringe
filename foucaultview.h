@@ -15,6 +15,9 @@ enum class OpticalTestType {
     Ronchi
 };
 
+enum class GridMode { None, Inches, Millimeters, Percentage };
+
+
 // Parameter container so this can be called without needing the UI pointers
 struct OpticalTestSettings {
     double rocOffset = 0.0;
@@ -81,6 +84,7 @@ private slots:
     void on_SaveImageCB_clicked(bool checked);
     void saveRonchiImage();
     void saveFoucaultImage();
+    void showGrid();
     void on_overlayProfile_stateChanged(int arg1);
     void on_RonchiX_valueChanged(double arg1);
     void on_pushButton_clicked();
@@ -99,7 +103,14 @@ private:
     double m_temp_sag;
     wavefront *m_wf;
     int lateralOffset;
+    GridMode m_gridMode = GridMode::None;
+    double m_gridSpacing = 10.0; // Default spacing value
+    int m_gridLineWidth = 1;
+    bool m_showUnitLabels = true;
+    QColor m_gridColor = Qt::cyan;
+    QColor m_textColor = Qt::white;
 
+    void drawGridOverlay(QImage &img);
     explicit foucaultView(QWidget *parent = 0, SurfaceManager *sm = 0);
     cv::Mat compute_star_test(int pupil_size, double defocus, double pad, bool use_OPD);
     double getStep();
