@@ -124,15 +124,15 @@ void foucaultView::showGrid() {
     QPushButton *btnGridCol = new QPushButton("Grid Color");
     QPushButton *btnTextCol = new QPushButton("Text Color");
 
-    colors = { m_gridColor, m_textColor }; // store current values
+    m_temp_colors = { m_gridColor, m_textColor }; // store current values
 
     connect(btnGridCol, &QPushButton::clicked, this,[this]() {
-        QColor c = QColorDialog::getColor(colors.grid, this);
-        if (c.isValid()) colors.grid = c;
+        QColor c = QColorDialog::getColor(m_temp_colors.grid, this);
+        if (c.isValid()) m_temp_colors.grid = c;
     });
     connect(btnTextCol, &QPushButton::clicked, this, [this]() {
-        QColor c = QColorDialog::getColor(colors.text, this);
-        if (c.isValid()) colors.text = c;
+        QColor c = QColorDialog::getColor(m_temp_colors.text, this);
+        if (c.isValid()) m_temp_colors.text = c;
     });
 
     form.addRow("Grid Units:", unitCombo);
@@ -153,8 +153,8 @@ void foucaultView::showGrid() {
         spacingSpin->setValue(10.0);
         widthSpin->setValue(1);
         textToggle->setChecked(true);
-        colors.grid = Qt::cyan;
-        colors.text = Qt::white;
+        m_temp_colors.grid = Qt::cyan;
+        m_temp_colors.text = Qt::white;
     });
 
     connect(&buttonBox, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
@@ -165,8 +165,8 @@ void foucaultView::showGrid() {
         m_gridSpacing = spacingSpin->value();
         m_gridLineWidth = widthSpin->value();
         m_showUnitLabels = textToggle->isChecked();
-        m_gridColor = colors.grid;
-        m_textColor = colors.text;
+        m_gridColor = m_temp_colors.grid;
+        m_textColor = m_temp_colors.text;
 
         // Save to QSettings with "ronchiGrid" prefix
         QSettings set;

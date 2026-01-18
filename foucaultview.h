@@ -109,7 +109,7 @@ private:
     bool m_showUnitLabels = true;
     QColor m_gridColor = Qt::cyan;
     QColor m_textColor = Qt::white;
-    struct State { QColor grid; QColor text; } colors;
+    struct State { QColor grid; QColor text; } m_temp_colors;
 
 
     void drawGridOverlay(QImage &img);
