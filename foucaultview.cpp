@@ -43,6 +43,9 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     // Using name() and string check for robust color persistence
     m_gridColor      = QColor(set.value("ronchiGrid/color", "#00FFFF").toString()); // Default Cyan
     m_textColor      = QColor(set.value("ronchiGrid/textColor", "#FFFFFF").toString()); // Default White
+
+    // Color storage (using local temps for the dialog session)
+
 }
 
 
@@ -118,17 +121,16 @@ void foucaultView::showGrid() {
     QCheckBox *textToggle = new QCheckBox("Show unit labels", &dlg);
     textToggle->setChecked(m_showUnitLabels);
 
-    // Color storage (using local temps for the dialog session)
-    struct State { QColor grid; QColor text; } colors = { m_gridColor, m_textColor };
-
     QPushButton *btnGridCol = new QPushButton("Grid Color");
     QPushButton *btnTextCol = new QPushButton("Text Color");
 
-    connect(btnGridCol, &QPushButton::clicked, [&]() {
+    colors = { m_gridColor, m_textColor }; // store current values
+
+    connect(btnGridCol, &QPushButton::clicked, this,[this]() {
         QColor c = QColorDialog::getColor(colors.grid, this);
         if (c.isValid()) colors.grid = c;
     });
-    connect(btnTextCol, &QPushButton::clicked, [&]() {
+    connect(btnTextCol, &QPushButton::clicked, this, [this]() {
         QColor c = QColorDialog::getColor(colors.text, this);
         if (c.isValid()) colors.text = c;
     });
@@ -146,7 +148,7 @@ void foucaultView::showGrid() {
     form.addRow(&buttonBox);
 
     // Reset Logic
-    connect(resetBtn, &QPushButton::clicked, [&]() {
+    connect(resetBtn, &QPushButton::clicked, this, [=]() {
         unitCombo->setCurrentIndex(0); // None
         spacingSpin->setValue(10.0);
         widthSpin->setValue(1);

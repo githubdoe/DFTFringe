@@ -109,6 +109,8 @@ private:
     bool m_showUnitLabels = true;
     QColor m_gridColor = Qt::cyan;
     QColor m_textColor = Qt::white;
+    struct State { QColor grid; QColor text; } colors;
+
 
     void drawGridOverlay(QImage &img);
     explicit foucaultView(QWidget *parent = 0, SurfaceManager *sm = 0);
