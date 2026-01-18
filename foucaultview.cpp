@@ -44,8 +44,6 @@ foucaultView::foucaultView(QWidget *parent, SurfaceManager *sm) :
     m_gridColor      = QColor(set.value("ronchiGrid/color", "#00FFFF").toString()); // Default Cyan
     m_textColor      = QColor(set.value("ronchiGrid/textColor", "#FFFFFF").toString()); // Default White
 
-    // Color storage (using local temps for the dialog session)
-
 }
 
 
