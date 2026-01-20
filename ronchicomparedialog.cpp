@@ -59,10 +59,18 @@ RonchiCompareDialog::RonchiCompareDialog(const QImage& img1, const QString& name
 
     m_saveBtn = new QPushButton(tr("Save This Comparison Image"));
     QPushButton* blinkBtn = new QPushButton(tr("Blink"));
+
     mainLayout->addWidget(m_saveBtn);
 
     blinkLayout->addSpacerItem( new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding));
     blinkLayout->addWidget(blinkBtn);
+    m_speedSlider = new QSlider(Qt::Horizontal, this);
+    m_speedSlider->setRange(50, 1500);
+    m_speedSlider->setValue(250);
+    m_speedSlider->hide();
+
+
+    blinkLayout->addWidget(m_speedSlider);
     blinkLayout->addSpacerItem( new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding));
     mainLayout->addLayout(blinkLayout);
     blinkTimer = new QTimer(this);
@@ -90,6 +98,7 @@ void RonchiCompareDialog::startBlink(){
         blinking = false;
         m_slider->show();
         m_saveBtn->show();
+        m_speedSlider->hide();
         m_info->setText(tr("Blend Ratio (Slide to compare difference):"));
     }
     else {
@@ -97,6 +106,8 @@ void RonchiCompareDialog::startBlink(){
         blinkTimer->start(300);
         m_slider->hide();
         m_saveBtn->hide();
+        m_speedSlider->show();
+
     }
 }
 
@@ -110,7 +121,7 @@ void RonchiCompareDialog::blink(){
         m_displayLabel->setPixmap(QPixmap::fromImage(m_q2));
         m_info->setText(m_compLabel->text());
     }
-    blinkTimer->start(300);
+    blinkTimer->start(m_speedSlider->value());
 }
 
 cv::Mat RonchiCompareDialog::qImageToMat(const QImage& image)

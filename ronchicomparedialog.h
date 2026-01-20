@@ -22,6 +22,7 @@ private slots:
     void startBlink();
     void blink();
 
+
 private:
     cv::Mat qImageToMat(const QImage& image);
 
@@ -37,6 +38,7 @@ private:
     bool blinking = false;
     QTimer *blinkTimer;
     QPushButton* m_saveBtn;
+    QSlider* m_speedSlider;
 };
 
 #endif // RONCHICOMPAREDIALOG_H
