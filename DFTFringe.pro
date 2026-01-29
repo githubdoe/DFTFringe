@@ -56,6 +56,7 @@ win32 {
     LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4120
     LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4120
     LIBS += -ldbghelp # for SetUnhandledExceptionFilter
+    LIBS += -lz
 
 
     # This is for armadillo to not use wrapper. See https://gitlab.com/conradsnicta/armadillo-code#6-linux-and-macos-compiling-and-linking
@@ -143,7 +144,7 @@ RESOURCES += DFTResources.qrc
 
 TRANSLATIONS += dftfringe_fr.ts
 
-INCLUDEPATH += ./bezier ./SingleApplication ./zernike
+INCLUDEPATH += ./bezier ./SingleApplication ./zernike ./cnpy
 
 SOURCES += SingleApplication/singleapplication.cpp \
     SingleApplication/singleapplication_p.cpp \
@@ -164,6 +165,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     ccswappeddlg.cpp \
     circlefit.cpp \
     circleoutline.cpp \
+    cnpy/cnpy.cpp \
     colorchannel.cpp \
     colorchanneldisplay.cpp \
     colormapviewerdlg.cpp \
@@ -285,6 +287,7 @@ HEADERS += bezier/bezier.h \
     circle.h \
     circleoutline.h \
     circleutils.h \
+    cnpy/cnpy.h \
     colorchannel.h \
     colorchanneldisplay.h \
     colormapviewerdlg.h \

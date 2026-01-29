@@ -75,6 +75,7 @@
 #include "ui_oglrendered.h"
 #include "astigpolargraph.h"
 #include "utils.h"
+#include "cnpy.h"
 
 cv::Mat theMask;
 cv::Mat deb;
@@ -1329,6 +1330,34 @@ bool SurfaceManager::loadWavefront(const QString &fileName){
 
     emit enableControls(false);
     bool mirrorParamsChanged = false;
+
+    if (fileName.endsWith(".npz",Qt::CaseInsensitive)){
+
+        cnpy::npz_t npz_data = cnpy::npz_load(fileName.toStdString());
+        spdlog::get("logger")->info("npz file contents");
+        for (const auto& element : npz_data) {
+            cnpy::NpyArray e = element.second;
+            if (e.shape.size() == 0 && e.num_vals == 1 && e.word_size==8) {
+                double * dval = e.data<double>();
+                spdlog::get("logger")->info("{} size {}  word size {} num_vals {} val: {}", element.first, e.shape.size(), e.word_size, e.num_vals, *dval);
+            }
+            else if (e.shape.size() == 0 && e.num_vals == 1 && e.word_size==1) {
+                unsigned char * ucval = e.data<unsigned char>();
+                spdlog::get("logger")->info("{} size {}  word size {} num_vals {} val: {}", element.first, e.shape.size(), e.word_size, e.num_vals, *ucval);
+            }
+            else
+                spdlog::get("logger")->info("{} size {}  word size {} num_vals {}", element.first, e.shape.size(), e.word_size, e.num_vals);
+
+        }
+
+
+
+
+        return mirrorParamsChanged;
+    }
+
+
+
     std::ifstream file(fileName.toStdString().c_str());
     if (!file) {
         QString b = "Can not read file " + fileName + " " +strerror(errno);

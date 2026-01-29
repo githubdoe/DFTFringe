@@ -333,7 +333,7 @@ void MainWindow::openWaveFrontonInit(QStringList args){
         if (pd.wasCanceled())
             break;
 
-        if (arg.endsWith(".wft", Qt::CaseInsensitive)){
+        if (arg.endsWith(".wft", Qt::CaseInsensitive) || arg.endsWith(".npz",Qt::CaseInsensitive)){
             pd.setLabelText(arg);
             try {
             m_surfaceManager->loadWavefront(arg);
@@ -663,7 +663,7 @@ QStringList MainWindow::SelectWaveFrontFiles(){
 
     QFileDialog dialog(this, "load wave front file", lastPath, tr("wft(*.wft)"));
     dialog.setFileMode(QFileDialog::ExistingFiles);
-    dialog.setNameFilter(tr("wft (*.wft)"));
+    dialog.setNameFilter(tr("wavefront files (*.wft *.npz)"));
 
     if (dialog.exec()) {
         QStringList fileNames = dialog.selectedFiles();
