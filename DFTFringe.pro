@@ -56,7 +56,7 @@ win32 {
     LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4120
     LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4120
     LIBS += -ldbghelp # for SetUnhandledExceptionFilter
-    LIBS += -lz
+    LIBS += -lz       # zip compression library needed for cnpy.cpp
 
 
     # This is for armadillo to not use wrapper. See https://gitlab.com/conradsnicta/armadillo-code#6-linux-and-macos-compiling-and-linking
@@ -82,6 +82,7 @@ unix: !mac {
     LIBS += -lopencv_imgcodecs
     LIBS += -lopencv_imgproc
     LIBS += -L/usr/local/qwt-6.3.0/lib -lqwt
+    LIBS += -lz       # zip compression library needed for cnpy.cpp
 }
 
 # MAC ##############
