@@ -1192,8 +1192,12 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             else {
                 spdlog::get("logger")->info("{} size {}  word size {} num_vals {}", element.first, e.shape.size(), e.word_size, e.num_vals);
                 if (element.first == "wf") {
-                    if (e.shape.size() != 2 || e.word_size != 8)
+                    if (e.shape.size() != 2 || e.word_size != 8) {
+                        delete wf;
+                        QString b = "Can not read file " + fileName + ". Wavefront not as expected (expected 2 dimensional array of doubles)";
+                        QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
                         return nullptr; // error - was expecting 2 dimensional array of doubles
+                    }
 
                     int width = e.shape[0];
                     int height = e.shape[1];
@@ -1223,8 +1227,12 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                 }
             }
         }
-        if (bWavefrontLoaded == false)
+        if (bWavefrontLoaded == false) {
+            delete wf;
+            QString b = "Can not read file " + fileName + ". Wavefront not found";
+            QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
             return nullptr; // error - no wavefront found in npz file
+        }
         //
         // Regarding this following line of code. wfpro stores the data with respect to the reference wavelength (typically 550nm).  But
         // DFTF stores the data with respect to the laser wavelength. So we need to scale the data so DFTF is happy.  Both of these values
@@ -1239,6 +1247,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         if (!file) {
             QString b = "Can not read file " + fileName + " " +strerror(errno);
             QMessageBox::warning(NULL, tr("Read Wavefront File"),b);
+            delete wf;
             return 0;
         }
         spdlog::get("logger")->trace("readWaveFront() step 1");
