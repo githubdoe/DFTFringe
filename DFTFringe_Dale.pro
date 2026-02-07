@@ -39,6 +39,7 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     igramarea.cpp \
     circleoutline.cpp \
+    cnpy/cnpy.cpp \
     graphicsutilities.cpp \
     dfttools.cpp \
     dftarea.cpp \
@@ -156,6 +157,7 @@ HEADERS  += mainwindow.h \
     edgeplot.h \
     IgramArea.h \
     circleoutline.h \
+    cnpy/cnpy.h \
     graphicsutilities.h \
     dfttools.h \
     dftarea.h \
@@ -266,7 +268,7 @@ HEADERS  += mainwindow.h \
     SingleApplication/singleapplication.h \
     SingleApplication/singleapplication_p.h
 
-INCLUDEPATH += ./bezier ./SingleApplication ./zernike
+INCLUDEPATH += ./bezier ./SingleApplication ./zernike ./cnpy
 
 FORMS    += mainwindow.ui \
     annulushelpdlg.ui \
@@ -378,6 +380,7 @@ LIBS += D:\lapack\build64\bin\liblapack.dll
 LIBS += D:\lapack\build64\bin\libblas.dll
 
 LIBS += -ldbghelp # for SetUnhandledExceptionFilter
+LIBS += -lz       # zip compression library needed for cnpy.cpp
 }
 
 
