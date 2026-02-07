@@ -1159,19 +1159,30 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             cnpy::NpyArray e = element.second;
             if (element.first == "null" && e.word_size != 0)
                 bAlreadyNulled=true;  //wfpro already nulled this wavefront
-            if (e.shape.size() == 0 && e.num_vals == 1 && e.word_size==8) {
-                double * dval = e.data<double>();
+            if (e.shape.size() == 0 && e.num_vals == 1 && (e.word_size==8 || e.word_size==4)) {
+                double temp;
+                double * dval = &temp; // dval points to temp if it's an integer (32bit number)
+
+                if (e.word_size==4)
+                    temp = *(e.data<int32_t>()); // the number is a 32bit integer
+                else
+                    dval = e.data<double>(); // the number is a 64bit double
+
                 spdlog::get("logger")->info("{} size {}  word size {} num_vals {} val: {}", element.first, e.shape.size(), e.word_size, e.num_vals, *dval);
                 if (element.first == "dia")
                     diam = *dval;
                 else if (element.first == "roc")
                     roc = *dval;
+                //else if (element.first == "conic")
+                //    double conic = *dval;   conic is ignored so no need to read it from the npz file
                 else if (element.first == "ref_wvl")
                     reference_wavelength= *dval;
                 else if (element.first == "laser_wvl")
                     lambda = *dval;
                 else if (element.first == "obsc")
                     obsc = *dval;
+                else if (element.first == "null" && std::isnan(*dval) == false)
+                    bAlreadyNulled = true;  //wfpro already nulled this wavefront
 
             }
             else if (e.shape.size() == 0 && e.num_vals == 1 && e.word_size==1) {
@@ -1214,6 +1225,12 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         }
         if (bWavefrontLoaded == false)
             return nullptr; // error - no wavefront found in npz file
+        //
+        // Regarding this following line of code. wfpro stores the data with respect to the reference wavelength (typically 550nm).  But
+        // DFTF stores the data with respect to the laser wavelength. So we need to scale the data so DFTF is happy.  Both of these values
+        // (reference_wavelength, lambda) whould always be in the npz file although an early version of wfpro didn't store the laser wavlenth
+        // there so we use the laser wavelength from the mirror dialog as a default
+        //
         wf->data = wf->data * (reference_wavelength / lambda);
 
     }
