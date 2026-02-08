@@ -1,21 +1,5 @@
-The MIT License (MIT)
+The MIT License
 
-bezier.h
-Copyright (C) 2023 Øystein Myrmo (oystein.myrmo@gmail.com)
-
-Lapack
-Copyright (C) 2014–2025 The lapack Developers
-
-singleApplication
-Copyright (C) 2015 - 2023 Itay Grudev
-
-spldlog
-Copyright (C) 2016 Gabi Melman.
-
-zernike (zapm.cpp)
-Copyright (C) 2022 Michael Peck
-
-cnpy (cnpy.h cnpy.cpp)
 Copyright (c) Carl Rogers, 2011
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
