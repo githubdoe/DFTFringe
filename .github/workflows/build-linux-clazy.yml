@@ -37,6 +37,6 @@ jobs:
       # all level 1 checks but ignore clazy-no-connect-by-name
       # no parallel make with clazy to not mess log
       - run: |
-          export CLAZY_IGNORE_DIRS=".*usr.*|.*bezier.*|.*boost.*|.*SingleApplication.*|.*spdlog.*|.*zernike.*" \
+          export CLAZY_IGNORE_DIRS=".*usr.*|.*bezier.*|.*boost.*|.*SingleApplication.*|.*spdlog.*|.*zernike.*|.*cnpy.*" \
           && export CLAZY_CHECKS="level1,no-connect-by-name,function-args-by-value,function-args-by-ref,incorrect-emit,old-style-connect" \
           && make
