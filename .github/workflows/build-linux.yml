@@ -49,4 +49,4 @@ jobs:
           tidy-checks: '' # rely solely on .clang-tidy file
           tidy-review: true
           passive-reviews: true
-          ignore: 'bezier|boost|SingleApplication|spdlog|zernike|moc_*|ui_*|qwt*'
+          ignore: 'bezier|boost|SingleApplication|spdlog|zernike|cnpy|moc_*|ui_*|qwt*'
