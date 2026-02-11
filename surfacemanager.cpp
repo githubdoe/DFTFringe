@@ -1766,11 +1766,11 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     makeMask(wf);
     generateSurfacefromWavefront(m_currentNdx);
 
+    m_surfaceTools->select(m_currentNdx);
     if (needsUpdate)
         m_waveFrontTimer->start(1000);
     else
        loadComplete();
-    m_surfaceTools->select(m_currentNdx);
     QApplication::restoreOverrideCursor();
 }
 #include "averagewavefrontfilesdlg.h"
@@ -1942,8 +1942,8 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
     }
     generateSurfacefromWavefront(m_currentNdx);
 
-    loadComplete();
     m_surfaceTools->select(m_currentNdx);
+    loadComplete();
 }
 
 void SurfaceManager::subtractWavefronts(){
