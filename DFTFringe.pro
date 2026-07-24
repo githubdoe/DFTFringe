@@ -46,6 +46,8 @@ win32 {
     INCLUDEPATH += ..\qwt-6.3.0\src
     INCLUDEPATH += ..\build_armadillo\tmp\include
     INCLUDEPATH += ..\build_openCV\install\include
+    INCLUDEPATH += ..\build_libraw\install\include   # LibRaw for camera RAW support
+    DEFINES += LIBRAW_NODLL   # link LibRaw statically (no __declspec(dllimport))
 
     LIBS += -L$$PWD\..\build_lapack\bin -llibblas
     LIBS += -L$$PWD\..\build_lapack\bin -lliblapack
@@ -55,6 +57,7 @@ win32 {
     LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_highgui4120
     LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4120
     LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4120
+    LIBS += -L$$PWD\..\build_libraw\install\lib -lraw   # LibRaw (static) for camera RAW support
     LIBS += -ldbghelp # for SetUnhandledExceptionFilter
     LIBS += -lz       # zip compression library needed for cnpy.cpp
 
@@ -70,6 +73,7 @@ unix: !mac {
 
     INCLUDEPATH += /usr/include/opencv4
     INCLUDEPATH += /usr/local/qwt-6.3.0/include
+    INCLUDEPATH += /usr/include/libraw
 
     QMAKE_RPATHDIR += /usr/local/qwt-6.3.0/lib
 
@@ -82,6 +86,7 @@ unix: !mac {
     LIBS += -lopencv_imgcodecs
     LIBS += -lopencv_imgproc
     LIBS += -L/usr/local/qwt-6.3.0/lib -lqwt
+    LIBS += -lraw     # LibRaw for camera RAW support
     LIBS += -lz       # zip compression library needed for cnpy.cpp
 }
 
@@ -114,7 +119,7 @@ macx {
     PKG_CONFIG_PATH = $$[QT_INSTALL_LIBS]/pkgconfig
     INCLUDEPATH += -I$$[QT_INSTALL_PLUGINS]
     LIBS += -L$$[QT_INSTALL_PLUGINS]
-    PKGCONFIG += armadillo opencv Qt5Qwt6
+    PKGCONFIG += armadillo opencv Qt5Qwt6 libraw
 
     message(........QT_VERSION: $$[QT_VERSION])
     message(.QT_INSTALL_PREFIX: $$[QT_INSTALL_PREFIX])
@@ -222,6 +227,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     psiphasedisplay.cpp \
     psitiltoptions.cpp \
     punwrap.cpp \
+    rawimage.cpp \
     regionedittools.cpp \
     rejectedwavefrontsdlg.cpp \
     reportdlg.cpp \
@@ -344,6 +350,7 @@ HEADERS += bezier/bezier.h \
     psiphasedisplay.h \
     psitiltoptions.h \
     punwrap.h \
+    rawimage.h \
     regionedittools.h \
     rejectedwavefrontsdlg.h \
     reportdlg.h \

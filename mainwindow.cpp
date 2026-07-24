@@ -48,6 +48,7 @@
 #include "utils.h"
 #include "colorchannel.h"
 #include "opencv2/opencv.hpp"
+#include "rawimage.h"
 #include <QUrl>
 
 #include <QNetworkAccessManager>
@@ -298,6 +299,8 @@ void MainWindow::importIgram() {
         QDir dir(dirPath);
         QStringList filters;
         filters << "*.png" << "*.jpg" << "*.jpeg" << "*.bmp" << "*.gif"; // Add more image formats if needed
+        for (const QString &e : RawImage::extensions())      // include camera RAW files
+            filters << ("*." + e);
 
         dir.setNameFilters(filters);
         dir.setFilter(QDir::Files | QDir::Readable);
@@ -486,6 +489,7 @@ void MainWindow::on_actionLoad_Interferogram_triggered()
     // `qDebug() << dialog.nameFilters();`
     // manually added upper case and first char upper case
     const QStringList filters({"Image files (*.bmp *.dib *.BMP *.DIB *.Bmp *.Dib *.gif *.GIF *.Gif *.jpg *.jpeg *.jpe *.JPG *.JPEG *.JPE *.Jpg *.Jpeg *.Jpe*.png *.PNG *.Png*.svg *.SVG *.Svg*.svgz *.SVGZ *.Svgz*.ico *.ICO *.Ico*.pbm *.PBM *.Pbm*.pgm *.PGM *.Pgm*.ppm *.PPM *.Ppm*.xbm *.XBM *.Xbm*.xpm *.XPM *.Xpm)",
+                           "Camera RAW files (" + RawImage::nameFilter() + ")",
                            "Any files (*)"
                           });
     dialog.setNameFilters(filters);
