@@ -29,7 +29,7 @@ jobs:
   # acually build the artifacts that will be uploaded to release
   call-build-windows:
     needs: check-semver
-    uses: ./.github/workflows/build-windows.yml
+    uses: ./.github/workflows/build-windows-QT5.yml
   # linux build is mainly here to check it builds. We have no acrtifact now.
   call-build-linux:
     permissions:
@@ -45,7 +45,7 @@ jobs:
       # get artifact uploaded from build workflow
       - uses: actions/download-artifact@v4
         with:
-          name: DFTFringe-windows-build-artifact
+          name: DFTFringe-windows-build-artifact-QT5
       # create the GitHub release and upload the artifacts
       - name: publish Release
         uses: softprops/action-gh-release@v1
@@ -59,5 +59,5 @@ jobs:
           # an automated release note is generated based on PRs to master
           generate_release_notes: true
           files: |
-            DFTFringeInstaller_${{github.ref_name}}.exe
+            DFTFringeInstaller_QT5_${{github.ref_name}}.exe
             Z_DFTFringe.exe.debug
