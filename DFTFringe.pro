@@ -58,6 +58,7 @@ win32 {
     LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs4120
     LIBS += -L$$PWD\..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc4120
     LIBS += -L$$PWD\..\build_libraw\install\lib -lraw   # LibRaw (static) for camera RAW support
+    LIBS += -lws2_32  # Winsock: LibRaw needs htons/ntohs/htonl/ntohl on Windows
     LIBS += -ldbghelp # for SetUnhandledExceptionFilter
     LIBS += -lz       # zip compression library needed for cnpy.cpp
 
