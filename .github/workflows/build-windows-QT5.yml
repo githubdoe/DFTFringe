@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - master
+    tags:
+      - 'v*'
   pull_request:
   workflow_dispatch:
   workflow_call:
@@ -387,6 +389,7 @@ jobs:
           (Get-Content DFTFringe/DFTFringeInstaller/config/config.xml).replace('MY_AUTOMATED_VERSION_STRING', '${{env.WORKFLOW_VERSION}}') | Set-Content DFTFringe/DFTFringeInstaller/config/config.xml
           (Get-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml).replace('MY_AUTOMATED_VERSION_STRING', '${{env.WORKFLOW_VERSION}}') | Set-Content DFTFringe/DFTFringeInstaller/packages/com.githubdoe.DFTFringe/meta/package.xml
           (Get-Content DFTFringe/DFTFringe.pro).replace('MY_AUTOMATED_VERSION_STRING', '${{env.WORKFLOW_VERSION}}') | Set-Content DFTFringe/DFTFringe.pro
+          (Get-Content DFTFringe/DFTFringe_QT5.pro).replace('MY_AUTOMATED_VERSION_STRING', '${{env.WORKFLOW_VERSION}}') | Set-Content DFTFringe/DFTFringe_QT5.pro
       - name: Put current date into a variable
         run: |
           $NOW=& Get-Date -format yyyy-MM-dd
