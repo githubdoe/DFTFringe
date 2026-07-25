@@ -149,11 +149,24 @@ void zernikeEditDlg::on_useCurrent_clicked()
         QMessageBox::warning(0,"No wave fronts available!", "First load or create a wave front");
         return;
     }
-    m_zernEnables = zernEnables;
-    tableModel->blockSignals(true);
+    wavefront *wf = m_sm->m_wavefronts[m_sm->m_currentNdx];
 
-    tableModel->setValues(m_sm->m_wavefronts[m_sm->m_currentNdx]->InputZerns,m_sm->m_wavefronts[m_sm->m_currentNdx]->useSANull );
-    ui->sizeSb->setValue(m_sm->m_wavefronts[m_sm->m_currentNdx]->data.cols);
+    // Re-fit the current wavefront to the max order selected in this dialog.
+    // wf->InputZerns is fitted with zernikePolar which is capped at Z_TERMS (49,
+    // i.e. order 12); ZernFitWavefront uses zpmC and honours m_maxOrder, so at
+    // order 22 it returns all (maxOrder/2+1)^2 = 144 coefficients in the same
+    // sequential order as the .zrn file. This is what makes a later Save write
+    // the actually-selected number of terms.
+    zernikeProcess &zp = *zernikeProcess::get_Instance();
+    zp.setMaxOrder(m_maxOrder);
+    std::vector<double> zs = zp.ZernFitWavefront(*wf);
+    if (zs.empty())        // fit cancelled by the user
+        return;
+
+    m_zernEnables.assign(zs.size(), true);
+    tableModel->blockSignals(true);
+    tableModel->setValues(zs, wf->useSANull);
+    ui->sizeSb->setValue(wf->data.cols);
     tableModel->blockSignals(false);
     tableModel->update();
 }
@@ -174,6 +187,7 @@ void zernikeEditDlg::on_maxOrder_valueChanged(int arg1)
     m_noOfTerms = zp.getNumberOfTerms();
     ui->numberOfTerms->setText(QString("%1 Terms").arg(m_noOfTerms));
     tableModel->resizeRows(m_noOfTerms);
+    m_zernEnables.resize(m_noOfTerms, true);   // keep enables in sync with the term count
     emit termCountChanged(m_noOfTerms);
 }
 
