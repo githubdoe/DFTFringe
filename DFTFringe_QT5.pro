@@ -46,6 +46,8 @@ win32 {
     INCLUDEPATH += ..\qwt-6.1.6\src
     INCLUDEPATH += ..\build_armadillo\tmp\include
     INCLUDEPATH += ..\build_openCV\install\include
+    INCLUDEPATH += ..\build_libraw\install\include   # LibRaw for camera RAW support
+    DEFINES += LIBRAW_NODLL   # link LibRaw statically (no __declspec(dllimport))
 
     LIBS += -L..\build_lapack\bin -llibblas
     LIBS += -L..\build_lapack\bin -lliblapack
@@ -55,6 +57,8 @@ win32 {
     LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui460
     LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs460
     LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc460
+    LIBS += -L..\build_libraw\install\lib -lraw   # LibRaw (static) for camera RAW support
+    LIBS += -lws2_32  # Winsock: LibRaw needs htons/ntohs/htonl/ntohl on Windows
     LIBS += -ldbghelp # for SetUnhandledExceptionFilter
     LIBS += -lz       # zip compression library needed for cnpy.cpp
 
@@ -221,6 +225,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     psiphasedisplay.cpp \
     psitiltoptions.cpp \
     punwrap.cpp \
+    rawimage.cpp \
     regionedittools.cpp \
     rejectedwavefrontsdlg.cpp \
     reportdlg.cpp \
@@ -343,6 +348,7 @@ HEADERS += bezier/bezier.h \
     psiphasedisplay.h \
     psitiltoptions.h \
     punwrap.h \
+    rawimage.h \
     regionedittools.h \
     rejectedwavefrontsdlg.h \
     reportdlg.h \

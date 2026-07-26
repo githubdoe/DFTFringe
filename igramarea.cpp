@@ -47,6 +47,7 @@
 #include <QJsonValue>
 #include <QJsonArray>
 #include <QJsonObject>
+#include "rawimage.h"
 
 
 QVBoxLayout *debugLayout = 0;
@@ -989,7 +990,17 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QImage loadedImage;
-    if (!loadedImage.load(fileName)) {
+    const bool isRaw = RawImage::isRawFile(fileName);
+    if (isRaw){
+        QString rawErr;
+        loadedImage = RawImage::load(fileName, &rawErr);
+        if (loadedImage.isNull()){
+            QMessageBox::warning(NULL,"","RAW image "+fileName + " could not be read.\n" + rawErr);
+            QApplication::restoreOverrideCursor();
+            return false;
+        }
+    }
+    else if (!loadedImage.load(fileName)) {
         QMessageBox::warning(NULL,"","Image "+fileName + " could not be read.");
         QApplication::restoreOverrideCursor();
         return false;
@@ -999,7 +1010,17 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
         loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
 
     if (Settings2::getInstance()->m_igram->m_removeDistortion){
-        cv::Mat raw = cv::imread(fileName.toStdString().c_str());
+        // cv::imread cannot decode camera RAW files, so for RAW inputs build the
+        // BGR matrix from the already decoded QImage instead.
+        cv::Mat raw;
+        if (isRaw){
+            cv::Mat rgb(loadedImage.height(), loadedImage.width(), CV_8UC3,
+                        (void*)loadedImage.bits(), loadedImage.bytesPerLine());
+            cv::cvtColor(rgb, raw, cv::COLOR_RGB2BGR);
+        }
+        else {
+            raw = cv::imread(fileName.toStdString().c_str());
+        }
         QStringList parms = Settings2::getInstance()->m_igram->m_lenseParms;
         cv::Mat camera = cv::Mat::zeros(3,3,CV_64FC1);
         cv::Mat distortion =cv::Mat::zeros(1,5, CV_64FC1);
