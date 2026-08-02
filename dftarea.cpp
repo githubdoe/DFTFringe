@@ -722,7 +722,11 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     imageMat.release();
 
     int count = 0;
-    bool *bp = m_mask.ptr<bool>(0);
+    // m_mask is CV_8UC1 holding 0 or 255. Reading those bytes through a bool
+    // pointer is undefined behaviour, and clang at -O2 evaluates every element
+    // as false, which leaves count at 0 and makes m2 below a NaN that then
+    // spreads through the whole wavefront.
+    const uchar *bp = m_mask.ptr<uchar>(0);
     for (int i = 0; i < size; ++i){
         if (bp[i]){
             sum += q[i];
@@ -940,7 +944,11 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     }
 
 }
-cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask){
+// The mask is CV_8UC1 holding 0 or 255. Taking it as Mat_<bool> and reading the
+// elements as bool is undefined behaviour: clang at -O2 sees every element as
+// false, so nothing is accumulated, cv::solve runs on an uninitialised X and Z,
+// and newPhase is returned without ever being written.
+cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<uint8_t> mask){
     cv::Mat_<double> coeff(3,1);
     cv::Mat_<double> X(phase.rows * phase.cols,3);
     cv::Mat_<double> Z(phase.rows * phase.cols,1);
@@ -960,7 +968,9 @@ cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask){
     // distance calculation d = Ax + By - z + C / sqrt(A^2 + B^2 + C^2)
 
 
-    cv::Mat_<double> newPhase(phase.size());
+    // Only the masked pixels are written below, so the rest would otherwise be
+    // returned uninitialised.
+    cv::Mat_<double> newPhase = cv::Mat_<double>::zeros(phase.size());
     for (int y = 0; y < phase.rows; ++y){
         for (int x = 0; x  < phase.cols; ++x){
             int b = (int)mask(y,x);

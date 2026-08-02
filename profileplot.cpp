@@ -464,7 +464,10 @@ QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool all
         }
 
         // Mask and Data Processing
-        if (wf->workMask.at<bool>(dy, dx)) {
+        // workMask is Mat_<uint8_t> holding 0 or 255. Reading it as bool is
+        // undefined behaviour and clang at -O2 sees every element as false,
+        // which leaves the profile with no points at all.
+        if (wf->workMask.at<uint8_t>(dy, dx)) {
             double val = (units * (wf->workData(dy, dx)) * wf->lambda / outputLambda) + (offset * units);
 
             if (m_defocus_mode) {
