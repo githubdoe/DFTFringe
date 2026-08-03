@@ -964,8 +964,6 @@ cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<uint8_t> mask){
     // distance calculation d = Ax + By - z + C / sqrt(A^2 + B^2 + C^2)
 
 
-    // Only the masked pixels are written below, so the rest would otherwise be
-    // returned uninitialised.
     cv::Mat_<double> newPhase = cv::Mat_<double>::zeros(phase.size());
     for (int y = 0; y < phase.rows; ++y){
         for (int x = 0; x  < phase.cols; ++x){
