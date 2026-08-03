@@ -47,6 +47,7 @@
 #include "regionedittools.h"
 #include "utils.h"
 #include "colorchannel.h"
+#include "jitteroutlinedlg.h"
 #include "opencv2/opencv.hpp"
 #include <QUrl>
 
@@ -66,7 +67,7 @@ MainWindow *MainWindow::me = 0;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
-    m_batchMakeSurfaceReady(false), m_astigStatsDlg(0), m_cameraCalibWizard(nullptr)
+    m_batchMakeSurfaceReady(false), m_astigStatsDlg(0), m_jitterOutlineDlg(nullptr), m_cameraCalibWizard(nullptr)
 {
     ui->setupUi(this);
     ui->useAnnulust->hide();
@@ -138,6 +139,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_contourTools = new ContourTools(this);
     m_outlineHelp = new outlineHelpDocWidget(this);
+    m_jitterOutlineDlg = new jitterOutlineDlg(this);
+    connect(m_jitterOutlineDlg, &jitterOutlineDlg::startRequested, this, &MainWindow::startJitter);
+    connect(m_jitterOutlineDlg, &jitterOutlineDlg::stopRequested, this, &MainWindow::stopJitter);
+    connect(m_jitterOutlineDlg, &QDialog::finished, this, &MainWindow::stopJitter);
     m_outlinePlots = new outlinePlots(this);
     m_surfTools = surfaceAnalysisTools::get_Instance(this);
     m_regionsEdit = new regionEditTools(this);
@@ -1349,13 +1354,9 @@ void MainWindow::on_actionVersion_History_triggered()
     QDesktopServices::openUrl(QUrl::fromLocalFile(link));
 }
 
-
-#include "jitteroutlinedlg.h"
 void MainWindow::on_actionIterate_outline_triggered()
 {
-    jitterOutlineDlg *dlg = jitterOutlineDlg::getInstance(this);
-    connect(dlg,&QDialog::finished,this,&MainWindow::stopJitter);
-    dlg->show();
+    m_jitterOutlineDlg->show();
 }
 static bool stopJittering = false;
 void MainWindow::stopJitter(){
@@ -1367,22 +1368,21 @@ void MainWindow::startJitter(){
         QMessageBox::warning(this, "Error", "You must first load an interferogram and outline the mirror. and press 'Done'");
         return;
     }
-    jitterOutlineDlg *dlg = jitterOutlineDlg::getInstance(this);
     stopJittering = false;
-    int start = dlg->getStart();
-    int end = dlg->getEnd();
-    int step = dlg->getStep();
+    int start = m_jitterOutlineDlg->getStart();
+    int end = m_jitterOutlineDlg->getEnd();
+    int step = m_jitterOutlineDlg->getStep();
     int x = 0;
     int y = 0;
     int rad = 0;
 
     m_igramArea->openImage(m_igramArea->m_filename);
     CircleOutline  saved = (m_igramArea->m_current_boundry == OutSideOutline) ? m_igramArea->m_outside : m_igramArea->m_center;
-    dlg->getProgressBar()->setMinimum(start);
-    dlg->getProgressBar()->setMaximum(end);
+    m_jitterOutlineDlg->getProgressBar()->setMinimum(start);
+    m_jitterOutlineDlg->getProgressBar()->setMaximum(end);
     for (int delta = start; delta <= end; delta += step){
-        dlg->getProgressBar()->setValue(delta);
-        switch (dlg->getType()){
+        m_jitterOutlineDlg->getProgressBar()->setValue(delta);
+        switch (m_jitterOutlineDlg->getType()){
         case 1:
             x = delta;
             break;
