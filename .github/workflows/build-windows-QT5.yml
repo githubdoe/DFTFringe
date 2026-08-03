@@ -52,7 +52,7 @@ jobs:
     steps:
       # this will restore/cache everything depending on cache hit/miss
       - name: Cache QT and openCV
-        uses: actions/cache/@v4
+        uses: actions/cache@v6
         id: cache-openCV-QT
         with:
           path: |
@@ -116,7 +116,7 @@ jobs:
     steps:
       # this will restore/cache everything depending on cache hit/miss
       - name: cache QWT
-        uses: actions/cache/@v4
+        uses: actions/cache@v6
         id: cache-QWT
         with:
           path: |
