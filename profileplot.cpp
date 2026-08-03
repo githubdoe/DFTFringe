@@ -464,7 +464,7 @@ QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool all
         }
 
         // Mask and Data Processing
-        if (wf->workMask.at<bool>(dy, dx)) {
+        if (wf->workMask.at<uint8_t>(dy, dx)) {
             double val = (units * (wf->workData(dy, dx)) * wf->lambda / outputLambda) + (offset * units);
 
             if (m_defocus_mode) {
