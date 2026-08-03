@@ -66,8 +66,8 @@ MainWindow *MainWindow::me = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
-    m_batchMakeSurfaceReady(false), m_jitterOutlineDlg(nullptr), m_astigStatsDlg(0), m_cameraCalibWizard(nullptr)
+    ui(new Ui::MainWindow), m_jitterOutlineDlg(nullptr), m_showChannels(false), m_showIntensity(false), m_inBatch(false),
+    m_skipItem(false), m_OutlineDoneInBatch(false), m_batchMakeSurfaceReady(false), m_astigStatsDlg(0), m_cameraCalibWizard(nullptr)
 {
     ui->setupUi(this);
     ui->useAnnulust->hide();
