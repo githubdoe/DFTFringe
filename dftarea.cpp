@@ -944,10 +944,6 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     }
 
 }
-// The mask is CV_8UC1 holding 0 or 255. Taking it as Mat_<bool> and reading the
-// elements as bool is undefined behaviour: clang at -O2 sees every element as
-// false, so nothing is accumulated, cv::solve runs on an uninitialised X and Z,
-// and newPhase is returned without ever being written.
 cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<uint8_t> mask){
     cv::Mat_<double> coeff(3,1);
     cv::Mat_<double> X(phase.rows * phase.cols,3);
