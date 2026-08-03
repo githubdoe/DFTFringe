@@ -67,7 +67,7 @@ MainWindow *MainWindow::me = 0;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
-    m_batchMakeSurfaceReady(false), m_astigStatsDlg(0), m_jitterOutlineDlg(nullptr), m_cameraCalibWizard(nullptr)
+    m_batchMakeSurfaceReady(false), m_jitterOutlineDlg(nullptr), m_astigStatsDlg(0), m_cameraCalibWizard(nullptr)
 {
     ui->setupUi(this);
     ui->useAnnulust->hide();
@@ -1417,12 +1417,12 @@ void MainWindow::startJitter(){
         qApp->processEvents();
         wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
         wf->name = QString("x:_%1_Y:_%2_radius:_%3").arg(x).arg(y).arg(rad);
-        dlg->status(wf->name);
+        m_jitterOutlineDlg->status(wf->name);
         m_surfTools->nameChangedN(m_surfaceManager->m_currentNdx, wf->name);
         qApp->processEvents();
         QObject().thread()->msleep(500);
     }
-    dlg->getProgressBar()->reset();
+    m_jitterOutlineDlg->getProgressBar()->reset();
     stopJittering = false;
 
     m_igramArea->openImage(m_igramArea->m_filename);
