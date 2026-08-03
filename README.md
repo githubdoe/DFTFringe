@@ -314,7 +314,25 @@ aqt install-tool windows desktop tools_ifw
 
 :warning: This method is for Windows only.
 
+## If you get a stack trace in .log file
+
 - Get `DFTFringe.exe.debug` file corresponding to the release where the log comes from in github
-- Run `addr2line -e DFTFringe.exe.debug 0x00000000005A7229` with the address of the stack you get from the log
+- Run `addr2line -e Z_DFTFringe.exe.debug 0x00000000005A7229` with the address of the stack you get from the log
 - You should get an output like `D:\a\DFTFringe\DFTFringe\DFTFringe/./boost/stacktrace/stacktrace.hpp:78`
 - Do this for each line of the call stack leading to the crash. Look at corresponding file and line (here it's `stacktrace.hpp` line `78`) of the source code corresponding to the release you are debugging to understand what went wrong.
+
+## In case you have only the .dmp file
+
+- Open the file.dmp with windbg (File -> open dump file)
+- Type `!analyze -v`
+You will get a stack trace like this : 
+  ```
+  STACK_TEXT:  
+  000000ae`e0bfa650 00007ffb`df74d224     : 00000208`068a3a90 00000208`068a3aa0 00000000`00000001 00000000`00000000 : Qt6Core!ZNK11QStringView8toDoubleEPb+0x9d
+  000000ae`e0bfa7e0 00007ff6`4f442e1d     : 00000208`06b31f40 00000000`0000009d 00000000`00000168 000000ae`e0bfab80 : Qt6Core!ZNK7QString8toDoubleEPb+0x34
+  000000ae`e0bfa830 00007ff6`4f4576af     : 00000000`00000000 00000208`07b449e0 00000208`775cf0b0 99c37778`b5f046ec : DFTFringe+0x72e1d
+  000000ae`e0bfaef0 00007ff6`4f51cec4     : 00000208`7b8fbdf0 00000208`775b5970 00000000`00000000 000000ae`e0bfb078 : DFTFringe+0x876af
+  000000ae`e0bfb070 00007ffb`df9bc15e     : 000000ae`e0bfb140 000000ae`e0bfb148 000000ae`e0bfb150 00000000`00000000 : DFTFringe+0x14cec4
+  ```
+- `DFTFringe`correspond to `ImageBase` which is 0x140000000
+- You can now do the math (0x140000000+0x72e1d) and use `addr2line -e Z_DFTFringe.exe.debug 0x140072e1d`
