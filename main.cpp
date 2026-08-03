@@ -25,6 +25,7 @@
 #include "messagereceiver.h"
 #include "utils.h"
 #include <QDebug>
+#include <QStandardPaths>
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -169,7 +170,15 @@ int main(int argc, char *argv[])
     app.setApplicationName("DFTFringe");
 
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("DFTFringeLogs/log.txt", 1048576 * 5, 3);
+
+#ifdef Q_OS_MAC
+    const std::string logFile = (QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+                                 + "/DFTFringeLogs/log.txt").toStdString();
+#else
+    const std::string logFile = "DFTFringeLogs/log.txt";
+#endif
+
+    auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logFile, 1048576 * 5, 3);
 
     auto combined_logger = std::make_shared<spdlog::logger>("logger", spdlog::sinks_init_list({console_sink, file_sink}));
 
