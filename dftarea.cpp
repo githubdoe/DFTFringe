@@ -722,10 +722,6 @@ cv::Mat DFTArea::vortex(QImage &img, double low)
     imageMat.release();
 
     int count = 0;
-    // m_mask is CV_8UC1 holding 0 or 255. Reading those bytes through a bool
-    // pointer is undefined behaviour, and clang at -O2 evaluates every element
-    // as false, which leaves count at 0 and makes m2 below a NaN that then
-    // spreads through the whole wavefront.
     const uchar *bp = m_mask.ptr<uchar>(0);
     for (int i = 0; i < size; ++i){
         if (bp[i]){
