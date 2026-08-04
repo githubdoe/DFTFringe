@@ -36,7 +36,7 @@ class wavefront
 {
 public:
     wavefront();
-    ~wavefront();
+    ~wavefront() = default;
     wavefront( const wavefront &wf); // copy constructor doing deep copy of cv::Mat
     wavefront( wavefront && ) = delete;	// move constructor, deleted because unused
     wavefront& operator=( const wavefront & ) = default; // copy operator not doing deep copy of cv::mat

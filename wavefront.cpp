@@ -22,17 +22,6 @@ wavefront::wavefront():
 {
 }
 
-wavefront::~wavefront()
-{
-
-    data.release();
-    mask.release();
-    workData.release();
-    workMask.release();
-    InputZerns.clear();
-    nulledData.release();
-
-}
 wavefront::wavefront( const wavefront &wf): 
     data(wf.data.clone()),
     nulledData(wf.nulledData.clone()),
