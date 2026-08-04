@@ -2030,7 +2030,6 @@ void SurfaceManager::filter(){
 }
 
 #include "wftexaminer.h"
-wftExaminer *wex;
 double wrapAngle(double angle){
     if (angle < -360){
         angle += 360;
@@ -2040,7 +2039,12 @@ double wrapAngle(double angle){
     return angle;
 }
 void SurfaceManager::inspectWavefront(){
-    wex = new wftExaminer(m_wavefronts[m_currentNdx]);
+    wftExaminer *wex = new wftExaminer(m_wavefronts[m_currentNdx], nullptr);
+    wex->setAttribute(Qt::WA_DeleteOnClose);
+    if (parent()) {
+        QObject::connect(parent(), &QObject::destroyed, wex, &QWidget::close);
+    }
+    QObject::connect(qApp, &QCoreApplication::aboutToQuit, wex, &QWidget::close);
     wex->show();
 }
 
