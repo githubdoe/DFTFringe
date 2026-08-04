@@ -1564,6 +1564,7 @@ void SurfaceManager::saveAllWaveFrontStats(){
     if (m_wavefronts.size() == 0)
         return;
     statsView * sv = new statsView(this);
+    sv->setAttribute(Qt::WA_DeleteOnClose);
     sv->show();
     return;
 }
