@@ -1,23 +1,13 @@
 #include "jitteroutlinedlg.h"
 #include "ui_jitteroutlinedlg.h"
-#include "mainwindow.h"
-jitterOutlineDlg *jitterOutlineDlg::m_instance = 0;
 
 jitterOutlineDlg::jitterOutlineDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::jitterOutlineDlg)
 {
     ui->setupUi(this);
-}
-
-jitterOutlineDlg *jitterOutlineDlg::getInstance(MainWindow *mw){
-    if (m_instance ==0){
-        m_instance=  new jitterOutlineDlg;
-        connect(m_instance->ui->startPb, &QAbstractButton::clicked, mw,&MainWindow::startJitter);
-        connect(m_instance->ui->StopPb, &QAbstractButton::clicked,mw,&MainWindow::stopJitter);
-    }
-    return m_instance;
-
+    connect(ui->startPb, &QAbstractButton::clicked, this, &jitterOutlineDlg::startRequested);
+    connect(ui->StopPb, &QAbstractButton::clicked, this, &jitterOutlineDlg::stopRequested);
 }
 
 jitterOutlineDlg::~jitterOutlineDlg()

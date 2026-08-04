@@ -49,6 +49,7 @@
 #include "cameracalibwizard.h"
 
 class regionEditTools;
+class jitterOutlineDlg;
 namespace Ui {
 class MainWindow;
 }
@@ -301,6 +302,7 @@ private:
     ContourTools *m_contourTools;
     surfaceAnalysisTools *m_surfTools;
     outlineHelpDocWidget *m_outlineHelp;
+    jitterOutlineDlg *m_jitterOutlineDlg;
     regionEditTools *m_regionsEdit;
     SurfaceManager *m_surfaceManager;
     QScrollArea *scrollArea;
