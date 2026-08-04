@@ -49,6 +49,7 @@ wavefront::wavefront( const wavefront &wf):
     GBSmoothingValue(wf.GBSmoothingValue),
     m_origin(wf.m_origin),
     m_manuallyInverted(wf.m_manuallyInverted),
+    name(wf.name),
     lambda(wf.lambda),
     m_outside(wf.m_outside),
     m_inside(wf.m_inside),
@@ -58,6 +59,8 @@ wavefront::wavefront( const wavefront &wf):
     max(wf.max),
     std(wf.std),
     mean(wf.mean),
-    dirtyZerns(wf.dirtyZerns)
+    dirtyZerns(wf.dirtyZerns),
+    regions(wf.regions),
+    regions_have_been_expanded(wf.regions_have_been_expanded)
 {}
 
