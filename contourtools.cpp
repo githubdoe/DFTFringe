@@ -94,6 +94,9 @@ void ContourTools::setWaveRange(double val){
 void ContourTools::setMinMaxValues(double min, double max){
     m_min = min;
     m_max = max;
+    ui->errorRangeSpin->blockSignals(true);
+    ui->errorRangeSpin->setValue(m_max - m_min);
+    ui->errorRangeSpin->blockSignals(false);
     ui->minSB->blockSignals(true);
     ui->maxSB->blockSignals(true);
     ui->minSB->setValue(min);
