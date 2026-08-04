@@ -331,6 +331,9 @@ void ProfilePlot::setSurface(wavefront * wf){
     m_waveFrontyOffsets.clear();
     populate();
     m_plot->replot();
+    // Re-emit the current angle so contour view redraws its dashed profile line
+    // after selecting a different wavefront.
+    emit profileAngleChanged(M_PI_2 - g_angle);
 }
 
 void ProfilePlot::setDefocusWaveFront( const cv::Mat_<double> &wf){
