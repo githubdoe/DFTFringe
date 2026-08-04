@@ -2026,7 +2026,8 @@ void MainWindow::on_actionSmooth_current_wave_front_triggered()
         QMessageBox::warning(this, "No Wavefronts", "You must first load a wave front");
         return;
     }
-    ZernikeSmoothingDlg *dlg = new ZernikeSmoothingDlg(*sm.m_wavefronts[sm.m_currentNdx]);
+    ZernikeSmoothingDlg *dlg = new ZernikeSmoothingDlg(*sm.m_wavefronts[sm.m_currentNdx], this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->resize(1000,1000);
     dlg->show();
     return;
