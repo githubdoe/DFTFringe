@@ -2129,14 +2129,27 @@ void IgramArea::loadOutlineFile(const QString &fileName){
     // an oln file at all (or some portions of the oln data get lost).  Because of this I decided not to report any json parsing errors.
     QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
 
+    // Reset region model + UI so loading is self-contained and never leaks old regions.
+    m_polygons.clear();
+    m_regionEdit->clear();
+
     // outer
     QJsonObject outside = loadDoc["outside_outline"].toObject();
     CircleOutline out(outside);
     m_outside = out;
     m_outside.translate(QPointF(-cropTotalDx, -cropTotalDy));
-    m_OutterP1 = m_outside.m_p1;
-    m_OutterP2 = m_outside.m_p2;
-    outterPcount = 2;
+    if (m_outside.m_radius > 0) {
+        m_OutterP1 = m_outside.m_p1;
+        m_OutterP2 = m_outside.m_p2;
+        outterPcount = 2;
+    }
+    else {
+        qWarning() << "OLN load warning:" << fileName
+                   << "has no valid outside outline; clearing outside outline state.";
+        m_OutterP1 = QPointF(0,0);
+        m_OutterP2 = QPointF(0,0);
+        outterPcount = 0;
+    }
 
     // center/inner
     QJsonObject inside = loadDoc["inside_outline"].toObject();
@@ -2160,7 +2173,6 @@ void IgramArea::loadOutlineFile(const QString &fileName){
 
 
     // mask polygons regions
-    m_polygons.clear();
     QJsonArray jregions = loadDoc["regions"].toArray();
     for (int i=0; i < jregions.size(); ++i) {
         QJsonArray jpoly = jregions[i].toArray();
@@ -2197,11 +2209,24 @@ void IgramArea::loadOutlineFileOldV6(const QString &fileName){
         return;
     }
 
+    // Reset region model + UI so loading is self-contained and never leaks old regions.
+    m_polygons.clear();
+    m_regionEdit->clear();
+
 
     m_outside = readCircle(file, -cropTotalDx, -cropTotalDy);
-    m_OutterP1 = m_outside.m_p1;
-    m_OutterP2 = m_outside.m_p2;
-    outterPcount = 2;
+    if (m_outside.m_radius > 0) {
+        m_OutterP1 = m_outside.m_p1;
+        m_OutterP2 = m_outside.m_p2;
+        outterPcount = 2;
+    }
+    else {
+        qWarning() << "OLN load warning:" << fileName
+                   << "has no valid outside outline; clearing outside outline state.";
+        m_OutterP1 = QPointF(0,0);
+        m_OutterP2 = QPointF(0,0);
+        outterPcount = 0;
+    }
     CircleOutline sideLobe = readCircle(file);
     emit dftCenterFilter(sideLobe.m_radius);
     char b = file.peek();
@@ -2229,7 +2254,6 @@ void IgramArea::loadOutlineFileOldV6(const QString &fileName){
     }
 
     std::string line;
-    m_polygons.clear();
     while(std::getline(file, line)){
 
         if (line == "Poly"){
