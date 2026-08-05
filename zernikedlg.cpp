@@ -30,7 +30,7 @@
 // Zernike_terms message handlers
 
 ZernTableModel::ZernTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
-    :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable), m_nulled(false)
+    :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable), m_nulled(false), m_appliedEnables(nullptr)
 {
     zernikeProcess &zp = *zernikeProcess::get_Instance();
     values = std::vector<double>(zp.m_norms.size(), 0.);
@@ -46,6 +46,11 @@ void ZernTableModel::setValues(const std::vector<double> &vals, bool nulled){
     QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
     update();
     emit dataChanged(topLeft, bottomRight);
+}
+
+void ZernTableModel::setAppliedEnables(const std::vector<bool> *appliedEnables){
+    m_appliedEnables = appliedEnables;
+    update();
 }
 
 void ZernTableModel::update(){
@@ -103,13 +108,25 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole)
     {
         if (index.column() == 0){
+            QString marker;
+            if (m_appliedEnables != nullptr &&
+                index.row() < (int)m_appliedEnables->size() &&
+                index.row() < (int)m_enables->size()) {
+                const bool floatingEnabled = m_enables->at(index.row());
+                const bool appliedEnabled = m_appliedEnables->at(index.row());
+                if (floatingEnabled && !appliedEnabled) {
+                    marker = "[+] ";
+                } else if (!floatingEnabled && appliedEnabled) {
+                    marker = "[-] ";
+                }
+            }
             if (index.row() <= 48)
-                return zernsNames[index.row()];
+                return marker + zernsNames[index.row()];
             else {
                 int row = index.row();
                 int sr = floor(sqrt(row+1));
 
-                return (QString("%1 %2").arg(index.row()).arg(
+                return marker + (QString("%1 %2").arg(index.row()).arg(
                       ( sr * sr == index.row()+1)? "Spherical" : ""));
             }
         }
@@ -137,6 +154,18 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
             return m_enables->at(index.row()) ? Qt::Checked : Qt::Unchecked;
         }
     }
+    if (role == Qt::ToolTipRole && index.column() == 0 && m_appliedEnables != nullptr &&
+        index.row() < (int)m_appliedEnables->size() && index.row() < (int)m_enables->size()) {
+        const bool floatingEnabled = m_enables->at(index.row());
+        const bool appliedEnabled = m_appliedEnables->at(index.row());
+        if (floatingEnabled && !appliedEnabled) {
+            return QString("Will be enabled on recompute for this wavefront.");
+        }
+        if (!floatingEnabled && appliedEnabled) {
+            return QString("Will be disabled on recompute for this wavefront.");
+        }
+        return QString("No change for this wavefront on recompute.");
+    }
     return QVariant();
 }
 bool ZernTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
@@ -152,6 +181,7 @@ bool ZernTableModel::setData(const QModelIndex & index, const QVariant & value, 
     if (role == Qt::CheckStateRole){
         m_enables->at(index.row()) = value.toBool();
     }
+    emit dataChanged(this->index(index.row(), 0), this->index(index.row(), 1));
     return true;
 }
 

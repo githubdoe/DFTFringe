@@ -18,7 +18,7 @@
 #include "wavefront.h"
 
 wavefront::wavefront():
-    gaussian_diameter(0.),gbEnabled(false),gbValue(20.),wasSmoothed(false),useSANull(true),GBSmoothingValue(0.),m_origin(WavefrontOrigin::Unknown),m_manuallyInverted(false),dirtyZerns(true),regions_have_been_expanded(false)
+    zernEnablesApplied(),gaussian_diameter(0.),gbEnabled(false),gbValue(20.),wasSmoothed(false),useSANull(true),GBSmoothingValue(0.),m_origin(WavefrontOrigin::Unknown),m_manuallyInverted(false),dirtyZerns(true),regions_have_been_expanded(false)
 {
 }
 
@@ -40,6 +40,7 @@ wavefront::wavefront( const wavefront &wf):
     workData(wf.workData.clone()),
     workMask(wf.workMask.clone()),
     InputZerns(wf.InputZerns),
+    zernEnablesApplied(wf.zernEnablesApplied),
     gaussian_diameter(wf.gaussian_diameter),
     gbEnabled(wf.gbEnabled),
     gbValue(wf.gbValue),

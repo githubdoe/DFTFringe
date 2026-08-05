@@ -44,6 +44,7 @@ public:
     void resizeRows(const int rowCnt);
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     void setValues(const std::vector<double> &vals, bool nulled);
+    void setAppliedEnables(const std::vector<bool> *appliedEnables);
     bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
     Qt::ItemFlags flags(const QModelIndex & index) const ;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
@@ -56,6 +57,7 @@ signals:
 private:
     bool canEdit;
     bool m_nulled;
+    const std::vector<bool> *m_appliedEnables;
 
 };
 
