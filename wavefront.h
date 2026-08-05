@@ -49,6 +49,8 @@ public:
     cv::Mat_<uint8_t> workMask;
     std::vector<double> InputZerns;
     double gaussian_diameter;
+    bool gbEnabled;
+    double gbValue;
     bool wasSmoothed;
     bool useSANull;
     double GBSmoothingValue;
