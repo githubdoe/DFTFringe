@@ -2148,6 +2148,11 @@ void IgramArea::loadOutlineFile(const QString &fileName){
         m_innerP2 = m_center.m_p2;
         innerPcount = 2;
     }
+    else {
+        m_innerP1 = QPointF(0,0);
+        m_innerP2 = QPointF(0,0);
+        innerPcount = 0;
+    }
 
     const double filter = loadDoc["dft_filter_radius"].toDouble();
     emit dftCenterFilter(filter);
@@ -2209,9 +2214,18 @@ void IgramArea::loadOutlineFileOldV6(const QString &fileName){
             m_innerP2 = m_center.m_p2;
             innerPcount = 2;
         }
+        else {
+            m_center = CircleOutline(QPointF(0,0),0);
+            m_innerP1 = QPointF(0,0);
+            m_innerP2 = QPointF(0,0);
+            innerPcount = 0;
+        }
     }
     else {
-        m_center.m_radius = 0;
+        m_center = CircleOutline(QPointF(0,0),0);
+        m_innerP1 = QPointF(0,0);
+        m_innerP2 = QPointF(0,0);
+        innerPcount = 0;
     }
 
     std::string line;
