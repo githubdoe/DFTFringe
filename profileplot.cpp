@@ -331,6 +331,9 @@ void ProfilePlot::setSurface(wavefront * wf){
     m_waveFrontyOffsets.clear();
     populate();
     m_plot->replot();
+    // Re-emit the current angle so contour view redraws its dashed profile line
+    // after selecting a different wavefront.
+    emit profileAngleChanged(M_PI_2 - g_angle);
 }
 
 void ProfilePlot::setDefocusWaveFront( const cv::Mat_<double> &wf){
@@ -350,6 +353,7 @@ void ProfilePlot::setDefocusValue(double val){
 QPolygonF ProfilePlot::createAverageProfile(double /*umnits*/, wavefront * /*wf*/, bool /*removeNull = false*/){
     surfaceAnalysisTools *saTools = surfaceAnalysisTools::get_Instance();
     QList<int> list = saTools->SelectedWaveFronts();
+    const double baselineAngle = g_angle;
     QPolygonF avg;
     for (int indx = 0; indx < list.size(); ++indx){
 
@@ -381,6 +385,7 @@ QPolygonF ProfilePlot::createAverageProfile(double /*umnits*/, wavefront * /*wf*
             }
 
         }
+        g_angle = startAngle;
 
         // plot the average profile
         int i = 0;
@@ -406,6 +411,8 @@ QPolygonF ProfilePlot::createAverageProfile(double /*umnits*/, wavefront * /*wf*
 //        }
 //        avg = avg2;
 //    }
+
+    g_angle = baselineAngle;
 
     return avg;
 }
@@ -626,6 +633,8 @@ void ProfilePlot::populate()
 
     m_plot->detachItems(QwtPlotItem::Rtti_PlotItem);
     compass->setGeometry(QRect(80,80,70,70));
+    // Use compass as the source of truth when rebuilding profiles.
+    g_angle = compass->value() * DEGTORAD;
     QString tmp("nanometers");
     if (m_showNm == 1.)
         tmp = QString("waves of %1 nm").arg(outputLambda, 6, 'f', 1);
@@ -781,6 +790,8 @@ void ProfilePlot::populate()
                     cprofile->attach( m_plot );
                   }
               }
+              // Keep repeated redraws stable at the user-selected compass angle.
+              g_angle = startAngle;
             }
           if (m_showAvg){
               qDebug() << "inside avg" << y_offset;
