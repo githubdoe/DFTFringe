@@ -137,6 +137,7 @@ private:
     explicit mirrorDlg(QWidget *parent = 0);
     void setclearAp();
     void setEllipseControlsEnabled(bool enabled);
+    void enforceEllipseMajorAxis();
 
     Ui::mirrorDlg *ui;
     bool m_aperatureReductionValueChanged;

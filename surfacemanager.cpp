@@ -1407,6 +1407,13 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
 
         }
     }
+
+    if (md->isEllipse() && md->m_verticalAxis > md->diameter){
+        spdlog::get("logger")->info("Wavefront load ellipse axis clamp: vertical axis {} exceeded horizontal axis {}. Vertical axis was clamped to {}.",
+                                     md->m_verticalAxis, md->diameter, md->diameter);
+        md->setMinorAxis(md->diameter);
+    }
+
     wf->diameter = diam;
     wf->roc = roc;
     wf->lambda = lambda;

@@ -116,6 +116,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
     setEllipseControlsEnabled(m_outlineShape == ELLIPSE);
     ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
+    enforceEllipseMajorAxis();
     ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
     ui->obs->setText(QString("%1").arg(obs, 6, 'f', 2));
     ui->FNumber->blockSignals(false);
@@ -149,6 +150,21 @@ bool mirrorDlg::isEllipse(){
 void mirrorDlg::setEllipseControlsEnabled(bool enabled)
 {
     ui->minorAxisEdit->setEnabled(enabled);
+}
+
+void mirrorDlg::enforceEllipseMajorAxis()
+{
+    if (m_outlineShape != ELLIPSE || diameter <= 0)
+        return;
+
+    if (m_verticalAxis > diameter){
+        const double originalVerticalAxis = m_verticalAxis;
+        m_verticalAxis = diameter;
+        const QSignalBlocker blocker(ui->minorAxisEdit);
+        ui->minorAxisEdit->setText(QString::number(m_verticalAxis));
+        spdlog::get("logger")->info("Ellipse axis clamp applied: vertical axis {} exceeded horizontal axis {}. Vertical axis was clamped to {}.",
+                                     originalVerticalAxis, diameter, m_verticalAxis);
+    }
 }
 
 void mirrorDlg::saveJson(const QString &fileName){
@@ -297,6 +313,7 @@ void mirrorDlg::loadFile(QString & fileName){
         setEllipseControlsEnabled(m_outlineShape == ELLIPSE);
 
         ui->minorAxisEdit->setText(QString::number(m_verticalAxis));
+        enforceEllipseMajorAxis();
 
         FNumber = roc/(2. * diameter);
         ui->FNumber->blockSignals(true);
@@ -435,6 +452,7 @@ void mirrorDlg::loadFile(QString & fileName){
                 file.read(buf,8);
                 m_verticalAxis = *(double*)buf;
                 ui->minorAxisEdit->setText(QString::number(m_verticalAxis));
+                enforceEllipseMajorAxis();
             }
 
             FNumber = roc/(2. * diameter);
@@ -472,6 +490,7 @@ void mirrorDlg::on_diameter_textChanged(const QString &arg1) {
         ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
     }
     diameter = diam;
+    enforceEllipseMajorAxis();
     FNumber = roc/(2. * diameter);
     ui->FNumber->blockSignals(true);
     ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
@@ -492,6 +511,7 @@ void mirrorDlg::on_diameter_Changed(const double diam)
         ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
     }
     diameter = diam ;
+    enforceEllipseMajorAxis();
     FNumber = roc/(2. * diameter);
     ui->FNumber->blockSignals(true);
     const QSignalBlocker blocker(ui->diameter);
@@ -704,11 +724,13 @@ void mirrorDlg::on_minorAxisEdit_textChanged(const QString &arg1)
 {
 
     m_verticalAxis = arg1.toDouble();
+    enforceEllipseMajorAxis();
 }
 
 void mirrorDlg::setMinorAxis(double val){
     m_verticalAxis = val;
     ui->minorAxisEdit->setText(QString::number(val));
+    enforceEllipseMajorAxis();
     //on_minorAxisEdit_textChanged( QString::number(val));
 }
 
@@ -723,6 +745,7 @@ void mirrorDlg::on_ellipseShape_clicked(bool checked)
         m_verticalAxis = diameter;
         ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
     }
+    enforceEllipseMajorAxis();
 }
 
 
