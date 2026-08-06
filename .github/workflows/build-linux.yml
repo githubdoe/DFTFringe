@@ -23,12 +23,30 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: sudo apt update
-      - run: sudo apt install -y apt-utils build-essential wget qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev bear
+      # imagemagick/file/libfuse2 are only needed for the AppImage steps but are
+      # cheap to install everywhere. libqwt-qt5-* dropped: Qwt is built from
+      # source below and the distro Qt5 flavor was never linked against.
+      - run: sudo apt install -y apt-utils build-essential wget qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libopencv-core-dev libopencv-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev bear imagemagick file libfuse2
       - run: wget -O qwt-${{env.QWT_version}}.zip https://sourceforge.net/projects/qwt/files/qwt/${{env.QWT_version}}/qwt-${{env.QWT_version}}.zip/download?use_mirror=pilotfiber
       - run: 7z x qwt-${{env.QWT_version}}.zip
       - run: cd qwt-${{env.QWT_version}} ; /usr/lib/qt6/bin/qmake
       - run: cd qwt-${{env.QWT_version}} ; make -j4
       - run: cd qwt-${{env.QWT_version}} ; sudo make install
+
+      # ---- version string, mirrors build-windows.yml ----
+      - name: Put release name into a variable (pull request)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: echo "WORKFLOW_VERSION=${{github.event.pull_request.head.sha}}_${{github.event.pull_request.base.sha}}" >> $GITHUB_ENV
+      - name: Put release name into a variable (tag)
+        if: ${{ startsWith(github.event.ref, 'refs/tags/v') }}
+        run: echo "WORKFLOW_VERSION=${{github.ref_name}}" >> $GITHUB_ENV
+      - name: Put release name into a variable (single commit)
+        if: ${{ !startsWith(github.event.ref, 'refs/tags/v') && github.event_name != 'pull_request' }}
+        run: echo "WORKFLOW_VERSION=${{github.sha}}" >> $GITHUB_ENV
+      - name: Find and Replace MY_AUTOMATED_VERSION_STRING
+        run: sed -i "s/MY_AUTOMATED_VERSION_STRING/${{env.WORKFLOW_VERSION}}/" DFTFringe.pro
+
+      # ---- build (unchanged) ----
       - run: /usr/lib/qt6/bin/qmake DFTFringe.pro
       - uses: ammaraskar/gcc-problem-matcher@master
       - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
@@ -50,3 +68,74 @@ jobs:
           tidy-review: true
           passive-reviews: true
           ignore: 'bezier|boost|SingleApplication|spdlog|zernike|cnpy|moc_*|ui_*|qwt*'
+
+      # ---- bare build artifact, one per matrix OS ----
+      # tar first: upload-artifact zips files and would strip the executable bit.
+      # Note: the bare binary expects Qwt in /usr/local/qwt-6.3.0 (rpath) and the
+      # distro Qt6/OpenCV/Armadillo packages on the target machine.
+      - name: Pack bare build
+        run: tar -czf DFTFringe-bare-${{ matrix.os }}.tar.gz DFTFringe
+      - name: Upload bare build
+        uses: actions/upload-artifact@v7
+        with:
+          name: DFTFringe-bare-${{ matrix.os }}
+          path: DFTFringe-bare-${{ matrix.os }}.tar.gz
+          if-no-files-found: error
+
+      # ---- AppImage: only from the oldest matrix OS (lowest glibc baseline) ----
+      - name: Assemble AppDir
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp DFTFringe AppDir/usr/bin/
+          # Runtime data is resolved relative to applicationDirPath(), so it
+          # must sit next to the binary (see colormapviewerdlg.cpp, mainwindow.cpp)
+          cp -r ColorMaps AppDir/usr/bin/
+          mkdir -p AppDir/usr/bin/res
+          cp -r res/Help AppDir/usr/bin/res/
+          cp RevisionHistory.html AppDir/usr/bin/
+          # Icon: reuse the Windows .ico, keep the largest frame
+          convert res/surface_LeY_icon.ico ico_frame.png
+          cp "$(ls -S ico_frame*.png | head -n 1)" dftfringe.png
+          # Desktop entry (required by appimagetool)
+          cat > dftfringe.desktop << 'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=DFTFringe
+          Comment=Interferometry analysis for telescope mirror makers
+          Exec=DFTFringe
+          Icon=dftfringe
+          Categories=Science;Education;
+          Terminal=false
+          EOF
+      - name: Fetch linuxdeploy
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy-*.AppImage
+      - name: Build AppImage
+        if: matrix.os == 'ubuntu-22.04'
+        env:
+          QMAKE: /usr/lib/qt6/bin/qmake   # make the qt plugin pick Qt6, not Qt5
+          VERSION: ${{ env.WORKFLOW_VERSION }}  # used for the output filename
+        run: |
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir \
+            --desktop-file dftfringe.desktop \
+            --icon-file dftfringe.png \
+            --plugin qt \
+            --output appimage
+      - name: Smoke test AppImage
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          ./DFTFringe-*.AppImage --appimage-extract > /dev/null
+          ldd squashfs-root/usr/bin/DFTFringe | grep -v "not found"
+          ! ldd squashfs-root/usr/bin/DFTFringe | grep "not found"
+      - name: Upload AppImage
+        if: matrix.os == 'ubuntu-22.04'
+        uses: actions/upload-artifact@v7
+        with:
+          name: DFTFringe-linux-appimage
+          path: DFTFringe-*.AppImage
+          if-no-files-found: error
+
