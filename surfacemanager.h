@@ -106,7 +106,7 @@ public:
     int messageResult;
     void inspectWavefront();
 
-    cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask);
+    cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<uint8_t> mask);
 
     void average(QList<wavefront *> wfList);
     void subtractWavefronts();
