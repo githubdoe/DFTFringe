@@ -136,6 +136,7 @@ signals:
 private:
     explicit mirrorDlg(QWidget *parent = 0);
     void setclearAp();
+    void setEllipseControlsEnabled(bool enabled);
 
     Ui::mirrorDlg *ui;
     bool m_aperatureReductionValueChanged;

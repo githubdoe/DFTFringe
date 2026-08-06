@@ -114,6 +114,7 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     if (m_verticalAxis == 0)
         m_verticalAxis = diameter;
     ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
+    setEllipseControlsEnabled(m_outlineShape == ELLIPSE);
     ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
     ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
     ui->obs->setText(QString("%1").arg(obs, 6, 'f', 2));
@@ -144,6 +145,12 @@ double mirrorDlg::getMinorAxis(){
 bool mirrorDlg::isEllipse(){
     return m_outlineShape == ELLIPSE;
 }
+
+void mirrorDlg::setEllipseControlsEnabled(bool enabled)
+{
+    ui->minorAxisEdit->setEnabled(enabled);
+}
+
 void mirrorDlg::saveJson(const QString &fileName){
     QJsonObject jDoc, jMirror,jIgram, jEllipse, jAnnulus;
     jDoc["name"] = m_name;
@@ -211,6 +218,7 @@ void mirrorDlg::loadFile(QString & fileName){
 
     // clear ellipse in case this is an old config that does not have it.
     ui->ellipseShape->setChecked(false);
+    setEllipseControlsEnabled(false);
     m_outlineShape = CIRCLE;
     QFileInfo info(fileName);
     QSettings settings;
@@ -286,6 +294,7 @@ void mirrorDlg::loadFile(QString & fileName){
         ui->z8->setText(QString().number(z8));
 
         ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
+        setEllipseControlsEnabled(m_outlineShape == ELLIPSE);
 
         ui->minorAxisEdit->setText(QString::number(m_verticalAxis));
 
@@ -418,6 +427,7 @@ void mirrorDlg::loadFile(QString & fileName){
                 file.read(buf,4);
                 m_outlineShape = *(outlineShape*)buf;
                 ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
+                setEllipseControlsEnabled(m_outlineShape == ELLIPSE);
 
             }
             // vertical axis
@@ -706,6 +716,8 @@ void mirrorDlg::on_ellipseShape_clicked(bool checked)
 {
     if (checked) m_outlineShape = ELLIPSE;
     else m_outlineShape = CIRCLE;
+
+    setEllipseControlsEnabled(checked);
 
     if (m_verticalAxis == 0){
         m_verticalAxis = diameter;
