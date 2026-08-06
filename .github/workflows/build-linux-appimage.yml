@@ -12,28 +12,19 @@ env:
 
 jobs:
   build-appimage:
-    # ubuntu-22.04 = oldest hosted runner still available (glibc 2.35),
-    # which maximizes the range of distros the AppImage will run on.
-    # NOTE: GitHub starts deprecating ubuntu-22.04 on 2026-09-17 (removed 2027-04-17).
-    # When that lands, either accept the ubuntu-24.04 glibc baseline (2.39) or move
-    # this job into a `container: ubuntu:22.04` on a newer runner.
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v6
 
       - run: sudo apt update
-      # same list as build-linux.yml, plus imagemagick (icon conversion),
-      # libfuse2 (to run the linuxdeploy AppImages) and file (used by appimagetool)
       - run: sudo apt install -y apt-utils build-essential wget file imagemagick libfuse2 qt6-base-dev qt6-base-dev-tools qt6-declarative-dev qt6-multimedia-dev libqt6charts6-dev libqt6datavisualization6-dev libqt6svg6-dev libopencv-core-dev libopencv-dev libarmadillo-dev libgl1-mesa-dev libglu1-mesa-dev
 
-      # ---- Qwt 6.3.0 against Qt6, identical to build-linux.yml ----
       - run: wget -O qwt-${{env.QWT_version}}.zip https://sourceforge.net/projects/qwt/files/qwt/${{env.QWT_version}}/qwt-${{env.QWT_version}}.zip/download?use_mirror=pilotfiber
       - run: 7z x qwt-${{env.QWT_version}}.zip
       - run: cd qwt-${{env.QWT_version}} ; /usr/lib/qt6/bin/qmake
       - run: cd qwt-${{env.QWT_version}} ; make -j4
       - run: cd qwt-${{env.QWT_version}} ; sudo make install
 
-      # ---- version string, mirrors build-windows.yml ----
       - name: Put release name into a variable (pull request)
         if: ${{ github.event_name == 'pull_request' }}
         run: echo "WORKFLOW_VERSION=${{github.event.pull_request.head.sha}}_${{github.event.pull_request.base.sha}}" >> $GITHUB_ENV
@@ -46,17 +37,13 @@ jobs:
       - name: Find and Replace MY_AUTOMATED_VERSION_STRING
         run: sed -i "s/MY_AUTOMATED_VERSION_STRING/${{env.WORKFLOW_VERSION}}/" DFTFringe.pro
 
-      # ---- build the app ----
       - run: /usr/lib/qt6/bin/qmake DFTFringe.pro CONFIG+=release
       - run: make -j4
 
-      # ---- assemble the AppDir ----
       - name: Assemble AppDir
         run: |
           mkdir -p AppDir/usr/bin
           cp DFTFringe AppDir/usr/bin/
-          # Runtime data is resolved relative to applicationDirPath(), so it
-          # must sit next to the binary (see colormapviewerdlg.cpp, mainwindow.cpp)
           cp -r ColorMaps AppDir/usr/bin/
           mkdir -p AppDir/usr/bin/res
           cp -r res/Help AppDir/usr/bin/res/
@@ -76,7 +63,6 @@ jobs:
           Terminal=false
           EOF
 
-      # ---- bundle Qt + all shared libs and produce the AppImage ----
       - name: Fetch linuxdeploy
         run: |
           wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
@@ -93,8 +79,7 @@ jobs:
             --plugin qt \
             --output appimage
 
-      # ---- minimal smoke test: unpack and check the dynamic linker is happy ----
-      - name: Smoke test
+      - name: Extraction test
         run: |
           ./DFTFringe-*.AppImage --appimage-extract > /dev/null
           ldd squashfs-root/usr/bin/DFTFringe | grep -v "not found"
