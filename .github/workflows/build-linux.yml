@@ -46,7 +46,7 @@ jobs:
       - name: Find and Replace MY_AUTOMATED_VERSION_STRING
         run: sed -i "s/MY_AUTOMATED_VERSION_STRING/${{env.WORKFLOW_VERSION}}/" DFTFringe.pro
 
-      # ---- build (unchanged) ----
+      # ---- build ----
       - run: /usr/lib/qt6/bin/qmake DFTFringe.pro
       - uses: ammaraskar/gcc-problem-matcher@master
       - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
