@@ -46,88 +46,29 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     m_useAnnular = false;
     m_connectAnnulusToObs = false;
     ui->setupUi(this);
-    QSettings settings;
-    m_name = settings.value("config mirror name", "default").toString();
-    ui->name->setText(m_name);
-    doNull = settings.value("config doNull", true).toBool();
-    m_useAnnular = settings.value("md use annulus", false).toBool();
-    ui->useAnnulus->setChecked(m_useAnnular);
-    enableAnnular(m_useAnnular);
-    ui->annulusPercent->setValue(settings.value("md annulus percent",0.).toDouble() * 100   );
-
-    ui->nullCB->setChecked(doNull);
-    diameter = settings.value("config diameter", 200.).toDouble();
-    aperatureReduction = settings.value("config aperatureReduction", 0.).toDouble();
-    m_aperatureReductionEnabled = settings.value("configAperatureReductionChecked",false).toBool();
-
-    roc = settings.value("config roc", 2000.).toDouble();
-    FNumber = roc/(2. * diameter);
+    
+    // Initialize defaults only; loadDraftFromSettings() called in showEvent() populates UI
+    FNumber = 0.0;
     ui->FNumber->blockSignals(true);
     ui->roc->blockSignals(true);
     ui->lambda->blockSignals(true);
     ui->cc->blockSignals(true);
     ui->unitsCB->blockSignals(true);
     ui->fringeSpacingEdit->blockSignals(true);
-
-    if (!doNull){
-        ui->roc->hide();
-        ui->rocLab->hide();
-        ui->FNumber->hide();
-        ui->fnumberLab->hide();
-    }
-    else
-    {   ui->roc->show();
-        ui->rocLab->show();
-        ui->fnumberLab->show();
-        ui->FNumber->show();
-        ui->roc->setText(QString("%1").arg(roc, 6, 'f', 2));
-        ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
-    }
-    lambda = settings.value("config lambda", 640).toDouble();
-
-    ui->lambda->setText(QString("%1").arg(lambda, 6 ,'f' ,1));
-
-    obs = settings.value("config obstruction", 0.).toDouble();
-
-    cc = settings.value("config cc", -1.).toDouble();
-
-    ui->cc->setText(QString("%1").arg(cc, 6, 'f', 2));
-
-    ui->ReducApp->setChecked( m_aperatureReductionEnabled);
-    if (  m_aperatureReductionEnabled)
-        ui->reduceValue->setEnabled(true);
-
-    ui->reduceValue->setValue(aperatureReduction);
-
-
+    ui->minorAxisEdit->blockSignals(true);
+    
     ui->unitsCB->setChecked(mm);
-
-    ui->FNumber->blockSignals(false);
-    ui->flipH->setChecked((settings.value( "flipH", false).toBool()));
-    m_projectPath = settings.value("projectPath", "").toString();
-    fringeSpacing = settings.value("config fringe spacing", 1.).toDouble();
-
-    ui->fringeSpacingEdit->setText(QString("%1").arg(fringeSpacing, 6, 'f', 3));
-    ui->fringeSpacingEdit->blockSignals(false);
-    m_outlineShape = (outlineShape)settings.value("outlineShape", CIRCLE).toInt();
-    ui->minorAxisEdit->setText(QString::number(settings.value("ellipseMinorAxis", 50.).toDouble()));
     connect(&spacingChangeTimer, &QTimer::timeout, this, &mirrorDlg::spacingChangeTimeout);
-    if (m_verticalAxis == 0)
-        m_verticalAxis = diameter;
-    ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
-    ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
-    ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
-    ui->obs->setText(QString("%1").arg(obs, 6, 'f', 2));
+    
     ui->FNumber->blockSignals(false);
     ui->roc->blockSignals(false);
     ui->lambda->blockSignals(false);
     ui->cc->blockSignals(false);
     ui->unitsCB->blockSignals(false);
     ui->fringeSpacingEdit->blockSignals(false);
-    ui->ClearAp->setVisible( m_aperatureReductionEnabled);
-    ui->clearApLabel->setVisible( m_aperatureReductionEnabled);
+    ui->minorAxisEdit->blockSignals(false);
+    
     m_aperatureReductionValueChanged = false;
-    setclearAp();
 }
 
 mirrorDlg::~mirrorDlg()
@@ -238,8 +179,7 @@ void mirrorDlg::saveJson(const QString &fileName){
 }
 void mirrorDlg:: on_saveBtn_clicked()
 {
-    QSettings settings;
-    QString path = settings.value("mirrorConfigFile").toString();
+    QString path = m_draft.mirrorConfigFile;
     QString extensionTypes("config file (*.json)");
     QString fileName = QFileDialog::getSaveFileName(this,
                         tr("Save config file"), path,
@@ -256,9 +196,11 @@ void mirrorDlg:: on_saveBtn_clicked()
     }
     saveJson(fileName);
     QFileInfo info(fileName);
-    settings.setValue("mirrorConfigFile", fileName);
-    settings.setValue("projectPath", info.absolutePath());
-    m_projectPath = info.absolutePath();
+    
+    // Update draft with new file path, then persist via facade
+    m_draft.mirrorConfigFile = fileName;
+    m_draft.projectPath = info.absolutePath();
+    m_projectPath = m_draft.projectPath;
 }
 
 void mirrorDlg::loadFile(QString & fileName){
@@ -267,13 +209,16 @@ void mirrorDlg::loadFile(QString & fileName){
     ui->ellipseShape->setChecked(false);
     m_outlineShape = CIRCLE;
     QFileInfo info(fileName);
+    
+    // Only persist non-mirror-settings to QSettings (lastPath)
     QSettings settings;
-
     settings.setValue("lastPath", info.absolutePath());
+    
     emit newPath(info.absolutePath());
-    m_projectPath = info.absolutePath();
-    settings.setValue("mirrorConfigFile",fileName);
-    settings.setValue("lastPath", info.absolutePath());
+    
+    // Update draft with new file path and project path via facade
+    m_draft.projectPath = info.absolutePath();
+    m_draft.mirrorConfigFile = fileName;
 
 
     if (fileName.endsWith(".json")){
@@ -661,8 +606,9 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
      ui->annularDiameter->blockSignals(true);
      ui->annularDiameter->setValue(diameter * m_annularObsPercent * ((mm)? 1.: 1./25.4));
      ui->annularDiameter->blockSignals(false);
-     QSettings set;
-     aperatureReduction = set.value("config aperatureReduction",0.).toDouble();
+     
+     // Get aperatureReduction from draft (already loaded from persistent storage)
+     aperatureReduction = m_draft.apertureReduction;
 
      ui->reduceValue->setValue(aperatureReduction * ((mm) ? 1. : 1./25.4));
      ui->reduceValue->blockSignals(false);
