@@ -32,6 +32,8 @@ class mirrorDlg : public QDialog
     Q_OBJECT
 
 public:
+    //TODO if we get rid of the singleton design, settings are read from settingsFacade instead here
+    // check if it makes sense
     static mirrorDlg *get_Instance();
     ~mirrorDlg();
     mirrorDlg(const mirrorDlg&) = delete;
@@ -65,31 +67,17 @@ public:
     void setOutlineShape(outlineShape shape);
     void setObsPercent(double obs);
     
-    /** @brief Access current mirror settings (read-only snapshot).
-     *  Returns the draft which is the canonical storage for all mirror config.
-     *  All internal member variables are kept in sync with this. */
-    const MirrorSettings& currentSettings() const { return m_draft; }
+    /** @brief Access current mirror settings.
+     *  Returns the persistent copy - the last saved state.
+     *  External code reads this as source of truth. */
+    const MirrorSettings& currentSettings() const { return m_current; }
     
 private:
-    // Configuration members (access via currentSettings() or setters)
-    QString m_name;
-    double diameter;
-    double roc;
-    double obs; // obstruction
-    double cc;
-    bool doNull;
-    double lambda;
-    double fringeSpacing;
-    bool flipv;
-    bool fliph;
-    bool m_useAnnular;
-    bool m_connectAnnulusToObs;
-    double m_annularObsPercent; // a value from 0 to 1 (not 0 to 100)
-    double m_clearAperature;
-    double aperatureReduction;
-    bool m_aperatureReductionEnabled;
-    double m_verticalAxis;
-    outlineShape m_outlineShape;
+    // Persistent mirror configuration copy (source of truth for external code)
+    MirrorSettings m_current;
+    
+    // Working copy for dialog edits (discarded on Cancel, committed to m_current on OK)
+    MirrorSettings m_draft;
     
 private slots:
     void on_ReadBtn_clicked();
@@ -141,6 +129,8 @@ private slots:
     void on_btnChangeAutoInvert_clicked();
 
 signals:
+    // TODO some of these are not used. 
+    // also notify shoud probably only happen when OK is clicked, not on every change.
     void diameterChanged(double);
     void rocChanged(double);
     void lambdaChanged(double);
@@ -152,8 +142,7 @@ signals:
     void aperatureChanged();
 
 protected:
-    /** @brief Reload draft settings before dialog becomes visible.
-     *  Ensures Cancel always reverts to the last-saved state (issue #121). */
+    /** @brief Reload settings before dialog becomes visible. */
     void showEvent(QShowEvent *event) override;
 
 private:
@@ -170,10 +159,6 @@ private:
     void saveJson(const QString &fileName);
     void enableAnnular(bool enable);
     
-    /** @brief Working copy of mirror settings during dialog edit.
-     *  All UI modifications update this draft. On OK, it persists via facade.
-     *  On Cancel, it's discarded, leaving member variables unchanged. */
-    MirrorSettings m_draft;
 };
 
 #endif // MIRRORDLG_H
