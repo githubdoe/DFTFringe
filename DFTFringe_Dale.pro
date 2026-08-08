@@ -141,6 +141,8 @@ SOURCES += main.cpp \
     outlinedialog.cpp \
     psitiltoptions.cpp \
     contourrulerparams.cpp \
+    settingsfacade.cpp \
+    settingsstores.cpp \
     zernikesmoothingdlg.cpp \
     zernike/zapm.cpp \
     SingleApplication/singleapplication.cpp \
@@ -262,6 +264,8 @@ HEADERS  += mainwindow.h \
     outlinedialog.h \
     psitiltoptions.h \
     contourrulerparams.h \
+    settingsfacade.h \
+    settingsstores.h \
     zernikesmoothingdlg.h \
     bezier/bezier.h \
     zernike/zapm_interface.h \
@@ -498,6 +502,7 @@ DISTFILES += \
     COPYING.txt \
     RevisionHistory.html \
     README.md \
+    settingsstores_fields.inc
 
 
     TRANSLATIONS    = dftfringe_fr.ts
