@@ -19,6 +19,7 @@
 #include "ui_mirrordlg.h"
 #include "spdlog/spdlog.h"
 #include <QtGui>
+#include <QShowEvent>
 #include <QFileDialog>
 #include <iostream>
 #include <fstream>
@@ -134,6 +135,59 @@ mirrorDlg::~mirrorDlg()
     spdlog::get("logger")->trace("mirrorDlg::~mirrorDlg");
     delete ui;
 }
+
+void mirrorDlg::loadDraftFromSettings()
+{
+    // Load mirror settings from persistent storage via facade into working draft.
+    // This ensures every dialog open/show starts with the last-saved state.
+    m_draft = SettingsFacade::instance().mirrorStore().load();
+    
+    // Sync public member variables with draft for backward compatibility.
+    m_name = m_draft.mirrorName;
+    diameter = m_draft.diameter;
+    roc = m_draft.roc;
+    obs = m_draft.obstruction;
+    cc = m_draft.cc;
+    lambda = m_draft.lambda;
+    fringeSpacing = m_draft.fringeSpacing;
+    fliph = m_draft.flipH;
+    doNull = m_draft.doNull;
+    m_useAnnular = m_draft.useAnnulus;
+    m_annularObsPercent = m_draft.annulusPercent;
+    m_connectAnnulusToObs = m_draft.annulusToObstruction;
+    m_outlineShape = (outlineShape)m_draft.outlineShape;
+    m_verticalAxis = m_draft.ellipseMinorAxis;
+    aperatureReduction = m_draft.apertureReduction;
+    m_aperatureReductionEnabled = m_draft.apertureReductionEnabled;
+    m_projectPath = m_draft.projectPath;
+}
+
+void mirrorDlg::showEvent(QShowEvent *event)
+{
+    // Reload draft from persistent settings before dialog becomes visible.
+    // This ensures Cancel always reverts to the last-saved state.
+    loadDraftFromSettings();
+    
+    // Sync UI with reloaded draft values
+    ui->name->setText(m_draft.mirrorName);
+    ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
+    ui->roc->setText(QString("%1").arg(roc, 6, 'f', 2));
+    ui->obs->setText(QString("%1").arg(obs, 6, 'f', 2));
+    ui->lambda->setText(QString("%1").arg(lambda, 6, 'f', 1));
+    ui->cc->setText(QString("%1").arg(cc, 6, 'f', 2));
+    ui->flipH->setChecked(m_draft.flipH);
+    ui->nullCB->setChecked(m_draft.doNull);
+    ui->fringeSpacingEdit->setText(QString("%1").arg(fringeSpacing, 6, 'f', 3));
+    ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
+    ui->minorAxisEdit->setText(QString::number(m_verticalAxis));
+    ui->ReducApp->setChecked(m_aperatureReductionEnabled);
+    ui->reduceValue->setValue(aperatureReduction);
+    ui->useAnnulus->setChecked(m_useAnnular);
+    ui->annulusPercent->setValue(m_annularObsPercent * 100);
+    
+    QDialog::showEvent(event);
+}
+
 bool mirrorDlg::shouldFlipH(){
     return ui->flipH->isChecked();
 }
@@ -617,7 +671,6 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
 
 void mirrorDlg::on_buttonBox_accepted()
 {
-    QSettings settings;
     setclearAp();
     updateZ8();
 
@@ -627,32 +680,32 @@ void mirrorDlg::on_buttonBox_accepted()
         updateAutoInvertStatus();
     }
 
-    settings.setValue("config mirror name", ui->name->text());
-    settings.setValue("config roc", roc);
-    settings.setValue("config lambda",lambda);
-    settings.setValue("config diameter",diameter);
-    settings.setValue("config obstruction", obs);
-    settings.setValue("config cc", cc);
-    settings.setValue("flipH", ui->flipH->isChecked());
-    settings.setValue("md Annulus to obs", m_useAnnular);
+    // Update draft with current UI values
+    m_draft.mirrorName = ui->name->text();
+    m_draft.diameter = diameter;
+    m_draft.roc = roc;
+    m_draft.obstruction = obs;
+    m_draft.cc = cc;
+    m_draft.lambda = lambda;
+    m_draft.fringeSpacing = ui->fringeSpacingEdit->text().toDouble();
+    m_draft.flipH = ui->flipH->isChecked();
+    m_draft.doNull = doNull;
+    m_draft.useAnnulus = m_useAnnular;
+    m_draft.annulusPercent = m_annularObsPercent;
+    m_draft.annulusToObstruction = m_connectAnnulusToObs;
+    m_draft.outlineShape = (int)m_outlineShape;
+    m_draft.ellipseMinorAxis = m_verticalAxis;
+    m_draft.apertureReductionEnabled = m_aperatureReductionEnabled;
+    m_draft.apertureReduction = aperatureReduction;
+    m_draft.projectPath = m_projectPath;
+    
+    // Persist draft to QSettings via facade (single atomic save)
+    SettingsFacade::instance().mirrorStore().save(m_draft);
 
-    settings.setValue("outlineShape", m_outlineShape);
-    fringeSpacing = ui->fringeSpacingEdit->text().toDouble();
-    settings.setValue("config fringe spacing", fringeSpacing);
-    //settings.setValue("config unitsMM", mm);
-    settings.setValue("config doNull",doNull);
-    settings.setValue("outlineShape",(int)m_outlineShape);
-    settings.setValue("ellipseMinorAxis",m_verticalAxis);
-    settings.setValue("configAperatureReductionChecked", m_aperatureReductionEnabled);
-    settings.setValue("config aperatureReduction", aperatureReduction);
-    settings.setValue("md annulus percent",  m_annularObsPercent);
-    settings.setValue("md use annulus", m_useAnnular);
     if (m_obsChanged)
-
         emit obstructionChanged();
     emit recomputeZerns();
     if (m_aperatureReductionValueChanged){
-
         QMessageBox::warning(0, tr("Aperature Reduction value was  changed."),
                              tr("Aperature Reduction was changed.\n"
                                 "The wave front will not be correct until it is recomputed from the interferogram."));

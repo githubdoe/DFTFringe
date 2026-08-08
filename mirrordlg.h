@@ -21,6 +21,7 @@
 #include <QDialog>
 #include <QTimer>
 #include "autoinvertdlg.h"
+#include "settingsfacade.h"
 
 namespace Ui {
 class mirrorDlg;
@@ -133,15 +134,29 @@ signals:
     void recomputeZerns();
     void aperatureChanged();
 
+protected:
+    /** @brief Reload draft settings before dialog becomes visible.
+     *  Ensures Cancel always reverts to the last-saved state (issue #121). */
+    void showEvent(QShowEvent *event) override;
+
 private:
     explicit mirrorDlg(QWidget *parent = 0);
     void setclearAp();
+    
+    /** @brief Load draft from persistent settings before dialog is shown.
+     *  Ensures Cancel always reverts to the last saved state. */
+    void loadDraftFromSettings();
 
     Ui::mirrorDlg *ui;
     bool m_aperatureReductionValueChanged;
     QTimer spacingChangeTimer;
     void saveJson(const QString &fileName);
     void enableAnnular(bool enable);
+    
+    /** @brief Working copy of mirror settings during dialog edit.
+     *  All UI modifications update this draft. On OK, it persists via facade.
+     *  On Cancel, it's discarded, leaving member variables unchanged. */
+    MirrorSettings m_draft;
 };
 
 #endif // MIRRORDLG_H
