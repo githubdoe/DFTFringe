@@ -186,7 +186,7 @@ simIgramDlg::simIgramDlg(QWidget *parent) :
     zernikes[2] = ytilt;
     size = s.value("simSize", 601).toDouble();
     ui->sizeSB->setValue(size);
-    if (mirrorDlg::get_Instance()->cc == 0.){
+    if (mirrorDlg::get_Instance()->currentSettings().cc == 0.){
         ui->correctionPb->setChecked(false);
     }
 
@@ -325,8 +325,8 @@ void simIgramDlg::on_editArbitrary_clicked()
 {
     UserDrawnProfileDlg * dlg = UserDrawnProfileDlg::get_instance();
     mirrorDlg* md = mirrorDlg::get_Instance();
-    if (md->diameter>0)
-        dlg->setDiameter(md->diameter);
+    if (md->currentSettings().diameter>0)
+        dlg->setDiameter(md->currentSettings().diameter);
     dlg->setModal(true);
     dlg->exec();
     if (dlg->bOkPressed == false)

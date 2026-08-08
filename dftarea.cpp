@@ -1032,8 +1032,8 @@ void DFTArea::makeSurface(){
 
     mirrorDlg *md = mirrorDlg::get_Instance();
 
-    if (md->fringeSpacing != 1.){
-        result *= md->fringeSpacing;
+    if (md->currentSettings().fringeSpacing != 1.){
+        result *= md->currentSettings().fringeSpacing;
     }
 
     if (md->isEllipse()) {

@@ -269,9 +269,9 @@ void statsView::on_SaveCSV_clicked()
             double v = wf->InputZerns[ndx];
 
             // apply software Null if needed
-            if (ndx == 8 and md->doNull)
-                v -= md->z8 * md->cc;
-            double Sigma = computeRMS(ndx,v) * md->lambda/outputLambda;
+            if (ndx == 8 and md->currentSettings().doNull)
+                v -= md->currentSettings().z8 * md->currentSettings().cc;
+            double Sigma = computeRMS(ndx,v) * md->currentSettings().lambda/outputLambda;
 
             if (ndx == 8) {
                 spherical << QPointF(row,Sigma);
@@ -279,7 +279,7 @@ void statsView::on_SaveCSV_clicked()
                 sphericaRunningAvg << QPointF(row,sperAvg/(i+1));
             }
 
-            mZerns.at<double>(row,ndx) =  Sigma * md->lambda/outputLambda;
+            mZerns.at<double>(row,ndx) =  Sigma * md->currentSettings().lambda/outputLambda;
 
         }
 

@@ -139,10 +139,10 @@ void wftStats::computeZernStats( int ndx){
         for (int i = 0; i < c.rows; ++i){
 
             int row = (i + ndx) % c.rows;
-            double v = computeRMS(ndx,c.at<double>(row)) * outputLambda/md->lambda;
+            double v = computeRMS(ndx,c.at<double>(row)) * outputLambda/md->currentSettings().lambda;
             if (isPair){
                 cv::Mat c2 = m_Zerns.col(zern+1);
-                double v2 = computeRMS(ndx,c2.at<double>(row)) * outputLambda/md->lambda;
+                double v2 = computeRMS(ndx,c2.at<double>(row)) * outputLambda/md->currentSettings().lambda;
                 double s = sqrt(v * v + v2 * v2);
                 v = s;
                 zname += " ";
@@ -214,9 +214,9 @@ void wftStats::computeWftStats( QVector<wavefront*> wavefronts, int ndx){
             double v = wf->InputZerns[ndx];
 
             // apply software Null if needed
-            if (ndx == 8 and md->doNull)
-                v -= md->z8 * md->cc;
-            double Sigma = computeRMS(ndx,v) * outputLambda/md->lambda;
+            if (ndx == 8 and md->currentSettings().doNull)
+                v -= md->currentSettings().z8 * md->currentSettings().cc;
+            double Sigma = computeRMS(ndx,v) * outputLambda/md->currentSettings().lambda;
 
             if (ndx == 8) {
                 spherical << QPointF(row,Sigma);
@@ -294,9 +294,9 @@ void wftStats::computeWftRunningAvg( QVector<wavefront*> wavefronts, int ndx){
         cv::Mat avg = sum/(j+1);
         cv::Scalar mean,std;
         cv::meanStdDev(resized,mean,std,mask);
-        double stdi = std.val[0]* md->lambda/outputLambda;
+        double stdi = std.val[0]* md->currentSettings().lambda/outputLambda;
         cv::meanStdDev(avg,mean,std,mask);
-        avgPoints << QPointF(j,std.val[0] * md->lambda/outputLambda);
+        avgPoints << QPointF(j,std.val[0] * md->currentSettings().lambda/outputLambda);
         wftPoints << QPointF(j,stdi);
         trueNdx << i;
     }

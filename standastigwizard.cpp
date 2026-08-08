@@ -192,7 +192,7 @@ define_input::define_input(QWidget *parent)
     browsePb = new QPushButton("Add average Wavefront file to List");
     QString pdfNameStr = set.value("stand pdf file", "stand.pdf").toString();
     connect(browsePb, &QAbstractButton::pressed, this, &define_input::browse);
-    AstigReportTitle = mirrorDlg::get_Instance()->m_name;
+    AstigReportTitle = mirrorDlg::get_Instance()->currentSettings().mirrorName;
     AstigReportPdfName = mirrorDlg::get_Instance()->getProjectPath() + "/" + pdfNameStr;
     title = new QLineEdit(AstigReportTitle);
     pdfName = new QPushButton(AstigReportPdfName);

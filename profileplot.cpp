@@ -526,7 +526,7 @@ void ProfilePlot::make_correction_graph(){
         QColor penColor = Settings2::m_profile->getColor(i);
         // give the plot routine new zernike values for each curve.
         mirrorDlg *md = mirrorDlg::get_Instance();
-        surfs << new surfaceData( md->lambda, penColor, theZerns ,name);
+        surfs << new surfaceData( md->currentSettings().lambda, penColor, theZerns ,name);
 
     }
     QPolygonF avg = createAverageProfile(1., wfs->at(list[0]),true);
@@ -1170,11 +1170,11 @@ void ProfilePlot::CreateWaveFrontFromAverage(){
     //create a matrix from the avgRadius profile.
     mirrorDlg *md = mirrorDlg::get_Instance();
     // first add the null back into it.
-    if (md->doNull){
+    if (md->currentSettings().doNull){
         for (unsigned int i = 0; i < avgRadius.size(); ++i) {
             double R2 = (double(i))/(avgRadius.size() -1);
             R2 *= R2;
-            avgRadius[i] += md->z8 * md->cc * (1. + R2 * (-6 + 6. * R2));;
+            avgRadius[i] += md->currentSettings().z8 * md->currentSettings().cc * (1. + R2 * (-6 + 6. * R2));;
         }
     }
     cv::Mat result = createInterpolatedCircularSurface(avgRadius);

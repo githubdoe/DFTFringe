@@ -592,16 +592,16 @@ void MainWindow::updateMetrics(wavefront& wf){
     metrics->setZernTitle(ztitle);
     double z8 = zernTablemodel->values[8];
     double BestSC;
-    if (m_mirrorDlg->doNull && wf.useSANull){
+    if (m_mirrorDlg->currentSettings().doNull && wf.useSANull){
         BestSC = z8/m_mirrorDlg->z8;
     }
     else {
-        BestSC = m_mirrorDlg->cc +z8/m_mirrorDlg->z8;
+        BestSC = m_mirrorDlg->currentSettings().cc +z8/m_mirrorDlg->z8;
     }
     metrics->setOutputLambda(outputLambda);
 
-    metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing, m_mirrorDlg->lambda);
-    if (m_mirrorDlg->doNull)
+    metrics->setWavePerFringe(m_mirrorDlg->currentSettings().fringeSpacing, m_mirrorDlg->currentSettings().lambda);
+    if (m_mirrorDlg->currentSettings().doNull)
         metrics->mCC->setText(QString("<FONT FONT SIZE = 7>%1").arg(BestSC, 6 ,'f', 3));
     else {
         metrics->mCC->setText("NA");

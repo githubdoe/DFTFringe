@@ -396,7 +396,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
                 QGuiApplication::setOverrideCursor(QCursor(Qt::ArrowCursor));
                 autoInvertDlg dlg_ai;
                 dlg_ai.setMainLabel("Your wavefront may be inverted.  What do you want to do?");
-                dlg_ai.enableConic(md->cc != 0);
+                dlg_ai.enableConic(md->currentSettings().cc != 0);
                 dlg_ai.exec();
                 QGuiApplication::restoreOverrideCursor();
                 md->updateAutoInvertStatus();
@@ -404,7 +404,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             bool reverse = false;
             if (m_inverseMode == invCONIC)
             {
-                if (md->cc != 0.0 && md->cc * wf->InputZerns[8] < 0.)
+                if (md->currentSettings().cc != 0.0 && md->currentSettings().cc * wf->InputZerns[8] < 0.)
                     reverse = true;
             } else if (m_inverseMode == invINSIDE)
             {
@@ -500,8 +500,8 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
                     }
                     else {
                         if (en[z]){
-                            if (z == 8 && md->doNull)
-                                S1 +=    md->z8 * zpolar.zernike(z);
+                            if (z == 8 && md->currentSettings().doNull)
+                                S1 +=    md->currentSettings().z8 * zpolar.zernike(z);
 
                             S1 += zerns[z] * zpolar.zernike(z);
                         }
@@ -800,7 +800,7 @@ void SurfaceManager::useDemoWaveFront(){
 
             if (rho <= 1.)
             {
-                double S1 = md->z8 * -.9 * zpolar.zernike(8) + .02* zpolar.zernike(9);
+                double S1 = md->currentSettings().z8 * -.9 * zpolar.zernike(8) + .02* zpolar.zernike(9);
 
                 result.at<double>(j,i) = S1;
             }
@@ -856,7 +856,7 @@ void SurfaceManager::surfaceSmoothGBValue(double value){
     m_gbValue = value;
     mirrorDlg *md = mirrorDlg::get_Instance();
 
-    m_surfaceTools->setBlurText(QString("%1 mm").arg( .01 * value * md->diameter, 6, 'f', 2));
+    m_surfaceTools->setBlurText(QString("%1 mm").arg( .01 * value * md->currentSettings().diameter, 6, 'f', 2));
     if (m_wavefronts.size() == 0)
         return;
 
@@ -878,7 +878,7 @@ void SurfaceManager::surfaceSmoothGBEnabled(bool b){
         rad = m_wavefronts[m_currentNdx]->m_outside.m_radius-1;
 
     mirrorDlg *md = ((MainWindow*)parent())->m_mirrorDlg;
-    double mmPerPixel = md->diameter/(2 * rad);
+    double mmPerPixel = md->currentSettings().diameter/(2 * rad);
     m_surfaceTools->setBlurText(QString("%1 mm").arg(m_gbValue* mmPerPixel, 6, 'f', 2));
     if (m_wavefronts.size() == 0)
         return;
@@ -890,16 +890,16 @@ void SurfaceManager::computeMetrics(wavefront *wf){
     mirrorDlg *md = mirrorDlg::get_Instance();
     cv::Scalar mean,std;
     cv::meanStdDev(wf->workData,mean,std,wf->workMask);
-    wf->mean = mean.val[0] * md->lambda/outputLambda;
-    wf->std = std.val[0]* md->lambda/outputLambda;
+    wf->mean = mean.val[0] * md->currentSettings().lambda/outputLambda;
+    wf->std = std.val[0]* md->currentSettings().lambda/outputLambda;
 
     double mmin;
     double mmax;
 
     minMaxIdx(wf->workData, &mmin,&mmax);
 
-    wf->min = mmin * md->lambda/outputLambda;
-    wf->max = mmax * md->lambda/outputLambda;
+    wf->min = mmin * md->currentSettings().lambda/outputLambda;
+    wf->max = mmax * md->currentSettings().lambda/outputLambda;
 
 
     ((MainWindow*)(parent()))->zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
@@ -1118,9 +1118,9 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     wf->m_inside = center;
     wf->data = phase;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    wf->diameter = md->diameter;
-    wf->lambda = md->lambda;
-    wf->roc = md->roc;
+    wf->diameter = md->currentSettings().diameter;
+    wf->lambda = md->currentSettings().lambda;
+    wf->roc = md->currentSettings().roc;
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
     wf->regions = polyArea;
@@ -1137,9 +1137,9 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
 wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     mirrorDlg *md = mirrorDlg::get_Instance();
     double xm,ym,radm;
-    double  roc = md->roc,
-            lambda = md->lambda,
-            diam = md->diameter;
+    double  roc = md->currentSettings().roc,
+            lambda = md->currentSettings().lambda,
+            diam = md->currentSettings().diameter;
 
     double xo, yo, rado;
     wavefront *wf = new wavefront();
@@ -1326,11 +1326,11 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     wf->m_inside = CircleOutline(QPointF(xo,yo), rado);
 
 
-    if (lambda != md->lambda){
+    if (lambda != md->currentSettings().lambda){
         if (lambdResp == ASK){
             QString message("The interferogram wavelength (");
             message += QString("%1").arg( lambda, 6, 'f', 3) +
-                    ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->lambda, 6, 'f', 3) +
+                    ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->currentSettings().lambda, 6, 'f', 3) +
                     "Do you want to make the config match?";
 
 
@@ -1352,11 +1352,11 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         }
     }
 
-    if (roundl(diam * 10) != roundl(md->diameter* 10))
+    if (roundl(diam * 10) != roundl(md->currentSettings().diameter* 10))
     {
         QString message("The mirror diameter (");
         message += QString("%1").arg(diam, 6, 'f', 3) +
-                ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->diameter, 6, 'f', 3) +
+                ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->currentSettings().diameter, 6, 'f', 3) +
                 "Do you want to make the config match?";
         if (diamResp == ASK){
             int resp = QMessageBox(QMessageBox::Information,"config", message,QMessageBox::Yes|QMessageBox::No |
@@ -1375,16 +1375,16 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             emit diameterChanged(diam);
         }
         else {
-            diam = md->diameter;
+            diam = md->currentSettings().diameter;
         }
 
     }
 
-    if (roundl(roc * 10.) != roundl(md->roc * 10.))
+    if (roundl(roc * 10.) != roundl(md->currentSettings().roc * 10.))
     {
         QString message("The mirror roc (");
         message += QString("%1").arg(roc, 6, 'f', 3) +
-                ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->roc, 6, 'f', 3) +
+                ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->currentSettings().roc, 6, 'f', 3) +
                 "Do you want to make the config match?";
         //qDebug() << message;
         if (rocResp == ASK){
@@ -1404,7 +1404,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             emit rocChanged(roc);
         }
         else {
-            roc = md->roc;
+            roc = md->currentSettings().roc;
 
         }
     }
@@ -3009,9 +3009,9 @@ void SurfaceManager::report(){
                   + QDate::currentDate().toString() +
                   " " +QTime::currentTime().toString()+"<br>DFTFringe Version:"+APP_VERSION+"</td></tr></table>");
 
-    QString Diameter = (md->isEllipse()) ? " Horizontal Axis: " : " Diameter: " +QString().number(md->diameter,'f',1) ;
-    QString ROC = (md->isEllipse()) ? "Vertical Axis: " + QString().number(md->m_verticalAxis) : "ROC: " +  QString().number(md->roc,'f',1);
-    QString FNumber = (md->isEllipse()) ? "" : "Fnumber: " + QString().number(md->FNumber,'f',1);
+    QString Diameter = (md->isEllipse()) ? " Horizontal Axis: " : " Diameter: " +QString().number(md->currentSettings().diameter,'f',1) ;
+    QString ROC = (md->isEllipse()) ? "Vertical Axis: " + QString().number(md->currentSettings().ellipseMinorAxis) : "ROC: " +  QString().number(md->currentSettings().roc,'f',1);
+    QString FNumber = (md->isEllipse()) ? "" : "Fnumber: " + QString().number(md->currentSettings().roc/(2.0*md->currentSettings().diameter),'f',1);
     QString BFC = (md->isEllipse()) ? " Flat" : "Best Fit CC: " +metrics->mCC->text();
     QString html = "<p style=\'font-size: 2em'>"
             "<table border='1' width = '100%'><tr><td>" + Diameter + " mm</td><td>" + ROC + " mm</td>"
@@ -3019,9 +3019,9 @@ void SurfaceManager::report(){
             "<tr><td> RMS: " + QString().number(wf->std,'f',3) +
                 QString(" waves at %1 nm</td><td>Strehl: ").arg(outputLambda, 6, 'f', 1) + metrics->mStrehl->text() +
             "</td><td>" + BFC + "</td></tr>"
-            "<tr><td>" + ((md->isEllipse()) ? "":"Desired Conic: " + QString::number(md->cc)) + "</td><td>" +
-            ((md->doNull) ? QString("SANull: %1").arg(md->z8 * md->cc, 6, 'f', 4) : "No software Null") + "</td>"
-            "<td>Waves per fringe: " + QString::number(md->fringeSpacing) + "<br>Interferogram Wave length: "+ QString::number(md->lambda) + "nm</td></tr>"
+            "<tr><td>" + ((md->isEllipse()) ? "":"Desired Conic: " + QString::number(md->currentSettings().cc)) + "</td><td>" +
+            ((md->currentSettings().doNull) ? QString("SANull: %1").arg(md->currentSettings().z8 * md->currentSettings().cc, 6, 'f', 4) : "No software Null") + "</td>"
+            "<td>Waves per fringe: " + QString::number(md->currentSettings().fringeSpacing) + "<br>Interferogram Wave length: "+ QString::number(md->currentSettings().lambda) + "nm</td></tr>"
             "</table></p>";
 
     // zerenike values
@@ -3029,8 +3029,8 @@ void SurfaceManager::report(){
     if (!md->isEllipse()){
         zerns = "<p><br><table width='100%' border = '1'>"
                 "<tr><th colspan = '2'><h2>" +
-                ((!md->m_useAnnular) ? QString("Zernike Values at interferogram wavelength") :
-                 QString("Annular Zernike Values %1\% center hole").arg(100 * md->m_annularObsPercent, 6,'f',2))+
+                ((!md->currentSettings().useAnnulus) ? QString("Zernike Values at interferogram wavelength") :
+                 QString("Annular Zernike Values %1\% center hole").arg(100 * md->currentSettings().annulusPercent, 6,'f',2))+
                 "</h2></th></tr>"
                 "<tr><td><table  border='1' width='40%'>";
         zerns.append("<tr><th>Term</th><td><table width = '100%'><tr><th>Wyant</th><th>RMS</th></tr></table></td></tr>");
@@ -3042,8 +3042,8 @@ void SurfaceManager::report(){
                 val = m_surfaceTools->m_defocus;
                 enabled = true;
             }
-            if ( i == 8 && md->doNull){
-                val -= md->z8 * md->cc;
+            if ( i == 8 && md->currentSettings().doNull){
+                val -= md->currentSettings().z8 * md->currentSettings().cc;
             }
 
 

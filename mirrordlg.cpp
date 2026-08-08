@@ -137,7 +137,7 @@ double mirrorDlg::getMinorAxis(){
 }
 
 bool mirrorDlg::isEllipse(){
-    return m_outlineShape == ELLIPSE;
+    return m_draft.outlineShape == ELLIPSE;
 }
 void mirrorDlg::saveJson(const QString &fileName){
     QJsonObject jDoc, jMirror,jIgram, jEllipse, jAnnulus;
@@ -449,7 +449,7 @@ void mirrorDlg::on_ReadBtn_clicked()
     loadFile(fileName);
 }
 QString mirrorDlg::getProjectPath(){
-    return m_projectPath;
+    return m_draft.projectPath;
 }
 
 void mirrorDlg::on_diameter_textChanged(const QString &arg1) {

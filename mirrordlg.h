@@ -74,6 +74,12 @@ public:
     void setMinorAxis(double val);
     bool m_aperatureReductionEnabled;
     void setObsPercent(double obs);
+    
+    /** @brief Access current mirror settings (read-only snapshot).
+     *  Returns the draft which is the canonical storage for all mirror config.
+     *  All member variables are kept in sync with this for backward compatibility. */
+    const MirrorSettings& currentSettings() const { return m_draft; }
+    
 private slots:
     void on_ReadBtn_clicked();
 

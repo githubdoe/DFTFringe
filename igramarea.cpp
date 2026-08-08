@@ -883,7 +883,7 @@ void IgramArea::useAnnulusforCenterOutine(){
     if (m_current_boundry == CenterOutline) {
 
             mirrorDlg *md = mirrorDlg::get_Instance();
-            double rad = m_outside.m_radius * md->m_annularObsPercent;
+            double rad = m_outside.m_radius * md->currentSettings().annulusPercent;
 
             double cx = m_outside.m_center.x();
             double cy = m_outside.m_center.y();
