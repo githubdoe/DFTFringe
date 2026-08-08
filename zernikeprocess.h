@@ -55,7 +55,7 @@ public:
     explicit zernikeProcess(QObject *parent = 0);
     static zernikeProcess *get_Instance();
     void unwrap_to_zernikes(wavefront &wf, int zterms = Z_TERMS);
-    cv::Mat null_unwrapped(wavefront&wf,  std::vector<double> zerns, std::vector<bool> enables,int start_term =0, int last_term = Z_TERMS);
+    cv::Mat null_unwrapped(wavefront&wf,  std::vector<double> zerns, std::vector<bool> enables, int start_term = 0, int last_term = Z_TERMS, bool applyNull = true);
     std::vector<double> ZernFitWavefront( wavefront &wf);
     void initGrid(wavefront &wf, int maxOrder);
     void initGrid(int width, double radius, double cx, double cy, int maxOrder, double inside = 0);

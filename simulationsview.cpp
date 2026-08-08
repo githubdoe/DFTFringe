@@ -191,7 +191,7 @@ SimulationsView *SimulationsView::getInstance(QWidget *parent){
 
 
 
-cv::Mat SimulationsView::nulledSurface(double defocus){
+cv::Mat SimulationsView::nulledSurface(double defocus, bool applyNull){
     cv::Mat out;
 
     mirrorDlg *md = mirrorDlg::get_Instance();
@@ -210,7 +210,9 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
     // save the user selected defocus enable to be restored after this.
     bool saved_defocus_enable = zernEnables[3];
     zernEnables[3] = false;
-    cv::Mat nulled_surface = zp.null_unwrapped( *(m_Instance->m_wf), newZerns, zernEnables);
+    
+    // Pass the applyNull flag to control whether null correction is applied
+    cv::Mat nulled_surface = zp.null_unwrapped( *(m_Instance->m_wf), newZerns, zernEnables, 0, Z_TERMS, applyNull);
     zernEnables[3] = saved_defocus_enable;
 
     if (GB_enabled){

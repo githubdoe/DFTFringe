@@ -100,7 +100,10 @@ void mirrorDlg::loadDraftFromSettings()
     m_verticalAxis = m_draft.ellipseMinorAxis;
     aperatureReduction = m_draft.apertureReduction;
     m_aperatureReductionEnabled = m_draft.apertureReductionEnabled;
-    m_projectPath = m_draft.projectPath;
+    
+    // Load application-level settings separately (projectPath, mirrorConfigFile, lastPath)
+    ApplicationSettings appSettings = SettingsFacade::instance().appStore().load();
+    m_projectPath = appSettings.projectPath;
 }
 
 void mirrorDlg::showEvent(QShowEvent *event)
@@ -179,7 +182,7 @@ void mirrorDlg::saveJson(const QString &fileName){
 }
 void mirrorDlg:: on_saveBtn_clicked()
 {
-    QString path = m_draft.mirrorConfigFile;
+    QString path = m_projectPath;  // Use current project path for file dialog default
     QString extensionTypes("config file (*.json)");
     QString fileName = QFileDialog::getSaveFileName(this,
                         tr("Save config file"), path,
@@ -197,10 +200,12 @@ void mirrorDlg:: on_saveBtn_clicked()
     saveJson(fileName);
     QFileInfo info(fileName);
     
-    // Update draft with new file path, then persist via facade
-    m_draft.mirrorConfigFile = fileName;
-    m_draft.projectPath = info.absolutePath();
-    m_projectPath = m_draft.projectPath;
+    // Update application settings with new file path
+    ApplicationSettings appSettings = SettingsFacade::instance().appStore().load();
+    appSettings.mirrorConfigFile = fileName;
+    appSettings.projectPath = info.absolutePath();
+    SettingsFacade::instance().appStore().save(appSettings);
+    m_projectPath = appSettings.projectPath;
 }
 
 void mirrorDlg::loadFile(QString & fileName){
@@ -210,15 +215,18 @@ void mirrorDlg::loadFile(QString & fileName){
     m_outlineShape = CIRCLE;
     QFileInfo info(fileName);
     
-    // Only persist non-mirror-settings to QSettings (lastPath)
+    // Persist UI convenience path to QSettings
     QSettings settings;
     settings.setValue("lastPath", info.absolutePath());
     
     emit newPath(info.absolutePath());
     
-    // Update draft with new file path and project path via facade
-    m_draft.projectPath = info.absolutePath();
-    m_draft.mirrorConfigFile = fileName;
+    // Update application settings with new file path and mirror config file via facade
+    ApplicationSettings appSettings = SettingsFacade::instance().appStore().load();
+    appSettings.projectPath = info.absolutePath();
+    appSettings.mirrorConfigFile = fileName;
+    SettingsFacade::instance().appStore().save(appSettings);
+    m_projectPath = appSettings.projectPath;
 
 
     if (fileName.endsWith(".json")){
@@ -449,7 +457,7 @@ void mirrorDlg::on_ReadBtn_clicked()
     loadFile(fileName);
 }
 QString mirrorDlg::getProjectPath(){
-    return m_draft.projectPath;
+    return m_projectPath;  // Already synced from application settings in loadDraftFromSettings()
 }
 
 void mirrorDlg::on_diameter_textChanged(const QString &arg1) {
@@ -643,7 +651,6 @@ void mirrorDlg::on_buttonBox_accepted()
     m_draft.ellipseMinorAxis = m_verticalAxis;
     m_draft.apertureReductionEnabled = m_aperatureReductionEnabled;
     m_draft.apertureReduction = aperatureReduction;
-    m_draft.projectPath = m_projectPath;
     
     // Persist draft to QSettings via facade (single atomic save)
     SettingsFacade::instance().mirrorStore().save(m_draft);

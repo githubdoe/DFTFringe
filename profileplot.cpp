@@ -1174,7 +1174,7 @@ void ProfilePlot::CreateWaveFrontFromAverage(){
         for (unsigned int i = 0; i < avgRadius.size(); ++i) {
             double R2 = (double(i))/(avgRadius.size() -1);
             R2 *= R2;
-            avgRadius[i] += md->currentSettings().z8 * md->currentSettings().cc * (1. + R2 * (-6 + 6. * R2));;
+            avgRadius[i] += md->z8 * md->currentSettings().cc * (1. + R2 * (-6 + 6. * R2));;
         }
     }
     cv::Mat result = createInterpolatedCircularSurface(avgRadius);

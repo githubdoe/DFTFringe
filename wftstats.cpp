@@ -215,7 +215,7 @@ void wftStats::computeWftStats( QVector<wavefront*> wavefronts, int ndx){
 
             // apply software Null if needed
             if (ndx == 8 and md->currentSettings().doNull)
-                v -= md->currentSettings().z8 * md->currentSettings().cc;
+                v -= md->z8 * md->currentSettings().cc;
             double Sigma = computeRMS(ndx,v) * outputLambda/md->currentSettings().lambda;
 
             if (ndx == 8) {

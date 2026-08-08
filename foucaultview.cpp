@@ -377,14 +377,11 @@ QImage foucaultView::generateOpticalTestImage(OpticalTestType type, wavefront* w
     SimulationsView *sv = SimulationsView::getInstance(0);
     sv->setSurface(wf);
 
-    bool oldDoNull = md->currentSettings().doNull;
-    if (bAutoCollimate == false)
-        md->m_draft.doNull = false; // this is normal foucault/ronchi so we *don't* subtract the null (autcoCollimate ronchi or foucault mode will typically subtract the null)
+    // For normal Foucault/Ronchi mode (not autocollimation), disable null correction
+    // Autocollimation mode applies null if configured; normal mode does not
+    bool applyNull = bAutoCollimate && md->currentSettings().doNull;
 
-    cv::Mat surf_fft = sv->computeStarTest(s.heightMultiply * sv->nulledSurface(effectiveZ3), size, actualPad, true);
-
-    wf->InputZerns = originalZerns; // Restore state immediately
-    md->m_draft.doNull = oldDoNull;
+    cv::Mat surf_fft = sv->computeStarTest(s.heightMultiply * sv->nulledSurface(effectiveZ3, applyNull), size, actualPad, true);
 
     // 3. Mask Generation
     cv::Mat mask = cv::Mat::zeros(size, size, CV_64FC1);

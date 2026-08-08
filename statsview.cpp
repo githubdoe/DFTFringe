@@ -270,7 +270,7 @@ void statsView::on_SaveCSV_clicked()
 
             // apply software Null if needed
             if (ndx == 8 and md->currentSettings().doNull)
-                v -= md->currentSettings().z8 * md->currentSettings().cc;
+                v -= md->z8 * md->currentSettings().cc;
             double Sigma = computeRMS(ndx,v) * md->currentSettings().lambda/outputLambda;
 
             if (ndx == 8) {

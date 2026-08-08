@@ -98,6 +98,7 @@ void percentCorrectionDlg::saveSettings(){
  * fixme figure that out.
 */
 QList<double> percentCorrectionDlg::generateZoneCenters(double radius, int number_of_zones, bool makeNew){
+    QSettings set;
     QList<double> zoneCenters;
 
     if (!makeNew) {  // read last used zones
@@ -354,7 +355,7 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
     ActualZoneKnife << 0.0;
 
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double nullval = md->currentSettings().z8 * md->currentSettings().cc;  // null value was computed at the igram wavevlength
+    double nullval = md->z8 * md->currentSettings().cc;  // null value was computed at the igram wavevlength
     nullval *=  m_lambda_nm/m_outputLambda;   // only data from the profile needs the null but it's data is at the output wavelength;
     // process each zone center
 
@@ -400,7 +401,7 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
 void percentCorrectionDlg::plotProfile(){
 
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double nullval = md->currentSettings().z8 * md->currentSettings().cc;
+    double nullval = md->z8 * md->currentSettings().cc;
     for (int i = 0; i < surfs.length(); ++ i) {
 
         QwtPlotCurve *Curve = new QwtPlotCurve();
@@ -753,6 +754,7 @@ void percentCorrectionDlg::on_loadZones_clicked()
 
 void percentCorrectionDlg::on_saveZones_clicked()
 {
+    QSettings set;
     QString path = SettingsFacade::instance().appStore().load().projectPath;
     QString extensionTypes(tr( "zone file (*.zones)"));
     QString fileName = QFileDialog::getSaveFileName(0,
