@@ -8,9 +8,9 @@ bathAstigDlg::bathAstigDlg(QWidget *parent) :
 {
     ui->setupUi(this);
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    ui->diamSb->setValue(md.diameter);
-    ui->rocsb->setValue(md.roc);
-    ui->lambdaSb->setValue(md.lambda);
+    ui->diamSb->setValue(md.currentSettings().diameter);
+    ui->rocsb->setValue(md.currentSettings().roc);
+    ui->lambdaSb->setValue(md.currentSettings().lambda);
     ui->sepSb->setValue(5.);
     compute();
 }

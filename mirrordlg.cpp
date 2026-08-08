@@ -653,7 +653,8 @@ void mirrorDlg::on_buttonBox_accepted()
     m_draft.apertureReduction = aperatureReduction;
     
     // Persist draft to QSettings via facade (single atomic save)
-    SettingsFacade::instance().mirrorStore().save(m_draft);
+    // Note: Only mirrordlg can call this (via friend declaration) - enforces single source of truth
+    SettingsFacade::instance().saveMirrorSettings(m_draft);
 
     if (m_obsChanged)
         emit obstructionChanged();
@@ -706,6 +707,17 @@ void mirrorDlg::setMinorAxis(double val){
     m_verticalAxis = val;
     ui->minorAxisEdit->setText(QString::number(val));
     //on_minorAxisEdit_textChanged( QString::number(val));
+}
+
+void mirrorDlg::setVerticalAxis(double val){
+    m_verticalAxis = val;
+    m_draft.ellipseMinorAxis = val;
+}
+
+void mirrorDlg::setOutlineShape(outlineShape shape){
+    m_outlineShape = shape;
+    m_draft.outlineShape = (int)shape;
+    ui->ellipseShape->setChecked(shape == ELLIPSE);
 }
 
 void mirrorDlg::on_ellipseShape_clicked(bool checked)

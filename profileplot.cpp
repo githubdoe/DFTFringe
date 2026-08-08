@@ -427,8 +427,8 @@ QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool all
     // 1. Setup constants
     double steps = 1.0 / wf->m_outside.m_radius;
     double offset = allowOffset ? y_offset : 0.0;
-    double radius = md.m_clearAperature / 2.0;
-    double obs_radius = md.obs / 2.0;
+    double radius = md.currentSettings().apertureReduction / 2.0;
+    double obs_radius = md.currentSettings().obstruction / 2.0;
 
     if (m_displayInches) {
         obs_radius /= 25.4;
@@ -443,12 +443,12 @@ QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool all
 
         if (m_displayPercent) {
             radx = 100.0 * radx / radius;
-            obs_radius = 100.0 * (md.obs / 2.0) / radius;
+            obs_radius = 100.0 * (md.currentSettings().obstruction / 2.0) / radius;
         }
 
         double e = 1.0;
         if (md.isEllipse()) {
-            e = md.m_verticalAxis / md.diameter;
+            e = md.currentSettings().ellipseMinorAxis / md.currentSettings().diameter;
         }
 
         // Calculate matrix coordinates

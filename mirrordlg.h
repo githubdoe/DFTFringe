@@ -37,19 +37,47 @@ public:
     mirrorDlg(const mirrorDlg&) = delete;
     mirrorDlg& operator=(const mirrorDlg&) = delete;
 
+    // File and configuration operations
     void loadFile(QString & fileName);
     void updateZ8();
     void updateAutoInvertStatus();
 
-    QString m_name;
+    // Computed/derived values (read-only, not from settings)
     bool mm;
+    double FNumber;
+    double z8;
+    static QString m_projectPath;
+    
+    // State flags
+    bool m_obsChanged;
+    bool m_majorHorizontal;
+
+    // Methods for configuration access/modification
+    void on_roc_Changed(const double newVal);
+    void on_diameter_Changed(const double diam);
+    bool shouldFlipH();
+    static QString getProjectPath();
+    void newLambda(const QString &v);
+    double getMinorAxis();
+    bool isEllipse();
+    void setMinorAxis(double val);
+    void setVerticalAxis(double val);
+    void setOutlineShape(outlineShape shape);
+    void setObsPercent(double obs);
+    
+    /** @brief Access current mirror settings (read-only snapshot).
+     *  Returns the draft which is the canonical storage for all mirror config.
+     *  All internal member variables are kept in sync with this. */
+    const MirrorSettings& currentSettings() const { return m_draft; }
+    
+private:
+    // Configuration members (access via currentSettings() or setters)
+    QString m_name;
     double diameter;
     double roc;
-    double FNumber;
     double obs; // obstruction
     double cc;
     bool doNull;
-    double z8;
     double lambda;
     double fringeSpacing;
     bool flipv;
@@ -59,26 +87,9 @@ public:
     double m_annularObsPercent; // a value from 0 to 1 (not 0 to 100)
     double m_clearAperature;
     double aperatureReduction;
-    static QString m_projectPath;
-    void on_roc_Changed(const double newVal);
-    void on_diameter_Changed(const double diam);
-    bool shouldFlipH();
-    static QString getProjectPath();
-    bool m_obsChanged;
-    void newLambda(const QString &v);
-    double getMinorAxis();
-    bool m_majorHorizontal;
+    bool m_aperatureReductionEnabled;
     double m_verticalAxis;
     outlineShape m_outlineShape;
-    bool isEllipse();
-    void setMinorAxis(double val);
-    bool m_aperatureReductionEnabled;
-    void setObsPercent(double obs);
-    
-    /** @brief Access current mirror settings (read-only snapshot).
-     *  Returns the draft which is the canonical storage for all mirror config.
-     *  All member variables are kept in sync with this for backward compatibility. */
-    const MirrorSettings& currentSettings() const { return m_draft; }
     
 private slots:
     void on_ReadBtn_clicked();

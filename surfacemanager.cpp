@@ -647,7 +647,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     mirrorDlg &md = *mirrorDlg::get_Instance();
     double rx = radm;
     double rx2 = rx * rx;
-    double ry = rx * md.m_verticalAxis/md.diameter;
+    double ry = rx * md.currentSettings().ellipseMinorAxis / md.currentSettings().diameter;
     double ry2 = ry * ry;
     if (!mirrorDlg::get_Instance()->isEllipse()){
         uchar v = 0xff;
@@ -718,7 +718,7 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
 
 
     // add central obstruction (not to be confused with a hole in the mirror - this comes from mirror configuration)
-    double r = md.obs * (2. * radm)/md.diameter;
+    double r = md.currentSettings().obstruction * (2. * radm)/md.currentSettings().diameter;
     r/= 2.;
     if (r > 0){
 
@@ -941,9 +941,9 @@ void SurfaceManager::computeZerns()
     mirrorDlg &md = *mirrorDlg::get_Instance();
     foreach(int ndx , doThese){
         wavefront &wf = *m_wavefronts[ndx];
-        wf.diameter = md.diameter;
-        wf.roc = md.roc;
-        wf.lambda = md.lambda;
+        wf.diameter = md.currentSettings().diameter;
+        wf.roc = md.currentSettings().roc;
+        wf.lambda = md.currentSettings().lambda;
     }
 
     m_waveFrontTimer->start(500);
@@ -997,7 +997,7 @@ void SurfaceManager::writeWavefront(const QString &fname, wavefront *wf, bool sa
         }
         mirrorDlg &md = *mirrorDlg::get_Instance();
         if (md.isEllipse()){
-            file << "ellipse_vertical_axis " << md.m_verticalAxis;
+            file << "ellipse_vertical_axis " << md.currentSettings().ellipseMinorAxis;
         }
 }
 
@@ -1305,8 +1305,10 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                 continue;
             }
             if (l.startsWith("ellipse_vertical_axis")){
-                md->m_outlineShape = ELLIPSE;
-                iss >> dummy >> md->m_verticalAxis;
+                md->setOutlineShape(ELLIPSE);
+                double vertAxis;
+                iss >> dummy >> vertAxis;
+                md->setVerticalAxis(vertAxis);
             }
             if (l.startsWith("Do Not use null") || l.startsWith("nulled") ){
                 wf->useSANull = false;

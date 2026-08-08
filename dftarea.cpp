@@ -40,7 +40,7 @@ cv::Mat  makeMask(const CircleOutline &outside, const CircleOutline &center, con
     double rady = radm;
     mirrorDlg &md = *mirrorDlg::get_Instance();
     if (md.isEllipse())
-        rady = radm * md.m_verticalAxis/md.diameter;
+        rady = radm * md.currentSettings().ellipseMinorAxis/md.currentSettings().diameter;
     double rado = center.m_radius;
     double cx = outside.m_center.x();
     double cy = outside.m_center.y();
@@ -151,14 +151,14 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     grid->attach(test);
     QPolygonF points;
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    double roc = md.roc;
-    double diam = md.diameter;
+    double roc = md.currentSettings().roc;
+    double diam = md.currentSettings().diameter;
     double r3 = roc * roc * roc;
     double d4 = diam * diam * diam * diam;
 
 
     for (double i = 0; i < .03; i += .0001){
-    double z1 = -i * 384. * r3 * md.lambda * 1.E-6/(d4);
+    double z1 = -i * 384. * r3 * md.currentSettings().lambda * 1.E-6/(d4);
 
         points << QPointF( -i,  z1 );
 
@@ -251,9 +251,9 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double centerY = igramArea->m_outside.m_center.y();
     mirrorDlg &md = *mirrorDlg::get_Instance();
 
-    double pixelsPermm =(igramArea->m_outside.m_radius/(md.diameter/2.));
-    double reduction = md.aperatureReduction * pixelsPermm;
-    if (md.m_aperatureReductionEnabled == false)
+    double pixelsPermm =(igramArea->m_outside.m_radius/(md.currentSettings().diameter/2.));
+    double reduction = md.currentSettings().apertureReduction * pixelsPermm;
+    if (md.currentSettings().apertureReductionEnabled == false)
         reduction = 0;
 
     double rad = igramArea->m_outside.m_radius - reduction;
@@ -262,7 +262,7 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     double rady = rad;
 
     if (md.isEllipse()){
-        rady = rady * md.m_verticalAxis/ md.diameter;
+        rady = rady * md.currentSettings().ellipseMinorAxis / md.currentSettings().diameter;
     }
 
     double left = centerX - rad;

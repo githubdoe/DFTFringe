@@ -45,3 +45,8 @@ const ApplicationSettingsStore &SettingsFacade::appStore() const
 {
     return m_appStore;
 }
+
+void SettingsFacade::saveMirrorSettings(const MirrorSettings &settings)
+{
+    m_mirrorStore.save(settings);
+}

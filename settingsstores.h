@@ -16,12 +16,13 @@ struct MirrorSettings {
 
 class MirrorSettingsStore {
 private:
-    friend class SettingsFacade;  // Only facade can construct
+    friend class SettingsFacade;  // Only facade can construct and call save()
     MirrorSettingsStore() = default;
+    
+    void save(const MirrorSettings &value) const;
     
 public:
     MirrorSettings load() const;
-    void save(const MirrorSettings &value) const;
 };
 
 
