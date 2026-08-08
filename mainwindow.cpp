@@ -593,10 +593,10 @@ void MainWindow::updateMetrics(wavefront& wf){
     double z8 = zernTablemodel->values[8];
     double BestSC;
     if (m_mirrorDlg->currentSettings().doNull && wf.useSANull){
-        BestSC = z8/m_mirrorDlg->z8;
+        BestSC = z8/m_mirrorDlg->getZ8();
     }
     else {
-        BestSC = m_mirrorDlg->currentSettings().cc +z8/m_mirrorDlg->z8;
+        BestSC = m_mirrorDlg->currentSettings().cc +z8/m_mirrorDlg->getZ8();
     }
     metrics->setOutputLambda(outputLambda);
 

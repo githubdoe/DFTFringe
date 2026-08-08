@@ -493,7 +493,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
     mirrorDlg *md = mirrorDlg::get_Instance();
     
-    double scz8 = md->z8 * md->currentSettings().cc;
+    double scz8 = md->getZ8() * md->currentSettings().cc;
 
 
     if (!applyNull || !md->currentSettings().doNull || !wf.useSANull){
@@ -914,7 +914,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
         for (unsigned int z = 0; z < m_zerns.n_cols; ++z){
             double val = dlg.zernikes[z];
             if (z == 8){
-                val = (dlg.doCorrection && md->currentSettings().doNull) ? md->currentSettings().cc * md->z8 * val * .01 : val;
+                val = (dlg.doCorrection && md->currentSettings().doNull) ? md->currentSettings().cc * md->getZ8() * val * .01 : val;
             }
             S1 +=  val * m_zerns(i,z)/((doColor) ? md->currentSettings().fringeSpacing: 1.);
 

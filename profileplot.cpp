@@ -406,7 +406,7 @@ QPolygonF ProfilePlot::createAverageProfile(double /*umnits*/, wavefront * /*wf*
 //            double rho = avg[i].x() / md.diameter/2.;
 //            double rho2 = rho * rho;
 //            double y = avg[i].y();
-//            y += md.z8 * md.cc * (1. + rho2 * (-6 + 6. * rho2));
+//            y += md.getZ8() * md.cc * (1. + rho2 * (-6 + 6. * rho2));
 //            avg2 << QPointF(avg[i].x(),y);
 //        }
 //        avg = avg2;
@@ -1174,7 +1174,7 @@ void ProfilePlot::CreateWaveFrontFromAverage(){
         for (unsigned int i = 0; i < avgRadius.size(); ++i) {
             double R2 = (double(i))/(avgRadius.size() -1);
             R2 *= R2;
-            avgRadius[i] += md->z8 * md->currentSettings().cc * (1. + R2 * (-6 + 6. * R2));;
+            avgRadius[i] += md->getZ8() * md->currentSettings().cc * (1. + R2 * (-6 + 6. * R2));;
         }
     }
     cv::Mat result = createInterpolatedCircularSurface(avgRadius);

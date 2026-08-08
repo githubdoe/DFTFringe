@@ -792,9 +792,6 @@ void mirrorDlg::on_annularDiameter_valueChanged(double arg1)
     updateZ8();
 }
 
-void mirrorDlg::setObsPercent(double obs){
-    ui->annulusPercent->setValue(obs);
-}
 
 void mirrorDlg::updateAutoInvertStatus()
 {

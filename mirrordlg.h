@@ -32,40 +32,32 @@ class mirrorDlg : public QDialog
     Q_OBJECT
 
 public:
-    //TODO if we get rid of the singleton design, settings are read from settingsFacade instead here
+    // TODO if we get rid of the singleton design, settings could be read from settingsFacade instead here
     // check if it makes sense
     static mirrorDlg *get_Instance();
     ~mirrorDlg();
     mirrorDlg(const mirrorDlg&) = delete;
     mirrorDlg& operator=(const mirrorDlg&) = delete;
 
-    // File and configuration operations
-    void loadFile(QString & fileName);
-    void updateZ8();
+    // TODO this group must be investigatedto validate they are OK
+    // we cannot change settings/configuration from both outside and inside the dialog. We need to have a single source of truth for settings/configuration.
     void updateAutoInvertStatus();
-
-    // Computed/derived values (read-only, not from settings)
-    bool mm;
-    double FNumber;
-    double z8;
-    static QString m_projectPath;
-    
-    // State flags
-    bool m_obsChanged;
-    bool m_majorHorizontal;
-
-    // Methods for configuration access/modification
-    void on_roc_Changed(const double newVal);
-    void on_diameter_Changed(const double diam);
-    bool shouldFlipH();
-    static QString getProjectPath();
     void newLambda(const QString &v);
-    double getMinorAxis();
-    bool isEllipse();
     void setMinorAxis(double val);
     void setVerticalAxis(double val);
     void setOutlineShape(outlineShape shape);
-    void setObsPercent(double obs);
+    void on_roc_Changed(const double newVal);
+    void on_diameter_Changed(const double diam);
+    
+    
+    // Computed/derived value accessors (read-only)
+    double getFNumber() const { return FNumber; }
+    double getZ8() const { return z8; }
+    static QString getProjectPath();
+    double getMinorAxis();
+    bool isEllipse();
+    bool shouldFlipH();
+
     
     /** @brief Access current mirror settings.
      *  Returns the persistent copy - the last saved state.
@@ -73,11 +65,7 @@ public:
     const MirrorSettings& currentSettings() const { return m_current; }
     
 private:
-    // Persistent mirror configuration copy (source of truth for external code)
-    MirrorSettings m_current;
-    
-    // Working copy for dialog edits (discarded on Cancel, committed to m_current on OK)
-    MirrorSettings m_draft;
+
     
 private slots:
     void on_ReadBtn_clicked();
@@ -154,10 +142,30 @@ private:
     void loadDraftFromSettings();
 
     Ui::mirrorDlg *ui;
+
+    // State flags
     bool m_aperatureReductionValueChanged;
+    bool m_obsChanged;
+
     QTimer spacingChangeTimer;
+
+    // Persistent mirror configuration copy (source of truth for external code)
+    MirrorSettings m_current;
+    
+    // Working copy for dialog edits (discarded on Cancel, committed to m_current on OK)
+    MirrorSettings m_draft;
+    
+    // Computed/derived values (read-only, not from settings)
+    //TODO actually mm is not saved in settings. should probably be saved as it's a user preference. I need to check what happens when user enters values in mm or inch and reopens DFTFringe
+    bool mm;                           // Unit display flag: true = mm, false = other units
+    double FNumber;                    // Computed f-number (focal length / diameter)
+    double z8;                         // Z8 Zernike coefficient or null reference value
+    static QString m_projectPath;      // Current project directory path
+    
     void saveJson(const QString &fileName);
     void enableAnnular(bool enable);
+    void updateZ8();
+    void loadFile(QString & fileName);
     
 };
 

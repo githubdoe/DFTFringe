@@ -501,7 +501,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
                     else {
                         if (en[z]){
                             if (z == 8 && md->currentSettings().doNull)
-                                S1 +=    md->z8 * zpolar.zernike(z);
+                                S1 +=    md->getZ8() * zpolar.zernike(z);
 
                             S1 += zerns[z] * zpolar.zernike(z);
                         }
@@ -800,7 +800,7 @@ void SurfaceManager::useDemoWaveFront(){
 
             if (rho <= 1.)
             {
-                double S1 = md->z8 * -.9 * zpolar.zernike(8) + .02* zpolar.zernike(9);
+                double S1 = md->getZ8() * -.9 * zpolar.zernike(8) + .02* zpolar.zernike(9);
 
                 result.at<double>(j,i) = S1;
             }
@@ -3022,7 +3022,7 @@ void SurfaceManager::report(){
                 QString(" waves at %1 nm</td><td>Strehl: ").arg(outputLambda, 6, 'f', 1) + metrics->mStrehl->text() +
             "</td><td>" + BFC + "</td></tr>"
             "<tr><td>" + ((md->isEllipse()) ? "":"Desired Conic: " + QString::number(md->currentSettings().cc)) + "</td><td>" +
-            ((md->currentSettings().doNull) ? QString("SANull: %1").arg(md->z8 * md->currentSettings().cc, 6, 'f', 4) : "No software Null") + "</td>"
+            ((md->currentSettings().doNull) ? QString("SANull: %1").arg(md->getZ8() * md->currentSettings().cc, 6, 'f', 4) : "No software Null") + "</td>"
             "<td>Waves per fringe: " + QString::number(md->currentSettings().fringeSpacing) + "<br>Interferogram Wave length: "+ QString::number(md->currentSettings().lambda) + "nm</td></tr>"
             "</table></p>";
 
@@ -3045,7 +3045,7 @@ void SurfaceManager::report(){
                 enabled = true;
             }
             if ( i == 8 && md->currentSettings().doNull){
-                val -= md->z8 * md->currentSettings().cc;
+                val -= md->getZ8() * md->currentSettings().cc;
             }
 
 
