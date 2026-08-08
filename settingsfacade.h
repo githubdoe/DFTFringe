@@ -12,27 +12,22 @@
 class SettingsFacade
 {
 public:
-    /** @brief Returns process-wide facade instance. */
+
     static SettingsFacade &instance();
 
-    /** @brief Accessor for mirror settings persistence. */
     MirrorSettingsStore &mirrorStore();
-    /** @brief Const accessor for mirror settings persistence. */
     const MirrorSettingsStore &mirrorStore() const;
 
-    /** @brief Accessor for general processing settings persistence. */
     GeneralProcessingSettingsStore &generalProcessingStore();
-    /** @brief Const accessor for general processing settings persistence. */
     const GeneralProcessingSettingsStore &generalProcessingStore() const;
 
-    /** @brief Accessor for contour settings persistence. */
     ContourSettingsStore &contourStore();
-    /** @brief Const accessor for contour settings persistence. */
     const ContourSettingsStore &contourStore() const;
 
 private:
-    SettingsFacade() = default;
+    SettingsFacade() = default; // Enforce singleton
 
+    // Only facade owns these
     MirrorSettingsStore m_mirrorStore;
     GeneralProcessingSettingsStore m_generalProcessingStore;
     ContourSettingsStore m_contourStore;

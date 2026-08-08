@@ -15,8 +15,11 @@ struct MirrorSettings {
 };
 
 class MirrorSettingsStore {
-public:
+private:
+    friend class SettingsFacade;  // Only facade can construct
+    MirrorSettingsStore() = default;
     
+public:
     MirrorSettings load() const;
     void save(const MirrorSettings &value) const;
 };
@@ -28,8 +31,11 @@ struct GeneralProcessingSettings {
 };
 
 class GeneralProcessingSettingsStore {
+private:
+    friend class SettingsFacade;
+    GeneralProcessingSettingsStore() = default;
+    
 public:
-
     GeneralProcessingSettings load() const;
     void save(const GeneralProcessingSettings &value) const;
 };
@@ -41,8 +47,11 @@ struct ContourSettings {
 };
 
 class ContourSettingsStore {
+private:
+    friend class SettingsFacade;
+    ContourSettingsStore() = default;
+    
 public:
-
     ContourSettings load() const;
     void save(const ContourSettings &value) const;
 };
