@@ -17,6 +17,7 @@
 ****************************************************************************/
 #include "standastigwizard.h"
 #include "ui_standastigwizard.h"
+#include "settingsfacade.h"
 #include "spdlog/spdlog.h"
 #include <QtWidgets>
 #include <QDebug>
@@ -133,7 +134,8 @@ makeAverages::makeAverages(QWidget *parent)
 }
 void define_input::pdfNamesPressed(){
     QSettings set;
-    QString standReportPath = set.value("stand report path", mirrorDlg::get_Instance()->getProjectPath()).toString();
+    QString standReportPath = SettingsFacade::instance().appStore().load().projectPath;
+    if (standReportPath.isEmpty()) standReportPath = mirrorDlg::get_Instance()->getProjectPath();
     QString fileName = QFileDialog::getSaveFileName((QWidget* )0, "Export PDF", standReportPath + "/stand.pdf" ,
                                                           "*.pdf");
     if (fileName.isEmpty())
@@ -227,7 +229,7 @@ define_input::define_input(QWidget *parent)
 
     connect(runpb, &QAbstractButton::pressed, this, &define_input::compute);
     QSettings settings;
-    QString lastPath = settings.value("projectPath","").toString();
+    QString lastPath = SettingsFacade::instance().appStore().load().projectPath;
     basePath = new QLineEdit(settings.value("rotation base path",lastPath).toString());
     basePath->setToolTip("Directory were rotation files are stored.");
     QPushButton *browsePath = new QPushButton("...");

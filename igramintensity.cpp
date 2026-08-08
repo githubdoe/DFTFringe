@@ -17,6 +17,7 @@
 ****************************************************************************/
 #include "igramintensity.h"
 #include "ui_igramintensity.h"
+#include "settingsfacade.h"
 #include <QImageWriter>
 #include <QFileDialog>
 #include <qwt_plot_renderer.h>
@@ -58,8 +59,7 @@ void igramIntensity::on_showGreen_clicked(bool checked)
 
 void igramIntensity::on_pushButton_clicked()
 {
-    QSettings set;
-    QString path = set.value("mirrorConfigFile").toString();
+    QString path = SettingsFacade::instance().appStore().load().mirrorConfigFile;
     QFile fn(path);
     QFileInfo info(fn.fileName());
     QString dd = info.dir().absolutePath();

@@ -18,6 +18,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "spdlog/spdlog.h"
+#include "settingsfacade.h"
 #include <QtWidgets>
 #include <iostream>
 #include <fstream>
@@ -1996,7 +1997,8 @@ void MainWindow::on_actionSave_curent_profile_triggered()
     if (m_profilePlot->m_wf == 0)
         return;
     QSettings settings;
-    QString lastPath = settings.value("projectPath",".").toString();
+    QString lastPath = SettingsFacade::instance().appStore().load().projectPath;
+    if (lastPath.isEmpty()) lastPath = ".";
     QString fName = QFileDialog::getSaveFileName(0,
         tr("Save Profile"), lastPath + "//profile.txt");
     if (fName.isEmpty())

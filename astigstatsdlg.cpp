@@ -1,5 +1,6 @@
 #include "astigstatsdlg.h"
 #include "ui_astigstatsdlg.h"
+#include "settingsfacade.h"
 #include "circleutils.h"
 #include "circle.h"
 #include <qwt_plot.h>
@@ -489,8 +490,7 @@ void astigStatsDlg::showItem(const QVariant &item, bool on, int /*ndx*/){
 
 void astigStatsDlg::on_zernikePB_pressed()
 {
-    QSettings set;
-    QString path = set.value("mirrorConfigFile").toString();
+    QString path = SettingsFacade::instance().appStore().load().mirrorConfigFile;
     QFile fn(path);
     QFileInfo info(fn.fileName());
     QString dd = info.dir().absolutePath();

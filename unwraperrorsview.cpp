@@ -1,5 +1,6 @@
 #include "unwraperrorsview.h"
 #include "ui_unwraperrorsview.h"
+#include "settingsfacade.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <QSettings>
@@ -71,7 +72,7 @@ unwrapErrorsView::~unwrapErrorsView()
 void unwrapErrorsView::on_save_clicked()
 {
     QSettings set;
-    QString path = set.value("mirrorConfigFile").toString();
+    QString path = SettingsFacade::instance().appStore().load().mirrorConfigFile;
     QFile fn(path);
     QFileInfo info(fn.fileName());
     QString dd = info.dir().absolutePath();

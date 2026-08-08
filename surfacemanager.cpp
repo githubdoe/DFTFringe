@@ -17,6 +17,7 @@
 ****************************************************************************/
 #include "surfacemanager.h"
 #include "spdlog/spdlog.h"
+#include "settingsfacade.h"
 #include <limits>
 #include <cmath>
 #include <QWidget>
@@ -3404,7 +3405,7 @@ bool QPointFLessThan(QPointF p1, QPointF p2){
 
 void SurfaceManager::tiltAnalysis(){
     QSettings set;
-    QString path = set.value("mirrorConfigFile").toString();
+    QString path = SettingsFacade::instance().appStore().load().mirrorConfigFile;
     QFile fn(path);
     QFileInfo info(fn.fileName());
     QString dd = info.dir().absolutePath();

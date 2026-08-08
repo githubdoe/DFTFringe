@@ -56,6 +56,22 @@ public:
     void save(const ContourSettings &value) const;
 };
 
+
+
+struct ApplicationSettings {
+    SETTINGS_STORE_FOR_EACH_APPLICATION_FIELD(SETTINGS_STORE_DECLARE_STRUCT_FIELD)
+};
+
+class ApplicationSettingsStore {
+private:
+    friend class SettingsFacade;
+    ApplicationSettingsStore() = default;
+    
+public:
+    ApplicationSettings load() const;
+    void save(const ApplicationSettings &value) const;
+};
+
 #undef SETTINGS_STORE_DECLARE_STRUCT_FIELD
 
 #endif // SETTINGSSTORES_H

@@ -1,5 +1,6 @@
 #include "percentcorrectiondlg.h"
 #include "ui_percentcorrectiondlg.h"
+#include "settingsfacade.h"
 #include "qwt_plot_grid.h"
 #include "qwt_scale_div.h"
 #include "qwt_plot_barchart.h"
@@ -715,9 +716,7 @@ void percentCorrectionDlg::on_help_clicked()
 
 void percentCorrectionDlg::on_loadZones_clicked()
 {
-
-    QSettings set;
-    QString path = set.value("projectPath").toString();
+    QString path = SettingsFacade::instance().appStore().load().projectPath;
     QString extensionTypes(tr( "zone file (*.zones)"));
     QString fileName = QFileDialog::getOpenFileName(0,
                         tr("Read zone file"), path,
@@ -754,8 +753,7 @@ void percentCorrectionDlg::on_loadZones_clicked()
 
 void percentCorrectionDlg::on_saveZones_clicked()
 {
-    QSettings set;
-    QString path = set.value("projectPath").toString();
+    QString path = SettingsFacade::instance().appStore().load().projectPath;
     QString extensionTypes(tr( "zone file (*.zones)"));
     QString fileName = QFileDialog::getSaveFileName(0,
                         tr("Save zone file"), path,
@@ -774,7 +772,11 @@ void percentCorrectionDlg::on_saveZones_clicked()
     out << jsonString;
 
     file.close();
-    set.setValue("projectPath", QFileInfo(fileName).absolutePath());
+    
+    // Update and persist application settings via facade
+    ApplicationSettings appSettings = SettingsFacade::instance().appStore().load();
+    appSettings.projectPath = QFileInfo(fileName).absolutePath();
+    SettingsFacade::instance().appStore().save(appSettings);
 }
 
 

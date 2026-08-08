@@ -22,6 +22,7 @@
 #endif
 
 #include "IgramArea.h"
+#include "settingsfacade.h"
 #include "Circleoutline.h"
 #include <QtGlobal>
 #include <math.h>
@@ -2481,7 +2482,8 @@ void IgramArea::save(){
         mimeTypeFilters.append(mimeTypeName);
     mimeTypeFilters.sort();
     QSettings settings;
-    QString lastPath = settings.value("projectPath",".").toString();
+    QString lastPath = SettingsFacade::instance().appStore().load().projectPath;
+    if (lastPath.isEmpty()) lastPath = ".";
 
 
     QString filters = QStringList(mimeTypeFilters.mid(1,6)).join(" ");

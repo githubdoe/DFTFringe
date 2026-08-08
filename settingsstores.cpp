@@ -56,5 +56,21 @@ void ContourSettingsStore::save(const ContourSettings &value) const
     SETTINGS_STORE_FOR_EACH_CONTOUR_FIELD(SETTINGS_STORE_SAVE_FIELD_TO_QSETTINGS)
 }
 
+ApplicationSettings ApplicationSettingsStore::load() const
+{
+    QSettings s;
+
+    ApplicationSettings value{};
+    SETTINGS_STORE_FOR_EACH_APPLICATION_FIELD(SETTINGS_STORE_LOAD_FIELD_FROM_QSETTINGS)
+
+    return value;
+}
+
+void ApplicationSettingsStore::save(const ApplicationSettings &value) const
+{
+    QSettings s;
+    SETTINGS_STORE_FOR_EACH_APPLICATION_FIELD(SETTINGS_STORE_SAVE_FIELD_TO_QSETTINGS)
+}
+
 #undef SETTINGS_STORE_LOAD_FIELD_FROM_QSETTINGS
 #undef SETTINGS_STORE_SAVE_FIELD_TO_QSETTINGS

@@ -35,3 +35,13 @@ const ContourSettingsStore &SettingsFacade::contourStore() const
 {
     return m_contourStore;
 }
+
+ApplicationSettingsStore &SettingsFacade::appStore()
+{
+    return m_appStore;
+}
+
+const ApplicationSettingsStore &SettingsFacade::appStore() const
+{
+    return m_appStore;
+}

@@ -18,9 +18,12 @@
 	FIELD(int, outlineShape, 0, "outlineShape", toInt) \
 	FIELD(double, ellipseMinorAxis, 50.0, "ellipseMinorAxis", toDouble) \
 	FIELD(bool, apertureReductionEnabled, false, "configAperatureReductionChecked", toBool) \
-	FIELD(double, apertureReduction, 0.0, "config aperatureReduction", toDouble) \
+	FIELD(double, apertureReduction, 0.0, "config aperatureReduction", toDouble)
+
+#define SETTINGS_STORE_FOR_EACH_APPLICATION_FIELD(FIELD) \
 	FIELD(QString, projectPath, QString(), "projectPath", toString) \
-	FIELD(QString, mirrorConfigFile, QString(), "mirrorConfigFile", toString)
+	FIELD(QString, mirrorConfigFile, QString(), "mirrorConfigFile", toString) \
+	FIELD(QString, lastPath, QString(), "lastPath", toString)
 
 #define SETTINGS_STORE_FOR_EACH_GENERAL_FIELD(FIELD) \
 	FIELD(bool, useMakeStarTest, false, "useMakeStarTest", toBool) \

@@ -24,6 +24,11 @@ public:
     ContourSettingsStore &contourStore();
     const ContourSettingsStore &contourStore() const;
 
+    /** @brief Accessor for application-wide path settings (project path, file paths, etc.). */
+    ApplicationSettingsStore &appStore();
+    /** @brief Const accessor for application-wide path settings. */
+    const ApplicationSettingsStore &appStore() const;
+
 private:
     SettingsFacade() = default; // Enforce singleton
 
@@ -31,6 +36,7 @@ private:
     MirrorSettingsStore m_mirrorStore;
     GeneralProcessingSettingsStore m_generalProcessingStore;
     ContourSettingsStore m_contourStore;
+    ApplicationSettingsStore m_appStore;
 };
 
 #endif // SETTINGSFACADE_H
