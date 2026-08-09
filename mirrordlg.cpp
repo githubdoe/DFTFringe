@@ -619,9 +619,10 @@ void mirrorDlg::on_buttonBox_accepted()
     SettingsFacade::instance().saveMirrorSettings(m_current);
 
     if (m_obsChanged)
-        emit obstructionChanged();
+        emit obstructionChanged();    
     emit recomputeZerns();
     if (m_aperatureReductionValueChanged){
+        emit aperatureChanged();
         QMessageBox::warning(0, tr("Aperature Reduction value was  changed."),
                              tr("Aperature Reduction was changed.\n"
                                 "The wave front will not be correct until it is recomputed from the interferogram."));
@@ -717,7 +718,6 @@ void mirrorDlg::on_ReducApp_clicked(bool checked)
     ui->reduceValue->setValue(m_draft.apertureReduction);
     m_aperatureReductionValueChanged = true;
     setclearAp();
-    emit aperatureChanged();
 }
 
 
@@ -728,7 +728,6 @@ void mirrorDlg::on_reduceValue_valueChanged(double arg1)
 
     setclearAp();
     m_aperatureReductionValueChanged = true;
-    emit aperatureChanged();
 }
 
 void mirrorDlg::on_annulusPercent_valueChanged(double arg1)

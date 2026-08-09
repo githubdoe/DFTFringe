@@ -125,9 +125,10 @@ private slots:
     void on_btnChangeAutoInvert_clicked();
 
 signals:
+    // Emitted only after OK/accept when committed settings are saved.
     void obstructionChanged();
     void recomputeZerns();
-    void aperatureChanged(); // TODO this one only : notify shoud probably only happen when OK is clicked, not on every change.
+    void aperatureChanged(); 
 
 protected:
     /** @brief Reload settings before dialog becomes visible. */
@@ -149,15 +150,14 @@ private:
 
     QTimer spacingChangeTimer;
 
-    // Persistent mirror configuration copy (source of truth for external code)
-    //TODO check if all UI settings are actually saved in settings
+    // Persistent mirror configuration copy (source of truth)
     MirrorSettings m_current;
     
     // Working copy for dialog edits (discarded on Cancel, committed to m_current on OK)
     MirrorSettings m_draft;
     
     // Computed/derived values (read-only, not from settings)
-    //TODO actually mm is not saved in settings. should probably be saved as it's a user preference. I need to check what happens when user enters values in mm or inch and reopens DFTFringe
+    //TODO actually mm is not saved in settings. should probably be saved as it's a user preference 
     bool mm;                           // Unit display flag: true = mm, false = other units
     double FNumber;                    // Computed f-number (focal length / diameter)
     double z8;                         // Z8 Zernike coefficient or null reference value
