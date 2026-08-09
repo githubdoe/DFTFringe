@@ -204,9 +204,7 @@ void mirrorDlg::loadFile(QString & fileName){
     // Persist UI convenience path to QSettings
     QSettings settings;
     settings.setValue("lastPath", info.absolutePath());
-    
-    emit newPath(info.absolutePath());
-    
+
     // Update application settings with new file path and mirror config file via facade
     ApplicationSettings appSettings = SettingsFacade::instance().appStore().load();
     appSettings.projectPath = info.absolutePath();

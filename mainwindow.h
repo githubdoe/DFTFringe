@@ -120,7 +120,6 @@ private slots:
     void on_shiftDown_clicked();
     void on_shiftRight_clicked();
     void selectDftTab();
-    void newMirrorDlgPath(const QString &path);
     void on_actionRead_WaveFront_triggered();
 
     void on_actionPreferences_triggered();

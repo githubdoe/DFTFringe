@@ -274,7 +274,6 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     connect(m_surfaceManager, &SurfaceManager::rocChanged,this, &MainWindow::rocChanged);
-    connect(m_mirrorDlg, &mirrorDlg::newPath,this, &MainWindow::newMirrorDlgPath);
     progBar = new QProgressBar(this);
 
     status1 = new QLabel();
@@ -845,11 +844,7 @@ void MainWindow::on_showIntensity_clicked(bool checked)
     else
         m_intensityPlot->close();
 }
-void MainWindow::newMirrorDlgPath(const QString &path){
-    QFileInfo info(path);
-    QSettings settings;
-    settings.setValue("lastPath",info.path());
-}
+
 //make a simulated wavefront based on zernike values
 #define TSIZE 200
 void MainWindow::on_actionWavefront_triggered()

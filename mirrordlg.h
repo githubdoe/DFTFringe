@@ -119,7 +119,6 @@ private slots:
 signals:
     // TODO notify shoud probably only happen when OK is clicked, not on every change.
     void obstructionChanged();
-    void newPath(QString);
     void recomputeZerns();
     void aperatureChanged();
 
