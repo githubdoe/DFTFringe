@@ -25,40 +25,6 @@ public:
     MirrorSettings load() const;
 };
 
-
-
-struct GeneralProcessingSettings {
-    SETTINGS_STORE_FOR_EACH_GENERAL_FIELD(SETTINGS_STORE_DECLARE_STRUCT_FIELD)
-};
-
-class GeneralProcessingSettingsStore {
-private:
-    friend class SettingsFacade;
-    GeneralProcessingSettingsStore() = default;
-    
-public:
-    GeneralProcessingSettings load() const;
-    void save(const GeneralProcessingSettings &value) const;
-};
-
-
-
-struct ContourSettings {
-    SETTINGS_STORE_FOR_EACH_CONTOUR_FIELD(SETTINGS_STORE_DECLARE_STRUCT_FIELD)
-};
-
-class ContourSettingsStore {
-private:
-    friend class SettingsFacade;
-    ContourSettingsStore() = default;
-    
-public:
-    ContourSettings load() const;
-    void save(const ContourSettings &value) const;
-};
-
-
-
 struct ApplicationSettings {
     SETTINGS_STORE_FOR_EACH_APPLICATION_FIELD(SETTINGS_STORE_DECLARE_STRUCT_FIELD)
 };
@@ -72,6 +38,39 @@ public:
     ApplicationSettings load() const;
     void save(const ApplicationSettings &value) const;
 };
+
+// examples for future PRs
+//struct GeneralProcessingSettings {
+//    SETTINGS_STORE_FOR_EACH_GENERAL_FIELD(SETTINGS_STORE_DECLARE_STRUCT_FIELD)
+//};
+//
+//class GeneralProcessingSettingsStore {
+//private:
+//    friend class SettingsFacade;
+//    GeneralProcessingSettingsStore() = default;
+//    
+//public:
+//    GeneralProcessingSettings load() const;
+//    void save(const GeneralProcessingSettings &value) const;
+//};
+//
+//
+//
+//struct ContourSettings {
+//    SETTINGS_STORE_FOR_EACH_CONTOUR_FIELD(SETTINGS_STORE_DECLARE_STRUCT_FIELD)
+//};
+//
+//class ContourSettingsStore {
+//private:
+//    friend class SettingsFacade;
+//    ContourSettingsStore() = default;
+//    
+//public:
+//    ContourSettings load() const;
+//    void save(const ContourSettings &value) const;
+//};
+
+
 
 #undef SETTINGS_STORE_DECLARE_STRUCT_FIELD
 

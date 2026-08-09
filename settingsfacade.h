@@ -25,16 +25,16 @@ public:
     MirrorSettingsStore &mirrorStore();
     const MirrorSettingsStore &mirrorStore() const;
 
-    GeneralProcessingSettingsStore &generalProcessingStore();
-    const GeneralProcessingSettingsStore &generalProcessingStore() const;
-
-    ContourSettingsStore &contourStore();
-    const ContourSettingsStore &contourStore() const;
-
-    /** @brief Accessor for application-wide path settings (project path, file paths, etc.). */
     ApplicationSettingsStore &appStore();
-    /** @brief Const accessor for application-wide path settings. */
     const ApplicationSettingsStore &appStore() const;
+
+    // examples for future PRs
+    //GeneralProcessingSettingsStore &generalProcessingStore();
+    //const GeneralProcessingSettingsStore &generalProcessingStore() const;
+//
+    //ContourSettingsStore &contourStore();
+    //const ContourSettingsStore &contourStore() const;
+
 
 private:
     friend class mirrorDlg;  // Allow mirrordlg to call restricted save
@@ -48,9 +48,10 @@ private:
 
     // Only facade owns these
     MirrorSettingsStore m_mirrorStore;
-    GeneralProcessingSettingsStore m_generalProcessingStore;
-    ContourSettingsStore m_contourStore;
     ApplicationSettingsStore m_appStore;
+    // examples for future PRs
+    //GeneralProcessingSettingsStore m_generalProcessingStore;
+    //ContourSettingsStore m_contourStore;
 };
 
 #endif // SETTINGSFACADE_H

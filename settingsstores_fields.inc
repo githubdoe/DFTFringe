@@ -25,7 +25,8 @@
 	FIELD(QString, mirrorConfigFile, QString(), "mirrorConfigFile", toString) \
 	FIELD(QString, lastPath, QString(), "lastPath", toString)
 
-#define SETTINGS_STORE_FOR_EACH_GENERAL_FIELD(FIELD) \
+// examples for futur PRs
+/*#define SETTINGS_STORE_FOR_EACH_GENERAL_FIELD(FIELD) \
 	FIELD(bool, useMakeStarTest, false, "useMakeStarTest", toBool) \
 	FIELD(int, wavefrontDownSizeValue, 650, "wavefrontDownSizeValue", toInt) \
 	FIELD(bool, wavefrontShouldDownsize, false, "wavefrontShouldDownsize", toBool) \
@@ -47,4 +48,4 @@
 	FIELD(int, colorMapIndex, 1, "colorMap ndx", toInt) \
 	FIELD(QString, contourLineColor, QStringLiteral("grey"), "ContourLineColor", toString) \
 	FIELD(QString, contourRulerColor, QStringLiteral("grey"), "ContourRulerColor", toString) \
-	FIELD(double, contourRulerRadialDeg, 0.0, "contourRulerRadialDeg", toDouble)
+	FIELD(double, contourRulerRadialDeg, 0.0, "contourRulerRadialDeg", toDouble)*/
