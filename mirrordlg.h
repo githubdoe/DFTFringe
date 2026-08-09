@@ -45,9 +45,6 @@ public:
     //TODO This one not OK. Edits m_draft.ellipseMinorAxis and wont get saved. 
     // need to investigate why external code needs to change the minor axis. If it is a user preference, it should be saved in settings. If it is a computed value, it should be computed from other values and not set directly.
     void setMinorAxis(double val); 
-    //TODO even worse, same thing but it doesn't update UI text
-    // on call from a file load but the other ?
-    void setVerticalAxis(double val);
     // TODO not OK. Edits m_draft.outlineShape and wont get saved
     // from file load
     void setOutlineShape(outlineShape shape);

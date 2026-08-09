@@ -1308,7 +1308,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                 md->setOutlineShape(ELLIPSE);
                 double vertAxis;
                 iss >> dummy >> vertAxis;
-                md->setVerticalAxis(vertAxis);
+                md->setMinorAxis(vertAxis);
             }
             if (l.startsWith("Do Not use null") || l.startsWith("nulled") ){
                 wf->useSANull = false;

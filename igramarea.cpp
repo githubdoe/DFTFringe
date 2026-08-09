@@ -1545,7 +1545,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
         int majorRad = fabs((m_OutterP2.x() - m_OutterP1.x()))/2.;
         double e = (double)minorRad/majorRad;
         mirrorDlg &md = *mirrorDlg::get_Instance();
-        md.setVerticalAxis(md.currentSettings().diameter * e);
+        md.setMinorAxis(md.currentSettings().diameter * e);
         drawBoundary();
         return;
     }

@@ -672,10 +672,6 @@ void mirrorDlg::setMinorAxis(double val){
     //on_minorAxisEdit_textChanged( QString::number(val));
 }
 
-void mirrorDlg::setVerticalAxis(double val){
-    m_draft.ellipseMinorAxis = val;
-}
-
 void mirrorDlg::setOutlineShape(outlineShape shape){
     m_draft.outlineShape = (int)shape;
     ui->ellipseShape->setChecked(shape == ELLIPSE);
