@@ -194,7 +194,6 @@ MainWindow::MainWindow(QWidget *parent) :
                                           m_ogl->m_surface, metrics);
     connect(m_contourView, &contourView::showAllContours, m_surfaceManager, &SurfaceManager::showAllContours);
     connect(m_dftArea, &DFTArea::newWavefront, m_surfaceManager, &SurfaceManager::createSurfaceFromPhaseMap);
-    connect(m_surfaceManager, &SurfaceManager::diameterChanged,this,&MainWindow::diameterChanged);
     connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
     connect(m_surfTools, &surfaceAnalysisTools::updateSelected, m_surfaceManager, &SurfaceManager::backGroundUpdate);
     ui->tabWidget->addTab(review, "Results");
@@ -273,7 +272,6 @@ MainWindow::MainWindow(QWidget *parent) :
         zernEnables[i] = false;
     }
 
-    connect(m_surfaceManager, &SurfaceManager::rocChanged,this, &MainWindow::rocChanged);
     progBar = new QProgressBar(this);
 
     status1 = new QLabel();
@@ -777,15 +775,6 @@ void MainWindow::showMessage(const QString &msg, int id){
 
 
 }
-
-void MainWindow::diameterChanged(double v){
-    m_mirrorDlg->on_diameter_Changed(v);
-}
-void MainWindow::rocChanged(double v){
-    m_mirrorDlg->on_roc_Changed(v);
-}
-
-
 
 void MainWindow::on_SelectOutSideOutline_clicked(bool checked)
 {

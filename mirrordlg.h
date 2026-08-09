@@ -39,16 +39,24 @@ public:
     mirrorDlg(const mirrorDlg&) = delete;
     mirrorDlg& operator=(const mirrorDlg&) = delete;
 
-    // TODO this group must be investigated to validate they are OK
-    // we cannot change settings/configuration from both outside and inside the dialog. We need to have a single source of truth for settings/configuration.
-    void updateAutoInvertStatus();
-    void newLambda(const QString &v);
-    void setMinorAxis(double val);
+    void updateAutoInvertStatus(); //This one makes sense. Not saved
+
+    // ---- file loading ----
+    //TODO This one not OK. Edits m_draft.ellipseMinorAxis and wont get saved. 
+    // need to investigate why external code needs to change the minor axis. If it is a user preference, it should be saved in settings. If it is a computed value, it should be computed from other values and not set directly.
+    void setMinorAxis(double val); 
+    //TODO even worse, same thing but it doesn't update UI text
+    // on call from a file load but the other ?
     void setVerticalAxis(double val);
+    // TODO not OK. Edits m_draft.outlineShape and wont get saved
+    // from file load
     void setOutlineShape(outlineShape shape);
-    void on_roc_Changed(const double newVal);
-    void on_diameter_Changed(const double diam);
     
+
+    // Apply loaded wavefront settings to both runtime and persisted mirror settings.
+    // Intended for a single call after wavefront load mismatch decisions are finalized.
+    void adoptWavefrontSettings(double diameter, double roc, double lambda);
+
     
     // Computed/derived value accessors (read-only)
     double getFNumber() const { return FNumber; }
@@ -117,10 +125,9 @@ private slots:
     void on_btnChangeAutoInvert_clicked();
 
 signals:
-    // TODO notify shoud probably only happen when OK is clicked, not on every change.
     void obstructionChanged();
     void recomputeZerns();
-    void aperatureChanged();
+    void aperatureChanged(); // TODO this one only : notify shoud probably only happen when OK is clicked, not on every change.
 
 protected:
     /** @brief Reload settings before dialog becomes visible. */
@@ -143,6 +150,7 @@ private:
     QTimer spacingChangeTimer;
 
     // Persistent mirror configuration copy (source of truth for external code)
+    //TODO check if all UI settings are actually saved in settings
     MirrorSettings m_current;
     
     // Working copy for dialog edits (discarded on Cancel, committed to m_current on OK)

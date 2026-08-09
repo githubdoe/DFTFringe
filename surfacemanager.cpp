@@ -1327,6 +1327,8 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     }
     wf->m_inside = CircleOutline(QPointF(xo,yo), rado);
 
+    bool shouldAdoptWavefrontSettings = false;
+
 
     if (lambda != md->currentSettings().lambda){
         if (lambdResp == ASK){
@@ -1350,7 +1352,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         }
 
         if ( lambdResp == YES || messageResult == QMessageBox::Yes){
-            md->newLambda(QString::number(lambda));
+            shouldAdoptWavefrontSettings = true;
         }
     }
 
@@ -1374,7 +1376,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             }
         }
         if (diamResp == YES || messageResult == QMessageBox::Yes){
-            emit diameterChanged(diam);
+            shouldAdoptWavefrontSettings = true;
         }
         else {
             diam = md->currentSettings().diameter;
@@ -1403,13 +1405,18 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             }
         }
         if (rocResp == YES || messageResult == QMessageBox::Yes){
-            emit rocChanged(roc);
+            shouldAdoptWavefrontSettings = true;
         }
         else {
             roc = md->currentSettings().roc;
 
         }
     }
+
+    if (shouldAdoptWavefrontSettings) {
+        md->adoptWavefrontSettings(diam, roc, lambda);
+    }
+
     wf->diameter = diam;
     wf->roc = roc;
     wf->lambda = lambda;

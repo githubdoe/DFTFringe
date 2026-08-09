@@ -84,8 +84,6 @@ public:
 public slots:
     void enableShiftButtons(bool enable);
     void showMessage(const QString&, int id);
-    void diameterChanged(double);
-    void rocChanged(double);
     void batchProcess(QStringList fileList);
     void batchMakeSurfaceReady();
     void batchConnections(bool flag);

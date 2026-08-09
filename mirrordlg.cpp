@@ -428,6 +428,41 @@ void mirrorDlg::loadFile(QString & fileName){
         }
     }
 }
+
+void mirrorDlg::adoptWavefrontSettings(double diameter, double roc, double lambda)
+{
+    if ((outlineShape)m_draft.outlineShape == ELLIPSE && m_draft.diameter != 0.0) {
+        const double e = m_draft.ellipseMinorAxis / m_draft.diameter;
+        m_draft.ellipseMinorAxis = e * diameter;
+    }
+
+    m_draft.diameter = diameter;
+    m_draft.roc = roc;
+    m_draft.lambda = lambda;
+
+    FNumber = m_draft.roc / (2. * m_draft.diameter);
+
+    {
+        const QSignalBlocker blockDiameter(ui->diameter);
+        const QSignalBlocker blockRoc(ui->roc);
+        const QSignalBlocker blockLambda(ui->lambda);
+        const QSignalBlocker blockMinor(ui->minorAxisEdit);
+        const QSignalBlocker blockFNumber(ui->FNumber);
+
+        ui->diameter->setText(QString("%1").arg(m_draft.diameter * ((mm) ? 1. : 1./25.4), 6, 'f', 2));
+        ui->roc->setText(QString("%1").arg(m_draft.roc * ((mm) ? 1. : 1./25.4), 6, 'f', 2));
+        ui->lambda->setText(QString("%1").arg(m_draft.lambda, 6, 'f', 1));
+        ui->minorAxisEdit->setText(QString::number(m_draft.ellipseMinorAxis));
+        ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
+    }
+
+    setclearAp();
+    updateZ8();
+
+    m_current = m_draft;
+    SettingsFacade::instance().saveMirrorSettings(m_current);
+}
+
 void mirrorDlg::on_ReadBtn_clicked()
 {
     QSettings settings;
@@ -463,28 +498,6 @@ void mirrorDlg::on_diameter_textChanged(const QString &arg1) {
 
 }
 
-//Used when the just loading wavfront is different
-void mirrorDlg::on_diameter_Changed(const double diam)
-{
-    if ((outlineShape)m_draft.outlineShape == ELLIPSE){
-        double e = m_draft.ellipseMinorAxis/m_draft.diameter;
-        m_draft.ellipseMinorAxis = e * diam;
-        ui->minorAxisEdit->setText(QString().number(m_draft.ellipseMinorAxis));
-    }
-    m_draft.diameter = diam ;
-    FNumber = m_draft.roc/(2. * m_draft.diameter);
-    ui->FNumber->blockSignals(true);
-    const QSignalBlocker blocker(ui->diameter);
-    ui->FNumber->setText(QString("%1").arg(FNumber *( (mm) ? 1.: 25.4), 6, 'f', 2));
-    ui->diameter->setText(QString("%1").arg(m_draft.diameter * ((mm) ? 1.: 25.4), 6, 'f', 2));
-    ui->FNumber->blockSignals(false);
-    ui->diameter->blockSignals(false);
-
-    setclearAp();
-    updateZ8();
-
-}
-
 void mirrorDlg::on_roc_textChanged(const QString &arg1)
 {
     m_draft.roc = arg1.toDouble() * ((mm) ? 1: 25.4);
@@ -495,20 +508,6 @@ void mirrorDlg::on_roc_textChanged(const QString &arg1)
     updateZ8();
 }
 
-/* used when the just loading wavefront is different */
-void mirrorDlg::on_roc_Changed(const double newVal)
-{
-    m_draft.roc = newVal;
-
-    FNumber = m_draft.roc /(2. * m_draft.diameter);
-    ui->FNumber->blockSignals(true);
-    ui->FNumber->setText(QString("%1").arg(FNumber * ((mm) ? 1.: 25.4), 6, 'f', 2));
-    ui->FNumber->blockSignals(false);
-    ui->roc->blockSignals(true);
-    ui->roc->setText(QString("%1").arg(m_draft.roc * ((mm) ? 1.: 25.4), 6, 'f', 2));
-    ui->roc->blockSignals(false);
-    updateZ8();
-}
 void mirrorDlg::updateZ8(){
 //Z = d^6 / (16 * R^5)
 
@@ -546,9 +545,6 @@ void mirrorDlg::on_obs_textChanged(const QString &arg1)
         m_obsChanged = true;
     m_draft.obstruction = ((mm) ? 1: 25.4) * arg1.toDouble();
 
-}
-void mirrorDlg::newLambda(const QString &v){
-    ui->lambda->setText(v);
 }
 
 void mirrorDlg::on_lambda_textChanged(const QString &arg1)
