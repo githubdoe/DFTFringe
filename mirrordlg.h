@@ -117,13 +117,7 @@ private slots:
     void on_btnChangeAutoInvert_clicked();
 
 signals:
-    // TODO some of these are not used. 
-    // also notify shoud probably only happen when OK is clicked, not on every change.
-    void diameterChanged(double);
-    void rocChanged(double);
-    void lambdaChanged(double);
-    void saNullChanged(double);
-    void CCChanged(double);
+    // TODO notify shoud probably only happen when OK is clicked, not on every change.
     void obstructionChanged();
     void newPath(QString);
     void recomputeZerns();
