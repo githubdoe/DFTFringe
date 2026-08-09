@@ -41,7 +41,9 @@ mirrorDlg *mirrorDlg::get_Instance(){
 
 mirrorDlg::mirrorDlg(QWidget *parent) :
     QDialog(parent),
-    mm(true),m_obsChanged(false),ui(new Ui::mirrorDlg)
+    ui(new Ui::mirrorDlg),
+    m_obsChanged(false),
+    mm(true)
 {
     ui->setupUi(this);
     

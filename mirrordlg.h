@@ -39,7 +39,7 @@ public:
     mirrorDlg(const mirrorDlg&) = delete;
     mirrorDlg& operator=(const mirrorDlg&) = delete;
 
-    // TODO this group must be investigatedto validate they are OK
+    // TODO this group must be investigated to validate they are OK
     // we cannot change settings/configuration from both outside and inside the dialog. We need to have a single source of truth for settings/configuration.
     void updateAutoInvertStatus();
     void newLambda(const QString &v);
