@@ -1466,7 +1466,7 @@ void MainWindow::zoomProfile(bool flag){
         profileFv->close();
         return;
     }
-    profileFv = new QWidget(0);
+    profileFv = new QWidget(this, Qt::Window);
     profileFv->setAttribute( Qt::WA_DeleteOnClose );
     connect(profileFv,&QObject::destroyed,this, &MainWindow::restoreProfile);
     QVBoxLayout *l = new QVBoxLayout();
@@ -1481,7 +1481,7 @@ void MainWindow::zoomContour(bool flag){
         contourFv->close();
         return;
     }
-    contourFv = new QWidget(0);
+    contourFv = new QWidget(this, Qt::Window);
     contourFv->setAttribute( Qt::WA_DeleteOnClose );
     connect(contourFv,&QObject::destroyed,this, &MainWindow::restoreContour);
     QVBoxLayout *l = new QVBoxLayout();
@@ -1494,7 +1494,7 @@ void MainWindow::zoomContour(bool flag){
 void MainWindow::zoomOgl()
 {
 
-    oglFv = new QWidget(0);
+    oglFv = new QWidget(this, Qt::Window);
     oglFv->setAttribute( Qt::WA_DeleteOnClose );
     connect(oglFv,&QObject::destroyed,this, &MainWindow::restoreOgl);
     QVBoxLayout *l = new QVBoxLayout();
@@ -2026,7 +2026,8 @@ void MainWindow::on_actionSmooth_current_wave_front_triggered()
         QMessageBox::warning(this, "No Wavefronts", "You must first load a wave front");
         return;
     }
-    ZernikeSmoothingDlg *dlg = new ZernikeSmoothingDlg(*sm.m_wavefronts[sm.m_currentNdx]);
+    ZernikeSmoothingDlg *dlg = new ZernikeSmoothingDlg(*sm.m_wavefronts[sm.m_currentNdx], this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->resize(1000,1000);
     dlg->show();
     return;
