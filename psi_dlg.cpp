@@ -293,10 +293,10 @@ void PSI_dlg::plot(QVector<double> phases, int iteration, double sdp){
             double angle = phases[i];
             double angle2 = phases[i+1];
 
-            int x1 = half - rlast * cos(angle + M_PI/2.);
-            int x2 = half - r * cos(angle2 + M_PI/2.);
-            int y1 = half - rlast * sin(angle + M_PI/2.);
-            int y2 = half - r * sin(angle2+ M_PI/2.);
+            int x1 = qRound(half - rlast * cos(angle + M_PI/2.));
+            int x2 = qRound(half - r * cos(angle2 + M_PI/2.));
+            int y1 = qRound(half - rlast * sin(angle + M_PI/2.));
+            int y2 = qRound(half - r * sin(angle2+ M_PI/2.));
             // qDebug() << "angle1" << angle * k << angle2 * k;
             while (angle < 0)
                 angle = (2 * M_PI) + angle;
