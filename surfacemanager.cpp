@@ -470,10 +470,14 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     wf->nulledData.release();
 }
 cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector<double> &zerns, QVector<int> zernsToUse){
-    double rad = getCurrent()->m_outside.m_radius;
-    double xcen = (wx-1)/2, ycen = (wy-1)/2;
-
+    wavefront *currentWf = getCurrent();
     cv::Mat result = cv::Mat::zeros(wy,wx, numType);
+    if (currentWf == nullptr) {
+        return result;
+    }
+
+    double rad = currentWf->m_outside.m_radius;
+    double xcen = (wx-1)/2, ycen = (wy-1)/2;
 
     double rho;
 
@@ -482,9 +486,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
         if (value > maxZernToUse)
             maxZernToUse = value;
     }
-
-
-    std::vector<bool> &en = (getCurrent()->zernEnablesApplied.empty()) ? zernEnables : getCurrent()->zernEnablesApplied;
+    std::vector<bool> &en = (currentWf->zernEnablesApplied.empty()) ? zernEnables : currentWf->zernEnablesApplied;
     mirrorDlg *md = mirrorDlg::get_Instance();
     for (int i = 0; i <  wx; ++i)
     {
