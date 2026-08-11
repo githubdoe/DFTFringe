@@ -32,8 +32,7 @@ class mirrorDlg : public QDialog
     Q_OBJECT
 
 public:
-    // TODO if we get rid of the singleton design, settings could be read from settingsFacade instead here
-    // check if it makes sense
+    // TODO we could get rid of singleton if every file accessed settings though SettingsFacade instead of mirrorDlg::get_Instance()->currentSettings()
     static mirrorDlg *get_Instance();
     ~mirrorDlg();
     mirrorDlg(const mirrorDlg&) = delete;
@@ -42,11 +41,12 @@ public:
     void updateAutoInvertStatus(); //This one makes sense. Not saved
 
     // ---- file loading ----
-    //TODO This one not OK. Edits m_draft.ellipseMinorAxis and wont get saved. 
-    // need to investigate why external code needs to change the minor axis. If it is a user preference, it should be saved in settings. If it is a computed value, it should be computed from other values and not set directly.
+    //TODO This is still not 100% clean
+    // One call from loading file shoulb be integgrated to adoptWavefrontSettings
+    // other calls are outline helpers. Need to be clarified
     void setMinorAxis(double val); 
-    // TODO not OK. Edits m_draft.outlineShape and wont get saved
-    // from file load
+    // TODO to be fixed with #358. 
+    // saving shape shall be asked as it is for ROC, lambda and diameter and be saved using adoptWavefrontSettings
     void setOutlineShape(outlineShape shape);
     
 

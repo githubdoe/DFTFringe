@@ -906,7 +906,7 @@ void SurfaceManager::syncGaussianStateForWavefront(wavefront *wf){
     m_surfaceTools->setGaussianControls(wf->gbEnabled, wf->gbValue);
 
     mirrorDlg *md = mirrorDlg::get_Instance();
-    m_surfaceTools->setBlurText(QString("%1 mm").arg(.01 * wf->gbValue * md->diameter, 6, 'f', 2));
+    m_surfaceTools->setBlurText(QString("%1 mm").arg(.01 * wf->gbValue * md->currentSettings().diameter, 6, 'f', 2));
 }
 
 void SurfaceManager::computeMetrics(wavefront *wf){
