@@ -351,13 +351,15 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
 
 void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     zernikeProcess &zp = *zernikeProcess::get_Instance();
+    m_GB_enabled = wf->gbEnabled;
+    m_gbValue = wf->gbValue;
     if (wf->dirtyZerns){
         if (mirrorDlg::get_Instance()->isEllipse()){
             wf->nulledData = wf->data.clone();
-            if (m_GB_enabled){
+            if (wf->gbEnabled){
 
                 // compute blur radius
-                int gaussianRad = 2 * wf->m_outside.m_radius * m_gbValue * .01;
+                int gaussianRad = 2 * wf->m_outside.m_radius * wf->gbValue * .01;
                 gaussianRad &= 0xfffffffe;
 
                 ++gaussianRad;
@@ -441,9 +443,9 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     wf->workData = wf->nulledData.clone();
 
 
-    if (m_GB_enabled){
+        if (wf->gbEnabled){
             // compute blur radius
-            int gaussianRad = 2 * wf->m_outside.m_radius * m_gbValue * .01;
+            int gaussianRad = 2 * wf->m_outside.m_radius * wf->gbValue * .01;
 
             gaussianRad &= 0xfffffffe;
             ++gaussianRad;
@@ -824,6 +826,7 @@ void SurfaceManager::waveFrontClickedSlot(int ndx)
 {
 
     m_currentNdx = ndx;
+    syncGaussianStateForWavefront(m_wavefronts[ndx]);
     QString msg = QString(" %1x%2 ").arg(m_wavefronts[ndx]->data.cols).arg(m_wavefronts[ndx]->data.rows);
     ((MainWindow*)parent())->statusBar()->showMessage(msg);
     sendSurface(m_wavefronts[ndx]);
@@ -843,6 +846,7 @@ void SurfaceManager::wavefrontDClicked(const QString & name){
     for (int i = 0; i < m_wavefronts.size(); ++i){
         if (m_wavefronts[i]->name.endsWith(name)){ //TODO JST 2023/09/11 this does not work on some name combinations. To be fixed
             m_currentNdx = i;
+            syncGaussianStateForWavefront(m_wavefronts[i]);
             sendSurface(m_wavefronts[i]);
             break;
         }
@@ -854,6 +858,9 @@ void SurfaceManager::surfaceSmoothGBValue(double value){
     QSettings settings;
     settings.setValue("GBValue", (int)(value));
     m_gbValue = value;
+    if (m_wavefronts.size() > 0) {
+        m_wavefronts[m_currentNdx]->gbValue = value;
+    }
     mirrorDlg *md = mirrorDlg::get_Instance();
 
     m_surfaceTools->setBlurText(QString("%1 mm").arg( .01 * value * md->currentSettings().diameter, 6, 'f', 2));
@@ -869,6 +876,9 @@ void SurfaceManager::surfaceSmoothGBValue(double value){
 void SurfaceManager::surfaceSmoothGBEnabled(bool b){
 
     m_GB_enabled = b;
+    if (m_wavefronts.size() > 0) {
+        m_wavefronts[m_currentNdx]->gbEnabled = b;
+    }
 
     QSettings settings;
     settings.setValue("GBlur", m_GB_enabled);
@@ -884,6 +894,19 @@ void SurfaceManager::surfaceSmoothGBEnabled(bool b){
         return;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
     m_waveFrontTimer->start(500);
+}
+
+void SurfaceManager::syncGaussianStateForWavefront(wavefront *wf){
+    if (wf == nullptr) {
+        return;
+    }
+
+    m_GB_enabled = wf->gbEnabled;
+    m_gbValue = wf->gbValue;
+    m_surfaceTools->setGaussianControls(wf->gbEnabled, wf->gbValue);
+
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    m_surfaceTools->setBlurText(QString("%1 mm").arg(.01 * wf->gbValue * md->diameter, 6, 'f', 2));
 }
 
 void SurfaceManager::computeMetrics(wavefront *wf){
@@ -1121,6 +1144,8 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     wf->diameter = md->currentSettings().diameter;
     wf->lambda = md->currentSettings().lambda;
     wf->roc = md->currentSettings().roc;
+    wf->gbEnabled = m_GB_enabled;
+    wf->gbValue = m_gbValue;
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
     wf->regions = polyArea;
@@ -1420,6 +1445,8 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     wf->diameter = diam;
     wf->roc = roc;
     wf->lambda = lambda;
+    wf->gbEnabled = m_GB_enabled;
+    wf->gbValue = m_gbValue;
     wf->wasSmoothed = false;
 
     return wf;
@@ -1537,6 +1564,7 @@ void SurfaceManager::next(){
         ++m_currentNdx;
     else
         m_currentNdx = 0;
+    syncGaussianStateForWavefront(m_wavefronts[m_currentNdx]);
     sendSurface(m_wavefronts[m_currentNdx]);
 
 
@@ -1551,6 +1579,7 @@ void SurfaceManager::previous(){
     else
         m_currentNdx = m_wavefronts.length()-1;
 
+    syncGaussianStateForWavefront(m_wavefronts[m_currentNdx]);
     sendSurface(m_wavefronts[m_currentNdx]);
 }
 QVector<int> histo(const std::vector<double> &data, int bins, double min, double max){
@@ -1574,6 +1603,7 @@ void SurfaceManager::saveAllWaveFrontStats(){
     if (m_wavefronts.size() == 0)
         return;
     statsView * sv = new statsView(this);
+    sv->setAttribute(Qt::WA_DeleteOnClose);
     sv->show();
     return;
 }
@@ -2040,7 +2070,6 @@ void SurfaceManager::filter(){
 }
 
 #include "wftexaminer.h"
-wftExaminer *wex;
 double wrapAngle(double angle){
     if (angle < -360){
         angle += 360;
@@ -2050,7 +2079,12 @@ double wrapAngle(double angle){
     return angle;
 }
 void SurfaceManager::inspectWavefront(){
-    wex = new wftExaminer(m_wavefronts[m_currentNdx]);
+    wftExaminer *wex = new wftExaminer(m_wavefronts[m_currentNdx], nullptr);
+    wex->setAttribute(Qt::WA_DeleteOnClose);
+    if (parent()) {
+        QObject::connect(parent(), &QObject::destroyed, wex, &QWidget::close);
+    }
+    QObject::connect(qApp, &QCoreApplication::aboutToQuit, wex, &QWidget::close);
     wex->show();
 }
 
@@ -3219,7 +3253,7 @@ void SurfaceManager::report(){
         doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
                          QVariant(pixStats.scaledToWidth(dlg.histoWidth * finalWidth,
                                                           Qt::SmoothTransformation)));
-        imagesHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Histogram and SLope error</th></tr> <tr><td> <img src = '" +
+        imagesHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Histogram and Slope error</th></tr> <tr><td> <img src = '" +
                            pixStat + "'></td></tr></table>");
     }
     editor->setHtml(title + html +zerns + imagesHtml +  tail);

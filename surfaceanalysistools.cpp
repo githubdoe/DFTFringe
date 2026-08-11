@@ -24,6 +24,7 @@
 #include <QShortcut>
 #include <QtAlgorithms>
 #include <QLineEdit>
+#include <QSignalBlocker>
 #include "mirrordlg.h"
 #include <QMessageBox>
 surfaceAnalysisTools *surfaceAnalysisTools::m_Instance = NULL;
@@ -67,6 +68,14 @@ void surfaceAnalysisTools::enableControls(bool flag){
 
 void surfaceAnalysisTools::setBlurText(const QString &txt){
     ui->blurMm->setText(txt);
+}
+
+void surfaceAnalysisTools::setGaussianControls(bool enabled, double value){
+    const QSignalBlocker blurToggleBlocker(ui->blurCB);
+    const QSignalBlocker blurValueBlocker(ui->surfaceSmoothGausianBlurr);
+    ui->blurCB->setChecked(enabled);
+    ui->surfaceSmoothGausianBlurr->setValue(value);
+    ui->surfaceSmoothGausianBlurr->setEnabled(enabled);
 }
 
 void surfaceAnalysisTools::addWaveFront(const QString &name){

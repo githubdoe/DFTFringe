@@ -48,6 +48,7 @@ wftExaminer::wftExaminer( wavefront *wf,QWidget *parent) :
 
 wftExaminer::~wftExaminer()
 {
+    delete m_Pl;
     delete ui;
 }
 

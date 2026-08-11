@@ -227,9 +227,10 @@ void CropGaussianBlur(const cv::Mat &in_, cv::Mat &out, int kernelSize, const Ci
     double radius2 = (outside.m_radius-2)*(outside.m_radius-2);
     for (int x=0; x<width; x++) {
         double dx = (cx-x)*(cx-x);
-        for (int y=0; y<width; y++) {
+        for (int y=0; y<height; y++) {
             double dy = (cy-y)*(cy-y);
-            if ((dx+dy) >= radius2) {
+            // Keep boundary pixels inside, consistent with fillCircle() mask creation.
+            if ((dx+dy) > radius2) {
                 mask.at<double>(y,x) = 1e-5; // can't use zero or we get divide by zero issues later (in cells we don't care about)
                 in.at<double>(y,x) = 0;
             }
@@ -246,9 +247,9 @@ void CropGaussianBlur(const cv::Mat &in_, cv::Mat &out, int kernelSize, const Ci
     if (center.m_radius > 0) {
         for (int x=0; x<width; x++) {
             double dx = (cx-x)*(cx-x);
-            for (int y=0; y<width; y++) {
+            for (int y=0; y<height; y++) {
                 double dy = (cy-y)*(cy-y);
-                if ((dx+dy) < radius2) {
+                if ((dx+dy) <= radius2) {
                     mask.at<double>(y,x) = 1e-5; // can't use zero or we get divide by zero issues later (in cells we don't care about)
                     in.at<double>(y,x) = 0;
                 }
@@ -292,9 +293,9 @@ void CropGaussianBlur(const cv::Mat &in_, cv::Mat &out, int kernelSize, const Ci
 
     for (int x=0; x<width; x++) {
         double dx2 = (cx-x)*(cx-x);
-        for (int y=0; y<width; y++) {
+        for (int y=0; y<height; y++) {
             double dy2 = (cy-y)*(cy-y);
-            if ((dx2+dy2) >= radius2) {
+            if ((dx2+dy2) > radius2) {
                 out.at<double>(y,x) = 0;
             }
         }
@@ -310,9 +311,9 @@ void CropGaussianBlur(const cv::Mat &in_, cv::Mat &out, int kernelSize, const Ci
     if (center.m_radius > 0) {
         for (int x=0; x<width; x++) {
             double dx = (cx-x)*(cx-x);
-            for (int y=0; y<width; y++) {
+            for (int y=0; y<height; y++) {
                 double dy = (cy-y)*(cy-y);
-                if ((dx+dy) < radius2) {
+                if ((dx+dy) <= radius2) {
                     out.at<double>(y,x) = 0;
                 }
             }
