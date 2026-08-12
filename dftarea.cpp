@@ -258,13 +258,6 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
 
     double rad = igramArea->m_outside.m_radius - reduction;
 
-
-    double rady = rad;
-
-    if (md.isEllipse()){
-        rady = rady * md.currentSettings().ellipseMinorAxis / md.currentSettings().diameter;
-    }
-
     double left = centerX - rad;
     double top = centerY - rad;
     std::vector<Mat > bgr_planes;
