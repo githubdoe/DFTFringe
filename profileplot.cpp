@@ -427,7 +427,7 @@ QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool all
     // 1. Setup constants
     double steps = 1.0 / wf->m_outside.m_radius;
     double offset = allowOffset ? y_offset : 0.0;
-    double radius = md.currentSettings().apertureReduction / 2.0;
+    double radius = md.getClearAperture() / 2.0;
     double obs_radius = md.currentSettings().obstruction / 2.0;
 
     if (m_displayInches) {

@@ -31,7 +31,7 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
 
 
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    m_radius = md.currentSettings().apertureReduction/2.;
+    m_radius = md.getClearAperture()/2.;
     QSettings set;
     ui->minvalue->blockSignals(true);
     ui->maxvalue->blockSignals(true);
@@ -644,7 +644,7 @@ void percentCorrectionDlg::setData( QVector< surfaceData *> data) {
     QSettings set;
     m_outputLambda = set.value("outputLambda").toDouble();
 
-    m_radius = md.currentSettings().apertureReduction/2.;
+    m_radius = md.getClearAperture()/2.;
     surfs = data;
     ui->percentTable->setRowCount(data.length());
 

@@ -60,6 +60,7 @@ public:
     double getZ8() const { return z8; }
     static QString getProjectPath();
     double getMinorAxis();
+    double getClearAperture() const;
     bool isEllipse();
     bool shouldFlipH();
 

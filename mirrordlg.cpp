@@ -597,7 +597,7 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
      // Get apertureReduction from draft (already loaded from persistent storage)
      ui->reduceValue->setValue(m_draft.apertureReduction * ((mm) ? 1. : 1./25.4));
      ui->reduceValue->blockSignals(false);
-     ui->ClearAp->setText(QString("%1 ").arg(m_draft.apertureReduction * ((mm) ? 1: 1./25.4), 6, 'f', 2));
+    setclearAp();
 }
 
 void mirrorDlg::on_buttonBox_accepted()
@@ -701,6 +701,14 @@ void mirrorDlg::setclearAp(){
     if (m_draft.apertureReductionEnabled == false)
         clearAperature = m_draft.diameter;
     ui->ClearAp->setText(QString("%1 ").arg(clearAperature * ((mm) ? 1: 1./25.4), 6, 'f', 2));
+}
+
+double mirrorDlg::getClearAperture() const {
+    double clearAperature = (m_current.diameter - m_current.apertureReduction * 2) ;
+    if (m_current.apertureReductionEnabled == false){
+        clearAperature = m_current.diameter;
+    }
+    return clearAperature;
 }
 
 void mirrorDlg::on_ReducApp_clicked(bool checked)

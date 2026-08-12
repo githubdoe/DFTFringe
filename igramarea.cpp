@@ -1719,7 +1719,7 @@ void IgramArea::drawBoundary()
                 painter.setBrush(Qt::NoBrush);
             }
             outside.draw(painter,1.,s2);
-            if ( md.currentSettings().apertureReductionEnabled && md.currentSettings().apertureReduction != md.currentSettings().diameter){
+            if ( md.currentSettings().apertureReductionEnabled && md.getClearAperture() != md.currentSettings().diameter){
                 painter.setPen(QPen(edgePenColor, edgePenWidth, Qt::DotLine));
                 computeEdgeRadius();
                 painter.drawEllipse(outside.m_center,
