@@ -1349,8 +1349,8 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     }
     wf->m_inside = CircleOutline(QPointF(xo,yo), rado);
 
-
     if (lambda != md->lambda){
+        int resp = QMessageBox::No;
         if (lambdResp == ASK){
             QString message("The interferogram wavelength (");
             message += QString("%1").arg( lambda, 6, 'f', 3) +
@@ -1358,7 +1358,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                     "Do you want to make the config match?";
 
 
-            int resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
+            resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
                                  QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
             switch (resp){
@@ -1371,7 +1371,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             }
         }
 
-        if ( lambdResp == YES || messageResult == QMessageBox::Yes){
+        if ( lambdResp == YES || resp == QMessageBox::Yes){
             md->newLambda(QString::number(lambda));
         }
     }
@@ -1382,8 +1382,9 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         message += QString("%1").arg(diam, 6, 'f', 3) +
                 ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->diameter, 6, 'f', 3) +
                 "Do you want to make the config match?";
+        int resp = QMessageBox::No;
         if (diamResp == ASK){
-            int resp = QMessageBox(QMessageBox::Information,"config", message,QMessageBox::Yes|QMessageBox::No |
+            resp = QMessageBox(QMessageBox::Information,"config", message,QMessageBox::Yes|QMessageBox::No |
                                  QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
             switch (resp){
@@ -1395,7 +1396,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                 break;
             }
         }
-        if (diamResp == YES || messageResult == QMessageBox::Yes){
+        if (diamResp == YES || resp == QMessageBox::Yes){
             emit diameterChanged(diam);
         }
         else {
@@ -1411,8 +1412,9 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                 ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->roc, 6, 'f', 3) +
                 "Do you want to make the config match?";
         //qDebug() << message;
+        int resp = QMessageBox::No;
         if (rocResp == ASK){
-            int resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
+            resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
                                  QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
             switch (resp){
@@ -1424,7 +1426,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                 break;
             }
         }
-        if (rocResp == YES || messageResult == QMessageBox::Yes){
+        if (rocResp == YES || resp == QMessageBox::Yes){
             emit rocChanged(roc);
         }
         else {
