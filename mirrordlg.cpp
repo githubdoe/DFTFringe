@@ -140,6 +140,35 @@ double mirrorDlg::getMinorAxis(){
     return ui->minorAxisEdit->text().toDouble();
 }
 
+double mirrorDlg::annularObstructionDiameter() const
+{
+    return m_annularObsPercent * diameter;
+}
+
+double mirrorDlg::annularFitEpsilon() const
+{
+    if (diameter <= 0.)
+        return 0.;
+
+    double fitAperture = diameter;
+    if (m_aperatureReductionEnabled) {
+        fitAperture = diameter - 2. * aperatureReduction;
+    }
+    if (fitAperture <= 0.) {
+        fitAperture = m_clearAperature;
+    }
+    if (fitAperture <= 0.) {
+        fitAperture = diameter;
+    }
+
+    double eps = annularObstructionDiameter() / fitAperture;
+    if (eps < 0.)
+        eps = 0.;
+    if (eps >= 1.)
+        eps = 0.999999;
+    return eps;
+}
+
 bool mirrorDlg::isEllipse(){
     return m_outlineShape == ELLIPSE;
 }
@@ -533,7 +562,8 @@ void mirrorDlg::updateZ8(){
 
 
     if (m_useAnnular){
-        double f = (1 - (m_annularObsPercent * m_annularObsPercent));
+        double eps = annularFitEpsilon();
+        double f = (1 - (eps * eps));
         f *= f;
         z8 *= f;
     }
@@ -609,7 +639,7 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
      ui->minorAxisEdit->setText(QString("%1").arg(m_verticalAxis/div, 6, 'f', 2));
      ui->reduceValue->blockSignals(true);
      ui->annularDiameter->blockSignals(true);
-    ui->annularDiameter->setValue(m_clearAperature * m_annularObsPercent * ((mm)? 1.: 1./25.4));
+    ui->annularDiameter->setValue(annularObstructionDiameter() * ((mm)? 1.: 1./25.4));
      ui->annularDiameter->blockSignals(false);
      QSettings set;
      aperatureReduction = set.value("config aperatureReduction",0.).toDouble();
@@ -732,7 +762,7 @@ void mirrorDlg::setclearAp(){
     ui->ClearAp->setText(QString("%1 ").arg(m_clearAperature * ((mm) ? 1: 1./25.4), 6, 'f', 2));
     if (m_useAnnular) {
         ui->annularDiameter->blockSignals(true);
-        ui->annularDiameter->setValue(m_clearAperature * m_annularObsPercent * ((mm) ? 1. : 1./25.4));
+        ui->annularDiameter->setValue(annularObstructionDiameter() * ((mm) ? 1. : 1./25.4));
         ui->annularDiameter->blockSignals(false);
     }
 }
@@ -766,11 +796,11 @@ void mirrorDlg::on_annulusPercent_valueChanged(double arg1)
 {
     ui->annularDiameter->blockSignals(true);
     m_annularObsPercent = .01 * arg1;
-    ui->annularDiameter->setValue( m_annularObsPercent * m_clearAperature * ( (mm) ? 1.: 1./25.4));
+    ui->annularDiameter->setValue( annularObstructionDiameter() * ( (mm) ? 1.: 1./25.4));
     ui->annularDiameter->blockSignals(false);
 
     if (m_connectAnnulusToObs){
-        ui->obs->setText(QString::number(m_annularObsPercent * m_clearAperature * ((mm)? 1.: 1./25.4)));
+        ui->obs->setText(QString::number(annularObstructionDiameter() * ((mm)? 1.: 1./25.4)));
     }
     updateZ8();
 }
@@ -814,9 +844,9 @@ void mirrorDlg::on_annulusHelp_clicked()
 
 void mirrorDlg::on_annularDiameter_valueChanged(double arg1)
 {
-    if (m_clearAperature <= 0.)
+    if (diameter <= 0.)
         return;
-    m_annularObsPercent = arg1/m_clearAperature;
+    m_annularObsPercent = arg1/diameter;
     ui->annulusPercent->setValue(m_annularObsPercent * 100);
     updateZ8();
 }
