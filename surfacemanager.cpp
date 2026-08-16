@@ -77,8 +77,6 @@
 #include "utils.h"
 #include "cnpy.h"
 
-cv::Mat theMask;
-cv::Mat deb;
 double outputLambda;
 double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
 {
@@ -715,7 +713,6 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     //line(wf->workMask, Point(s/2, 0), Point(s/2,s),cv::Scalar(0,0,0), 10);
    // line(wf->workMask, Point(0, s/2), Point(s,s/2),cv::Scalar(0,0,0), 10);
     //line(wf->workMask, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), 10);
-    theMask = mask.clone();
 
 
     // add central obstruction (not to be confused with a hole in the mirror - this comes from mirror configuration)
