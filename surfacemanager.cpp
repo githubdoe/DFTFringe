@@ -641,8 +641,6 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
         rado += 1;
     }
 
-    double cx = wf->m_inside.m_center.x();
-    double cy = wf->m_inside.m_center.y();
     cv::Mat mask = cv::Mat::zeros(height,width,CV_8U);
     mirrorDlg &md = *mirrorDlg::get_Instance();
     double rx = radm;
@@ -668,7 +666,8 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
 
     if (rado > 0 && useInsideCircle) {
         uchar color = 0;
-        fillCircle(mask, cx,cy,rado, &color);
+        // inside circle is not always defined. So we use outside circle coordinates. They are concentric.
+        fillCircle(mask, xm, ym, rado, &color);
     }
 
     // expand the region by 10%
