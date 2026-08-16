@@ -1646,6 +1646,7 @@ void SurfaceManager::backGroundUpdate(){
             zp.m_bDontProcessEvents=false;
         }
         catch (int i) {
+            qWarning() << "Exception caught in generateSurfacefromWavefront:" << i;
             break;
         }
     }
