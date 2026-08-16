@@ -643,15 +643,16 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
 
     cv::Mat mask = cv::Mat::zeros(height,width,CV_8U);
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    double rx = radm;
-    double rx2 = rx * rx;
-    double ry = rx * md.m_verticalAxis/md.diameter;
-    double ry2 = ry * ry;
+
     if (!mirrorDlg::get_Instance()->isEllipse()){
         uchar v = 0xff;
         fillCircle(mask, xm,ym,radm, &v);
     }
     else {
+        double rx = radm;
+        double rx2 = rx * rx;
+        double ry = rx * md.m_verticalAxis/md.diameter;
+        double ry2 = ry * ry;
         for (int y = 0; y < height; ++y){
             for (int x = 0; x < width; ++x){
 
