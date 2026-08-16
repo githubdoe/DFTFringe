@@ -80,7 +80,7 @@ IntroPage::IntroPage(QWidget *parent)
                             "It will create a pdf file with up to 5 sections.<ul>"
                             "<li>Section 1: shows contours pairs. </li>"
                             "<li>Section 2: shows countours pairs counter rotated.</li>"
-                            " <li>Section 3: shows a graph of the x and y astig values for each file.  This graph is used to verify if the resutls are valid.<br>"
+                            " <li>Section 3: shows a graph of the 0° and 45° astig values for each file.  This graph is used to verify if the resutls are valid.<br>"
                             "              Valid results will have the points on a circle or circles with almost the same diameters.<br>"
                             "              The diameter of the circle represents the astig difference caused by the system at that mirror rotation.<br>"
                             "              If the analysis is valid the center of the circle will the by system astig.</li>"

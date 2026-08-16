@@ -41,7 +41,7 @@ QString intro( "<p style = font-size:16px ;>Astigmatism values vary from sample 
                " This report displays that variabity and shows when enough samples have been obtained to"
                " average out the variability of air currents at each mirror rotation. The first plot shows an overview"
                " of all the samples.  The rest of the plots show the sample distribution of each group and an "
-               " accumulating average of the x and y astigs of the samples in the group.  Usually each group "
+               " accumulating average of the 0° and 45° astigs of the samples in the group.  Usually each group "
                "is from one mirror rotation."
                " <br><br>If best fit has been selected then a thick black circle is drawn through the average of each"
                " group.  The center of the circle is the average system induced astig( mostly due to test stand.)  The radius of the circle "
@@ -412,8 +412,8 @@ void astigStatsDlg::plot(){
     double maxmag = std::max(xmag,ymag);
     ui->mPlot->setAxisScale(QwtPlot::xBottom, -maxmag, maxmag);
     ui->mPlot->setAxisScale(QwtPlot::yLeft,   -maxmag, maxmag);
-    ui->mPlot->setAxisTitle(QwtPlot::xBottom,"wavefront X astig");
-    ui->mPlot->setAxisTitle(QwtPlot::yLeft,"wavefront Y Astig");
+    ui->mPlot->setAxisTitle(QwtPlot::xBottom,"wavefront 0° astig");
+    ui->mPlot->setAxisTitle(QwtPlot::yLeft,"wavefront 45° Astig");
 
 
     // draw best fit circle
@@ -585,8 +585,8 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width){
     QwtPlotCurve *xvalsc = new QwtPlotCurve();
     QwtPlotCurve *yvalsc = new QwtPlotCurve();
 
-    QwtPlotCurve *runx = new QwtPlotCurve(QString((m_usePolar? "mag ":"x "))+ QString("running avg"));
-    QwtPlotCurve *runy = new QwtPlotCurve(QString((m_usePolar? "angle ": "y ")) + QString("running avg"));
+    QwtPlotCurve *runx = new QwtPlotCurve(QString((m_usePolar? "mag ":"0° "))+ QString("running avg"));
+    QwtPlotCurve *runy = new QwtPlotCurve(QString((m_usePolar? "angle ": "45° ")) + QString("running avg"));
     double runAvgx = 0;
     double runAvgy = 0;
     double n = runningAvgN;
@@ -655,7 +655,7 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width){
     xvalsc->setItemAttribute(QwtPlotItem::Legend, false);
     yvalsc->setItemAttribute(QwtPlotItem::Legend, false);
 
-    xavgc->setTitle(QString(m_usePolar? "Mag ":"X ") +QString("mean"));
+    xavgc->setTitle(QString(m_usePolar? "Mag ":"0° ") +QString("mean"));
     yavgc->setLegendAttribute( QwtPlotCurve::LegendShowLine );
     yavgc->setLegendIconSize(QSize(20,20));
 
@@ -669,7 +669,7 @@ QwtPlot *astigStatsDlg::avgPlot(cv::Mat x, cv::Mat y, int width){
     yvalsc->setSamples(yPoints);
     if (showSamples)yvalsc->attach(plot);
     yavgc->attach(plot);
-    yavgc->setTitle(QString(m_usePolar? "angle ":"y ") + "mean");
+    yavgc->setTitle(QString(m_usePolar? "angle ":"45° ") + "mean");
     plot->setTitle("accumulating astig");
 
 
@@ -886,13 +886,13 @@ void astigStatsDlg::on_distribution_clicked()
         xpl->resize(width * .4,width * .25);
         xpl->setAxisTitle(QwtPlot::xBottom, " SD: " + QString().number(xstd.val[0]));
 
-        xpl->setTitle(" X "+ QString().number(size) + " samples");
+        xpl->setTitle(" 0° "+ QString().number(size) + " samples");
         QwtPlot *ypl = makeSDPlot(yhist, ymin,ymax, ymean.val[0], bins, width * .5, width * .25);
 
 
 
 
-        ypl->setTitle(" Y " + QString().number(size) + " samples");
+        ypl->setTitle(" 45° " + QString().number(size) + " samples");
         ypl->setAxisTitle(QwtPlot::xBottom, " SD: " + QString().number(ystd.val[0]));
 
         html.append("<p style=\"page-break-before: always\"><br><center><h2> Sample Group " + Name +

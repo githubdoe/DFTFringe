@@ -242,7 +242,7 @@ void statsView::on_SaveCSV_clicked()
     QTextStream file(&thefile);
     QString dir = info.dir().path();
     dir = dir.right(dir.size() - dir.lastIndexOf("/")-1);
-    file << title(dir) << ",'wavefront RMS'"<< ",,Piston,XTile,Ytilt,Defocus,XAstig,Yastig,Z6,Z7,Spherical,Z9,Z10 " << Qt::endl;
+    file << title(dir) << ",'wavefront RMS'"<< ",,Piston,Xtilt,Ytilt,Defocus,0astig,45astig,Z6,Z7,Spherical,Z9,Z10 " << Qt::endl;
     cv::Mat mZerns(m_sm->m_wavefronts.size(),Z_TERMS,numType,0.);
     int row = 0;
     mirrorDlg *md = mirrorDlg::get_Instance();

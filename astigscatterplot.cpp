@@ -36,8 +36,8 @@ astigScatterPlot::astigScatterPlot(QWidget *parent):QwtPlot( parent ),m_max(.3)
     d_curve->attach( this );
     setAxisScale(QwtPlot::xBottom, -.3, .3);
     setAxisScale(QwtPlot::yLeft,   -.3, .3);
-    setAxisTitle(QwtPlot::xBottom, "X");
-    setAxisTitle(QwtPlot::yLeft, "Y");
+    setAxisTitle(QwtPlot::xBottom, "0°");
+    setAxisTitle(QwtPlot::yLeft, "45°");
     d_curve->setPen( Qt::red );
     d_curve->setStyle( QwtPlotCurve::Dots );
     d_curve->setSymbol( NULL );

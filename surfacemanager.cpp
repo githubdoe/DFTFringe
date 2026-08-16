@@ -2300,7 +2300,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     html.append( "<table  style='ds margin-top:0px; margin-bottom:0px; margin-left:10px; margin-right:10px;'"
                  " width='70%' cellspacing='1' cellpadding='1'>"
 
-                 "<tr><b><td>rotation angle</td><td>X astig</td><td>Y astig</td><td> magnitude</td><td>astig angle Degrees</td></b></tr>");
+                 "<tr><b><td>rotation angle</td><td>0° astig</td><td>45° astig</td><td> magnitude</td><td>astig angle Degrees</td></b></tr>");
     double maxX = -1000;
     double minX =1000.;
     double maxY = -1000;
@@ -2471,8 +2471,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 
 
     pl1->insertLegend( new QwtLegend() , QwtPlot::TopLegend);
-    pl1->setAxisTitle( QwtPlot::yLeft, "Y astig" );
-    pl1->setAxisTitle(QwtPlot::xBottom, "X astig");
+    pl1->setAxisTitle( QwtPlot::yLeft, "45° astig" );
+    pl1->setAxisTitle(QwtPlot::xBottom, "0° astig");
     //  ...a vertical line at 0...
     QwtPlotMarker *muY = new QwtPlotMarker();
     muY->setLineStyle( QwtPlotMarker::VLine );
