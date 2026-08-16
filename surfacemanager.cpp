@@ -637,8 +637,9 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     ym = wf->m_outside.m_center.y();
     double radm =wf->m_outside.m_radius + outsideOffset-2;
     double rado = wf->m_inside.m_radius + insideOffset;
-    if (rado > 0)
-        rado += (insideOffset + 1);
+    if(rado > 0){
+        rado += 1;
+    }
 
     double cx = wf->m_inside.m_center.x();
     double cy = wf->m_inside.m_center.y();
