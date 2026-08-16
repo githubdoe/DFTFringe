@@ -758,10 +758,10 @@ void SurfaceManager::ObstructionChanged(){
 
 void SurfaceManager::centerMaskValue(int val){
     insideOffset = val;
-    double mmPerPixel = getCurrent()->diameter/(2 *( m_wavefronts[m_currentNdx]->m_outside.m_radius-1));
-    m_surfaceTools->m_centerMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
-    makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
+    double mmPerPixel = wf->diameter/(2 *(wf->m_outside.m_radius-1));
+    m_surfaceTools->m_centerMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
+    makeMask(wf);
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
@@ -771,10 +771,10 @@ void SurfaceManager::centerMaskValue(int val){
 
 void SurfaceManager::outsideMaskValue(int val){
     outsideOffset = val;
-    double mmPerPixel = m_wavefronts[m_currentNdx]->diameter/(2 * (m_wavefronts[m_currentNdx]->m_outside.m_radius));
-    m_surfaceTools->m_edgeMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
-    makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
+    double mmPerPixel = wf->diameter/(2 * (wf->m_outside.m_radius));
+    m_surfaceTools->m_edgeMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
+    makeMask(wf);
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
