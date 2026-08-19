@@ -77,6 +77,7 @@ public:
     void initWaveFrontLoad();
     void averageWavefrontFiles(const QStringList &files);
     void downSizeWf(wavefront *wf);
+    void syncGaussianStateForWavefront(wavefront *wf);
     void process(int wavefront_index, SurfaceManager *sm);
     wavefront *readWaveFront(const QString &fileName);
     inline wavefront *getCurrent(){

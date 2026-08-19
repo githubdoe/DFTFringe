@@ -451,9 +451,9 @@ QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool all
             e = md.m_verticalAxis / md.diameter;
         }
 
-        // Calculate matrix coordinates
-        int dx = radn * cos(g_angle + M_PI_2) + wf->m_outside.m_center.x();
-        int dy = -radn * e * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y();
+        // Round to the nearest pixel to avoid 1-pixel endpoint errors at cardinal angles.
+        int dx = qRound(radn * cos(g_angle + M_PI_2) + wf->m_outside.m_center.x());
+        int dy = qRound(-radn * e * sin(g_angle + M_PI_2) + wf->m_outside.m_center.y());
 
         // Boundary Check: Ignore points outside the matrix
         if (dy >= wf->data.rows || dx >= wf->data.cols || dy < 0 || dx < 0) {
