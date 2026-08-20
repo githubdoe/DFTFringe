@@ -117,7 +117,7 @@ void SimulationsView::initMTFPlot(){
     grid->enableXMin(true);
     grid->setPen( Qt::gray, 0.0, Qt::DotLine );
     grid->attach( ui->MTF);
-    m_arcSecScaleDraw  =  new arcSecScaleDraw(mirrorDlg::get_Instance()->diameter);
+    m_arcSecScaleDraw  =  new arcSecScaleDraw(mirrorDlg::get_Instance()->currentSettings().diameter);
     ui->MTF->setAxisScaleDraw(ui->MTF->xBottom, m_arcSecScaleDraw);
     QwtPlotLegendItem *customLegend = new QwtPlotLegendItem();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -191,7 +191,7 @@ SimulationsView *SimulationsView::getInstance(QWidget *parent){
 
 
 
-cv::Mat SimulationsView::nulledSurface(double defocus){
+cv::Mat SimulationsView::nulledSurface(double defocus, bool applyNull){
     cv::Mat out;
 
     mirrorDlg *md = mirrorDlg::get_Instance();
@@ -210,7 +210,9 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
     // save the user selected defocus enable to be restored after this.
     bool saved_defocus_enable = zernEnables[3];
     zernEnables[3] = false;
-    cv::Mat nulled_surface = zp.null_unwrapped( *(m_Instance->m_wf), newZerns, zernEnables);
+    
+    // Pass the applyNull flag to control whether null correction is applied
+    cv::Mat nulled_surface = zp.null_unwrapped( *(m_Instance->m_wf), newZerns, zernEnables, 0, Z_TERMS, applyNull);
     zernEnables[3] = saved_defocus_enable;
 
     if (GB_enabled){
@@ -221,7 +223,7 @@ cv::Mat SimulationsView::nulledSurface(double defocus){
         CropGaussianBlur(nulled_surface, nulled_surface, blurRad, m_wf->m_outside, m_wf->m_inside);
     }
 
-    nulled_surface  *= M2PI * md->lambda/outputLambda;
+    nulled_surface  *= M2PI * md->currentSettings().lambda/outputLambda;
     return nulled_surface;
 }
 
@@ -663,7 +665,7 @@ void SimulationsView::on_MakePB_clicked()
     // remove obstructions
     cv::Mat noObstruction = savedMask.clone();
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double r = md->obs * (2. * m_wf->m_outside.m_radius)/md->diameter;
+    double r = md->currentSettings().obstruction * (2. * m_wf->m_outside.m_radius)/md->currentSettings().diameter;
     if (r > 0){
 
         circle(noObstruction,Point(noObstruction.cols/2,noObstruction.cols/2),r, Scalar(255),-1);

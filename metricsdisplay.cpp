@@ -58,8 +58,8 @@ void metricsDisplay::setWavePerFringe(double val, double lambda){
     ui->wavesPerFringe->setText(QString("Waves Per Fringe: %1").arg(val, 2, 'f', 1));
     ui->lambda->setText(QString("Igram laser wavelength: %1 nm").arg(lambda, 6, 'f', 2));
     mirrorDlg *md = mirrorDlg::get_Instance();
-    QString donull = (md->doNull) ? (QString("SANull: %1").arg(md->z8 * md->cc, 6, 'f', 4)) : "";
-    ui->desiredConicLb->setText(QString("Desired Conic: %1 ").arg( md->cc, 6, 'f', 2) + donull);
+    QString donull = (md->currentSettings().doNull) ? (QString("SANull: %1").arg(md->getZ8() * md->currentSettings().cc, 6, 'f', 4)) : "";
+    ui->desiredConicLb->setText(QString("Desired Conic: %1 ").arg( md->currentSettings().cc, 6, 'f', 2) + donull);
     if (md->isEllipse()){
         ui->desiredConicLb->setText("");
         ui->zernTitle->setText("Zernike Values not computed for Flats");

@@ -86,7 +86,7 @@ void defocusDlg::on_defocusSlider_valueChanged(int value)
     ui->defocusVal->setValue(val);
     ui->defocusVal->blockSignals(false);
 
-    double f = mirrorDlg::get_Instance()->FNumber;
+    double f = mirrorDlg::get_Instance()->getFNumber();
     double mm = f * f * 8. * value * .00055;  //mmeters
     m_defocusInmm = mm;
     qDebug() << "defocus offset" << mm;

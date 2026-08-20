@@ -1,5 +1,6 @@
 #include "percentcorrectiondlg.h"
 #include "ui_percentcorrectiondlg.h"
+#include "settingsfacade.h"
 #include "qwt_plot_grid.h"
 #include "qwt_scale_div.h"
 #include "qwt_plot_barchart.h"
@@ -30,7 +31,7 @@ percentCorrectionDlg::percentCorrectionDlg( QWidget *parent) :
 
 
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    m_radius = md.m_clearAperature/2.;
+    m_radius = md.getClearAperture()/2.;
     QSettings set;
     ui->minvalue->blockSignals(true);
     ui->maxvalue->blockSignals(true);
@@ -97,6 +98,7 @@ void percentCorrectionDlg::saveSettings(){
  * fixme figure that out.
 */
 QList<double> percentCorrectionDlg::generateZoneCenters(double radius, int number_of_zones, bool makeNew){
+    QSettings set;
     QList<double> zoneCenters;
 
     if (!makeNew) {  // read last used zones
@@ -353,7 +355,7 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
     ActualZoneKnife << 0.0;
 
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double nullval = md->z8 * md->cc;  // null value was computed at the igram wavevlength
+    double nullval = md->getZ8() * md->currentSettings().cc;  // null value was computed at the igram wavevlength
     nullval *=  m_lambda_nm/m_outputLambda;   // only data from the profile needs the null but it's data is at the output wavelength;
     // process each zone center
 
@@ -399,7 +401,7 @@ QPolygonF percentCorrectionDlg::makePercentages(surfaceData *surf){
 void percentCorrectionDlg::plotProfile(){
 
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double nullval = md->z8 * md->cc;
+    double nullval = md->getZ8() * md->currentSettings().cc;
     for (int i = 0; i < surfs.length(); ++ i) {
 
         QwtPlotCurve *Curve = new QwtPlotCurve();
@@ -637,12 +639,12 @@ void percentCorrectionDlg::setData( QVector< surfaceData *> data) {
 
 
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    m_roc = md.roc;
-    m_lambda_nm = md.lambda;
+    m_roc = md.currentSettings().roc;
+    m_lambda_nm = md.currentSettings().lambda;
     QSettings set;
     m_outputLambda = set.value("outputLambda").toDouble();
 
-    m_radius = md.m_clearAperature/2.;
+    m_radius = md.getClearAperture()/2.;
     surfs = data;
     ui->percentTable->setRowCount(data.length());
 
@@ -715,9 +717,7 @@ void percentCorrectionDlg::on_help_clicked()
 
 void percentCorrectionDlg::on_loadZones_clicked()
 {
-
-    QSettings set;
-    QString path = set.value("projectPath").toString();
+    QString path = SettingsFacade::instance().appStore().load().projectPath;
     QString extensionTypes(tr( "zone file (*.zones)"));
     QString fileName = QFileDialog::getOpenFileName(0,
                         tr("Read zone file"), path,
@@ -755,7 +755,7 @@ void percentCorrectionDlg::on_loadZones_clicked()
 void percentCorrectionDlg::on_saveZones_clicked()
 {
     QSettings set;
-    QString path = set.value("projectPath").toString();
+    QString path = SettingsFacade::instance().appStore().load().projectPath;
     QString extensionTypes(tr( "zone file (*.zones)"));
     QString fileName = QFileDialog::getSaveFileName(0,
                         tr("Save zone file"), path,
@@ -774,7 +774,11 @@ void percentCorrectionDlg::on_saveZones_clicked()
     out << jsonString;
 
     file.close();
-    set.setValue("projectPath", QFileInfo(fileName).absolutePath());
+    
+    // Update and persist application settings via facade
+    ApplicationSettings appSettings = SettingsFacade::instance().appStore().load();
+    appSettings.projectPath = QFileInfo(fileName).absolutePath();
+    SettingsFacade::instance().appStore().save(appSettings);
 }
 
 

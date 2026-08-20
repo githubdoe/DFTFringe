@@ -406,7 +406,7 @@ QPolygonF ProfilePlot::createAverageProfile(double /*umnits*/, wavefront * /*wf*
 //            double rho = avg[i].x() / md.diameter/2.;
 //            double rho2 = rho * rho;
 //            double y = avg[i].y();
-//            y += md.z8 * md.cc * (1. + rho2 * (-6 + 6. * rho2));
+//            y += md.getZ8() * md.cc * (1. + rho2 * (-6 + 6. * rho2));
 //            avg2 << QPointF(avg[i].x(),y);
 //        }
 //        avg = avg2;
@@ -427,8 +427,8 @@ QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool all
     // 1. Setup constants
     double steps = 1.0 / wf->m_outside.m_radius;
     double offset = allowOffset ? y_offset : 0.0;
-    double radius = md.m_clearAperature / 2.0;
-    double obs_radius = md.obs / 2.0;
+    double radius = md.getClearAperture() / 2.0;
+    double obs_radius = md.currentSettings().obstruction / 2.0;
 
     if (m_displayInches) {
         obs_radius /= 25.4;
@@ -443,12 +443,12 @@ QPolygonF ProfilePlot::createProfile(double units, const wavefront *wf, bool all
 
         if (m_displayPercent) {
             radx = 100.0 * radx / radius;
-            obs_radius = 100.0 * (md.obs / 2.0) / radius;
+            obs_radius = 100.0 * (md.currentSettings().obstruction / 2.0) / radius;
         }
 
         double e = 1.0;
         if (md.isEllipse()) {
-            e = md.m_verticalAxis / md.diameter;
+            e = md.currentSettings().ellipseMinorAxis / md.currentSettings().diameter;
         }
 
         // Round to the nearest pixel to avoid 1-pixel endpoint errors at cardinal angles.
@@ -526,7 +526,7 @@ void ProfilePlot::make_correction_graph(){
         QColor penColor = Settings2::m_profile->getColor(i);
         // give the plot routine new zernike values for each curve.
         mirrorDlg *md = mirrorDlg::get_Instance();
-        surfs << new surfaceData( md->lambda, penColor, theZerns ,name);
+        surfs << new surfaceData( md->currentSettings().lambda, penColor, theZerns ,name);
 
     }
     QPolygonF avg = createAverageProfile(1., wfs->at(list[0]),true);
@@ -1170,11 +1170,11 @@ void ProfilePlot::CreateWaveFrontFromAverage(){
     //create a matrix from the avgRadius profile.
     mirrorDlg *md = mirrorDlg::get_Instance();
     // first add the null back into it.
-    if (md->doNull){
+    if (md->currentSettings().doNull){
         for (unsigned int i = 0; i < avgRadius.size(); ++i) {
             double R2 = (double(i))/(avgRadius.size() -1);
             R2 *= R2;
-            avgRadius[i] += md->z8 * md->cc * (1. + R2 * (-6 + 6. * R2));;
+            avgRadius[i] += md->getZ8() * md->currentSettings().cc * (1. + R2 * (-6 + 6. * R2));;
         }
     }
     cv::Mat result = createInterpolatedCircularSurface(avgRadius);

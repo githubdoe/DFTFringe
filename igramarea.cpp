@@ -22,6 +22,7 @@
 #endif
 
 #include "IgramArea.h"
+#include "settingsfacade.h"
 #include "Circleoutline.h"
 #include <QtGlobal>
 #include <math.h>
@@ -150,9 +151,9 @@ IgramArea::IgramArea(QWidget *parent, void *mw)
 void IgramArea::computeEdgeRadius(){
     // compute mask inner edge in pixels
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    double pixelsPermm =(m_outside.m_radius/(md.diameter/2.));
-    m_edgeMaskWidth = md.aperatureReduction * pixelsPermm;
-    if (md.m_aperatureReductionEnabled == false)
+    double pixelsPermm =(m_outside.m_radius/(md.currentSettings().diameter/2.));
+    m_edgeMaskWidth = md.currentSettings().apertureReduction * pixelsPermm;
+    if (md.currentSettings().apertureReductionEnabled == false)
         m_edgeMaskWidth = 0;
 
 }
@@ -882,7 +883,7 @@ void IgramArea::useAnnulusforCenterOutine(){
     if (m_current_boundry == CenterOutline) {
 
             mirrorDlg *md = mirrorDlg::get_Instance();
-            double rad = m_outside.m_radius * md->m_annularObsPercent;
+            double rad = m_outside.m_radius * md->currentSettings().annulusPercent;
 
             double cx = m_outside.m_center.x();
             double cy = m_outside.m_center.y();
@@ -1544,7 +1545,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
         int majorRad = fabs((m_OutterP2.x() - m_OutterP1.x()))/2.;
         double e = (double)minorRad/majorRad;
         mirrorDlg &md = *mirrorDlg::get_Instance();
-        md.m_verticalAxis = md.diameter * e;
+        md.setMinorAxis(md.currentSettings().diameter * e);
         drawBoundary();
         return;
     }
@@ -1623,8 +1624,8 @@ void IgramArea::mouseReleaseEvent(QMouseEvent *event)
     setCursor(Qt::ArrowCursor);
     if (event->button() == Qt::LeftButton && verticalTracking) {
         mirrorDlg &md = *mirrorDlg::get_Instance();
-        double e = md.m_verticalAxis/ md.diameter;
-        md.setMinorAxis( e * md.diameter);
+        double e = md.currentSettings().ellipseMinorAxis / md.currentSettings().diameter;
+        md.setMinorAxis( e * md.currentSettings().diameter);
     }
 
 
@@ -1704,7 +1705,7 @@ void IgramArea::drawBoundary()
 
             mirrorDlg &md = *mirrorDlg::get_Instance();
             if ((md.isEllipse())){
-                s2 = md.m_verticalAxis/ md.diameter;
+                s2 = md.currentSettings().ellipseMinorAxis / md.currentSettings().diameter;
                            }
             if (m_searching_outside){
                 QColor c(Qt::cyan);
@@ -1718,7 +1719,7 @@ void IgramArea::drawBoundary()
                 painter.setBrush(Qt::NoBrush);
             }
             outside.draw(painter,1.,s2);
-            if ( md.m_aperatureReductionEnabled && md.m_clearAperature != md.diameter){
+            if ( md.currentSettings().apertureReductionEnabled && md.getClearAperture() != md.currentSettings().diameter){
                 painter.setPen(QPen(edgePenColor, edgePenWidth, Qt::DotLine));
                 computeEdgeRadius();
                 painter.drawEllipse(outside.m_center,
@@ -1926,7 +1927,7 @@ void IgramArea::paintEvent(QPaintEvent *event)
         mirrorDlg &md = *mirrorDlg::get_Instance();
         double e = 1.;
         if (md.isEllipse()){
-            e = md.m_verticalAxis/md.diameter;
+            e = md.currentSettings().ellipseMinorAxis / md.currentSettings().diameter;
         }
 
 
@@ -2021,7 +2022,7 @@ void IgramArea::crop() {
     mirrorDlg &md = *mirrorDlg::get_Instance();
 
     if (md.isEllipse()){
-        double e = md.m_verticalAxis/md.diameter;
+        double e = md.currentSettings().ellipseMinorAxis/md.currentSettings().diameter;
         rady =  radx * e;
         top = fmax(0,cy - rady);
         bottom = igramColor.height() - (rady + cy);
@@ -2519,7 +2520,8 @@ void IgramArea::save(){
         mimeTypeFilters.append(mimeTypeName);
     mimeTypeFilters.sort();
     QSettings settings;
-    QString lastPath = settings.value("projectPath",".").toString();
+    QString lastPath = SettingsFacade::instance().appStore().load().projectPath;
+    if (lastPath.isEmpty()) lastPath = ".";
 
 
     QString filters = QStringList(mimeTypeFilters.mid(1,6)).join(" ");

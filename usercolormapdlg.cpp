@@ -283,7 +283,7 @@ void userColorMapDlg::on_pb10_clicked()
     ui->pb10->setStyleSheet(s);
     ui->pb10->update();
     QSettings set;
-    set.setValue("userColorStopColor09",c.name());
+    set.setValue("userColorStopColor10",c.name());
     setColorMap();
     emit colorMapChanged(5);
 }

@@ -203,7 +203,7 @@ void foucaultView::drawGridOverlay(QImage &img) {
     int maxPixelRadius = w / 2;
 
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double mirrorRadiusMM = md->diameter / 2.0;
+    double mirrorRadiusMM = md->currentSettings().diameter / 2.0;
 
     // 3. Determine physics-to-pixel scale
     double stepSizeMM = 0;
@@ -298,8 +298,8 @@ void foucaultView::setSurface(wavefront *wf){
     double offset = set.value("foucault roc offset", 0.).toDouble();
     m_wf = wf;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double rad = md->diameter/2.;
-    double FL = md->roc/2.;
+    double rad = md->currentSettings().diameter/2.;
+    double FL = md->currentSettings().roc/2.;
     double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
     m_sag = mul * (rad * rad) /( 4 * FL);
     m_sag = round(100 * m_sag)/100.;
@@ -362,9 +362,9 @@ QImage foucaultView::generateOpticalTestImage(OpticalTestType type, wavefront* w
     double coc_offset_mm = s.rocOffset * unitMultiplyer;
 
     // Physics geometry
-    double r2 = (md->diameter / 2.0) * (md->diameter / 2.0);
-    double b = md->roc + coc_offset_mm;
-    double pv = (sqrt(r2 + (md->roc * md->roc)) - (sqrt(r2 + b * b) - coc_offset_mm)) / (md->lambda * 1.E-6);
+    double r2 = (md->currentSettings().diameter / 2.0) * (md->currentSettings().diameter / 2.0);
+    double b = md->currentSettings().roc + coc_offset_mm;
+    double pv = (sqrt(r2 + (md->currentSettings().roc * md->currentSettings().roc)) - (sqrt(r2 + b * b) - coc_offset_mm)) / (md->currentSettings().lambda * 1.E-6);
     double z3 = pv / moving_constant;
     double effectiveZ3 = (type == OpticalTestType::Ronchi) ? (s.ronchiX * z3) : z3;
 
@@ -377,20 +377,17 @@ QImage foucaultView::generateOpticalTestImage(OpticalTestType type, wavefront* w
     SimulationsView *sv = SimulationsView::getInstance(0);
     sv->setSurface(wf);
 
-    bool oldDoNull = md->doNull;
-    if (bAutoCollimate == false)
-        md->doNull = false; // this is normal foucault/ronchi so we *don't* subtract the null (autcoCollimate ronchi or foucault mode will typically subtract the null)
+    // For normal Foucault/Ronchi mode (not autocollimation), disable null correction
+    // Autocollimation mode applies null if configured; normal mode does not
+    bool applyNull = bAutoCollimate && md->currentSettings().doNull;
 
-    cv::Mat surf_fft = sv->computeStarTest(s.heightMultiply * sv->nulledSurface(effectiveZ3), size, actualPad, true);
-
-    wf->InputZerns = originalZerns; // Restore state immediately
-    md->doNull = oldDoNull;
+    cv::Mat surf_fft = sv->computeStarTest(s.heightMultiply * sv->nulledSurface(effectiveZ3, applyNull), size, actualPad, true);
 
     // 3. Mask Generation
     cv::Mat mask = cv::Mat::zeros(size, size, CV_64FC1);
     cv::Mat sourceSlit = cv::Mat::zeros(size, size, CV_64FC1);
     int hx = (size - 1) / 2 + s.lateralOffset;
-    double pixwidth = s.outputLambda * 1.E-6 * (0.5 * md->roc / md->diameter) * 2. / (25.4 * actualPad);
+    double pixwidth = s.outputLambda * 1.E-6 * (0.5 * md->currentSettings().roc / md->currentSettings().diameter) * 2. / (25.4 * actualPad);
 
     if (type == OpticalTestType::Ronchi) {
         double lpi_val = s.lpi * (s.useMM ? 25.4 : 1.0);
@@ -954,8 +951,8 @@ void foucaultView::on_RonchiX_valueChanged(double arg1)
 void foucaultView::on_pushButton_clicked()
 {
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double rad = md->diameter/2.;
-    double FL = md->roc/2.;
+    double rad = md->currentSettings().diameter/2.;
+    double FL = md->currentSettings().roc/2.;
     double mul = (ui->useMM->isChecked()) ? 1. : 1/25.4;
     m_sag = mul * (rad * rad) /( 4 * FL);
     m_sag = round(100 * m_sag)/100.;

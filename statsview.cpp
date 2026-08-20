@@ -1,5 +1,6 @@
 #include "statsview.h"
 #include "ui_statsview.h"
+#include "settingsfacade.h"
 #include <QVBoxLayout>
 #include "wftstats.h"
 #include "surfacemanager.h"
@@ -173,8 +174,7 @@ void statsView::on_checkBox_2_toggled(bool checked)
 
 void statsView::on_saveImg_clicked()
 {
-    QSettings settings;
-    QString path = settings.value("projectPath").toString();
+    QString path = SettingsFacade::instance().appStore().load().projectPath;
     QFile fn(path);
     QString csvName = path + "/stats.pdf";
     QString name = QFileInfo(csvName).absoluteFilePath() + "/stats.png";
@@ -226,8 +226,7 @@ QString statsView::title(const QString &dir){
 
 void statsView::on_SaveCSV_clicked()
 {
-    QSettings settings;
-    QString path = settings.value("projectPath").toString();
+    QString path = SettingsFacade::instance().appStore().load().projectPath;
     QFile fn(path);
     QFileInfo info(fn.fileName());
     QString csvName = path + "/stats.csv";
@@ -270,9 +269,9 @@ void statsView::on_SaveCSV_clicked()
             double v = wf->InputZerns[ndx];
 
             // apply software Null if needed
-            if (ndx == 8 and md->doNull)
-                v -= md->z8 * md->cc;
-            double Sigma = computeRMS(ndx,v) * md->lambda/outputLambda;
+            if (ndx == 8 and md->currentSettings().doNull)
+                v -= md->getZ8() * md->currentSettings().cc;
+            double Sigma = computeRMS(ndx,v) * md->currentSettings().lambda/outputLambda;
 
             if (ndx == 8) {
                 spherical << QPointF(row,Sigma);
@@ -280,7 +279,7 @@ void statsView::on_SaveCSV_clicked()
                 sphericaRunningAvg << QPointF(row,sperAvg/(i+1));
             }
 
-            mZerns.at<double>(row,ndx) =  Sigma * md->lambda/outputLambda;
+            mZerns.at<double>(row,ndx) =  Sigma * md->currentSettings().lambda/outputLambda;
 
         }
 
@@ -293,8 +292,7 @@ void statsView::on_SaveCSV_clicked()
 
 void statsView::on_savePdf_clicked()
 {
-    QSettings settings;
-    QString path = settings.value("projectPath").toString();
+    QString path = SettingsFacade::instance().appStore().load().projectPath;
     QFile fn(path);
     QFileInfo info(fn.fileName());
     QString csvName = path + "/stats.pdf";

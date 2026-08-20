@@ -381,7 +381,7 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
 
     // if annular zernikes needed then do this instead of all the other stuff below this.
     mirrorDlg *md = mirrorDlg::get_Instance();
-    if (md->m_useAnnular) {
+    if (md->currentSettings().useAnnulus) {
         initGrid(wf, 12);
         ZernFitWavefront(wf);
 
@@ -484,19 +484,19 @@ void zernikeProcess::unwrap_to_zernikes(wavefront &wf, int zterms){
 }
 
 cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, std::vector<bool> enables,
-                                       int start_term, int last_term)
+                                       int start_term, int last_term, bool applyNull)
 {
 
     int nx = wf.data.cols;
 
     cv::Mat unwrapped = wf.data.clone();
 
-    double scz8 = md->z8 * md->cc;
-
     mirrorDlg *md = mirrorDlg::get_Instance();
+    
+    double scz8 = md->getZ8() * md->currentSettings().cc;
 
 
-    if (!md->doNull || !wf.useSANull){
+    if (!applyNull || !md->currentSettings().doNull || !wf.useSANull){
         scz8 = 0.;
     }
     double midx = wf.m_outside.m_center.rx();
@@ -524,7 +524,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
         // make a list of points on the surface containing their rho and theta values as well as their
         // row column indexes in the matix that contanis the wave front.
         // annular wave fronts already have this made elsewhere.
-        if (!md->m_useAnnular){
+        if (!md->currentSettings().useAnnulus){
             m_rhoTheta = rhotheta(nx ,wf.m_outside.m_radius, midx,midy, &wf);
             if (m_lastusedAnnulus)
                 m_needsInit=true;
@@ -541,7 +541,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 
                 rho = m_rhoTheta.row(0)(i);
                 theta = m_rhoTheta.row(1)(i);
-                if (!md->m_useAnnular){
+                if (!md->currentSettings().useAnnulus){
                     zpolar = new zernikePolar(rho,theta, Z_TERMS);
                 }
 
@@ -550,8 +550,8 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
 
                 if (last_term > 7)
                 {
-                    if (md->doNull && enables[8]){
-                        if (!md->m_useAnnular)
+                    if (md->currentSettings().doNull && enables[8]){
+                        if (!md->currentSettings().useAnnulus)
                             nz -= scz8 * zpolar->zernike(8);
                         else {
                             nz -= scz8 * m_zerns(i, 8);
@@ -562,7 +562,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                 for (int z = start_term; z < Z_TERMS; ++z)
                 {
                     if ((z == 3) && doDefocus){
-                        if (!md->m_useAnnular) {
+                        if (!md->currentSettings().useAnnulus) {
                             nz += defocus * zpolar->zernike(z);
                             nz -= zerns[z] * zpolar->zernike(z);
                         }
@@ -572,7 +572,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                         }
                     }
                     else if (!enables[z]){
-                        if (!md->m_useAnnular) {
+                        if (!md->currentSettings().useAnnulus) {
                             nz -= zerns[z] * zpolar->zernike(z);
                         }
                         else {
@@ -581,7 +581,7 @@ cv::Mat zernikeProcess::null_unwrapped(wavefront&wf, std::vector<double> zerns, 
                     }
                 }
 
-                if (!md->m_useAnnular){
+                if (!md->currentSettings().useAnnulus){
                     delete zpolar;
                 }
 
@@ -597,7 +597,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
     double ux,uy;
     double rho,theta;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    bool useannular = md->m_useAnnular;
+    bool useannular = md->currentSettings().useAnnulus;
 
     if (wf.regions.size() > 0){
         int x = wf.regions[0][0].x;
@@ -667,7 +667,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
             arma::rowvec r(rhov),t(thetav);
 
             // now that we have the points in rho and theta get the zernike terms at each of those points
-            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->m_annularObsPercent, 12);
+            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->currentSettings().annulusPercent, 12);
             // compute the surface at each point by using the zernike poly at each point.
             for (arma::uword i = 0; i < r.size(); ++i){
                 double S1 = 0.0;
@@ -748,7 +748,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
             arma::rowvec r(rhov),t(thetav);
 
             // now that we have the points in rho and theta get the zernike terms at each of those points
-            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->m_annularObsPercent, 12);
+            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->currentSettings().annulusPercent, 12);
             // compute the surface at each point by using the zernike poly at each point.
             for (arma::uword i = 0; i < r.size(); ++i){
                 double S1 = 0.0;
@@ -875,7 +875,7 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
     mirrorDlg *md = mirrorDlg::get_Instance();
 
     double r,g,b;
-    spectral_color(r,g,b, md->lambda);
+    spectral_color(r,g,b, md->currentSettings().lambda);
     if (doColor) {
         result =  cv::Vec4f(0.,125. * .5 * g, 125 * r, 125. * b);
     }
@@ -914,9 +914,9 @@ cv::Mat zernikeProcess::makeSurfaceFromZerns(int border, bool doColor){
         for (unsigned int z = 0; z < m_zerns.n_cols; ++z){
             double val = dlg.zernikes[z];
             if (z == 8){
-                val = (dlg.doCorrection && md->doNull) ? md->cc * md->z8 * val * .01 : val;
+                val = (dlg.doCorrection && md->currentSettings().doNull) ? md->currentSettings().cc * md->getZ8() * val * .01 : val;
             }
-            S1 +=  val * m_zerns(i,z)/((doColor) ? md->fringeSpacing: 1.);
+            S1 +=  val * m_zerns(i,z)/((doColor) ? md->currentSettings().fringeSpacing: 1.);
 
             int x =  m_col[i];
             int y =  m_row[i];
@@ -948,8 +948,8 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
     bool useMask = false;
     double centerR = 0.0;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    if (md->m_useAnnular){
-        centerR = md->m_annularObsPercent;
+    if (md->currentSettings().useAnnulus){
+        centerR = md->currentSettings().annulusPercent;
     }
     if (wf != 0){
         useMask = true;
@@ -1079,8 +1079,8 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
     double obsPercent = 0.;
     bool shouldUseAnnulus = false;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    if (md->m_useAnnular){
-        obsPercent = md->m_annularObsPercent;
+    if (md->currentSettings().useAnnulus){
+        obsPercent = md->currentSettings().annulusPercent;
         shouldUseAnnulus = true;
     }
 

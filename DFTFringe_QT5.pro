@@ -264,6 +264,8 @@ SOURCES += SingleApplication/singleapplication.cpp \
     zernikepolar.cpp \
     zernikeprocess.cpp \
     zernikes.cpp \
+    settingsfacade.cpp \
+    settingsstores.cpp \
     zernikesmoothingdlg.cpp
 
 HEADERS += bezier/bezier.h \
@@ -355,6 +357,8 @@ HEADERS += bezier/bezier.h \
     settingsGeneral2.h \
     settingsigram.h \
     settingsigramimportconfig.h \
+    settingsfacade.h \
+    settingsstores.h \
     settingsprofile.h \
     showaliasdlg.h \
     showallcontoursdlg.h \
@@ -549,8 +553,5 @@ DISTFILES += buildingDFTFringe64.txt \
     COPYING.LESSER.txt \
     COPYING.txt \
     README.md \
-    RevisionHistory.html
-
-
-
-
+    RevisionHistory.html \
+    settingsstores_fields.inc

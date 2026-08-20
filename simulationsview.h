@@ -51,7 +51,7 @@ public:
     void compute();
     bool needs_drawing;
     bool needs_drawing_3D;
-    cv::Mat nulledSurface(double defocus);
+    cv::Mat nulledSurface(double defocus, bool applyNull = true);
     cv::Mat m_PSF;
 private:
     bool alias;

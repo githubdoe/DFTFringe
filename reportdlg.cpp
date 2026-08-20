@@ -9,7 +9,7 @@ ReportDlg::ReportDlg(QPrinter *p, QWidget *parent) :
     ui(new Ui::ReportDlg)
 {
     ui->setupUi(this);
-    ui->title->setText( mirrorDlg::get_Instance()->m_name);
+    ui->title->setText(mirrorDlg::get_Instance()->currentSettings().mirrorName);
     QSettings set;
     contourWidth = set.value("ReprotContourWidth", 1.).toDouble();
     ui->contourWidth->setValue(contourWidth);

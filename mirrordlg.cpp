@@ -19,6 +19,7 @@
 #include "ui_mirrordlg.h"
 #include "spdlog/spdlog.h"
 #include <QtGui>
+#include <QShowEvent>
 #include <QFileDialog>
 #include <iostream>
 #include <fstream>
@@ -40,95 +41,36 @@ mirrorDlg *mirrorDlg::get_Instance(){
 
 mirrorDlg::mirrorDlg(QWidget *parent) :
     QDialog(parent),
-    mm(true),m_obsChanged(false),ui(new Ui::mirrorDlg)
+    ui(new Ui::mirrorDlg),
+    m_obsChanged(false),
+    mm(true)
 {
-    m_useAnnular = false;
-    m_connectAnnulusToObs = false;
     ui->setupUi(this);
-    QSettings settings;
-    m_name = settings.value("config mirror name", "default").toString();
-    ui->name->setText(m_name);
-    doNull = settings.value("config doNull", true).toBool();
-    m_useAnnular = settings.value("md use annulus", false).toBool();
-    ui->useAnnulus->setChecked(m_useAnnular);
-    enableAnnular(m_useAnnular);
-    ui->annulusPercent->setValue(settings.value("md annulus percent",0.).toDouble() * 100   );
-
-    ui->nullCB->setChecked(doNull);
-    diameter = settings.value("config diameter", 200.).toDouble();
-    aperatureReduction = settings.value("config aperatureReduction", 0.).toDouble();
-    m_aperatureReductionEnabled = settings.value("configAperatureReductionChecked",false).toBool();
-
-    roc = settings.value("config roc", 2000.).toDouble();
-    FNumber = roc/(2. * diameter);
+    
+    // Initialize defaults only; loadDraftFromSettings() populates m_current and m_draft
+    FNumber = 0.0;
     ui->FNumber->blockSignals(true);
     ui->roc->blockSignals(true);
     ui->lambda->blockSignals(true);
     ui->cc->blockSignals(true);
     ui->unitsCB->blockSignals(true);
     ui->fringeSpacingEdit->blockSignals(true);
-
-    if (!doNull){
-        ui->roc->hide();
-        ui->rocLab->hide();
-        ui->FNumber->hide();
-        ui->fnumberLab->hide();
-    }
-    else
-    {   ui->roc->show();
-        ui->rocLab->show();
-        ui->fnumberLab->show();
-        ui->FNumber->show();
-        ui->roc->setText(QString("%1").arg(roc, 6, 'f', 2));
-        ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
-    }
-    lambda = settings.value("config lambda", 640).toDouble();
-
-    ui->lambda->setText(QString("%1").arg(lambda, 6 ,'f' ,1));
-
-    obs = settings.value("config obstruction", 0.).toDouble();
-
-    cc = settings.value("config cc", -1.).toDouble();
-
-    ui->cc->setText(QString("%1").arg(cc, 6, 'f', 2));
-
-    ui->ReducApp->setChecked( m_aperatureReductionEnabled);
-    if (  m_aperatureReductionEnabled)
-        ui->reduceValue->setEnabled(true);
-
-    ui->reduceValue->setValue(aperatureReduction);
-
-
+    ui->minorAxisEdit->blockSignals(true);
+    
     ui->unitsCB->setChecked(mm);
-
-    ui->FNumber->blockSignals(false);
-    ui->flipH->setChecked((settings.value( "flipH", false).toBool()));
-    m_projectPath = settings.value("projectPath", "").toString();
-    fringeSpacing = settings.value("config fringe spacing", 1.).toDouble();
-
-    ui->fringeSpacingEdit->setText(QString("%1").arg(fringeSpacing, 6, 'f', 3));
-    ui->fringeSpacingEdit->blockSignals(false);
-    m_outlineShape = (outlineShape)settings.value("outlineShape", CIRCLE).toInt();
-    ui->minorAxisEdit->setText(QString::number(settings.value("ellipseMinorAxis", 50.).toDouble()));
     connect(&spacingChangeTimer, &QTimer::timeout, this, &mirrorDlg::spacingChangeTimeout);
-    if (m_verticalAxis == 0)
-        m_verticalAxis = diameter;
-    ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
-    setEllipseControlsEnabled(m_outlineShape == ELLIPSE);
-    ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
-    enforceEllipseMajorAxis();
-    ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
-    ui->obs->setText(QString("%1").arg(obs, 6, 'f', 2));
     ui->FNumber->blockSignals(false);
     ui->roc->blockSignals(false);
     ui->lambda->blockSignals(false);
     ui->cc->blockSignals(false);
     ui->unitsCB->blockSignals(false);
     ui->fringeSpacingEdit->blockSignals(false);
-    ui->ClearAp->setVisible( m_aperatureReductionEnabled);
-    ui->clearApLabel->setVisible( m_aperatureReductionEnabled);
+    ui->minorAxisEdit->blockSignals(false);
+    
     m_aperatureReductionValueChanged = false;
-    setclearAp();
+    
+    // Initialize settings from persistent storage (in case dialog used without showEvent)
+    loadDraftFromSettings();
 }
 
 mirrorDlg::~mirrorDlg()
@@ -136,6 +78,46 @@ mirrorDlg::~mirrorDlg()
     spdlog::get("logger")->trace("mirrorDlg::~mirrorDlg");
     delete ui;
 }
+
+void mirrorDlg::loadDraftFromSettings()
+{
+    // Load mirror settings from persistent storage via facade into BOTH copies.
+    // m_current: persistent copy (source of truth for external code)
+    // m_draft: working copy for dialog edits (discarded on Cancel)
+    m_current = SettingsFacade::instance().mirrorStore().load();
+    m_draft = m_current;
+    
+    // Load application-level settings separately (projectPath, mirrorConfigFile, lastPath)
+    ApplicationSettings appSettings = SettingsFacade::instance().appStore().load();
+    m_projectPath = appSettings.projectPath;
+}
+
+void mirrorDlg::showEvent(QShowEvent *event)
+{
+    // Reload draft from persistent settings before dialog becomes visible.
+    // This ensures Cancel always reverts to the last-saved state.
+    loadDraftFromSettings();
+    
+    // Sync UI with reloaded draft (working copy) values
+    ui->name->setText(m_draft.mirrorName);
+    ui->diameter->setText(QString("%1").arg(m_draft.diameter, 6, 'f', 2));
+    ui->roc->setText(QString("%1").arg(m_draft.roc, 6, 'f', 2));
+    ui->obs->setText(QString("%1").arg(m_draft.obstruction, 6, 'f', 2));
+    ui->lambda->setText(QString("%1").arg(m_draft.lambda, 6, 'f', 1));
+    ui->cc->setText(QString("%1").arg(m_draft.cc, 6, 'f', 2));
+    ui->flipH->setChecked(m_draft.flipH);
+    ui->nullCB->setChecked(m_draft.doNull);
+    ui->fringeSpacingEdit->setText(QString("%1").arg(m_draft.fringeSpacing, 6, 'f', 3));
+    ui->ellipseShape->setChecked((outlineShape)m_draft.outlineShape == ELLIPSE);
+    ui->minorAxisEdit->setText(QString::number(m_draft.ellipseMinorAxis));
+    ui->ReducApp->setChecked(m_draft.apertureReductionEnabled);
+    ui->reduceValue->setValue(m_draft.apertureReduction);
+    ui->useAnnulus->setChecked(m_draft.useAnnulus);
+    ui->annulusPercent->setValue(m_draft.annulusPercent * 100);
+    
+    QDialog::showEvent(event);
+}
+
 bool mirrorDlg::shouldFlipH(){
     return ui->flipH->isChecked();
 }
@@ -144,7 +126,7 @@ double mirrorDlg::getMinorAxis(){
 }
 
 bool mirrorDlg::isEllipse(){
-    return m_outlineShape == ELLIPSE;
+    return (outlineShape)m_draft.outlineShape == ELLIPSE;
 }
 
 void mirrorDlg::setEllipseControlsEnabled(bool enabled)
@@ -154,41 +136,40 @@ void mirrorDlg::setEllipseControlsEnabled(bool enabled)
 
 void mirrorDlg::enforceEllipseMajorAxis()
 {
-    if (m_outlineShape != ELLIPSE || diameter <= 0)
+    if ((outlineShape)m_draft.outlineShape != ELLIPSE || m_draft.diameter <= 0)
         return;
 
-    if (m_verticalAxis > diameter){
-        const double originalVerticalAxis = m_verticalAxis;
-        m_verticalAxis = diameter;
+    if (m_draft.ellipseMinorAxis > m_draft.diameter){
+        const double originalVerticalAxis = m_draft.ellipseMinorAxis;
+        m_draft.ellipseMinorAxis = m_draft.diameter;
         const QSignalBlocker blocker(ui->minorAxisEdit);
-        ui->minorAxisEdit->setText(QString::number(m_verticalAxis));
+        ui->minorAxisEdit->setText(QString::number(m_draft.ellipseMinorAxis));
         spdlog::get("logger")->info("Ellipse axis clamp applied: vertical axis {} exceeded horizontal axis {}. Vertical axis was clamped to {}.",
-                                     originalVerticalAxis, diameter, m_verticalAxis);
+                                     originalVerticalAxis, m_draft.diameter, m_draft.ellipseMinorAxis);
     }
 }
 
 void mirrorDlg::saveJson(const QString &fileName){
     QJsonObject jDoc, jMirror,jIgram, jEllipse, jAnnulus;
-    jDoc["name"] = m_name;
+    jDoc["name"] = m_draft.mirrorName;
     jDoc["show units in mm"] = mm;
-    jDoc["useNull"] = doNull;
-    jIgram["wavelength"] = lambda;
-    jIgram["fringe spacing"] = fringeSpacing;
-    jMirror["diameter"] = diameter;
-    jMirror["obs diameter"] = obs;
-    jMirror["roc"] = roc;
-    jMirror["desired conic"] = cc;
-    jMirror["edgeMaskon"] = m_aperatureReductionEnabled;
-    jMirror["edge mask value"] = aperatureReduction;
-    jIgram["wavelength"] = lambda;
+    jDoc["useNull"] = m_draft.doNull;
+    jIgram["wavelength"] = m_draft.lambda;
+    jIgram["fringe spacing"] = m_draft.fringeSpacing;
+    jMirror["diameter"] = m_draft.diameter;
+    jMirror["obs diameter"] = m_draft.obstruction;
+    jMirror["roc"] = m_draft.roc;
+    jMirror["desired conic"] = m_draft.cc;
+    jMirror["edgeMaskon"] = m_draft.apertureReductionEnabled;
+    jMirror["edge mask value"] = m_draft.apertureReduction;
+    jIgram["wavelength"] = m_draft.lambda;
     jIgram["null value"] = z8;
-    jIgram["flip horizontal"] = fliph;
-    jIgram["flip vert"] = flipv;
-    jIgram["fringe spacing"] = fringeSpacing;
-    jEllipse["is ellipse"] = m_outlineShape;
-    jEllipse["ellipse vert axis"] = m_verticalAxis;
-    jAnnulus["use annular Zernike values"] = m_useAnnular;
-    jAnnulus["obs percentage"] = m_annularObsPercent;
+    jIgram["flip horizontal"] = m_draft.flipH;
+    jIgram["fringe spacing"] = m_draft.fringeSpacing;
+    jEllipse["is ellipse"] = m_draft.outlineShape;
+    jEllipse["ellipse vert axis"] = m_draft.ellipseMinorAxis;
+    jAnnulus["use annular Zernike values"] = m_draft.useAnnulus;
+    jAnnulus["obs percentage"] = m_draft.annulusPercent;
     jDoc["mirror"] = jMirror;
     jDoc["igram"] = jIgram;
     jDoc["ellipse"] = jEllipse;
@@ -207,8 +188,7 @@ void mirrorDlg::saveJson(const QString &fileName){
 }
 void mirrorDlg:: on_saveBtn_clicked()
 {
-    QSettings settings;
-    QString path = settings.value("mirrorConfigFile").toString();
+    QString path = m_projectPath;  // Use current project path for file dialog default
     QString extensionTypes("config file (*.json)");
     QString fileName = QFileDialog::getSaveFileName(this,
                         tr("Save config file"), path,
@@ -225,25 +205,33 @@ void mirrorDlg:: on_saveBtn_clicked()
     }
     saveJson(fileName);
     QFileInfo info(fileName);
-    settings.setValue("mirrorConfigFile", fileName);
-    settings.setValue("projectPath", info.absolutePath());
-    m_projectPath = info.absolutePath();
+    
+    // Update application settings with new file path
+    ApplicationSettings appSettings = SettingsFacade::instance().appStore().load();
+    appSettings.mirrorConfigFile = fileName;
+    appSettings.projectPath = info.absolutePath();
+    SettingsFacade::instance().appStore().save(appSettings);
+    m_projectPath = appSettings.projectPath;
 }
 
 void mirrorDlg::loadFile(QString & fileName){
 
     // clear ellipse in case this is an old config that does not have it.
     ui->ellipseShape->setChecked(false);
-    setEllipseControlsEnabled(false);
-    m_outlineShape = CIRCLE;
+    setEllipseControlsEnabled(false);    
+    m_draft.outlineShape = (int)CIRCLE;
     QFileInfo info(fileName);
+    
+    // Persist UI convenience path to QSettings
     QSettings settings;
+    settings.setValue("lastPath", info.absolutePath());
 
-    settings.setValue("lastPath", info.absolutePath());
-    emit newPath(info.absolutePath());
-    m_projectPath = info.absolutePath();
-    settings.setValue("mirrorConfigFile",fileName);
-    settings.setValue("lastPath", info.absolutePath());
+    // Update application settings with new file path and mirror config file via facade
+    ApplicationSettings appSettings = SettingsFacade::instance().appStore().load();
+    appSettings.projectPath = info.absolutePath();
+    appSettings.mirrorConfigFile = fileName;
+    SettingsFacade::instance().appStore().save(appSettings);
+    m_projectPath = appSettings.projectPath;
 
 
     if (fileName.endsWith(".json")){
@@ -264,58 +252,57 @@ void mirrorDlg::loadFile(QString & fileName){
 
         // set diameter early - before setting roc and annulus percentage
         QJsonObject mirror = loadDoc["mirror"].toObject();
-        diameter = QJsonValue(mirror["diameter"]).toDouble();
+        m_draft.diameter = QJsonValue(mirror["diameter"]).toDouble();
         ui->diameter->blockSignals(true);
-        ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
+        ui->diameter->setText(QString("%1").arg(m_draft.diameter, 6, 'f', 2));
         ui->diameter->blockSignals(false);
 
         ui->nullCB->setChecked( QJsonValue(loadDoc["useNull"]).toBool());
 
-        obs = QJsonValue(mirror["obs diameter"]).toDouble();
-        roc = QJsonValue(mirror["roc"]).toDouble();
-        cc = QJsonValue(mirror["desired conic"]).toDouble();
-        m_aperatureReductionEnabled = QJsonValue(mirror["edgeMaskon"]).toBool();
-        aperatureReduction=QJsonValue( mirror["edge mask value"]).toDouble();
+        m_draft.obstruction = QJsonValue(mirror["obs diameter"]).toDouble();
+        m_draft.roc = QJsonValue(mirror["roc"]).toDouble();
+        m_draft.cc = QJsonValue(mirror["desired conic"]).toDouble();
+        m_draft.apertureReductionEnabled = QJsonValue(mirror["edgeMaskon"]).toBool();
+        m_draft.apertureReduction = QJsonValue( mirror["edge mask value"]).toDouble();
 
         QJsonObject Igram = loadDoc["igram"].toObject();
-        lambda = QJsonValue(Igram["wavelength"]).toDouble();
+        m_draft.lambda = QJsonValue(Igram["wavelength"]).toDouble();
         z8 = QJsonValue(Igram["null value"]).toDouble();
-        fliph = QJsonValue(Igram["flip horizontal"]).toBool();
-        flipv = QJsonValue(Igram["flip vert"]).toBool();
-        fringeSpacing = QJsonValue(Igram["fringe spacing"]).toDouble();
+        m_draft.flipH = QJsonValue(Igram["flip horizontal"]).toBool();
+        m_draft.fringeSpacing = QJsonValue(Igram["fringe spacing"]).toDouble();
         QJsonObject Ellipse = loadDoc["ellipse"].toObject();
-        m_outlineShape = (outlineShape)QJsonValue(Ellipse["is ellipse"]).toInt();
-        m_verticalAxis = QJsonValue(Ellipse["ellipse vert axis"]).toDouble();
+        m_draft.outlineShape = QJsonValue(Ellipse["is ellipse"]).toInt();
+        m_draft.ellipseMinorAxis = QJsonValue(Ellipse["ellipse vert axis"]).toDouble();
         QJsonObject Annulus = loadDoc["Annulus"].toObject();
-        m_useAnnular = QJsonValue(Annulus["use annular Zernike values"]).toBool();
-        m_annularObsPercent = QJsonValue(Annulus["obs percentage"]).toDouble();
-        ui->useAnnulus->setChecked(m_useAnnular);
-        ui->annulusPercent->setValue(m_annularObsPercent * 100);
-        on_annulusPercent_valueChanged(m_annularObsPercent * 100);
-        enableAnnular(m_useAnnular);
+        m_draft.useAnnulus = QJsonValue(Annulus["use annular Zernike values"]).toBool();
+        m_draft.annulusPercent = QJsonValue(Annulus["obs percentage"]).toDouble();
+        ui->useAnnulus->setChecked(m_draft.useAnnulus);
+        ui->annulusPercent->setValue(m_draft.annulusPercent * 100);
+        on_annulusPercent_valueChanged(m_draft.annulusPercent * 100);
+        enableAnnular(m_draft.useAnnulus);
 
         ui->fringeSpacingEdit->blockSignals(true);
-        ui->fringeSpacingEdit->setText(QString("%1").arg(fringeSpacing, 3, 'f', 1));
+        ui->fringeSpacingEdit->setText(QString("%1").arg(m_draft.fringeSpacing, 3, 'f', 1));
         ui->fringeSpacingEdit->blockSignals(false);
 
-        ui->obs->setText(QString().number(obs));
+        ui->obs->setText(QString().number(m_draft.obstruction));
 
 
         ui->roc->blockSignals(true);
-        ui->roc->setText(QString("%1").arg(roc, 6, 'f', 2));
+        ui->roc->setText(QString("%1").arg(m_draft.roc, 6, 'f', 2));
         ui->roc->blockSignals(false);
 
-        ui->cc->setText(QString().number(cc));
+        ui->cc->setText(QString().number(m_draft.cc));
 
         ui->z8->setText(QString().number(z8));
 
-        ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
-        setEllipseControlsEnabled(m_outlineShape == ELLIPSE);
+        ui->ellipseShape->setChecked((outlineShape)m_draft.outlineShape == ELLIPSE);
+        setEllipseControlsEnabled((outlineShape)m_draft.outlineShape == ELLIPSE);
 
-        ui->minorAxisEdit->setText(QString::number(m_verticalAxis));
+        ui->minorAxisEdit->setText(QString::number(m_draft.ellipseMinorAxis));
         enforceEllipseMajorAxis();
 
-        FNumber = roc/(2. * diameter);
+        FNumber = m_draft.roc/(2. * m_draft.diameter);
         ui->FNumber->blockSignals(true);
         ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
         ui->FNumber->blockSignals(false);
@@ -363,29 +350,29 @@ void mirrorDlg::loadFile(QString & fileName){
             }
 
             ui->name->setText(name);
-            m_name = name;
+            m_draft.mirrorName = name;
 
             // donull
             file.read(buf,4);
             bool *bp = (bool *)buf;
             ui->nullCB->setChecked(*bp);
-            doNull = *bp;
+            m_draft.doNull = *bp;
 
             //fringe Spacing
             file.read(buf,8);
             double *dp = (double*)buf;
-            fringeSpacing = *dp;
+            m_draft.fringeSpacing = *dp;
             ui->fringeSpacingEdit->blockSignals(true);
             ui->fringeSpacingEdit->setText(QString("%1").arg(*dp, 3, 'f', 1));
             ui->fringeSpacingEdit->blockSignals(false);
 
             //read diameter
             file.read(buf,8);
-            diameter = *dp;
+            m_draft.diameter = *dp;
 
             //Lambda
             file.read(buf,8);
-            lambda = *dp;
+            m_draft.lambda = *dp;
             ui->lambda->setText(QString().number(*dp));
 
             //Units mm
@@ -395,11 +382,11 @@ void mirrorDlg::loadFile(QString & fileName){
 
             //obsruction
             file.read(buf,4 * 9);
-            obs = *(dp++);
-            ui->obs->setText(QString().number(obs));
+            m_draft.obstruction = *(dp++);
+            ui->obs->setText(QString().number(m_draft.obstruction));
 
             //ROC
-            roc = *(dp++);
+            m_draft.roc = *(dp++);
 
             //Diameter
             if (!mm){
@@ -407,15 +394,15 @@ void mirrorDlg::loadFile(QString & fileName){
                 //roc *= 25.4;
             }
             ui->diameter->blockSignals(true);
-            ui->diameter->setText(QString("%1").arg(diameter, 6, 'f', 2));
+            ui->diameter->setText(QString("%1").arg(m_draft.diameter, 6, 'f', 2));
             ui->diameter->blockSignals(false);
             ui->roc->blockSignals(true);
-            ui->roc->setText(QString("%1").arg(roc, 6, 'f', 2));
+            ui->roc->setText(QString("%1").arg(m_draft.roc, 6, 'f', 2));
             ui->roc->blockSignals(false);
 
             //conic
-            cc = *(dp++);
-            ui->cc->setText(QString().number(cc));
+            m_draft.cc = *(dp++);
+            ui->cc->setText(QString().number(m_draft.cc));
 
             //z8
             z8 = *(dp++);
@@ -433,29 +420,29 @@ void mirrorDlg::loadFile(QString & fileName){
             //flips
             if (!file.eof()){
                 file.read(buf,4);   // 1234 read right here
-                fliph = *(bool*)buf;
+                m_draft.flipH = *(bool*)buf;
                 file.read(buf,4);
-                flipv = *(bool*)buf;
+                // Skip vertical flip - not stored in MirrorSettings struct and not used
             }
 
             // ellipse
             if (file.tellg() > 0){
                 // read outlineShape
                 file.read(buf,4);
-                m_outlineShape = *(outlineShape*)buf;
-                ui->ellipseShape->setChecked(m_outlineShape == ELLIPSE);
-                setEllipseControlsEnabled(m_outlineShape == ELLIPSE);
+                m_draft.outlineShape = (int)*(outlineShape*)buf;
+                ui->ellipseShape->setChecked((outlineShape)m_draft.outlineShape == ELLIPSE);
+                setEllipseControlsEnabled((outlineShape)m_draft.outlineShape == ELLIPSE);
 
             }
             // vertical axis
             if (file.tellg() > 0){
                 file.read(buf,8);
-                m_verticalAxis = *(double*)buf;
-                ui->minorAxisEdit->setText(QString::number(m_verticalAxis));
+                m_draft.ellipseMinorAxis = *(double*)buf;
+                ui->minorAxisEdit->setText(QString::number(m_draft.ellipseMinorAxis));
                 enforceEllipseMajorAxis();
             }
 
-            FNumber = roc/(2. * diameter);
+            FNumber = m_draft.roc/(2. * m_draft.diameter);
             ui->FNumber->blockSignals(true);
             ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
             ui->FNumber->blockSignals(false);
@@ -466,6 +453,41 @@ void mirrorDlg::loadFile(QString & fileName){
         }
     }
 }
+
+void mirrorDlg::adoptWavefrontSettings(double diameter, double roc, double lambda)
+{
+    if ((outlineShape)m_draft.outlineShape == ELLIPSE && m_draft.diameter != 0.0) {
+        const double e = m_draft.ellipseMinorAxis / m_draft.diameter;
+        m_draft.ellipseMinorAxis = e * diameter;
+    }
+
+    m_draft.diameter = diameter;
+    m_draft.roc = roc;
+    m_draft.lambda = lambda;
+
+    FNumber = m_draft.roc / (2. * m_draft.diameter);
+
+    {
+        const QSignalBlocker blockDiameter(ui->diameter);
+        const QSignalBlocker blockRoc(ui->roc);
+        const QSignalBlocker blockLambda(ui->lambda);
+        const QSignalBlocker blockMinor(ui->minorAxisEdit);
+        const QSignalBlocker blockFNumber(ui->FNumber);
+
+        ui->diameter->setText(QString("%1").arg(m_draft.diameter * ((mm) ? 1. : 1./25.4), 6, 'f', 2));
+        ui->roc->setText(QString("%1").arg(m_draft.roc * ((mm) ? 1. : 1./25.4), 6, 'f', 2));
+        ui->lambda->setText(QString("%1").arg(m_draft.lambda, 6, 'f', 1));
+        ui->minorAxisEdit->setText(QString::number(m_draft.ellipseMinorAxis));
+        ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
+    }
+
+    setclearAp();
+    updateZ8();
+
+    m_current = m_draft;
+    SettingsFacade::instance().saveMirrorSettings(m_current);
+}
+
 void mirrorDlg::on_ReadBtn_clicked()
 {
     QSettings settings;
@@ -478,93 +500,56 @@ void mirrorDlg::on_ReadBtn_clicked()
     loadFile(fileName);
 }
 QString mirrorDlg::getProjectPath(){
-    return m_projectPath;
+    return m_projectPath;  // Already synced from application settings in loadDraftFromSettings()
 }
 
 void mirrorDlg::on_diameter_textChanged(const QString &arg1) {
 
     double diam = arg1.toDouble() *  ((mm) ? 1.: 25.4);
-    if (m_outlineShape == ELLIPSE){
-        double e = m_verticalAxis/diameter;
-        m_verticalAxis = e * diam;
-        ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
+    if ((outlineShape)m_draft.outlineShape == ELLIPSE){
+        double e = m_draft.ellipseMinorAxis/m_draft.diameter;
+        m_draft.ellipseMinorAxis = e * diam;
+        ui->minorAxisEdit->setText(QString().number(m_draft.ellipseMinorAxis));
     }
-    diameter = diam;
+    m_draft.diameter = diam;
     enforceEllipseMajorAxis();
-    FNumber = roc/(2. * diameter);
+    FNumber = m_draft.roc/(2. * m_draft.diameter);
     ui->FNumber->blockSignals(true);
     ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
     ui->FNumber->blockSignals(false);
     updateZ8();
-    if (m_useAnnular){
-        on_annulusPercent_valueChanged(m_annularObsPercent * 100);
+    if (m_draft.useAnnulus){
+        on_annulusPercent_valueChanged(m_draft.annulusPercent * 100);
     }
-
-}
-
-//Used when the just loading wavfront is different
-void mirrorDlg::on_diameter_Changed(const double diam)
-{
-    if (m_outlineShape == ELLIPSE){
-        double e = m_verticalAxis/diameter;
-        m_verticalAxis = e * diam;
-        ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
-    }
-    diameter = diam ;
-    enforceEllipseMajorAxis();
-    FNumber = roc/(2. * diameter);
-    ui->FNumber->blockSignals(true);
-    const QSignalBlocker blocker(ui->diameter);
-    ui->FNumber->setText(QString("%1").arg(FNumber *( (mm) ? 1.: 25.4), 6, 'f', 2));
-    ui->diameter->setText(QString("%1").arg(diameter * ((mm) ? 1.: 25.4), 6, 'f', 2));
-    ui->FNumber->blockSignals(false);
-    ui->diameter->blockSignals(false);
-
-    setclearAp();
-    updateZ8();
 
 }
 
 void mirrorDlg::on_roc_textChanged(const QString &arg1)
 {
-    roc = arg1.toDouble() * ((mm) ? 1: 25.4);
-    FNumber = roc /(2. * diameter);
+    m_draft.roc = arg1.toDouble() * ((mm) ? 1: 25.4);
+    FNumber = m_draft.roc /(2. * m_draft.diameter);
     ui->FNumber->blockSignals(true);
     ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
     ui->FNumber->blockSignals(false);
     updateZ8();
 }
 
-/* used when the just loading wavefront is different */
-void mirrorDlg::on_roc_Changed(const double newVal)
-{
-    roc = newVal;
-
-    FNumber = roc /(2. * diameter);
-    ui->FNumber->blockSignals(true);
-    ui->FNumber->setText(QString("%1").arg(FNumber * ((mm) ? 1.: 25.4), 6, 'f', 2));
-    ui->FNumber->blockSignals(false);
-    ui->roc->blockSignals(true);
-    ui->roc->setText(QString("%1").arg(roc * ((mm) ? 1.: 25.4), 6, 'f', 2));
-    ui->roc->blockSignals(false);
-    updateZ8();
-}
 void mirrorDlg::updateZ8(){
 //Z = d^6 / (16 * R^5)
 
-    double aperature = (ui->ReducApp->isChecked()) ?  diameter- aperatureReduction*2. : diameter;
+    double aperature = (ui->ReducApp->isChecked()) ?  m_draft.diameter - m_draft.apertureReduction*2. : m_draft.diameter;
 
     z8 = (pow(aperature,4) * 1000000.) /
-            (384. * pow(roc, 3) * lambda);
+            (384. * pow(m_draft.roc, 3) * m_draft.lambda);
 
 
-    if (m_useAnnular){
-        double f = (1 - (m_annularObsPercent * m_annularObsPercent));
+    if (m_draft.useAnnulus){
+        double f = (1 - (m_draft.annulusPercent * m_draft.annulusPercent));
         f *= f;
         z8 *= f;
     }
     ui->z8->blockSignals(true);
-    ui->z8->setText(QString().number(z8 * cc));
+    ui->z8->setText(QString().number(z8 * m_draft.cc));
     ui->z8->blockSignals(false);
 
 }
@@ -573,36 +558,33 @@ void mirrorDlg::on_FNumber_textChanged(const QString &arg1)
 {
 
     FNumber = arg1.toDouble();
-    roc = FNumber *(2 * diameter);
+    m_draft.roc = FNumber *(2 * m_draft.diameter);
     ui->roc->blockSignals(true);
-    ui->roc->setText(QString().number(roc * ((mm) ? 1.: 1./25.4)));
+    ui->roc->setText(QString().number(m_draft.roc * ((mm) ? 1.: 1./25.4)));
     ui->roc->blockSignals(false);
     updateZ8();
 }
 
 void mirrorDlg::on_obs_textChanged(const QString &arg1)
 {
-    if (arg1.toDouble() != obs)
+    if (arg1.toDouble() != m_draft.obstruction)
         m_obsChanged = true;
-    obs = ((mm) ? 1: 25.4) * arg1.toDouble();
+    m_draft.obstruction = ((mm) ? 1: 25.4) * arg1.toDouble();
 
-}
-void mirrorDlg::newLambda(const QString &v){
-    ui->lambda->setText(v);
 }
 
 void mirrorDlg::on_lambda_textChanged(const QString &arg1)
 {
-    lambda = arg1.toDouble();
+    m_draft.lambda = arg1.toDouble();
     updateZ8();
 }
 
 void mirrorDlg::on_nullCB_clicked(bool checked)
 {
-    doNull = checked;
+    m_draft.doNull = checked;
     ui->FNumber->blockSignals(true);
     ui->roc->blockSignals(true);
-    if (!doNull){
+    if (!m_draft.doNull){
 
         ui->FNumber->hide();
         ui->fnumberLab->hide();
@@ -626,63 +608,47 @@ void mirrorDlg::on_unitsCB_clicked(bool checked)
 
     ui->roc->blockSignals(true);
     ui->diameter->blockSignals(true);
-     ui->diameter->setText(QString("%1").arg(diameter/div, 6, 'f', 2));
-     ui->roc->setText(QString().number(roc/div));
-     ui->obs->setText(QString().number(obs/div));
+     ui->diameter->setText(QString("%1").arg(m_draft.diameter/div, 6, 'f', 2));
+     ui->roc->setText(QString().number(m_draft.roc/div));
+     ui->obs->setText(QString().number(m_draft.obstruction/div));
      ui->diameter->blockSignals(false);
      ui->roc->blockSignals(false);
      ui->minorAxisEdit->blockSignals(true);
-     ui->minorAxisEdit->setText(QString("%1").arg(m_verticalAxis/div, 6, 'f', 2));
+     ui->minorAxisEdit->setText(QString("%1").arg(m_draft.ellipseMinorAxis/div, 6, 'f', 2));
      ui->reduceValue->blockSignals(true);
      ui->annularDiameter->blockSignals(true);
-     ui->annularDiameter->setValue(diameter * m_annularObsPercent * ((mm)? 1.: 1./25.4));
+     ui->annularDiameter->setValue(m_draft.diameter * m_draft.annulusPercent * ((mm)? 1.: 1./25.4));
      ui->annularDiameter->blockSignals(false);
-     QSettings set;
-     aperatureReduction = set.value("config aperatureReduction",0.).toDouble();
-
-     ui->reduceValue->setValue(aperatureReduction * ((mm) ? 1. : 1./25.4));
+     
+     // Get apertureReduction from draft (already loaded from persistent storage)
+     ui->reduceValue->setValue(m_draft.apertureReduction * ((mm) ? 1. : 1./25.4));
      ui->reduceValue->blockSignals(false);
-     ui->ClearAp->setText(QString("%1 ").arg(m_clearAperature * ((mm) ? 1: 1./25.4), 6, 'f', 2));
+    setclearAp();
 }
 
 void mirrorDlg::on_buttonBox_accepted()
 {
-    QSettings settings;
     setclearAp();
     updateZ8();
 
     SurfaceManager * sm = SurfaceManager::get_instance();
-    if (sm->m_inverseMode == invCONIC && cc==0) {
+    if (sm->m_inverseMode == invCONIC && m_draft.cc == 0) {
         sm->m_inverseMode = invNOTSET; // don't allow inverse mode to be conic if conic constant is zero
         updateAutoInvertStatus();
     }
 
-    settings.setValue("config mirror name", ui->name->text());
-    settings.setValue("config roc", roc);
-    settings.setValue("config lambda",lambda);
-    settings.setValue("config diameter",diameter);
-    settings.setValue("config obstruction", obs);
-    settings.setValue("config cc", cc);
-    settings.setValue("flipH", ui->flipH->isChecked());
-    settings.setValue("md Annulus to obs", m_useAnnular);
+    // Commit draft edits to persistent copy
+    m_current = m_draft;
+    
+    // Persist persistent copy to QSettings via facade (single atomic save)
+    // Note: Only mirrordlg can call this (via friend declaration) - enforces single source of truth
+    SettingsFacade::instance().saveMirrorSettings(m_current);
 
-    settings.setValue("outlineShape", m_outlineShape);
-    fringeSpacing = ui->fringeSpacingEdit->text().toDouble();
-    settings.setValue("config fringe spacing", fringeSpacing);
-    //settings.setValue("config unitsMM", mm);
-    settings.setValue("config doNull",doNull);
-    settings.setValue("outlineShape",(int)m_outlineShape);
-    settings.setValue("ellipseMinorAxis",m_verticalAxis);
-    settings.setValue("configAperatureReductionChecked", m_aperatureReductionEnabled);
-    settings.setValue("config aperatureReduction", aperatureReduction);
-    settings.setValue("md annulus percent",  m_annularObsPercent);
-    settings.setValue("md use annulus", m_useAnnular);
     if (m_obsChanged)
-
-        emit obstructionChanged();
+        emit obstructionChanged();    
     emit recomputeZerns();
     if (m_aperatureReductionValueChanged){
-
+        emit aperatureChanged();
         QMessageBox::warning(0, tr("Aperature Reduction value was  changed."),
                              tr("Aperature Reduction was changed.\n"
                                 "The wave front will not be correct until it is recomputed from the interferogram."));
@@ -693,18 +659,18 @@ void mirrorDlg::on_buttonBox_accepted()
 
 void mirrorDlg::on_cc_textChanged(const QString &arg1)
 {
-   cc = arg1.toDouble();
+   m_draft.cc = arg1.toDouble();
    updateZ8();
 }
 
 void mirrorDlg::spacingChangeTimeout(){
     spacingChangeTimer.stop();
     double v = ui->fringeSpacingEdit->text().toDouble();
-    if ( v != fringeSpacing){
+    if ( v != m_draft.fringeSpacing){
         QMessageBox::information(0,"Fringe Spacing Changed",  "This change will only be used when Interferograms are analyzed. "
                     "It will not be applied to any existing wavefronts already loaded.");
     }
-    fringeSpacing = v;
+    m_draft.fringeSpacing = v;
 
 }
 
@@ -715,35 +681,39 @@ void mirrorDlg::on_fringeSpacingEdit_textChanged(const QString & /*text*/)
 
 void mirrorDlg::on_name_editingFinished()
 {
-    m_name = ui->name->text();
+    m_draft.mirrorName = ui->name->text();
 
 }
 
 
 void mirrorDlg::on_minorAxisEdit_textChanged(const QString &arg1)
 {
-
-    m_verticalAxis = arg1.toDouble();
+    m_draft.ellipseMinorAxis = arg1.toDouble();
     enforceEllipseMajorAxis();
 }
 
 void mirrorDlg::setMinorAxis(double val){
-    m_verticalAxis = val;
+    m_draft.ellipseMinorAxis = val;
     ui->minorAxisEdit->setText(QString::number(val));
     enforceEllipseMajorAxis();
     //on_minorAxisEdit_textChanged( QString::number(val));
 }
 
+void mirrorDlg::setOutlineShape(outlineShape shape){
+    m_draft.outlineShape = (int)shape;
+    ui->ellipseShape->setChecked(shape == ELLIPSE);
+}
+
 void mirrorDlg::on_ellipseShape_clicked(bool checked)
 {
-    if (checked) m_outlineShape = ELLIPSE;
-    else m_outlineShape = CIRCLE;
+    if (checked) m_draft.outlineShape = (int)ELLIPSE;
+    else m_draft.outlineShape = (int)CIRCLE;
 
     setEllipseControlsEnabled(checked);
 
-    if (m_verticalAxis == 0){
-        m_verticalAxis = diameter;
-        ui->minorAxisEdit->setText(QString().number(m_verticalAxis));
+    if (m_draft.ellipseMinorAxis == 0){
+        m_draft.ellipseMinorAxis = m_draft.diameter;
+        ui->minorAxisEdit->setText(QString().number(m_draft.ellipseMinorAxis));
     }
     enforceEllipseMajorAxis();
 }
@@ -757,46 +727,52 @@ void mirrorDlg::on_buttonBox_helpRequested()
 
 void mirrorDlg::setclearAp(){
 
-    m_clearAperature = (diameter - aperatureReduction * 2) ;
-    if (m_aperatureReductionEnabled == false)
-        m_clearAperature = diameter;
-    ui->ClearAp->setText(QString("%1 ").arg(m_clearAperature * ((mm) ? 1: 1./25.4), 6, 'f', 2));
+    double clearAperature = (m_draft.diameter - m_draft.apertureReduction * 2) ;
+    if (m_draft.apertureReductionEnabled == false)
+        clearAperature = m_draft.diameter;
+    ui->ClearAp->setText(QString("%1 ").arg(clearAperature * ((mm) ? 1: 1./25.4), 6, 'f', 2));
+}
+
+double mirrorDlg::getClearAperture() const {
+    double clearAperature = (m_current.diameter - m_current.apertureReduction * 2) ;
+    if (m_current.apertureReductionEnabled == false){
+        clearAperature = m_current.diameter;
+    }
+    return clearAperature;
 }
 
 void mirrorDlg::on_ReducApp_clicked(bool checked)
 {
-    m_aperatureReductionEnabled = checked;
+    m_draft.apertureReductionEnabled = checked;
     ui->reduceValue->setEnabled(checked);
     ui->ClearAp->setVisible(checked);
     ui->clearApLabel->setVisible(checked);
     updateZ8();
 
-    ui->reduceValue->setValue(aperatureReduction);
+    ui->reduceValue->setValue(m_draft.apertureReduction);
     m_aperatureReductionValueChanged = true;
     setclearAp();
-    emit aperatureChanged();
 }
 
 
 void mirrorDlg::on_reduceValue_valueChanged(double arg1)
 {
-    aperatureReduction = ((mm) ? 1: 25.4) * arg1;
+    m_draft.apertureReduction = ((mm) ? 1: 25.4) * arg1;
     updateZ8();
 
     setclearAp();
     m_aperatureReductionValueChanged = true;
-    emit aperatureChanged();
 }
 
 void mirrorDlg::on_annulusPercent_valueChanged(double arg1)
 {
     ui->annularDiameter->blockSignals(true);
-    m_annularObsPercent = .01 * arg1;
-    ui->annularDiameter->setValue( m_annularObsPercent * diameter * ( (mm) ? 1.: 1./25.4));
+    m_draft.annulusPercent = .01 * arg1;
+    ui->annularDiameter->setValue( m_draft.annulusPercent * m_draft.diameter * ( (mm) ? 1.: 1./25.4));
     ui->annularDiameter->blockSignals(false);
 
-    if (m_connectAnnulusToObs){
-        ui->obs->setText(QString::number(m_annularObsPercent * diameter * ((mm)? 1.: 1./25.4)));
+    if (m_draft.annulusToObstruction){
+        ui->obs->setText(QString::number(m_draft.annulusPercent * m_draft.diameter * ((mm)? 1.: 1./25.4)));
     }
     updateZ8();
 }
@@ -822,7 +798,7 @@ void mirrorDlg::enableAnnular(bool enable){
 
 void mirrorDlg::on_useAnnulus_clicked(bool checked)
 {
-    m_useAnnular = checked;
+    m_draft.useAnnulus = checked;
     enableAnnular(checked);
     updateZ8();
 
@@ -840,14 +816,11 @@ void mirrorDlg::on_annulusHelp_clicked()
 
 void mirrorDlg::on_annularDiameter_valueChanged(double arg1)
 {
-    m_annularObsPercent = arg1/diameter;
-    ui->annulusPercent->setValue(m_annularObsPercent * 100);
+    m_draft.annulusPercent = arg1/m_draft.diameter;
+    ui->annulusPercent->setValue(m_draft.annulusPercent * 100);
     updateZ8();
 }
 
-void mirrorDlg::setObsPercent(double obs){
-    ui->annulusPercent->setValue(obs);
-}
 
 void mirrorDlg::updateAutoInvertStatus()
 {
@@ -876,7 +849,7 @@ void mirrorDlg::on_btnChangeAutoInvert_clicked()
 {
     autoInvertDlg dlg;
     dlg.setMainLabel("How should DFTFringe choose to auto invert?");
-    dlg.enableConic(cc != 0);
+    dlg.enableConic(m_draft.cc != 0);
     dlg.exec();
     updateAutoInvertStatus();
 }

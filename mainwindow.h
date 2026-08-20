@@ -84,8 +84,6 @@ public:
 public slots:
     void enableShiftButtons(bool enable);
     void showMessage(const QString&, int id);
-    void diameterChanged(double);
-    void rocChanged(double);
     void batchProcess(QStringList fileList);
     void batchMakeSurfaceReady();
     void batchConnections(bool flag);
@@ -119,7 +117,6 @@ private slots:
     void on_shiftDown_clicked();
     void on_shiftRight_clicked();
     void selectDftTab();
-    void newMirrorDlgPath(const QString &path);
     void on_actionRead_WaveFront_triggered();
 
     void on_actionPreferences_triggered();

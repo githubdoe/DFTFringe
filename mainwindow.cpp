@@ -18,6 +18,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "spdlog/spdlog.h"
+#include "settingsfacade.h"
 #include <QtWidgets>
 #include <iostream>
 #include <fstream>
@@ -193,7 +194,6 @@ MainWindow::MainWindow(QWidget *parent) :
                                           m_ogl->m_surface, metrics);
     connect(m_contourView, &contourView::showAllContours, m_surfaceManager, &SurfaceManager::showAllContours);
     connect(m_dftArea, &DFTArea::newWavefront, m_surfaceManager, &SurfaceManager::createSurfaceFromPhaseMap);
-    connect(m_surfaceManager, &SurfaceManager::diameterChanged,this,&MainWindow::diameterChanged);
     connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
     connect(m_surfTools, &surfaceAnalysisTools::updateSelected, m_surfaceManager, &SurfaceManager::backGroundUpdate);
     ui->tabWidget->addTab(review, "Results");
@@ -272,8 +272,6 @@ MainWindow::MainWindow(QWidget *parent) :
         zernEnables[i] = false;
     }
 
-    connect(m_surfaceManager, &SurfaceManager::rocChanged,this, &MainWindow::rocChanged);
-    connect(m_mirrorDlg, &mirrorDlg::newPath,this, &MainWindow::newMirrorDlgPath);
     progBar = new QProgressBar(this);
 
     status1 = new QLabel();
@@ -585,22 +583,22 @@ void MainWindow::updateMetrics(wavefront& wf){
     double Strehl = pow(e, -st);
     metrics->mStrehl->setText(QString("<b><FONT FONT SIZE = 12>%1</b>").arg(Strehl, 6, 'f', 3));
     QString ztitle("Zernike Values");
-    if (m_mirrorDlg->m_useAnnular){
-        ztitle = QString("Annular Zernike values %1% center hole").arg(100 * m_mirrorDlg->m_annularObsPercent, 6, 'f',1);
+    if (m_mirrorDlg->currentSettings().useAnnulus){
+        ztitle = QString("Annular Zernike values %1% center hole").arg(100 * m_mirrorDlg->currentSettings().annulusPercent, 6, 'f',1);
     }
     metrics->setZernTitle(ztitle);
     double z8 = zernTablemodel->values[8];
     double BestSC;
-    if (m_mirrorDlg->doNull && wf.useSANull){
-        BestSC = z8/m_mirrorDlg->z8;
+    if (m_mirrorDlg->currentSettings().doNull && wf.useSANull){
+        BestSC = z8/m_mirrorDlg->getZ8();
     }
     else {
-        BestSC = m_mirrorDlg->cc +z8/m_mirrorDlg->z8;
+        BestSC = m_mirrorDlg->currentSettings().cc +z8/m_mirrorDlg->getZ8();
     }
     metrics->setOutputLambda(outputLambda);
 
-    metrics->setWavePerFringe(m_mirrorDlg->fringeSpacing, m_mirrorDlg->lambda);
-    if (m_mirrorDlg->doNull)
+    metrics->setWavePerFringe(m_mirrorDlg->currentSettings().fringeSpacing, m_mirrorDlg->currentSettings().lambda);
+    if (m_mirrorDlg->currentSettings().doNull)
         metrics->mCC->setText(QString("<FONT FONT SIZE = 7>%1").arg(BestSC, 6 ,'f', 3));
     else {
         metrics->mCC->setText("NA");
@@ -778,15 +776,6 @@ void MainWindow::showMessage(const QString &msg, int id){
 
 }
 
-void MainWindow::diameterChanged(double v){
-    m_mirrorDlg->on_diameter_Changed(v);
-}
-void MainWindow::rocChanged(double v){
-    m_mirrorDlg->on_roc_Changed(v);
-}
-
-
-
 void MainWindow::on_SelectOutSideOutline_clicked(bool checked)
 {
     m_igramArea->SideOutLineActive( checked);
@@ -844,11 +833,7 @@ void MainWindow::on_showIntensity_clicked(bool checked)
     else
         m_intensityPlot->close();
 }
-void MainWindow::newMirrorDlgPath(const QString &path){
-    QFileInfo info(path);
-    QSettings settings;
-    settings.setValue("lastPath",info.path());
-}
+
 //make a simulated wavefront based on zernike values
 #define TSIZE 200
 void MainWindow::on_actionWavefront_triggered()
@@ -1996,7 +1981,8 @@ void MainWindow::on_actionSave_curent_profile_triggered()
     if (m_profilePlot->m_wf == 0)
         return;
     QSettings settings;
-    QString lastPath = settings.value("projectPath",".").toString();
+    QString lastPath = SettingsFacade::instance().appStore().load().projectPath;
+    if (lastPath.isEmpty()) lastPath = ".";
     QString fName = QFileDialog::getSaveFileName(0,
         tr("Save Profile"), lastPath + "//profile.txt");
     if (fName.isEmpty())

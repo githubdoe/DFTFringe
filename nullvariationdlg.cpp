@@ -26,8 +26,8 @@ nullVariationDlg::nullVariationDlg(QWidget *parent) :
     ui->roc->blockSignals(true);
     ui->diameter->blockSignals(true);
 
-    ui->diameter->setText(QString::number(md->diameter));
-    ui->roc->setText(QString::number(md->roc));
+    ui->diameter->setText(QString::number(md->currentSettings().diameter));
+    ui->roc->setText(QString::number(md->currentSettings().roc));
 
     ui->roc->blockSignals(false);
     ui->diameter->blockSignals(false);
@@ -151,7 +151,7 @@ void nullVariationDlg::calculate()
 
     double roc = ui->roc->text().toDouble() * mul;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double lambda = md->lambda;
+    double lambda = md->currentSettings().lambda;
 
     double center =  1.5 * pow(diam,4) * 1000000. /(384. * lambda * pow(roc,3));
     //qDebug() << center/1.5;
@@ -190,7 +190,7 @@ void nullVariationDlg::on_ComputeSim_clicked()
 
     double roc = ui->roc->text().toDouble() * mul;
     mirrorDlg *md = mirrorDlg::get_Instance();
-    double lambda = md->lambda;
+    double lambda = md->currentSettings().lambda;
     double center =  1.5 * pow(diam,4) * 1000000. /(384. * lambda * pow(roc,3));
     std::default_random_engine generator(time(0));
     std::default_random_engine g2(time(0) + 1000);

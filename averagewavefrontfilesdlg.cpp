@@ -66,7 +66,7 @@ void averageWaveFrontFilesDlg::on_process_clicked()
             sm->generateSurfacefromWavefront(wf);
             cv::Scalar mean,std;
             cv::meanStdDev(wf->workData,mean,std,wf->workMask);
-            double stdVal = std.val[0]* md->lambda/outputLambda;
+            double stdVal = std.val[0]* md->currentSettings().lambda/outputLambda;
             if (stdVal > filterRMS){
                 QFileInfo info(name);
                 QString item = QString("%1 RMS:%2").arg(info.baseName()).arg(stdVal, 0, 'f');

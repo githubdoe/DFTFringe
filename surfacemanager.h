@@ -147,8 +147,6 @@ signals:
     void deleteWavefront(int);
     void rotateTheseSig(int, QList<int>);
     void progress(int);
-    void diameterChanged(double);
-    void rocChanged(double);
     void nameChanged(const QString &, const QString &);
     void showTab(int);
     void enableControls(bool);

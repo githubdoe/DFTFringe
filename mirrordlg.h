@@ -21,6 +21,7 @@
 #include <QDialog>
 #include <QTimer>
 #include "autoinvertdlg.h"
+#include "settingsfacade.h"
 
 namespace Ui {
 class mirrorDlg;
@@ -31,48 +32,47 @@ class mirrorDlg : public QDialog
     Q_OBJECT
 
 public:
+    // TODO we could get rid of singleton if every file accessed settings though SettingsFacade instead of mirrorDlg::get_Instance()->currentSettings()
     static mirrorDlg *get_Instance();
     ~mirrorDlg();
     mirrorDlg(const mirrorDlg&) = delete;
     mirrorDlg& operator=(const mirrorDlg&) = delete;
 
-    void loadFile(QString & fileName);
-    void updateZ8();
-    void updateAutoInvertStatus();
+    void updateAutoInvertStatus(); //This one makes sense. Not saved
 
-    QString m_name;
-    bool mm;
-    double diameter;
-    double roc;
-    double FNumber;
-    double obs; // obstruction
-    double cc;
-    bool doNull;
-    double z8;
-    double lambda;
-    double fringeSpacing;
-    bool flipv;
-    bool fliph;
-    bool m_useAnnular;
-    bool m_connectAnnulusToObs;
-    double m_annularObsPercent; // a value from 0 to 1 (not 0 to 100)
-    double m_clearAperature;
-    double aperatureReduction;
-    static QString m_projectPath;
-    void on_roc_Changed(const double newVal);
-    void on_diameter_Changed(const double diam);
-    bool shouldFlipH();
+    // ---- file loading ----
+    //TODO This is still not 100% clean
+    // One call from loading file shoulb be integgrated to adoptWavefrontSettings
+    // other calls are outline helpers. Need to be clarified
+    void setMinorAxis(double val); 
+    // TODO to be fixed with #358. 
+    // saving shape shall be asked as it is for ROC, lambda and diameter and be saved using adoptWavefrontSettings
+    void setOutlineShape(outlineShape shape);
+    
+
+    // Apply loaded wavefront settings to both runtime and persisted mirror settings.
+    // Intended for a single call after wavefront load mismatch decisions are finalized.
+    void adoptWavefrontSettings(double diameter, double roc, double lambda);
+
+    
+    // Computed/derived value accessors (read-only)
+    double getFNumber() const { return FNumber; }
+    double getZ8() const { return z8; }
     static QString getProjectPath();
-    bool m_obsChanged;
-    void newLambda(const QString &v);
     double getMinorAxis();
-    bool m_majorHorizontal;
-    double m_verticalAxis;
-    outlineShape m_outlineShape;
+    double getClearAperture() const;
     bool isEllipse();
-    void setMinorAxis(double val);
-    bool m_aperatureReductionEnabled;
-    void setObsPercent(double obs);
+    bool shouldFlipH();
+
+    
+    /** @brief Access current mirror settings.
+     *  Returns the persistent copy - the last saved state.
+     *  External code reads this as source of truth. */
+    const MirrorSettings& currentSettings() const { return m_current; }
+    
+private:
+
+    
 private slots:
     void on_ReadBtn_clicked();
 
@@ -123,27 +123,51 @@ private slots:
     void on_btnChangeAutoInvert_clicked();
 
 signals:
-    void diameterChanged(double);
-    void rocChanged(double);
-    void lambdaChanged(double);
-    void saNullChanged(double);
-    void CCChanged(double);
+    // Emitted only after OK/accept when committed settings are saved.
     void obstructionChanged();
-    void newPath(QString);
     void recomputeZerns();
-    void aperatureChanged();
+    void aperatureChanged(); 
+
+protected:
+    /** @brief Reload settings before dialog becomes visible. */
+    void showEvent(QShowEvent *event) override;
 
 private:
     explicit mirrorDlg(QWidget *parent = 0);
     void setclearAp();
+    
+    /** @brief Load draft from persistent settings before dialog is shown.
+     *  Ensures Cancel always reverts to the last saved state. */
+    void loadDraftFromSettings();
     void setEllipseControlsEnabled(bool enabled);
     void enforceEllipseMajorAxis();
 
     Ui::mirrorDlg *ui;
+
+    // State flags
     bool m_aperatureReductionValueChanged;
+    bool m_obsChanged;
+
     QTimer spacingChangeTimer;
+
+    // Persistent mirror configuration copy (source of truth)
+    MirrorSettings m_current;
+    
+    // Working copy for dialog edits (discarded on Cancel, committed to m_current on OK)
+    MirrorSettings m_draft;
+    
+    // Computed/derived values (read-only, not from settings)
+    //TODO actually mm is not saved in settings. should probably be saved as it's a user preference 
+    bool mm;                           // Unit display flag: true = mm, false = other units
+    double FNumber;                    // Computed f-number (focal length / diameter)
+    double z8;                         // Z8 Zernike coefficient or null reference value
+    static QString m_projectPath;      // Current project directory path
+    
     void saveJson(const QString &fileName);
     void enableAnnular(bool enable);
+    void updateZ8();
+    void loadFile(QString & fileName);
+    
 };
 
 #endif // MIRRORDLG_H

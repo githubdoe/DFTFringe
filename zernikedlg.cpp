@@ -119,8 +119,8 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
             }
 
             mirrorDlg &md = *mirrorDlg::get_Instance();
-            if (index.row() == 8 && md.doNull && !m_nulled){
-                double val = values[8] - md.z8 * md.cc;
+            if (index.row() == 8 && md.currentSettings().doNull && !m_nulled){
+                double val = values[8] - md.getZ8() * md.currentSettings().cc;
                 return QString("%1  %2").arg(val, 6, 'f', 3).arg( computeRMS(8, val), 6, 'f', 3);
             }
 
