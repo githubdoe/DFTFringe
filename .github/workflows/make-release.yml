@@ -30,7 +30,7 @@ jobs:
   call-build-windows:
     needs: check-semver
     uses: ./.github/workflows/build-windows.yml
-  # linux build is mainly here to check it builds. We have no acrtifact now.
+  # produces the AppImage published below
   call-build-linux:
     permissions:
       contents: read
@@ -40,12 +40,15 @@ jobs:
 
   download-and-publish-artifacts:
     runs-on: ubuntu-latest
-    needs: call-build-windows
+    needs: [call-build-windows, call-build-linux]
     steps:
-      # get artifact uploaded from build workflow
+      # get artifacts uploaded from the build workflows
       - uses: actions/download-artifact@v8
         with:
           name: DFTFringe-windows-build-artifact
+      - uses: actions/download-artifact@v8
+        with:
+          name: DFTFringe-linux-appimage
       # create the GitHub release and upload the artifacts
       - name: publish Release
         uses: softprops/action-gh-release@v3
@@ -61,3 +64,4 @@ jobs:
           files: |
             DFTFringeInstaller_${{github.ref_name}}.exe
             Z_DFTFringe.exe.debug
+            DFTFringe-${{github.ref_name}}-x86_64.AppImage

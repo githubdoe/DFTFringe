@@ -31,6 +31,17 @@ Additional information and help is availlable at https://groups.io/g/Interferome
 :point_right: Follow the link and use the installer:
 [link to latest release](https://github.com/githubdoe/dftfringe/releases/latest).
 
+# How to install DFTFringe on Linux
+
+:point_right: Download `DFTFringe-<version>-x86_64.AppImage` from the
+[latest release](https://github.com/githubdoe/dftfringe/releases/latest), make it
+executable and run it:
+
+```
+chmod +x DFTFringe-*-x86_64.AppImage
+./DFTFringe-*-x86_64.AppImage
+```
+
 # How to build DFTFringe on Linux
 
 
