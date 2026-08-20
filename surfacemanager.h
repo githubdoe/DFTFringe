@@ -104,7 +104,6 @@ public:
     wavefront* m_standRemoved;
     int insideOffset;
     int outsideOffset;
-    int messageResult;
     void inspectWavefront();
 
     cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<uint8_t> mask);

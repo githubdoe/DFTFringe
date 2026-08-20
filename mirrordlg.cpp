@@ -59,7 +59,6 @@ mirrorDlg::mirrorDlg(QWidget *parent) :
     
     ui->unitsCB->setChecked(mm);
     connect(&spacingChangeTimer, &QTimer::timeout, this, &mirrorDlg::spacingChangeTimeout);
-    
     ui->FNumber->blockSignals(false);
     ui->roc->blockSignals(false);
     ui->lambda->blockSignals(false);
@@ -129,6 +128,27 @@ double mirrorDlg::getMinorAxis(){
 bool mirrorDlg::isEllipse(){
     return (outlineShape)m_draft.outlineShape == ELLIPSE;
 }
+
+void mirrorDlg::setEllipseControlsEnabled(bool enabled)
+{
+    ui->minorAxisEdit->setEnabled(enabled);
+}
+
+void mirrorDlg::enforceEllipseMajorAxis()
+{
+    if ((outlineShape)m_draft.outlineShape != ELLIPSE || m_draft.diameter <= 0)
+        return;
+
+    if (m_draft.ellipseMinorAxis > m_draft.diameter){
+        const double originalVerticalAxis = m_draft.ellipseMinorAxis;
+        m_draft.ellipseMinorAxis = m_draft.diameter;
+        const QSignalBlocker blocker(ui->minorAxisEdit);
+        ui->minorAxisEdit->setText(QString::number(m_draft.ellipseMinorAxis));
+        spdlog::get("logger")->info("Ellipse axis clamp applied: vertical axis {} exceeded horizontal axis {}. Vertical axis was clamped to {}.",
+                                     originalVerticalAxis, m_draft.diameter, m_draft.ellipseMinorAxis);
+    }
+}
+
 void mirrorDlg::saveJson(const QString &fileName){
     QJsonObject jDoc, jMirror,jIgram, jEllipse, jAnnulus;
     jDoc["name"] = m_draft.mirrorName;
@@ -198,6 +218,7 @@ void mirrorDlg::loadFile(QString & fileName){
 
     // clear ellipse in case this is an old config that does not have it.
     ui->ellipseShape->setChecked(false);
+    setEllipseControlsEnabled(false);    
     m_draft.outlineShape = (int)CIRCLE;
     QFileInfo info(fileName);
     
@@ -276,8 +297,10 @@ void mirrorDlg::loadFile(QString & fileName){
         ui->z8->setText(QString().number(z8));
 
         ui->ellipseShape->setChecked((outlineShape)m_draft.outlineShape == ELLIPSE);
+        setEllipseControlsEnabled((outlineShape)m_draft.outlineShape == ELLIPSE);
 
         ui->minorAxisEdit->setText(QString::number(m_draft.ellipseMinorAxis));
+        enforceEllipseMajorAxis();
 
         FNumber = m_draft.roc/(2. * m_draft.diameter);
         ui->FNumber->blockSignals(true);
@@ -408,6 +431,7 @@ void mirrorDlg::loadFile(QString & fileName){
                 file.read(buf,4);
                 m_draft.outlineShape = (int)*(outlineShape*)buf;
                 ui->ellipseShape->setChecked((outlineShape)m_draft.outlineShape == ELLIPSE);
+                setEllipseControlsEnabled((outlineShape)m_draft.outlineShape == ELLIPSE);
 
             }
             // vertical axis
@@ -415,6 +439,7 @@ void mirrorDlg::loadFile(QString & fileName){
                 file.read(buf,8);
                 m_draft.ellipseMinorAxis = *(double*)buf;
                 ui->minorAxisEdit->setText(QString::number(m_draft.ellipseMinorAxis));
+                enforceEllipseMajorAxis();
             }
 
             FNumber = m_draft.roc/(2. * m_draft.diameter);
@@ -487,6 +512,7 @@ void mirrorDlg::on_diameter_textChanged(const QString &arg1) {
         ui->minorAxisEdit->setText(QString().number(m_draft.ellipseMinorAxis));
     }
     m_draft.diameter = diam;
+    enforceEllipseMajorAxis();
     FNumber = m_draft.roc/(2. * m_draft.diameter);
     ui->FNumber->blockSignals(true);
     ui->FNumber->setText(QString("%1").arg(FNumber, 6, 'f', 2));
@@ -662,13 +688,14 @@ void mirrorDlg::on_name_editingFinished()
 
 void mirrorDlg::on_minorAxisEdit_textChanged(const QString &arg1)
 {
-
     m_draft.ellipseMinorAxis = arg1.toDouble();
+    enforceEllipseMajorAxis();
 }
 
 void mirrorDlg::setMinorAxis(double val){
     m_draft.ellipseMinorAxis = val;
     ui->minorAxisEdit->setText(QString::number(val));
+    enforceEllipseMajorAxis();
     //on_minorAxisEdit_textChanged( QString::number(val));
 }
 
@@ -682,10 +709,13 @@ void mirrorDlg::on_ellipseShape_clicked(bool checked)
     if (checked) m_draft.outlineShape = (int)ELLIPSE;
     else m_draft.outlineShape = (int)CIRCLE;
 
+    setEllipseControlsEnabled(checked);
+
     if (m_draft.ellipseMinorAxis == 0){
         m_draft.ellipseMinorAxis = m_draft.diameter;
         ui->minorAxisEdit->setText(QString().number(m_draft.ellipseMinorAxis));
     }
+    enforceEllipseMajorAxis();
 }
 
 

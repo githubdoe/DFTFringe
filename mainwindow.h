@@ -103,7 +103,6 @@ public slots:
 signals:
     void load(SurfaceManager *);
     //void load(QStringList, SurfaceManager *);
-    void messageResult(int);
     void gammaChanged(bool, double);
 private slots:
     void updateChannels(const cv::Mat&);

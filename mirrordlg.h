@@ -139,6 +139,8 @@ private:
     /** @brief Load draft from persistent settings before dialog is shown.
      *  Ensures Cancel always reverts to the last saved state. */
     void loadDraftFromSettings();
+    void setEllipseControlsEnabled(bool enabled);
+    void enforceEllipseMajorAxis();
 
     Ui::mirrorDlg *ui;
 
