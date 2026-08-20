@@ -1,6 +1,6 @@
 # DFTFringe
 
-[![build-windows](https://github.com/githubdoe/DFTFringe/actions/workflows/build-windows.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-windows.yml) [![build-linux](https://github.com/githubdoe/DFTFringe/actions/workflows/build-linux.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-linux.yml)
+[![build-windows](https://github.com/githubdoe/DFTFringe/actions/workflows/build-windows.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-windows.yml) [![build-linux](https://github.com/githubdoe/DFTFringe/actions/workflows/build-linux.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-linux.yml) [![build-macos](https://github.com/githubdoe/DFTFringe/actions/workflows/build-macos.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-macos.yml)
 
 
 # Introduction
@@ -30,6 +30,24 @@ Additional information and help is availlable at https://groups.io/g/Interferome
 
 :point_right: Follow the link and use the installer:
 [link to latest release](https://github.com/githubdoe/dftfringe/releases/latest).
+
+# How to install DFTFringe on MacOS
+
+Download the disk image from the
+[latest release](https://github.com/githubdoe/dftfringe/releases/latest), open it
+and drag DFTFringe into Applications. The required OS is MacOS 15 or later.
+
+**The app is not notarised yet**, so macOS refuses to open it the first time and
+will just quit without saying anything. To launch it : 
+
+Right-click it -> "Open", then open "System Settings", go to "Privacy & Security",
+find the DFTFringe security warning, and click "Open Anyway"
+
+Or, from the terminal :
+
+```
+xattr -dr com.apple.quarantine /Applications/DFTFringe.app
+```
 
 # How to install DFTFringe on Linux
 
@@ -63,7 +81,32 @@ make -j4
 
 # How to build DFTFringe on MacOS
 
-:building_construction: Under construction :building_construction:
+Dependencies come from [Homebrew](https://brew.sh).
+
+```
+brew install qt qwt opencv@4 armadillo
+```
+
+qmake finds them through pkg-config.
+`opencv@4` is keg-only and Qt6 is split across several kegs, so point `PKG_CONFIG_PATH` at them:
+
+```
+export PKG_CONFIG_PATH="$(brew --prefix qwt)/lib/pkgconfig:$(brew --prefix opencv@4)/lib/pkgconfig:$(brew --prefix armadillo)/lib/pkgconfig:$(brew --prefix)/lib/pkgconfig"
+$(brew --prefix qt)/bin/qmake DFTFringe.pro CONFIG+=release
+make -j$(sysctl -n hw.ncpu)
+```
+
+This produces `build/release/DFTFringe.app`, linked against Homebrew libraries.
+`macdeployqt` copies the libraries in and rewrites their install names. The colour
+maps have to be copied in `Contents/Resources`.
+
+```
+$(brew --prefix qt)/bin/macdeployqt build/release/DFTFringe.app
+cp -R ColorMaps build/release/DFTFringe.app/Contents/Resources/
+open build/release/DFTFringe.app
+```
+
+To produce an universal build with `lipo` from arm and intel builds, you can take `.github/workflows/build-macos.yml` as reference.
 
 # How to build DFTFringe on Windows
 

@@ -1,0 +1,145 @@
+name: build-macos
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            arch: arm64
+          - os: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    outputs:
+      workflow-version: ${{ steps.version.outputs.workflow-version }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: brew install qt qwt opencv@4 armadillo
+
+      - name: Resolve Homebrew layout
+        run: |
+          QT_PREFIX="$(brew --prefix qt)"
+          if [ ! -x "$QT_PREFIX/bin/qmake" ]; then QT_PREFIX="$(brew --prefix qtbase)"; fi
+          echo "QT_PREFIX=$QT_PREFIX" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=$(brew --prefix qwt)/lib/pkgconfig:$(brew --prefix opencv@4)/lib/pkgconfig:$(brew --prefix armadillo)/lib/pkgconfig:$(brew --prefix)/lib/pkgconfig" >> "$GITHUB_ENV"
+
+      - name: Resolve version strings
+        id: version
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            WORKFLOW_VERSION="${{ github.event.pull_request.head.sha }}_${{ github.event.pull_request.base.sha }}"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            WORKFLOW_VERSION="$GITHUB_REF_NAME"
+          else
+            WORKFLOW_VERSION="$GITHUB_SHA"
+          fi
+          BUNDLE_VERSION="$(printf '%s' "$WORKFLOW_VERSION" | sed -nE 's/^v?([0-9]+\.[0-9]+\.[0-9]+).*$/\1/p')"
+          echo "WORKFLOW_VERSION=$WORKFLOW_VERSION" >> "$GITHUB_ENV"
+          echo "BUNDLE_VERSION=${BUNDLE_VERSION:-0.0.0}" >> "$GITHUB_ENV"
+          echo "workflow-version=$WORKFLOW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Find and Replace MY_AUTOMATED_VERSION_STRING
+        run: sed -i '' "s/MY_AUTOMATED_VERSION_STRING/${WORKFLOW_VERSION}/" DFTFringe.pro
+
+      - name: Configure
+        run: '"$QT_PREFIX/bin/qmake" DFTFringe.pro CONFIG+=release'
+
+      - uses: ammaraskar/gcc-problem-matcher@master
+      - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
+      - name: Build
+        run: make -j$(sysctl -n hw.ncpu)
+      - run: echo "::remove-matcher owner=uic-problem-matcher::"
+
+      - name: Bundle dependencies
+        run: |
+          "$QT_PREFIX/bin/macdeployqt" build/release/DFTFringe.app -verbose=1
+          cp -R ColorMaps build/release/DFTFringe.app/Contents/Resources/
+          PLIST=build/release/DFTFringe.app/Contents/Info.plist
+          for key in CFBundleShortVersionString CFBundleVersion; do
+            /usr/libexec/PlistBuddy -c "Set :$key $BUNDLE_VERSION" "$PLIST" 2>/dev/null \
+              || /usr/libexec/PlistBuddy -c "Add :$key string $BUNDLE_VERSION" "$PLIST"
+          done
+
+      - name: Verify the bundle is self contained
+        run: |
+          if otool -L build/release/DFTFringe.app/Contents/MacOS/DFTFringe \
+              | tail -n +2 | awk '{print $1}' \
+              | grep -vE "^(@rpath|@executable_path|/usr/lib|/System)"; then
+            echo "bundle references the paths above, outside itself"
+            exit 1
+          fi
+
+      - name: Upload bundle
+        run: tar czf DFTFringe-${{ matrix.arch }}.tar.gz -C build/release DFTFringe.app
+      - uses: actions/upload-artifact@v7
+        with:
+          name: DFTFringe-macos-${{ matrix.arch }}-bundle
+          path: DFTFringe-${{ matrix.arch }}.tar.gz
+          retention-days: 1
+
+  universal-dmg:
+    needs: build-macos
+    runs-on: macos-15
+    env:
+      WORKFLOW_VERSION: ${{ needs.build-macos.outputs.workflow-version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: DFTFringe-macos-*-bundle
+          merge-multiple: true
+
+      - name: Merge the two architectures
+        run: |
+          mkdir arm64 x86_64
+          tar xzf DFTFringe-arm64.tar.gz -C arm64
+          tar xzf DFTFringe-x86_64.tar.gz -C x86_64
+          ARM="$PWD/arm64/DFTFringe.app"
+          INTEL="$PWD/x86_64/DFTFringe.app"
+
+          diff <(cd "$ARM" && find . | sort) <(cd "$INTEL" && find . | sort) \
+            || { echo "the two bundles do not contain the same files"; exit 1; }
+
+          cp -R "$ARM" DFTFringe.app
+          UNIVERSAL="$PWD/DFTFringe.app"
+          find "$UNIVERSAL" -type f | while read -r f; do
+            rel="${f#$UNIVERSAL/}"
+            if file -b "$f" | grep -q "Mach-O"; then
+              lipo -create "$ARM/$rel" "$INTEL/$rel" -output "$f"
+            fi
+          done
+          echo "--- architectures in the merged executable:"
+          lipo -info "$UNIVERSAL/Contents/MacOS/DFTFringe"
+
+      - name: Ad-hoc sign
+        run: |
+          APP=DFTFringe.app
+          find "$APP/Contents/Frameworks" "$APP/Contents/PlugIns" \
+            \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign - {} +
+          find "$APP/Contents/Frameworks" -maxdepth 1 -name "*.framework" \
+            -exec codesign --force --sign - {} +
+          codesign --force --sign - "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
+      - name: Create disk image
+        run: |
+          STAGE="$(mktemp -d)/DFTFringe"
+          mkdir -p "$STAGE"
+          cp -R DFTFringe.app "$STAGE/"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create -volname "DFTFringe" -srcfolder "$STAGE" -ov -format UDZO \
+            "DFTFringe-${WORKFLOW_VERSION}.dmg"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: DFTFringe-macos-build-artifact
+          path: DFTFringe-${{ env.WORKFLOW_VERSION }}.dmg
