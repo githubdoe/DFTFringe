@@ -47,7 +47,7 @@
 #include "wavefrontfilterdlg.h"
 #include "outlineplots.h"
 #include "cameracalibwizard.h"
-
+#include "liveviewdialog.h"
 class regionEditTools;
 namespace Ui {
 class MainWindow;
@@ -275,7 +275,9 @@ private slots:
 
     void on_actionStop_auto_invert_triggered();
 
-    void load_from_url();
+    QString load_from_url();
+
+    void on_actionLive_view_triggered();
 
 private:
 
@@ -289,6 +291,7 @@ private:
     QMenu* m_view_menu;
     void createActions();
     void createDockWindows();
+    void startLiveAnalysisLoop();
 public:
     IgramArea *m_igramArea;
     DFTTools *m_dftTools;
@@ -329,6 +332,7 @@ private:
     bool m_skipItem;
     bool m_OutlineDoneInBatch;
     bool m_batchMakeSurfaceReady;
+    bool m_liveLoopActive = false;
     astigStatsDlg *m_astigStatsDlg;
 
     enum { MaxRecentFiles = 5 };
@@ -337,6 +341,7 @@ private:
     ColorChannelDisplay *m_colorChannels;
     igramIntensity *m_intensityPlot;
     vortexDebug    *m_vortexDebugTool;
+    LiveViewDialog *m_viewDlg = NULL;
     batchIgramWizard *batchWiz;
     QStringList m_igramsToProcess;
     QWidget *oglFv;

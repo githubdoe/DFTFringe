@@ -478,7 +478,6 @@ QSize SurfaceGraph::Size(){
 QImage SurfaceGraph::render(int width, int height){
     QSize orgsize = m_graph->size();
     if (orgsize.width() < width){
-        qDebug() << "m_graph size" << orgsize << width << height;
         m_graph->resize(width, height);
     }
     QImage result = m_graph->renderToImage(0, QSize(width,height));

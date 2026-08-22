@@ -260,10 +260,10 @@ void IgramArea::doGamma(double gammaV){
 }
 
 cv::Mat IgramArea::qImageToMat(QImage &img){
-    QImage::Format f = img.format();
+
     int depth = img.depth();
-    int planesCnt = img.bitPlaneCount();
-    qDebug() << "format " << f << depth << planesCnt;
+
+
     cv::Mat iMat;
     switch (depth){
         case 24:
@@ -935,7 +935,6 @@ void IgramArea::useLastOutline(){
             drawBoundary();
         }
     }
-        qDebug() << "uselastoutline" << m_outside.m_center.x();
 }
 void IgramArea::adjustCenterandRegions(){
     double xoffset , yoffset = 0;
@@ -1076,7 +1075,6 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
     m_polygons.clear();
     m_regionEdit->clear();
     m_regionEdit->hide();
-    qDebug() << "Checking for ouline file";
     // check for an outline file
     QFileInfo finfo(makeOutlineName());
     emit showTab(0);
@@ -2366,7 +2364,6 @@ void IgramArea::writeOutlines(QString fileName){
         return;
     }
     QFileInfo info(saveFile);
-    qDebug() << info.absoluteFilePath();
     saveFile.write(jsondoc.toJson());
     saveFile.close();
 

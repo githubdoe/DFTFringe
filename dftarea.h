@@ -92,6 +92,7 @@ signals:
                       QVector<std::vector<cv::Point> >);
     void dftReady(QImage);
     void statusBarUpdate(QString, int);
+    void centerFilterPercent(double);
 private:
     static DFTArea *m_Instance;
     Ui::DFTArea *ui;
@@ -127,6 +128,8 @@ private:
     int m_psiRows;
     int m_psiCols;
     double zoom;
+public:
+
 };
 
 

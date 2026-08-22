@@ -857,7 +857,7 @@ void ProfilePlot::populate()
     muY->setLabel( QString::fromLatin1( " 1/8 wave on wavefront" ) );
     muY->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
     muY->setLineStyle( QwtPlotMarker::HLine );
-    muY->setLinePen( Qt::red, 0, Qt::DashDotLine );
+    muY->setLinePen( Qt::red, 3, Qt::DashDotLine );
     muY->setYValue( 0.125 * mul );
     muY->attach( m_plot );
 
@@ -866,7 +866,7 @@ void ProfilePlot::populate()
     mlY->setLabel( QString::fromLatin1( " -1/8 wave on wavefront" ) );
     mlY->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
     mlY->setLineStyle( QwtPlotMarker::HLine );
-    mlY->setLinePen( Qt::red, 0, Qt::DashDotLine );
+    mlY->setLinePen( Qt::red, 3, Qt::DashDotLine );
     mlY->setYValue( -0.125 * mul );
     mlY->attach( m_plot );
 

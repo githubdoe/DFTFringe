@@ -55,7 +55,8 @@
 
 #include "zapm_interface.h"
 #include "zernikeprocess.h"
-
+#include "liveimageview.h"
+#include "liveviewdialog.h"
 
 using namespace QtConcurrent;
 std::vector<wavefront*> g_wavefronts;
@@ -75,7 +76,6 @@ MainWindow::MainWindow(QWidget *parent) :
         a->menu()->setToolTipsVisible(true);
     }
     spdlog::get("logger")->info("DFTFringe {} started", APP_VERSION);
-
     //const QString toolButtonStyle("QToolButton {"
     //                                "border-style: outset;"
     //                                "border-width: 3px;"
@@ -2149,30 +2149,66 @@ void MainWindow::on_actionStop_auto_invert_triggered()
 }
 
 /*
-    This is called iwth shortcut Qt::Key_U
+    This is called With shortcut Qt::Key_U or by the live view automation loop
     It's a sort of easter egg for people using skysolve camera with their Bath setup.
  */
-void MainWindow::load_from_url(){
+QString MainWindow::load_from_url(){
+    // if live view is open use it
+    QImage image;
 
-    // Construct the URL with IP address and port
-    QUrl url;
-    url.setScheme("http"); // or "https" if using SSL
-    url.setHost("192.168.50.5"); // Replace with your IP address
-    url.setPort(5000); // Specify the port
-    url.setPath("/downloadImage");
-    showMessage("Connecting to " + url.toString(),1);
-    //downloader.startDownload(url);
+    //if live view is not available.
+    if (!m_viewDlg || !m_viewDlg->isVisible()){
 
-    QEventLoop loop;
-    QNetworkAccessManager nam;
-    QNetworkRequest req(url);
-    QNetworkReply *reply = nam.get(req);
-    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    //connect(reply, &QNetworkReply::downloadProgress, this, [&](qint64 bytesReceived, qint64 bytesTotal){
-    //    showMessage(QString("byes received %1").arg( bytesReceived) + QString(" total %1").arg(bytesTotal),1);
-    //});
-    loop.exec();
-    QByteArray buffer = reply->readAll();
+
+        // Construct the URL with IP address and port
+        QUrl url;
+        url.setScheme("http"); // or "https" if using SSL
+        url.setHost("192.168.50.5"); // Replace with your IP address
+        url.setPort(5000); // Specify the port
+        url.setPath("/downloadImage");
+        showMessage("Connecting to " + url.toString(),1);
+        //downloader.startDownload(url);
+
+        QEventLoop loop;
+        QNetworkAccessManager nam;
+        QNetworkRequest req(url);
+        QNetworkReply *reply = nam.get(req);
+        connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        //connect(reply, &QNetworkReply::downloadProgress, this, [&](qint64 bytesReceived, qint64 bytesTotal){
+        //    showMessage(QString("byes received %1").arg( bytesReceived) + QString(" total %1").arg(bytesTotal),1);
+        //});
+        loop.exec();
+        QByteArray buffer = reply->readAll();
+        QSettings set;
+        QString dirPath = set.value("importIgramPath",".").toString();
+        // Get the current date and time
+        QDateTime currentDateTime = QDateTime::currentDateTime();
+
+        // Format the date and time into a string suitable for a filename
+        // Using "yyyyMMdd_HHmmss" for a clear, sortable format without illegal characters
+        QString dateTimeString = currentDateTime.toString("yyyyMMdd_HHmmss");
+
+        // Construct the full filename
+        QString fileName = dirPath + "/" + dateTimeString +".jpg";
+        // Create a QImage from the QByteArray
+
+        if (image.loadFromData(buffer, "jpg")) { // Specify format if known, otherwise omit
+            showMessage("Image loaded successfully " + fileName,1);
+            // Now you can use the 'image' QImage object
+            // Example: Save it to another file
+            image.save(fileName, "JPG");
+            importIgram();
+        } else {
+            showMessage("Failed to load image!",2);
+        }
+    }
+    else {
+       image =  m_viewDlg->getFrame();
+       if (image.isNull()){
+           return ("");
+
+       }
+    }
     QSettings set;
     QString dirPath = set.value("importIgramPath",".").toString();
     // Get the current date and time
@@ -2185,16 +2221,156 @@ void MainWindow::load_from_url(){
     // Construct the full filename
     QString fileName = dirPath + "/" + dateTimeString +".jpg";
     qDebug() << "download filename" << fileName;
-    // Create a QImage from the QByteArray
-    QImage image;
-    if (image.loadFromData(buffer, "jpg")) { // Specify format if known, otherwise omit
-        showMessage("Image loaded successfully " + fileName,1);
-        // Now you can use the 'image' QImage object
-        // Example: Save it to another file
-        image.save(fileName, "JPG");
-        importIgram();
-    } else {
-        showMessage("Failed to load image!",2);
+    image.save(fileName, "JPG");
+    importIgram();
+    return fileName;
+}
+
+void MainWindow::on_actionLive_view_triggered()
+{
+    if (!m_viewDlg) {
+            m_viewDlg = new LiveViewDialog("1",this);//("http://192.168.50.5:5000/video_feed");
+            // compute the size of the current filter circle and set it to the viewDLG
+
+            // Automatically nullify the pointer when Qt deletes the dialog on close
+            connect(m_viewDlg, &QObject::destroyed, this, [this]() {
+                m_viewDlg = nullptr;
+            });
+
+            connect(m_viewDlg, &LiveViewDialog::igramCaptured, this, &MainWindow::load_from_url);
+            // Connect the Start button on the dialog to trigger your analysis loop
+            connect(m_viewDlg->startAnalysisBtn, &QPushButton::clicked, this, [this]() {
+                // Using single-shot timer ensures the click event finishes before entering the loop
+                QTimer::singleShot(0, this, &MainWindow::startLiveAnalysisLoop);
+            });
+
+            // Connect the Stop button to signal the loop to terminate
+            connect(m_viewDlg->stopAnalysisBtn, &QPushButton::clicked, this, [this]() {
+             m_liveLoopActive = false;
+            });
+            // Connect the Stop button to signal the loop to terminate
+            connect(m_viewDlg, &LiveViewDialog::streamDisconnected, this, [this]() {
+             m_liveLoopActive = false;
+            });
+            m_viewDlg->show();
+        } else {
+            // If it's already open, just bring it to the front
+            m_viewDlg->raise();
+            m_viewDlg->activateWindow();
+        }
+    double f = (double)(m_dftArea->m_center_filter)/((double)(m_dftArea->width())/2.);
+qDebug() << "center percent" << f <<  m_dftArea->m_center_filter << m_dftArea->width()/2.;
+    m_viewDlg->setCenterFilterRadius(f);
+}
+
+void MainWindow::startLiveAnalysisLoop() {
+    if (m_liveLoopActive) return;
+    m_liveLoopActive = true;
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+
+    int count = 1;
+
+    cv::Mat sum;
+
+    QFont tFont("Serif", 24);
+    while (m_liveLoopActive && m_viewDlg) {
+        QApplication::processEvents();
+        if (!m_liveLoopActive) break;
+
+        // 1. Grab and save the frame with a timestamp filename
+        QString savedFilePath = load_from_url();
+        if (savedFilePath == "") {
+            break;
+        }
+
+
+        // 2. Open the saved image in the pipeline
+        m_igramArea->openImage(savedFilePath);
+        QApplication::processEvents();
+        if (!m_liveLoopActive) break;
+
+        // 3. Find center/outline automatically if needed
+        if (m_igramArea->m_center.m_radius == 0) {
+            //m_igramArea->findCenterHole();
+        }
+        QApplication::processEvents();
+        if (!m_liveLoopActive) break;
+
+        // 4. Advance through processing steps
+        m_igramArea->nextStep();
+        QApplication::processEvents();
+        if (!m_liveLoopActive) break;
+
+        // 5. Switch to DFT tab and generate surface
+        ui->tabWidget->setCurrentIndex(2); // Adjust index if DFT tab differs
+        m_dftTools->wasPressed = true;
+        m_dftArea->makeSurface();
+
+        QApplication::processEvents();
+        if (!m_dftArea->success) {
+            break;
+        }
+        wavefront *wf = m_surfaceManager->m_wavefronts.back();
+        if (count == 1){
+            sum = cv::Mat::zeros(wf->workData.rows,wf->workData.cols, wf->workData.type());
+        }
+        sum += wf->workData;
+
+        cv::Mat mask = wf->mask.clone();
+
+
+        cv::Mat masked;
+        cv::Mat result = sum.clone()/count;
+
+        //result.copyTo(masked, mask);
+        wavefront *resultwf = new wavefront;
+        *resultwf = *wf;
+        resultwf->workData = result.clone();
+        resultwf->data = result.clone();
+        resultwf->mask = mask.clone();
+        resultwf->workMask = mask.clone();
+        resultwf->m_origin = WavefrontOrigin::Average;
+
+        //if (m_viewDlg->showAverage->isChecked()){
+            m_ogl->m_surface->setSurface(resultwf);
+        //}
+
+
+            // 6. RENDER surface
+            QImage img = m_ogl->m_surface->render(1000, 1000);
+
+            QPainter p2(&img);
+            p2.setPen(QPen(Qt::black,50));
+            p2.setFont(tFont);
+            QString msg("avg of ");
+            if (!m_viewDlg->showAverage->isChecked())
+                msg = "";
+
+            p2.drawText(img.size().width()/4, img.size().height()/3, QString(msg + "%1").arg(count));
+            p2.end(); // Clean up painter
+
+            QPixmap pixmap = QPixmap::fromImage(img);
+            if (m_viewDlg->deleteIgramAfter->isChecked()){
+
+                if (QFile::remove(savedFilePath)) {
+                } else {
+                    qDebug() <<savedFilePath << "Failed to delete file.";
+                }
+                QFile::remove(savedFilePath.replace("jpg","oln"));
+            }
+
+
+         if (m_viewDlg != NULL)
+            m_viewDlg->surfaceResultLabel->setPixmap(pixmap);
+        ++count;
+        // Pacing delay between loop iterations
+        QThread::msleep(200);
+
     }
 
+
+    QApplication::restoreOverrideCursor();
+    m_liveLoopActive = false;
 }
+

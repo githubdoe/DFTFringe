@@ -59,7 +59,7 @@
      <x>0</x>
      <y>0</y>
      <width>667</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFiles">
@@ -83,6 +83,7 @@
     <addaction name="separator"/>
     <addaction name="actionSave_PDF_report"/>
     <addaction name="actionCreate_Movie_of_wavefronts"/>
+    <addaction name="actionLive_view"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -161,8 +162,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>250</width>
-     <height>791</height>
+     <width>348</width>
+     <height>856</height>
     </size>
    </property>
    <property name="whatsThis">
@@ -430,7 +431,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
             </property>
             <property name="minimumSize">
              <size>
-              <width>82</width>
+              <width>94</width>
               <height>0</height>
              </size>
             </property>
@@ -502,7 +503,7 @@ QPushButton:hover{rgb(85, 255, 255)}</string>
             </property>
             <property name="minimumSize">
              <size>
-              <width>82</width>
+              <width>94</width>
               <height>30</height>
              </size>
             </property>
@@ -608,7 +609,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>82</width>
+            <width>94</width>
             <height>0</height>
            </size>
           </property>
@@ -654,7 +655,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>82</width>
+            <width>94</width>
             <height>0</height>
            </size>
           </property>
@@ -697,7 +698,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>82</width>
+            <width>94</width>
             <height>0</height>
            </size>
           </property>
@@ -746,7 +747,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>82</width>
+            <width>94</width>
             <height>0</height>
            </size>
           </property>
@@ -789,7 +790,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>82</width>
+            <width>94</width>
             <height>0</height>
            </size>
           </property>
@@ -838,7 +839,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>82</width>
+            <width>94</width>
             <height>0</height>
            </size>
           </property>
@@ -881,7 +882,7 @@ em;
           </property>
           <property name="minimumSize">
            <size>
-            <width>50</width>
+            <width>56</width>
             <height>0</height>
            </size>
           </property>
@@ -972,7 +973,7 @@ em;
          </property>
          <property name="minimumSize">
           <size>
-           <width>82</width>
+           <width>94</width>
            <height>0</height>
           </size>
          </property>
@@ -1518,6 +1519,11 @@ em;
   <action name="actionStop_auto_invert">
    <property name="text">
     <string>Stop auto invert</string>
+   </property>
+  </action>
+  <action name="actionLive_view">
+   <property name="text">
+    <string>Live view</string>
    </property>
   </action>
  </widget>
