@@ -36,17 +36,26 @@
 #include <QLabel>
 #include <QSettings>
 #include <QDebug>
-
+#include "custom3dinputhandler.h"
 int sampleCountX = 50;
 int sampleCountZ = 50;
 
 const float sampleMin = -8.0f;
 const float sampleMax = 8.0f;
 #include <QOpenGLFunctions>
+
+#include <Q3DInputHandler>
+#include <QMouseEvent>
+
+
+
 SurfaceGraph::SurfaceGraph(Q3DSurface *surface)
     : m_graph(surface),m_axisMaxSliderXValue(100),m_axisMinSliderXValue(0), m_wf(0), m_colorRange(.56)
 {
     m_xGridMin = 0;
+    // Replace default input handler with your custom one
+    Custom3DInputHandler *customInputHandler = new Custom3DInputHandler(m_graph);
+    m_graph->setActiveInputHandler(customInputHandler);
     m_graph->setAxisX(new QValue3DAxis);
     m_graph->setAxisY(new QValue3DAxis);
     m_graph->setAxisZ(new QValue3DAxis);
@@ -478,7 +487,6 @@ QSize SurfaceGraph::Size(){
 QImage SurfaceGraph::render(int width, int height){
     QSize orgsize = m_graph->size();
     if (orgsize.width() < width){
-        qDebug() << "m_graph size" << orgsize << width << height;
         m_graph->resize(width, height);
     }
     QImage result = m_graph->renderToImage(0, QSize(width,height));
