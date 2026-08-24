@@ -48,6 +48,15 @@
 #include "outlineplots.h"
 #include "cameracalibwizard.h"
 #include "liveviewdialog.h"
+
+enum LiveLoopState {
+    State_Stopped,
+    State_Running,
+    State_Paused
+};
+
+
+
 class regionEditTools;
 namespace Ui {
 class MainWindow;
@@ -291,7 +300,7 @@ private:
     QMenu* m_view_menu;
     void createActions();
     void createDockWindows();
-    void startLiveAnalysisLoop();
+    void runLiveAnalysisLoop();
 public:
     IgramArea *m_igramArea;
     DFTTools *m_dftTools;
@@ -351,6 +360,17 @@ private:
     QVector<QVector<QString> > batchZerns;
 
     QPointer<cameraCalibWizard> m_cameraCalibWizard;
+
+    // Live view variables
+    // Average tracking variables (persists across pause/resume, resets on fresh start)
+    wavefront *m_liveAverageWf = nullptr;
+    cv::Mat m_liveSum;
+    int m_liveValidCount = 0;
+    LiveLoopState m_liveState = State_Stopped;
+public slots:
+    void on_startLiveButton_clicked();
+    void on_pauseLiveButton_clicked();
+    void on_stopLiveButton_clicked();
 };
 
 #endif // MAINWINDOW_H

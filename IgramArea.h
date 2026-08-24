@@ -132,7 +132,8 @@ public:
     void CenterOutlineActive(bool checked);
     void PolyAreaActive(bool checked);
     void edgeMaskOutLineActive(bool checked);
-    void save();    void nextStep();
+    void save();
+    void nextStep();
     bool sideOutlineIsActive;
 
 

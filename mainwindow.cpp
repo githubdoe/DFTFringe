@@ -2241,17 +2241,16 @@ void MainWindow::on_actionLive_view_triggered()
             // Connect the Start button on the dialog to trigger your analysis loop
             connect(m_viewDlg->startAnalysisBtn, &QPushButton::clicked, this, [this]() {
                 // Using single-shot timer ensures the click event finishes before entering the loop
-                QTimer::singleShot(0, this, &MainWindow::startLiveAnalysisLoop);
+                QTimer::singleShot(0, this, &MainWindow::on_startLiveButton_clicked);
             });
 
             // Connect the Stop button to signal the loop to terminate
-            connect(m_viewDlg->stopAnalysisBtn, &QPushButton::clicked, this, [this]() {
-             m_liveLoopActive = false;
-            });
+            connect(m_viewDlg->stopAnalysisBtn, &QPushButton::clicked, this,&MainWindow::on_stopLiveButton_clicked);
+
             // Connect the Stop button to signal the loop to terminate
-            connect(m_viewDlg, &LiveViewDialog::streamDisconnected, this, [this]() {
-             m_liveLoopActive = false;
-            });
+            connect(m_viewDlg, &LiveViewDialog::streamDisconnected, this, &MainWindow::on_stopLiveButton_clicked);
+            connect(m_viewDlg->pauseAnalyBtn, &QPushButton::clicked,this,  &MainWindow::on_pauseLiveButton_clicked);
+
             m_viewDlg->show();
         } else {
             // If it's already open, just bring it to the front
@@ -2259,118 +2258,198 @@ void MainWindow::on_actionLive_view_triggered()
             m_viewDlg->activateWindow();
         }
     double f = (double)(m_dftArea->m_center_filter)/((double)(m_dftArea->width())/2.);
-qDebug() << "center percent" << f <<  m_dftArea->m_center_filter << m_dftArea->width()/2.;
+
     m_viewDlg->setCenterFilterRadius(f);
 }
 
-void MainWindow::startLiveAnalysisLoop() {
+void MainWindow::on_startLiveButton_clicked() {
+    // If already running, do nothing or treat as restart
+    if (m_liveState == State_Running) return;
+
+    if (m_liveState == State_Stopped) {
+        // Fresh start: clear previous average data
+        m_liveValidCount = 0;
+        m_liveSum.release();
+        if (!m_liveAverageWf) {
+            m_liveAverageWf = new wavefront;
+        }
+    }
+
+    m_liveState = State_Running;
+
+    // If the loop was completely stopped, start the execution flow again
+    if (!m_liveLoopActive) {
+        runLiveAnalysisLoop();
+    }
+}
+
+void MainWindow::on_pauseLiveButton_clicked() {
+    if (m_liveState == State_Running) {
+        m_liveState = State_Paused;
+        qDebug() << "Live loop paused. Average preserved.";
+    } else if (m_liveState == State_Paused) {
+        m_liveState = State_Running;
+        qDebug() << "Live loop resumed.";
+    }
+}
+
+void MainWindow::on_stopLiveButton_clicked() {
+    m_liveState = State_Stopped;
+    m_liveLoopActive = false;
+}
+
+void MainWindow::runLiveAnalysisLoop() {
     if (m_liveLoopActive) return;
     m_liveLoopActive = true;
-    QApplication::setOverrideCursor(Qt::WaitCursor);
+    //QApplication::setOverrideCursor(Qt::WaitCursor);
 
+    cv::Scalar mean;
+    cv::Scalar stddev;
+    QFont tFont("Serif", 18);
 
-    int count = 1;
+    // Reset average tracking for the start of the session
+    m_liveValidCount = 1;
+    m_liveSum.release();
 
-    cv::Mat sum;
+    int totalFrames = 1; // Local frame counter for non-averaged views
 
-    QFont tFont("Serif", 24);
-    while (m_liveLoopActive && m_viewDlg) {
+    while (m_liveState != State_Stopped && m_viewDlg) {
         QApplication::processEvents();
-        if (!m_liveLoopActive) break;
 
-        // 1. Grab and save the frame with a timestamp filename
+        // If paused, just idle gracefully
+        if (m_liveState == State_Paused) {
+            QApplication::processEvents();
+            continue;
+        }
+
+        if (m_liveState == State_Stopped) break;
+
+        // 1. Grab and save the frame
         QString savedFilePath = load_from_url();
         if (savedFilePath == "") {
             break;
         }
 
-
         // 2. Open the saved image in the pipeline
         m_igramArea->openImage(savedFilePath);
         QApplication::processEvents();
-        if (!m_liveLoopActive) break;
+        if (m_liveState == State_Stopped) break;
 
-        // 3. Find center/outline automatically if needed
-        if (m_igramArea->m_center.m_radius == 0) {
-            //m_igramArea->findCenterHole();
+        // 3. if outline is not good
+        if (m_igramArea->m_outside.m_radius == 0) {
+            m_viewDlg->statusRight->setText("<span style='color: white; background-color: red;'>  The outline is NOT valid for this image    </span>");
+qDebug() << "bad";
+            break;
         }
+        qDebug() << "good";
         QApplication::processEvents();
-        if (!m_liveLoopActive) break;
+        if (m_liveState == State_Stopped) break;
 
         // 4. Advance through processing steps
         m_igramArea->nextStep();
         QApplication::processEvents();
-        if (!m_liveLoopActive) break;
+        if (m_liveState == State_Stopped) break;
 
         // 5. Switch to DFT tab and generate surface
-        ui->tabWidget->setCurrentIndex(2); // Adjust index if DFT tab differs
+        ui->tabWidget->setCurrentIndex(2);
         m_dftTools->wasPressed = true;
         m_dftArea->makeSurface();
 
         QApplication::processEvents();
-        if (!m_dftArea->success) {
-            break;
+        if (!m_dftArea->success || m_surfaceManager->m_wavefronts.isEmpty()) {
+            qDebug() << "Warning: Surface generation failed or wavefront list empty. Skipping frame.";
+            continue;
         }
+
         wavefront *wf = m_surfaceManager->m_wavefronts.back();
-        if (count == 1){
-            sum = cv::Mat::zeros(wf->workData.rows,wf->workData.cols, wf->workData.type());
+
+        // SAFETY: Ensure the wavefront data is actually allocated and valid before touching OpenCV
+        if (wf->workData.empty() || wf->workData.rows <= 0 || wf->workData.cols <= 0) {
+            qDebug() << "Error: Wavefront workData is empty or invalid!";
+            continue;
         }
-        sum += wf->workData;
 
-        cv::Mat mask = wf->mask.clone();
+        // Determine what we are doing based on the dropdown mode
+        int mode = m_viewDlg->averageMode->currentIndex();
+        bool computeAverage = (mode == 1 || mode == 2);
+        bool displayAverage = (mode == 2);
 
-
-        cv::Mat masked;
-        cv::Mat result = sum.clone()/count;
-
-        //result.copyTo(masked, mask);
-        wavefront *resultwf = new wavefront;
-        *resultwf = *wf;
-        resultwf->workData = result.clone();
-        resultwf->data = result.clone();
-        resultwf->mask = mask.clone();
-        resultwf->workMask = mask.clone();
-        resultwf->m_origin = WavefrontOrigin::Average;
-
-        //if (m_viewDlg->showAverage->isChecked()){
-            m_ogl->m_surface->setSurface(resultwf);
-        //}
-
-
-            // 6. RENDER surface
-            QImage img = m_ogl->m_surface->render(1000, 1000);
-
-            QPainter p2(&img);
-            p2.setPen(QPen(Qt::black,50));
-            p2.setFont(tFont);
-            QString msg("avg of ");
-            if (!m_viewDlg->showAverage->isChecked())
-                msg = "";
-
-            p2.drawText(img.size().width()/4, img.size().height()/3, QString(msg + "%1").arg(count));
-            p2.end(); // Clean up painter
-
-            QPixmap pixmap = QPixmap::fromImage(img);
-            if (m_viewDlg->deleteIgramAfter->isChecked()){
-
-                if (QFile::remove(savedFilePath)) {
-                } else {
-                    qDebug() <<savedFilePath << "Failed to delete file.";
-                }
-                QFile::remove(savedFilePath.replace("jpg","oln"));
+        // Accumulate average only if requested and valid
+        if (computeAverage && (wf->std < m_viewDlg->maxRMS->value())) {
+            if (m_liveValidCount == 1 || m_liveSum.empty()){
+                m_liveSum = cv::Mat::zeros(wf->workData.rows, wf->workData.cols, wf->workData.type());
+                *m_liveAverageWf = *wf;
+                m_liveAverageWf->m_origin = WavefrontOrigin::Average;
             }
 
+            // Double check dimensions just as a defensive programming safeguard
+            if (m_liveSum.rows == wf->workData.rows && m_liveSum.cols == wf->workData.cols) {
+                m_liveSum += wf->workData;
 
-         if (m_viewDlg != NULL)
+                cv::Mat result = m_liveSum.clone() / m_liveValidCount;
+
+                // Compute the mean and standard deviation of the running average
+                cv::meanStdDev(result, mean, stddev);
+
+                cv::Mat mask = wf->mask.clone();
+
+                m_liveAverageWf->workData = result.clone();
+                m_liveAverageWf->data = result.clone();
+                m_liveAverageWf->mask = mask.clone();
+                m_liveAverageWf->workMask = mask.clone();
+
+                if (displayAverage) {
+                    m_ogl->m_surface->setSurface(m_liveAverageWf);
+                }
+
+                m_liveValidCount++;
+            } else {
+                qDebug() << "Error: Mismatched matrix dimensions during live accumulation!";
+            }
+        }
+
+        // If displaying current frame, make sure the 3D view is showing the current wavefront
+        if (!displayAverage) {
+            m_ogl->m_surface->setSurface(wf);
+        }
+
+        // 6. RENDER surface
+        QImage img = m_ogl->m_surface->render(1000, 1000);
+
+        QString statusRightText;
+        if (computeAverage) {
+            statusRightText = QString("Averaged: %1 | RMS: %2 | Avg RMS: %3")
+                        .arg(m_liveValidCount - 1)
+                        .arg(wf->std, 0, 'f', 3)
+                        .arg(stddev[0], 0, 'f', 3);
+        } else {
+            statusRightText = QString("Frame: %1 | RMS: %2")
+                        .arg(totalFrames)
+                        .arg(wf->std, 0, 'f', 3);
+        }
+
+        m_viewDlg->statusRight->setText(statusRightText);
+
+        QPixmap pixmap = QPixmap::fromImage(img);
+        if (m_viewDlg->deleteIgramAfter->isChecked()){
+            QFile::remove(savedFilePath);
+            QFile::remove(savedFilePath.replace("jpg", "oln"));
+        }
+
+        if (wf->std > m_viewDlg->maxRMS->value()){
+            qDebug() << "maxed out" << wf->std;
+            m_surfaceManager->m_wavefronts.removeLast();
+            m_surfTools->deleteLast();
+        }
+
+        if (m_viewDlg != NULL)
             m_viewDlg->surfaceResultLabel->setPixmap(pixmap);
-        ++count;
-        // Pacing delay between loop iterations
-        QThread::msleep(200);
 
+        QThread::msleep(200);
+        totalFrames++;
     }
 
-
-    QApplication::restoreOverrideCursor();
+    //QApplication::restoreOverrideCursor();
     m_liveLoopActive = false;
+    m_liveState = State_Stopped;
 }
-

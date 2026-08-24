@@ -50,6 +50,7 @@ public:
     void setBlurText(const QString &txt);
     void nameChangedN(int, const QString&);
     void select(int item);
+    void deleteLast();
 
 signals:
     void doxform(QList<int>);

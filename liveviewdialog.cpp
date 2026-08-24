@@ -7,12 +7,14 @@
 #include <QFormLayout>
 #include <QSettings>
 #include <QApplication>
+#include <QPainter>
+#include "videostreamworker.h"
 // ==========================================
 // LiveViewDialog Implementation
 // ==========================================
 
 LiveViewDialog::LiveViewDialog(const QString &defaultStreamUrl, QWidget *parent)
-    : QDialog(parent), timer(nullptr), tabWidget(nullptr) {
+    : QDialog(parent),  tabWidget(nullptr) {
 
     setWindowTitle("DFTFringe - Live View");
     setAttribute(Qt::WA_DeleteOnClose, true);
@@ -21,29 +23,48 @@ LiveViewDialog::LiveViewDialog(const QString &defaultStreamUrl, QWidget *parent)
     // 1. Build the UI components
     setupUI(defaultStreamUrl);
 
-    // 2. Initialize video stream
     QSettings settings;
     QString savedUrl = settings.value("LiveView/streamUrl", defaultStreamUrl).toString();
-    initStream(savedUrl);
 
-    // 3. Setup timer (~30 fps -> 33ms)
-    timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &LiveViewDialog::updateFrame);
-    if (cap.isOpened()) {
-        timer->start(33);
-    }
+
+
+    // 2. Initialize video stream
+    // In LiveViewDialog initialization (constructor):
+    m_thread = new QThread(this);
+    m_worker = new VideoStreamWorker(savedUrl); //
+    m_worker->moveToThread(m_thread);
+
+    // Connect thread lifecycle to worker cleanup
+    connect(m_thread, &QThread::started, m_worker, &VideoStreamWorker::startStream);
+    connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
+    qRegisterMetaType<cv::Mat>("cv::Mat");
+    connect(m_worker, &VideoStreamWorker::frameReady, this, [this](cv::Mat frame) {
+            m_latestFrame = frame;
+            renderCurrentFrame();
+        }, Qt::QueuedConnection);
+
+    connect(m_worker, &VideoStreamWorker::streamError, this, [this](const QString &msg) {
+        if (imageLabel) {
+            imageLabel->setText(msg);
+        }
+        emit streamDisconnected();
+    });
+
+    // Start the background thread
+    m_thread->start();
+
 }
 LiveViewDialog::~LiveViewDialog() {
-    if (timer && timer->isActive()) {
-        timer->stop();
-    }
-    if (cap.isOpened()) {
-        cap.release();
-    }
+    if (m_worker) {
+            m_worker->stop();
+        }
+        if (m_thread) {
+            m_thread->quit();
+            m_thread->wait(); // Wait safely for the background loop to exit
+        }
 }
 
 void LiveViewDialog::closeEvent(QCloseEvent *event) {
-    timer->stop();
     cap.release();
     QDialog::closeEvent(event);
 }
@@ -100,6 +121,12 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     zoomCombo->addItem("300%", 3.0);
     zoomCombo->addItem("400%", 4.0);
     zoomCombo->setCurrentIndex(1);
+
+    averageMode = new QComboBox(this);
+    averageMode->addItem("Show current");
+    averageMode->addItem("Compute Average show current");
+    averageMode->addItem("Compute Average and show Average");
+
     connect(zoomCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LiveViewDialog::onZoomChanged);
 
@@ -109,13 +136,15 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
 
     startAnalysisBtn = new QPushButton("Start Loop", this);
     startAnalysisBtn->setStyleSheet("background-color: #1976d2; color: white; font-weight: bold;");
-
+    pauseAnalyBtn = new QPushButton("Pause",this);
+    pauseAnalyBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
     stopAnalysisBtn = new QPushButton("Stop Loop", this);
     stopAnalysisBtn->setStyleSheet("background-color: #d32f2f; color: white; font-weight: bold;");
 
     QHBoxLayout *controlLayout = new QHBoxLayout();
     controlLayout->addWidget(grabButton);
     controlLayout->addWidget(startAnalysisBtn);
+    controlLayout->addWidget(pauseAnalyBtn);
     controlLayout->addWidget(stopAnalysisBtn);
     controlLayout->addSpacing(10);
     controlLayout->addWidget(dftButton);
@@ -125,7 +154,15 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     controlLayout->addWidget(new QLabel("Zoom:", this));
     controlLayout->addWidget(zoomCombo);
 
+    // status area
+    statusLeft = new QLabel(this);
+    statusRight = new QLabel(this);
+    QHBoxLayout *statusLayout = new QHBoxLayout();
+    statusLayout->addWidget(statusLeft);
+    statusLayout->addWidget(statusRight);
+
     QVBoxLayout *feedLayout = new QVBoxLayout(feedTab);
+    feedLayout->addLayout(statusLayout);
     feedLayout->addLayout(viewSplitLayout, 1); // Add the side-by-side views
     feedLayout->addLayout(controlLayout);
 
@@ -153,6 +190,27 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     tabWidget->addTab(feedTab, "Live Feed");
     tabWidget->addTab(settingsTab, "Settings");
     tabWidget->addTab(helpTab, "Help & Instructions");
+    // ==========================================
+        // Top-Right Corner Controls (Live Feed Only)
+        // ==========================================
+        QWidget *cornerWidget = new QWidget(this);
+        QHBoxLayout *cornerLayout = new QHBoxLayout(cornerWidget);
+        cornerLayout->setContentsMargins(0, 0, 0, 0);
+
+        QLabel *spinLabel = new QLabel("Delete if RMS >", this);
+        maxRMS = new QDoubleSpinBox(this);
+        maxRMS->setRange(0.0, 100.0);
+        maxRMS->setValue(.4);
+        maxRMS->setSingleStep(.05);
+
+        cornerLayout->addWidget(averageMode);
+        cornerLayout->addWidget(spinLabel);
+        cornerLayout->addWidget(maxRMS);
+
+        // Assign it to the top-right of the tab widget
+        tabWidget->setCornerWidget(cornerWidget, Qt::TopRightCorner);
+
+
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(8, 8, 8, 8);
@@ -174,11 +232,15 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
         urlHistory << "0" << "1" << "http://192.168.50.5:5000/video_feed";
     }
     urlListWidget->addItems(urlHistory);
+
+    // Clicking a history list item instantly sets the line edit and triggers stream application
     connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
-            if (item) {
-                urlLineEdit->setText(item->text().trimmed());
-            }
+        if (item) {
+            urlLineEdit->setText(item->text().trimmed());
+            onApplySettings(); // Instant apply
+        }
     });
+
     QString currentUrl = settings.value("LiveView/streamUrl", urlHistory.first()).toString();
     QList<QListWidgetItem*> matches = urlListWidget->findItems(currentUrl, Qt::MatchExactly);
     if (!matches.isEmpty()) {
@@ -191,6 +253,9 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     urlLineEdit->setPlaceholderText("Or type a new URL / ID here...");
     urlLineEdit->setText(currentUrl);
 
+    // Pressing Enter in the line edit triggers instant apply
+    connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::onApplySettings);
+
     QPushButton *removeHistoryBtn = new QPushButton("Remove Selected from History", this);
     connect(removeHistoryBtn, &QPushButton::clicked, this, [this]() {
         QListWidgetItem *item = urlListWidget->currentItem();
@@ -202,32 +267,51 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     QHBoxLayout *listActionLayout = new QHBoxLayout();
     listActionLayout->addWidget(removeHistoryBtn);
 
-    QPushButton *applySettingsBtn = new QPushButton("Apply & Restart Stream", this);
-    applySettingsBtn->setStyleSheet("background-color: #f57c00; color: white; font-weight: bold;");
-    connect(applySettingsBtn, &QPushButton::clicked, this, &LiveViewDialog::onApplySettings);
+    // --- Camera Resolution Selector ---
+    QHBoxLayout *resLayout = new QHBoxLayout();
+    resLayout->addWidget(new QLabel("Camera Resolution:", this));
 
-    showAverage = new QCheckBox("Show Average");
-    showAverage->setChecked(settings.value("LiveView/showAvg", true).toBool());
+    resolutionCombo = new QComboBox(this);
+    resolutionCombo->addItem("Default (Auto)", QSize(0, 0));
+    resolutionCombo->addItem("640 x 480 (VGA)", QSize(640, 480));
+    resolutionCombo->addItem("1280 x 720 (HD)", QSize(1280, 720));
+    resolutionCombo->addItem("1920 x 1080 (FHD)", QSize(1920, 1080));
+    resolutionCombo->addItem("2560 x 1440 (QHD)", QSize(2560, 1440));
+    resolutionCombo->addItem("3840 x 2160 (4K)", QSize(3840, 2160));
+
+    QString savedResStr = settings.value("LiveView/resolution", "Default (Auto)").toString();
+    int resIndex = resolutionCombo->findText(savedResStr);
+    if (resIndex != -1) {
+        resolutionCombo->setCurrentIndex(resIndex);
+    }
+    resLayout->addWidget(resolutionCombo);
+
+    // Changing resolution combo instantly applies it
+    connect(resolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int){
+        onApplySettings();
+    });
+    // ------------------------------------
+
 
     deleteIgramAfter = new QCheckBox("Delete IGram after analysis");
     deleteIgramAfter->setChecked(settings.value("LiveView/deleteAfter", true).toBool());
+    connect(deleteIgramAfter, &QCheckBox::toggled, this, [this](bool checked) {
+        QSettings s;
+        s.setValue("LiveView/deleteAfter", checked);
+    });
 
     settingsLayout->addWidget(urlLineEdit);
     settingsLayout->addWidget(urlListWidget);
     settingsLayout->addLayout(listActionLayout);
-    settingsLayout->addWidget(showAverage);
-    settingsLayout->addWidget(deleteIgramAfter);
-    settingsLayout->addSpacing(15);
-    settingsLayout->addWidget(applySettingsBtn);
-    settingsLayout->addStretch();
+    settingsLayout->addLayout(resLayout);
+     settingsLayout->addWidget(deleteIgramAfter);
+    settingsLayout->addStretch(); // No more apply button clutter!
 
     return settingsTab;
 }
 
 void LiveViewDialog::initStream(const QString &url) {
-    if (timer && timer->isActive()) {
-        timer->stop();
-    }
+
     if (cap.isOpened()) {
         cap.release();
     }
@@ -236,13 +320,20 @@ void LiveViewDialog::initStream(const QString &url) {
     int camIndex = url.toInt(&isInt);
 
     if (isInt) {
-        cap.open(camIndex);
+        #if defined(_WIN32) || defined(_WIN64)
+          cap.open(camIndex, cv::CAP_DSHOW);
+        #else
+          cap.open(camIndex);
+        #endif
     } else {
         cap.open(url.toStdString());
     }
 
     if (cap.isOpened()) {
-        if (timer) timer->start(33);
+
+        qDebug() << "frame size" <<   cap.get(cv::CAP_PROP_FRAME_WIDTH) << cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+
+
     } else {
         imageLabel->setText("Failed to open stream: " + url);
         imageLabel->adjustSize();
@@ -251,39 +342,44 @@ void LiveViewDialog::initStream(const QString &url) {
 
 void LiveViewDialog::onApplySettings() {
     QString newUrl = urlLineEdit->text().trimmed();
-    if (newUrl.isEmpty() && urlListWidget->currentItem()) {
-        newUrl = urlListWidget->currentItem()->text().trimmed();
-    }
     if (newUrl.isEmpty()) return;
 
     QSettings settings;
-    QStringList urlHistory;
-    urlHistory << newUrl;
-
-    for (int i = 0; i < urlListWidget->count(); ++i) {
-        QString existing = urlListWidget->item(i)->text().trimmed();
-        if (existing != newUrl && urlHistory.size() < 5) {
-            urlHistory << existing;
-        }
-    }
-
     settings.setValue("LiveView/streamUrl", newUrl);
-    settings.setValue("LiveView/urlHistory", urlHistory);
-    settings.setValue("LiveView/dftResolutionIndex", resolutionCombo->currentIndex());
-    settings.setValue("LiveView/showAvg", showAverage->isChecked());
-    settings.setValue("LiveView/deleteAfter", deleteIgramAfter->isChecked());
-    urlListWidget->clear();
-    urlListWidget->addItems(urlHistory);
-    urlLineEdit->setText(newUrl);
+    settings.setValue("LiveView/resolution", resolutionCombo->currentText());
 
-    if (urlListWidget->count() > 0) {
-        urlListWidget->setCurrentRow(0);
+    // Save/update history list if needed...
+
+
+    if (cap.isOpened()) {
+        cap.release();
     }
 
-    initStream(newUrl);
+    // Reopen stream (handle integer IDs vs HTTP streams)
+    bool isInt = false;
+    int camId = newUrl.toInt(&isInt);
 
-    if (tabWidget) {
-        tabWidget->setCurrentIndex(0); // Snap back to Live Feed tab
+    if (isInt) {
+#if defined(_WIN32) || defined(_WIN64)
+        cap.open(camId, cv::CAP_DSHOW);
+#else
+        cap.open(camId);
+#endif
+    } else {
+        cap.open(newUrl.toStdString());
+    }
+
+    // Apply selected resolution if valid
+    QSize selectedRes = resolutionCombo->currentData().toSize();
+    if (cap.isOpened() && selectedRes.width() > 0 && selectedRes.height() > 0) {
+        cap.set(cv::CAP_PROP_FRAME_WIDTH, selectedRes.width());
+        cap.set(cv::CAP_PROP_FRAME_HEIGHT, selectedRes.height());
+    }
+
+    if (cap.isOpened()) {
+        // Or your preferred interval
+    } else {
+        if (imageLabel) imageLabel->setText("Failed to open stream.");
     }
 }
 void LiveViewDialog::onGrabClicked() {
@@ -348,18 +444,22 @@ void LiveViewDialog::updateFrame() {
 
     // Fast-grab and discard any accumulated backlog frames so we get the freshest one.
     // (Depending on your stream framerate, grabbing 2 to 4 times clears out the queue)
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 5; ++i) {
         QApplication::processEvents();
+
+        // SAFETY CHECK: If the dialog is closing or cap was released during processEvents, bail out immediately!
+        if (!cap.isOpened()) {
+            return;
+        }
         cap.grab();
     }
-
+    qDebug() << "updateFrame1";
     // Now retrieve the final, most up-to-date frame
     if (cap.retrieve(frame) && !frame.empty()) {
         m_latestFrame = frame.clone();
         renderCurrentFrame();
     } else {
         // Stream failed or disconnected
-        timer->stop();
         m_latestFrame.release();
         if (imageLabel) {
             imageLabel->setText("Connection Lost / Stream Ended.");
@@ -370,18 +470,25 @@ void LiveViewDialog::updateFrame() {
 
 void LiveViewDialog::renderCurrentFrame() {
     if (m_latestFrame.empty()) return;
-
+    qDebug() << "render1";
     cv::Mat displayMat = m_latestFrame;
 
     if (m_dftModeEnabled) {
         displayMat = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
     }
-
+    // Display directly via OpenCV
     QImage img = matToQImage(displayMat);
     if (img.isNull()) return;
 
     int targetWidth = static_cast<int>(img.width() * m_zoomFactor);
     int targetHeight = static_cast<int>(img.height() * m_zoomFactor);
+    QFont Font("Serif", 12);
+    QPainter p2(&img);
+
+    statusLeft->setText( QString("%1 x %2")
+                .arg(img.size().width())
+                .arg(img.size().height()));
+
 
     imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     imageLabel->resize(targetWidth, targetHeight);

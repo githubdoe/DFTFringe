@@ -11,6 +11,10 @@
 #include <QListWidget>
 #include <QCheckBox>
 #include <QDebug>
+#include <QDoubleSpinBox>
+#include "videostreamworker.h"
+#include <QThread>
+
 class LiveViewDialog : public QDialog {
     Q_OBJECT
 public:
@@ -36,13 +40,18 @@ signals:
 public:
     QPushButton *startAnalysisBtn;
     QPushButton *stopAnalysisBtn;
+    QPushButton *pauseAnalyBtn;
     QLabel *surfaceResultLabel;
-    QCheckBox *showAverage;
+
     QCheckBox *deleteIgramAfter;
     void setCenterFilterRadius(double percent) {imageLabel->m_centerPercent = percent;};
-
+    QDoubleSpinBox *maxRMS;
+    QComboBox *averageMode;
+    QLabel *statusLeft;
+    QLabel *statusRight;
 private:
-
+    VideoStreamWorker *m_worker;
+    QThread *m_thread;
     LiveImageView *imageLabel;
     QScrollArea *scrollArea;
     QPushButton *dftButton;
@@ -55,13 +64,12 @@ private:
 
     QComboBox *resolutionCombo;
     QComboBox *zoomCombo;
-    QTimer *timer;
     cv::VideoCapture cap;
 
     bool m_dftModeEnabled = false;
     int m_dftSize = 512;
     double m_zoomFactor = 1.0;
-
+    QImage m_latestImage;
     cv::Mat m_latestFrame;
     QRect m_userMirrorRect;
 

@@ -33,6 +33,7 @@ SOURCES += main.cpp \
     astigpolargraph.cpp \
 	autoinvertdlg.cpp \
     cpoint.cpp \
+    custom3dinputhandler.cpp \
     defocusdlg.cpp \
     edgeplot.cpp \
     hotkeysdlg.cpp \
@@ -58,6 +59,7 @@ SOURCES += main.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
     userdrawnprofiledlg.cpp \
+    videostreamworker.cpp \
     wavefront.cpp \
     contourplot.cpp \
     contourtools.cpp \
@@ -155,6 +157,7 @@ HEADERS  += mainwindow.h \
     astigpolargraph.h \
 	autoinvertdlg.h \
     cpoint.h \
+    custom3dinputhandler.h \
     defocusdlg.h \
     edgeplot.h \
     IgramArea.h \
@@ -180,6 +183,7 @@ HEADERS  += mainwindow.h \
     surfacegraph.h \
     surfacelightingproxy.h \
     userdrawnprofiledlg.h \
+    videostreamworker.h \
     wavefront.h \
     contourplot.h \
     contourtools.h \
@@ -416,7 +420,7 @@ RESOURCES += \
     DFTResources.qrc
 RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
-
+CONFIG += separate_debug_info
 # The application version
 VERSION = LiveView8/22/26
 
