@@ -44,8 +44,6 @@ const float sampleMin = -8.0f;
 const float sampleMax = 8.0f;
 #include <QOpenGLFunctions>
 
-#include <Q3DInputHandler>
-#include <QMouseEvent>
 
 
 
