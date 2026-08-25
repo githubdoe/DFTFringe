@@ -47,6 +47,7 @@
 #include "regionedittools.h"
 #include "utils.h"
 #include "colorchannel.h"
+#include "jitteroutlinedlg.h"
 #include "opencv2/opencv.hpp"
 #include <QUrl>
 
@@ -66,8 +67,8 @@ MainWindow *MainWindow::me = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),m_showChannels(false), m_showIntensity(false),m_inBatch(false),m_OutlineDoneInBatch(false),
-    m_batchMakeSurfaceReady(false), m_astigStatsDlg(0), m_cameraCalibWizard(nullptr)
+    ui(new Ui::MainWindow), m_jitterOutlineDlg(nullptr), m_showChannels(false), m_showIntensity(false), m_inBatch(false),
+    m_skipItem(false), m_OutlineDoneInBatch(false), m_batchMakeSurfaceReady(false), m_astigStatsDlg(0), m_cameraCalibWizard(nullptr)
 {
     ui->setupUi(this);
     ui->useAnnulust->hide();
@@ -138,6 +139,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_contourTools = new ContourTools(this);
     m_outlineHelp = new outlineHelpDocWidget(this);
+    m_jitterOutlineDlg = new jitterOutlineDlg(this);
+    connect(m_jitterOutlineDlg, &jitterOutlineDlg::startRequested, this, &MainWindow::startJitter);
+    connect(m_jitterOutlineDlg, &jitterOutlineDlg::stopRequested, this, &MainWindow::stopJitter);
+    connect(m_jitterOutlineDlg, &QDialog::finished, this, &MainWindow::stopJitter);
     m_outlinePlots = new outlinePlots(this);
     m_surfTools = surfaceAnalysisTools::get_Instance(this);
     m_regionsEdit = new regionEditTools(this);
@@ -1349,13 +1354,9 @@ void MainWindow::on_actionVersion_History_triggered()
     QDesktopServices::openUrl(QUrl::fromLocalFile(link));
 }
 
-
-#include "jitteroutlinedlg.h"
 void MainWindow::on_actionIterate_outline_triggered()
 {
-    jitterOutlineDlg *dlg = jitterOutlineDlg::getInstance(this);
-    connect(dlg,&QDialog::finished,this,&MainWindow::stopJitter);
-    dlg->show();
+    m_jitterOutlineDlg->show();
 }
 static bool stopJittering = false;
 void MainWindow::stopJitter(){
@@ -1367,22 +1368,21 @@ void MainWindow::startJitter(){
         QMessageBox::warning(this, "Error", "You must first load an interferogram and outline the mirror. and press 'Done'");
         return;
     }
-    jitterOutlineDlg *dlg = jitterOutlineDlg::getInstance(this);
     stopJittering = false;
-    int start = dlg->getStart();
-    int end = dlg->getEnd();
-    int step = dlg->getStep();
+    int start = m_jitterOutlineDlg->getStart();
+    int end = m_jitterOutlineDlg->getEnd();
+    int step = m_jitterOutlineDlg->getStep();
     int x = 0;
     int y = 0;
     int rad = 0;
 
     m_igramArea->openImage(m_igramArea->m_filename);
     CircleOutline  saved = (m_igramArea->m_current_boundry == OutSideOutline) ? m_igramArea->m_outside : m_igramArea->m_center;
-    dlg->getProgressBar()->setMinimum(start);
-    dlg->getProgressBar()->setMaximum(end);
+    m_jitterOutlineDlg->getProgressBar()->setMinimum(start);
+    m_jitterOutlineDlg->getProgressBar()->setMaximum(end);
     for (int delta = start; delta <= end; delta += step){
-        dlg->getProgressBar()->setValue(delta);
-        switch (dlg->getType()){
+        m_jitterOutlineDlg->getProgressBar()->setValue(delta);
+        switch (m_jitterOutlineDlg->getType()){
         case 1:
             x = delta;
             break;
@@ -1417,12 +1417,12 @@ void MainWindow::startJitter(){
         qApp->processEvents();
         wavefront *wf = m_surfaceManager->m_wavefronts[m_surfaceManager->m_currentNdx];
         wf->name = QString("x:_%1_Y:_%2_radius:_%3").arg(x).arg(y).arg(rad);
-        dlg->status(wf->name);
+        m_jitterOutlineDlg->status(wf->name);
         m_surfTools->nameChangedN(m_surfaceManager->m_currentNdx, wf->name);
         qApp->processEvents();
         QObject().thread()->msleep(500);
     }
-    dlg->getProgressBar()->reset();
+    m_jitterOutlineDlg->getProgressBar()->reset();
     stopJittering = false;
 
     m_igramArea->openImage(m_igramArea->m_filename);
@@ -1466,7 +1466,7 @@ void MainWindow::zoomProfile(bool flag){
         profileFv->close();
         return;
     }
-    profileFv = new QWidget(0);
+    profileFv = new QWidget(this, Qt::Window);
     profileFv->setAttribute( Qt::WA_DeleteOnClose );
     connect(profileFv,&QObject::destroyed,this, &MainWindow::restoreProfile);
     QVBoxLayout *l = new QVBoxLayout();
@@ -1481,7 +1481,7 @@ void MainWindow::zoomContour(bool flag){
         contourFv->close();
         return;
     }
-    contourFv = new QWidget(0);
+    contourFv = new QWidget(this, Qt::Window);
     contourFv->setAttribute( Qt::WA_DeleteOnClose );
     connect(contourFv,&QObject::destroyed,this, &MainWindow::restoreContour);
     QVBoxLayout *l = new QVBoxLayout();
@@ -1494,7 +1494,7 @@ void MainWindow::zoomContour(bool flag){
 void MainWindow::zoomOgl()
 {
 
-    oglFv = new QWidget(0);
+    oglFv = new QWidget(this, Qt::Window);
     oglFv->setAttribute( Qt::WA_DeleteOnClose );
     connect(oglFv,&QObject::destroyed,this, &MainWindow::restoreOgl);
     QVBoxLayout *l = new QVBoxLayout();
@@ -2026,7 +2026,8 @@ void MainWindow::on_actionSmooth_current_wave_front_triggered()
         QMessageBox::warning(this, "No Wavefronts", "You must first load a wave front");
         return;
     }
-    ZernikeSmoothingDlg *dlg = new ZernikeSmoothingDlg(*sm.m_wavefronts[sm.m_currentNdx]);
+    ZernikeSmoothingDlg *dlg = new ZernikeSmoothingDlg(*sm.m_wavefronts[sm.m_currentNdx], this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->resize(1000,1000);
     dlg->show();
     return;

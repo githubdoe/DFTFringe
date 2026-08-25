@@ -77,6 +77,7 @@ public:
     void initWaveFrontLoad();
     void averageWavefrontFiles(const QStringList &files);
     void downSizeWf(wavefront *wf);
+    void syncGaussianStateForWavefront(wavefront *wf);
     void process(int wavefront_index, SurfaceManager *sm);
     wavefront *readWaveFront(const QString &fileName);
     inline wavefront *getCurrent(){
@@ -103,10 +104,9 @@ public:
     wavefront* m_standRemoved;
     int insideOffset;
     int outsideOffset;
-    int messageResult;
     void inspectWavefront();
 
-    cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<bool> mask);
+    cv::Mat_<double> subtractPlane(cv::Mat_<double> phase, cv::Mat_<uint8_t> mask);
 
     void average(QList<wavefront *> wfList);
     void subtractWavefronts();

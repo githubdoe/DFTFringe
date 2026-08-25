@@ -350,13 +350,15 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
 
 void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     zernikeProcess &zp = *zernikeProcess::get_Instance();
+    m_GB_enabled = wf->gbEnabled;
+    m_gbValue = wf->gbValue;
     if (wf->dirtyZerns){
         if (mirrorDlg::get_Instance()->isEllipse()){
             wf->nulledData = wf->data.clone();
-            if (m_GB_enabled){
+            if (wf->gbEnabled){
 
                 // compute blur radius
-                int gaussianRad = 2 * wf->m_outside.m_radius * m_gbValue * .01;
+                int gaussianRad = 2 * wf->m_outside.m_radius * wf->gbValue * .01;
                 gaussianRad &= 0xfffffffe;
 
                 ++gaussianRad;
@@ -440,9 +442,9 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     wf->workData = wf->nulledData.clone();
 
 
-    if (m_GB_enabled){
+        if (wf->gbEnabled){
             // compute blur radius
-            int gaussianRad = 2 * wf->m_outside.m_radius * m_gbValue * .01;
+            int gaussianRad = 2 * wf->m_outside.m_radius * wf->gbValue * .01;
 
             gaussianRad &= 0xfffffffe;
             ++gaussianRad;
@@ -823,6 +825,7 @@ void SurfaceManager::waveFrontClickedSlot(int ndx)
 {
 
     m_currentNdx = ndx;
+    syncGaussianStateForWavefront(m_wavefronts[ndx]);
     QString msg = QString(" %1x%2 ").arg(m_wavefronts[ndx]->data.cols).arg(m_wavefronts[ndx]->data.rows);
     ((MainWindow*)parent())->statusBar()->showMessage(msg);
     sendSurface(m_wavefronts[ndx]);
@@ -842,6 +845,7 @@ void SurfaceManager::wavefrontDClicked(const QString & name){
     for (int i = 0; i < m_wavefronts.size(); ++i){
         if (m_wavefronts[i]->name.endsWith(name)){ //TODO JST 2023/09/11 this does not work on some name combinations. To be fixed
             m_currentNdx = i;
+            syncGaussianStateForWavefront(m_wavefronts[i]);
             sendSurface(m_wavefronts[i]);
             break;
         }
@@ -853,6 +857,9 @@ void SurfaceManager::surfaceSmoothGBValue(double value){
     QSettings settings;
     settings.setValue("GBValue", (int)(value));
     m_gbValue = value;
+    if (m_wavefronts.size() > 0) {
+        m_wavefronts[m_currentNdx]->gbValue = value;
+    }
     mirrorDlg *md = mirrorDlg::get_Instance();
 
     m_surfaceTools->setBlurText(QString("%1 mm").arg( .01 * value * md->diameter, 6, 'f', 2));
@@ -868,6 +875,9 @@ void SurfaceManager::surfaceSmoothGBValue(double value){
 void SurfaceManager::surfaceSmoothGBEnabled(bool b){
 
     m_GB_enabled = b;
+    if (m_wavefronts.size() > 0) {
+        m_wavefronts[m_currentNdx]->gbEnabled = b;
+    }
 
     QSettings settings;
     settings.setValue("GBlur", m_GB_enabled);
@@ -883,6 +893,19 @@ void SurfaceManager::surfaceSmoothGBEnabled(bool b){
         return;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
     m_waveFrontTimer->start(500);
+}
+
+void SurfaceManager::syncGaussianStateForWavefront(wavefront *wf){
+    if (wf == nullptr) {
+        return;
+    }
+
+    m_GB_enabled = wf->gbEnabled;
+    m_gbValue = wf->gbValue;
+    m_surfaceTools->setGaussianControls(wf->gbEnabled, wf->gbValue);
+
+    mirrorDlg *md = mirrorDlg::get_Instance();
+    m_surfaceTools->setBlurText(QString("%1 mm").arg(.01 * wf->gbValue * md->diameter, 6, 'f', 2));
 }
 
 void SurfaceManager::computeMetrics(wavefront *wf){
@@ -1120,6 +1143,8 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     wf->diameter = md->diameter;
     wf->lambda = md->lambda;
     wf->roc = md->roc;
+    wf->gbEnabled = m_GB_enabled;
+    wf->gbValue = m_gbValue;
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
     wf->regions = polyArea;
@@ -1324,8 +1349,8 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     }
     wf->m_inside = CircleOutline(QPointF(xo,yo), rado);
 
-
     if (lambda != md->lambda){
+        int resp = QMessageBox::No;
         if (lambdResp == ASK){
             QString message("The interferogram wavelength (");
             message += QString("%1").arg( lambda, 6, 'f', 3) +
@@ -1333,7 +1358,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                     "Do you want to make the config match?";
 
 
-            int resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
+            resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
                                  QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
             switch (resp){
@@ -1346,7 +1371,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
             }
         }
 
-        if ( lambdResp == YES || messageResult == QMessageBox::Yes){
+        if ( lambdResp == YES || resp == QMessageBox::Yes){
             md->newLambda(QString::number(lambda));
         }
     }
@@ -1357,8 +1382,9 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
         message += QString("%1").arg(diam, 6, 'f', 3) +
                 ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->diameter, 6, 'f', 3) +
                 "Do you want to make the config match?";
+        int resp = QMessageBox::No;
         if (diamResp == ASK){
-            int resp = QMessageBox(QMessageBox::Information,"config", message,QMessageBox::Yes|QMessageBox::No |
+            resp = QMessageBox(QMessageBox::Information,"config", message,QMessageBox::Yes|QMessageBox::No |
                                  QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
             switch (resp){
@@ -1370,7 +1396,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                 break;
             }
         }
-        if (diamResp == YES || messageResult == QMessageBox::Yes){
+        if (diamResp == YES || resp == QMessageBox::Yes){
             emit diameterChanged(diam);
         }
         else {
@@ -1386,8 +1412,9 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                 ") Of the wavefront does not match the config value of " + QString("%1\n").arg(md->roc, 6, 'f', 3) +
                 "Do you want to make the config match?";
         //qDebug() << message;
+        int resp = QMessageBox::No;
         if (rocResp == ASK){
-            int resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
+            resp = QMessageBox(QMessageBox::Information,"config",message,QMessageBox::Yes|QMessageBox::No |
                                  QMessageBox::YesToAll | QMessageBox::NoToAll).exec();
 
             switch (resp){
@@ -1399,7 +1426,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
                 break;
             }
         }
-        if (rocResp == YES || messageResult == QMessageBox::Yes){
+        if (rocResp == YES || resp == QMessageBox::Yes){
             emit rocChanged(roc);
         }
         else {
@@ -1407,9 +1434,18 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
 
         }
     }
+
+    if (md->isEllipse() && md->m_verticalAxis > md->diameter){
+        spdlog::get("logger")->info("Wavefront load ellipse axis clamp: vertical axis {} exceeded horizontal axis {}. Vertical axis was clamped to {}.",
+                                     md->m_verticalAxis, md->diameter, md->diameter);
+        md->setMinorAxis(md->diameter);
+    }
+
     wf->diameter = diam;
     wf->roc = roc;
     wf->lambda = lambda;
+    wf->gbEnabled = m_GB_enabled;
+    wf->gbValue = m_gbValue;
     wf->wasSmoothed = false;
 
     return wf;
@@ -1527,6 +1563,7 @@ void SurfaceManager::next(){
         ++m_currentNdx;
     else
         m_currentNdx = 0;
+    syncGaussianStateForWavefront(m_wavefronts[m_currentNdx]);
     sendSurface(m_wavefronts[m_currentNdx]);
 
 
@@ -1541,6 +1578,7 @@ void SurfaceManager::previous(){
     else
         m_currentNdx = m_wavefronts.length()-1;
 
+    syncGaussianStateForWavefront(m_wavefronts[m_currentNdx]);
     sendSurface(m_wavefronts[m_currentNdx]);
 }
 QVector<int> histo(const std::vector<double> &data, int bins, double min, double max){
@@ -1564,6 +1602,7 @@ void SurfaceManager::saveAllWaveFrontStats(){
     if (m_wavefronts.size() == 0)
         return;
     statsView * sv = new statsView(this);
+    sv->setAttribute(Qt::WA_DeleteOnClose);
     sv->show();
     return;
 }
@@ -1765,12 +1804,12 @@ void SurfaceManager::average(QList<wavefront *> wfList){
     wf->regions.clear();
     makeMask(wf);
     generateSurfacefromWavefront(m_currentNdx);
+
     m_surfaceTools->select(m_currentNdx);
     if (needsUpdate)
         m_waveFrontTimer->start(1000);
     else
        loadComplete();
-
     QApplication::restoreOverrideCursor();
 }
 #include "averagewavefrontfilesdlg.h"
@@ -1941,9 +1980,9 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
         resultwf->useSANull = false;
     }
     generateSurfacefromWavefront(m_currentNdx);
+
     m_surfaceTools->select(m_currentNdx);
     loadComplete();
-
 }
 
 void SurfaceManager::subtractWavefronts(){
@@ -2030,7 +2069,6 @@ void SurfaceManager::filter(){
 }
 
 #include "wftexaminer.h"
-wftExaminer *wex;
 double wrapAngle(double angle){
     if (angle < -360){
         angle += 360;
@@ -2040,7 +2078,12 @@ double wrapAngle(double angle){
     return angle;
 }
 void SurfaceManager::inspectWavefront(){
-    wex = new wftExaminer(m_wavefronts[m_currentNdx]);
+    wftExaminer *wex = new wftExaminer(m_wavefronts[m_currentNdx], nullptr);
+    wex->setAttribute(Qt::WA_DeleteOnClose);
+    if (parent()) {
+        QObject::connect(parent(), &QObject::destroyed, wex, &QWidget::close);
+    }
+    QObject::connect(qApp, &QCoreApplication::aboutToQuit, wex, &QWidget::close);
     wex->show();
 }
 
@@ -3209,7 +3252,7 @@ void SurfaceManager::report(){
         doc->addResource(QTextDocument::ImageResource, QUrl(pixStat),
                          QVariant(pixStats.scaledToWidth(dlg.histoWidth * finalWidth,
                                                           Qt::SmoothTransformation)));
-        imagesHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Histogram and SLope error</th></tr> <tr><td> <img src = '" +
+        imagesHtml.append("<table  style=\"page-break-before:always\" border = \"1\"><tr><th>Pixel Histogram and Slope error</th></tr> <tr><td> <img src = '" +
                            pixStat + "'></td></tr></table>");
     }
     editor->setHtml(title + html +zerns + imagesHtml +  tail);

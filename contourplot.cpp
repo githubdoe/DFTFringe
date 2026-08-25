@@ -254,10 +254,15 @@ double SpectrogramData::value( double x, double y ) const
     if (y >= m_wf->workData.rows || x >= m_wf->workData.cols || y < 0 || x < 0){
         return -10.0;
     }
-    if ((m_wf->workMask.at<uint8_t>((int)y,(int)x)) != 255){
+    int ix = qRound(x);
+    int iy = qRound(y);
+    if (iy >= m_wf->workData.rows || ix >= m_wf->workData.cols || iy < 0 || ix < 0){
+        return -10.0;
+    }
+    if ((m_wf->workMask.at<uint8_t>(iy,ix)) != 255){
         return -10;
     }
-    return  (m_wf->workData(y,x)* m_wf->lambda/outputLambda) -zOffset;
+    return  (m_wf->workData(iy,ix)* m_wf->lambda/outputLambda) -zOffset;
 
 }
 
@@ -402,8 +407,8 @@ void ContourPlot::ruler(){
             double sina = sin(radians);
             double cosa = cos(radians);
             // move to start
-            int startx =  -half * cosa;
-            int starty =  -half * sina;
+            int startx =  qRound(-half * cosa);
+            int starty =  qRound(-half * sina);
             radials.moveTo( half + startx,half + starty);
             // line to end
             int endx = half - startx;
@@ -486,8 +491,8 @@ void ContourPlot::drawProfileLine(const double angle){
     QPainterPath radials;
     int half = m_wf->data.rows/2.;
     // move to start
-    int startx =  -half * cosa;
-    int starty =  -half * sina;
+    int startx =  qRound(-half * cosa);
+    int starty =  qRound(-half * sina);
     radials.moveTo( half + startx,half + starty);
     // line to end
     int endx = half - startx;

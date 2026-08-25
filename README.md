@@ -1,6 +1,6 @@
 # DFTFringe
 
-[![build-windows](https://github.com/githubdoe/DFTFringe/actions/workflows/build-windows.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-windows.yml) [![build-linux](https://github.com/githubdoe/DFTFringe/actions/workflows/build-linux.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-linux.yml)
+[![build-windows](https://github.com/githubdoe/DFTFringe/actions/workflows/build-windows.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-windows.yml) [![build-linux](https://github.com/githubdoe/DFTFringe/actions/workflows/build-linux.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-linux.yml) [![build-macos](https://github.com/githubdoe/DFTFringe/actions/workflows/build-macos.yml/badge.svg?branch=master)](https://github.com/githubdoe/DFTFringe/actions/workflows/build-macos.yml)
 
 
 # Introduction
@@ -31,6 +31,35 @@ Additional information and help is availlable at https://groups.io/g/Interferome
 :point_right: Follow the link and use the installer:
 [link to latest release](https://github.com/githubdoe/dftfringe/releases/latest).
 
+# How to install DFTFringe on MacOS
+
+Download the disk image from the
+[latest release](https://github.com/githubdoe/dftfringe/releases/latest), open it
+and drag DFTFringe into Applications. The required OS is MacOS 15 or later.
+
+**The app is not notarised yet**, so macOS refuses to open it the first time and
+will just quit without saying anything. To launch it : 
+
+Right-click it -> "Open", then open "System Settings", go to "Privacy & Security",
+find the DFTFringe security warning, and click "Open Anyway"
+
+Or, from the terminal :
+
+```
+xattr -dr com.apple.quarantine /Applications/DFTFringe.app
+```
+
+# How to install DFTFringe on Linux
+
+:point_right: Download `DFTFringe-<version>-x86_64.AppImage` from the
+[latest release](https://github.com/githubdoe/dftfringe/releases/latest), make it
+executable and run it:
+
+```
+chmod +x DFTFringe-*-x86_64.AppImage
+./DFTFringe-*-x86_64.AppImage
+```
+
 # How to build DFTFringe on Linux
 
 
@@ -52,7 +81,32 @@ make -j4
 
 # How to build DFTFringe on MacOS
 
-:building_construction: Under construction :building_construction:
+Dependencies come from [Homebrew](https://brew.sh).
+
+```
+brew install qt qwt opencv@4 armadillo
+```
+
+qmake finds them through pkg-config.
+`opencv@4` is keg-only and Qt6 is split across several kegs, so point `PKG_CONFIG_PATH` at them:
+
+```
+export PKG_CONFIG_PATH="$(brew --prefix qwt)/lib/pkgconfig:$(brew --prefix opencv@4)/lib/pkgconfig:$(brew --prefix armadillo)/lib/pkgconfig:$(brew --prefix)/lib/pkgconfig"
+$(brew --prefix qt)/bin/qmake DFTFringe.pro CONFIG+=release
+make -j$(sysctl -n hw.ncpu)
+```
+
+This produces `build/release/DFTFringe.app`, linked against Homebrew libraries.
+`macdeployqt` copies the libraries in and rewrites their install names. The colour
+maps have to be copied in `Contents/Resources`.
+
+```
+$(brew --prefix qt)/bin/macdeployqt build/release/DFTFringe.app
+cp -R ColorMaps build/release/DFTFringe.app/Contents/Resources/
+open build/release/DFTFringe.app
+```
+
+To produce an universal build with `lipo` from arm and intel builds, you can take `.github/workflows/build-macos.yml` as reference.
 
 # How to build DFTFringe on Windows
 
@@ -314,7 +368,25 @@ aqt install-tool windows desktop tools_ifw
 
 :warning: This method is for Windows only.
 
+## If you get a stack trace in .log file
+
 - Get `DFTFringe.exe.debug` file corresponding to the release where the log comes from in github
-- Run `addr2line -e DFTFringe.exe.debug 0x00000000005A7229` with the address of the stack you get from the log
+- Run `addr2line -e Z_DFTFringe.exe.debug 0x00000000005A7229` with the address of the stack you get from the log
 - You should get an output like `D:\a\DFTFringe\DFTFringe\DFTFringe/./boost/stacktrace/stacktrace.hpp:78`
 - Do this for each line of the call stack leading to the crash. Look at corresponding file and line (here it's `stacktrace.hpp` line `78`) of the source code corresponding to the release you are debugging to understand what went wrong.
+
+## In case you have only the .dmp file
+
+- Open the file.dmp with windbg (File -> open dump file)
+- Type `!analyze -v`
+You will get a stack trace like this : 
+  ```
+  STACK_TEXT:  
+  000000ae`e0bfa650 00007ffb`df74d224     : 00000208`068a3a90 00000208`068a3aa0 00000000`00000001 00000000`00000000 : Qt6Core!ZNK11QStringView8toDoubleEPb+0x9d
+  000000ae`e0bfa7e0 00007ff6`4f442e1d     : 00000208`06b31f40 00000000`0000009d 00000000`00000168 000000ae`e0bfab80 : Qt6Core!ZNK7QString8toDoubleEPb+0x34
+  000000ae`e0bfa830 00007ff6`4f4576af     : 00000000`00000000 00000208`07b449e0 00000208`775cf0b0 99c37778`b5f046ec : DFTFringe+0x72e1d
+  000000ae`e0bfaef0 00007ff6`4f51cec4     : 00000208`7b8fbdf0 00000208`775b5970 00000000`00000000 000000ae`e0bfb078 : DFTFringe+0x876af
+  000000ae`e0bfb070 00007ffb`df9bc15e     : 000000ae`e0bfb140 000000ae`e0bfb148 000000ae`e0bfb150 00000000`00000000 : DFTFringe+0x14cec4
+  ```
+- `DFTFringe`correspond to `ImageBase` which is 0x140000000
+- You can now do the math (0x140000000+0x72e1d) and use `addr2line -e Z_DFTFringe.exe.debug 0x140072e1d`

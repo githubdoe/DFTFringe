@@ -6,7 +6,10 @@
 #include <QtDataVisualization/Q3DCamera>
 #include <QMouseEvent>
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+//keep compatiblity with Qt5
 using namespace QtDataVisualization;
+#endif
 
 class Custom3DInputHandler : public Q3DInputHandler {
     Q_OBJECT

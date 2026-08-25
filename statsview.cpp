@@ -12,7 +12,7 @@
 #include "myutils.h"
 #include "utils.h"
 statsView::statsView(SurfaceManager *parent) :
-    QDialog(0),
+    QDialog(qobject_cast<QWidget *>(parent ? parent->parent() : nullptr)),
     ui(new Ui::statsView),m_removeOutliers(false), m_removeRMS(false)
 {
     ui->setupUi(this);
