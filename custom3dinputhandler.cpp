@@ -20,8 +20,14 @@ void Custom3DInputHandler::mousePressEvent(QMouseEvent *event, const QPoint &mou
         mappedButtons = (mappedButtons & ~Qt::LeftButton) | Qt::RightButton;
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QMouseEvent customEvent(event->type(), event->position(), event->globalPosition(),
+                             mappedButton, mappedButtons, event->modifiers());
+#else
     QMouseEvent customEvent(event->type(), event->localPos(), event->globalPos(),
                              mappedButton, mappedButtons, event->modifiers());
+#endif
+    Q3DInputHandler::mousePressEvent(&customEvent, mousePos);
     Q3DInputHandler::mousePressEvent(&customEvent, mousePos);
 }
 
@@ -38,8 +44,14 @@ void Custom3DInputHandler::mouseReleaseEvent(QMouseEvent *event, const QPoint &m
         mappedButtons = (mappedButtons & ~Qt::LeftButton) | Qt::RightButton;
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QMouseEvent customEvent(event->type(), event->position(), event->globalPosition(),
+                             mappedButton, mappedButtons, event->modifiers());
+#else
     QMouseEvent customEvent(event->type(), event->localPos(), event->globalPos(),
                              mappedButton, mappedButtons, event->modifiers());
+#endif
+    Q3DInputHandler::mousePressEvent(&customEvent, mousePos);
     Q3DInputHandler::mouseReleaseEvent(&customEvent, mousePos);
 }
 
@@ -87,7 +99,12 @@ void Custom3DInputHandler::mouseMoveEvent(QMouseEvent *event, const QPoint &mous
         mappedButtons = (mappedButtons & ~Qt::LeftButton) | Qt::RightButton;
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QMouseEvent customEvent(event->type(), event->position(), event->globalPosition(),
+                             event->button(), mappedButtons, event->modifiers());
+#else
     QMouseEvent customEvent(event->type(), event->localPos(), event->globalPos(),
                              event->button(), mappedButtons, event->modifiers());
+#endif
     Q3DInputHandler::mouseMoveEvent(&customEvent, mousePos);
 }
