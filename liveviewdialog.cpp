@@ -46,12 +46,20 @@ LiveViewDialog::LiveViewDialog(const QString &defaultStreamUrl, QWidget *parent)
     connect(m_worker, &VideoStreamWorker::streamError, this, [this](const QString &msg) {
         if (imageLabel) {
             imageLabel->setText(msg);
+            statusLeft->setText(msg);
+            statusLeft->setText(QString("<span style='color: white; background-color: red;'>%1</span>").arg(msg));
+
+
+            qDebug() << "stream failed" << msg;
+            imageLabel->adjustSize();
         }
         emit streamDisconnected();
     });
 
     // Start the background thread
     m_thread->start();
+
+
 
 }
 LiveViewDialog::~LiveViewDialog() {
@@ -136,9 +144,12 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
 
     startAnalysisBtn = new QPushButton("Start Loop", this);
     startAnalysisBtn->setStyleSheet("background-color: #1976d2; color: white; font-weight: bold;");
+
     pauseAnalyBtn = new QPushButton("Pause",this);
     pauseAnalyBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
+
     stopAnalysisBtn = new QPushButton("Stop Loop", this);
+
     stopAnalysisBtn->setStyleSheet("background-color: #d32f2f; color: white; font-weight: bold;");
 
     QHBoxLayout *controlLayout = new QHBoxLayout();
@@ -176,15 +187,27 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     QTextEdit *helpText = new QTextEdit(this);
     helpText->setReadOnly(true);
     helpText->setHtml(
+        "<h3>Settings</h3>"
+        "<p>The settings tab lets you select the source of the video.  Use 0,1,or 2 for USB attached cameras.</p>"
+        "<p>A selection for a URL stream might look like this:  http://192.168.50.5:5000/video_feed</p>"
+        "<p>You can also set the camera resolution if it can accept it.</p>"
         "<h3>Automated Live Analysis Prerequisites</h3>"
         "<p>Before starting the automated analysis loop, ensure the following steps are completed:</p>"
         "<ol>"
-        "  <li><b>Camera Alignment:</b> Position your interferogram so it is stable and clearly visible in the live feed window.</li>"
-        "  <li><b>Initial Outline:</b> The application needs to know the boundary of the mirror. On your first frame, make sure the mirror edge/outline and central obstruction are properly defined.</li>"
-        "  <li><b>Threshold & Settings:</b> Verify your analysis parameters in the main application preferences.</li>"
+        "  <li><b>Use the Grab button</b> To import the igram into DFTFringe and outtline it as usualal. Then Press Done.</li>"
+        "  <li><b>Set the blue circle as usual</b> Then press the compute surface button as usual.</li>"
+        "  <li><b>Max RMS value</b> You can set the Max RMS value where values higher than that will not be used in the analysis. </li>"
         "</ol>"
-        "<p>Once configured, switch back to the <b>Live Feed</b> tab and click <b>Start Loop</b> to begin automated capture and processing.</p>"
-    );
+
+        "<p><b>Start</b>Once configured, switch back to the Live Feed< tab and click <b>Start Loop</b> to begin automated capture and processing.</p>"
+
+        "<p>If a wave front's RMS is equal of below the max RMS value it will be saved in the wave front list."
+                " If averaging is turned on it will be added to the average as well.</p> "
+       "<p>One the looping has started you might want to pause it to adjust some settings without reseing the averaging.</P>"
+        "<P>The Start button always resets the averaging if it was selected to be done.</p>"
+        "<p>The Stop button always stops the current looping and any averaging happening.</p>"
+        "<p>The average is not saved.  You can select any of the saved wave fronts and average them youself.</p>"
+                );
     helpLayout->addWidget(helpText);
 
     tabWidget->addTab(feedTab, "Live Feed");
@@ -215,7 +238,10 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(8, 8, 8, 8);
     mainLayout->addWidget(tabWidget);
+    stopAnalysisBtn->hide();
+    pauseAnalyBtn->hide();
     setLayout(mainLayout);
+
 }
 QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     QWidget *settingsTab = new QWidget(this);

@@ -2263,6 +2263,7 @@ void MainWindow::on_actionLive_view_triggered()
 }
 
 void MainWindow::on_startLiveButton_clicked() {
+
     // If already running, do nothing or treat as restart
     if (m_liveState == State_Running) return;
 
@@ -2276,6 +2277,10 @@ void MainWindow::on_startLiveButton_clicked() {
     }
 
     m_liveState = State_Running;
+    m_viewDlg->startAnalysisBtn->hide();
+    m_viewDlg->pauseAnalyBtn->show();
+    m_viewDlg->stopAnalysisBtn->show();
+
 
     // If the loop was completely stopped, start the execution flow again
     if (!m_liveLoopActive) {
@@ -2286,16 +2291,21 @@ void MainWindow::on_startLiveButton_clicked() {
 void MainWindow::on_pauseLiveButton_clicked() {
     if (m_liveState == State_Running) {
         m_liveState = State_Paused;
+        m_viewDlg->pauseAnalyBtn->setText("Resume");
         qDebug() << "Live loop paused. Average preserved.";
     } else if (m_liveState == State_Paused) {
         m_liveState = State_Running;
         qDebug() << "Live loop resumed.";
+        m_viewDlg->pauseAnalyBtn->setText("Pause");
     }
 }
 
 void MainWindow::on_stopLiveButton_clicked() {
     m_liveState = State_Stopped;
     m_liveLoopActive = false;
+    m_viewDlg->pauseAnalyBtn->hide();
+    m_viewDlg->stopAnalysisBtn->hide();
+    m_viewDlg->startAnalysisBtn->show();
 }
 
 void MainWindow::runLiveAnalysisLoop() {
@@ -2338,7 +2348,7 @@ void MainWindow::runLiveAnalysisLoop() {
         // 3. if outline is not good
         if (m_igramArea->m_outside.m_radius == 0) {
             m_viewDlg->statusRight->setText("<span style='color: white; background-color: red;'>  The outline is NOT valid for this image    </span>");
-qDebug() << "bad";
+
             break;
         }
         qDebug() << "good";
