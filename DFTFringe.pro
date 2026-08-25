@@ -151,7 +151,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     astigpolargraph.cpp \
     astigscatterplot.cpp \
     astigstatsdlg.cpp \
-	  autoinvertdlg.cpp \
+    autoinvertdlg.cpp \
     averagewavefrontfilesdlg.cpp \
     batchigramwizard.cpp \
     bathastigdlg.cpp \
@@ -171,6 +171,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     contourview.cpp \
     counterrotationdlg.cpp \
     cpoint.cpp \
+    custom3dinputhandler.cpp \
     defocusdlg.cpp \
     dftarea.cpp \
     dftcolormap.cpp \
@@ -293,6 +294,7 @@ HEADERS += bezier/bezier.h \
     contourview.h \
     counterrotationdlg.h \
     cpoint.h \
+    custom3dinputhandler.h \
     defocusdlg.h \
     dftarea.h \
     dftcolormap.h \
