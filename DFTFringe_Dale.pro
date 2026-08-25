@@ -33,6 +33,7 @@ SOURCES += main.cpp \
     astigpolargraph.cpp \
 	autoinvertdlg.cpp \
     cpoint.cpp \
+    custom3dinputhandler.cpp \
     defocusdlg.cpp \
     edgeplot.cpp \
     hotkeysdlg.cpp \
@@ -153,6 +154,7 @@ HEADERS  += mainwindow.h \
     astigpolargraph.h \
 	autoinvertdlg.h \
     cpoint.h \
+    custom3dinputhandler.h \
     defocusdlg.h \
     edgeplot.h \
     IgramArea.h \
@@ -411,7 +413,7 @@ RC_FILE = DFTFringe.rc
 QMAKE_CXXFLAGS += -std=c++11
 
 # The application version
-VERSION = Dale7.3.2
+VERSION = 3Dmouse_08/24/26
 
 # Define the preprocessor macro to get the application version in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
