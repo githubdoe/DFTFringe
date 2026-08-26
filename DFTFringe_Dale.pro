@@ -37,6 +37,8 @@ SOURCES += main.cpp \
     defocusdlg.cpp \
     edgeplot.cpp \
     hotkeysdlg.cpp \
+    liveimageview.cpp \
+    liveviewdialog.cpp \
     mainwindow.cpp \
     igramarea.cpp \
     circleoutline.cpp \
@@ -57,6 +59,7 @@ SOURCES += main.cpp \
     surfacegraph.cpp \
     surfacelightingproxy.cpp \
     userdrawnprofiledlg.cpp \
+    videostreamworker.cpp \
     wavefront.cpp \
     contourplot.cpp \
     contourtools.cpp \
@@ -164,6 +167,8 @@ HEADERS  += mainwindow.h \
     dfttools.h \
     dftarea.h \
     hotkeysdlg.h \
+    liveimageview.h \
+    liveviewdialog.h \
     oglrendered.h \
     pdfcalibrationdlg.h \
     percentCorrectionSurface.h \
@@ -178,6 +183,7 @@ HEADERS  += mainwindow.h \
     surfacegraph.h \
     surfacelightingproxy.h \
     userdrawnprofiledlg.h \
+    videostreamworker.h \
     wavefront.h \
     contourplot.h \
     contourtools.h \
@@ -376,7 +382,8 @@ LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgcodecs3412.dll
 LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_imgproc3412.dll
 LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_features2d3412.dll
 LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_calib3d3412.dll
-
+LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_video3412.dll
+LIBS += D:\opencv\opencv-3.4.12\build\bin\libopencv_videoio3412.dll
 #LIBS += D:\armadillo\bin\libarmadillo.dll
 LIBS += D:\lapack\build64\bin\liblapack.dll
 LIBS += D:\lapack\build64\bin\libblas.dll
