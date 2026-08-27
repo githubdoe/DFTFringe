@@ -106,6 +106,8 @@ jobs:
           ARM="$PWD/arm64/DFTFringe.app"
           INTEL="$PWD/x86_64/DFTFringe.app"
 
+          rm -rf "$ARM/Contents/_CodeSignature" "$INTEL/Contents/_CodeSignature"
+
           diff <(cd "$ARM" && find . | sort) <(cd "$INTEL" && find . | sort) \
             || { echo "the two bundles do not contain the same files"; exit 1; }
 
