@@ -40,6 +40,7 @@ signals:
     void streamDisconnected();
     void requestChangeSource(QString newSource);
     void requestSetResolution(int width, int height);
+    void stopLiveLoopRequested();
 public:
     QPushButton *startAnalysisBtn;
     QPushButton *stopAnalysisBtn;
@@ -56,6 +57,10 @@ public:
     QCheckBox *autoRMSatStarup;
     QDoubleSpinBox *RMSMargin;
     bool FirstWaveFrontSeen = false;
+    bool saveAverage = false;
+    QPushButton *saveAverageBtn;
+    bool loopRunning = false;
+    bool m_stopRequested = false;// used to signal the dialog is trying to close.
 private:
     VideoStreamWorker *m_worker;
     QThread *m_thread;

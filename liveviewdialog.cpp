@@ -85,10 +85,25 @@ LiveViewDialog::~LiveViewDialog() {
 
 void LiveViewDialog::closeEvent(QCloseEvent *event) {
 
-    QSettings set; // Or use existing app settings key
-    set.setValue("LiveViewDialog/geometry", saveGeometry());
+            if (loopRunning) {
+                // 1. Tell the main window/loop to stop
+                m_stopRequested = true;
 
-    QDialog::closeEvent(event);
+                // 2. Hide immediately so the UI feels responsive and closed to the user
+                hide();
+
+                // 3. Ignore the close event so the object isn't destroyed out from under the loop yet
+                event->ignore();
+            } else {
+                // Safe to close normally
+                loopRunning = false;
+                QSettings set; // Or use existing app settings key
+                set.setValue("LiveViewDialog/geometry", saveGeometry());
+                event->accept();
+            }
+
+
+
 }
 
 void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
@@ -151,7 +166,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     averageMode = new QComboBox(this);
     averageMode->addItem("Show current");
     averageMode->addItem("Compute and show Average");
-
+    averageMode->setStyleSheet("QComboBox { background-color: #FFBF00; color: black; }");
     connect(zoomCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LiveViewDialog::onZoomChanged);
 
@@ -169,11 +184,18 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
 
     stopAnalysisBtn->setStyleSheet("background-color: #d32f2f; color: white; font-weight: bold;");
 
+    saveAverageBtn = new QPushButton("Save average",this);
+    saveAverageBtn->hide();
+    connect(saveAverageBtn, &QPushButton::clicked, this, [this](){
+        this->saveAverage = true;
+    } );
+
     QHBoxLayout *controlLayout = new QHBoxLayout();
     controlLayout->addWidget(grabButton);
     controlLayout->addWidget(startAnalysisBtn);
     controlLayout->addWidget(pauseAnalyBtn);
     controlLayout->addWidget(stopAnalysisBtn);
+    controlLayout->addWidget(saveAverageBtn);
     controlLayout->addSpacing(10);
     controlLayout->addWidget(dftButton);
     controlLayout->addWidget(new QLabel("DFT Size:", this));
@@ -208,6 +230,12 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
         "<p>The settings tab lets you select the source of the video.  Use 0,1,or 2 for USB attached cameras.</p>"
         "<p>A selection for a URL stream might look like this:  http://192.168.50.5:5000/video_feed</p>"
         "<p>You can also set the camera resolution if it can accept it.</p>"
+
+        "<h3>Auto RMS setup</h3>"
+        "<p>Enable the checkbox if you want the Max RMS value to be set to value of the first analyzed wave front time a percentage."
+           " This will happen the firsts time you \"Start\" the analysis.  From then on the Max value will not be modified by the program. "
+           " You can still modify it yourself however.</p>"
+
         "<h3>Automated Live Analysis Prerequisites</h3>"
         "<p>Before starting the automated analysis loop, ensure the following steps are completed:</p>"
         "<ol>"
@@ -218,12 +246,19 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
 
         "<p><b>Start</b>Once configured, switch back to the Live Feed< tab and click <b>Start Loop</b> to begin automated capture and processing.</p>"
 
-        "<p>If a wave front's RMS is equal of below the max RMS value it will be saved in the wave front list."
+        "<p>If a wave front's RMS is equal or below the max RMS value it will be saved in the wave front list."
                 " If averaging is turned on it will be added to the average as well.</p> "
-       "<p>One the looping has started you might want to pause it to adjust some settings without reseing the averaging.</P>"
+       "<p>Once the looping has started you might want to pause it to adjust some settings without reseting the averaging.</P>"
         "<P>The Start button always resets the averaging if it was selected to be done.</p>"
         "<p>The Stop button always stops the current looping and any averaging happening.</p>"
-        "<p>The average is not saved.  You can select any of the saved wave fronts and average them youself.</p>"
+        "<p>The average is not saved until you pause and press the \"Save Average\" button.  You can select any of the saved wave fronts and average them youself as usual.</p>"
+
+       "<h3>Max RMS</h3>"
+                "<p>If an analyzed wave front's RMS value is larger than the Max RMS value it will"
+                " not be added to the average and it will not be added to the list of wave fronts."
+                "Also the surface display will switch to the live view instead of the average view"
+                "until the RMS value is below the max</p>"
+
                 );
     helpLayout->addWidget(helpText);
 
@@ -244,10 +279,12 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
         maxRMS->setRange(0.0, 100.0);
         maxRMS->setValue(.4);
         maxRMS->setSingleStep(.05);
-
+        cornerLayout->addWidget(averageMode);
+        controlLayout->addSpacing(100);
         cornerLayout->addWidget(new QLabel("DFT contrast:"));
         cornerLayout->addWidget(vivid);
-        cornerLayout->addWidget(averageMode);
+        controlLayout->addSpacing(10);
+
         cornerLayout->addWidget(spinLabel);
         cornerLayout->addWidget(maxRMS);
 

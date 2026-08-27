@@ -352,7 +352,7 @@ private:
     ColorChannelDisplay *m_colorChannels;
     igramIntensity *m_intensityPlot;
     vortexDebug    *m_vortexDebugTool;
-    LiveViewDialog *m_viewDlg = NULL;
+    QPointer<LiveViewDialog> m_viewDlg;
     batchIgramWizard *batchWiz;
     QStringList m_igramsToProcess;
     QWidget *oglFv;

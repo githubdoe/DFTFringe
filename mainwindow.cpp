@@ -2270,6 +2270,8 @@ void MainWindow::on_actionLive_view_triggered()
     double f = (double)(m_dftArea->m_center_filter)/((double)(m_dftArea->width())/2.);
 
     m_viewDlg->setCenterFilterRadius(f);
+
+    m_viewDlg->show();
 }
 
 void MainWindow::on_startLiveButton_clicked() {
@@ -2303,10 +2305,12 @@ void MainWindow::on_pauseLiveButton_clicked() {
         m_liveState = State_Paused;
         m_viewDlg->pauseAnalyBtn->setText("Resume");
         qDebug() << "Live loop paused. Average preserved.";
+
     } else if (m_liveState == State_Paused) {
         m_liveState = State_Running;
         qDebug() << "Live loop resumed.";
         m_viewDlg->pauseAnalyBtn->setText("Pause");
+        m_viewDlg->saveAverageBtn->hide();
     }
 }
 
@@ -2316,6 +2320,7 @@ void MainWindow::on_stopLiveButton_clicked() {
     m_viewDlg->pauseAnalyBtn->hide();
     m_viewDlg->stopAnalysisBtn->hide();
     m_viewDlg->startAnalysisBtn->show();
+    m_viewDlg->saveAverageBtn->hide();
 }
 
 void MainWindow::runLiveAnalysisLoop() {
@@ -2332,15 +2337,28 @@ void MainWindow::runLiveAnalysisLoop() {
     m_liveSum.release();
 
     int totalFrames = 1; // Local frame counter for non-averaged views
-
-    while (m_liveState != State_Stopped && m_viewDlg) {
+    m_viewDlg->loopRunning = true;
+    while (m_liveState != State_Stopped && !m_viewDlg->m_stopRequested) {
         QApplication::processEvents();
 
         // If paused, just idle gracefully
         if (m_liveState == State_Paused) {
+
             QApplication::processEvents();
+
+            if (m_liveAverageWf)
+               m_viewDlg->saveAverageBtn->show();
+            if (m_viewDlg->saveAverage == true){
+                m_surfaceManager->m_wavefronts << m_liveAverageWf;
+
+                m_liveAverageWf->name = QString("Average_%1").arg(m_liveValidCount);
+
+                m_surfTools->addWaveFront(m_liveAverageWf->name);
+                m_viewDlg->saveAverage = false;
+            }
             continue;
         }
+
 
         if (m_liveState == State_Stopped) break;
 
@@ -2380,10 +2398,9 @@ void MainWindow::runLiveAnalysisLoop() {
             qDebug() << "Warning: Surface generation failed or wavefront list empty. Skipping frame.";
             continue;
         }
-        if (!m_viewDlg)
-            break;
+
         wavefront *wf = m_surfaceManager->m_wavefronts.back();
-        if (m_viewDlg && (!m_viewDlg->FirstWaveFrontSeen) && m_viewDlg->autoRMSatStarup->isChecked()){
+        if (!m_viewDlg->FirstWaveFrontSeen && m_viewDlg->autoRMSatStarup->isChecked()){
             m_viewDlg->maxRMS->setValue(wf->std * m_viewDlg->RMSMargin->value());
             m_viewDlg->FirstWaveFrontSeen = true;
         }
@@ -2392,8 +2409,7 @@ void MainWindow::runLiveAnalysisLoop() {
             qDebug() << "Error: Wavefront workData is empty or invalid!";
             continue;
         }
-        if (!m_viewDlg)
-            break;
+
         // Determine what we are doing based on the dropdown mode
         int mode = m_viewDlg->averageMode->currentIndex();
         bool computeAverage = (mode == 1);
@@ -2405,7 +2421,6 @@ void MainWindow::runLiveAnalysisLoop() {
             if ((wf->std > m_viewDlg->maxRMS->value())) {
                 m_viewDlg->m_tmpShowLive = true;
                 m_liveViewRMSTimer->start(2000); // display live for 2 seconds.
-                qDebug() << "too big" << wf->std << m_viewDlg->maxRMS->value();
             }
             else {
 
@@ -2455,8 +2470,6 @@ void MainWindow::runLiveAnalysisLoop() {
         QString statusRightText;
         if (computeAverage) {
             QString liveMsg = "";
-            if (!m_viewDlg)
-                break;
             if (m_viewDlg->m_tmpShowLive == true){
                 liveMsg = QString("<span style='color: white; background-color: red;'>%1</span>")
                     .arg("  &nbsp;RMS too big &nbsp;  ");
@@ -2475,15 +2488,13 @@ void MainWindow::runLiveAnalysisLoop() {
         m_viewDlg->statusRight->setText(statusRightText);
 
         QPixmap pixmap = QPixmap::fromImage(img);
-        if (!m_viewDlg)
-            break;
+
         if (m_viewDlg->deleteIgramAfter->isChecked()){
             QFile::remove(savedFilePath);
             QFile::remove(savedFilePath.replace("jpg", "oln"));
         }
 
         if (wf->std > m_viewDlg->maxRMS->value()){
-            qDebug() << "maxed out" << wf->std;
             m_surfaceManager->m_wavefronts.removeLast();
             m_surfTools->deleteLast();
         }
@@ -2497,5 +2508,10 @@ void MainWindow::runLiveAnalysisLoop() {
 
     //QApplication::restoreOverrideCursor();
     m_liveLoopActive = false;
+    m_viewDlg->m_stopRequested = false;
+    m_viewDlg->loopRunning = false;
     m_liveState = State_Stopped;
+    m_liveLoopActive = false;
+    on_stopLiveButton_clicked();// used to clean up to button colors if the dialog was closed during the loop
+
 }
