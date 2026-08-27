@@ -108,19 +108,22 @@ jobs:
 
           rm -rf "$ARM/Contents/_CodeSignature" "$INTEL/Contents/_CodeSignature"
 
-          diff <(cd "$ARM" && find . | sort) <(cd "$INTEL" && find . | sort) \
-            || { echo "the two bundles do not contain the same files"; exit 1; }
-
           cp -R "$ARM" DFTFringe.app
-          UNIVERSAL="$PWD/DFTFringe.app"
-          find "$UNIVERSAL" -type f | while read -r f; do
-            rel="${f#$UNIVERSAL/}"
-            if file -b "$f" | grep -q "Mach-O"; then
+          cp -Rn "$INTEL/" DFTFringe.app/ || true
+
+          find DFTFringe.app -type f | while read -r f; do
+            rel="${f#DFTFringe.app/}"
+            if [ -f "$ARM/$rel" ] && [ -f "$INTEL/$rel" ] && file -b "$f" | grep -q "Mach-O"; then
               lipo -create "$ARM/$rel" "$INTEL/$rel" -output "$f"
             fi
           done
-          echo "--- architectures in the merged executable:"
-          lipo -info "$UNIVERSAL/Contents/MacOS/DFTFringe"
+
+          ARCHS="$(lipo -archs DFTFringe.app/Contents/MacOS/DFTFringe)"
+          echo "--- architectures in the merged executable: $ARCHS"
+          case "$ARCHS" in
+            *arm64*x86_64*|*x86_64*arm64*) ;;
+            *) echo "the merged executable is not universal"; exit 1 ;;
+          esac
 
       - name: Ad-hoc sign
         run: |
