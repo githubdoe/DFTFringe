@@ -2230,8 +2230,17 @@ QString MainWindow::load_from_url(){
 void MainWindow::on_actionLive_view_triggered()
 {
     if (!m_viewDlg) {
-            m_viewDlg = new LiveViewDialog("1",this);//("http://192.168.50.5:5000/video_feed");
+            if (!m_liveViewRMSTimer){
+                m_liveViewRMSTimer = new QTimer();
+            }
+
+            m_viewDlg = new LiveViewDialog(this);//("http://192.168.50.5:5000/video_feed");
             // compute the size of the current filter circle and set it to the viewDLG
+            connect(m_liveViewRMSTimer, &QTimer::timeout, this, [this](){
+                if (m_viewDlg)
+                    m_viewDlg->m_tmpShowLive = false;
+
+            });
 
             // Automatically nullify the pointer when Qt deletes the dialog on close
             connect(m_viewDlg, &QObject::destroyed, this, [this]() {
@@ -2352,7 +2361,7 @@ void MainWindow::runLiveAnalysisLoop() {
 
             break;
         }
-        qDebug() << "good";
+
         QApplication::processEvents();
         if (m_liveState == State_Stopped) break;
 
@@ -2371,56 +2380,72 @@ void MainWindow::runLiveAnalysisLoop() {
             qDebug() << "Warning: Surface generation failed or wavefront list empty. Skipping frame.";
             continue;
         }
-
+        if (!m_viewDlg)
+            break;
         wavefront *wf = m_surfaceManager->m_wavefronts.back();
-
+        if (m_viewDlg && (!m_viewDlg->FirstWaveFrontSeen) && m_viewDlg->autoRMSatStarup->isChecked()){
+            m_viewDlg->maxRMS->setValue(wf->std * m_viewDlg->RMSMargin->value());
+            m_viewDlg->FirstWaveFrontSeen = true;
+        }
         // SAFETY: Ensure the wavefront data is actually allocated and valid before touching OpenCV
         if (wf->workData.empty() || wf->workData.rows <= 0 || wf->workData.cols <= 0) {
             qDebug() << "Error: Wavefront workData is empty or invalid!";
             continue;
         }
-
+        if (!m_viewDlg)
+            break;
         // Determine what we are doing based on the dropdown mode
         int mode = m_viewDlg->averageMode->currentIndex();
-        bool computeAverage = (mode == 1 || mode == 2);
-        bool displayAverage = (mode == 2);
+        bool computeAverage = (mode == 1);
+        bool displayAverage = (mode == 1);
 
         // Accumulate average only if requested and valid
-        if (computeAverage && (wf->std < m_viewDlg->maxRMS->value())) {
-            if (m_liveValidCount == 1 || m_liveSum.empty()){
-                m_liveSum = cv::Mat::zeros(wf->workData.rows, wf->workData.cols, wf->workData.type());
-                *m_liveAverageWf = *wf;
-                m_liveAverageWf->m_origin = WavefrontOrigin::Average;
+        if (computeAverage){
+
+            if ((wf->std > m_viewDlg->maxRMS->value())) {
+                m_viewDlg->m_tmpShowLive = true;
+                m_liveViewRMSTimer->start(2000); // display live for 2 seconds.
+                qDebug() << "too big" << wf->std << m_viewDlg->maxRMS->value();
             }
+            else {
 
-            // Double check dimensions just as a defensive programming safeguard
-            if (m_liveSum.rows == wf->workData.rows && m_liveSum.cols == wf->workData.cols) {
-                m_liveSum += wf->workData;
-
-                cv::Mat result = m_liveSum.clone() / m_liveValidCount;
-
-                // Compute the mean and standard deviation of the running average
-                cv::meanStdDev(result, mean, stddev);
-
-                cv::Mat mask = wf->mask.clone();
-
-                m_liveAverageWf->workData = result.clone();
-                m_liveAverageWf->data = result.clone();
-                m_liveAverageWf->mask = mask.clone();
-                m_liveAverageWf->workMask = mask.clone();
-
-                if (displayAverage) {
-                    m_ogl->m_surface->setSurface(m_liveAverageWf);
+                if (m_liveValidCount == 1 || m_liveSum.empty()){
+                    m_liveSum = cv::Mat::zeros(wf->workData.rows, wf->workData.cols, wf->workData.type());
+                    *m_liveAverageWf = *wf;
+                    m_liveAverageWf->m_origin = WavefrontOrigin::Average;
                 }
 
-                m_liveValidCount++;
-            } else {
-                qDebug() << "Error: Mismatched matrix dimensions during live accumulation!";
-            }
+                // Double check dimensions just as a defensive programming safeguard
+                if (m_liveSum.rows == wf->workData.rows && m_liveSum.cols == wf->workData.cols) {
+                    m_liveSum += wf->workData;
+
+                    cv::Mat result = m_liveSum.clone() / m_liveValidCount;
+
+                    // Compute the mean and standard deviation of the running average
+                    cv::meanStdDev(result, mean, stddev);
+
+                    cv::Mat mask = wf->mask.clone();
+
+                    m_liveAverageWf->workData = result.clone();
+                    m_liveAverageWf->data = result.clone();
+                    m_liveAverageWf->mask = mask.clone();
+                    m_liveAverageWf->workMask = mask.clone();
+
+                    if (!m_viewDlg->m_tmpShowLive) {
+                        m_ogl->m_surface->setSurface(m_liveAverageWf);
+                    }
+
+                    m_liveValidCount++;
+
+                } else {
+                    qDebug() << "Error: Mismatched matrix dimensions during live accumulation!";
+                }
+            }// end of do average if RMS is ok.
+
         }
 
         // If displaying current frame, make sure the 3D view is showing the current wavefront
-        if (!displayAverage) {
+        if (!displayAverage or m_viewDlg->m_tmpShowLive) {
             m_ogl->m_surface->setSurface(wf);
         }
 
@@ -2429,10 +2454,18 @@ void MainWindow::runLiveAnalysisLoop() {
 
         QString statusRightText;
         if (computeAverage) {
-            statusRightText = QString("Averaged: %1 | RMS: %2 | Avg RMS: %3")
+            QString liveMsg = "";
+            if (!m_viewDlg)
+                break;
+            if (m_viewDlg->m_tmpShowLive == true){
+                liveMsg = QString("<span style='color: white; background-color: red;'>%1</span>")
+                    .arg("  &nbsp;RMS too big &nbsp;  ");
+            }
+            statusRightText = QString("Averaged: %1 | RMS: %2 | Avg RMS: %3  %4")
                         .arg(m_liveValidCount - 1)
                         .arg(wf->std, 0, 'f', 3)
-                        .arg(stddev[0], 0, 'f', 3);
+                        .arg(stddev[0], 0, 'f', 3)
+                        .arg(liveMsg);
         } else {
             statusRightText = QString("Frame: %1 | RMS: %2")
                         .arg(totalFrames)
@@ -2442,6 +2475,8 @@ void MainWindow::runLiveAnalysisLoop() {
         m_viewDlg->statusRight->setText(statusRightText);
 
         QPixmap pixmap = QPixmap::fromImage(img);
+        if (!m_viewDlg)
+            break;
         if (m_viewDlg->deleteIgramAfter->isChecked()){
             QFile::remove(savedFilePath);
             QFile::remove(savedFilePath.replace("jpg", "oln"));

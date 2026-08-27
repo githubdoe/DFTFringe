@@ -1,5 +1,6 @@
 #include "videostreamworker.h"
 #include <QDebug>
+#include <Qtimer>
 
 VideoStreamWorker::VideoStreamWorker(const QString &source, QObject *parent)
     : QObject(parent), m_source(source), m_running(false) {}
@@ -25,42 +26,77 @@ void VideoStreamWorker::startStream() {
     if (!m_cap.isOpened()) {
         emit streamError("Failed to open stream source: " + m_source);
         return;
+    } else {
+        qDebug() << "stream started";
     }
-    else qDebug() << "stream started";
 
     m_running = true;
 
-    while (m_running) {
-        for (int i = 0; i < 3; ++i) {
-            if (!m_running) break;
-            m_cap.grab();
-        }
+    // Kick off the first frame processing via the event loop
+    QMetaObject::invokeMethod(this, "processNextFrame", Qt::QueuedConnection);
+}
 
-        cv::Mat frame;
-        if (m_cap.retrieve(frame) && !frame.empty()) {
-            cv::Mat rgbFrame;
-            cv::cvtColor(frame, rgbFrame, cv::COLOR_BGR2RGB);
-            QImage img(rgbFrame.data, rgbFrame.cols, rgbFrame.rows, rgbFrame.step, QImage::Format_RGB888);
-            emit frameReady(frame.clone());
-        } else {
-            emit streamError("Stream disconnected or frame empty.");
-            break;
-        }
+void VideoStreamWorker::processNextFrame() {
+    if (!m_running || !m_cap.isOpened()) return;
 
-        QThread::msleep(30);
+    for (int i = 0; i < 3; ++i) {
+        if (!m_running) break;
+        m_cap.grab();
     }
 
-    if (m_cap.isOpened()) {
-        m_cap.release();
+    cv::Mat frame;
+    if (m_cap.retrieve(frame) && !frame.empty()) {
+        emit frameReady(frame.clone());
+    } else {
+        emit streamError("Stream disconnected or frame empty.");
+        m_running = false;
+        return;
+    }
+
+    // Schedule the next frame check after a short delay,
+    // allowing the event loop time to process changeSource or setResolution!
+    if (m_running) {
+        QTimer::singleShot(30, this, &VideoStreamWorker::processNextFrame);
     }
 }
 
 void VideoStreamWorker::stop() {
     m_running = false;
+    if (m_cap.isOpened()) {
+        m_cap.release();
+    }
 }
+void VideoStreamWorker::changeSource(QString newSource) {
+    // Release existing capture if open
+    if (m_cap.isOpened()) {
+        m_cap.release();
+    }
+qDebug() << "changing source" << newSource;
+    m_source = newSource;
+    bool isInt = false;
+    int camId = m_source.toInt(&isInt);
+
+    if (isInt) {
+#if defined(_WIN32) || defined(_WIN64)
+        m_cap.open(camId, cv::CAP_DSHOW);
+#else
+        m_cap.open(camId);
+#endif
+    } else {
+        m_cap.open(m_source.toStdString());
+    }
+
+    if (!m_cap.isOpened()) {
+        emit streamError("Failed to open stream source: " + m_source);
+    } else {
+        qDebug() << "Stream source changed successfully to:" << m_source;
+    }
+}
+
 
 // Thread-safe method invoked via signal/slot connection
 void VideoStreamWorker::setResolution(int width, int height) {
+    qDebug() << "set res";
     if (m_cap.isOpened() && width > 0 && height > 0) {
         m_cap.set(cv::CAP_PROP_FRAME_WIDTH, width);
         m_cap.set(cv::CAP_PROP_FRAME_HEIGHT, height);

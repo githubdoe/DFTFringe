@@ -67,6 +67,7 @@
      <string>Files</string>
     </property>
     <addaction name="actionLoad_Interferogram"/>
+    <addaction name="actionLive_view"/>
     <addaction name="actionLoad_outline"/>
     <addaction name="actionLoad_wave_fronts_from_multiple_directories"/>
     <addaction name="actionRead_WaveFront"/>
@@ -83,7 +84,6 @@
     <addaction name="separator"/>
     <addaction name="actionSave_PDF_report"/>
     <addaction name="actionCreate_Movie_of_wavefronts"/>
-    <addaction name="actionLive_view"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -1523,7 +1523,7 @@ em;
   </action>
   <action name="actionLive_view">
    <property name="text">
-    <string>Live view</string>
+    <string> Capture from Video device</string>
    </property>
   </action>
  </widget>

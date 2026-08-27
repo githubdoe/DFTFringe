@@ -298,6 +298,7 @@ private:
     void updateRecentFileActions();
     QString strippedName(const QString &fullFileName);
     QMenu* m_view_menu;
+    QTimer *m_liveViewRMSTimer = NULL;
     void createActions();
     void createDockWindows();
     void runLiveAnalysisLoop();

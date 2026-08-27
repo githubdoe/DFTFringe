@@ -14,18 +14,19 @@
 #include <QDoubleSpinBox>
 #include "videostreamworker.h"
 #include <QThread>
+#include <QCheckBox>
 
 class LiveViewDialog : public QDialog {
     Q_OBJECT
 public:
-    explicit LiveViewDialog(const QString &streamUrl, QWidget *parent = nullptr);
+    explicit LiveViewDialog( QWidget *parent = nullptr);
     ~LiveViewDialog();
     QImage getFrame() {return matToQImage(m_latestFrame.clone());};
 protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
-    void updateFrame();
+
     void toggleDftMode();
     void onResolutionChanged(int index);
     void onZoomChanged(int index);
@@ -37,6 +38,8 @@ private slots:
 signals:
     void igramCaptured();
     void streamDisconnected();
+    void requestChangeSource(QString newSource);
+    void requestSetResolution(int width, int height);
 public:
     QPushButton *startAnalysisBtn;
     QPushButton *stopAnalysisBtn;
@@ -49,6 +52,10 @@ public:
     QComboBox *averageMode;
     QLabel *statusLeft;
     QLabel *statusRight;
+    bool m_tmpShowLive = false;
+    QCheckBox *autoRMSatStarup;
+    QDoubleSpinBox *RMSMargin;
+    bool FirstWaveFrontSeen = false;
 private:
     VideoStreamWorker *m_worker;
     QThread *m_thread;
@@ -59,8 +66,11 @@ private:
     QListWidget *urlListWidget;
     QLineEdit *urlLineEdit;
     QTabWidget *tabWidget;
+    QDoubleSpinBox *vivid;  // makes the DFT Vivid;
     double m_centerPercent;
+    double m_RMSMargin = 1.;
 
+    QTimer *m_rmsTimer;
 
     QComboBox *resolutionCombo;
     QComboBox *zoomCombo;
@@ -76,7 +86,6 @@ private:
     QImage matToQImage(const cv::Mat &mat);
     cv::Mat computeLiveDFT(const cv::Mat &inputFrame, int targetSize, const QRect &roi);
     void renderCurrentFrame();
-    void initStream(const QString &url);
     void setupUI(const QString &defaultStreamUrl);
     QWidget* createSettingsTab(const QString &defaultStreamUrl);
 };

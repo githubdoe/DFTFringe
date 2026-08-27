@@ -9,23 +9,28 @@
 #include <QApplication>
 #include <QPainter>
 #include "videostreamworker.h"
+#include <QGroupBox>
 // ==========================================
 // LiveViewDialog Implementation
 // ==========================================
 
-LiveViewDialog::LiveViewDialog(const QString &defaultStreamUrl, QWidget *parent)
+LiveViewDialog::LiveViewDialog( QWidget *parent)
     : QDialog(parent),  tabWidget(nullptr) {
 
     setWindowTitle("DFTFringe - Live View");
     setAttribute(Qt::WA_DeleteOnClose, true);
-    resize(850, 750);
+    setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
+    QSettings settings;
+    if (settings.contains("LiveViewDialog/geometry")) {
+        restoreGeometry(settings.value("LiveViewDialog/geometry").toByteArray());
+    } else {
+        resize(800, 600); // Default fallback size if none saved yet
+    }
+
+    QString savedUrl = settings.value("LiveView/streamUrl", 0).toString();
 
     // 1. Build the UI components
-    setupUI(defaultStreamUrl);
-
-    QSettings settings;
-    QString savedUrl = settings.value("LiveView/streamUrl", defaultStreamUrl).toString();
-
+    setupUI(savedUrl);    // 1. Build the UI components
 
 
     // 2. Initialize video stream
@@ -45,9 +50,10 @@ LiveViewDialog::LiveViewDialog(const QString &defaultStreamUrl, QWidget *parent)
 
     connect(m_worker, &VideoStreamWorker::streamError, this, [this](const QString &msg) {
         if (imageLabel) {
-            imageLabel->setText(msg);
+            imageLabel->setText(msg );
             statusLeft->setText(msg);
-            statusLeft->setText(QString("<span style='color: white; background-color: red;'>%1</span>").arg(msg));
+            statusLeft->setText(QString("<span style='color: white; background-color: red;'>%1</span>")
+                                .arg(msg + " Go to settings to set the stream number. You may have to close and restart this dialog."));
 
 
             qDebug() << "stream failed" << msg;
@@ -55,6 +61,11 @@ LiveViewDialog::LiveViewDialog(const QString &defaultStreamUrl, QWidget *parent)
         }
         emit streamDisconnected();
     });
+    connect(this, &LiveViewDialog::requestChangeSource,  m_worker, &VideoStreamWorker::changeSource,  Qt::QueuedConnection);
+    connect(this, &LiveViewDialog::requestSetResolution, m_worker, &VideoStreamWorker::setResolution, Qt::QueuedConnection);
+
+
+
 
     // Start the background thread
     m_thread->start();
@@ -73,7 +84,10 @@ LiveViewDialog::~LiveViewDialog() {
 }
 
 void LiveViewDialog::closeEvent(QCloseEvent *event) {
-    cap.release();
+
+    QSettings set; // Or use existing app settings key
+    set.setValue("LiveViewDialog/geometry", saveGeometry());
+
     QDialog::closeEvent(event);
 }
 
@@ -130,10 +144,13 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     zoomCombo->addItem("400%", 4.0);
     zoomCombo->setCurrentIndex(1);
 
+    vivid = new QDoubleSpinBox(this);
+    vivid->setValue(2.1);
+    vivid->setSingleStep(.05);
+
     averageMode = new QComboBox(this);
     averageMode->addItem("Show current");
-    averageMode->addItem("Compute Average show current");
-    averageMode->addItem("Compute Average and show Average");
+    averageMode->addItem("Compute and show Average");
 
     connect(zoomCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LiveViewDialog::onZoomChanged);
@@ -220,12 +237,16 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
         QHBoxLayout *cornerLayout = new QHBoxLayout(cornerWidget);
         cornerLayout->setContentsMargins(0, 0, 0, 0);
 
+
+
         QLabel *spinLabel = new QLabel("Delete if RMS >", this);
         maxRMS = new QDoubleSpinBox(this);
         maxRMS->setRange(0.0, 100.0);
         maxRMS->setValue(.4);
         maxRMS->setSingleStep(.05);
 
+        cornerLayout->addWidget(new QLabel("DFT contrast:"));
+        cornerLayout->addWidget(vivid);
         cornerLayout->addWidget(averageMode);
         cornerLayout->addWidget(spinLabel);
         cornerLayout->addWidget(maxRMS);
@@ -259,13 +280,7 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     }
     urlListWidget->addItems(urlHistory);
 
-    // Clicking a history list item instantly sets the line edit and triggers stream application
-    connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
-        if (item) {
-            urlLineEdit->setText(item->text().trimmed());
-            onApplySettings(); // Instant apply
-        }
-    });
+
 
     QString currentUrl = settings.value("LiveView/streamUrl", urlHistory.first()).toString();
     QList<QListWidgetItem*> matches = urlListWidget->findItems(currentUrl, Qt::MatchExactly);
@@ -281,23 +296,48 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
 
     // Pressing Enter in the line edit triggers instant apply
     connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::onApplySettings);
-
-    QPushButton *removeHistoryBtn = new QPushButton("Remove Selected from History", this);
-    connect(removeHistoryBtn, &QPushButton::clicked, this, [this]() {
-        QListWidgetItem *item = urlListWidget->currentItem();
-        if (item && urlListWidget->count() > 1) {
-            delete item;
+    connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
+        if (item) {
+            urlLineEdit->setText(item->text().trimmed());
+            onApplySettings(); // Applies immediately upon list selection
         }
     });
+    QGroupBox * rmsGroup = new QGroupBox("RMS settings");
+    QVBoxLayout *rmsLayout = new QVBoxLayout(rmsGroup);
 
     QHBoxLayout *listActionLayout = new QHBoxLayout();
-    listActionLayout->addWidget(removeHistoryBtn);
+    autoRMSatStarup = new QCheckBox("Compute Max rms as a percentage of first analysis");
+    connect(autoRMSatStarup, &QCheckBox::toggled, this, [](bool checked) {
+        QSettings settings;
+        settings.setValue("liveViewAutoRMSCheckBox", checked);
+    });
+    autoRMSatStarup->setChecked(settings.value("liveViewAutoRMSCheckBox", false).toBool());
+    rmsLayout->addWidget(autoRMSatStarup);
+
+    // make RMS margin settings;
+    QHBoxLayout *percentLayout = new QHBoxLayout();
+    percentLayout->addWidget(new QLabel("Percent above RMS of first analysis:"));
+
+    RMSMargin = new QDoubleSpinBox();
+    connect(RMSMargin, QOverload<double>::of (&QDoubleSpinBox::valueChanged), this, [](double val){
+        QSettings settings;
+        settings.setValue("liveViewAutoRMSValue", val);
+    });
+    RMSMargin->setSingleStep(.25);
+    RMSMargin->setValue(settings.value("liveViewAutoRMSValue", 1.5).toDouble());
+    percentLayout->addWidget(RMSMargin);
+    percentLayout->addStretch((1));
+    rmsLayout->addLayout(percentLayout);
+
+
+
 
     // --- Camera Resolution Selector ---
     QHBoxLayout *resLayout = new QHBoxLayout();
-    resLayout->addWidget(new QLabel("Camera Resolution:", this));
 
-    resolutionCombo = new QComboBox(this);
+    resLayout->addWidget(new QLabel("Camera Resolution:"));
+
+    resolutionCombo = new QComboBox();
     resolutionCombo->addItem("Default (Auto)", QSize(0, 0));
     resolutionCombo->addItem("640 x 480 (VGA)", QSize(640, 480));
     resolutionCombo->addItem("1280 x 720 (HD)", QSize(1280, 720));
@@ -311,6 +351,7 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
         resolutionCombo->setCurrentIndex(resIndex);
     }
     resLayout->addWidget(resolutionCombo);
+    resLayout->addStretch(1);
 
     // Changing resolution combo instantly applies it
     connect(resolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int){
@@ -329,6 +370,7 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     settingsLayout->addWidget(urlLineEdit);
     settingsLayout->addWidget(urlListWidget);
     settingsLayout->addLayout(listActionLayout);
+    settingsLayout->addWidget(rmsGroup);
     settingsLayout->addLayout(resLayout);
      settingsLayout->addWidget(deleteIgramAfter);
     settingsLayout->addStretch(); // No more apply button clutter!
@@ -336,35 +378,7 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     return settingsTab;
 }
 
-void LiveViewDialog::initStream(const QString &url) {
 
-    if (cap.isOpened()) {
-        cap.release();
-    }
-
-    bool isInt = false;
-    int camIndex = url.toInt(&isInt);
-
-    if (isInt) {
-        #if defined(_WIN32) || defined(_WIN64)
-          cap.open(camIndex, cv::CAP_DSHOW);
-        #else
-          cap.open(camIndex);
-        #endif
-    } else {
-        cap.open(url.toStdString());
-    }
-
-    if (cap.isOpened()) {
-
-        qDebug() << "frame size" <<   cap.get(cv::CAP_PROP_FRAME_WIDTH) << cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-
-
-    } else {
-        imageLabel->setText("Failed to open stream: " + url);
-        imageLabel->adjustSize();
-    }
-}
 
 void LiveViewDialog::onApplySettings() {
     QString newUrl = urlLineEdit->text().trimmed();
@@ -374,38 +388,20 @@ void LiveViewDialog::onApplySettings() {
     settings.setValue("LiveView/streamUrl", newUrl);
     settings.setValue("LiveView/resolution", resolutionCombo->currentText());
 
-    // Save/update history list if needed...
+    // Tell the worker thread to switch sources safely
 
+    if (m_worker) {
 
-    if (cap.isOpened()) {
-        cap.release();
-    }
-
-    // Reopen stream (handle integer IDs vs HTTP streams)
-    bool isInt = false;
-    int camId = newUrl.toInt(&isInt);
-
-    if (isInt) {
-#if defined(_WIN32) || defined(_WIN64)
-        cap.open(camId, cv::CAP_DSHOW);
-#else
-        cap.open(camId);
-#endif
-    } else {
-        cap.open(newUrl.toStdString());
+            qDebug() << "apply emitting requestChangeSource:" << newUrl;
+                    emit requestChangeSource(newUrl);
     }
 
     // Apply selected resolution if valid
     QSize selectedRes = resolutionCombo->currentData().toSize();
-    if (cap.isOpened() && selectedRes.width() > 0 && selectedRes.height() > 0) {
-        cap.set(cv::CAP_PROP_FRAME_WIDTH, selectedRes.width());
-        cap.set(cv::CAP_PROP_FRAME_HEIGHT, selectedRes.height());
-    }
-
-    if (cap.isOpened()) {
-        // Or your preferred interval
-    } else {
-        if (imageLabel) imageLabel->setText("Failed to open stream.");
+    if (m_worker && selectedRes.width() > 0 && selectedRes.height() > 0) {
+        QMetaObject::invokeMethod(m_worker, "setResolution", Qt::QueuedConnection,
+                                  Q_ARG(int, selectedRes.width()),
+                                  Q_ARG(int, selectedRes.height()));
     }
 }
 void LiveViewDialog::onGrabClicked() {
@@ -465,56 +461,90 @@ void LiveViewDialog::onMirrorDefined(const QRect &rect) {
     m_userMirrorRect = rect;
 }
 
-void LiveViewDialog::updateFrame() {
-    cv::Mat frame;
 
-    // Fast-grab and discard any accumulated backlog frames so we get the freshest one.
-    // (Depending on your stream framerate, grabbing 2 to 4 times clears out the queue)
-    for (int i = 0; i < 5; ++i) {
-        QApplication::processEvents();
-
-        // SAFETY CHECK: If the dialog is closing or cap was released during processEvents, bail out immediately!
-        if (!cap.isOpened()) {
-            return;
-        }
-        cap.grab();
-    }
-    qDebug() << "updateFrame1";
-    // Now retrieve the final, most up-to-date frame
-    if (cap.retrieve(frame) && !frame.empty()) {
-        m_latestFrame = frame.clone();
-        renderCurrentFrame();
-    } else {
-        // Stream failed or disconnected
-        m_latestFrame.release();
-        if (imageLabel) {
-            imageLabel->setText("Connection Lost / Stream Ended.");
-            imageLabel->adjustSize();
-        }
-    }
-}
 
 void LiveViewDialog::renderCurrentFrame() {
     if (m_latestFrame.empty()) return;
-    qDebug() << "render1";
-    cv::Mat displayMat = m_latestFrame;
+
+    cv::Mat displayMat = m_latestFrame.clone();
+    if (displayMat.channels() == 1) {
+        cv::cvtColor(displayMat, displayMat, cv::COLOR_GRAY2BGR);
+    }
 
     if (m_dftModeEnabled) {
-        displayMat = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
+        // 1. Compute raw DFT
+        cv::Mat dftRaw = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
+        if (dftRaw.empty()) return;
+
+        // 2. Convert to float and apply logarithmic scaling on the raw DFT directly
+        cv::Mat dftFloat;
+        dftRaw.convertTo(dftFloat, CV_32F);
+
+        cv::Mat dftLog = dftFloat;
+        //cv::log(dftFloat + 1.0, dftLog);
+
+        // 3. Compute statistics on the true DFT data (ignoring empty display padding)
+        double minVal, maxVal;
+        cv::minMaxLoc(dftLog, &minVal, &maxVal);
+
+        cv::Scalar meanVal, stdDevVal;
+        cv::meanStdDev(dftLog, meanVal, stdDevVal);
+    qDebug() << "min max mean std" << minVal << maxVal << meanVal[0] << stdDevVal[0];
+        // 4. Clip dynamic range based on statistics
+        double floorVal = meanVal[0] + 2 * stdDevVal[0];
+        double ceilVal = meanVal[0] + (maxVal - meanVal[0])/vivid->value();
+
+        cv::Mat dftClamped;
+        cv::threshold(dftLog, dftClamped, floorVal, 0, cv::THRESH_TOZERO);
+
+        cv::Mat dftShifted = dftClamped - floorVal;
+        double range = ceilVal - floorVal;
+        if (range < 1e-5) range = 1.0;
+
+        cv::Mat dftNorm;
+        dftShifted.convertTo(dftNorm, CV_8U, 255.0 / range);
+
+        // 5. Apply Jet colormap to the square DFT
+        cv::Mat dftColorSquare;
+        cv::applyColorMap(dftNorm, dftColorSquare, cv::COLORMAP_JET);
+
+        // Also create a normalized mask for alpha blending
+        cv::Mat alphaMaskSquare;
+        dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
+
+        // 6. Now resize the color and alpha maps to match the full display frame size
+                cv::Mat dftColor, alphaMask;
+                cv::resize(dftColorSquare, dftColor, displayMat.size(), 0, 0, cv::INTER_LINEAR);
+                cv::resize(alphaMaskSquare, alphaMask, displayMat.size(), 0, 0, cv::INTER_LINEAR);
+
+                // 7. Safe and fast pixel loop using the fully-resized maps
+                for (int y = 0; y < displayMat.rows; ++y) {
+                    for (int x = 0; x < displayMat.cols; ++x) {
+                        float a = alphaMask.at<float>(y, x);
+                        if (a < 0.05) continue; // Skip background noise
+
+                        double alpha = std::min(1.0, a * 1.4); // Punch up saturation on peaks
+
+                        cv::Vec3b &bgPixel = displayMat.at<cv::Vec3b>(y, x);
+                        cv::Vec3b fgPixel = dftColor.at<cv::Vec3b>(y, x);
+
+                        bgPixel[0] = cv::saturate_cast<uchar>(bgPixel[0] * (1.0 - alpha) + fgPixel[0] * alpha);
+                        bgPixel[1] = cv::saturate_cast<uchar>(bgPixel[1] * (1.0 - alpha) + fgPixel[1] * alpha);
+                        bgPixel[2] = cv::saturate_cast<uchar>(bgPixel[2] * (1.0 - alpha) + fgPixel[2] * alpha);
+                    }
+                }
     }
-    // Display directly via OpenCV
+
+    // Display via OpenCV conversion
     QImage img = matToQImage(displayMat);
     if (img.isNull()) return;
 
     int targetWidth = static_cast<int>(img.width() * m_zoomFactor);
     int targetHeight = static_cast<int>(img.height() * m_zoomFactor);
-    QFont Font("Serif", 12);
-    QPainter p2(&img);
 
-    statusLeft->setText( QString("%1 x %2")
+    statusLeft->setText(QString("%1 x %2")
                 .arg(img.size().width())
                 .arg(img.size().height()));
-
 
     imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     imageLabel->resize(targetWidth, targetHeight);

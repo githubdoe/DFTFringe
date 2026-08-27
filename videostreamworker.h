@@ -16,14 +16,18 @@ public:
 public slots:
     void startStream();
     void stop();
-    void setResolution(int width, int height); // <-- New slot
+    void changeSource(QString newSource);
+    void setResolution(int width, int height);
 
+private slots:
+    void processNextFrame(); // Handles one grab/retrieve cycle
 signals:
     void frameReady(cv::Mat);
     void streamError(const QString &errorMsg);
-
 private:
-    QString m_source;
     cv::VideoCapture m_cap;
-    std::atomic<bool> m_running;
+    QString m_source;
+    bool m_running = false;
 };
+
+
