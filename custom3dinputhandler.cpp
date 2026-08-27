@@ -1,5 +1,5 @@
 #include "custom3dinputhandler.h"
-#include <QtMath>
+
 Custom3DInputHandler::Custom3DInputHandler(QAbstract3DGraph *graph)
     : Q3DInputHandler(graph), m_isRightDragging(false), m_graphRef(graph) {
     setZoomAtTargetEnabled(true);
@@ -28,7 +28,6 @@ void Custom3DInputHandler::mousePressEvent(QMouseEvent *event, const QPoint &mou
                              mappedButton, mappedButtons, event->modifiers());
 #endif
     Q3DInputHandler::mousePressEvent(&customEvent, mousePos);
-    Q3DInputHandler::mousePressEvent(&customEvent, mousePos);
 }
 
 void Custom3DInputHandler::mouseReleaseEvent(QMouseEvent *event, const QPoint &mousePos) {
@@ -51,7 +50,6 @@ void Custom3DInputHandler::mouseReleaseEvent(QMouseEvent *event, const QPoint &m
     QMouseEvent customEvent(event->type(), event->localPos(), event->globalPos(),
                              mappedButton, mappedButtons, event->modifiers());
 #endif
-    Q3DInputHandler::mousePressEvent(&customEvent, mousePos);
     Q3DInputHandler::mouseReleaseEvent(&customEvent, mousePos);
 }
 
