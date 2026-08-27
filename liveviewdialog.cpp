@@ -185,6 +185,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     stopAnalysisBtn->setStyleSheet("background-color: #d32f2f; color: white; font-weight: bold;");
 
     saveAverageBtn = new QPushButton("Save average",this);
+    saveAverageBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
     saveAverageBtn->hide();
     connect(saveAverageBtn, &QPushButton::clicked, this, [this](){
         this->saveAverage = true;
