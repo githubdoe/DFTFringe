@@ -931,7 +931,22 @@ void SurfaceManager::computeMetrics(wavefront *wf){
     wf->min = mmin * md->lambda/outputLambda;
     wf->max = mmax * md->lambda/outputLambda;
 
-    ((MainWindow*)parent())->zernTablemodel->setAppliedEnables(&wf->zernEnablesApplied);
+    // let zernTableModel know state of currently selected wavefronts zernike state (which were checked/unchecked/both)
+    QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
+    bool bFirst=true;
+    foreach(int ndx , doThese){
+        wavefront * each_wf = m_wavefronts[ndx];
+        if (bFirst) {
+            ((MainWindow*)parent())->zernTablemodel->setAppliedEnables(&each_wf->zernEnablesApplied);
+            bFirst = false;
+        } else {
+            ((MainWindow*)parent())->zernTablemodel->addAppliedEnables(&each_wf->zernEnablesApplied);
+        }
+    }
+
+
+
+
     ((MainWindow*)(parent()))->zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
     ((MainWindow*)parent())-> zernTablemodel->update();
     ((MainWindow*)(parent()))->updateMetrics(*wf);

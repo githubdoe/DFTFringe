@@ -30,7 +30,7 @@
 // Zernike_terms message handlers
 
 ZernTableModel::ZernTableModel(QObject *parent, std::vector<bool> *enables, bool editEnable)
-    :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable), m_nulled(false), m_appliedEnables(nullptr)
+    :QAbstractTableModel(parent),  m_enables(enables),canEdit(editEnable), m_nulled(false)
 {
     zernikeProcess &zp = *zernikeProcess::get_Instance();
     values = std::vector<double>(zp.m_norms.size(), 0.);
@@ -49,7 +49,33 @@ void ZernTableModel::setValues(const std::vector<double> &vals, bool nulled){
 }
 
 void ZernTableModel::setAppliedEnables(const std::vector<bool> *appliedEnables){
-    m_appliedEnables = appliedEnables;
+    if (appliedEnables == nullptr) return;
+    if (appliedEnables->size() > m_appliedEnables.size())
+        m_appliedEnables.resize(appliedEnables->size());
+    for (size_t i = 0; i < appliedEnables->size(); ++i) {
+        if ((*appliedEnables)[i])
+            m_appliedEnables[i] = enEnables::Enabled;
+        else
+            m_appliedEnables[i] = enEnables::Disabled;
+    }
+    update();
+}
+
+void ZernTableModel::addAppliedEnables(const std::vector<bool> *appliedEnables){
+    if (appliedEnables == nullptr) return;
+    if (appliedEnables->size() > m_appliedEnables.size())
+        m_appliedEnables.resize(appliedEnables->size());
+    for (size_t i = 0; i < appliedEnables->size(); ++i) {
+        if ((*appliedEnables)[i]) {
+            // new zernike is enabled
+            if (m_appliedEnables[i] == enEnables::Disabled)
+                m_appliedEnables[i] = enEnables::Mixed;
+        } else {
+            // new zernike is disabled
+            if (m_appliedEnables[i] == enEnables::Enabled)
+                m_appliedEnables[i] = enEnables::Mixed;
+        }
+    }
     update();
 }
 
@@ -57,7 +83,6 @@ void ZernTableModel::update(){
     QModelIndex topLeft = index(0, 0);
     QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
     emit dataChanged(topLeft, bottomRight);
-
 }
 
 void ZernTableModel::resizeRows(const int rowCnt){
@@ -109,14 +134,13 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
     {
         if (index.column() == 0){
             QString marker;
-            if (m_appliedEnables != nullptr &&
-                index.row() < (int)m_appliedEnables->size() &&
+            if (index.row() < (int)m_appliedEnables.size() &&
                 index.row() < (int)m_enables->size()) {
                 const bool floatingEnabled = m_enables->at(index.row());
-                const bool appliedEnabled = m_appliedEnables->at(index.row());
-                if (floatingEnabled && !appliedEnabled) {
+                const enEnables appliedEnabled = m_appliedEnables[index.row()];
+                if (floatingEnabled && appliedEnabled != enEnables::Enabled) {
                     marker = "[+] ";
-                } else if (!floatingEnabled && appliedEnabled) {
+                } else if (!floatingEnabled && appliedEnabled != enEnables::Disabled) {
                     marker = "[-] ";
                 }
             }
@@ -154,17 +178,19 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
             return m_enables->at(index.row()) ? Qt::Checked : Qt::Unchecked;
         }
     }
-    if (role == Qt::ToolTipRole && index.column() == 0 && m_appliedEnables != nullptr &&
-        index.row() < (int)m_appliedEnables->size() && index.row() < (int)m_enables->size()) {
+    if (role == Qt::ToolTipRole && index.column() == 0 &&
+        index.row() < (int)m_appliedEnables.size() && index.row() < (int)m_enables->size()) {
         const bool floatingEnabled = m_enables->at(index.row());
-        const bool appliedEnabled = m_appliedEnables->at(index.row());
-        if (floatingEnabled && !appliedEnabled) {
+        const enEnables appliedEnabled = m_appliedEnables[index.row()];
+        if (floatingEnabled && appliedEnabled != enEnables::Enabled) {
             return QString("Will be enabled on recompute for this wavefront.");
         }
-        if (!floatingEnabled && appliedEnabled) {
+        if (!floatingEnabled && appliedEnabled != enEnables::Disabled) {
             return QString("Will be disabled on recompute for this wavefront.");
         }
-        return QString("No change for this wavefront on recompute.");
+        if (floatingEnabled == false)
+            return QString("This Zernike has been subtracted out from the wavefront.");
+        return QString("Uncheck to remove this component from the wavefront.");
     }
     return QVariant();
 }
