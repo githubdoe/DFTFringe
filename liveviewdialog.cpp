@@ -138,7 +138,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     viewSplitLayout->addWidget(surfaceResultLabel, 1);  // Surface result shares the space
 
     // --- Controls Layout (unchanged) ---
-    dftButton = new QPushButton("Switch to Live DFT Mode", this);
+    dftButton = new QPushButton("Show DFT", this);
     dftButton->setCheckable(true);
     connect(dftButton, &QPushButton::clicked, this, &LiveViewDialog::toggleDftMode);
 

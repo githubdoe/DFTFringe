@@ -2290,6 +2290,7 @@ void MainWindow::on_startLiveButton_clicked() {
 
     m_liveState = State_Running;
     m_viewDlg->startAnalysisBtn->hide();
+    m_viewDlg->pauseAnalyBtn->setText("Pause");
     m_viewDlg->pauseAnalyBtn->show();
     m_viewDlg->stopAnalysisBtn->show();
 
@@ -2317,6 +2318,7 @@ void MainWindow::on_pauseLiveButton_clicked() {
 void MainWindow::on_stopLiveButton_clicked() {
     m_liveState = State_Stopped;
     m_liveLoopActive = false;
+    m_viewDlg->pauseAnalyBtn->setText("Pause");
     m_viewDlg->pauseAnalyBtn->hide();
     m_viewDlg->stopAnalysisBtn->hide();
     m_viewDlg->startAnalysisBtn->show();

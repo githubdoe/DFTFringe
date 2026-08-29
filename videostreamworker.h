@@ -6,6 +6,7 @@
 #include <QString>
 #include <atomic>
 #include <opencv2/opencv.hpp>
+#include <QMutex>
 
 class VideoStreamWorker : public QObject {
     Q_OBJECT
@@ -28,6 +29,7 @@ private:
     cv::VideoCapture m_cap;
     QString m_source;
     bool m_running = false;
+    QMutex m_mutex;
 };
 
 
