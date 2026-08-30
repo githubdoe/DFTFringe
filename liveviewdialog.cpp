@@ -65,11 +65,21 @@ LiveViewDialog::LiveViewDialog( QWidget *parent)
     connect(this, &LiveViewDialog::requestSetResolution, m_worker, &VideoStreamWorker::setResolution, Qt::QueuedConnection);
 
 
+    // In LiveViewDialog initialization (after connecting signals):
+    connect(this, &LiveViewDialog::requestFrame, m_worker, &VideoStreamWorker::fetchNextFrame, Qt::QueuedConnection);
 
+    // Connect frameReady to render and then immediately request the next one
+    connect(m_worker, &VideoStreamWorker::frameReady, this, [this](cv::Mat frame) {
+        m_latestFrame = frame;
+        renderCurrentFrame();
 
-    // Start the background thread
+        // Once rendering is completely finished, ask for the next frame!
+        emit requestFrame();
+    }, Qt::QueuedConnection);
+
+    // Kick off the very first frame request after starting the thread
     m_thread->start();
-
+    emit requestFrame();
 
 
 }
@@ -108,7 +118,7 @@ void LiveViewDialog::closeEvent(QCloseEvent *event) {
 
 void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     tabWidget = new QTabWidget(this);
-
+    QSettings set;
     // ==========================================
     // TAB 1: Live Feed & Analysis Split View
     // ==========================================
@@ -142,12 +152,14 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     dftButton->setCheckable(true);
     connect(dftButton, &QPushButton::clicked, this, &LiveViewDialog::toggleDftMode);
 
-    resolutionCombo = new QComboBox(this);
-    resolutionCombo->addItem("256 x 256 (Fast)", 256);
-    resolutionCombo->addItem("512 x 512 (Balanced)", 512);
-    resolutionCombo->addItem("1024 x 1024 (Detailed)", 1024);
-    resolutionCombo->setCurrentIndex(1);
-    resolutionCombo->setEnabled(false);
+    dftresolutionCombo = new QComboBox(this);
+    dftresolutionCombo->addItem("256 x 256 (Fast)", 256);
+    dftresolutionCombo->addItem("512 x 512 (Balanced)", 512);
+    dftresolutionCombo->addItem("1024 x 1024 (Detailed)", 1024);
+
+    dftresolutionCombo->setCurrentIndex(set.value("liveViewDftSize", 1).toInt());
+    connect(dftresolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &LiveViewDialog::onDFTSizeChanged);
 
     zoomCombo = new QComboBox(this);
     zoomCombo->addItem("Fit to Window", -1.0);
@@ -163,6 +175,15 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     vivid->setValue(2.1);
     vivid->setSingleStep(.05);
 
+    DFTLowThreshold = new QSpinBox(this);
+    DFTLowThreshold->setRange(-1, 255);
+
+    DFTLowThreshold->setSpecialValueText("Auto");
+    DFTLowThreshold->setValue(set.value("liveViewDFTLow", -1).toInt());
+    connect(DFTLowThreshold, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](int val) {
+        QSettings set;
+        set.value("liveViewDFTLow", val);
+    });
     averageMode = new QComboBox(this);
     averageMode->addItem("Show current");
     averageMode->addItem("Compute and show Average");
@@ -200,7 +221,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     controlLayout->addSpacing(10);
     controlLayout->addWidget(dftButton);
     controlLayout->addWidget(new QLabel("DFT Size:", this));
-    controlLayout->addWidget(resolutionCombo);
+    controlLayout->addWidget(dftresolutionCombo);
     controlLayout->addSpacing(15);
     controlLayout->addWidget(new QLabel("Zoom:", this));
     controlLayout->addWidget(zoomCombo);
@@ -282,6 +303,9 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
         maxRMS->setSingleStep(.05);
         cornerLayout->addWidget(averageMode);
         controlLayout->addSpacing(100);
+        cornerLayout->addWidget(new QLabel("DFT Floor:"));
+        cornerLayout->addWidget(DFTLowThreshold);
+
         cornerLayout->addWidget(new QLabel("DFT contrast:"));
         cornerLayout->addWidget(vivid);
         controlLayout->addSpacing(10);
@@ -459,8 +483,17 @@ void LiveViewDialog::toggleDftMode() {
     renderCurrentFrame();
 }
 
+void LiveViewDialog::onDFTSizeChanged(int index){
+    int data = dftresolutionCombo->itemData(index).toDouble();
+    QSettings set;
+    set.setValue("liveViewDFTSize",index );
+    m_dftSize = data;
+}
+
 void LiveViewDialog::onZoomChanged(int index) {
     double data = zoomCombo->itemData(index).toDouble();
+    QSettings set;
+    set.setValue("liveViewZoom", data);
     if (data < 0) {
         setFitToWindowZoom();
     } else {
@@ -501,6 +534,39 @@ void LiveViewDialog::onMirrorDefined(const QRect &rect) {
 
 
 
+cv::Mat computeFringeModulation(const cv::Mat& src, int kernelSize) {
+    cv::Mat gray, floatImg;
+
+    // Ensure single-channel grayscale input
+    if (src.channels() == 3) {
+        cv::cvtColor(src, gray, cv::COLOR_BGR2GRAY);
+    } else {
+        gray = src;
+    }
+
+    // Convert to 32-bit float for division and precision
+    gray.convertTo(floatImg, CV_32F);
+
+    // Define local neighborhood structuring element (must match fringe frequency scale)
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
+
+    cv::Mat iMax, iMin;
+    cv::dilate(floatImg, iMax, kernel); // Local maximum intensity
+    cv::erode(floatImg, iMin, kernel);  // Local minimum intensity
+
+    // Modulation formula: (I_max - I_min) / (I_max + I_min)
+    cv::Mat numerator, denominator, modulation;
+    cv::subtract(iMax, iMin, numerator);
+    cv::add(iMax, iMin, denominator);
+
+    // Prevent division by zero in dark background regions outside the aperture
+    denominator += 1e-5f;
+
+    cv::divide(numerator, denominator, modulation);
+
+    return modulation;
+}
+
 void LiveViewDialog::renderCurrentFrame() {
     if (m_latestFrame.empty()) return;
 
@@ -508,6 +574,9 @@ void LiveViewDialog::renderCurrentFrame() {
     if (displayMat.channels() == 1) {
         cv::cvtColor(displayMat, displayMat, cv::COLOR_GRAY2BGR);
     }
+    //cv::Mat modulatation = computeFringeModulation(displayMat, 5);
+    //cv::imshow("mod", modulatation);
+    //fcv::waitKey(100);
 
     if (m_dftModeEnabled) {
         // 1. Compute raw DFT
@@ -527,9 +596,16 @@ void LiveViewDialog::renderCurrentFrame() {
 
         cv::Scalar meanVal, stdDevVal;
         cv::meanStdDev(dftLog, meanVal, stdDevVal);
-    qDebug() << "min max mean std" << minVal << maxVal << meanVal[0] << stdDevVal[0];
+
         // 4. Clip dynamic range based on statistics
+
+
         double floorVal = meanVal[0] + 2 * stdDevVal[0];
+        int val = DFTLowThreshold->value();
+        if (val != -1) {
+            floorVal = val;
+        }
+
         double ceilVal = meanVal[0] + (maxVal - meanVal[0])/vivid->value();
 
         cv::Mat dftClamped;
@@ -586,6 +662,7 @@ void LiveViewDialog::renderCurrentFrame() {
 
     imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     imageLabel->resize(targetWidth, targetHeight);
+    emit requestFrame();
 }
 
 cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize, const QRect &roi) {
@@ -615,11 +692,22 @@ cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize
         workingArea = gray;
     }
 
+    // Preserve aspect ratio and calculate scale
+    double scale = static_cast<double>(targetSize) / std::max(workingArea.cols, workingArea.rows);
+    int newW = std::round(workingArea.cols * scale);
+    int newH = std::round(workingArea.rows * scale);
+
     cv::Mat resized;
-    cv::resize(workingArea, resized, cv::Size(targetSize, targetSize), 0, 0, cv::INTER_AREA);
+    cv::resize(workingArea, resized, cv::Size(newW, newH), 0, 0, cv::INTER_AREA);
+
+    // Create target canvas and center the resized image with padding (0 since mask already zeroes background)
+    cv::Mat padded = cv::Mat::zeros(targetSize, targetSize, workingArea.type());
+    int xOffset = (targetSize - newW) / 2;
+    int yOffset = (targetSize - newH) / 2;
+    resized.copyTo(padded(cv::Rect(xOffset, yOffset, newW, newH)));
 
     cv::Mat floatImg;
-    resized.convertTo(floatImg, CV_32F);
+    padded.convertTo(floatImg, CV_32F);
 
     cv::Mat complexImg;
     cv::dft(floatImg, complexImg, cv::DFT_COMPLEX_OUTPUT);

@@ -19,9 +19,9 @@ public slots:
     void stop();
     void changeSource(QString newSource);
     void setResolution(int width, int height);
+    void fetchNextFrame();
 
-private slots:
-    void processNextFrame(); // Handles one grab/retrieve cycle
+
 signals:
     void frameReady(cv::Mat);
     void streamError(const QString &errorMsg);

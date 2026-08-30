@@ -209,16 +209,9 @@ void LiveImageView::paintEvent(QPaintEvent *event) {
         QPoint centerScaled = (p1Scaled + p2Scaled) / 2;
         double dx = p2Scaled.x() - p1Scaled.x();
         double dy = p2Scaled.y() - p1Scaled.y();
-        int radiusScaled = static_cast<int>(std::sqrt(dx * dx + dy * dy) / 2.0);
 
-        if (!m_dftModeActive){
-            // Dashed green boundary
-            QPen pen(Qt::green, 2, Qt::DashLine);
-            painter.setPen(pen);
+        if (m_dftModeActive){  // draw mirror boundary.
 
-            painter.drawEllipse(centerScaled, radiusScaled, radiusScaled);
-        }
-        else {
             QPen pen(Qt::blue, 2, Qt::DashLine);
             painter.setPen(pen);
 

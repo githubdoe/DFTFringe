@@ -2251,15 +2251,15 @@ void MainWindow::on_actionLive_view_triggered()
             // Connect the Start button on the dialog to trigger your analysis loop
             connect(m_viewDlg->startAnalysisBtn, &QPushButton::clicked, this, [this]() {
                 // Using single-shot timer ensures the click event finishes before entering the loop
-                QTimer::singleShot(0, this, &MainWindow::on_startLiveButton_clicked);
+                QTimer::singleShot(0, this, &MainWindow::startLiveButton_clicked);
             });
 
             // Connect the Stop button to signal the loop to terminate
-            connect(m_viewDlg->stopAnalysisBtn, &QPushButton::clicked, this,&MainWindow::on_stopLiveButton_clicked);
+            connect(m_viewDlg->stopAnalysisBtn, &QPushButton::clicked, this,&MainWindow::stopLiveButton_clicked);
 
             // Connect the Stop button to signal the loop to terminate
-            connect(m_viewDlg, &LiveViewDialog::streamDisconnected, this, &MainWindow::on_stopLiveButton_clicked);
-            connect(m_viewDlg->pauseAnalyBtn, &QPushButton::clicked,this,  &MainWindow::on_pauseLiveButton_clicked);
+            connect(m_viewDlg, &LiveViewDialog::streamDisconnected, this, &MainWindow::stopLiveButton_clicked);
+            connect(m_viewDlg->pauseAnalyBtn, &QPushButton::clicked,this,  &MainWindow::pauseLiveButton_clicked);
 
             m_viewDlg->show();
         } else {
@@ -2274,7 +2274,7 @@ void MainWindow::on_actionLive_view_triggered()
     m_viewDlg->show();
 }
 
-void MainWindow::on_startLiveButton_clicked() {
+void MainWindow::startLiveButton_clicked() {
 
     // If already running, do nothing or treat as restart
     if (m_liveState == State_Running) return;
@@ -2301,7 +2301,7 @@ void MainWindow::on_startLiveButton_clicked() {
     }
 }
 
-void MainWindow::on_pauseLiveButton_clicked() {
+void MainWindow::pauseLiveButton_clicked() {
     if (m_liveState == State_Running) {
         m_liveState = State_Paused;
         m_viewDlg->pauseAnalyBtn->setText("Resume");
@@ -2315,7 +2315,7 @@ void MainWindow::on_pauseLiveButton_clicked() {
     }
 }
 
-void MainWindow::on_stopLiveButton_clicked() {
+void MainWindow::stopLiveButton_clicked() {
     m_liveState = State_Stopped;
     m_liveLoopActive = false;
     m_viewDlg->pauseAnalyBtn->setText("Pause");
@@ -2514,6 +2514,6 @@ void MainWindow::runLiveAnalysisLoop() {
     m_viewDlg->loopRunning = false;
     m_liveState = State_Stopped;
     m_liveLoopActive = false;
-    on_stopLiveButton_clicked();// used to clean up to button colors if the dialog was closed during the loop
+    stopLiveButton_clicked();// used to clean up to button colors if the dialog was closed during the loop
 
 }

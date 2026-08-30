@@ -34,6 +34,7 @@ private slots:
     void setFitToWindowZoom();
     void onGrabClicked();
     void onApplySettings();
+    void onDFTSizeChanged(int index);
 
 signals:
     void igramCaptured();
@@ -41,6 +42,7 @@ signals:
     void requestChangeSource(QString newSource);
     void requestSetResolution(int width, int height);
     void stopLiveLoopRequested();
+    void requestFrame();
 public:
     QPushButton *startAnalysisBtn;
     QPushButton *stopAnalysisBtn;
@@ -72,17 +74,20 @@ private:
     QLineEdit *urlLineEdit;
     QTabWidget *tabWidget;
     QDoubleSpinBox *vivid;  // makes the DFT Vivid;
+    QSpinBox *DFTLowThreshold;
+
     double m_centerPercent;
     double m_RMSMargin = 1.;
 
     QTimer *m_rmsTimer;
 
     QComboBox *resolutionCombo;
+    QComboBox *dftresolutionCombo;
     QComboBox *zoomCombo;
     cv::VideoCapture cap;
 
     bool m_dftModeEnabled = false;
-    int m_dftSize = 512;
+    int m_dftSize = 1024;
     double m_zoomFactor = 1.0;
     QImage m_latestImage;
     cv::Mat m_latestFrame;

@@ -370,9 +370,9 @@ private:
     int m_liveValidCount = 0;
     LiveLoopState m_liveState = State_Stopped;
 public slots:
-    void on_startLiveButton_clicked();
-    void on_pauseLiveButton_clicked();
-    void on_stopLiveButton_clicked();
+    void startLiveButton_clicked();
+    void pauseLiveButton_clicked();
+    void stopLiveButton_clicked();
 };
 
 #endif // MAINWINDOW_H

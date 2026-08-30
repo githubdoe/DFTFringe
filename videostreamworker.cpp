@@ -34,10 +34,9 @@ void VideoStreamWorker::startStream() {
 
     qDebug() << "stream started";
     m_running = true;
-    QMetaObject::invokeMethod(this, "processNextFrame", Qt::QueuedConnection);
-}
 
-void VideoStreamWorker::processNextFrame() {
+}
+void VideoStreamWorker::fetchNextFrame() {
     if (!m_running) return;
 
     cv::Mat frame;
@@ -45,24 +44,19 @@ void VideoStreamWorker::processNextFrame() {
         QMutexLocker locker(&m_mutex);
         if (!m_running || !m_cap.isOpened()) return;
 
-        for (int i = 0; i < 3; ++i) {
-            if (!m_running) break;
-            m_cap.grab();
-        }
-
-        if (!m_cap.retrieve(frame) || frame.empty()) {
+        // Grab and retrieve the latest frame from the buffer
+        if (!m_cap.read(frame) || frame.empty()) {
             emit streamError("Stream disconnected or frame empty.");
             m_running = false;
             return;
         }
-    } // Mutex is released here before emitting, preventing UI thread deadlocks
-
-    emit frameReady(frame.clone());
-
-    if (m_running) {
-        QTimer::singleShot(30, this, &VideoStreamWorker::processNextFrame);
     }
+
+    // Emit the frame back to the UI thread
+    emit frameReady(frame.clone());
 }
+
+
 
 void VideoStreamWorker::stop() {
     m_running = false;
