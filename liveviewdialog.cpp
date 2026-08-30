@@ -130,6 +130,11 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     imageLabel->setStyleSheet("background-color: black;");
     imageLabel->setAlignment(Qt::AlignCenter);
 
+    connect(imageLabel, &LiveImageView::mirrorDefined, this,[this](const QRect r){
+        this->m_userMirrorRect = r;
+
+    });
+
     scrollArea = new QScrollArea(this);
     scrollArea->setWidget(imageLabel);
     scrollArea->setWidgetResizable(false);
@@ -182,7 +187,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     DFTLowThreshold->setValue(set.value("liveViewDFTLow", -1).toInt());
     connect(DFTLowThreshold, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](int val) {
         QSettings set;
-        set.value("liveViewDFTLow", val);
+        set.setValue("liveViewDFTLow", val);
     });
     averageMode = new QComboBox(this);
     averageMode->addItem("Show current");

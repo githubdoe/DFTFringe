@@ -21,9 +21,14 @@ QPoint LiveImageView::mapToImageCoordinates(const QPoint &widgetPos) const {
 
 void LiveImageView::mousePressEvent(QMouseEvent *event) {
     QPoint clickImg = mapToImageCoordinates(event->pos());
-
-    // Shift-click or Right-click: Move existing circle if clicking inside the radius
-    if ((event->button() == Qt::RightButton || (event->button() == Qt::LeftButton && (event->modifiers() & Qt::ShiftModifier))) && m_hasCircle) {
+    if (event->button() == Qt::RightButton){
+        // delete circle
+        m_hasCircle = false;
+        emit mirrorDefined(QRect());  // emit an invalid circle
+        return;
+    }
+    // Shift-click Move existing circle if clicking inside the radius
+    if ((event->button() == Qt::LeftButton && (event->modifiers() & Qt::ShiftModifier)) && m_hasCircle) {
         // Calculate current center and radius from the two defining edge/diameter points
         QPoint center = (m_centerImg + m_edgeImg) / 2;
         double dx = m_edgeImg.x() - m_centerImg.x();
@@ -118,6 +123,10 @@ void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
                 m_hasCircle = true;
                 emit mirrorDefined(getMirrorRect());
             }
+            else {
+                m_hasCircle = false;
+                emit mirrorDefined(QRect());
+            }
         }
 
         m_state = InteractionState::None;
@@ -209,28 +218,17 @@ void LiveImageView::paintEvent(QPaintEvent *event) {
         QPoint centerScaled = (p1Scaled + p2Scaled) / 2;
         double dx = p2Scaled.x() - p1Scaled.x();
         double dy = p2Scaled.y() - p1Scaled.y();
+        int radiusScaled = static_cast<int>(std::sqrt(dx * dx + dy * dy) / 2.0);
 
-        if (m_dftModeActive){  // draw mirror boundary.
 
-            QPen pen(Qt::blue, 2, Qt::DashLine);
+            // Dashed green boundary
+            QPen pen(Qt::green, 2, Qt::DashLine);
             painter.setPen(pen);
 
-            // Use the center of the widget (or the image display area) as the fixed center
-            QPoint widgetCenter(width() / 2, height() / 2);
+            painter.drawEllipse(centerScaled, radiusScaled, radiusScaled);
 
-            // Calculate the radius as the exact distance from the center to the mouse position (p2Scaled)
-            double dx = static_cast<double>(p2Scaled.x() - widgetCenter.x());
-            double dy = static_cast<double>(p2Scaled.y() - widgetCenter.y());
-            int radius = static_cast<int>(std::sqrt(dx * dx + dy * dy));
-
-            // Draw ellipse centered at widgetCenter with diameter (2 * radius)
-            painter.drawEllipse(widgetCenter, radius, radius);
-        }
-        // Center crosshair
-        painter.setPen(QPen(Qt::red, 1));
-        painter.drawLine(centerScaled.x() - 4, centerScaled.y(), centerScaled.x() + 4, centerScaled.y());
-        painter.drawLine(centerScaled.x(), centerScaled.y() - 4, centerScaled.x(), centerScaled.y() + 4);
     }
+
 }
 
 void LiveImageView::setFilterPercentage(double p, int dftSize) {
