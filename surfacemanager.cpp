@@ -350,6 +350,11 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
 
 void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     zernikeProcess &zp = *zernikeProcess::get_Instance();
+    if (wf->zernEnablesApplied.empty()) {
+        wf->zernEnablesApplied = zernEnables;
+    } else if (wf->zernEnablesApplied.size() != zernEnables.size()) {
+        wf->zernEnablesApplied.resize(zernEnables.size(), true);
+    }
     m_GB_enabled = wf->gbEnabled;
     m_gbValue = wf->gbValue;
     if (wf->dirtyZerns){
@@ -426,6 +431,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 		// AUTO INVERT CODE ENDS HERE/
 		//
 
+        ((MainWindow*)parent())-> zernTablemodel->setAppliedEnables(&wf->zernEnablesApplied);
         ((MainWindow*)parent())-> zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
         ((MainWindow*)parent())-> zernTablemodel->update();
         // fill in void from obstruction of igram.
@@ -435,7 +441,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         //cv::Mat tiltremoved = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables, 0,3);
         //wf->data = tiltremoved;
         //zp.unwrap_to_zernikes(*wf);
-        wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables,0,Z_TERMS   );
+        wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, wf->zernEnablesApplied,0,Z_TERMS   );
         wf->dirtyZerns = false;
     }
 
@@ -464,10 +470,14 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     wf->nulledData.release();
 }
 cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector<double> &zerns, QVector<int> zernsToUse){
-    double rad = getCurrent()->m_outside.m_radius;
-    double xcen = (wx-1)/2, ycen = (wy-1)/2;
-
+    wavefront *currentWf = getCurrent();
     cv::Mat result = cv::Mat::zeros(wy,wx, numType);
+    if (currentWf == nullptr) {
+        return result;
+    }
+
+    double rad = currentWf->m_outside.m_radius;
+    double xcen = (wx-1)/2, ycen = (wy-1)/2;
 
     double rho;
 
@@ -476,9 +486,7 @@ cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector
         if (value > maxZernToUse)
             maxZernToUse = value;
     }
-
-
-    std::vector<bool> &en = zernEnables;
+    std::vector<bool> &en = (currentWf->zernEnablesApplied.empty()) ? zernEnables : currentWf->zernEnablesApplied;
     mirrorDlg *md = mirrorDlg::get_Instance();
     for (int i = 0; i <  wx; ++i)
     {
@@ -538,7 +546,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
     m_SurfaceGraph(glPlot), m_metrics(mets),m_gbValue(21),
     m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),outsideOffset(0),
-    m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
+    m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_applyFloatingZernEnables(false), m_wftStats(0)
 {
 
     okToUpdateSurfacesOnGenerateComplete = true;
@@ -923,6 +931,21 @@ void SurfaceManager::computeMetrics(wavefront *wf){
     wf->min = mmin * md->lambda/outputLambda;
     wf->max = mmax * md->lambda/outputLambda;
 
+    // let zernTableModel know state of currently selected wavefronts zernike state (which were checked/unchecked/both)
+    QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
+    bool bFirst=true;
+    foreach(int ndx , doThese){
+        wavefront * each_wf = m_wavefronts[ndx];
+        if (bFirst) {
+            ((MainWindow*)parent())->zernTablemodel->setAppliedEnables(&each_wf->zernEnablesApplied);
+            bFirst = false;
+        } else {
+            ((MainWindow*)parent())->zernTablemodel->addAppliedEnables(&each_wf->zernEnablesApplied);
+        }
+    }
+
+
+
 
     ((MainWindow*)(parent()))->zernTablemodel->setValues(wf->InputZerns, !wf->useSANull);
     ((MainWindow*)parent())-> zernTablemodel->update();
@@ -960,6 +983,7 @@ void SurfaceManager::computeZerns()
 {
     QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
     workToDo = doThese.size();
+    m_applyFloatingZernEnables = !doThese.isEmpty();
     mirrorDlg &md = *mirrorDlg::get_Instance();
     foreach(int ndx , doThese){
         wavefront &wf = *m_wavefronts[ndx];
@@ -1143,6 +1167,7 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     wf->diameter = md->diameter;
     wf->lambda = md->lambda;
     wf->roc = md->roc;
+    wf->zernEnablesApplied = zernEnables;
     wf->gbEnabled = m_GB_enabled;
     wf->gbValue = m_gbValue;
     wf->dirtyZerns = true;
@@ -1444,6 +1469,7 @@ wavefront * SurfaceManager::readWaveFront(const QString &fileName){
     wf->diameter = diam;
     wf->roc = roc;
     wf->lambda = lambda;
+    wf->zernEnablesApplied = zernEnables;
     wf->gbEnabled = m_GB_enabled;
     wf->gbValue = m_gbValue;
     wf->wasSmoothed = false;
@@ -1647,7 +1673,12 @@ void SurfaceManager::backGroundUpdate(){
     workToDo = doThese.size();
     pd->setLabelText("Updating Selected Surfaces");
     pd->setRange(0,doThese.size());
+    const bool applyFloatingZerns = m_applyFloatingZernEnables;
+    m_applyFloatingZernEnables = false;
     foreach (int i, doThese){
+        if (applyFloatingZerns) {
+            m_wavefronts[i]->zernEnablesApplied = zernEnables;
+        }
         m_wavefronts[i]->dirtyZerns = true;
         m_wavefronts[i]->wasSmoothed = false;
         makeMask(i);
@@ -3079,7 +3110,10 @@ void SurfaceManager::report(){
         int half = Z_TERMS/2 +2;
         for (int i = 3; i < half; ++i){
             double val = wf->InputZerns[i];
-            bool enabled = zernEnables[i];
+            bool enabled = true;
+            if (static_cast<size_t>(i) < wf->zernEnablesApplied.size()) {
+                enabled = wf->zernEnablesApplied[i];
+            }
             if ( i == 3 && m_surfaceTools->m_useDefocus){
                 val = m_surfaceTools->m_defocus;
                 enabled = true;
@@ -3113,9 +3147,13 @@ void SurfaceManager::report(){
 
         for (int i = half; i < Z_TERMS; ++i){
             double val = wf->InputZerns[i];
+            bool enabled = true;
+            if (static_cast<size_t>(i) < wf->zernEnablesApplied.size()) {
+                enabled = wf->zernEnablesApplied[i];
+            }
             zerns.append("<tr><td>" + QString(zernsNames[i]) + "</td><td><table width = '100%'><tr><td>" + QString("%1</td><td>%2</td></tr></table>").arg(
                                                                                                                              val, 6, 'f', 3).arg(computeRMS(i,val), 6, 'f', 3) + "</td><td>" +
-                         QString((zernEnables[i]) ? QString("") : QString("Disabled")) + "</td></tr>");
+                         QString((enabled) ? QString("") : QString("Disabled")) + "</td></tr>");
         }
         zerns.append("</table></td></tr></table></p>");
 

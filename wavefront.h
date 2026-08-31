@@ -48,6 +48,7 @@ public:
     cv::Mat_<double> workData;
     cv::Mat_<uint8_t> workMask;
     std::vector<double> InputZerns;
+    std::vector<bool> zernEnablesApplied;
     double gaussian_diameter;
     bool gbEnabled;
     double gbValue;

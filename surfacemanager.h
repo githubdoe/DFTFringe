@@ -131,6 +131,7 @@ private:
     QPointer<standAstigWizard> m_standAstigWizard;
     int workToDo;
     int workProgress;
+    bool m_applyFloatingZernEnables;
 
     wftStats *m_wftStats;
 
