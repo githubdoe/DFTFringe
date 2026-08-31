@@ -25,6 +25,7 @@ public slots:
 signals:
     void frameReady(cv::Mat);
     void streamError(const QString &errorMsg);
+    void streamStarted();
 private:
     cv::VideoCapture m_cap;
     QString m_source;

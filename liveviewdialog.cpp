@@ -14,8 +14,8 @@
 // LiveViewDialog Implementation
 // ==========================================
 
-LiveViewDialog::LiveViewDialog( QWidget *parent)
-    : QDialog(parent),  tabWidget(nullptr) {
+LiveViewDialog::LiveViewDialog(QWidget *parent)
+    : QDialog(parent), tabWidget(nullptr) {
 
     setWindowTitle("DFTFringe - Live View");
     setAttribute(Qt::WA_DeleteOnClose, true);
@@ -24,64 +24,55 @@ LiveViewDialog::LiveViewDialog( QWidget *parent)
     if (settings.contains("LiveViewDialog/geometry")) {
         restoreGeometry(settings.value("LiveViewDialog/geometry").toByteArray());
     } else {
-        resize(800, 600); // Default fallback size if none saved yet
+        resize(800, 600);
     }
 
     QString savedUrl = settings.value("LiveView/streamUrl", 0).toString();
 
-    // 1. Build the UI components
-    setupUI(savedUrl);    // 1. Build the UI components
-
-
-    // 2. Initialize video stream
-    // In LiveViewDialog initialization (constructor):
+    setupUI(savedUrl);
+    statusLeft->setText("<span style='color: black  ;background-color: yellow'>Connecting to camera/stream... Please wait.</span>");
+    // Initialize video stream thread and worker
     m_thread = new QThread(this);
-    m_worker = new VideoStreamWorker(savedUrl); //
+    m_worker = new VideoStreamWorker(savedUrl);
     m_worker->moveToThread(m_thread);
 
-    // Connect thread lifecycle to worker cleanup
     connect(m_thread, &QThread::started, m_worker, &VideoStreamWorker::startStream);
     connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
+
     qRegisterMetaType<cv::Mat>("cv::Mat");
+
+    // Single unified connection for frame handling and pulling the next frame
     connect(m_worker, &VideoStreamWorker::frameReady, this, [this](cv::Mat frame) {
-            m_latestFrame = frame;
-            renderCurrentFrame();
-        }, Qt::QueuedConnection);
+        m_latestFrame = frame;
+        renderCurrentFrame();
+        emit requestFrame(); // Pull the next frame only after rendering finishes
+    }, Qt::QueuedConnection);
 
     connect(m_worker, &VideoStreamWorker::streamError, this, [this](const QString &msg) {
         if (imageLabel) {
-            imageLabel->setText(msg );
-            statusLeft->setText(msg);
+            imageLabel->setText(msg);
             statusLeft->setText(QString("<span style='color: white; background-color: red;'>%1</span>")
                                 .arg(msg + " Go to settings to set the stream number. You may have to close and restart this dialog."));
-
-
-            qDebug() << "stream failed" << msg;
             imageLabel->adjustSize();
         }
         emit streamDisconnected();
     });
-    connect(this, &LiveViewDialog::requestChangeSource,  m_worker, &VideoStreamWorker::changeSource,  Qt::QueuedConnection);
+
+    connect(this, &LiveViewDialog::requestChangeSource, m_worker, &VideoStreamWorker::changeSource, Qt::QueuedConnection);
     connect(this, &LiveViewDialog::requestSetResolution, m_worker, &VideoStreamWorker::setResolution, Qt::QueuedConnection);
-
-
-    // In LiveViewDialog initialization (after connecting signals):
     connect(this, &LiveViewDialog::requestFrame, m_worker, &VideoStreamWorker::fetchNextFrame, Qt::QueuedConnection);
 
-    // Connect frameReady to render and then immediately request the next one
-    connect(m_worker, &VideoStreamWorker::frameReady, this, [this](cv::Mat frame) {
-        m_latestFrame = frame;
-        renderCurrentFrame();
-
-        // Once rendering is completely finished, ask for the next frame!
+    // Trigger the very first frame pull once the worker confirms the stream is open
+    connect(m_worker, &VideoStreamWorker::streamStarted, this, [this]() {
         emit requestFrame();
     }, Qt::QueuedConnection);
 
-    // Kick off the very first frame request after starting the thread
-    m_thread->start();
-    emit requestFrame();
-
-
+    // Kick off the thread start safely after construction
+    QTimer::singleShot(50, this, [this]() {
+        if (m_thread && !m_thread->isRunning()) {
+            m_thread->start();
+        }
+    });
 }
 LiveViewDialog::~LiveViewDialog() {
     if (m_worker) {
@@ -129,6 +120,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     imageLabel->setStyleSheet("background-color: black;");
     imageLabel->setAlignment(Qt::AlignCenter);
+
 
     connect(imageLabel, &LiveImageView::mirrorDefined, this,[this](const QRect r){
         this->m_userMirrorRect = r;

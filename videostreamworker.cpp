@@ -13,28 +13,38 @@ VideoStreamWorker::~VideoStreamWorker() {
 void VideoStreamWorker::startStream() {
     bool isInt = false;
     int camId = m_source.toInt(&isInt);
-
+    qputenv("OPENCV_FFMPEG_CAPTURE_OPTIONS", "stimeout;2000000;");
     {
         QMutexLocker locker(&m_mutex);
+
+        // Release any existing capture instance first
+        if (m_cap.isOpened()) {
+            m_cap.release();
+        }
+
         if (isInt) {
 #if defined(_WIN32) || defined(_WIN64)
+            // Use DirectShow on Windows with a quick check
             m_cap.open(camId, cv::CAP_DSHOW);
 #else
             m_cap.open(camId);
 #endif
         } else {
+            // For network URLs, open with standard backend
             m_cap.open(m_source.toStdString());
         }
 
+        // If it fails to open immediately, emit error and abort cleanly without hanging
         if (!m_cap.isOpened()) {
             emit streamError("Failed to open stream source: " + m_source);
+            m_running = false;
             return;
         }
     }
 
-    qDebug() << "stream started";
+    qDebug() << "stream started successfully";
     m_running = true;
-
+    emit streamStarted();
 }
 void VideoStreamWorker::fetchNextFrame() {
     if (!m_running) return;
