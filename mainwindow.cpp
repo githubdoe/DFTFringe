@@ -2327,6 +2327,7 @@ void MainWindow::stopLiveButton_clicked() {
 
 void MainWindow::runLiveAnalysisLoop() {
     if (m_liveLoopActive) return;
+    static mirrorDlg *md = mirrorDlg::get_Instance();
     m_liveLoopActive = true;
     //QApplication::setOverrideCursor(Qt::WaitCursor);
 
@@ -2479,7 +2480,7 @@ void MainWindow::runLiveAnalysisLoop() {
             statusRightText = QString("Averaged: %1 | RMS: %2 | Avg RMS: %3  %4")
                         .arg(m_liveValidCount - 1)
                         .arg(wf->std, 0, 'f', 3)
-                        .arg(stddev[0], 0, 'f', 3)
+                        .arg(stddev[0]* md->lambda/outputLambda, 0, 'f', 3)
                         .arg(liveMsg);
         } else {
             statusRightText = QString("Frame: %1 | RMS: %2")
@@ -2507,7 +2508,14 @@ void MainWindow::runLiveAnalysisLoop() {
         QThread::msleep(200);
         totalFrames++;
     }
+    if ( m_viewDlg->averageMode->currentIndex() == 1){// if we were computing average then save it.
+        m_surfaceManager->m_wavefronts << m_liveAverageWf;
 
+        m_liveAverageWf->name = QString("Average_%1").arg(m_liveValidCount);
+
+        m_surfTools->addWaveFront(m_liveAverageWf->name);
+        m_viewDlg->saveAverage = false;
+    }
     //QApplication::restoreOverrideCursor();
     m_liveLoopActive = false;
     m_viewDlg->m_stopRequested = false;

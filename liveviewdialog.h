@@ -35,6 +35,7 @@ private slots:
     void onGrabClicked();
     void onApplySettings();
     void onDFTSizeChanged(int index);
+    void restartStream();
 
 signals:
     void igramCaptured();

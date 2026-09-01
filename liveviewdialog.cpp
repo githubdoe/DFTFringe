@@ -354,7 +354,7 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     urlLineEdit->setText(currentUrl);
 
     // Pressing Enter in the line edit triggers instant apply
-    connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::onApplySettings);
+    connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::restartStream);
     connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
         if (item) {
             urlLineEdit->setText(item->text().trimmed());
@@ -437,7 +437,10 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     return settingsTab;
 }
 
+void LiveViewDialog::restartStream(){
+    onApplySettings();
 
+}
 
 void LiveViewDialog::onApplySettings() {
     QString newUrl = urlLineEdit->text().trimmed();

@@ -77,30 +77,43 @@ void VideoStreamWorker::stop() {
 }
 
 void VideoStreamWorker::changeSource(QString newSource) {
-    QMutexLocker locker(&m_mutex);
-    if (m_cap.isOpened()) {
-        m_cap.release();
-    }
+    bool success = false;
 
-    qDebug() << "changing source" << newSource;
-    m_source = newSource;
-    bool isInt = false;
-    int camId = m_source.toInt(&isInt);
+    {
+        QMutexLocker locker(&m_mutex);
+        m_running = false; // Temporarily halt fetching during switch
 
-    if (isInt) {
+        if (m_cap.isOpened()) {
+            m_cap.release();
+        }
+
+        qDebug() << "Changing source to:" << newSource;
+        m_source = newSource;
+        bool isInt = false;
+        int camId = m_source.toInt(&isInt);
+
+        if (isInt) {
 #if defined(_WIN32) || defined(_WIN64)
-        m_cap.open(camId, cv::CAP_DSHOW);
+            m_cap.open(camId, cv::CAP_DSHOW);
 #else
-        m_cap.open(camId);
+            m_cap.open(camId);
 #endif
-    } else {
-        m_cap.open(m_source.toStdString());
-    }
+        } else {
+            m_cap.open(m_source.toStdString());
+        }
 
-    if (!m_cap.isOpened()) {
-        emit streamError("Failed to open stream source: " + m_source);
+        if (m_cap.isOpened()) {
+            m_running = true;
+            success = true;
+        }
+    } // Mutex lock is automatically released here
+
+    // Emit signals OUTSIDE the mutex block to prevent deadlocks
+    if (!success) {
+        emit streamError("Failed to open stream source: " + newSource);
     } else {
-        qDebug() << "Stream source changed successfully to:" << m_source;
+        qDebug() << "Stream source changed successfully to:" << newSource;
+        emit streamStarted();
     }
 }
 
