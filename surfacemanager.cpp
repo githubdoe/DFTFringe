@@ -2415,7 +2415,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         ContourPlot *cp = new ContourPlot();
         cp->m_zRangeMode = "Fractions of Wave";
         cp->contourWaveRangeChanged(inputs[0]->std* 3);
-        wavefront * wf = new wavefront(*inputs[i]);
+        wavefront * wf = new wavefront(*inputs[i]); //TODO 1/2 sole usage of copy constructor 
 
 
         wf->data = wf->workData = standwfs[i];
@@ -2460,7 +2460,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 
 
     //display average of all stand zernwavefronts
-    wavefront * wf2 = new wavefront(*inputs[0]);
+    wavefront * wf2 = new wavefront(*inputs[0]); //TODO 2/2 sole usage of copy constructor
     wf2->data = wf2->workData = standavgZernMat ;
     cv::resize(inputs[0]->mask,wf2->mask, cv::Size(wf2->data.cols, wf2->data.rows));
     wf2->workMask = wf2->mask;
