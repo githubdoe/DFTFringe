@@ -1,5 +1,6 @@
 #include "custom3dinputhandler.h"
-
+// required only with Qt5 build
+#include <QtMath>
 Custom3DInputHandler::Custom3DInputHandler(QAbstract3DGraph *graph)
     : Q3DInputHandler(graph), m_isRightDragging(false), m_graphRef(graph) {
     setZoomAtTargetEnabled(true);
