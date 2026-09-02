@@ -2329,7 +2329,6 @@ void MainWindow::runLiveAnalysisLoop() {
     if (m_liveLoopActive) return;
     static mirrorDlg *md = mirrorDlg::get_Instance();
     m_liveLoopActive = true;
-    //QApplication::setOverrideCursor(Qt::WaitCursor);
 
     cv::Scalar mean;
     cv::Scalar stddev;
@@ -2341,33 +2340,37 @@ void MainWindow::runLiveAnalysisLoop() {
 
     int totalFrames = 1; // Local frame counter for non-averaged views
     m_viewDlg->loopRunning = true;
+
     while (m_liveState != State_Stopped && !m_viewDlg->m_stopRequested) {
         QApplication::processEvents();
 
-        // If paused, just idle gracefully
+        // ---------------------------------------------------------------------
+        // PAUSED STATE HANDLER
+        // ---------------------------------------------------------------------
         if (m_liveState == State_Paused) {
-
             QApplication::processEvents();
 
-            if (m_liveAverageWf)
-               m_viewDlg->saveAverageBtn->show();
-            if (m_viewDlg->saveAverage == true){
-                m_surfaceManager->m_wavefronts << m_liveAverageWf;
+            if (m_liveAverageWf) {
+                m_viewDlg->saveAverageBtn->show();
+            }
 
-                m_liveAverageWf->name = QString("Average_%1").arg(m_liveValidCount);
+            if (m_viewDlg->saveAverage && m_liveAverageWf) {
+                // Store a DEEP COPY snapshot so future frame accumulation won't alter this saved record
+                wavefront *savedAvg = new wavefront(*m_liveAverageWf);
+                savedAvg->name = QString("Average_%1").arg(m_liveValidCount - 1);
 
-                m_surfTools->addWaveFront(m_liveAverageWf->name);
+                m_surfaceManager->m_wavefronts << savedAvg;
+                m_surfTools->addWaveFront(savedAvg->name);
                 m_viewDlg->saveAverage = false;
             }
             continue;
         }
 
-
         if (m_liveState == State_Stopped) break;
 
         // 1. Grab and save the frame
         QString savedFilePath = load_from_url();
-        if (savedFilePath == "") {
+        if (savedFilePath.isEmpty()) {
             break;
         }
 
@@ -2376,10 +2379,11 @@ void MainWindow::runLiveAnalysisLoop() {
         QApplication::processEvents();
         if (m_liveState == State_Stopped) break;
 
-        // 3. if outline is not good
+        // 3. Check outline validity
         if (m_igramArea->m_outside.m_radius == 0) {
-            m_viewDlg->statusRight->setText("<span style='color: white; background-color: red;'>  The outline is NOT valid for this image    </span>");
-
+            m_viewDlg->statusRight->setText(
+                "<span style='color: white; background-color: red;'>  The outline is NOT valid for this image    </span>"
+            );
             break;
         }
 
@@ -2402,85 +2406,89 @@ void MainWindow::runLiveAnalysisLoop() {
             continue;
         }
 
-        wavefront *wf = m_surfaceManager->m_wavefronts.back();
-        if (!m_viewDlg->FirstWaveFrontSeen && m_viewDlg->autoRMSatStarup->isChecked()){
+        // Deep copy the newly generated wavefront from m_wavefronts.back()
+        wavefront *wf = new wavefront(*m_surfaceManager->m_wavefronts.back());
+
+        if (!m_viewDlg->FirstWaveFrontSeen && m_viewDlg->autoRMSatStarup->isChecked()) {
             m_viewDlg->maxRMS->setValue(wf->std * m_viewDlg->RMSMargin->value());
             m_viewDlg->FirstWaveFrontSeen = true;
         }
-        // SAFETY: Ensure the wavefront data is actually allocated and valid before touching OpenCV
+
+        // Defensive check: Ensure matrix data is allocated
         if (wf->workData.empty() || wf->workData.rows <= 0 || wf->workData.cols <= 0) {
             qDebug() << "Error: Wavefront workData is empty or invalid!";
+            delete wf;
             continue;
         }
 
-        // Determine what we are doing based on the dropdown mode
         int mode = m_viewDlg->averageMode->currentIndex();
         bool computeAverage = (mode == 1);
         bool displayAverage = (mode == 1);
 
-        // Accumulate average only if requested and valid
-        if (computeAverage){
-
-            if ((wf->std > m_viewDlg->maxRMS->value())) {
+        // ---------------------------------------------------------------------
+        // ACCUMULATION / AVERAGE CALCULATION
+        // ---------------------------------------------------------------------
+        if (computeAverage) {
+            if (wf->std > m_viewDlg->maxRMS->value()) {
                 m_viewDlg->m_tmpShowLive = true;
-                m_liveViewRMSTimer->start(2000); // display live for 2 seconds.
-            }
-            else {
-
-                if (m_liveValidCount == 1 || m_liveSum.empty()){
+                m_liveViewRMSTimer->start(2000); // Display live for 2 seconds
+            } else {
+                // First valid frame in the averaging run
+                if (m_liveValidCount == 1 || m_liveSum.empty()) {
                     m_liveSum = cv::Mat::zeros(wf->workData.rows, wf->workData.cols, wf->workData.type());
-                    *m_liveAverageWf = *wf;
+
+                    if (m_liveAverageWf) {
+                        delete m_liveAverageWf;
+                    }
+                    m_liveAverageWf = new wavefront(*wf); // Deep copy initial wavefront properties
                     m_liveAverageWf->m_origin = WavefrontOrigin::Average;
                 }
 
-                // Double check dimensions just as a defensive programming safeguard
+                // Verify dimensions before accumulating
                 if (m_liveSum.rows == wf->workData.rows && m_liveSum.cols == wf->workData.cols) {
                     m_liveSum += wf->workData;
 
-                    cv::Mat result = m_liveSum.clone() / m_liveValidCount;
+                    cv::Mat result = m_liveSum / static_cast<double>(m_liveValidCount);
 
-                    // Compute the mean and standard deviation of the running average
-                    cv::meanStdDev(result, mean, stddev);
+                    // Compute statistics strictly inside the pupil mask
+                    cv::meanStdDev(result, mean, stddev, m_liveAverageWf->mask);
 
-                    cv::Mat mask = wf->mask.clone();
-
+                    // Update surface matrices and calculated statistics
                     m_liveAverageWf->workData = result.clone();
                     m_liveAverageWf->data = result.clone();
-                    m_liveAverageWf->mask = mask.clone();
-                    m_liveAverageWf->workMask = mask.clone();
+                    m_liveAverageWf->std = stddev[0] * md->lambda / outputLambda;
+                    m_liveAverageWf->mean = mean[0];
 
                     if (!m_viewDlg->m_tmpShowLive) {
                         m_ogl->m_surface->setSurface(m_liveAverageWf);
                     }
 
                     m_liveValidCount++;
-
                 } else {
                     qDebug() << "Error: Mismatched matrix dimensions during live accumulation!";
                 }
-            }// end of do average if RMS is ok.
-
+            } // end RMS check
         }
 
-        // If displaying current frame, make sure the 3D view is showing the current wavefront
-        if (!displayAverage or m_viewDlg->m_tmpShowLive) {
+        // If displaying current frame, update 3D view
+        if (!displayAverage || m_viewDlg->m_tmpShowLive) {
             m_ogl->m_surface->setSurface(wf);
         }
 
-        // 6. RENDER surface
+        // 6. RENDER SURFACE
         QImage img = m_ogl->m_surface->render(1000, 1000);
 
+        // Update UI Status Bar
         QString statusRightText;
         if (computeAverage) {
             QString liveMsg = "";
-            if (m_viewDlg->m_tmpShowLive == true){
-                liveMsg = QString("<span style='color: white; background-color: red;'>%1</span>")
-                    .arg("  &nbsp;RMS too big &nbsp;  ");
+            if (m_viewDlg->m_tmpShowLive) {
+                liveMsg = "<span style='color: white; background-color: red;'>  &nbsp;RMS too big &nbsp;  </span>";
             }
             statusRightText = QString("Averaged: %1 | RMS: %2 | Avg RMS: %3  %4")
                         .arg(m_liveValidCount - 1)
                         .arg(wf->std, 0, 'f', 3)
-                        .arg(stddev[0]* md->lambda/outputLambda, 0, 'f', 3)
+                        .arg(m_liveAverageWf->std, 0, 'f', 3)
                         .arg(liveMsg);
         } else {
             statusRightText = QString("Frame: %1 | RMS: %2")
@@ -2490,38 +2498,47 @@ void MainWindow::runLiveAnalysisLoop() {
 
         m_viewDlg->statusRight->setText(statusRightText);
 
-        QPixmap pixmap = QPixmap::fromImage(img);
+        if (m_viewDlg->surfaceResultLabel) {
+            m_viewDlg->surfaceResultLabel->setPixmap(QPixmap::fromImage(img));
+        }
 
-        if (m_viewDlg->deleteIgramAfter->isChecked()){
+        // File cleanup if requested
+        if (m_viewDlg->deleteIgramAfter->isChecked()) {
             QFile::remove(savedFilePath);
             QFile::remove(savedFilePath.replace("jpg", "oln"));
         }
 
-        if (wf->std > m_viewDlg->maxRMS->value()){
+        // Wavefront list cleanup & memory management
+        bool discardFrame = (wf->std > m_viewDlg->maxRMS->value()) || m_viewDlg->deleteIntermidiateWaveFront->isChecked();
+        if (discardFrame) {
             m_surfaceManager->m_wavefronts.removeLast();
             m_surfTools->deleteLast();
         }
 
-        if (m_viewDlg != NULL)
-            m_viewDlg->surfaceResultLabel->setPixmap(pixmap);
+        // Free our local temporary wavefront
+        delete wf;
 
         QThread::msleep(200);
         totalFrames++;
     }
-    if ( m_viewDlg->averageMode->currentIndex() == 1){// if we were computing average then save it.
-        m_surfaceManager->m_wavefronts << m_liveAverageWf;
 
-        m_liveAverageWf->name = QString("Average_%1").arg(m_liveValidCount);
+    // -------------------------------------------------------------------------
+    // LOOP EXIT: SAVE FINAL AVERAGE IF APPLICABLE
+    // -------------------------------------------------------------------------
+    if (m_viewDlg->averageMode->currentIndex() == 1 && m_liveAverageWf && m_liveValidCount > 1) {
+        wavefront *savedAvg = new wavefront(*m_liveAverageWf);
+        savedAvg->name = QString("Average_%1").arg(m_liveValidCount - 1);
 
-        m_surfTools->addWaveFront(m_liveAverageWf->name);
+        m_surfaceManager->m_wavefronts << savedAvg;
+        m_surfTools->addWaveFront(savedAvg->name);
         m_viewDlg->saveAverage = false;
     }
-    //QApplication::restoreOverrideCursor();
+
+    // Reset UI & Loop State Flags
     m_liveLoopActive = false;
     m_viewDlg->m_stopRequested = false;
     m_viewDlg->loopRunning = false;
     m_liveState = State_Stopped;
-    m_liveLoopActive = false;
-    stopLiveButton_clicked();// used to clean up to button colors if the dialog was closed during the loop
 
+    stopLiveButton_clicked(); // Clean up button colors
 }

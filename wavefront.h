@@ -32,9 +32,7 @@ enum class WavefrontOrigin : std::uint8_t {
     Zernikes,
     Smoothed
 };
-class wavefront
-{
-public:
+class wavefront { public:
     wavefront();
     ~wavefront();
     wavefront( const wavefront &wf); // copy constructor doing deep copy of cv::Mat

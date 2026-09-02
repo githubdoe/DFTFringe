@@ -59,6 +59,7 @@ public:
     bool m_tmpShowLive = false;
     QCheckBox *autoRMSatStarup;
     QDoubleSpinBox *RMSMargin;
+    QCheckBox *deleteIntermidiateWaveFront;
     bool FirstWaveFrontSeen = false;
     bool saveAverage = false;
     QPushButton *saveAverageBtn;

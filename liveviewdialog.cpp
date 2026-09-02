@@ -387,9 +387,13 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     percentLayout->addWidget(RMSMargin);
     percentLayout->addStretch((1));
     rmsLayout->addLayout(percentLayout);
+    deleteIntermidiateWaveFront = new QCheckBox("Do not add Wave fronts to list except for averages",this);
 
-
-
+    connect(deleteIntermidiateWaveFront, &QCheckBox::toggled, this, [](bool checked) {
+        QSettings settings;
+        settings.setValue("liveViewDoNotAddWavefrontsToList", checked);
+    });
+    deleteIntermidiateWaveFront->setChecked(settings.value("liveViewDoNotAddWavefrontsToList", false).toBool());
 
     // --- Camera Resolution Selector ---
     QHBoxLayout *resLayout = new QHBoxLayout();
@@ -431,7 +435,8 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     settingsLayout->addLayout(listActionLayout);
     settingsLayout->addWidget(rmsGroup);
     settingsLayout->addLayout(resLayout);
-     settingsLayout->addWidget(deleteIgramAfter);
+    settingsLayout->addWidget(deleteIgramAfter);
+    settingsLayout->addWidget(deleteIntermidiateWaveFront);
     settingsLayout->addStretch(); // No more apply button clutter!
 
     return settingsTab;
