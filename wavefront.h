@@ -37,13 +37,11 @@ class wavefront
 public:
     wavefront();
     ~wavefront() = default;
-    wavefront(const wavefront&) = delete;
-    wavefront(wavefront&&) noexcept = default;
-    wavefront& operator=(const wavefront&) = delete;
-    wavefront& operator=(wavefront&&) noexcept = default;
-
-    wavefront copyShallow() const;
-    wavefront copyDeep() const;
+    wavefront( const wavefront &wf) = default;
+    wavefront( wavefront && ) = default;
+    wavefront& operator=( const wavefront & ) = default;
+    wavefront& operator=(wavefront &&) = default;
+    void cloneMatricesFrom(const wavefront &wf);
 
     cv::Mat_<double> data;
     cv::Mat_<double> nulledData;

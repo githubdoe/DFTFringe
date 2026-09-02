@@ -12,7 +12,7 @@ ZernikeSmoothingDlg::ZernikeSmoothingDlg(wavefront &wf, QWidget *parent) :
     p_wf = &wf;
 
     m_zp = new zernikeProcess;
-    m_wf = wf.copyShallow();
+    m_wf = wf;
     theZerns = wf.InputZerns;
     m_noOfTerms = m_zp->getNumberOfTerms();
     m_zernEnables = std::vector<bool>(m_noOfTerms);
@@ -115,7 +115,7 @@ cv::Mat makeSurfaceFromZerns(int width, zernikeProcess &zp, std::vector<double> 
 void ZernikeSmoothingDlg::on_createWaveFront_clicked()
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    m_wf = p_wf->copyShallow();
+    m_wf = *p_wf;
     if (!ui->useCurrentZernySet->isChecked()){
         std::vector<double> tzerns = m_zp->ZernFitWavefront(m_wf);
         if (tzerns.size() == 0){

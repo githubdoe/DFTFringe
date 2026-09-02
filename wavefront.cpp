@@ -22,75 +22,11 @@ wavefront::wavefront():
 {
 }
 
-wavefront wavefront::copyShallow() const
+void wavefront::cloneMatricesFrom(const wavefront &wf)
 {
-    wavefront out;
-    
-    // those are cv::mat objects. `=` operator will not copy the data, but will create a new header pointing to the same data. So it is a shallow copy.
-    out.data = data;
-    out.nulledData = nulledData;
-    out.mask = mask;
-    out.workData = workData;
-    out.workMask = workMask;
-
-    out.InputZerns = InputZerns;
-    out.zernEnablesApplied = zernEnablesApplied;
-    out.gaussian_diameter = gaussian_diameter;
-    out.gbEnabled = gbEnabled;
-    out.gbValue = gbValue;
-    out.wasSmoothed = wasSmoothed;
-    out.useSANull = useSANull;
-    out.GBSmoothingValue = GBSmoothingValue;
-    out.m_origin = m_origin;
-    out.m_manuallyInverted = m_manuallyInverted;
-    out.name = name;
-    out.lambda = lambda;
-    out.m_outside = m_outside;
-    out.m_inside = m_inside;
-    out.diameter = diameter;
-    out.roc = roc;
-    out.min = min;
-    out.max = max;
-    out.std = std;
-    out.mean = mean;
-    out.dirtyZerns = dirtyZerns;
-    out.regions = regions;
-    out.regions_have_been_expanded = regions_have_been_expanded;
-    return out;
+    data = wf.data.clone();
+    nulledData = wf.nulledData.clone();
+    mask = wf.mask.clone();
+    workData = wf.workData.clone();
+    workMask = wf.workMask.clone();
 }
-
-wavefront wavefront::copyDeep() const
-{
-    wavefront out;
-    out.data = data.clone();
-    out.nulledData = nulledData.clone();
-    out.mask = mask.clone();
-    out.workData = workData.clone();
-    out.workMask = workMask.clone();
-    out.InputZerns = InputZerns;
-    out.zernEnablesApplied = zernEnablesApplied;
-    out.gaussian_diameter = gaussian_diameter;
-    out.gbEnabled = gbEnabled;
-    out.gbValue = gbValue;
-    out.wasSmoothed = wasSmoothed;
-    out.useSANull = useSANull;
-    out.GBSmoothingValue = GBSmoothingValue;
-    out.m_origin = m_origin;
-    out.m_manuallyInverted = m_manuallyInverted;
-    out.name = name;
-    out.lambda = lambda;
-    out.m_outside = m_outside;
-    out.m_inside = m_inside;
-    out.diameter = diameter;
-    out.roc = roc;
-    out.min = min;
-    out.max = max;
-    out.std = std;
-    out.mean = mean;
-    out.dirtyZerns = dirtyZerns;
-    out.regions = regions;
-    out.regions_have_been_expanded = regions_have_been_expanded;
-    return out;
-}
-
-
