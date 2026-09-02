@@ -1821,7 +1821,7 @@ void SurfaceManager::average(QList<wavefront *> wfList){
 
 
     wavefront *wf = new wavefront();
-    *wf = *wfList[sizes[maxkey][0]];// copy in all the parameters (e.g. m_inside, lambda, diameter) from first wavefront to average
+    *wf = wfList[sizes[maxkey][0]]->copyShallow();
     wf->data = sum.clone();
     wf->mask = mask;
     wf->workMask = mask.clone();
@@ -1918,8 +1918,7 @@ void SurfaceManager::rotateThese(double angle, QList<int> list){
         wavefront *oldWf = m_wavefronts[list[i]];
         QStringList l = oldWf->name.split('.');
         QString newName = QString("%1_%2%3.wft").arg(l[0]).arg((angle >= 0) ? "CW":"CCW").arg(fabs(angle), 5, 'f', 1, QLatin1Char('0')); // clazy:exclude=qstring-arg
-        wavefront *wf = new wavefront();
-        *wf = *oldWf; // copy everything to new wavefront including basic things like diameter,wavelength,origin
+        wavefront *wf = new wavefront(oldWf->copyShallow());
         //emit nameChanged(wf->name, newName);
 
         wf->name = newName;
@@ -1990,8 +1989,7 @@ void SurfaceManager::subtract(wavefront *wf1, wavefront *wf2, bool use_null){
     cv::Mat result = wf1->data - resize;
 
     //result.copyTo(masked, mask);
-    wavefront *resultwf = new wavefront;
-    *resultwf = *wf1;
+    wavefront *resultwf = new wavefront(wf1->copyShallow());
     resultwf->data = result.clone();
     resultwf->mask = mask.clone();
     resultwf->workMask = mask.clone();
@@ -2415,7 +2413,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         ContourPlot *cp = new ContourPlot();
         cp->m_zRangeMode = "Fractions of Wave";
         cp->contourWaveRangeChanged(inputs[0]->std* 3);
-        wavefront * wf = new wavefront(*inputs[i]); //TODO 1/2 sole usage of copy constructor 
+        wavefront * wf = new wavefront(inputs[i]->copyDeep());
 
 
         wf->data = wf->workData = standwfs[i];
@@ -2460,7 +2458,7 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
 
 
     //display average of all stand zernwavefronts
-    wavefront * wf2 = new wavefront(*inputs[0]); //TODO 2/2 sole usage of copy constructor
+    wavefront * wf2 = new wavefront(inputs[0]->copyDeep());
     wf2->data = wf2->workData = standavgZernMat ;
     cv::resize(inputs[0]->mask,wf2->mask, cv::Size(wf2->data.cols, wf2->data.rows));
     wf2->workMask = wf2->mask;
@@ -3333,8 +3331,7 @@ void SurfaceManager::memoryLow(){
         okToContinue = resp;
 }
 void SurfaceManager::resize( wavefront *wf, int size){
-    wavefront *nwf = new wavefront();
-    *nwf = *wf;
+    wavefront *nwf = new wavefront(wf->copyShallow());
     nwf->dirtyZerns = true;
     cv::Mat newData;
     cv::Mat newMask;
@@ -3357,8 +3354,7 @@ void SurfaceManager::resize( wavefront *wf, int size){
 
 }
 void SurfaceManager::changeWavelength( wavefront *wf, double wavelength){
-    wavefront *nwf = new wavefront();
-    *nwf = *wf;
+    wavefront *nwf = new wavefront(wf->copyShallow());
     nwf->dirtyZerns = true;
     nwf->data = nwf->data * ( wf->lambda/wavelength);
     nwf->lambda = wavelength;
@@ -3376,8 +3372,7 @@ void SurfaceManager::flipHorizontal( wavefront *wf){
     cv::flip(wf->data, newData, 1);
     cv::flip(wf->mask, newMask, 1);
 
-    wavefront *nwf = new wavefront();
-    *nwf = *wf;
+    wavefront *nwf = new wavefront(wf->copyShallow());
     nwf->dirtyZerns = true;
     nwf->m_inside.m_center.rx() = wf->data.cols-1 - wf->m_inside.m_center.x();
     nwf->m_outside.m_center.rx() = wf->data.cols-1 - wf->m_outside.m_center.x();
@@ -3401,8 +3396,7 @@ void SurfaceManager::flipVertical( wavefront *wf){
     cv::flip(wf->data, newData, 0);
     cv::flip(wf->mask, newMask, 0);
 
-    wavefront *nwf = new wavefront();
-    *nwf = *wf;
+    wavefront *nwf = new wavefront(wf->copyShallow());
     nwf->dirtyZerns = true;
     nwf->m_inside.m_center.rx() = wf->data.cols-1 - wf->m_inside.m_center.x();
     nwf->m_outside.m_center.rx() = wf->data.cols-1 - wf->m_outside.m_center.x();

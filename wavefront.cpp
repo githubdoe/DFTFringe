@@ -22,34 +22,75 @@ wavefront::wavefront():
 {
 }
 
-wavefront::wavefront( const wavefront &wf): 
-    data(wf.data.clone()),
-    nulledData(wf.nulledData.clone()),
-    mask(wf.mask.clone()),
-    workData(wf.workData.clone()),
-    workMask(wf.workMask.clone()),
-    InputZerns(wf.InputZerns),
-    zernEnablesApplied(wf.zernEnablesApplied),
-    gaussian_diameter(wf.gaussian_diameter),
-    gbEnabled(wf.gbEnabled),
-    gbValue(wf.gbValue),
-    wasSmoothed(wf.wasSmoothed),
-    useSANull(wf.useSANull),
-    GBSmoothingValue(wf.GBSmoothingValue),
-    m_origin(wf.m_origin),
-    m_manuallyInverted(wf.m_manuallyInverted),
-    name(wf.name),
-    lambda(wf.lambda),
-    m_outside(wf.m_outside),
-    m_inside(wf.m_inside),
-    diameter(wf.diameter),
-    roc(wf.roc),
-    min(wf.min),
-    max(wf.max),
-    std(wf.std),
-    mean(wf.mean),
-    dirtyZerns(wf.dirtyZerns),
-    regions(wf.regions),
-    regions_have_been_expanded(wf.regions_have_been_expanded)
-{}
+wavefront wavefront::copyShallow() const
+{
+    wavefront out;
+    
+    // those are cv::mat objects. `=` operator will not copy the data, but will create a new header pointing to the same data. So it is a shallow copy.
+    out.data = data;
+    out.nulledData = nulledData;
+    out.mask = mask;
+    out.workData = workData;
+    out.workMask = workMask;
+
+    out.InputZerns = InputZerns;
+    out.zernEnablesApplied = zernEnablesApplied;
+    out.gaussian_diameter = gaussian_diameter;
+    out.gbEnabled = gbEnabled;
+    out.gbValue = gbValue;
+    out.wasSmoothed = wasSmoothed;
+    out.useSANull = useSANull;
+    out.GBSmoothingValue = GBSmoothingValue;
+    out.m_origin = m_origin;
+    out.m_manuallyInverted = m_manuallyInverted;
+    out.name = name;
+    out.lambda = lambda;
+    out.m_outside = m_outside;
+    out.m_inside = m_inside;
+    out.diameter = diameter;
+    out.roc = roc;
+    out.min = min;
+    out.max = max;
+    out.std = std;
+    out.mean = mean;
+    out.dirtyZerns = dirtyZerns;
+    out.regions = regions;
+    out.regions_have_been_expanded = regions_have_been_expanded;
+    return out;
+}
+
+wavefront wavefront::copyDeep() const
+{
+    wavefront out;
+    out.data = data.clone();
+    out.nulledData = nulledData.clone();
+    out.mask = mask.clone();
+    out.workData = workData.clone();
+    out.workMask = workMask.clone();
+    out.InputZerns = InputZerns;
+    out.zernEnablesApplied = zernEnablesApplied;
+    out.gaussian_diameter = gaussian_diameter;
+    out.gbEnabled = gbEnabled;
+    out.gbValue = gbValue;
+    out.wasSmoothed = wasSmoothed;
+    out.useSANull = useSANull;
+    out.GBSmoothingValue = GBSmoothingValue;
+    out.m_origin = m_origin;
+    out.m_manuallyInverted = m_manuallyInverted;
+    out.name = name;
+    out.lambda = lambda;
+    out.m_outside = m_outside;
+    out.m_inside = m_inside;
+    out.diameter = diameter;
+    out.roc = roc;
+    out.min = min;
+    out.max = max;
+    out.std = std;
+    out.mean = mean;
+    out.dirtyZerns = dirtyZerns;
+    out.regions = regions;
+    out.regions_have_been_expanded = regions_have_been_expanded;
+    return out;
+}
+
 
