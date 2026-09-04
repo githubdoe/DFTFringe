@@ -10,7 +10,27 @@
     <h1>DFTFringe Version History</h1>
     <ul>
 
-        <li>Version 8.4.0</li>
+ 
+       <li>Version 8.5.0</li>
+        <ul>
+		    <li>Live Video Mode! This may be rough around the edges but it works - view live fft and igrams or do auto averaging of the wavefronts from the video stream.</li>
+            <li>Mac and Linux versions!! Thanks to @lucassifoni. Mac installer will require extra steps for now. Most advanced mac users will know what to do but if not there are instructions on the main
+			git page. For linux users there is an AppImage.</li>
+            <li>3d view lets you pan now with right mouse drag and orbit with left mouse drag.  No longer will a click go into that annoying mode. Mouse scroll wheel still zooms.</li>
+            <li>Gaussian blur, zernike checkboxes, remembered per wavefront so when you click on a different wavefront, these change to reflect that particular selected wavefront. Also the 
+			zernikes get a + or - next to them if clicking recalculate will add or remove that zernike.  No change in functionality from older versions - but now it's easier to see which 
+			wavefronts have which current gaussian blur amount and zernikes enabled.</li>
+            <li>Fixed bug when loading a wavefront file.  It turns out the "yes" button did nothing ("yes to all" worked) when asked about if you should copy a setting from the wavefront
+			file to the mirror configuration.</li>
+            <li>Fixed a minor bug in a feature that probably no one uses when analyzing elliptical secondary mirrors.</li>
+            <li>Fixed a tiny glitch where one pixel was cleared on the right edge of the wavefront.  Bug was in gaussian blur mask code.</li>
+            <li>Fixed a bug where, when loading a new wavefront plus the OLN file, if there are currently regions or center outlines but not in the OLN file, then
+			the current regions are not cleared out before loading OLN.</li>
+            <li>When enabling '16 diameters' feature, the starting angle bounced around randomly each time you selected the current wavefront.  Now they are deterministic (stable).</li>
+            <li>Fixed: When creating a fresh wavefront such as when averaging waves, the profile plot shows the wrong wavefront unless you click on the wavefront on the right.</li>
+        </ul>
+ 
+       <li>Version 8.4.0</li>
         <ul>
             <li>Ronchi and Foucault displays have new circular grid feature to measure zones better (right click on ronchi)</li>
             <li>Ronchi compare now has blink mode that switches between 2 ronchis (first select at least 2 ronchis, then right click on the ronchi view, then select "compare" button, then "blink" button)</li>
@@ -201,7 +221,7 @@
 
         <li>Version 6.3.1</li>
         <ul>
-            <li>Fixed some issues with regions that caused DFTF to crash if you didn't check them each time\</li>
+            <li>Fixed some issues with regions that caused DFTF to crash if you didn't check them each time</li>
             <li>Regions are remembered better from one igram to the next</li>
             <li>Fixed a few minor bugs related to "edge mask":
                 <ul>
@@ -413,17 +433,6 @@
             <li>Added feature to display the resized interferogram that is used by the DFT analysis so that it can be
                 compared to the full size version. This allows one to check for fringes that may be too thin. </li>
             <li>fixed rotation direction bug.</li>
-        </ul>
-
-        <li>Version 2.1</li>
-        <ul>
-            <li>Fixed problems created by 2.0 when rotating, averaging, and writing wavefronts</li>
-            <li>Added save 3d image and 3d Video creation</li>
-            <li>Added options to report and added astig polar value to report</li>
-            <li>Made contour settings also apply to the show all contours function.</li>
-            <li>Improved offset values for Ronchi and Foucault simulations.</li>
-            <li>Corrected size of simulated interferogram to match requested size.</li>
-            <li>Changed gaussian blur to not cross mirror outline thus better preserving the edge of the mirror</li>
         </ul>
 
         <li>Version 2.1</li>
