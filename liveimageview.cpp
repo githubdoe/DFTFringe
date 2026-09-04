@@ -3,12 +3,12 @@
 #include <QPen>
 #include <QCursor>
 #include <cmath>
+#include <QDebug>
 
 LiveImageView::LiveImageView(QWidget *parent) : QLabel(parent) {}
 
 void LiveImageView::setZoomFactor(double zoom) {
     m_zoomFactor = zoom;
-
     update();
 }
 
@@ -21,42 +21,34 @@ QPoint LiveImageView::mapToImageCoordinates(const QPoint &widgetPos) const {
 
 void LiveImageView::mousePressEvent(QMouseEvent *event) {
     QPoint clickImg = mapToImageCoordinates(event->pos());
-    if (event->button() == Qt::RightButton){
-        // delete circle
+
+    if (event->button() == Qt::RightButton) {
         m_hasCircle = false;
-        emit mirrorDefined(QRect());  // emit an invalid circle
+        emit mirrorDefined(QRect());
+        update();
         return;
     }
-    // Shift-click Move existing circle if clicking inside the radius
+
+    // Shift-click: Move existing circle if clicking inside the radius
     if ((event->button() == Qt::LeftButton && (event->modifiers() & Qt::ShiftModifier)) && m_hasCircle) {
-        // Calculate current center and radius from the two defining edge/diameter points
-        QPoint center = (m_centerImg + m_edgeImg) / 2;
-        double dx = m_edgeImg.x() - m_centerImg.x();
-        double dy = m_edgeImg.y() - m_centerImg.y();
-        double radius = std::sqrt(dx * dx + dy * dy) / 2.0;
+        double distToCenter = std::sqrt(std::pow(clickImg.x() - m_nativeCenter.x(), 2) +
+                                        std::pow(clickImg.y() - m_nativeCenter.y(), 2));
 
-        double distToCenter = std::sqrt(std::pow(clickImg.x() - center.x(), 2) + std::pow(clickImg.y() - center.y(), 2));
-
-        if (distToCenter <= radius) {
+        if (distToCenter <= m_nativeRadius) {
             m_state = InteractionState::DraggingCenter;
-            // Store offset of click relative to the center
-            m_dragOffsetImg = clickImg - center;
+            m_dragOffsetImg = clickImg - m_nativeCenter.toPoint();
             setCursor(Qt::ClosedHandCursor);
             event->accept();
             return;
         }
     }
 
-    // Standard Left-click: Start defining a new circle edge-to-edge
+    // Standard Left-click: Start defining a new circle from the center out or edge-to-edge
     if (event->button() == Qt::LeftButton) {
-
-        m_centerImg = clickImg; // First edge point
-        if (m_dftModeActive)
-            m_edgeImgDft = clickImg;
-        else
-            m_edgeImg = clickImg;   // Second edge point (tracks with mouse move)
+        m_nativeCenter = clickImg;
+        m_nativeRadius = 0.0;
         m_hasCircle = false;
-        m_state = InteractionState::DrawingRadius; // Re-using state name for edge-to-edge drag
+        m_state = InteractionState::DrawingRadius;
         setCursor(Qt::CrossCursor);
         update();
         event->accept();
@@ -67,30 +59,23 @@ void LiveImageView::mouseMoveEvent(QMouseEvent *event) {
     QPoint currentImg = mapToImageCoordinates(event->pos());
 
     if (m_state == InteractionState::DrawingRadius) {
-        // The second point is now the other side of the diameter
-        m_edgeImg = currentImg;
+        // Calculate radius dynamically as mouse drags outward from m_nativeCenter
+        double dx = currentImg.x() - m_nativeCenter.x();
+        double dy = currentImg.y() - m_nativeCenter.y();
+        m_nativeRadius = std::sqrt(dx * dx + dy * dy);
         update();
     }
     else if (m_state == InteractionState::DraggingCenter) {
-        // Move both points together maintaining the diameter vector
-        QPoint currentCenter = (m_centerImg + m_edgeImg) / 2;
-        QPoint radiusVector = m_edgeImg - currentCenter;
-
         QPoint newCenter = currentImg - m_dragOffsetImg;
-        m_centerImg = newCenter - radiusVector;
-        m_edgeImg = newCenter + radiusVector;
+        m_nativeCenter = newCenter;
         update();
     }
     else {
         if (m_hasCircle) {
-            QPoint center = (m_centerImg + m_edgeImg) / 2;
-            double dx = m_edgeImg.x() - m_centerImg.x();
-            double dy = m_edgeImg.y() - m_centerImg.y();
-            double radius = std::sqrt(dx * dx + dy * dy) / 2.0;
+            double distToCenter = std::sqrt(std::pow(currentImg.x() - m_nativeCenter.x(), 2) +
+                                            std::pow(currentImg.y() - m_nativeCenter.y(), 2));
 
-            double distToCenter = std::sqrt(std::pow(currentImg.x() - center.x(), 2) + std::pow(currentImg.y() - center.y(), 2));
-
-            if (distToCenter <= radius) {
+            if (distToCenter <= m_nativeRadius) {
                 setCursor(Qt::OpenHandCursor);
             } else {
                 setCursor(Qt::ArrowCursor);
@@ -100,30 +85,28 @@ void LiveImageView::mouseMoveEvent(QMouseEvent *event) {
 }
 
 QRect LiveImageView::getMirrorRect() const {
-    // Center is the midpoint between the two clicked edge points
-    QPoint center = (m_centerImg + m_edgeImg) / 2;
-    double dx = m_edgeImg.x() - m_centerImg.x();
-    double dy = m_edgeImg.y() - m_centerImg.y();
-    int radius = static_cast<int>(std::sqrt(dx * dx + dy * dy) / 2.0);
-
-    int x = center.x() - radius;
-    int y = center.y() - radius;
-    int width = 2 * radius;
-    int height = 2 * radius;
+    int x = static_cast<int>(m_nativeCenter.x() - m_nativeRadius);
+    int y = static_cast<int>(m_nativeCenter.y() - m_nativeRadius);
+    int width = static_cast<int>(2 * m_nativeRadius);
+    int height = static_cast<int>(2 * m_nativeRadius);
     return QRect(x, y, width, height);
+}
+
+void LiveImageView::setOutsideCircle(QPointF center, double radius) {
+    m_nativeCenter = center;
+    m_nativeRadius = radius;
+    m_hasCircle = true;
+    emit mirrorDefined(getMirrorRect());
+    update();
 }
 
 void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
         if (m_state == InteractionState::DrawingRadius) {
-            double dx = m_edgeImg.x() - m_centerImg.x();
-            double dy = m_edgeImg.y() - m_centerImg.y();
-            int radius = static_cast<int>(std::sqrt(dx * dx + dy * dy));
-            if (radius > 5) {
+            if (m_nativeRadius > 5.0) {
                 m_hasCircle = true;
                 emit mirrorDefined(getMirrorRect());
-            }
-            else {
+            } else {
                 m_hasCircle = false;
                 emit mirrorDefined(QRect());
             }
@@ -136,72 +119,37 @@ void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
     }
 }
 
-
 void LiveImageView::wheelEvent(QWheelEvent *event) {
     QPoint imgPos = mapToImageCoordinates(event->position().toPoint());
     int numDegrees = event->angleDelta().y() / 8;
-    int numSteps = numDegrees / 15; // Standard mouse wheel step
+    int numSteps = numDegrees / 15;
 
     if (numSteps == 0) return;
 
-    // If we have a valid mirror, check if the mouse is inside the circle
     bool insideCircle = false;
     if (m_hasCircle) {
-        QPoint center = (m_centerImg + m_edgeImg) / 2;
-        double dx = m_edgeImg.x() - m_centerImg.x();
-        double dy = m_edgeImg.y() - m_centerImg.y();
-        double radius = std::sqrt(dx * dx + dy * dy) / 2.0;
-
-        double dist = std::sqrt(std::pow(imgPos.x() - center.x(), 2) + std::pow(imgPos.y() - center.y(), 2));
-        if (dist <= radius) {
+        double dist = std::sqrt(std::pow(imgPos.x() - m_nativeCenter.x(), 2) +
+                                std::pow(imgPos.y() - m_nativeCenter.y(), 2));
+        if (dist <= m_nativeRadius) {
             insideCircle = true;
         }
     }
 
     if (insideCircle && m_hasCircle) {
-        // Adjust the mirror radius when scrolling inside the circle
-        // We push/pull the edge point away from or closer to the center
-        QPoint center = (m_centerImg + m_edgeImg) / 2;
-        double dx = m_edgeImg.x() - center.x();
-        double dy = m_edgeImg.y() - center.y();
-        double currentRadius = std::sqrt(dx * dx + dy * dy);
-
-        // Scale radius by a small factor per wheel step (e.g., 5% per step)
+        // Scale radius via scroll wheel steps
         double scaleFactor = 1.0 + (numSteps * 0.05);
-        double newRadius = std::max(10.0, currentRadius * scaleFactor);
-
-        // Preserve angle and update edge point
-        double angle = std::atan2(dy, dx);
-        if (m_dftModeActive){
-            m_edgeImgDft.setX(center.x() + static_cast<int>(newRadius * std::cos(angle)));
-            m_edgeImgDft.setY(center.y() + static_cast<int>(newRadius * std::sin(angle)));
-        }
-        else {
-            m_edgeImg.setX(center.x() + static_cast<int>(newRadius * std::cos(angle)));
-            m_edgeImg.setY(center.y() + static_cast<int>(newRadius * std::sin(angle)));
-        }
-        // Keep center fixed, update edge
-        // m_centerImg remains opposite or we adjust center relative to edge.
-        // With edge-to-edge drag, m_centerImg and m_edgeImg define the diameter endpoints.
-        // Let's recalculate m_centerImg to keep the center invariant:
-        QPoint offset(static_cast<int>(newRadius * std::cos(angle)), static_cast<int>(newRadius * std::sin(angle)));
-        m_centerImg = center - offset;
-        m_edgeImg = center + offset;
+        m_nativeRadius = std::max(10.0, m_nativeRadius * scaleFactor);
 
         update();
         emit mirrorDefined(getMirrorRect());
         event->accept();
     } else {
-        // Scroll wheel outside the circle handles general image zooming
-        // (Optional: require Ctrl or just let scrolling zoom if not over circle)
         double zoomFactorChange = (numSteps > 0) ? 1.15 : 1.0 / 1.15;
-        //double newZoom = std::clamp(m_zoomFactor * zoomFactorChange, 0.2, 8.0);
         double newZoom = std::max(0.2, std::min(m_zoomFactor * zoomFactorChange, 8.0));
         emit requestZoomChange(newZoom);
         event->accept();
     }
 }
-
 
 void LiveImageView::paintEvent(QPaintEvent *event) {
     QLabel::paintEvent(event); // Render underlying pixmap
@@ -210,38 +158,22 @@ void LiveImageView::paintEvent(QPaintEvent *event) {
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing, true);
 
-        QPoint p1Scaled(static_cast<int>(m_centerImg.x() * m_zoomFactor),
-                        static_cast<int>(m_centerImg.y() * m_zoomFactor));
-        QPoint p2Scaled(static_cast<int>(m_edgeImg.x() * m_zoomFactor),
-                        static_cast<int>(m_edgeImg.y() * m_zoomFactor));
+        // Scale native center and radius precisely once by the current zoom factor
+        QPointF centerScaled(m_nativeCenter.x() * m_zoomFactor, m_nativeCenter.y() * m_zoomFactor);
+        double radiusScaled = m_nativeRadius * m_zoomFactor;
 
-        QPoint centerScaled = (p1Scaled + p2Scaled) / 2;
-        double dx = p2Scaled.x() - p1Scaled.x();
-        double dy = p2Scaled.y() - p1Scaled.y();
-        int radiusScaled = static_cast<int>(std::sqrt(dx * dx + dy * dy) / 2.0);
-
-
-            // Dashed green boundary
-            QPen pen(Qt::green, 2, Qt::DashLine);
-            painter.setPen(pen);
-
-            painter.drawEllipse(centerScaled, radiusScaled, radiusScaled);
-
+        QPen pen(Qt::green, 2, Qt::DashLine);
+        painter.setPen(pen);
+        painter.drawEllipse(centerScaled, radiusScaled, radiusScaled);
     }
-
 }
 
 void LiveImageView::setFilterPercentage(double p, int dftSize) {
-    // 1. Center of the DFT image in native coordinates
     QPointF dftCenter(dftSize / 2.0, dftSize / 2.0);
-
-    // 2. Reference radius and target radius in native coordinates
     double baseRadius = dftSize / 2.0;
     double targetRadius = baseRadius * p;
 
-    // 3. Store the native edge point into a DFT-specific member variable (e.g., m_edgeImgDft)
-    m_edgeImgDft = QPoint(dftCenter.x() + targetRadius, dftCenter.y());
-
-    // 4. Trigger a redraw
+    m_nativeCenter = dftCenter;
+    m_nativeRadius = targetRadius;
     update();
 }

@@ -935,6 +935,7 @@ void IgramArea::useLastOutline(){
             drawBoundary();
         }
     }
+
 }
 void IgramArea::adjustCenterandRegions(){
     double xoffset , yoffset = 0;
@@ -1097,7 +1098,7 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
             findOutline();
             adjustCenterandRegions();
         }
-
+    emit boundary(m_outside, m_center);
     if (showBoundary){
         computeEdgeRadius();
         drawBoundary();
@@ -1265,6 +1266,7 @@ void IgramArea::increaseValue(int i) {
     else if (m_current_boundry == PolyArea && m_polygons.size() > 0){
         increaseRegion(polyndx,1.1);
     }
+    emit boundary(m_outside, m_center);
     drawBoundary();
 }
 
@@ -1287,6 +1289,7 @@ void IgramArea::decrease(){
     else if (m_current_boundry == PolyArea && m_polygons.size() > 0){
         increaseRegion(polyndx, .9);
     }
+    emit boundary(m_outside,m_center);
     drawBoundary();
 }
 void IgramArea::zoomIn(){
@@ -1339,6 +1342,8 @@ void IgramArea::zoom(int del, QPointF zoompt){
         gscrollArea->setWidgetResizable(true);
     }
     drawBoundary();
+    emit boundary(m_outside,m_center);
+
 }
 
 void IgramArea::wheelEvent (QWheelEvent *e)
@@ -1365,6 +1370,7 @@ void IgramArea::wheelEvent (QWheelEvent *e)
         }
 
         drawBoundary();
+        emit boundary(m_outside,m_center);
         return;
     }
     QPointF pos = e->position();
@@ -1405,7 +1411,9 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
             dragMode = true;
             cntrlPressed = event->modifiers() & Qt::ControlModifier;
             lastPoint = Raw/scale;
+
             drawBoundary();
+            emit boundary(m_outside,m_center);
             return;
         }
         if (m_current_boundry == OutSideOutline) m_outside.m_radius = 0;
@@ -1521,6 +1529,7 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         }
 
         drawBoundary();
+        emit boundary(m_outside,m_center);
     }
 
 }
@@ -1544,6 +1553,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
         mirrorDlg &md = *mirrorDlg::get_Instance();
         md.m_verticalAxis = md.diameter * e;
         drawBoundary();
+        emit boundary(m_outside, m_center);
         return;
     }
     if ((event->buttons() & Qt::LeftButton) && scribbling) {
@@ -1568,6 +1578,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
 
         }
         drawBoundary();
+        emit boundary(m_outside, m_center);
     }
     if ( regionMode){
         if (m_regionEdit->m_doFreeform && event->buttons() & Qt::LeftButton){
@@ -1575,6 +1586,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
         }
         lastPoint = scaledPos;
         drawBoundary();
+        emit boundary(m_outside, m_center);
     }
     else if ((event->buttons() & Qt::LeftButton) & dragMode){
         if( outterPcount == 2) {
@@ -1610,6 +1622,7 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
             }
         }
         drawBoundary();
+        emit boundary(m_outside, m_center);
         lastPoint = scaledPos;
     }
 }
@@ -1650,6 +1663,7 @@ void IgramArea::mouseReleaseEvent(QMouseEvent *event)
     }
 
     drawBoundary();
+    emit boundary(m_outside, m_center);
     scribbling = false;
     verticalTracking = false;
     dragMode = false;
@@ -1692,7 +1706,7 @@ void IgramArea::drawBoundary()
 
     CircleOutline outside(m_OutterP1,m_OutterP2);
     CircleOutline inside(m_innerP1, m_innerP2);
-    emit boundary(outside, inside);
+
     double s2 = 1.;
     if (!m_hideOutlines){
         painter.setOpacity(opacity * .01);

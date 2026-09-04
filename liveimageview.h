@@ -15,6 +15,7 @@ public:
     QRect getMirrorRect() const; // Returns rect in original image coordinates
     void setDftModeActive(bool active) { m_dftModeActive = active; update(); }
     void setFilterPercentage(double p, int dftSize);
+    void setOutsideCircle(QPointF center, double radius);
 signals:
     void mirrorDefined(const QRect &rect);
     void requestZoomChange(double zoomFactor);
@@ -36,9 +37,13 @@ private:
     double m_zoomFactor = 1.0;
     bool m_hasCircle = false;
     bool m_dftModeActive = false;
-    QPoint m_centerImg;      // Circle center in original image pixels
-    QPoint m_edgeImg;        // Edge point for radius calculation
+    QPoint m_firstEdgePoint;      // Circle center in original image pixels
+    QPoint m_edgeImg;        // Second Edge point for radius calculation
     QPoint m_dragOffsetImg;  // Offset when grabbing the center to move the circle
     QPoint m_edgeImgDft;     // DFT circle edge.
     QPoint mapToImageCoordinates(const QPoint &widgetPos) const;
+
+    QPointF m_nativeCenter;
+    double m_nativeRadius = 0.0;
+
 };

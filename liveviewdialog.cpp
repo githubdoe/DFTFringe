@@ -493,6 +493,12 @@ void LiveViewDialog::onZoomChanged(int index) {
     } else {
         m_zoomFactor = data;
         imageLabel->setZoomFactor(m_zoomFactor);
+
+        // Re-apply scaled circle if we have one active
+        if (m_hasActiveCircle) {
+            imageLabel->setOutsideCircle(m_rawCircleCenter * m_zoomFactor, m_rawCircleRadius * m_zoomFactor);
+        }
+
         renderCurrentFrame();
     }
 }
@@ -512,7 +518,10 @@ void LiveViewDialog::setFitToWindowZoom() {
     m_zoomFactor = std::min(scaleX, scaleY);
     // Clamp to a reasonable minimum
     m_zoomFactor = std::max(0.1, m_zoomFactor);
-
+    // Re-apply scaled circle if we have one active
+    if (m_hasActiveCircle) {
+        imageLabel->setOutsideCircle(m_rawCircleCenter * m_zoomFactor, m_rawCircleRadius * m_zoomFactor);
+    }
     imageLabel->setZoomFactor(m_zoomFactor);
     renderCurrentFrame();
 }
@@ -747,5 +756,16 @@ QImage LiveViewDialog::matToQImage(const cv::Mat &mat) {
     return QImage();
 }
 
+void LiveViewDialog::setOutsidecircle(QPointF center, double radius) {
+    m_rawCircleCenter = center;
+    m_rawCircleRadius = radius;
+    m_hasActiveCircle = true;
 
+
+    // Scale center and radius by current zoom factor
+    QPointF scaledCenter(center.x() / m_zoomFactor, center.y() / m_zoomFactor);
+    double scaledRadius = radius / m_zoomFactor;
+
+    imageLabel->setOutsideCircle(scaledCenter, scaledRadius);
+}
 

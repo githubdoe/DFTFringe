@@ -2241,6 +2241,9 @@ void MainWindow::on_actionLive_view_triggered()
                     m_viewDlg->m_tmpShowLive = false;
 
             });
+            connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, CircleOutline inside) {
+                m_viewDlg->setOutsidecircle(outside.m_center, outside.m_radius);
+            });
 
             // Automatically nullify the pointer when Qt deletes the dialog on close
             connect(m_viewDlg, &QObject::destroyed, this, [this]() {
@@ -2308,10 +2311,11 @@ void MainWindow::pauseLiveButton_clicked() {
         m_liveState = State_Paused;
         m_viewDlg->pauseAnalyBtn->setText("Resume");
         setLiveViewMode(false);
+        m_viewDlg->onGrabClicked();
 
     } else if (m_liveState == State_Paused) {
         m_liveState = State_Running;
-
+        m_viewDlg->pauseAnalyBtn->setText("Pause");
         m_viewDlg->saveAverageBtn->hide();
         m_igramArea->hide();
         m_dftArea->hide();

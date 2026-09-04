@@ -41,11 +41,12 @@ private slots:
     void onZoomChanged(int index);
     void onMirrorDefined(const QRect &rect);
     void setFitToWindowZoom();
-    void onGrabClicked();
     void onApplySettings();
     void onDFTSizeChanged(int index);
     void restartStream();
-
+public slots:
+    void setOutsidecircle(QPointF center, double radius);
+    void onGrabClicked();
 signals:
     void igramCaptured();
     void streamDisconnected();
@@ -112,4 +113,8 @@ private:
     void setupUI(const QString &defaultStreamUrl);
     void initSettingsDialog(const QString &defaultStreamUrl);
     QDialog *m_settingsDlg;
+
+    QPointF m_rawCircleCenter;
+    double m_rawCircleRadius = 0.0;
+    bool m_hasActiveCircle = false;
 };
