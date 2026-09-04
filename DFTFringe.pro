@@ -281,9 +281,8 @@ HEADERS += bezier/bezier.h \
     cameracalibwizard.h \
     camwizardpage1.h \
     ccswappeddlg.h \
-    circle.h \
+    circlefit.h \
     circleoutline.h \
-    circleutils.h \
     cnpy/cnpy.h \
     colorchannel.h \
     colorchanneldisplay.h \
