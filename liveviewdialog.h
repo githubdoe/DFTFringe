@@ -64,6 +64,7 @@ public:
     void setCenterFilterRadius(double percent) {imageLabel->m_centerPercent = percent;};
     QDoubleSpinBox *maxRMS;
     QCheckBox *averageMode;
+    QLabel *imageSize;
     QLabel *statusLeft;
     QLabel *statusRight;
     bool m_tmpShowLive = false;

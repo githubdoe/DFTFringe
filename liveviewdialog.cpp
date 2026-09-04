@@ -67,7 +67,15 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
 
     // Trigger the very first frame pull once the worker confirms the stream is open
     connect(m_worker, &VideoStreamWorker::streamStarted, this, [this]() {
+        statusLeft->setText("Stream Connected");
         emit requestFrame();
+        // Clear the status message after 5 seconds (5000 milliseconds)
+        QTimer::singleShot(5000, this, [this]() {
+            // Only clear if it still says "Stream Connected" so we don't overwrite a newer message
+            if (statusLeft->text() == "Stream Connected") {
+                statusLeft->clear();
+            }
+        });
     }, Qt::QueuedConnection);
 
     // Kick off the thread start safely after construction
@@ -148,10 +156,14 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     QWidget *leftContainer = new QWidget(this);
     QVBoxLayout *leftLayout = new QVBoxLayout(leftContainer);
     leftLayout->setContentsMargins(0, 0, 0, 0);
-
+    imageSize = new QLabel(this);
+    statusRight = new QLabel(this);
     statusLeft = new QLabel(this);
-    leftLayout->addWidget(statusLeft);
-
+    QHBoxLayout *statusLayout = new QHBoxLayout();
+    statusLayout->addWidget(imageSize);
+    statusLayout->addWidget(statusLeft);
+    statusLayout->addWidget(statusRight);
+    leftLayout->addLayout(statusLayout);
     imageLabel = new LiveImageView(this);
     imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     imageLabel->setStyleSheet("background-color: black;");
@@ -638,7 +650,7 @@ void LiveViewDialog::renderCurrentFrame() {
     int targetWidth = static_cast<int>(img.width() * m_zoomFactor);
     int targetHeight = static_cast<int>(img.height() * m_zoomFactor);
 
-    statusLeft->setText(QString("%1 x %2")
+    imageSize->setText(QString("%1 x %2")
                 .arg(img.size().width())
                 .arg(img.size().height()));
 

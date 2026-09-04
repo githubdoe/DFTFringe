@@ -2526,6 +2526,7 @@ void MainWindow::runLiveAnalysisLoop() {
         m_ogl->m_liveLabel->setPixmap(QPixmap::fromImage(img));
         // Update UI Status Bar
         QString statusRightText;
+
         if (computeAverage) {
             QString liveMsg = "";
             if (m_viewDlg->m_tmpShowLive) {
@@ -2542,7 +2543,7 @@ void MainWindow::runLiveAnalysisLoop() {
                     .arg(wf->std, 0, 'f', 3);
         }
 
-        m_viewDlg->statusLeft->setText(statusRightText);
+        m_viewDlg->statusRight->setText(statusRightText);
 
 
 
