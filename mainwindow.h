@@ -369,6 +369,7 @@ private:
     cv::Mat m_liveSum;
     int m_liveValidCount = 0;
     LiveLoopState m_liveState = State_Stopped;
+    void setLiveViewMode(bool active);
 public slots:
     void startLiveButton_clicked();
     void pauseLiveButton_clicked();

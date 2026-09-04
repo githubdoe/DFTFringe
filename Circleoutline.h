@@ -47,5 +47,6 @@ class CircleOutline {
     QPointF m_p1;
     QPointF m_p2;
 };
-
+// Declare it for the meta-object system
+Q_DECLARE_METATYPE(CircleOutline)
 #endif // CIRCLEOUTLINE_H

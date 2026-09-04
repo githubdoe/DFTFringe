@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <QDialog>
@@ -16,6 +17,15 @@
 #include <QThread>
 #include <QCheckBox>
 
+enum class CameraProperty {
+    Brightness,
+    Contrast,
+    Exposure, // Shutter speed
+    Gain
+};
+Q_DECLARE_METATYPE(CameraProperty)
+
+
 class LiveViewDialog : public QDialog {
     Q_OBJECT
 public:
@@ -27,7 +37,6 @@ protected:
 
 private slots:
 
-    void toggleDftMode();
     void onResolutionChanged(int index);
     void onZoomChanged(int index);
     void onMirrorDefined(const QRect &rect);
@@ -44,33 +53,35 @@ signals:
     void requestSetResolution(int width, int height);
     void stopLiveLoopRequested();
     void requestFrame();
+    void requestCameraSetting(CameraProperty prop , int val);
 public:
     QPushButton *startAnalysisBtn;
     QPushButton *stopAnalysisBtn;
     QPushButton *pauseAnalyBtn;
-    QLabel *surfaceResultLabel;
+
 
     QCheckBox *deleteIgramAfter;
     void setCenterFilterRadius(double percent) {imageLabel->m_centerPercent = percent;};
     QDoubleSpinBox *maxRMS;
-    QComboBox *averageMode;
+    QCheckBox *averageMode;
     QLabel *statusLeft;
     QLabel *statusRight;
     bool m_tmpShowLive = false;
     QCheckBox *autoRMSatStarup;
     QDoubleSpinBox *RMSMargin;
-    QCheckBox *deleteIntermidiateWaveFront;
+    QCheckBox *deleteIntermidiateWaveFront = nullptr;
     bool FirstWaveFrontSeen = false;
     bool saveAverage = false;
     QPushButton *saveAverageBtn;
     bool loopRunning = false;
     bool m_stopRequested = false;// used to signal the dialog is trying to close.
+    bool FirsdtWaveFrontSeen = false;
 private:
     VideoStreamWorker *m_worker;
     QThread *m_thread;
     LiveImageView *imageLabel;
     QScrollArea *scrollArea;
-    QPushButton *dftButton;
+    QCheckBox *dftCheckBox;
     QPushButton *grabButton;
     QListWidget *urlListWidget;
     QLineEdit *urlLineEdit;
@@ -88,7 +99,6 @@ private:
     QComboBox *zoomCombo;
     cv::VideoCapture cap;
 
-    bool m_dftModeEnabled = false;
     int m_dftSize = 1024;
     double m_zoomFactor = 1.0;
     QImage m_latestImage;
@@ -99,5 +109,6 @@ private:
     cv::Mat computeLiveDFT(const cv::Mat &inputFrame, int targetSize, const QRect &roi);
     void renderCurrentFrame();
     void setupUI(const QString &defaultStreamUrl);
-    QWidget* createSettingsTab(const QString &defaultStreamUrl);
+    void initSettingsDialog(const QString &defaultStreamUrl);
+    QDialog *m_settingsDlg;
 };

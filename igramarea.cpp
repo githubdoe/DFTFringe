@@ -1692,7 +1692,7 @@ void IgramArea::drawBoundary()
 
     CircleOutline outside(m_OutterP1,m_OutterP2);
     CircleOutline inside(m_innerP1, m_innerP2);
-
+    emit boundary(outside, inside);
     double s2 = 1.;
     if (!m_hideOutlines){
         painter.setOpacity(opacity * .01);

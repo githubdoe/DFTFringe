@@ -2221,7 +2221,7 @@ QString MainWindow::load_from_url(){
 
     // Construct the full filename
     QString fileName = dirPath + "/" + dateTimeString +".jpg";
-    qDebug() << "download filename" << fileName;
+
     image.save(fileName, "JPG");
     importIgram();
     return fileName;
@@ -2287,12 +2287,14 @@ void MainWindow::startLiveButton_clicked() {
             m_liveAverageWf = new wavefront;
         }
     }
-
+    setLiveViewMode(true);
     m_liveState = State_Running;
     m_viewDlg->startAnalysisBtn->hide();
     m_viewDlg->pauseAnalyBtn->setText("Pause");
     m_viewDlg->pauseAnalyBtn->show();
     m_viewDlg->stopAnalysisBtn->show();
+    m_viewDlg->saveAverageBtn->hide();
+
 
 
     // If the loop was completely stopped, start the execution flow again
@@ -2305,13 +2307,18 @@ void MainWindow::pauseLiveButton_clicked() {
     if (m_liveState == State_Running) {
         m_liveState = State_Paused;
         m_viewDlg->pauseAnalyBtn->setText("Resume");
-        qDebug() << "Live loop paused. Average preserved.";
+        setLiveViewMode(false);
 
     } else if (m_liveState == State_Paused) {
         m_liveState = State_Running;
-        qDebug() << "Live loop resumed.";
-        m_viewDlg->pauseAnalyBtn->setText("Pause");
+
         m_viewDlg->saveAverageBtn->hide();
+        m_igramArea->hide();
+        m_dftArea->hide();
+
+        setLiveViewMode(true);
+
+
     }
 }
 
@@ -2323,8 +2330,42 @@ void MainWindow::stopLiveButton_clicked() {
     m_viewDlg->stopAnalysisBtn->hide();
     m_viewDlg->startAnalysisBtn->show();
     m_viewDlg->saveAverageBtn->hide();
+    setLiveViewMode(false);
+
 }
 
+void MainWindow::setLiveViewMode(bool active) {
+    if (active) {
+        qDebug() << "golive";
+        // --- LOCKDOWN: Enter Live Mode ---
+        ui->tabWidget->setCurrentIndex(2);
+        m_igramArea->setUpdatesEnabled(false);
+        scrollAreaDft->setUpdatesEnabled(false);
+
+        // Sever automatic tab-switching signals during loop execution
+        disconnect(m_igramArea, &IgramArea::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
+        disconnect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
+
+        m_ogl->setLivePreviewMode(true);
+    } else {
+        // --- RESTORATION: Exit Live Mode ---
+qDebug() << "return to normal";
+        m_igramArea->show();
+        connect(m_igramArea, &IgramArea::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
+        connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
+
+        m_dftArea->show();
+
+        ui->tabWidget->blockSignals(false);
+        ui->tabWidget->setUpdatesEnabled(true);
+
+        scrollAreaDft->setUpdatesEnabled(true);
+        m_igramArea->setUpdatesEnabled(true);
+
+        m_ogl->setLivePreviewMode(false);
+
+    }
+}
 void MainWindow::runLiveAnalysisLoop() {
     if (m_liveLoopActive) return;
     static mirrorDlg *md = mirrorDlg::get_Instance();
@@ -2340,8 +2381,13 @@ void MainWindow::runLiveAnalysisLoop() {
 
     int totalFrames = 1; // Local frame counter for non-averaged views
     m_viewDlg->loopRunning = true;
+   // have the 3D view switch to a widget that does not blink
 
+    bool computeAverage = m_viewDlg->averageMode->isChecked();
     while (m_liveState != State_Stopped && !m_viewDlg->m_stopRequested) {
+
+        computeAverage = m_viewDlg->averageMode->isChecked();
+        bool displayAverage = computeAverage;
         QApplication::processEvents();
 
         // ---------------------------------------------------------------------
@@ -2350,7 +2396,7 @@ void MainWindow::runLiveAnalysisLoop() {
         if (m_liveState == State_Paused) {
             QApplication::processEvents();
 
-            if (m_liveAverageWf) {
+            if (m_liveAverageWf && computeAverage) {
                 m_viewDlg->saveAverageBtn->show();
             }
 
@@ -2381,9 +2427,9 @@ void MainWindow::runLiveAnalysisLoop() {
 
         // 3. Check outline validity
         if (m_igramArea->m_outside.m_radius == 0) {
-            m_viewDlg->statusRight->setText(
-                "<span style='color: white; background-color: red;'>  The outline is NOT valid for this image    </span>"
-            );
+            m_viewDlg->statusLeft->setText(
+                        "<span style='color: white; background-color: red;'>  The outline is NOT valid for this image    </span>"
+                        );
             break;
         }
 
@@ -2409,7 +2455,7 @@ void MainWindow::runLiveAnalysisLoop() {
         // Deep copy the newly generated wavefront from m_wavefronts.back()
         wavefront *wf = new wavefront(*m_surfaceManager->m_wavefronts.back());
 
-        if (!m_viewDlg->FirstWaveFrontSeen && m_viewDlg->autoRMSatStarup->isChecked()) {
+        if (!(m_viewDlg->FirstWaveFrontSeen) && m_viewDlg->autoRMSatStarup->isChecked()) {
             m_viewDlg->maxRMS->setValue(wf->std * m_viewDlg->RMSMargin->value());
             m_viewDlg->FirstWaveFrontSeen = true;
         }
@@ -2421,13 +2467,11 @@ void MainWindow::runLiveAnalysisLoop() {
             continue;
         }
 
-        int mode = m_viewDlg->averageMode->currentIndex();
-        bool computeAverage = (mode == 1);
-        bool displayAverage = (mode == 1);
 
         // ---------------------------------------------------------------------
         // ACCUMULATION / AVERAGE CALCULATION
         // ---------------------------------------------------------------------
+        m_viewDlg->m_tmpShowLive = false;
         if (computeAverage) {
             if (wf->std > m_viewDlg->maxRMS->value()) {
                 m_viewDlg->m_tmpShowLive = true;
@@ -2456,6 +2500,7 @@ void MainWindow::runLiveAnalysisLoop() {
                     // Update surface matrices and calculated statistics
                     m_liveAverageWf->workData = result.clone();
                     m_liveAverageWf->data = result.clone();
+                    m_liveAverageWf->nulledData = result.clone();
                     m_liveAverageWf->std = stddev[0] * md->lambda / outputLambda;
                     m_liveAverageWf->mean = mean[0];
 
@@ -2473,11 +2518,12 @@ void MainWindow::runLiveAnalysisLoop() {
         // If displaying current frame, update 3D view
         if (!displayAverage || m_viewDlg->m_tmpShowLive) {
             m_ogl->m_surface->setSurface(wf);
+            qDebug() << "not average";
         }
 
         // 6. RENDER SURFACE
         QImage img = m_ogl->m_surface->render(1000, 1000);
-
+        m_ogl->m_liveLabel->setPixmap(QPixmap::fromImage(img));
         // Update UI Status Bar
         QString statusRightText;
         if (computeAverage) {
@@ -2486,21 +2532,19 @@ void MainWindow::runLiveAnalysisLoop() {
                 liveMsg = "<span style='color: white; background-color: red;'>  &nbsp;RMS too big &nbsp;  </span>";
             }
             statusRightText = QString("Averaged: %1 | RMS: %2 | Avg RMS: %3  %4")
-                        .arg(m_liveValidCount - 1)
-                        .arg(wf->std, 0, 'f', 3)
-                        .arg(m_liveAverageWf->std, 0, 'f', 3)
-                        .arg(liveMsg);
+                    .arg(m_liveValidCount - 1)
+                    .arg(wf->std, 0, 'f', 3)
+                    .arg(m_liveAverageWf->std, 0, 'f', 3)
+                    .arg(liveMsg);
         } else {
             statusRightText = QString("Frame: %1 | RMS: %2")
-                        .arg(totalFrames)
-                        .arg(wf->std, 0, 'f', 3);
+                    .arg(totalFrames)
+                    .arg(wf->std, 0, 'f', 3);
         }
 
-        m_viewDlg->statusRight->setText(statusRightText);
+        m_viewDlg->statusLeft->setText(statusRightText);
 
-        if (m_viewDlg->surfaceResultLabel) {
-            m_viewDlg->surfaceResultLabel->setPixmap(QPixmap::fromImage(img));
-        }
+
 
         // File cleanup if requested
         if (m_viewDlg->deleteIgramAfter->isChecked()) {
@@ -2525,7 +2569,7 @@ void MainWindow::runLiveAnalysisLoop() {
     // -------------------------------------------------------------------------
     // LOOP EXIT: SAVE FINAL AVERAGE IF APPLICABLE
     // -------------------------------------------------------------------------
-    if (m_viewDlg->averageMode->currentIndex() == 1 && m_liveAverageWf && m_liveValidCount > 1) {
+    if (computeAverage  && m_liveAverageWf && m_liveValidCount > 1) {
         wavefront *savedAvg = new wavefront(*m_liveAverageWf);
         savedAvg->name = QString("Average_%1").arg(m_liveValidCount - 1);
 
@@ -2540,5 +2584,4 @@ void MainWindow::runLiveAnalysisLoop() {
     m_viewDlg->loopRunning = false;
     m_liveState = State_Stopped;
 
-    stopLiveButton_clicked(); // Clean up button colors
 }

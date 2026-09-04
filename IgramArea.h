@@ -186,6 +186,7 @@ signals:
     void dftCenterFilter(double);
     void imageSize(QString);
     void doDFT();
+    void boundary(CircleOutline outside, CircleOutline inside);
 protected:
     bool eventFilter(QObject *object, QEvent *event);
     void wheelEvent(QWheelEvent * event);

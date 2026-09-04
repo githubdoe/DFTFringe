@@ -41,22 +41,23 @@ wavefront::wavefront( const wavefront &wf):
     workMask(wf.workMask.clone()),
     InputZerns(wf.InputZerns),
     gaussian_diameter(wf.gaussian_diameter),
-    gbEnabled(wf.gbEnabled),
-    gbValue(wf.gbValue),
-    wasSmoothed(wf.wasSmoothed),
-    useSANull(wf.useSANull),
-    GBSmoothingValue(wf.GBSmoothingValue),
-    m_origin(wf.m_origin),
-    m_manuallyInverted(wf.m_manuallyInverted),
-    lambda(wf.lambda),
     m_outside(wf.m_outside),
     m_inside(wf.m_inside),
+
+    GBSmoothingValue(wf.GBSmoothingValue),
+    gbValue(wf.gbValue),
+    m_origin(wf.m_origin),
+    lambda(wf.lambda),
     diameter(wf.diameter),
     roc(wf.roc),
     min(wf.min),
     max(wf.max),
     std(wf.std),
     mean(wf.mean),
-    dirtyZerns(wf.dirtyZerns)
+    dirtyZerns(wf.dirtyZerns),
+    gbEnabled(wf.gbEnabled),
+    wasSmoothed(wf.wasSmoothed),
+    useSANull(wf.useSANull),
+    m_manuallyInverted(wf.m_manuallyInverted)
 {}
 

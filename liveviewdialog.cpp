@@ -10,6 +10,8 @@
 #include <QPainter>
 #include "videostreamworker.h"
 #include <QGroupBox>
+#include <QSplitter>
+#include <QDialogButtonBox>
 // ==========================================
 // LiveViewDialog Implementation
 // ==========================================
@@ -24,10 +26,11 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
     if (settings.contains("LiveViewDialog/geometry")) {
         restoreGeometry(settings.value("LiveViewDialog/geometry").toByteArray());
     } else {
-        resize(800, 600);
+        resize(600, 600);
     }
-
     QString savedUrl = settings.value("LiveView/streamUrl", 0).toString();
+    initSettingsDialog(savedUrl);
+
 
     setupUI(savedUrl);
     statusLeft->setText("<span style='color: black  ;background-color: yellow'>Connecting to camera/stream... Please wait.</span>");
@@ -45,7 +48,7 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
     connect(m_worker, &VideoStreamWorker::frameReady, this, [this](cv::Mat frame) {
         m_latestFrame = frame;
         renderCurrentFrame();
-        emit requestFrame(); // Pull the next frame only after rendering finishes
+    // Pull the next frame only after rendering finishes
     }, Qt::QueuedConnection);
 
     connect(m_worker, &VideoStreamWorker::streamError, this, [this](const QString &msg) {
@@ -108,23 +111,54 @@ void LiveViewDialog::closeEvent(QCloseEvent *event) {
 }
 
 void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
-    tabWidget = new QTabWidget(this);
-    QSettings set;
-    // ==========================================
-    // TAB 1: Live Feed & Analysis Split View
-    // ==========================================
-    QWidget *feedTab = new QWidget(this);
+    setWindowTitle("DFTFringe - Live View");
 
-    // --- Left Side: Live Image View (with scroll area) ---
+    // Root layout for the dialog (Vertical)
+    QVBoxLayout *rootLayout = new QVBoxLayout(this);
+    rootLayout->setContentsMargins(8, 8, 8, 8);
+    rootLayout->setSpacing(6);
+
+    // ==========================================
+    // TOP HEADER BAR (RMS & Average Mode)
+    // ==========================================
+    QWidget *headerWidget = new QWidget(this);
+    QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(0, 0, 0, 0);
+
+    averageMode = new QCheckBox("Compute and show average when loop is running", this);
+
+    maxRMS = new QDoubleSpinBox(this);
+    maxRMS->setRange(0.0, 100.0);
+    maxRMS->setValue(.4);
+    maxRMS->setSingleStep(.05);
+
+    headerLayout->addWidget(averageMode);
+
+    headerLayout->addWidget(new QLabel("Delete if RMS >", this));
+    headerLayout->addWidget(maxRMS);
+
+    rootLayout->addWidget(headerWidget);
+
+    // ==========================================
+    // CENTER SPLITTER (Video Feed vs Sidebar)
+    // ==========================================
+    QSplitter *mainSplitter = new QSplitter(Qt::Horizontal, this);
+
+    // --- Left Side: Live Image View ---
+    QWidget *leftContainer = new QWidget(this);
+    QVBoxLayout *leftLayout = new QVBoxLayout(leftContainer);
+    leftLayout->setContentsMargins(0, 0, 0, 0);
+
+    statusLeft = new QLabel(this);
+    leftLayout->addWidget(statusLeft);
+
     imageLabel = new LiveImageView(this);
     imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     imageLabel->setStyleSheet("background-color: black;");
     imageLabel->setAlignment(Qt::AlignCenter);
 
-
-    connect(imageLabel, &LiveImageView::mirrorDefined, this,[this](const QRect r){
+    connect(imageLabel, &LiveImageView::mirrorDefined, this, [this](const QRect r){
         this->m_userMirrorRect = r;
-
     });
 
     scrollArea = new QScrollArea(this);
@@ -132,32 +166,20 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     scrollArea->setWidgetResizable(false);
     scrollArea->setBackgroundRole(QPalette::Dark);
 
-    // --- Right Side: Surface Result Display ---
-    surfaceResultLabel = new QLabel(this);
-    surfaceResultLabel->setStyleSheet("background-color: black; color: white;");
-    surfaceResultLabel->setAlignment(Qt::AlignCenter);
-    surfaceResultLabel->setMinimumSize(300, 300);
-    surfaceResultLabel->setText("Surface Result\n(Inactive)");
+    leftLayout->addWidget(scrollArea, 1);
 
-    // Put them side by side in a splitter or horizontal layout
-    QHBoxLayout *viewSplitLayout = new QHBoxLayout();
-    viewSplitLayout->addWidget(scrollArea, 1);        // Live feed takes available stretch
-    viewSplitLayout->addWidget(surfaceResultLabel, 1);  // Surface result shares the space
+    // --- Right Side: Scrollable Control Sidebar ---
+    QScrollArea *sidebarScrollArea = new QScrollArea(this);
+    sidebarScrollArea->setWidgetResizable(true);
+    sidebarScrollArea->setMinimumWidth(260);
+    sidebarScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    // --- Controls Layout (unchanged) ---
-    dftButton = new QPushButton("Show DFT", this);
-    dftButton->setCheckable(true);
-    connect(dftButton, &QPushButton::clicked, this, &LiveViewDialog::toggleDftMode);
+    QWidget *sidebarContent = new QWidget(sidebarScrollArea);
+    QVBoxLayout *sidebarLayout = new QVBoxLayout(sidebarContent);
+    sidebarLayout->setContentsMargins(6, 6, 6, 6);
 
-    dftresolutionCombo = new QComboBox(this);
-    dftresolutionCombo->addItem("256 x 256 (Fast)", 256);
-    dftresolutionCombo->addItem("512 x 512 (Balanced)", 512);
-    dftresolutionCombo->addItem("1024 x 1024 (Detailed)", 1024);
-
-    dftresolutionCombo->setCurrentIndex(set.value("liveViewDftSize", 1).toInt());
-    connect(dftresolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &LiveViewDialog::onDFTSizeChanged);
-
+    // Zoom Control
+    sidebarLayout->addWidget(new QLabel("Zoom:", this));
     zoomCombo = new QComboBox(this);
     zoomCombo->addItem("Fit to Window", -1.0);
     zoomCombo->addItem("50%", 0.5);
@@ -167,26 +189,104 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     zoomCombo->addItem("300%", 3.0);
     zoomCombo->addItem("400%", 4.0);
     zoomCombo->setCurrentIndex(1);
+    connect(zoomCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &LiveViewDialog::onZoomChanged);
+    sidebarLayout->addWidget(zoomCombo);
 
-    vivid = new QDoubleSpinBox(this);
-    vivid->setValue(2.1);
-    vivid->setSingleStep(.05);
+    // DFT Resolution Combo
+    sidebarLayout->addWidget(new QLabel("DFT Size:", this));
+    dftresolutionCombo = new QComboBox(this);
+    dftresolutionCombo->addItem("256 x 256 (Fast)", 256);
+    dftresolutionCombo->addItem("512 x 512 (Balanced)", 512);
+    dftresolutionCombo->addItem("1024 x 1024 (Detailed)", 1024);
+    QSettings set;
+    dftresolutionCombo->setCurrentIndex(set.value("liveViewDftSize", 1).toInt());
+    connect(dftresolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &LiveViewDialog::onDFTSizeChanged);
+    sidebarLayout->addWidget(dftresolutionCombo);
 
+    // DFT Floor
+    sidebarLayout->addWidget(new QLabel("DFT Floor:", this));
     DFTLowThreshold = new QSpinBox(this);
     DFTLowThreshold->setRange(-1, 255);
-
     DFTLowThreshold->setSpecialValueText("Auto");
     DFTLowThreshold->setValue(set.value("liveViewDFTLow", -1).toInt());
     connect(DFTLowThreshold, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](int val) {
-        QSettings set;
-        set.setValue("liveViewDFTLow", val);
+        QSettings s;
+        s.setValue("liveViewDFTLow", val);
     });
-    averageMode = new QComboBox(this);
-    averageMode->addItem("Show current");
-    averageMode->addItem("Compute and show Average");
-    averageMode->setStyleSheet("QComboBox { background-color: #FFBF00; color: black; }");
-    connect(zoomCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &LiveViewDialog::onZoomChanged);
+    sidebarLayout->addWidget(DFTLowThreshold);
+
+    // DFT Contrast
+    sidebarLayout->addWidget(new QLabel("DFT Contrast:", this));
+    vivid = new QDoubleSpinBox(this);
+    vivid->setValue(2.1);
+    vivid->setSingleStep(.05);
+    sidebarLayout->addWidget(vivid);
+
+    // Camera Hardware Sliders (Brightness / Exposure)
+    sidebarLayout->addWidget(new QLabel("Brightness:", this));
+    QSlider *brightnessSlider = new QSlider(Qt::Horizontal, this);
+    brightnessSlider->setRange(-64, 64);
+    brightnessSlider->setValue(0);
+    connect(brightnessSlider, &QSlider::valueChanged, this, [this](int val) {
+        emit requestCameraSetting(CameraProperty::Brightness, val);
+    });
+    sidebarLayout->addWidget(brightnessSlider);
+
+    sidebarLayout->addWidget(new QLabel("Exposure / Shutter:", this));
+    QSlider *exposureSlider = new QSlider(Qt::Horizontal, this);
+    exposureSlider->setRange(-13, 0);
+    exposureSlider->setValue(-6);
+    connect(exposureSlider, &QSlider::valueChanged, this, [this](int val) {
+        emit requestCameraSetting(CameraProperty::Exposure, val);
+    });
+    sidebarLayout->addWidget(exposureSlider);
+
+    sidebarLayout->addStretch(1);
+
+    // Popup Settings & Help Buttons
+    QPushButton *settingsBtn = new QPushButton("Settings...", this);
+    QPushButton *helpBtn = new QPushButton("Help & Instructions...", this);
+
+    connect(settingsBtn, &QPushButton::clicked, this, [this, defaultStreamUrl]() {
+        m_settingsDlg->exec(); // Just show the persistent dialog
+    });
+
+    connect(helpBtn, &QPushButton::clicked, this, [this]() {
+        QDialog helpDlg(this);
+        helpDlg.setWindowTitle("Live View Help");
+        QVBoxLayout *dlgLayout = new QVBoxLayout(&helpDlg);
+        QTextEdit *helpText = new QTextEdit(&helpDlg);
+        helpText->setReadOnly(true);
+        helpText->setHtml(
+            "<h3>Settings</h3>"
+            "<p>Select the source of the video (0, 1, or 2 for USB cameras, or an HTTP stream URL).</p>"
+            "<h3>Automated Live Analysis</h3>"
+            "<p>Outline your igram, set the blue circle, configure max RMS limits, and click <b>Start Loop</b>.</p>"
+        );
+        dlgLayout->addWidget(helpText);
+        helpDlg.resize(600, 500);
+        helpDlg.exec();
+    });
+
+    sidebarLayout->addWidget(settingsBtn);
+    sidebarLayout->addWidget(helpBtn);
+
+    sidebarContent->setLayout(sidebarLayout);
+    sidebarScrollArea->setWidget(sidebarContent);
+
+    mainSplitter->addWidget(leftContainer);
+    mainSplitter->addWidget(sidebarScrollArea);
+    mainSplitter->setStretchFactor(0, 4);
+    mainSplitter->setStretchFactor(1, 1);
+
+    rootLayout->addWidget(mainSplitter, 1);
+
+    // ==========================================
+    // BOTTOM ACTION BAR
+    // ==========================================
+    QHBoxLayout *bottomControlLayout = new QHBoxLayout();
 
     grabButton = new QPushButton("Grab Igram", this);
     grabButton->setStyleSheet("background-color: #2e7d32; color: white; font-weight: bold;");
@@ -195,141 +295,45 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     startAnalysisBtn = new QPushButton("Start Loop", this);
     startAnalysisBtn->setStyleSheet("background-color: #1976d2; color: white; font-weight: bold;");
 
-    pauseAnalyBtn = new QPushButton("Pause",this);
+    pauseAnalyBtn = new QPushButton("Pause", this);
     pauseAnalyBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
+    pauseAnalyBtn->hide();
 
     stopAnalysisBtn = new QPushButton("Stop Loop", this);
-
     stopAnalysisBtn->setStyleSheet("background-color: #d32f2f; color: white; font-weight: bold;");
+    stopAnalysisBtn->hide();
 
-    saveAverageBtn = new QPushButton("Save average",this);
+    saveAverageBtn = new QPushButton("Save average", this);
     saveAverageBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
     saveAverageBtn->hide();
     connect(saveAverageBtn, &QPushButton::clicked, this, [this](){
         this->saveAverage = true;
-    } );
+    });
 
-    QHBoxLayout *controlLayout = new QHBoxLayout();
-    controlLayout->addWidget(grabButton);
-    controlLayout->addWidget(startAnalysisBtn);
-    controlLayout->addWidget(pauseAnalyBtn);
-    controlLayout->addWidget(stopAnalysisBtn);
-    controlLayout->addWidget(saveAverageBtn);
-    controlLayout->addSpacing(10);
-    controlLayout->addWidget(dftButton);
-    controlLayout->addWidget(new QLabel("DFT Size:", this));
-    controlLayout->addWidget(dftresolutionCombo);
-    controlLayout->addSpacing(15);
-    controlLayout->addWidget(new QLabel("Zoom:", this));
-    controlLayout->addWidget(zoomCombo);
+    dftCheckBox = new QCheckBox("Show DFT", this);
+    dftCheckBox->setChecked(false);
+    connect(dftCheckBox, &QCheckBox::toggled, this, &LiveViewDialog::renderCurrentFrame);
 
-    // status area
-    statusLeft = new QLabel(this);
-    statusRight = new QLabel(this);
-    QHBoxLayout *statusLayout = new QHBoxLayout();
-    statusLayout->addWidget(statusLeft);
-    statusLayout->addWidget(statusRight);
+    bottomControlLayout->addWidget(grabButton);
+    bottomControlLayout->addWidget(startAnalysisBtn);
+    bottomControlLayout->addWidget(pauseAnalyBtn);
+    bottomControlLayout->addWidget(stopAnalysisBtn);
+    bottomControlLayout->addWidget(saveAverageBtn);
+    bottomControlLayout->addSpacing(20);
+    bottomControlLayout->addWidget(dftCheckBox);
+    bottomControlLayout->addStretch(1);
 
-    QVBoxLayout *feedLayout = new QVBoxLayout(feedTab);
-    feedLayout->addLayout(statusLayout);
-    feedLayout->addLayout(viewSplitLayout, 1); // Add the side-by-side views
-    feedLayout->addLayout(controlLayout);
-
-    // ==========================================
-    // TAB 2 & 3: Settings & Help
-    // ==========================================
-    QWidget *settingsTab = createSettingsTab(defaultStreamUrl);
-
-    QWidget *helpTab = new QWidget(this);
-    QVBoxLayout *helpLayout = new QVBoxLayout(helpTab);
-    QTextEdit *helpText = new QTextEdit(this);
-    helpText->setReadOnly(true);
-    helpText->setHtml(
-        "<h3>Settings</h3>"
-        "<p>The settings tab lets you select the source of the video.  Use 0,1,or 2 for USB attached cameras.</p>"
-        "<p>A selection for a URL stream might look like this:  http://192.168.50.5:5000/video_feed</p>"
-        "<p>You can also set the camera resolution if it can accept it.</p>"
-
-        "<h3>Auto RMS setup</h3>"
-        "<p>Enable the checkbox if you want the Max RMS value to be set to value of the first analyzed wave front time a percentage."
-           " This will happen the firsts time you \"Start\" the analysis.  From then on the Max value will not be modified by the program. "
-           " You can still modify it yourself however.</p>"
-
-        "<h3>Automated Live Analysis Prerequisites</h3>"
-        "<p>Before starting the automated analysis loop, ensure the following steps are completed:</p>"
-        "<ol>"
-        "  <li><b>Use the Grab button</b> To import the igram into DFTFringe and outtline it as usualal. Then Press Done.</li>"
-        "  <li><b>Set the blue circle as usual</b> Then press the compute surface button as usual.</li>"
-        "  <li><b>Max RMS value</b> You can set the Max RMS value where values higher than that will not be used in the analysis. </li>"
-        "</ol>"
-
-        "<p><b>Start</b>Once configured, switch back to the Live Feed< tab and click <b>Start Loop</b> to begin automated capture and processing.</p>"
-
-        "<p>If a wave front's RMS is equal or below the max RMS value it will be saved in the wave front list."
-                " If averaging is turned on it will be added to the average as well.</p> "
-       "<p>Once the looping has started you might want to pause it to adjust some settings without reseting the averaging.</P>"
-        "<P>The Start button always resets the averaging if it was selected to be done.</p>"
-        "<p>The Stop button always stops the current looping and any averaging happening.</p>"
-        "<p>The average is not saved until you pause and press the \"Save Average\" button.  You can select any of the saved wave fronts and average them youself as usual.</p>"
-
-       "<h3>Max RMS</h3>"
-                "<p>If an analyzed wave front's RMS value is larger than the Max RMS value it will"
-                " not be added to the average and it will not be added to the list of wave fronts."
-                "Also the surface display will switch to the live view instead of the average view"
-                "until the RMS value is below the max</p>"
-
-                );
-    helpLayout->addWidget(helpText);
-
-    tabWidget->addTab(feedTab, "Live Feed");
-    tabWidget->addTab(settingsTab, "Settings");
-    tabWidget->addTab(helpTab, "Help & Instructions");
-    // ==========================================
-        // Top-Right Corner Controls (Live Feed Only)
-        // ==========================================
-        QWidget *cornerWidget = new QWidget(this);
-        QHBoxLayout *cornerLayout = new QHBoxLayout(cornerWidget);
-        cornerLayout->setContentsMargins(0, 0, 0, 0);
-
-
-
-        QLabel *spinLabel = new QLabel("Delete if RMS >", this);
-        maxRMS = new QDoubleSpinBox(this);
-        maxRMS->setRange(0.0, 100.0);
-        maxRMS->setValue(.4);
-        maxRMS->setSingleStep(.05);
-        cornerLayout->addWidget(averageMode);
-        controlLayout->addSpacing(100);
-        cornerLayout->addWidget(new QLabel("DFT Floor:"));
-        cornerLayout->addWidget(DFTLowThreshold);
-
-        cornerLayout->addWidget(new QLabel("DFT contrast:"));
-        cornerLayout->addWidget(vivid);
-        controlLayout->addSpacing(10);
-
-        cornerLayout->addWidget(spinLabel);
-        cornerLayout->addWidget(maxRMS);
-
-        // Assign it to the top-right of the tab widget
-        tabWidget->setCornerWidget(cornerWidget, Qt::TopRightCorner);
-
-
-
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(8, 8, 8, 8);
-    mainLayout->addWidget(tabWidget);
-    stopAnalysisBtn->hide();
-    pauseAnalyBtn->hide();
-    setLayout(mainLayout);
-
+    rootLayout->addLayout(bottomControlLayout);
+    setLayout(rootLayout);
 }
-QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
-    QWidget *settingsTab = new QWidget(this);
-    QVBoxLayout *settingsLayout = new QVBoxLayout(settingsTab);
+void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
+    m_settingsDlg = new QDialog(this);
+    m_settingsDlg->setWindowTitle("Live View Settings");
+    QVBoxLayout *settingsLayout = new QVBoxLayout(m_settingsDlg);
 
-    settingsLayout->addWidget(new QLabel("Select or Manage Recent Streams / Camera IDs:", this));
+    settingsLayout->addWidget(new QLabel("Select or Manage Recent Streams / Camera IDs:", m_settingsDlg));
 
-    urlListWidget = new QListWidget(this);
+    urlListWidget = new QListWidget(m_settingsDlg);
     urlListWidget->setMaximumHeight(120);
 
     QSettings settings;
@@ -339,8 +343,6 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     }
     urlListWidget->addItems(urlHistory);
 
-
-
     QString currentUrl = settings.value("LiveView/streamUrl", urlHistory.first()).toString();
     QList<QListWidgetItem*> matches = urlListWidget->findItems(currentUrl, Qt::MatchExactly);
     if (!matches.isEmpty()) {
@@ -349,23 +351,22 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
         urlListWidget->setCurrentRow(0);
     }
 
-    urlLineEdit = new QLineEdit(this);
+    urlLineEdit = new QLineEdit(m_settingsDlg);
     urlLineEdit->setPlaceholderText("Or type a new URL / ID here...");
     urlLineEdit->setText(currentUrl);
 
-    // Pressing Enter in the line edit triggers instant apply
     connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::restartStream);
     connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
         if (item) {
             urlLineEdit->setText(item->text().trimmed());
-            onApplySettings(); // Applies immediately upon list selection
+            onApplySettings();
         }
     });
-    QGroupBox * rmsGroup = new QGroupBox("RMS settings");
+
+    QGroupBox *rmsGroup = new QGroupBox("RMS settings", m_settingsDlg);
     QVBoxLayout *rmsLayout = new QVBoxLayout(rmsGroup);
 
-    QHBoxLayout *listActionLayout = new QHBoxLayout();
-    autoRMSatStarup = new QCheckBox("Compute Max rms as a percentage of first analysis");
+    autoRMSatStarup = new QCheckBox("Compute Max rms as a percentage of first analysis", rmsGroup);
     connect(autoRMSatStarup, &QCheckBox::toggled, this, [](bool checked) {
         QSettings settings;
         settings.setValue("liveViewAutoRMSCheckBox", checked);
@@ -373,34 +374,10 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     autoRMSatStarup->setChecked(settings.value("liveViewAutoRMSCheckBox", false).toBool());
     rmsLayout->addWidget(autoRMSatStarup);
 
-    // make RMS margin settings;
-    QHBoxLayout *percentLayout = new QHBoxLayout();
-    percentLayout->addWidget(new QLabel("Percent above RMS of first analysis:"));
-
-    RMSMargin = new QDoubleSpinBox();
-    connect(RMSMargin, QOverload<double>::of (&QDoubleSpinBox::valueChanged), this, [](double val){
-        QSettings settings;
-        settings.setValue("liveViewAutoRMSValue", val);
-    });
-    RMSMargin->setSingleStep(.25);
-    RMSMargin->setValue(settings.value("liveViewAutoRMSValue", 1.5).toDouble());
-    percentLayout->addWidget(RMSMargin);
-    percentLayout->addStretch((1));
-    rmsLayout->addLayout(percentLayout);
-    deleteIntermidiateWaveFront = new QCheckBox("Do not add Wave fronts to list except for averages",this);
-
-    connect(deleteIntermidiateWaveFront, &QCheckBox::toggled, this, [](bool checked) {
-        QSettings settings;
-        settings.setValue("liveViewDoNotAddWavefrontsToList", checked);
-    });
-    deleteIntermidiateWaveFront->setChecked(settings.value("liveViewDoNotAddWavefrontsToList", false).toBool());
-
-    // --- Camera Resolution Selector ---
     QHBoxLayout *resLayout = new QHBoxLayout();
+    resLayout->addWidget(new QLabel("Camera Resolution:", m_settingsDlg));
 
-    resLayout->addWidget(new QLabel("Camera Resolution:"));
-
-    resolutionCombo = new QComboBox();
+    resolutionCombo = new QComboBox(m_settingsDlg);
     resolutionCombo->addItem("Default (Auto)", QSize(0, 0));
     resolutionCombo->addItem("640 x 480 (VGA)", QSize(640, 480));
     resolutionCombo->addItem("1280 x 720 (HD)", QSize(1280, 720));
@@ -416,30 +393,40 @@ QWidget* LiveViewDialog::createSettingsTab(const QString &defaultStreamUrl) {
     resLayout->addWidget(resolutionCombo);
     resLayout->addStretch(1);
 
-    // Changing resolution combo instantly applies it
     connect(resolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int){
         onApplySettings();
     });
-    // ------------------------------------
 
-
-    deleteIgramAfter = new QCheckBox("Delete IGram after analysis");
+    deleteIgramAfter = new QCheckBox("Delete IGram after analysis", m_settingsDlg);
     deleteIgramAfter->setChecked(settings.value("LiveView/deleteAfter", true).toBool());
     connect(deleteIgramAfter, &QCheckBox::toggled, this, [this](bool checked) {
         QSettings s;
         s.setValue("LiveView/deleteAfter", checked);
     });
 
+
+        deleteIntermidiateWaveFront = new QCheckBox("Do not add Wave fronts to list except for averages", m_settingsDlg);
+        deleteIntermidiateWaveFront->setChecked(settings.value("LiveView/deleteIntermittent", false).toBool());
+        connect(deleteIntermidiateWaveFront, &QCheckBox::toggled, this, [this](bool checked) {
+            QSettings s;
+            s.setValue("LiveView/deleteIntermittent", checked);
+        });
+
+
     settingsLayout->addWidget(urlLineEdit);
     settingsLayout->addWidget(urlListWidget);
-    settingsLayout->addLayout(listActionLayout);
     settingsLayout->addWidget(rmsGroup);
     settingsLayout->addLayout(resLayout);
     settingsLayout->addWidget(deleteIgramAfter);
     settingsLayout->addWidget(deleteIntermidiateWaveFront);
-    settingsLayout->addStretch(); // No more apply button clutter!
+    settingsLayout->addStretch();
 
-    return settingsTab;
+    QDialogButtonBox *btnBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, m_settingsDlg);
+    connect(btnBox, &QDialogButtonBox::accepted, m_settingsDlg, &QDialog::accept);
+    connect(btnBox, &QDialogButtonBox::rejected, m_settingsDlg, &QDialog::reject);
+    settingsLayout->addWidget(btnBox);
+
+    m_settingsDlg->resize(550, 450);
 }
 
 void LiveViewDialog::restartStream(){
@@ -476,17 +463,7 @@ void LiveViewDialog::onGrabClicked() {
         emit igramCaptured(); // Emit a safe deep copy of the frame
     }
 }
-void LiveViewDialog::toggleDftMode() {
-    m_dftModeEnabled = dftButton->isChecked();
-    resolutionCombo->setEnabled(m_dftModeEnabled);
-    imageLabel->setDftModeActive(m_dftModeEnabled);
-    if (m_dftModeEnabled) {
-        dftButton->setText("Switch to Spatial Live View");
-    } else {
-        dftButton->setText("Switch to Live DFT Mode");
-    }
-    renderCurrentFrame();
-}
+
 
 void LiveViewDialog::onDFTSizeChanged(int index){
     int data = dftresolutionCombo->itemData(index).toDouble();
@@ -512,8 +489,8 @@ void LiveViewDialog::setFitToWindowZoom() {
     if (m_latestFrame.empty()) return;
 
     QSize viewportSize = scrollArea->viewport()->size();
-    int imgW = m_dftModeEnabled ? m_dftSize : m_latestFrame.cols;
-    int imgH = m_dftModeEnabled ? m_dftSize : m_latestFrame.rows;
+    int imgW =  m_latestFrame.cols;
+    int imgH =  m_latestFrame.rows;
 
     if (imgW <= 0 || imgH <= 0) return;
 
@@ -583,7 +560,7 @@ void LiveViewDialog::renderCurrentFrame() {
     //cv::imshow("mod", modulatation);
     //fcv::waitKey(100);
 
-    if (m_dftModeEnabled) {
+    if (dftCheckBox->isChecked()) {
         // 1. Compute raw DFT
         cv::Mat dftRaw = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
         if (dftRaw.empty()) return;
@@ -757,3 +734,6 @@ QImage LiveViewDialog::matToQImage(const cv::Mat &mat) {
     }
     return QImage();
 }
+
+
+

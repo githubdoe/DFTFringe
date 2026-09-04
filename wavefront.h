@@ -46,19 +46,15 @@ class wavefront { public:
     cv::Mat_<double> workData;
     cv::Mat_<uint8_t> workMask;
     std::vector<double> InputZerns;
+    QVector<std::vector<cv::Point> > regions;
     double gaussian_diameter;
-    bool gbEnabled;
-    double gbValue;
-    bool wasSmoothed;
-    bool useSANull;
+                  CircleOutline m_outside;
+                  CircleOutline m_inside;
     double GBSmoothingValue;
+    double gbValue;
     WavefrontOrigin m_origin;
-    bool m_manuallyInverted; // true if user inverted this wavefront
-
     QString name;
     double lambda;
-    CircleOutline m_outside;
-    CircleOutline m_inside;
     double diameter;
     double roc;
     double min;
@@ -66,10 +62,11 @@ class wavefront { public:
     double std;
     double mean;
     bool dirtyZerns;
-    QVector<std::vector<cv::Point> > regions;
     bool regions_have_been_expanded;
-
-
+    bool gbEnabled;
+    bool wasSmoothed;
+    bool useSANull;
+    bool m_manuallyInverted; // true if user inverted this wavefront
 };
 
 #endif // WAVEFRONT_H
