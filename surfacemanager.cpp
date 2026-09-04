@@ -77,8 +77,6 @@
 #include "utils.h"
 #include "cnpy.h"
 
-cv::Mat theMask;
-cv::Mat deb;
 double outputLambda;
 double bilinear(cv::Mat mat, cv::Mat mask, double x, double y)
 {
@@ -647,22 +645,22 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     ym = wf->m_outside.m_center.y();
     double radm =wf->m_outside.m_radius + outsideOffset-2;
     double rado = wf->m_inside.m_radius + insideOffset;
-    if (rado > 0)
-        rado += (insideOffset + 1);
+    if(rado > 0){
+        rado += 1;
+    }
 
-    double cx = wf->m_inside.m_center.x();
-    double cy = wf->m_inside.m_center.y();
     cv::Mat mask = cv::Mat::zeros(height,width,CV_8U);
     mirrorDlg &md = *mirrorDlg::get_Instance();
-    double rx = radm;
-    double rx2 = rx * rx;
-    double ry = rx * md.m_verticalAxis/md.diameter;
-    double ry2 = ry * ry;
+
     if (!mirrorDlg::get_Instance()->isEllipse()){
         uchar v = 0xff;
         fillCircle(mask, xm,ym,radm, &v);
     }
     else {
+        double rx = radm;
+        double rx2 = rx * rx;
+        double ry = rx * md.m_verticalAxis/md.diameter;
+        double ry2 = ry * ry;
         for (int y = 0; y < height; ++y){
             for (int x = 0; x < width; ++x){
 
@@ -677,7 +675,8 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
 
     if (rado > 0 && useInsideCircle) {
         uchar color = 0;
-        fillCircle(mask, cx,cy,rado, &color);
+        // inside circle is not always defined. So we use outside circle coordinates. They are concentric.
+        fillCircle(mask, xm, ym, rado, &color);
     }
 
     // expand the region by 10%
@@ -723,7 +722,6 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
     //line(wf->workMask, Point(s/2, 0), Point(s/2,s),cv::Scalar(0,0,0), 10);
    // line(wf->workMask, Point(0, s/2), Point(s,s/2),cv::Scalar(0,0,0), 10);
     //line(wf->workMask, Point(0, 0), Point(s,s),cv::Scalar(0,0,0), 10);
-    theMask = mask.clone();
 
 
     // add central obstruction (not to be confused with a hole in the mirror - this comes from mirror configuration)
@@ -766,10 +764,10 @@ void SurfaceManager::ObstructionChanged(){
 
 void SurfaceManager::centerMaskValue(int val){
     insideOffset = val;
-    double mmPerPixel = getCurrent()->diameter/(2 *( m_wavefronts[m_currentNdx]->m_outside.m_radius-1));
-    m_surfaceTools->m_centerMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
-    makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
+    double mmPerPixel = wf->diameter/(2 *(wf->m_outside.m_radius-1));
+    m_surfaceTools->m_centerMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
+    makeMask(wf);
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
@@ -779,10 +777,10 @@ void SurfaceManager::centerMaskValue(int val){
 
 void SurfaceManager::outsideMaskValue(int val){
     outsideOffset = val;
-    double mmPerPixel = m_wavefronts[m_currentNdx]->diameter/(2 * (m_wavefronts[m_currentNdx]->m_outside.m_radius));
-    m_surfaceTools->m_edgeMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
-    makeMask(m_currentNdx);
     wavefront *wf = m_wavefronts[m_currentNdx];
+    double mmPerPixel = wf->diameter/(2 * (wf->m_outside.m_radius));
+    m_surfaceTools->m_edgeMaskLabel->setText(QString("%1 mm").arg(mmPerPixel* val, 6, 'f', 2));
+    makeMask(wf);
     wf->dirtyZerns = true;
     wf->wasSmoothed = false;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
@@ -1688,6 +1686,7 @@ void SurfaceManager::backGroundUpdate(){
             zp.m_bDontProcessEvents=false;
         }
         catch (int i) {
+            qWarning() << "Exception caught in generateSurfacefromWavefront:" << i;
             break;
         }
     }
