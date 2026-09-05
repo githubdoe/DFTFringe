@@ -2242,6 +2242,8 @@ void MainWindow::on_actionLive_view_triggered()
 
             });
             connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, CircleOutline inside) {
+
+                qDebug()<< "set4" << outside.m_center << outside.m_radius;
                 m_viewDlg->setOutsidecircle(outside.m_center, outside.m_radius);
             });
 
@@ -2264,6 +2266,13 @@ void MainWindow::on_actionLive_view_triggered()
             connect(m_viewDlg, &LiveViewDialog::streamDisconnected, this, &MainWindow::stopLiveButton_clicked);
             connect(m_viewDlg->pauseAnalyBtn, &QPushButton::clicked,this,  &MainWindow::pauseLiveButton_clicked);
 
+//            connect(m_viewDlg->imageLabel, &LiveImageView::mirrorDefined, this, [this](const QPointF center, double radius){
+//                QSettings set;
+//                set.setValue("lastOutsideRad", radius);
+
+//                set.setValue("lastOutsideCx",center.x());
+//                set.value("lastOutsideCy",center.y());
+//            });
             m_viewDlg->show();
         } else {
             // If it's already open, just bring it to the front

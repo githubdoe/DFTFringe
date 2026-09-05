@@ -78,10 +78,11 @@ public:
     bool loopRunning = false;
     bool m_stopRequested = false;// used to signal the dialog is trying to close.
     bool FirsdtWaveFrontSeen = false;
+    LiveImageView *imageLabel;
 private:
     VideoStreamWorker *m_worker;
     QThread *m_thread;
-    LiveImageView *imageLabel;
+
     QScrollArea *scrollArea;
     QCheckBox *dftCheckBox;
     QPushButton *grabButton;

@@ -977,26 +977,7 @@ void IgramArea::adjustCenterandRegions(){
         }
     }
 }
-
-bool IgramArea::openImage(const QString &fileName, bool showBoundary)
-
-{
-    cropTotalDx = cropTotalDy = 0;
-    foreach(QWidget *widget, QApplication::topLevelWidgets()) {
-      if(widget->objectName() == "MainWindow")
-        widget->setWindowTitle(fileName);
-    }
-
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    QImage loadedImage;
-    if (!loadedImage.load(fileName)) {
-        QMessageBox::warning(NULL,"","Image "+fileName + " could not be read.");
-        QApplication::restoreOverrideCursor();
-        return false;
-    }
-    // convert image to 3 channel image
-    if (loadedImage.format() != QImage::Format_RGB888)
-        loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
+bool IgramArea::openImage(QImage loadedImage,  bool showBoundary, QString fileName){
 
     if (Settings2::getInstance()->m_igram->m_removeDistortion){
         cv::Mat raw = cv::imread(fileName.toStdString().c_str());
@@ -1114,6 +1095,30 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
 
     QApplication::restoreOverrideCursor();
     return true;
+}
+
+bool IgramArea::openImage(const QString &fileName, bool showBoundary)
+
+{
+    cropTotalDx = cropTotalDy = 0;
+    foreach(QWidget *widget, QApplication::topLevelWidgets()) {
+      if(widget->objectName() == "MainWindow")
+        widget->setWindowTitle(fileName);
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QImage loadedImage;
+    if (!loadedImage.load(fileName)) {
+        QMessageBox::warning(NULL,"","Image "+fileName + " could not be read.");
+        QApplication::restoreOverrideCursor();
+        return false;
+    }
+    // convert image to 3 channel image
+    if (loadedImage.format() != QImage::Format_RGB888)
+        loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
+    return openImage(loadedImage, showBoundary,fileName);
+
+
 }
 void IgramArea::syncRegions(){
     // copy m_polygons to region editor

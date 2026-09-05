@@ -169,9 +169,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     imageLabel->setStyleSheet("background-color: black;");
     imageLabel->setAlignment(Qt::AlignCenter);
 
-    connect(imageLabel, &LiveImageView::mirrorDefined, this, [this](const QRect r){
-        this->m_userMirrorRect = r;
-    });
+
 
     scrollArea = new QScrollArea(this);
     scrollArea->setWidget(imageLabel);
@@ -273,12 +271,41 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
         helpText->setReadOnly(true);
         helpText->setHtml(
             "<h3>Settings</h3>"
-            "<p>Select the source of the video (0, 1, or 2 for USB cameras, or an HTTP stream URL).</p>"
-            "<h3>Automated Live Analysis</h3>"
-            "<p>Outline your igram, set the blue circle, configure max RMS limits, and click <b>Start Loop</b>.</p>"
-        );
+            "<p>Settings tab lets you select the source of the video.  Use 0,1,or 2 for USB attached cameras.</p>"
+            "<p>A selection for a URL stream might look like this:  http://192.168.50.5:5000/video_feed</p>"
+
+
+            "<h3>Auto RMS setup</h3>"
+            "<p>Enable the checkbox if you want the Max RMS value to be set to value of the first analyzed wave front time a percentage."
+               " This will happen the firsts time you \"Start\" the analysis.  From then on the Max value will not be modified by the program. "
+               " You can still modify it yourself however.</p>"
+
+            "<h3>Automated Live Analysis Prerequisites</h3>"
+            "<p>Before starting the automated analysis loop, ensure the following steps are completed:</p>"
+            "<ol>"
+            "  <li><b>Use the Grab button</b> To import the igram into DFTFringe and outtline it as usualal. Then Press Done.</li>"
+            "  <li><b>Set the blue circle as usual</b> Then press the compute surface button as usual.</li>"
+            "  <li><b>Max RMS value</b> You can set the Max RMS value where values higher than that will not be used in the analysis. </li>"
+            "</ol>"
+
+            "<p><b>Start</b>Once configured, switch back to the Live Feed< tab and click <b>Start Loop</b> to begin automated capture and processing.</p>"
+
+            "<p>If a wave front's RMS is equal or below the max RMS value it will be saved in the wave front list."
+                    " If averaging is turned on it will be added to the average as well.</p> "
+           "<p>Once the looping has started you might want to pause it to adjust some settings without reseting the averaging.</P>"
+            "<P>The Start button always resets the averaging if it was selected to be done.</p>"
+            "<p>The Stop button always stops the current looping and any averaging happening.</p>"
+            "<p>The average is not saved until you pause and press the \"Save Average\" button or the Stop button.  You can select any of the saved wave fronts and average them youself as usual.</p>"
+
+           "<h3>Max RMS</h3>"
+                    "<p>If an analyzed wave front's RMS value is larger than the Max RMS value it will"
+                    " not be added to the average and it will not be added to the list of wave fronts."
+                    "Also the surface display will switch to the live view instead of the average view"
+                    "until the RMS value is below the max</p>"
+
+                    );
         dlgLayout->addWidget(helpText);
-        helpDlg.resize(600, 500);
+        helpDlg.resize(800, 600);
         helpDlg.exec();
     });
 
@@ -496,7 +523,8 @@ void LiveViewDialog::onZoomChanged(int index) {
 
         // Re-apply scaled circle if we have one active
         if (m_hasActiveCircle) {
-            imageLabel->setOutsideCircle(m_rawCircleCenter * m_zoomFactor, m_rawCircleRadius * m_zoomFactor);
+            qDebug() << "set 1" << m_rawCircleCenter << m_rawCircleRadius;
+            imageLabel->setOutsideCircle(m_rawCircleCenter , m_rawCircleRadius);
         }
 
         renderCurrentFrame();
@@ -520,7 +548,8 @@ void LiveViewDialog::setFitToWindowZoom() {
     m_zoomFactor = std::max(0.1, m_zoomFactor);
     // Re-apply scaled circle if we have one active
     if (m_hasActiveCircle) {
-        imageLabel->setOutsideCircle(m_rawCircleCenter * m_zoomFactor, m_rawCircleRadius * m_zoomFactor);
+                    qDebug() << "set 2" << m_rawCircleCenter << m_rawCircleRadius;
+        imageLabel->setOutsideCircle(m_rawCircleCenter , m_rawCircleRadius );
     }
     imageLabel->setZoomFactor(m_zoomFactor);
     renderCurrentFrame();
@@ -760,12 +789,7 @@ void LiveViewDialog::setOutsidecircle(QPointF center, double radius) {
     m_rawCircleCenter = center;
     m_rawCircleRadius = radius;
     m_hasActiveCircle = true;
-
-
-    // Scale center and radius by current zoom factor
-    QPointF scaledCenter(center.x() / m_zoomFactor, center.y() / m_zoomFactor);
-    double scaledRadius = radius / m_zoomFactor;
-
-    imageLabel->setOutsideCircle(scaledCenter, scaledRadius);
+            qDebug() << "set 3" << m_rawCircleCenter << m_rawCircleRadius;
+    imageLabel->setOutsideCircle(center, radius);
 }
 
