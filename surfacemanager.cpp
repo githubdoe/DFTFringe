@@ -667,8 +667,15 @@ void SurfaceManager::makeMask(wavefront *wf, bool useInsideCircle){
 
     if (rado > 0 && useInsideCircle) {
         uchar color = 0;
-        // inside circle is not always defined. So we use outside circle coordinates. They are concentric.
-        fillCircle(mask, xm, ym, rado, &color);
+        if(wf->m_inside.isValid()){
+            double cx = wf->m_inside.m_center.x();
+            double cy = wf->m_inside.m_center.y();
+            fillCircle(mask, cx, cy, rado, &color);
+        }
+        else{
+            // inside circle is not always defined. So we use outside circle coordinates.
+            fillCircle(mask, xm, ym, rado, &color);
+        }
     }
 
     // expand the region by 10%
@@ -2904,8 +2911,8 @@ void SurfaceManager::showAllContours(){ //TODO move to contourview would make mo
     }
     QRect rec = QGuiApplication::primaryScreen()->geometry();
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot; //TODO leaking ? 
-    //plot->m_minimal = true; 
+    ContourPlot *plot =new ContourPlot(0,0);//m_contourPlot; //TODO leaking ?
+    //plot->m_minimal = true;
     int cols = dlg.getColumns(); //TODO parameter number of pixels unused here. update the dlg ui
     int width = rec.width()/cols;
     int height = width * .82;
@@ -3498,4 +3505,3 @@ void SurfaceManager::tiltAnalysis(){
    yTilt->attach(pl1);
    pl1->show();
 }
-
