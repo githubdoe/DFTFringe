@@ -2243,7 +2243,7 @@ void MainWindow::on_actionLive_view_triggered()
             });
             connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, CircleOutline inside) {
 
-                qDebug()<< "set4" << outside.m_center << outside.m_radius;
+
                 m_viewDlg->setOutsidecircle(outside.m_center, outside.m_radius);
             });
 
@@ -2266,13 +2266,14 @@ void MainWindow::on_actionLive_view_triggered()
             connect(m_viewDlg, &LiveViewDialog::streamDisconnected, this, &MainWindow::stopLiveButton_clicked);
             connect(m_viewDlg->pauseAnalyBtn, &QPushButton::clicked,this,  &MainWindow::pauseLiveButton_clicked);
 
-//            connect(m_viewDlg->imageLabel, &LiveImageView::mirrorDefined, this, [this](const QPointF center, double radius){
-//                QSettings set;
-//                set.setValue("lastOutsideRad", radius);
+            connect(m_viewDlg->imageLabel, &LiveImageView::mirrorDefined, this, [this](const QPointF center, double radius){
 
-//                set.setValue("lastOutsideCx",center.x());
-//                set.value("lastOutsideCy",center.y());
-//            });
+                QSettings set;
+                set.setValue("lastOutsideRad", radius);
+
+                set.setValue("lastOutsideCx",center.x());
+                set.setValue("lastOutsideCy",center.y());
+            });
             m_viewDlg->show();
         } else {
             // If it's already open, just bring it to the front
@@ -2362,7 +2363,6 @@ void MainWindow::setLiveViewMode(bool active) {
         m_ogl->setLivePreviewMode(true);
     } else {
         // --- RESTORATION: Exit Live Mode ---
-qDebug() << "return to normal";
         m_igramArea->show();
         connect(m_igramArea, &IgramArea::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
         connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
@@ -2427,14 +2427,12 @@ void MainWindow::runLiveAnalysisLoop() {
 
         if (m_liveState == State_Stopped) break;
 
-        // 1. Grab and save the frame
-        QString savedFilePath = load_from_url();
-        if (savedFilePath.isEmpty()) {
-            break;
-        }
+
 
         // 2. Open the saved image in the pipeline
-        m_igramArea->openImage(savedFilePath);
+        QImage img = m_viewDlg->getFrame();
+
+        m_igramArea->openImage(img, true, QString("stream%1").arg(m_liveValidCount));
         QApplication::processEvents();
         if (m_liveState == State_Stopped) break;
 
@@ -2531,11 +2529,10 @@ void MainWindow::runLiveAnalysisLoop() {
         // If displaying current frame, update 3D view
         if (!displayAverage || m_viewDlg->m_tmpShowLive) {
             m_ogl->m_surface->setSurface(wf);
-            qDebug() << "not average";
         }
 
         // 6. RENDER SURFACE
-        QImage img = m_ogl->m_surface->render(1000, 1000);
+        img = m_ogl->m_surface->render(1000, 1000);
         m_ogl->m_liveLabel->setPixmap(QPixmap::fromImage(img));
         // Update UI Status Bar
         QString statusRightText;
@@ -2560,11 +2557,11 @@ void MainWindow::runLiveAnalysisLoop() {
 
 
 
-        // File cleanup if requested
-        if (m_viewDlg->deleteIgramAfter->isChecked()) {
-            QFile::remove(savedFilePath);
-            QFile::remove(savedFilePath.replace("jpg", "oln"));
-        }
+//        // File cleanup if requested
+//        if (m_viewDlg->deleteIgramAfter->isChecked()) {
+//            QFile::remove(savedFilePath);
+//            QFile::remove(savedFilePath.replace("jpg", "oln"));
+//        }
 
         // Wavefront list cleanup & memory management
         bool discardFrame = (wf->std > m_viewDlg->maxRMS->value()) || m_viewDlg->deleteIntermidiateWaveFront->isChecked();

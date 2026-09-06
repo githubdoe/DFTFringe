@@ -1061,7 +1061,7 @@ bool IgramArea::openImage(QImage loadedImage,  bool showBoundary, QString fileNa
     QFileInfo finfo(makeOutlineName());
     emit showTab(0);
     qApp->processEvents();
-    if (finfo.exists()){
+    if (!fileName.startsWith("stream") and finfo.exists()){
         qDebug() << "file exists";
         deleteRegions();
         qDebug() << "del regions";
@@ -1079,12 +1079,13 @@ bool IgramArea::openImage(QImage loadedImage,  bool showBoundary, QString fileNa
             findOutline();
             adjustCenterandRegions();
         }
-    emit boundary(m_outside, m_center);
+
     if (showBoundary){
         computeEdgeRadius();
         drawBoundary();
     }
 
+    emit boundary(m_outside, m_center);
 
     cropTotalDx = cropTotalDy = 0;
     SideOutLineActive(true);

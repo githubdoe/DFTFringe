@@ -54,7 +54,6 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
         setCursor(Qt::CrossCursor);
         update();
         event->accept();
-     qDebug() << "starting point"<< m_firstEdgePoint;
     }
 }
 
@@ -98,20 +97,21 @@ QRect LiveImageView::getMirrorRect() const {
 }
 
 void LiveImageView::setOutsideCircle(QPointF center, double radius) {
-    qDebug() << "set center vals" << center << radius;
-    if (radius < 280){
-        qDebug() << "less than 280";
-    }
+
+
     m_nativeCenter = center;
     m_nativeRadius = radius;
     m_hasCircle = true;
-    qDebug() << "set native center" << m_nativeCenter << m_nativeRadius;
+
     update();
 }
 
 void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
-        if (m_state == InteractionState::DrawingRadius) {
+        if (m_state== InteractionState::DraggingCenter){
+           emit mirrorDefined(m_nativeCenter,m_nativeRadius);
+        }
+        else if (m_state == InteractionState::DrawingRadius) {
             if (m_nativeRadius > 5.0) {
                 m_hasCircle = true;
                 emit mirrorDefined(m_nativeCenter,m_nativeRadius);
@@ -166,7 +166,7 @@ void LiveImageView::paintEvent(QPaintEvent *event) {
     if (m_state != InteractionState::None || m_hasCircle) {
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing, true);
-qDebug() << "zoomfactor" << m_zoomFactor << m_nativeCenter << m_nativeRadius;
+
         // Scale native center and radius precisely once by the current zoom factor
         QPointF centerScaled(m_nativeCenter.x() * m_zoomFactor, m_nativeCenter.y() * m_zoomFactor);
         double radiusScaled = m_nativeRadius * m_zoomFactor;

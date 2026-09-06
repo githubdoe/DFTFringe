@@ -12,6 +12,7 @@
 #include <QGroupBox>
 #include <QSplitter>
 #include <QDialogButtonBox>
+#include <QMessageBox>
 // ==========================================
 // LiveViewDialog Implementation
 // ==========================================
@@ -23,6 +24,7 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
     setAttribute(Qt::WA_DeleteOnClose, true);
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
     QSettings settings;
+
     if (settings.contains("LiveViewDialog/geometry")) {
         restoreGeometry(settings.value("LiveViewDialog/geometry").toByteArray());
     } else {
@@ -78,12 +80,44 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
         });
     }, Qt::QueuedConnection);
 
-    // Kick off the thread start safely after construction
-    QTimer::singleShot(50, this, [this]() {
-        if (m_thread && !m_thread->isRunning()) {
-            m_thread->start();
-        }
-    });
+    // Kick off the thread start safely after checking user preferences
+        QTimer::singleShot(50, this, [this, savedUrl]() {
+            QSettings settings;
+            bool skipPrompt = settings.value("LiveView/skipUSBStartupPrompt", false).toBool();
+            bool autoConnect = settings.value("LiveView/autoConnectUSB", true).toBool();
+
+            // If it targets default USB device "0" and the user hasn't suppressed prompts
+            if (!skipPrompt) {
+                QMessageBox msgBox(this);
+                msgBox.setWindowTitle("USB Camera Connection");
+                msgBox.setText(QString("Attempt to connect to device %1 on startup?").arg(savedUrl));
+                msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+
+                QCheckBox dontAskBox("Never ask me again", &msgBox);
+                msgBox.setCheckBox(&dontAskBox);
+
+                int ret = msgBox.exec();
+                if (dontAskBox.isChecked()) {
+                    settings.setValue("LiveView/skipUSBStartupPrompt", true);
+                }
+                if (ret == QMessageBox::Yes) {
+                    settings.setValue("LiveView/autoConnectUSB", true);
+                    autoConnect = true;
+                } else {
+                    settings.setValue("LiveView/autoConnectUSB", false);
+                    autoConnect = false;
+                }
+            }
+
+            // Only start the thread if allowed
+            if ((savedUrl != "0") || autoConnect) {
+                if (m_thread && !m_thread->isRunning()) {
+                    m_thread->start();
+                }
+            } else {
+                statusLeft->setText("<span style='color: black; background-color: yellow'>USB connection skipped. Open settings to connect.</span>");
+            }
+        });
 }
 LiveViewDialog::~LiveViewDialog() {
     if (m_worker) {
@@ -144,6 +178,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
 
     headerLayout->addWidget(new QLabel("Delete if RMS >", this));
     headerLayout->addWidget(maxRMS);
+    headerLayout->addSpacing(100);
 
     rootLayout->addWidget(headerWidget);
 
@@ -396,6 +431,9 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
 
     connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::restartStream);
     connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
+        if (m_thread && !m_thread->isRunning()) {
+            m_thread->start();
+        }
         if (item) {
             urlLineEdit->setText(item->text().trimmed());
             onApplySettings();
@@ -523,7 +561,7 @@ void LiveViewDialog::onZoomChanged(int index) {
 
         // Re-apply scaled circle if we have one active
         if (m_hasActiveCircle) {
-            qDebug() << "set 1" << m_rawCircleCenter << m_rawCircleRadius;
+
             imageLabel->setOutsideCircle(m_rawCircleCenter , m_rawCircleRadius);
         }
 
@@ -548,7 +586,7 @@ void LiveViewDialog::setFitToWindowZoom() {
     m_zoomFactor = std::max(0.1, m_zoomFactor);
     // Re-apply scaled circle if we have one active
     if (m_hasActiveCircle) {
-                    qDebug() << "set 2" << m_rawCircleCenter << m_rawCircleRadius;
+
         imageLabel->setOutsideCircle(m_rawCircleCenter , m_rawCircleRadius );
     }
     imageLabel->setZoomFactor(m_zoomFactor);
@@ -789,7 +827,7 @@ void LiveViewDialog::setOutsidecircle(QPointF center, double radius) {
     m_rawCircleCenter = center;
     m_rawCircleRadius = radius;
     m_hasActiveCircle = true;
-            qDebug() << "set 3" << m_rawCircleCenter << m_rawCircleRadius;
+
     imageLabel->setOutsideCircle(center, radius);
 }
 
