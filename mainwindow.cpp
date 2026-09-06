@@ -2274,15 +2274,16 @@ void MainWindow::on_actionLive_view_triggered()
                 set.setValue("lastOutsideCx",center.x());
                 set.setValue("lastOutsideCy",center.y());
             });
+            connect(m_dftArea, &DFTArea::centerFilterPercent, this,[this](double percent){
+                m_viewDlg->setCenterFilterPercent(percent);
+            });
             m_viewDlg->show();
         } else {
             // If it's already open, just bring it to the front
             m_viewDlg->raise();
             m_viewDlg->activateWindow();
         }
-    double f = (double)(m_dftArea->m_center_filter)/((double)(m_dftArea->width())/2.);
 
-    m_viewDlg->setCenterFilterRadius(f);
 
     m_viewDlg->show();
 }

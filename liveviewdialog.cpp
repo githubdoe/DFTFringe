@@ -443,6 +443,7 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
     QGroupBox *rmsGroup = new QGroupBox("RMS settings", m_settingsDlg);
     QVBoxLayout *rmsLayout = new QVBoxLayout(rmsGroup);
 
+
     autoRMSatStarup = new QCheckBox("Compute Max rms as a percentage of first analysis", rmsGroup);
     connect(autoRMSatStarup, &QCheckBox::toggled, this, [](bool checked) {
         QSettings settings;
@@ -450,6 +451,21 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
     });
     autoRMSatStarup->setChecked(settings.value("liveViewAutoRMSCheckBox", false).toBool());
     rmsLayout->addWidget(autoRMSatStarup);
+
+    // make RMS margin settings;
+    QHBoxLayout *percentLayout = new QHBoxLayout();
+    percentLayout->addWidget(new QLabel("Percent above RMS of first analysis:"));
+
+    RMSMargin = new QDoubleSpinBox();
+    connect(RMSMargin, QOverload<double>::of (&QDoubleSpinBox::valueChanged), this, [](double val){
+        QSettings settings;
+        settings.setValue("liveViewAutoRMSValue", val);
+    });
+    RMSMargin->setSingleStep(.25);
+    RMSMargin->setValue(settings.value("liveViewAutoRMSValue", 1.5).toDouble());
+    percentLayout->addWidget(RMSMargin);
+    percentLayout->addStretch((1));
+    rmsLayout->addLayout(percentLayout);
 
     QHBoxLayout *resLayout = new QHBoxLayout();
     resLayout->addWidget(new QLabel("Camera Resolution:", m_settingsDlg));
@@ -721,7 +737,21 @@ void LiveViewDialog::renderCurrentFrame() {
 
     // Display via OpenCV conversion
     QImage img = matToQImage(displayMat);
-    if (img.isNull()) return;
+    if (dftCheckBox->isChecked()) {
+        // draw center filter circle
+        QPainter dftpainter(&img);
+
+        dftpainter.setBrush(QColor(0,0,100,70));
+
+        dftpainter.setPen(QPen(Qt::yellow, 2));
+
+        int centerx = img.width()/2;
+        int centery = img.height()/2;
+        int rad = centerx * m_centerPercent;
+
+        dftpainter.drawEllipse(QPointF(centerx, centery), rad,rad);
+    }
+
 
     int targetWidth = static_cast<int>(img.width() * m_zoomFactor);
     int targetHeight = static_cast<int>(img.height() * m_zoomFactor);

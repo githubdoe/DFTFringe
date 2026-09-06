@@ -47,6 +47,7 @@ private slots:
 public slots:
     void setOutsidecircle(QPointF center, double radius);
     void onGrabClicked();
+    void setCenterFilterPercent(double percent) {m_centerPercent = percent;};
 signals:
     void igramCaptured();
     void streamDisconnected();
@@ -62,7 +63,6 @@ public:
 
 
     QCheckBox *deleteIgramAfter;
-    void setCenterFilterRadius(double percent) {imageLabel->m_centerPercent = percent;};
     QDoubleSpinBox *maxRMS;
     QCheckBox *averageMode;
     QLabel *imageSize;
@@ -92,9 +92,9 @@ private:
     QDoubleSpinBox *vivid;  // makes the DFT Vivid;
     QSpinBox *DFTLowThreshold;
 
-    double m_centerPercent;
+    double m_centerPercent = .001;
     double m_RMSMargin = 1.;
-
+    double m_filterPercent = 0;
     QTimer *m_rmsTimer;
 
     QComboBox *resolutionCombo;

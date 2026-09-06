@@ -52,7 +52,7 @@ signals:
 
 private slots:
 
-    void setCenterFilterValue(int);
+    void setCenterFilterValue(double);
 
     void on_filterAdjuster_valueChanged(double arg1);
 

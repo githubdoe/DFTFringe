@@ -87,7 +87,7 @@ public slots:
 signals:
     void setDftSizeVal(int);
     void selectDFTTab();
-    void updateFilterSize(int);
+    void updateFilterSize(double);
     void newWavefront(cv::Mat, CircleOutline, CircleOutline, const QString &, WavefrontOrigin origin,
                       QVector<std::vector<cv::Point> >);
     void dftReady(QImage);

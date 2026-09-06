@@ -137,11 +137,10 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     tools->connectTo(this);
     capture = false;
     QSettings set;
-    m_center_filter = set.value("DFT Center Filter", 10).toDouble();
-    qDebug() << "init center" << m_center_filter;
-    // TODO I muted clazy warning as this is a false positive.
-    // It might be good to find a different way to call setCenterFilterValue
-    emit updateFilterSize(m_center_filter); // clazy:exclude=incorrect-emit
+
+
+
+    emit updateFilterSize(m_center_filter);
     installEventFilter(this);
 
     /*
@@ -226,6 +225,8 @@ void DFTArea::dftCenterFilter(double v){
     QSettings set;
     set.setValue("DFT Center Filter", v);
     emit updateFilterSize(v);
+    double percent = double(v/(magIImage.size().width()/2.));
+    emit centerFilterPercent(percent);
     update();
 }
 
@@ -1073,7 +1074,9 @@ void DFTArea::mouseMoveEvent(QMouseEvent *event){
     int ydel = pos.y() - ycenter;
     int rad = sqrt(pow(xdel,2)+pow(ydel,2));
     emit updateFilterSize(rad/zoom);
-    emit centerFilterPercent((rad/zoom)/(double)xcenter);
+    //double percent = double(rad/zoom)/(magIImage.size().width()/2.);
+    //emit centerFilterPercent(percent);
+
 }
 
 

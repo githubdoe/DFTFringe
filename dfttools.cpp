@@ -43,11 +43,8 @@ void DFTTools::imageSize(const QString &txt){
     ui->imageSize->setText(txt);
 }
 
+void DFTTools::setCenterFilterValue(double v){
 
-
-
-
-void DFTTools::setCenterFilterValue(int v){
     ui->filterAdjuster->setValue(v);
 }
 
