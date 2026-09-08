@@ -31,6 +31,17 @@
 #include <qwt_interval.h>
 
 class MyZoomer;
+class CustomSpectrogram : public QwtPlotSpectrogram {
+public:
+    qreal contourWidth = 3;
+
+protected:
+    QPen contourPen(double level) const override {
+        QPen pen = QwtPlotSpectrogram::contourPen(level); // Retrieves color from color map
+        pen.setWidthF(contourWidth);                      // Enforces your custom width
+        return pen;
+    }
+};
 
 class ContourPlot: public QwtPlot
 {
@@ -40,7 +51,7 @@ class ContourPlot: public QwtPlot
     double m_lastAngle;
 
 public:
-    QwtPlotSpectrogram *d_spectrogram;
+    CustomSpectrogram *d_spectrogram;
     const wavefront* m_wf;
     ContourTools *m_tools;
     static bool m_useMiddleOffset;
@@ -64,7 +75,7 @@ public:
     int m_radialDeg;
     bool m_do_fill;
     bool m_inZoomOperation;
-
+    int m_countourPenWidth = 3;
 
 signals:
     void setMinMaxValues(double,double);
@@ -87,6 +98,8 @@ public slots:
     void newDisplayErrorRange(double min, double max);
     void drawProfileLine(const double ang);
     void clearZoomFlag();
+    void printActualSizeTiled();
+    void on_line_width_changed(int width);
 #ifndef QT_NO_PRINTER
     void printPlot();
 #endif
@@ -96,7 +109,8 @@ private:
     void initPlot();
     bool eventFilter(QObject *obj, QEvent *event);
 
-    QColor m_contourPen;
+    QColor m_contourPenColor;
+
 
     void ruler();
     double m_min;

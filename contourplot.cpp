@@ -46,7 +46,7 @@
 #include <qwt_plot_marker.h>
 #include "spdlog/spdlog.h"
 #include <QTimer>
-
+#include <QFileDialog>
 
 double zOffset = 0;
 double lastx = -1.;
@@ -312,7 +312,7 @@ void ContourPlot::showContoursChanged(double val){
         d_spectrogram->setContourLevels( contourLevels );
         d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode,true );
         set.setValue("contourShowLines", true);
-        d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
+        d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPenColor, m_countourPenWidth) : QPen(Qt::NoPen));
     }
     replot();
 }
@@ -580,10 +580,10 @@ QString ContourPlot::m_zRangeMode("Auto");
 double ContourPlot::m_zOffset = 0.;
 
 ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
-    QwtPlot( parent ),m_wf(0),m_tools(tools),m_minimal(minimal), m_linkProfile(true), m_inZoomOperation(false), m_contourPen(Qt::white)
+    QwtPlot( parent ),m_wf(0),m_tools(tools),m_minimal(minimal), m_linkProfile(true), m_inZoomOperation(false), m_contourPenColor(Qt::white)
 {
     spdlog::get("logger")->trace("ContourPlot::ContourPlot");
-    d_spectrogram = new QwtPlotSpectrogram();
+    d_spectrogram = new CustomSpectrogram();
     picker_ = new QwtPlotPicker(this->canvas());
     picker_->setStateMachine(new QwtPickerClickPointMachine);
 
@@ -598,7 +598,9 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     QSettings settings;
     m_colorMapNdx = settings.value("colorMapType",0).toInt();
     contourRange = settings.value("contourRange", .1).toDouble();
-    m_contourPen = QColor(settings.value("ContourLineColor", "white").toString());
+    m_contourPenColor = QColor(settings.value("ContourLineColor", "white").toString());
+    m_countourPenWidth = settings.value("ContourLineWidth",3).toInt();
+    d_spectrogram->contourWidth = m_countourPenWidth;
     m_do_fill = settings.value("contourShowFill", true).toBool();
     m_rulerPen = QPen(QColor(settings.value("ContourRulerColor", "grey").toString()));
     m_radialDeg = settings.value("contourRulerRadialDeg", 30).toInt();
@@ -613,7 +615,7 @@ void ContourPlot::initPlot(){
     QSettings settings;
     bool fill = settings.value("contourShowFill", true).toBool();
     d_spectrogram->setRenderThreadCount( 0 ); // use system specific thread count
-    d_spectrogram->setDefaultContourPen( fill ? QPen( m_contourPen): QPen(Qt::NoPen));
+    d_spectrogram->setDefaultContourPen( fill ? QPen( m_contourPenColor,m_countourPenWidth): QPen(Qt::NoPen));
     d_spectrogram->setColorMap( new dftColorMap(settings.value("colorMapType",0).toInt()) );
     d_spectrogram->setCachePolicy( QwtPlotRasterItem::PaintCache );
 
@@ -656,17 +658,25 @@ void ContourPlot::setTool(ContourTools *tool){
 
 void ContourPlot::on_line_color_changed(QColor c)
 {
-    m_contourPen = c;
-    d_spectrogram->setDefaultContourPen(QPen(c));
+    m_contourPenColor = c;
+    d_spectrogram->setDefaultContourPen(QPen(c,5));
     QSettings settings;
     settings.setValue("ContourLineColor", c.name());
     replot();
 }
-
+void ContourPlot::on_line_width_changed(int width)
+{
+    m_countourPenWidth = width;
+    d_spectrogram->contourWidth = width;
+    d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPenColor, m_countourPenWidth) : QPen(Qt::NoPen));
+    QSettings settings;
+    settings.setValue("ContourLineWidth", width);
+    replot();
+}
 void ContourPlot::contourFillChanged(int val)
 {
     if (val){
-        d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
+        d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPenColor,m_countourPenWidth) : QPen(Qt::NoPen));
     }
 
     replot();
@@ -678,7 +688,7 @@ void ContourPlot::showContour( bool on )
     set.setValue("contourShowLines", on);
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ContourMode, on );
     if (on)
-        d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
+        d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPenColor,m_countourPenWidth) : QPen(Qt::NoPen));
     replot();
 }
 
@@ -689,7 +699,7 @@ void ContourPlot::showSpectrogram(bool on )
     m_do_fill = on;
 
     d_spectrogram->setDisplayMode( QwtPlotSpectrogram::ImageMode, on );
-    d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPen) : QPen(Qt::NoPen));
+    d_spectrogram->setDefaultContourPen(m_do_fill ? QPen(m_contourPenColor,m_countourPenWidth) : QPen(Qt::NoPen));
 
     replot();
 }
@@ -810,3 +820,111 @@ void ContourPlot::printPlot()
 }
 
 #endif
+
+void ContourPlot::printActualSizeTiled()
+{
+    if (m_wf == nullptr) {
+        spdlog::get("logger")->warn("printActualSizeTiled: m_wf is null");
+        return;
+    }
+
+    QString fileName = QFileDialog::getSaveFileName(
+        this,
+        tr("Save Tiled Mirror PDF"),
+        "mirror_tiled_1to1.pdf",
+        tr("PDF Files (*.pdf)")
+    );
+
+    if (fileName.isEmpty())
+        return;
+
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(fileName);
+
+    int dpiX = printer.logicalDpiX();
+    int dpiY = printer.logicalDpiY();
+
+    // 1. Calculate exact physical dimensions based on mirror diameter in mm
+    double mirrorDiameterMm = m_wf->diameter;
+    double mirrorRadiusMm = mirrorDiameterMm / 2.0;
+    double pixelsPerMm = m_wf->m_outside.m_radius / mirrorRadiusMm;
+
+    // Total master image size in pixels matching the physical mirror size
+    int totalWidthPx = qRound((mirrorDiameterMm / 25.4) * dpiX);
+    int totalHeightPx = qRound((mirrorDiameterMm / 25.4) * dpiY);
+
+    // Temporarily hide UI chrome for clean output
+    bool oldMinVal = m_minimal;
+    m_minimal = true;
+    enableAxis(QwtPlot::yLeft, false);
+    enableAxis(QwtPlot::xBottom, false);
+    enableAxis(QwtPlot::yRight, false);
+    replot();
+
+    // 2. Render the plot into a master image sized to the exact physical mirror proportions
+    QImage mirrorImage(totalWidthPx, totalHeightPx, QImage::Format_ARGB32);
+    mirrorImage.fill(Qt::white);
+
+    QPainter imgPainter(&mirrorImage);
+    QwtPlotRenderer renderer;
+    renderer.setDiscardFlag(QwtPlotRenderer::DiscardBackground, true);
+
+    // Map the plot view exactly to the mirror bounds
+    double cx = m_wf->data.cols / 2.0;
+    double cy = m_wf->data.rows / 2.0;
+    double radiusPx = mirrorRadiusMm * pixelsPerMm;
+
+    setAxisScale(QwtPlot::xBottom, cx - radiusPx, cx + radiusPx);
+    setAxisScale(QwtPlot::yLeft, cy - radiusPx, cy + radiusPx);
+    replot();
+
+    renderer.render(this, &imgPainter, QRectF(0, 0, totalWidthPx, totalHeightPx));
+    imgPainter.end();
+
+    // Restore UI state
+    m_minimal = oldMinVal;
+    enableAxis(QwtPlot::yLeft, !m_minimal);
+    enableAxis(QwtPlot::xBottom, !m_minimal);
+    updateAspectRatio();
+    replot();
+
+    // 3. Determine printable page dimensions in pixels
+    QPageLayout pageLayout = printer.pageLayout();
+    QRectF printableRectMm = pageLayout.paintRect(QPageLayout::Millimeter);
+
+    int pageWidthPx = qRound((printableRectMm.width() / 25.4) * dpiX);
+    int pageHeightPx = qRound((printableRectMm.height() / 25.4) * dpiY);
+
+    int overlapPx = qRound((10.0 / 25.4) * dpiX);
+    int effectiveWidthPx = pageWidthPx - overlapPx;
+    int effectiveHeightPx = pageHeightPx - overlapPx;
+
+    int numCols = qCeil((double)totalWidthPx / effectiveWidthPx);
+    int numRows = qCeil((double)totalHeightPx / effectiveHeightPx);
+
+    // 4. Slice the master image and write each tile.
+    // printerPainter.end() is called explicitly at the end to release the file lock.
+    QPainter printerPainter;
+    if (!printerPainter.begin(&printer))
+        return;
+
+    bool firstPage = true;
+    for (int row = 0; row < numRows; ++row) {
+        for (int col = 0; col < numCols; ++col) {
+            if (!firstPage) {
+                printer.newPage();
+            }
+            firstPage = false;
+
+            int srcX = col * effectiveWidthPx;
+            int srcY = row * effectiveHeightPx;
+            int srcW = qMin(pageWidthPx, totalWidthPx - srcX);
+            int srcH = qMin(pageHeightPx, totalHeightPx - srcY);
+
+            QImage tile = mirrorImage.copy(srcX, srcY, srcW, srcH);
+            printerPainter.drawImage(0, 0, tile);
+        }
+    }
+    printerPainter.end(); // Releases the file lock immediately
+}

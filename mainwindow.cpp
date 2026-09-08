@@ -2515,7 +2515,7 @@ void MainWindow::runLiveAnalysisLoop() {
                     m_liveAverageWf->nulledData = result.clone();
                     m_liveAverageWf->std = stddev[0] * md->lambda / outputLambda;
                     m_liveAverageWf->mean = mean[0];
-
+                    m_liveAverageWf->useSANull = false;
                     if (!m_viewDlg->m_tmpShowLive) {
                         m_ogl->m_surface->setSurface(m_liveAverageWf);
                     }

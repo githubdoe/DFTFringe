@@ -23,6 +23,8 @@
 #include <QSettings>
 #include <QGuiApplication>
 #include <QScreen>
+#include <QColorDialog>
+#include <QInputDialog>
 contourView::contourView(QWidget *parent, ContourTools *tools) :
     QWidget(parent),
     zoomed(false), ui(new Ui::contourView), tools(tools)
@@ -77,7 +79,29 @@ void contourView::showContextMenu(QPoint pos)
     QMenu myMenu;
     QString txt = (zoomed)? tr("Restore to MainWindow") : tr("FullScreen");
     myMenu.addAction(txt,  this, &contourView::zoom);
-
+    QString txt2 = "Print full sized";
+    myMenu.addAction(txt2, ui->widget, &ContourPlot::printActualSizeTiled);
+    // Direct lambda action to trigger QColorDialog and call your public slot
+    myMenu.addAction("Select Contour Line Color...", [this]() {
+        QColor chosenColor = QColorDialog::getColor(Qt::white, this, tr("Select Contour Line Color"));
+        if (chosenColor.isValid()) {
+            ui->widget->on_line_color_changed(chosenColor);
+        }
+    });
+    myMenu.addAction("Select Contour Line Width...", [this]() {
+        bool ok;
+        int newWidth = QInputDialog::getInt(
+            this,
+            tr("Contour Line Width"),
+            tr("Width (pixels):"),
+            ui->widget->m_countourPenWidth,
+            1, 10, 1,
+            &ok
+        );
+        if (ok) {
+            ui->widget->on_line_width_changed(newWidth);
+        }
+    });
     // Show context menu at handling position
     myMenu.exec(globalPos);
 }
@@ -139,4 +163,5 @@ void contourView::on_LinkProfileCB_clicked(bool checked)
     QSettings set;
     set.setValue("linkProfilePlot", checked);
     getPlot()->m_linkProfile = checked;
+
 }
