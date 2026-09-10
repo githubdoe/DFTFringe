@@ -155,7 +155,7 @@ void LiveViewDialog::closeEvent(QCloseEvent *event) {
 
 void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     setWindowTitle("DFTFringe - Live View");
-
+    QSettings set;
     // Root layout for the dialog (Vertical)
     QVBoxLayout *rootLayout = new QVBoxLayout(this);
     rootLayout->setContentsMargins(8, 8, 8, 8);
@@ -169,6 +169,11 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     headerLayout->setContentsMargins(0, 0, 0, 0);
 
     averageMode = new QCheckBox("Compute and show average when loop is running", this);
+    averageMode->setChecked(set.value("liveViewAverageMode", false).toBool());
+    connect(averageMode, &QCheckBox::stateChanged, this,[](int val){
+        QSettings set;
+        set.setValue("liveViewAverageMode",val);
+    });
 
     maxRMS = new QDoubleSpinBox(this);
     maxRMS->setRange(0.0, 100.0);
@@ -245,7 +250,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     dftresolutionCombo->addItem("256 x 256 (Fast)", 256);
     dftresolutionCombo->addItem("512 x 512 (Balanced)", 512);
     dftresolutionCombo->addItem("1024 x 1024 (Detailed)", 1024);
-    QSettings set;
+
     dftresolutionCombo->setCurrentIndex(set.value("liveViewDftSize", 1).toInt());
     connect(dftresolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LiveViewDialog::onDFTSizeChanged);
