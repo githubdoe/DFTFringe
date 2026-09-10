@@ -75,7 +75,7 @@ public:
     int m_radialDeg;
     bool m_do_fill;
     bool m_inZoomOperation;
-    int m_countourPenWidth = 3;
+    int m_countourPenWidth = 1;
 
 signals:
     void setMinMaxValues(double,double);

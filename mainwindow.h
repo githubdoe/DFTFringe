@@ -366,7 +366,8 @@ private:
     // Live view variables
     // Average tracking variables (persists across pause/resume, resets on fresh start)
     wavefront *m_liveAverageWf = nullptr;
-    cv::Mat m_liveSum;
+    cv::Mat m_liveSum;      //Sum used to make the live display
+    cv::Mat m_liveDataSum;  // The sum used to make the actual wavefront.
     int m_liveValidCount = 0;
     LiveLoopState m_liveState = State_Stopped;
     void setLiveViewMode(bool active);

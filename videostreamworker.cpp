@@ -56,7 +56,7 @@ void VideoStreamWorker::fetchNextFrame() {
 
         // Grab and retrieve the latest frame from the buffer
         if (!m_cap.read(frame) || frame.empty()) {
-            emit streamError("Stream disconnected or frame empty.");
+            emit streamError("Stream error. ");
             m_running = false;
             return;
         }

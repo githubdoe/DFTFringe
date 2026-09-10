@@ -2492,7 +2492,7 @@ void MainWindow::runLiveAnalysisLoop() {
                 // First valid frame in the averaging run
                 if (m_liveValidCount == 1 || m_liveSum.empty()) {
                     m_liveSum = cv::Mat::zeros(wf->workData.rows, wf->workData.cols, wf->workData.type());
-
+                    m_liveDataSum = cv::Mat::zeros(wf->workData.rows, wf->workData.cols, wf->data.type());
                     if (m_liveAverageWf) {
                         delete m_liveAverageWf;
                     }
@@ -2503,6 +2503,7 @@ void MainWindow::runLiveAnalysisLoop() {
                 // Verify dimensions before accumulating
                 if (m_liveSum.rows == wf->workData.rows && m_liveSum.cols == wf->workData.cols) {
                     m_liveSum += wf->workData;
+                    m_liveDataSum += wf->data;
 
                     cv::Mat result = m_liveSum / static_cast<double>(m_liveValidCount);
 
@@ -2515,14 +2516,14 @@ void MainWindow::runLiveAnalysisLoop() {
                     m_liveAverageWf->nulledData = result.clone();
                     m_liveAverageWf->std = stddev[0] * md->lambda / outputLambda;
                     m_liveAverageWf->mean = mean[0];
-                    m_liveAverageWf->useSANull = false;
                     if (!m_viewDlg->m_tmpShowLive) {
                         m_ogl->m_surface->setSurface(m_liveAverageWf);
                     }
 
                     m_liveValidCount++;
                 } else {
-                    qDebug() << "Error: Mismatched matrix dimensions during live accumulation!";
+                    m_viewDlg->statusRight->setText( "Error: Mismatched matrix dimensions during live accumulation!");
+                    stopLiveButton_clicked();  // cancel loop
                 }
             } // end RMS check
         }
@@ -2543,9 +2544,8 @@ void MainWindow::runLiveAnalysisLoop() {
             if (m_viewDlg->m_tmpShowLive) {
                 liveMsg = "<span style='color: white; background-color: red;'>  &nbsp;RMS too big &nbsp;  </span>";
             }
-            statusRightText = QString("Averaged: %1 | RMS: %2 | Avg RMS: %3  %4")
+            statusRightText = QString("Averaged: %1 | Avg RMS: %2  %3")
                     .arg(m_liveValidCount - 1)
-                    .arg(wf->std, 0, 'f', 3)
                     .arg(m_liveAverageWf->std, 0, 'f', 3)
                     .arg(liveMsg);
         } else {
@@ -2583,6 +2583,17 @@ void MainWindow::runLiveAnalysisLoop() {
     // -------------------------------------------------------------------------
     if (computeAverage  && m_liveAverageWf && m_liveValidCount > 1) {
         wavefront *savedAvg = new wavefront(*m_liveAverageWf);
+        m_liveDataSum /= m_liveValidCount;
+        savedAvg->data = m_liveDataSum.clone();
+        savedAvg->m_origin = WavefrontOrigin::Average;
+        savedAvg->wasSmoothed = false;
+        savedAvg->dirtyZerns = true;
+
+
+        savedAvg->regions.clear();
+        m_surfaceManager->makeMask(savedAvg);
+        m_surfaceManager->generateSurfacefromWavefront(savedAvg);
+
         savedAvg->name = QString("Average_%1").arg(m_liveValidCount - 1);
 
         m_surfaceManager->m_wavefronts << savedAvg;

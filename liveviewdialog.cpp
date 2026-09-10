@@ -55,6 +55,7 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
 
     connect(m_worker, &VideoStreamWorker::streamError, this, [this](const QString &msg) {
         if (imageLabel) {
+            statusLeft->setWordWrap(true);
             imageLabel->setText(msg);
             statusLeft->setText(QString("<span style='color: white; background-color: red;'>%1</span>")
                                 .arg(msg + " Go to settings to set the stream number. You may have to close and restart this dialog."));
@@ -249,9 +250,10 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     connect(dftresolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LiveViewDialog::onDFTSizeChanged);
     sidebarLayout->addWidget(dftresolutionCombo);
-
-    // DFT Floor
-    sidebarLayout->addWidget(new QLabel("DFT Floor:", this));
+    QGroupBox *DFTGroup = new QGroupBox("DFTColor", this);
+    QVBoxLayout *dftLayout = new QVBoxLayout(DFTGroup);
+    // DFT Floor  values below this lever are transparent.
+    dftLayout->addWidget(new QLabel("DFT Transparancy:", this));
     DFTLowThreshold = new QSpinBox(this);
     DFTLowThreshold->setRange(-1, 255);
     DFTLowThreshold->setSpecialValueText("Auto");
@@ -260,15 +262,15 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
         QSettings s;
         s.setValue("liveViewDFTLow", val);
     });
-    sidebarLayout->addWidget(DFTLowThreshold);
-
+    dftLayout->addWidget(DFTLowThreshold);
+    dftLayout->addLayout(dftLayout);
     // DFT Contrast
-    sidebarLayout->addWidget(new QLabel("DFT Contrast:", this));
+    dftLayout->addWidget(new QLabel("DFT Contrast:", this));
     vivid = new QDoubleSpinBox(this);
     vivid->setValue(2.1);
     vivid->setSingleStep(.05);
-    sidebarLayout->addWidget(vivid);
-
+    dftLayout->addWidget(vivid);
+    sidebarLayout->addWidget(DFTGroup);
     // Camera Hardware Sliders (Brightness / Exposure)
     sidebarLayout->addWidget(new QLabel("Brightness:", this));
     QSlider *brightnessSlider = new QSlider(Qt::Horizontal, this);
@@ -474,6 +476,7 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
     resolutionCombo->addItem("Default (Auto)", QSize(0, 0));
     resolutionCombo->addItem("640 x 480 (VGA)", QSize(640, 480));
     resolutionCombo->addItem("1280 x 720 (HD)", QSize(1280, 720));
+    resolutionCombo->addItem("1280 x 960 (4:3)", QSize( 1280, 960));
     resolutionCombo->addItem("1920 x 1080 (FHD)", QSize(1920, 1080));
     resolutionCombo->addItem("2560 x 1440 (QHD)", QSize(2560, 1440));
     resolutionCombo->addItem("3840 x 2160 (4K)", QSize(3840, 2160));

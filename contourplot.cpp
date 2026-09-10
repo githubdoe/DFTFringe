@@ -599,7 +599,7 @@ ContourPlot::ContourPlot( QWidget *parent, ContourTools *tools, bool minimal ):
     m_colorMapNdx = settings.value("colorMapType",0).toInt();
     contourRange = settings.value("contourRange", .1).toDouble();
     m_contourPenColor = QColor(settings.value("ContourLineColor", "white").toString());
-    m_countourPenWidth = settings.value("ContourLineWidth",3).toInt();
+    m_countourPenWidth = settings.value("ContourLineWidth",1).toInt();
     d_spectrogram->contourWidth = m_countourPenWidth;
     m_do_fill = settings.value("contourShowFill", true).toBool();
     m_rulerPen = QPen(QColor(settings.value("ContourRulerColor", "grey").toString()));
@@ -659,7 +659,7 @@ void ContourPlot::setTool(ContourTools *tool){
 void ContourPlot::on_line_color_changed(QColor c)
 {
     m_contourPenColor = c;
-    d_spectrogram->setDefaultContourPen(QPen(c,5));
+    d_spectrogram->setDefaultContourPen(QPen(c,m_countourPenWidth));
     QSettings settings;
     settings.setValue("ContourLineColor", c.name());
     replot();
