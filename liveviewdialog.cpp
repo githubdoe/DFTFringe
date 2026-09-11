@@ -201,9 +201,11 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     statusRight = new QLabel(this);
     statusLeft = new QLabel(this);
     QHBoxLayout *statusLayout = new QHBoxLayout();
-    statusLayout->addWidget(imageSize);
-    statusLayout->addWidget(statusLeft);
-    statusLayout->addWidget(statusRight);
+    statusLayout->addWidget(imageSize,0);
+    statusLayout->addWidget(statusLeft,10);
+    statusLeft->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    statusLayout->addWidget(statusRight,0);
+    statusLayout->addStretch(1);
     leftLayout->addLayout(statusLayout);
     imageLabel = new LiveImageView(this);
     imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
@@ -239,7 +241,8 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     zoomCombo->addItem("200%", 2.0);
     zoomCombo->addItem("300%", 3.0);
     zoomCombo->addItem("400%", 4.0);
-    zoomCombo->setCurrentIndex(1);
+    zoomCombo->setCurrentIndex(set.value("liveViewZoom",1).toInt());
+    onZoomChanged(zoomCombo->currentIndex());
     connect(zoomCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LiveViewDialog::onZoomChanged);
     sidebarLayout->addWidget(zoomCombo);
@@ -247,11 +250,12 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     // DFT Resolution Combo
     sidebarLayout->addWidget(new QLabel("DFT Size:", this));
     dftresolutionCombo = new QComboBox(this);
-    dftresolutionCombo->addItem("256 x 256 (Fast)", 256);
-    dftresolutionCombo->addItem("512 x 512 (Balanced)", 512);
-    dftresolutionCombo->addItem("1024 x 1024 (Detailed)", 1024);
+    dftresolutionCombo->addItem("256 x 256", 256);
+    dftresolutionCombo->addItem("512 x 512", 512);
+    dftresolutionCombo->addItem("1024 x 1024", 1024);
 
     dftresolutionCombo->setCurrentIndex(set.value("liveViewDftSize", 1).toInt());
+    onDFTSizeChanged(dftresolutionCombo->currentIndex());
     connect(dftresolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LiveViewDialog::onDFTSizeChanged);
     sidebarLayout->addWidget(dftresolutionCombo);
@@ -262,6 +266,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     DFTLowThreshold = new QSpinBox(this);
     DFTLowThreshold->setRange(-1, 255);
     DFTLowThreshold->setSpecialValueText("Auto");
+
     DFTLowThreshold->setValue(set.value("liveViewDFTLow", -1).toInt());
     connect(DFTLowThreshold, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](int val) {
         QSettings s;
@@ -438,6 +443,8 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
 
     connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::restartStream);
     connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
+        statusLeft->setText("<span style='color: black  ;background-color: yellow'>Connecting to camera/stream... Please wait.</span>");
+
         if (m_thread && !m_thread->isRunning()) {
             m_thread->start();
         }
@@ -576,7 +583,7 @@ void LiveViewDialog::onDFTSizeChanged(int index){
 void LiveViewDialog::onZoomChanged(int index) {
     double data = zoomCombo->itemData(index).toDouble();
     QSettings set;
-    set.setValue("liveViewZoom", data);
+    set.setValue("liveViewZoom", index);
     if (data < 0) {
         setFitToWindowZoom();
     } else {
@@ -692,12 +699,14 @@ void LiveViewDialog::renderCurrentFrame() {
         cv::meanStdDev(dftLog, meanVal, stdDevVal);
 
         // 4. Clip dynamic range based on statistics
-
-
         double floorVal = meanVal[0] + 2 * stdDevVal[0];
         int val = DFTLowThreshold->value();
+
         if (val != -1) {
             floorVal = val;
+        }
+        else {
+            floorVal = 127;
         }
 
         double ceilVal = meanVal[0] + (maxVal - meanVal[0])/vivid->value();
@@ -720,27 +729,35 @@ void LiveViewDialog::renderCurrentFrame() {
         cv::Mat alphaMaskSquare;
         dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
 
-        // 6. Now resize the color and alpha maps to match the full display frame size
-                cv::Mat dftColor, alphaMask;
-                cv::resize(dftColorSquare, dftColor, displayMat.size(), 0, 0, cv::INTER_LINEAR);
-                cv::resize(alphaMaskSquare, alphaMask, displayMat.size(), 0, 0, cv::INTER_LINEAR);
+        // 6. Resize the color and alpha maps to match the full display frame size
+        cv::Mat dftColor, alphaMask;
+        cv::resize(dftColorSquare, dftColor, displayMat.size(), 0, 0, cv::INTER_LINEAR);
+        cv::resize(alphaMaskSquare, alphaMask, displayMat.size(), 0, 0, cv::INTER_LINEAR);
 
-                // 7. Safe and fast pixel loop using the fully-resized maps
-                for (int y = 0; y < displayMat.rows; ++y) {
-                    for (int x = 0; x < displayMat.cols; ++x) {
-                        float a = alphaMask.at<float>(y, x);
-                        if (a < 0.05) continue; // Skip background noise
+        // 7. Vectorized blending (replaces the nested loops)
+        // Scale alpha to punch up peaks, capped at 1.0
+        cv::Mat scaledAlpha;
+        cv::multiply(alphaMask, 1.4, scaledAlpha);
+        cv::threshold(scaledAlpha, scaledAlpha, 1.0, 1.0, cv::THRESH_TRUNC); // Equivalent to std::min(1.0, a * 1.4)
 
-                        double alpha = std::min(1.0, a * 1.4); // Punch up saturation on peaks
+        // Convert displayMat and dftColor to float for precise blending
+        cv::Mat bgFloat, fgFloat;
+        displayMat.convertTo(bgFloat, CV_32FC3);
+        dftColor.convertTo(fgFloat, CV_32FC3);
 
-                        cv::Vec3b &bgPixel = displayMat.at<cv::Vec3b>(y, x);
-                        cv::Vec3b fgPixel = dftColor.at<cv::Vec3b>(y, x);
+        // Split alpha into 3 channels so it matches the 3-channel BGR matrices
+        std::vector<cv::Mat> alphaChannels(3, scaledAlpha);
+        cv::Mat alpha3C;
+        cv::merge(alphaChannels, alpha3C);
 
-                        bgPixel[0] = cv::saturate_cast<uchar>(bgPixel[0] * (1.0 - alpha) + fgPixel[0] * alpha);
-                        bgPixel[1] = cv::saturate_cast<uchar>(bgPixel[1] * (1.0 - alpha) + fgPixel[1] * alpha);
-                        bgPixel[2] = cv::saturate_cast<uchar>(bgPixel[2] * (1.0 - alpha) + fgPixel[2] * alpha);
-                    }
-                }
+        // Blending formula: bg * (1 - alpha) + fg * alpha -> bg + alpha * (fg - bg)
+        cv::Mat blended;
+        cv::multiply(fgFloat, alpha3C, fgFloat);
+        cv::multiply(bgFloat, cv::Scalar::all(1.0) - alpha3C, bgFloat);
+        cv::add(bgFloat, fgFloat, blended);
+
+        // Convert back to 8-bit BGR and write directly back to displayMat
+        blended.convertTo(displayMat, CV_8UC3);
     }
 
     // Display via OpenCV conversion

@@ -794,7 +794,6 @@ void ProfilePlot::populate()
               g_angle = startAngle;
             }
           if (m_showAvg){
-              qDebug() << "inside avg" << y_offset;
               QColor penColor = QColor(Settings2::m_profile->getColor(i%10));
               // plot the average profile
               std::vector<double> avgRadius = compute_average_radial_profile(wf->workData,
