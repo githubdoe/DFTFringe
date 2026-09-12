@@ -699,15 +699,13 @@ void LiveViewDialog::renderCurrentFrame() {
         cv::meanStdDev(dftLog, meanVal, stdDevVal);
 
         // 4. Clip dynamic range based on statistics
-        double floorVal = meanVal[0] + 2 * stdDevVal[0];
-        int val = DFTLowThreshold->value();
+        double floorVal = meanVal[0] + 2 * stdDevVal[0];// use this value if Auto is selected.
 
+        int val = DFTLowThreshold->value();
         if (val != -1) {
             floorVal = val;
         }
-        else {
-            floorVal = 127;
-        }
+
 
         double ceilVal = meanVal[0] + (maxVal - meanVal[0])/vivid->value();
 

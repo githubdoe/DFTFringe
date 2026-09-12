@@ -2599,6 +2599,9 @@ void MainWindow::runLiveAnalysisLoop() {
         m_surfaceManager->m_wavefronts << savedAvg;
         m_surfTools->addWaveFront(savedAvg->name);
         m_viewDlg->saveAverage = false;
+        m_surfaceManager->m_currentNdx = m_surfaceManager->m_wavefronts.size()-1;
+
+        m_surfaceManager->m_surfaceTools->select(m_surfaceManager->m_currentNdx);
     }
 
     // Reset UI & Loop State Flags
