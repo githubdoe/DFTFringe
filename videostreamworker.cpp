@@ -54,18 +54,25 @@ void VideoStreamWorker::fetchNextFrame() {
         QMutexLocker locker(&m_mutex);
         if (!m_running || !m_cap.isOpened()) return;
 
-        // Grab and retrieve the latest frame from the buffer
+        // 1. Fast-forward through the buffer, but check if the stream dies
+        for (int i = 0; i < 15; ++i) {
+            if (!m_cap.grab()) {
+                emit streamError("Stream connection lost.");
+                m_running = false;
+                return;
+            }
+        }
+
+        // 2. Read the final live frame
         if (!m_cap.read(frame) || frame.empty()) {
-            emit streamError("Stream error. ");
+            emit streamError("Stream error or connection lost.");
             m_running = false;
             return;
         }
     }
 
-    // Emit the frame back to the UI thread
     emit frameReady(frame.clone());
 }
-
 
 
 void VideoStreamWorker::stop() {
