@@ -16,6 +16,7 @@
 #include "videostreamworker.h"
 #include <QThread>
 #include <QCheckBox>
+#include "liveviewhistory.h"
 
 enum class CameraProperty {
     Brightness,
@@ -34,7 +35,7 @@ public:
     QImage getFrame() {return matToQImage(m_latestFrame.clone());};
 protected:
     void closeEvent(QCloseEvent *event) override;
-
+    void resizeEvent(QResizeEvent *event) override;
 private slots:
 
     void onResolutionChanged(int index);
@@ -72,6 +73,7 @@ public:
     QCheckBox *autoRMSatStarup;
     QDoubleSpinBox *RMSMargin;
     QCheckBox *deleteIntermidiateWaveFront = nullptr;
+    QCheckBox *showHistory;
     bool FirstWaveFrontSeen = false;
     bool saveAverage = false;
     QPushButton *saveAverageBtn;
@@ -79,6 +81,7 @@ public:
     bool m_stopRequested = false;// used to signal the dialog is trying to close.
     bool FirsdtWaveFrontSeen = false;
     LiveImageView *imageLabel;
+    liveViewHistory *history;
 private:
     VideoStreamWorker *m_worker;
     QThread *m_thread;
@@ -118,4 +121,5 @@ private:
     QPointF m_rawCircleCenter;
     double m_rawCircleRadius = 0.0;
     bool m_hasActiveCircle = false;
+    bool m_fitToWindow = true;
 };

@@ -13,6 +13,7 @@
 #include <QSplitter>
 #include <QDialogButtonBox>
 #include <QMessageBox>
+#include <liveviewhistory.h>
 // ==========================================
 // LiveViewDialog Implementation
 // ==========================================
@@ -70,7 +71,13 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
 
     // Trigger the very first frame pull once the worker confirms the stream is open
     connect(m_worker, &VideoStreamWorker::streamStarted, this, [this]() {
+
+        QSize selectedRes = resolutionCombo->currentData().toSize();
+        QMetaObject::invokeMethod(m_worker, "setResolution", Qt::QueuedConnection,
+                                  Q_ARG(int, selectedRes.width()),
+                                  Q_ARG(int, selectedRes.height()));
         statusLeft->setText("Stream Connected");
+
         emit requestFrame();
         // Clear the status message after 5 seconds (5000 milliseconds)
         QTimer::singleShot(5000, this, [this]() {
@@ -192,6 +199,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     // CENTER SPLITTER (Video Feed vs Sidebar)
     // ==========================================
     QSplitter *mainSplitter = new QSplitter(Qt::Horizontal, this);
+    QSplitter *leftSplitter = new QSplitter(Qt::Vertical, this);
 
     // --- Left Side: Live Image View ---
     QWidget *leftContainer = new QWidget(this);
@@ -219,7 +227,16 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     scrollArea->setWidgetResizable(false);
     scrollArea->setBackgroundRole(QPalette::Dark);
 
-    leftLayout->addWidget(scrollArea, 1);
+
+
+    // history plot
+    history  = new liveViewHistory();
+    history->hide();
+
+
+    leftSplitter->addWidget(scrollArea);
+    leftSplitter->addWidget(history);
+    leftLayout->addWidget(leftSplitter);
 
     // --- Right Side: Scrollable Control Sidebar ---
     QScrollArea *sidebarScrollArea = new QScrollArea(this);
@@ -356,6 +373,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
         helpDlg.exec();
     });
 
+
     sidebarLayout->addWidget(settingsBtn);
     sidebarLayout->addWidget(helpBtn);
 
@@ -364,6 +382,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
 
     mainSplitter->addWidget(leftContainer);
     mainSplitter->addWidget(sidebarScrollArea);
+
     mainSplitter->setStretchFactor(0, 4);
     mainSplitter->setStretchFactor(1, 1);
 
@@ -520,7 +539,13 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
             s.setValue("LiveView/deleteIntermittent", checked);
         });
 
-
+    showHistory = new QCheckBox("Show Average RMS and live SA",m_settingsDlg);
+    connect(showHistory, &QCheckBox::toggled, this, [this](bool checked){
+        if (checked)
+            history->show();
+        else
+            history->hide();
+    });
     settingsLayout->addWidget(urlLineEdit);
     settingsLayout->addWidget(urlListWidget);
     settingsLayout->addWidget(rmsGroup);
@@ -528,7 +553,7 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
     settingsLayout->addWidget(deleteIgramAfter);
     settingsLayout->addWidget(deleteIntermidiateWaveFront);
     settingsLayout->addStretch();
-
+    settingsLayout->addWidget(showHistory);
     QDialogButtonBox *btnBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, m_settingsDlg);
     connect(btnBox, &QDialogButtonBox::accepted, m_settingsDlg, &QDialog::accept);
     connect(btnBox, &QDialogButtonBox::rejected, m_settingsDlg, &QDialog::reject);
@@ -560,10 +585,13 @@ void LiveViewDialog::onApplySettings() {
 
     // Apply selected resolution if valid
     QSize selectedRes = resolutionCombo->currentData().toSize();
+
+
     if (m_worker && selectedRes.width() > 0 && selectedRes.height() > 0) {
         QMetaObject::invokeMethod(m_worker, "setResolution", Qt::QueuedConnection,
                                   Q_ARG(int, selectedRes.width()),
                                   Q_ARG(int, selectedRes.height()));
+        setFitToWindowZoom();
     }
 }
 void LiveViewDialog::onGrabClicked() {
@@ -585,8 +613,10 @@ void LiveViewDialog::onZoomChanged(int index) {
     QSettings set;
     set.setValue("liveViewZoom", index);
     if (data < 0) {
+        m_fitToWindow = true;
         setFitToWindowZoom();
     } else {
+        m_fitToWindow = false;
         m_zoomFactor = data;
         imageLabel->setZoomFactor(m_zoomFactor);
 
@@ -598,6 +628,11 @@ void LiveViewDialog::onZoomChanged(int index) {
 
         renderCurrentFrame();
     }
+}
+void LiveViewDialog::resizeEvent(QResizeEvent *event) {
+    QDialog::resizeEvent(event);
+    if (m_fitToWindow)
+         setFitToWindowZoom(); // Your custom routine
 }
 
 void LiveViewDialog::setFitToWindowZoom() {

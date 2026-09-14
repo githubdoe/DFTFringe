@@ -2553,6 +2553,7 @@ void MainWindow::runLiveAnalysisLoop() {
                     .arg(totalFrames)
                     .arg(wf->std, 0, 'f', 3);
         }
+        m_viewDlg->history->addSample(m_liveAverageWf->std,wf->InputZerns[8]);
 
         m_viewDlg->statusRight->setText(statusRightText);
 

@@ -15,6 +15,7 @@ QT += network \
       widgets
 QT += concurrent widgets
 QT += charts
+
 qtHaveModule(printsupport): QT += printsupport
 QT       += core gui
 QT       += opengl widgets
@@ -39,6 +40,7 @@ SOURCES += main.cpp \
     hotkeysdlg.cpp \
     liveimageview.cpp \
     liveviewdialog.cpp \
+    liveviewhistory.cpp \
     mainwindow.cpp \
     igramarea.cpp \
     circleoutline.cpp \
@@ -169,6 +171,7 @@ HEADERS  += mainwindow.h \
     hotkeysdlg.h \
     liveimageview.h \
     liveviewdialog.h \
+    liveviewhistory.h \
     oglrendered.h \
     pdfcalibrationdlg.h \
     percentCorrectionSurface.h \

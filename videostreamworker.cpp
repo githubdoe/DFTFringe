@@ -55,7 +55,7 @@ void VideoStreamWorker::fetchNextFrame() {
         if (!m_running || !m_cap.isOpened()) return;
 
         // 1. Fast-forward through the buffer, but check if the stream dies
-        for (int i = 0; i < 15; ++i) {
+        for (int i = 0; i < 5; ++i) {
             if (!m_cap.grab()) {
                 emit streamError("Stream connection lost.");
                 m_running = false;
