@@ -32,7 +32,7 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
         resize(600, 600);
     }
     QString savedUrl = settings.value("LiveView/streamUrl", 0).toString();
-    initSettingsDialog(savedUrl);
+    initSettingsDialog();
 
 
     setupUI(savedUrl);
@@ -452,7 +452,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     rootLayout->addLayout(bottomControlLayout);
     setLayout(rootLayout);
 }
-void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
+void LiveViewDialog::initSettingsDialog() {
     m_settingsDlg = new QDialog(this);
     m_settingsDlg->setWindowTitle("Live View Settings");
     QVBoxLayout *settingsLayout = new QVBoxLayout(m_settingsDlg);
@@ -547,7 +547,7 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
 
     deleteIgramAfter = new QCheckBox("Delete IGram after analysis", m_settingsDlg);
     deleteIgramAfter->setChecked(settings.value("LiveView/deleteAfter", true).toBool());
-    connect(deleteIgramAfter, &QCheckBox::toggled, this, [this](bool checked) {
+    connect(deleteIgramAfter, &QCheckBox::toggled, this, [](bool checked) {
         QSettings s;
         s.setValue("LiveView/deleteAfter", checked);
     });
@@ -555,10 +555,22 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
 
         deleteIntermidiateWaveFront = new QCheckBox("Do not add Wave fronts to list except for averages", m_settingsDlg);
         deleteIntermidiateWaveFront->setChecked(settings.value("LiveView/deleteIntermittent", false).toBool());
-        connect(deleteIntermidiateWaveFront, &QCheckBox::toggled, this, [this](bool checked) {
+        connect(deleteIntermidiateWaveFront, &QCheckBox::toggled, this, [](bool checked) {
             QSettings s;
             s.setValue("LiveView/deleteIntermittent", checked);
         });
+    QHBoxLayout *DFTPercentLayout = new QHBoxLayout();
+    DFTPercentLayout->addWidget(new QLabel("DFT size percent of image"));
+    dftDisplaySize = new QDoubleSpinBox(this);
+    dftDisplaySize->setRange(10,100);
+    dftDisplaySize->setSingleStep(10);
+    dftDisplaySize->setValue(settings.value("liveView/DFTImageSize",70.).toDouble());
+    DFTPercentLayout->addWidget(dftDisplaySize);
+    DFTPercentLayout->addStretch();
+    connect(dftDisplaySize, QOverload<double>::of (&QDoubleSpinBox::valueChanged), this,[](double value){
+        QSettings set;
+        set.setValue("liveView/DFTImageSize",value);
+    });
 
     showHistory = new QCheckBox("Show bestFit conic instead of SA in history Trend graph",m_settingsDlg);
     connect(showHistory, &QCheckBox::toggled, this, [this](bool checked){
@@ -572,6 +584,7 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
     settingsLayout->addWidget(deleteIgramAfter);
     settingsLayout->addWidget(deleteIntermidiateWaveFront);
     settingsLayout->addStretch();
+    settingsLayout->addLayout(DFTPercentLayout);
     settingsLayout->addWidget(showHistory);
     QDialogButtonBox *btnBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, m_settingsDlg);
     connect(btnBox, &QDialogButtonBox::accepted, m_settingsDlg, &QDialog::accept);
@@ -809,8 +822,8 @@ void LiveViewDialog::renderCurrentFrame() {
                 static_cast<double>(displayMat.rows) / dftColorSquare.rows
             );
 
-            int newWidth = static_cast<int>(dftColorSquare.cols * m_DFTscale);
-            int newHeight = static_cast<int>(dftColorSquare.rows * m_DFTscale);
+            int newWidth = (dftDisplaySize->value() /100.) * static_cast<int>(dftColorSquare.cols * m_DFTscale);
+            int newHeight = (dftDisplaySize->value() /100.) * static_cast<int>(dftColorSquare.rows * m_DFTscale);
 
             int x = (displayMat.cols - newWidth) / 2;
             int y = (displayMat.rows - newHeight) / 2;

@@ -125,6 +125,7 @@ private:
     QComboBox *resolutionCombo;
     QComboBox *dftresolutionCombo;
     QComboBox *zoomCombo;
+    QDoubleSpinBox *dftDisplaySize;
     cv::VideoCapture cap;
 
     int m_dftSize = 1024;
@@ -138,9 +139,9 @@ private:
     void renderCurrentFrame();
     QRect getMirrorRect();
     void setupUI(const QString &defaultStreamUrl);
-    void initSettingsDialog(const QString &defaultStreamUrl);
+    void initSettingsDialog();
     QDialog *m_settingsDlg;
-
+    double m_dftPercent = .7;
     double m_DFTscale = 1.;
     bool m_hasActiveCircle = false;
     bool m_fitToWindow = true;
