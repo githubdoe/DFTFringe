@@ -333,7 +333,7 @@ void SurfaceGraph::yOffsetChanged(int val){
 void SurfaceGraph::scaleY(int d){
 
     m_yGridHeight = maxHeightSelections[d];
-    qDebug() << "yscale" << m_yGridHeight <<  m_gradientScale << d;
+
     m_graph->axisY()->setRange(0.0f, m_yGridHeight);
     setSurface(m_wf);
 }

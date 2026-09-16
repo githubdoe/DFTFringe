@@ -54,8 +54,4 @@ void autoInvertDlg::enableConic(bool b) {
     ui->btnUseConic->setEnabled(b);
 }
 
-void autoInvertDlg::on_InvertWithoutAskingRb_clicked(bool checked)
-{
-    Q_UNUSED(checked);
-}
 

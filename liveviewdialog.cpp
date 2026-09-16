@@ -803,7 +803,7 @@ void LiveViewDialog::renderCurrentFrame() {
             cv::Mat alphaMaskSquare;
             dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
 
-            // 6. Resize and center the square maps to fit displayMat while keeping aspect ratio
+            // 6. Resize directly to the target ROI dimensions (maintaining aspect ratio)
             m_DFTscale = std::min(
                 static_cast<double>(displayMat.cols) / dftColorSquare.cols,
                 static_cast<double>(displayMat.rows) / dftColorSquare.rows
@@ -812,32 +812,29 @@ void LiveViewDialog::renderCurrentFrame() {
             int newWidth = static_cast<int>(dftColorSquare.cols * m_DFTscale);
             int newHeight = static_cast<int>(dftColorSquare.rows * m_DFTscale);
 
-            cv::Mat resizedColor, resizedAlpha;
-            cv::resize(dftColorSquare, resizedColor, cv::Size(newWidth, newHeight), 0, 0, cv::INTER_LINEAR);
-            cv::resize(alphaMaskSquare, resizedAlpha, cv::Size(newWidth, newHeight), 0, 0, cv::INTER_LINEAR);
-
             int x = (displayMat.cols - newWidth) / 2;
             int y = (displayMat.rows - newHeight) / 2;
             cv::Rect roi(x, y, newWidth, newHeight);
 
-            cv::Mat dftColor = cv::Mat::zeros(displayMat.size(), dftColorSquare.type());
-            cv::Mat alphaMask = cv::Mat::zeros(displayMat.size(), alphaMaskSquare.type());
+            // Ensure ROI safely fits within displayMat bounds
+            roi &= cv::Rect(0, 0, displayMat.cols, displayMat.rows);
+            if (roi.width <= 0 || roi.height <= 0) return;
 
-            resizedColor.copyTo(dftColor(roi));
-            resizedAlpha.copyTo(alphaMask(roi));
+            cv::Mat resizedColor, resizedAlpha;
+            cv::resize(dftColorSquare, resizedColor, roi.size(), 0, 0, cv::INTER_LINEAR);
+            cv::resize(alphaMaskSquare, resizedAlpha, roi.size(), 0, 0, cv::INTER_LINEAR);
 
-            // 7. Vectorized blending
-            // Scale alpha to punch up peaks, capped at 1.0
+            // 7. Vectorized blending restricted strictly to the ROI
             cv::Mat scaledAlpha;
-            cv::multiply(alphaMask, 1.4, scaledAlpha);
+            cv::multiply(resizedAlpha, 1.4, scaledAlpha);
             cv::threshold(scaledAlpha, scaledAlpha, 1.0, 1.0, cv::THRESH_TRUNC);
 
-            // Convert displayMat and dftColor to float for precise blending
+            // Convert ONLY the background ROI and foreground to float (bypasses full-frame overhead)
             cv::Mat bgFloat, fgFloat;
-            displayMat.convertTo(bgFloat, CV_32FC3);
-            dftColor.convertTo(fgFloat, CV_32FC3);
+            displayMat(roi).convertTo(bgFloat, CV_32FC3);
+            resizedColor.convertTo(fgFloat, CV_32FC3);
 
-            // Split alpha into 3 channels so it matches the 3-channel BGR matrices
+            // Split alpha into 3 channels matching the ROI size
             std::vector<cv::Mat> alphaChannels(3, scaledAlpha);
             cv::Mat alpha3C;
             cv::merge(alphaChannels, alpha3C);
@@ -848,9 +845,10 @@ void LiveViewDialog::renderCurrentFrame() {
             cv::multiply(bgFloat, cv::Scalar::all(1.0) - alpha3C, bgFloat);
             cv::add(bgFloat, fgFloat, blended);
 
-            // Convert back to 8-bit BGR and write directly back to displayMat
-            blended.convertTo(displayMat, CV_8UC3);
+            // Convert back to 8-bit BGR and write directly back into displayMat's ROI
+            blended.convertTo(displayMat(roi), CV_8UC3);
         }
+
 
     // Display via OpenCV conversion
     QImage img = matToQImage(displayMat);
