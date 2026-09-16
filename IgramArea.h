@@ -128,7 +128,7 @@ public:
     void deleteOutline();
     void readOutlines();
     void autoTraceOutline();
-
+    void setOutsideOutline(QPointF center, double radius);
     void SideOutLineActive(bool checked);
     void CenterOutlineActive(bool checked);
     void PolyAreaActive(bool checked);
@@ -205,7 +205,7 @@ private:
     QPushButton *m_demo;
     QWidget *outlinePlotWindow;
     QDockWidget *dock;
-    void drawBoundary();
+
     void resizeImage();
     void zoom(int del, QPointF zoompt);
     bool modified;
@@ -229,6 +229,7 @@ private:
     double m_edgeMaskWidth;
     void saveRegions();
 public:
+    void drawBoundary();
     void deleteRegions();
     QImage igramColor;
     QImage igramDisplay;    // gray with outlines

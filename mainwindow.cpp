@@ -2268,22 +2268,19 @@ void MainWindow::on_actionLive_view_triggered()
 
             connect(m_viewDlg->imageLabel, &LiveImageView::mirrorDefined, this, [this](const QPointF center, double radius){
 
-                QSettings set;
-                set.setValue("lastOutsideRad", radius);
+                m_igramArea->blockSignals(true);
+                m_igramArea->setOutsideOutline(center,radius);
+                m_igramArea->blockSignals(false);
 
-                set.setValue("lastOutsideCx",center.x());
-                set.setValue("lastOutsideCy",center.y());
             });
-            connect(m_dftArea, &DFTArea::centerFilterPercent, this,[this](double percent){
-                m_viewDlg->setCenterFilterPercent(percent);
-            });
+            connect(m_dftArea, &DFTArea::filterSizeScale, m_viewDlg, &LiveViewDialog::setCenterFilter );
+
             m_viewDlg->show();
         } else {
             // If it's already open, just bring it to the front
             m_viewDlg->raise();
             m_viewDlg->activateWindow();
         }
-
 
     m_viewDlg->show();
 }

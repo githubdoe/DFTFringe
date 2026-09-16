@@ -375,6 +375,7 @@ public slots:
     void startLiveButton_clicked();
     void pauseLiveButton_clicked();
     void stopLiveButton_clicked();
+
 };
 
 #endif // MAINWINDOW_H

@@ -40,15 +40,18 @@ private slots:
 
     void onResolutionChanged(int index);
     void onZoomChanged(int index);
-    void onMirrorDefined(const QRect &rect);
+    void onMirrorDefined(QPointF center, double radius);
     void setFitToWindowZoom();
+    void onYellowRadiusChanged(double radius);
+    void onRequestZoomChange(double newZoom);
     void onApplySettings();
     void onDFTSizeChanged(int index);
     void restartStream();
 public slots:
     void setOutsidecircle(QPointF center, double radius);
     void onGrabClicked();
-    void setCenterFilterPercent(double percent) {m_centerPercent = percent;};
+    //void setCenterFilter(double radius, double scale, int DFTSize);
+    void setCenterFilter(double freqBin) ;
 signals:
     void igramCaptured();
     void streamDisconnected();
@@ -57,6 +60,8 @@ signals:
     void stopLiveLoopRequested();
     void requestFrame();
     void requestCameraSetting(CameraProperty prop , int val);
+    void outline(QPointF center, double rad);
+    void blueCircle(QPointF center, double rad);
 public:
     QPushButton *startAnalysisBtn;
     QPushButton *stopAnalysisBtn;
@@ -95,7 +100,7 @@ private:
     QDoubleSpinBox *vivid;  // makes the DFT Vivid;
     QSpinBox *DFTLowThreshold;
 
-    double m_centerPercent = .001;
+    int m_centerFilterRadius = 0;
     double m_RMSMargin = 1.;
     double m_filterPercent = 0;
     QTimer *m_rmsTimer;
@@ -114,12 +119,15 @@ private:
     QImage matToQImage(const cv::Mat &mat);
     cv::Mat computeLiveDFT(const cv::Mat &inputFrame, int targetSize, const QRect &roi);
     void renderCurrentFrame();
+    QRect getMirrorRect();
     void setupUI(const QString &defaultStreamUrl);
     void initSettingsDialog(const QString &defaultStreamUrl);
     QDialog *m_settingsDlg;
 
-    QPointF m_rawCircleCenter;
-    double m_rawCircleRadius = 0.0;
+    double m_DFTscale = 1.;
     bool m_hasActiveCircle = false;
     bool m_fitToWindow = true;
+private:
+    QPointF m_mirrorOutlineCenter;
+    double m_mirrorOutlineRadius = 0.;
 };

@@ -2131,7 +2131,14 @@ void IgramArea::CenterOutlineActive(bool checked){
     drawBoundary();
     update();
 }
+void IgramArea::setOutsideOutline(QPointF center, double radius){
 
+    m_outside = CircleOutline(center,radius);
+    m_OutterP1 = m_outside.m_p1;
+    m_OutterP2 = m_outside.m_p2;
+    drawBoundary();
+    update();
+}
 void IgramArea::loadOutlineFile(const QString &fileName){
     QFile loadFile(fileName);
 
