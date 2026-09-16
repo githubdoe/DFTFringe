@@ -1,7 +1,7 @@
 #ifndef LIVEVIEWHISTORY_H
 #define LIVEVIEWHISTORY_H
 
-#include <QDialog>
+#include <QWidget>
 #include <QVector>
 
 namespace QtCharts {
@@ -11,13 +11,14 @@ namespace QtCharts {
     class QValueAxis;
 }
 
-class liveViewHistory : public QDialog {
+class liveViewHistory : public QWidget {
     Q_OBJECT
 public:
     explicit liveViewHistory(QWidget *parent = nullptr);
     ~liveViewHistory() = default;
 
     void addSample(double rawRms, double rawSa);
+    void showBestFit(bool show);
 
 private slots:
     void onResetClicked();

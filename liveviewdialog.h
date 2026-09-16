@@ -17,6 +17,7 @@
 #include <QThread>
 #include <QCheckBox>
 #include "liveviewhistory.h"
+#include <QSplitter>
 
 enum class CameraProperty {
     Brightness,
@@ -25,7 +26,21 @@ enum class CameraProperty {
     Gain
 };
 Q_DECLARE_METATYPE(CameraProperty)
+class ResizableScrollArea : public QScrollArea {
+    Q_OBJECT
+public:
+    explicit ResizableScrollArea(QWidget *parent = nullptr) : QScrollArea(parent) {}
 
+    std::function<void()> onResized;
+
+protected:
+    void resizeEvent(QResizeEvent *event) override {
+        QScrollArea::resizeEvent(event);
+        if (onResized) {
+            onResized(); // Triggers your fit-to-window or resize logic
+        }
+    }
+};
 
 class LiveViewDialog : public QDialog {
     Q_OBJECT
@@ -87,17 +102,19 @@ public:
     bool FirsdtWaveFrontSeen = false;
     LiveImageView *imageLabel;
     liveViewHistory *history;
+    bool m_showBestFit = false;
 private:
     VideoStreamWorker *m_worker;
     QThread *m_thread;
 
-    QScrollArea *scrollArea;
+    ResizableScrollArea *scrollArea;
     QCheckBox *dftCheckBox;
     QPushButton *grabButton;
     QListWidget *urlListWidget;
     QLineEdit *urlLineEdit;
     QTabWidget *tabWidget;
     QDoubleSpinBox *vivid;  // makes the DFT Vivid;
+    QSplitter *leftSplitter;
     QSpinBox *DFTLowThreshold;
 
     int m_centerFilterRadius = 0;

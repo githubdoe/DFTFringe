@@ -149,11 +149,16 @@ void LiveViewDialog::closeEvent(QCloseEvent *event) {
                 // 3. Ignore the close event so the object isn't destroyed out from under the loop yet
                 event->ignore();
             } else {
+
                 // Safe to close normally
                 loopRunning = false;
                 QSettings set; // Or use existing app settings key
+
+                set.setValue("LiveViewDialog/splitterGeometry", leftSplitter->saveState());
+
                 set.setValue("LiveViewDialog/geometry", saveGeometry());
                 event->accept();
+
             }
 
 
@@ -199,8 +204,10 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     // CENTER SPLITTER (Video Feed vs Sidebar)
     // ==========================================
     QSplitter *mainSplitter = new QSplitter(Qt::Horizontal, this);
-    QSplitter *leftSplitter = new QSplitter(Qt::Vertical, this);
-
+    leftSplitter = new QSplitter(Qt::Vertical, this);
+    if (set.contains("LiveViewDialog/splitterGeometry")) {
+        leftSplitter->restoreState(set.value("LiveViewDialog/splitterGeometry").toByteArray());
+    }
     // --- Left Side: Live Image View ---
     QWidget *leftContainer = new QWidget(this);
     QVBoxLayout *leftLayout = new QVBoxLayout(leftContainer);
@@ -224,20 +231,32 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     connect(imageLabel, &LiveImageView::yellowRadiusChanged, this, &LiveViewDialog::onYellowRadiusChanged);
     connect(imageLabel, &LiveImageView::requestZoomChange, this, &LiveViewDialog::onRequestZoomChange);
 
-    scrollArea = new QScrollArea(this);
+    scrollArea = new ResizableScrollArea(this);
     scrollArea->setWidget(imageLabel);
     scrollArea->setWidgetResizable(false);
     scrollArea->setBackgroundRole(QPalette::Dark);
 
-
+    // Wire up the resize callback to trigger your view update
+    scrollArea->onResized = [this]() {
+        if (zoomCombo && zoomCombo->currentData().toDouble() < 0) { // Check if "Fit to Window" is active (-1.0)
+            onZoomChanged(zoomCombo->currentIndex()); // Re-triggers your zoom adjustment with the new dimensions
+        }
+    };
 
     // history plot
     history  = new liveViewHistory();
-    history->hide();
-
 
     leftSplitter->addWidget(scrollArea);
     leftSplitter->addWidget(history);
+    leftSplitter->setSizes({2000, 10});
+
+    leftSplitter->setHandleWidth(8); // Sets the handle width to 8 pixels
+    leftSplitter->setStyleSheet(
+        "QSplitter::handle {"
+        "    background-color: #005c5c;" // A clear, contrasting gray color
+        "    border: 2px solid #333333;"
+        "}"
+    );
     leftLayout->addWidget(leftSplitter);
 
     // --- Right Side: Scrollable Control Sidebar ---
@@ -541,12 +560,10 @@ void LiveViewDialog::initSettingsDialog(const QString &defaultStreamUrl) {
             s.setValue("LiveView/deleteIntermittent", checked);
         });
 
-    showHistory = new QCheckBox("Show Average RMS and live SA",m_settingsDlg);
+    showHistory = new QCheckBox("Show bestFit conic instead of SA in history Trend graph",m_settingsDlg);
     connect(showHistory, &QCheckBox::toggled, this, [this](bool checked){
-        if (checked)
-            history->show();
-        else
-            history->hide();
+        m_showBestFit = checked;
+        history->showBestFit(checked);
     });
     settingsLayout->addWidget(urlLineEdit);
     settingsLayout->addWidget(urlListWidget);
@@ -782,11 +799,6 @@ void LiveViewDialog::renderCurrentFrame() {
             cv::Mat dftColorSquare;
             cv::applyColorMap(dftNorm, dftColorSquare, cv::COLORMAP_JET);
 
-             // status text strings for display
-            statusLeft->setText(QString("Frame: %1  DFTB Rad %2")
-                            .arg(cnt++)
-                            .arg(m_centerFilterRadius));
-
             // Also create a normalized mask for alpha blending
             cv::Mat alphaMaskSquare;
             dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
@@ -864,9 +876,10 @@ void LiveViewDialog::renderCurrentFrame() {
     int targetWidth = static_cast<int>(img.width() * m_zoomFactor);
     int targetHeight = static_cast<int>(img.height() * m_zoomFactor);
 
-    imageSize->setText(QString("%1 x %2")
+    imageSize->setText(QString("%1 x %2 frame:%3")
                 .arg(img.size().width())
-                .arg(img.size().height()));
+                .arg(img.size().height())
+                       .arg(cnt++));
 
     imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     imageLabel->resize(targetWidth, targetHeight);

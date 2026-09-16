@@ -2381,7 +2381,7 @@ void MainWindow::runLiveAnalysisLoop() {
     if (m_liveLoopActive) return;
     static mirrorDlg *md = mirrorDlg::get_Instance();
     m_liveLoopActive = true;
-
+    double z8Null = md->z8 * md->cc;
     cv::Scalar mean;
     cv::Scalar stddev;
     QFont tFont("Serif", 18);
@@ -2546,11 +2546,19 @@ void MainWindow::runLiveAnalysisLoop() {
                     .arg(m_liveAverageWf->std, 0, 'f', 3)
                     .arg(liveMsg);
         } else {
+            qDebug() << "rms" << wf->std;
             statusRightText = QString("Frame: %1 | RMS: %2")
                     .arg(totalFrames)
                     .arg(wf->std, 0, 'f', 3);
         }
-        m_viewDlg->history->addSample(m_liveAverageWf->std,wf->InputZerns[8]);
+        double bestSC;
+        if (m_mirrorDlg->doNull){
+            bestSC = wf->InputZerns[8]/m_mirrorDlg->z8;
+        }
+        else {
+            bestSC = m_mirrorDlg->cc +wf->InputZerns[8]/m_mirrorDlg->z8;
+        }
+        m_viewDlg->history->addSample(m_liveAverageWf->std,(m_viewDlg->m_showBestFit) ? bestSC: wf->InputZerns[8] - z8Null);
 
         m_viewDlg->statusRight->setText(statusRightText);
 
