@@ -315,7 +315,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     // DFT Contrast
     dftLayout->addWidget(new QLabel("DFT Contrast:", this));
     vivid = new QDoubleSpinBox(this);
-    vivid->setValue(2.1);
+    vivid->setValue(.7);
     vivid->setSingleStep(.05);
     dftLayout->addWidget(vivid);
     sidebarLayout->addWidget(DFTGroup);
@@ -759,7 +759,6 @@ void LiveViewDialog::renderCurrentFrame() {
     if (displayMat.channels() == 1) {
         cv::cvtColor(displayMat, displayMat, cv::COLOR_GRAY2BGR);
     }
-    int newWidth = m_dftSize;
     if (dftCheckBox->isChecked()) {
             // 1. Compute raw DFT
             cv::Mat dftRaw = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
@@ -799,22 +798,22 @@ void LiveViewDialog::renderCurrentFrame() {
             cv::Mat dftNorm;
             dftShifted.convertTo(dftNorm, CV_8U, 255.0 / range);
 
-            // Raise the black threshold to 50 (out of 255) to crush background noise to zero
-            cv::threshold(dftNorm, dftNorm, DFTLowThreshold->value(), 0, cv::THRESH_TOZERO);
-
-            // 5. Apply Jet colormap and force zero-values to pure black
+            // 5. Apply Jet colormap to the square DFT
             cv::Mat dftColorSquare;
             cv::applyColorMap(dftNorm, dftColorSquare, cv::COLORMAP_JET);
-            dftColorSquare.setTo(cv::Scalar(0, 0, 0), dftNorm == 0);
 
-            // 6. Resize directly to the target ROI dimensions (maintaining aspect ratio)
+            // Create a normalized float alpha mask from dftNorm (0.0 to 1.0)
+            cv::Mat alphaMaskSquare;
+            dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
+
+            // 6. Resize and center to fit displayMat while keeping aspect ratio
             m_DFTscale = std::min(
                 static_cast<double>(displayMat.cols) / dftColorSquare.cols,
                 static_cast<double>(displayMat.rows) / dftColorSquare.rows
             );
 
-            newWidth = dftDisplaySize->value()/100. * static_cast<int>(dftColorSquare.cols * m_DFTscale);
-            int newHeight = dftDisplaySize->value()/100. *static_cast<int>(dftColorSquare.rows * m_DFTscale);
+            int newWidth = static_cast<int>(dftColorSquare.cols * m_DFTscale);
+            int newHeight = static_cast<int>(dftColorSquare.rows * m_DFTscale);
 
             int x = (displayMat.cols - newWidth) / 2;
             int y = (displayMat.rows - newHeight) / 2;
@@ -824,11 +823,35 @@ void LiveViewDialog::renderCurrentFrame() {
             roi &= cv::Rect(0, 0, displayMat.cols, displayMat.rows);
             if (roi.width <= 0 || roi.height <= 0) return;
 
-            cv::Mat resizedColor;
+            cv::Mat resizedColor, resizedAlpha;
             cv::resize(dftColorSquare, resizedColor, roi.size(), 0, 0, cv::INTER_LINEAR);
+            cv::resize(alphaMaskSquare, resizedAlpha, roi.size(), 0, 0, cv::INTER_LINEAR);
 
-            // 7. Ultra-fast 8-bit additive overlay (Zero floats, zero alpha maps)
-            displayMat(roi) += resizedColor;
+            // 7. Localized Alpha Blending (Restricted strictly to the ROI)
+            // Scale alpha to punch up the DFT peaks, capped at 1.0 max
+            cv::Mat scaledAlpha;
+            cv::multiply(resizedAlpha, .7, scaledAlpha);
+            cv::threshold(scaledAlpha, scaledAlpha, 1.0, 1.0, cv::THRESH_TRUNC);
+
+            // Convert ONLY the background ROI and foreground to float for precise blending
+            cv::Mat bgFloat, fgFloat;
+            displayMat(roi).convertTo(bgFloat, CV_32FC3);
+            resizedColor.convertTo(fgFloat, CV_32FC3);
+
+            // Split alpha into 3 channels matching the ROI size
+            std::vector<cv::Mat> alphaChannels(3, scaledAlpha);
+            cv::Mat alpha3C;
+            cv::merge(alphaChannels, alpha3C);
+
+            // Standard Alpha Blending Formula: blended = bg * (1 - alpha) + fg * alpha
+            // Mathematically equivalent to: bg + alpha * (fg - bg)
+            cv::Mat blended;
+            cv::multiply(fgFloat, alpha3C, fgFloat);
+            cv::multiply(bgFloat, cv::Scalar::all(1.0) - alpha3C, bgFloat);
+            cv::add(bgFloat, fgFloat, blended);
+
+            // Convert back to 8-bit BGR and write directly back into displayMat's ROI
+            blended.convertTo(displayMat(roi), CV_8UC3);
         }
 
 
@@ -836,21 +859,25 @@ void LiveViewDialog::renderCurrentFrame() {
     QImage img = matToQImage(displayMat);
     QPainter dftpainter(&img);
     if (dftCheckBox->isChecked()) {
-        // draw center filter circle
-        dftpainter.setBrush(QColor(0,0,100,70));
-        dftpainter.setPen(QPen(Qt::yellow, 2));
-        int centerx = img.width()/2;
-        int centery = img.height()/2;
-        double s1 =  newWidth/m_dftSize ;
-        double scale = s1 * (dftDisplaySize->value() /100.)  ;
-        int bin = scale * m_centerFilterRadius * (static_cast<double>(m_mirrorOutlineRadius * 2)/m_dftSize);
-        dftpainter.drawEllipse(QPointF(centerx, centery), bin,bin);
-        statusLeft->setText(QString(" A: %1 B:bin %2 outlineRad %3")
-                                    .arg(m_centerFilterRadius)
-                                    .arg(bin)
-                                    .arg(m_mirrorOutlineRadius));
+            // draw center filter circle
+            dftpainter.setBrush(QColor(0,0,100,70));
+            dftpainter.setPen(QPen(Qt::yellow, 2));
+            int centerx = img.width()/2;
+            int centery = img.height()/2;
 
-    }
+            // The effective radius of the mirror inside the DFT buffer's coordinate system
+                    double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
+
+                    // Map filter radius (in mirror/spatial units) to DFT frequency bins
+                    // (DFT resolution scales with the buffer size relative to the feature size)
+                    double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (effectiveMirrorRadius * 2.0));
+                    int bin = static_cast<int>(binDftSpace * m_DFTscale);
+
+            dftpainter.drawEllipse(QPointF(centerx, centery), bin, bin);
+            statusLeft->setText(QString(" A: %1 B:bin %2")
+                                        .arg(m_centerFilterRadius)
+                                        .arg(bin));
+        }
     if (m_mirrorOutlineRadius != 0) {
         dftpainter.setPen(QPen(Qt::green,2));
         dftpainter.drawEllipse(m_mirrorOutlineCenter, m_mirrorOutlineRadius,m_mirrorOutlineRadius);
@@ -898,25 +925,47 @@ cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize
         workingArea = gray;
     }
 
-    // Preserve aspect ratio and calculate scale
-    double scale = static_cast<double>(targetSize) / workingArea.cols;
-    int newW = std::round(workingArea.cols * scale);
+    // 1. Calculate uniform scale, ensuring we ONLY scale down (cap scale at 1.0)
+    int maxDim = std::max(workingArea.cols, workingArea.rows);
+    double scale = static_cast<double>(targetSize) / maxDim;
+    if (scale > 1.0) {
+        scale = 1.0;
+    }
 
+    // Save to your member variable so display code can use it for PPM/circle scaling
+    m_imageDownScale = scale;
+
+    int newW = std::round(workingArea.cols * scale);
+    int newH = std::round(workingArea.rows * scale);
+
+    // Safety fallback if dimensions are somehow invalid
+    if (newW <= 0) newW = 1;
+    if (newH <= 0) newH = 1;
 
     cv::Mat resized;
-    cv::resize(workingArea, resized, cv::Size(newW, newW), 0, 0, cv::INTER_AREA);
+    cv::resize(workingArea, resized, cv::Size(newW, newH), 0, 0, cv::INTER_AREA);
 
-    // Create target canvas and center the resized image with padding (0 since mask already zeroes background)
+    // 2. Create target canvas and center the resized image with strict bounds protection
     cv::Mat padded = cv::Mat::zeros(targetSize, targetSize, workingArea.type());
-    int xOffset = (targetSize - newW) / 2;
-    int yOffset = (targetSize - newW) / 2;
-    resized.copyTo(padded(cv::Rect(xOffset, yOffset, newW, newW)));
+
+    int xOffset = std::max(0, (targetSize - newW) / 2);
+    int yOffset = std::max(0, (targetSize - newH) / 2);
+
+    int copyW = std::min(newW, targetSize - xOffset);
+    int copyH = std::min(newH, targetSize - yOffset);
+
+    if (copyW > 0 && copyH > 0 && xOffset >= 0 && yOffset >= 0 &&
+        (xOffset + copyW) <= targetSize && (yOffset + copyH) <= targetSize) {
+        cv::Rect targetRoi(xOffset, yOffset, copyW, copyH);
+        cv::Rect sourceRoi(0, 0, copyW, copyH);
+        resized(sourceRoi).copyTo(padded(targetRoi));
+    }
 
     cv::Mat floatImg;
     padded.convertTo(floatImg, CV_32F);
 
     cv::Mat complexImg;
-    cv::dft(floatImg, complexImg, cv::DFT_COMPLEX_OUTPUT);
+    cv::dft(floatImg, complexImg, CV_DXT_FORWARD | cv::DFT_COMPLEX_OUTPUT);
 
     std::vector<cv::Mat> planes;
     cv::split(complexImg, planes);
