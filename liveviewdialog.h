@@ -119,7 +119,6 @@ private:
 
     int m_centerFilterRadius = 0;
     double m_RMSMargin = 1.;
-    double m_filterPercent = 0;
     QTimer *m_rmsTimer;
 
     QComboBox *resolutionCombo;

@@ -49,8 +49,8 @@ void VideoStreamWorker::startStream() {
 void VideoStreamWorker::fetchNextFrame() {
     if (!m_running) return;
     static cv::Mat testpattern;
-    if (false){
-        if (testpattern.empty()){
+    if (false){// noraml op make this false.  This creates a calibration target for debug.  THe first side lobe will be at bin 32.
+        if (testpattern.empty()){   // that will be 32 cycles per mirror diameter.
         int innerWidth = 1024;
         int stripeWidth = 16;
         int borderWidth = 10; // Extra room for the outline/crop boundary

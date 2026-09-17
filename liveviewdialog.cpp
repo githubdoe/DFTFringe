@@ -691,11 +691,7 @@ void LiveViewDialog::setFitToWindowZoom() {
     renderCurrentFrame();
 }
 void LiveViewDialog::setCenterFilter(double spatialFreqBin) {
-
-
-
     m_centerFilterRadius = spatialFreqBin ;
-
 }
 
 void LiveViewDialog::onResolutionChanged(int index) {
@@ -763,12 +759,7 @@ void LiveViewDialog::renderCurrentFrame() {
     if (displayMat.channels() == 1) {
         cv::cvtColor(displayMat, displayMat, cv::COLOR_GRAY2BGR);
     }
-
-
-    //cv::Mat modulatation = computeFringeModulation(displayMat, 5);
-    //cv::imshow("mod", modulatation);
-    //fcv::waitKey(100);
-
+    int newWidth = m_dftSize;
     if (dftCheckBox->isChecked()) {
             // 1. Compute raw DFT
             cv::Mat dftRaw = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
@@ -808,13 +799,13 @@ void LiveViewDialog::renderCurrentFrame() {
             cv::Mat dftNorm;
             dftShifted.convertTo(dftNorm, CV_8U, 255.0 / range);
 
-            // 5. Apply Jet colormap to the square DFT
+            // Raise the black threshold to 50 (out of 255) to crush background noise to zero
+            cv::threshold(dftNorm, dftNorm, DFTLowThreshold->value(), 0, cv::THRESH_TOZERO);
+
+            // 5. Apply Jet colormap and force zero-values to pure black
             cv::Mat dftColorSquare;
             cv::applyColorMap(dftNorm, dftColorSquare, cv::COLORMAP_JET);
-
-            // Also create a normalized mask for alpha blending
-            cv::Mat alphaMaskSquare;
-            dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
+            dftColorSquare.setTo(cv::Scalar(0, 0, 0), dftNorm == 0);
 
             // 6. Resize directly to the target ROI dimensions (maintaining aspect ratio)
             m_DFTscale = std::min(
@@ -822,8 +813,8 @@ void LiveViewDialog::renderCurrentFrame() {
                 static_cast<double>(displayMat.rows) / dftColorSquare.rows
             );
 
-            int newWidth = (dftDisplaySize->value() /100.) * static_cast<int>(dftColorSquare.cols * m_DFTscale);
-            int newHeight = (dftDisplaySize->value() /100.) * static_cast<int>(dftColorSquare.rows * m_DFTscale);
+            newWidth = dftDisplaySize->value()/100. * static_cast<int>(dftColorSquare.cols * m_DFTscale);
+            int newHeight = dftDisplaySize->value()/100. *static_cast<int>(dftColorSquare.rows * m_DFTscale);
 
             int x = (displayMat.cols - newWidth) / 2;
             int y = (displayMat.rows - newHeight) / 2;
@@ -833,33 +824,11 @@ void LiveViewDialog::renderCurrentFrame() {
             roi &= cv::Rect(0, 0, displayMat.cols, displayMat.rows);
             if (roi.width <= 0 || roi.height <= 0) return;
 
-            cv::Mat resizedColor, resizedAlpha;
+            cv::Mat resizedColor;
             cv::resize(dftColorSquare, resizedColor, roi.size(), 0, 0, cv::INTER_LINEAR);
-            cv::resize(alphaMaskSquare, resizedAlpha, roi.size(), 0, 0, cv::INTER_LINEAR);
 
-            // 7. Vectorized blending restricted strictly to the ROI
-            cv::Mat scaledAlpha;
-            cv::multiply(resizedAlpha, 1.4, scaledAlpha);
-            cv::threshold(scaledAlpha, scaledAlpha, 1.0, 1.0, cv::THRESH_TRUNC);
-
-            // Convert ONLY the background ROI and foreground to float (bypasses full-frame overhead)
-            cv::Mat bgFloat, fgFloat;
-            displayMat(roi).convertTo(bgFloat, CV_32FC3);
-            resizedColor.convertTo(fgFloat, CV_32FC3);
-
-            // Split alpha into 3 channels matching the ROI size
-            std::vector<cv::Mat> alphaChannels(3, scaledAlpha);
-            cv::Mat alpha3C;
-            cv::merge(alphaChannels, alpha3C);
-
-            // Blending formula: bg * (1 - alpha) + fg * alpha -> bg + alpha * (fg - bg)
-            cv::Mat blended;
-            cv::multiply(fgFloat, alpha3C, fgFloat);
-            cv::multiply(bgFloat, cv::Scalar::all(1.0) - alpha3C, bgFloat);
-            cv::add(bgFloat, fgFloat, blended);
-
-            // Convert back to 8-bit BGR and write directly back into displayMat's ROI
-            blended.convertTo(displayMat(roi), CV_8UC3);
+            // 7. Ultra-fast 8-bit additive overlay (Zero floats, zero alpha maps)
+            displayMat(roi) += resizedColor;
         }
 
 
@@ -872,9 +841,14 @@ void LiveViewDialog::renderCurrentFrame() {
         dftpainter.setPen(QPen(Qt::yellow, 2));
         int centerx = img.width()/2;
         int centery = img.height()/2;
-
-        int bin = m_centerFilterRadius * (static_cast<double>(m_mirrorOutlineRadius * 2)/m_dftSize);
+        double s1 =  newWidth/m_dftSize ;
+        double scale = s1 * (dftDisplaySize->value() /100.)  ;
+        int bin = scale * m_centerFilterRadius * (static_cast<double>(m_mirrorOutlineRadius * 2)/m_dftSize);
         dftpainter.drawEllipse(QPointF(centerx, centery), bin,bin);
+        statusLeft->setText(QString(" A: %1 B:bin %2 outlineRad %3")
+                                    .arg(m_centerFilterRadius)
+                                    .arg(bin)
+                                    .arg(m_mirrorOutlineRadius));
 
     }
     if (m_mirrorOutlineRadius != 0) {
@@ -888,8 +862,8 @@ void LiveViewDialog::renderCurrentFrame() {
     int targetHeight = static_cast<int>(img.height() * m_zoomFactor);
 
     imageSize->setText(QString("%1 x %2 frame:%3")
-                .arg(img.size().width())
-                .arg(img.size().height())
+                       .arg(img.size().width())
+                       .arg(img.size().height())
                        .arg(cnt++));
 
     imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
