@@ -2,7 +2,7 @@
 #include <QDebug>
 #include <QTimer>
 #include <QMutexLocker>
-
+#include <QFileDialog>
 VideoStreamWorker::VideoStreamWorker(const QString &source, QObject *parent)
     : QObject(parent), m_source(source), m_running(false) {}
 
@@ -46,10 +46,31 @@ void VideoStreamWorker::startStream() {
     m_running = true;
     emit streamStarted();
 }
+
 void VideoStreamWorker::fetchNextFrame() {
     if (!m_running) return;
     static cv::Mat testpattern;
+    if (false) {  // use a file for the test patttern.
+        if (testpattern.empty()){
+            // 1. Open a file dialog to select an image
+                QString filePath = QFileDialog::getOpenFileName(
+                    nullptr,
+                    "Open Image",
+                    "",
+                    "Image Files (*.png *.jpg *.jpeg *.bmp)"
+                );
+
+                if (filePath.isEmpty()) {
+                    return; // User canceled
+                }
+            testpattern = cv::imread(filePath.toStdString(), cv::IMREAD_COLOR);
+        }
+        emit frameReady(testpattern.clone());
+        return;
+    }
     if (false){// for noraml op make this false.  This creates a calibration target for debug.  THe first side lobe will be at bin 32.
+
+
         if (testpattern.empty()){   // that will be 32 cycles per mirror diameter.
         int innerWidth = 800;
         int stripeWidth = 16;

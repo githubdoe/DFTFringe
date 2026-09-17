@@ -82,7 +82,7 @@ public:
     QPushButton *stopAnalysisBtn;
     QPushButton *pauseAnalyBtn;
 
-
+    QSlider *brightnessSlider;
     QCheckBox *deleteIgramAfter;
     QDoubleSpinBox *maxRMS;
     QCheckBox *averageMode;

@@ -321,7 +321,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     sidebarLayout->addWidget(DFTGroup);
     // Camera Hardware Sliders (Brightness / Exposure)
     sidebarLayout->addWidget(new QLabel("Brightness:", this));
-    QSlider *brightnessSlider = new QSlider(Qt::Horizontal, this);
+    brightnessSlider = new QSlider(Qt::Horizontal, this);
     brightnessSlider->setRange(-64, 64);
     brightnessSlider->setValue(0);
     connect(brightnessSlider, &QSlider::valueChanged, this, [this](int val) {
@@ -830,7 +830,8 @@ void LiveViewDialog::renderCurrentFrame() {
             // 7. Localized Alpha Blending (Restricted strictly to the ROI)
             // Scale alpha to punch up the DFT peaks, capped at 1.0 max
             cv::Mat scaledAlpha;
-            cv::multiply(resizedAlpha, .7, scaledAlpha);
+
+            cv::multiply(resizedAlpha, 2.7, scaledAlpha);
             cv::threshold(scaledAlpha, scaledAlpha, 1.0, 1.0, cv::THRESH_TRUNC);
 
             // Convert ONLY the background ROI and foreground to float for precise blending
@@ -866,12 +867,12 @@ void LiveViewDialog::renderCurrentFrame() {
             int centery = img.height()/2;
 
             // The effective radius of the mirror inside the DFT buffer's coordinate system
-                    double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
+            double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
 
-                    // Map filter radius (in mirror/spatial units) to DFT frequency bins
-                    // (DFT resolution scales with the buffer size relative to the feature size)
-                    double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (effectiveMirrorRadius * 2.0));
-                    int bin = static_cast<int>(binDftSpace * m_DFTscale);
+            // Map filter radius (in mirror/spatial units) to DFT frequency bins
+            // (DFT resolution scales with the buffer size relative to the feature size)
+            double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (effectiveMirrorRadius * 2.0));
+            int bin = static_cast<int>(binDftSpace * m_DFTscale);
 
             dftpainter.drawEllipse(QPointF(centerx, centery), bin, bin);
             statusLeft->setText(QString(" A: %1 B:bin %2")
