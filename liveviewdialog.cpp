@@ -906,7 +906,7 @@ void LiveViewDialog::renderCurrentFrame() {
     imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     imageLabel->resize(targetWidth, targetHeight);
 
-    m_throttle.start(100);
+    m_throttle.start(10);
 
 }
 

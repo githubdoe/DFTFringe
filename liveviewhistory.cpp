@@ -112,7 +112,7 @@ void liveViewHistory::addSample(double rawRms, double rawSa) {
     for (const auto &point : rmsSeries->points()) {
         if (point.y() > maxRms) maxRms = point.y();
     }
-    axisY_RMS->setRange(0, std::max(1.0, maxRms * 1.1));
+    axisY_RMS->setRange(0, std::max(.04, maxRms * 1.1));
 
     if (!saSeries->points().isEmpty()) {
         double minSa = saSeries->points().at(0).y();

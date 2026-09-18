@@ -2348,7 +2348,6 @@ void MainWindow::stopLiveButton_clicked() {
 
 void MainWindow::setLiveViewMode(bool active) {
     if (active) {
-        qDebug() << "golive";
         // --- LOCKDOWN: Enter Live Mode ---
         ui->tabWidget->setCurrentIndex(2);
         m_igramArea->setUpdatesEnabled(false);
