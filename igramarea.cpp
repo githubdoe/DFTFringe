@@ -1956,7 +1956,7 @@ void IgramArea::paintEvent(QPaintEvent *event)
             topy = 0;
         }
 
-        qDebug() << "viewW" << viewW << "scale"<< zoomIndex;
+
         QImage roi = m_withOutlines.copy(topx,topy, viewW * 2, viewW);
         smallPainter.drawImage(viewW ,0, roi);
 

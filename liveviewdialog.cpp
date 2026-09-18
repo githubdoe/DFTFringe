@@ -78,7 +78,13 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
                                   Q_ARG(int, selectedRes.height()));
         statusLeft->setText("Stream Connected");
 
-        emit requestFrame();
+        //emit requestFrame();
+        // Configure it once during initialization
+        m_throttle.setSingleShot(true);
+        connect(&m_throttle, &QTimer::timeout, this, [this]() {
+            emit requestFrame();
+        });
+        m_throttle.start(10);
         // Clear the status message after 5 seconds (5000 milliseconds)
         QTimer::singleShot(5000, this, [this]() {
             // Only clear if it still says "Stream Connected" so we don't overwrite a newer message
@@ -126,7 +132,9 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
                 statusLeft->setText("<span style='color: black; background-color: yellow'>USB connection skipped. Open settings to connect.</span>");
             }
         });
+        m_throttle.start(10);
 }
+
 LiveViewDialog::~LiveViewDialog() {
     if (m_worker) {
             m_worker->stop();
@@ -754,6 +762,7 @@ cv::Mat computeFringeModulation(const cv::Mat& src, int kernelSize) {
 
 void LiveViewDialog::renderCurrentFrame() {
     if (m_latestFrame.empty()) return;
+
     static int cnt = 0;
     cv::Mat displayMat = m_latestFrame.clone();
     if (displayMat.channels() == 1) {
@@ -875,9 +884,9 @@ void LiveViewDialog::renderCurrentFrame() {
             int bin = static_cast<int>(binDftSpace * m_DFTscale);
 
             dftpainter.drawEllipse(QPointF(centerx, centery), bin, bin);
-            statusLeft->setText(QString(" A: %1 B:bin %2")
-                                        .arg(m_centerFilterRadius)
-                                        .arg(bin));
+//            statusLeft->setText(QString(" A Bin: %1 B Bin %2")
+//                                        .arg(m_centerFilterRadius)
+//                                        .arg(bin));
         }
     if (m_mirrorOutlineRadius != 0) {
         dftpainter.setPen(QPen(Qt::green,2));
@@ -896,7 +905,9 @@ void LiveViewDialog::renderCurrentFrame() {
 
     imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     imageLabel->resize(targetWidth, targetHeight);
-    emit requestFrame();
+
+    m_throttle.start(100);
+
 }
 
 cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize, const QRect &roi) {

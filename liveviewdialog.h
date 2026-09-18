@@ -148,4 +148,5 @@ private:
     QPointF m_mirrorOutlineCenter;
     double m_mirrorOutlineRadius = 0.;
     double m_imageDownScale;
+    QTimer m_throttle;
 };
