@@ -55,7 +55,6 @@ private slots:
 
     void onResolutionChanged(int index);
     void onZoomChanged(int index);
-    void onMirrorDefined(QPointF center, double radius);
     void setFitToWindowZoom();
     void onYellowRadiusChanged(double radius);
     void onRequestZoomChange(double newZoom);

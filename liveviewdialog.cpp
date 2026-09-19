@@ -237,7 +237,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     imageLabel->setStyleSheet("background-color: black;");
     imageLabel->setAlignment(Qt::AlignCenter);
 
-    connect(imageLabel, &LiveImageView::mirrorDefined, this, &LiveViewDialog::onMirrorDefined);
+    connect(imageLabel, &LiveImageView::mirrorDefined, this, &LiveViewDialog::setOutsidecircle);
     connect(imageLabel, &LiveImageView::yellowRadiusChanged, this, &LiveViewDialog::onYellowRadiusChanged);
     connect(imageLabel, &LiveImageView::requestZoomChange, this, &LiveViewDialog::onRequestZoomChange);
 
@@ -739,11 +739,6 @@ QRect LiveViewDialog::getMirrorRect(){
     return QRect(left, top, radius * 2, radius * 2);
 }
 
-
-void LiveViewDialog::onMirrorDefined(QPointF center, double radius) {
-    m_mirrorOutlineCenter = center;
-    m_mirrorOutlineRadius = radius;
-}
 
 void LiveViewDialog::onRequestZoomChange(double){
 

@@ -1,22 +1,17 @@
-#ifndef LIVEVIEWHISTORY_H
-#define LIVEVIEWHISTORY_H
+#pragma once
 
 #include <QWidget>
 #include <QVector>
-
-namespace QtCharts {
-    class QChart;
-    class QChartView;
-    class QLineSeries;
-    class QValueAxis;
-}
+#include <QDateTime>
+#include <QtCharts/QChart>
+#include <QtCharts/QChartView>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QValueAxis>
 
 class liveViewHistory : public QWidget {
     Q_OBJECT
 public:
     explicit liveViewHistory(QWidget *parent = nullptr);
-    ~liveViewHistory() = default;
-
     void addSample(double rawRms, double rawSa);
     void showBestFit(bool show);
 
@@ -36,6 +31,6 @@ private:
 
     QVector<double> rawRmsData;
     QVector<double> rawSaData;
-};
 
-#endif // LIVEVIEWHISTORY_H
+    QDateTime firstSampleTime; // Tracks the start time reference
+};

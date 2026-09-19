@@ -48,17 +48,32 @@ void VideoStreamWorker::startStream() {
 }
 
 void VideoStreamWorker::captureLoop() {
+    int consecutiveErrors = 0;
+    const int maxStartupRetries = 10; // Allow a few empty frames on startup
+
     while (m_running) {
         cv::Mat frame;
 
-        // Read from camera (blocking call, but safe because m_cap is owned here)
+        // Read from camera
         if (!m_cap.isOpened() || !m_cap.read(frame) || frame.empty()) {
+            consecutiveErrors++;
+
+            // If it's just starting up, webcams often send a few blank/empty frames.
+            // Give it a moment instead of dying immediately.
+            if (consecutiveErrors < maxStartupRetries) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                continue;
+            }
+
             if (m_running) {
                 emit streamError("Stream error or connection lost.");
                 m_running = false;
             }
             break;
         }
+
+        // Reset error count once we successfully get a real frame
+        consecutiveErrors = 0;
 
         // Quickly update the latest frame buffer
         {

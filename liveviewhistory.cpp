@@ -5,6 +5,7 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QChart>
 #include <QtCharts/QValueAxis>
+#include <QDateTime>
 #include <algorithm>
 
 liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
@@ -48,7 +49,7 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
 
     // Axes Setup
     axisX = new QtCharts::QValueAxis();
-    axisX->setTitleText("seconds");
+    axisX->setTitleText("minutes");
     axisX->setRange(0, 1);
     chart->addAxis(axisX, Qt::AlignBottom);
     rmsSeries->attachAxis(axisX);
@@ -96,17 +97,27 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
 }
 
 void liveViewHistory::addSample(double rawRms, double rawSa) {
+    QDateTime currentTime = QDateTime::currentDateTime();
+
+    // Save the time of the first sample upon reset or start
+    if (!firstSampleTime.isValid()) {
+        firstSampleTime = currentTime;
+    }
+
+    // Calculate time delta in minutes from the first sample
+    double elapsedMinutes = static_cast<double>(firstSampleTime.msecsTo(currentTime)) / 60000.0;
+
     rawRmsData.append(rawRms);
     rawSaData.append(rawSa);
 
     double avgRms = computeRunningAverage(rawRmsData, 5);
     double avgSa = computeRunningAverage(rawSaData, 5);
 
-    int sampleIndex = rawRmsData.size();
-    rmsSeries->append(sampleIndex, avgRms);
-    saSeries->append(sampleIndex, avgSa);
+    rmsSeries->append(elapsedMinutes, avgRms);
+    saSeries->append(elapsedMinutes, avgSa);
 
-    axisX->setRange(1, std::max(2, sampleIndex));
+    // Dynamically adjust X-axis range based on elapsed time (at least 1 minute range)
+    axisX->setRange(0, std::max(1.0, elapsedMinutes));
 
     double maxRms = 0.0;
     for (const auto &point : rmsSeries->points()) {
@@ -126,8 +137,8 @@ void liveViewHistory::addSample(double rawRms, double rawSa) {
         axisY_SA->setRange(minSa - saPadding, maxSa + saPadding);
     }
 }
-void liveViewHistory::showBestFit(bool show)
-{
+
+void liveViewHistory::showBestFit(bool show) {
     saSeries->setName((show)? "Best Fit" : "Live SA");
     axisY_SA->setTitleText((show)? "Live Best Fit": "live SA");
     if (show){
@@ -144,6 +155,7 @@ void liveViewHistory::onResetClicked() {
     rawSaData.clear();
     rmsSeries->clear();
     saSeries->clear();
+    firstSampleTime = QDateTime(); // Reset start time so the next sample acts as the new epoch
     axisX->setRange(0, 1);
     axisY_RMS->setRange(0, 1);
     axisY_SA->setRange(-100, 100);
