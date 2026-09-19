@@ -70,9 +70,64 @@ void VideoStreamWorker::captureLoop() {
 
 void VideoStreamWorker::fetchNextFrame() {
     if (!m_running) return;
+    static cv::Mat testpattern;
+    if (false) {  // use a file for the test patttern.
+        if (testpattern.empty()){
+            // 1. Open a file dialog to select an image
+                QString filePath = QFileDialog::getOpenFileName(
+                    nullptr,
+                    "Open Image",
+                    "",
+                    "Image Files (*.png *.jpg *.jpeg *.bmp)"
+                );
 
-    // Optional debug test patterns can remain here if desired,
-    // but normal operation just grabs the latest captured frame:
+                if (filePath.isEmpty()) {
+                    return; // User canceled
+                }
+            testpattern = cv::imread(filePath.toStdString(), cv::IMREAD_COLOR);
+        }
+        emit frameReady(testpattern.clone());
+        return;
+    }
+    if (false){// for noraml op make this false.  This creates a calibration target for debug.  THe first side lobe will be at bin 32.
+
+
+        if (testpattern.empty()){   // that will be 32 cycles per mirror diameter.
+        int innerWidth = 800;
+        int stripeWidth = 16;
+        int borderWidth = 10; // Extra room for the outline/crop boundary
+        int totalSize = innerWidth + (borderWidth * 2);
+
+        // Create a larger canvas filled with black (the border background)
+        cv::Mat img(totalSize, totalSize, CV_8UC1, cv::Scalar(0));
+
+        // Define the region for the 1024x1024 striped circle, offset by the border
+        cv::Rect roiRect(borderWidth, borderWidth, innerWidth, innerWidth);
+        cv::Mat innerRegion = img(roiRect);
+
+        // Draw the 16-pixel stripes inside the inner region
+        for (int x = 0; x < innerWidth; x += stripeWidth) {
+            int currentWidth = std::min(stripeWidth, innerWidth - x);
+            if ((x / stripeWidth) % 2 == 1) {
+                cv::Mat stripeRoi = innerRegion(cv::Rect(x, 0, currentWidth, innerWidth));
+                stripeRoi.setTo(cv::Scalar(255));
+            }
+        }
+
+        // Apply a circular mask to the inner region so it matches the expected mirror outline
+        cv::Mat circularMask(innerWidth, innerWidth, CV_8UC1, cv::Scalar(0));
+        cv::Point center(innerWidth / 2.0, innerWidth / 2.0);
+        double radius = innerWidth / 2.0;
+        cv::circle(circularMask, center, radius, cv::Scalar(255), -1);
+
+        cv::Mat maskedInner;
+        innerRegion.copyTo(maskedInner, circularMask);
+        maskedInner.copyTo(innerRegion); // Copy back into the bordered canvas
+        testpattern = img.clone();
+        }
+            emit frameReady(testpattern.clone());
+        return;
+    }
     cv::Mat frameToSend;
     {
         QMutexLocker locker(&m_frameMutex);
@@ -82,6 +137,7 @@ void VideoStreamWorker::fetchNextFrame() {
 
     emit frameReady(frameToSend);
 }
+
 
 void VideoStreamWorker::stop() {
     m_running = false;

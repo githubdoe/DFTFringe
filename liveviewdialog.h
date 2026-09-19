@@ -77,6 +77,8 @@ signals:
     void requestCameraSetting(CameraProperty prop , int val);
     void outline(QPointF center, double rad);
     void blueCircle(QPointF center, double rad);
+    void autoOutLine();
+    void outlineOk();
 public:
     QPushButton *startAnalysisBtn;
     QPushButton *stopAnalysisBtn;
@@ -102,7 +104,7 @@ public:
     bool FirsdtWaveFrontSeen = false;
     LiveImageView *imageLabel;
     liveViewHistory *history;
-    bool m_showBestFit = false;
+    bool m_showBestFit = true;
 private:
     VideoStreamWorker *m_worker;
     QThread *m_thread;
@@ -110,6 +112,9 @@ private:
     ResizableScrollArea *scrollArea;
     QCheckBox *dftCheckBox;
     QPushButton *grabButton;
+    QPushButton *OutlineBtn;
+    QPushButton *OutlineOkBtn;
+
     QListWidget *urlListWidget;
     QLineEdit *urlLineEdit;
     QTabWidget *tabWidget;

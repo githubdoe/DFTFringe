@@ -2274,7 +2274,10 @@ void MainWindow::on_actionLive_view_triggered()
 
             });
             connect(m_dftArea, &DFTArea::filterSizeScale, m_viewDlg, &LiveViewDialog::setCenterFilter );
-
+            connect(m_viewDlg, &LiveViewDialog::autoOutLine, m_igramArea, &IgramArea::autoTraceOutline);
+            connect(m_viewDlg, &LiveViewDialog::outlineOk, this,[this](){
+                m_igramArea->nextStep();
+            });
             m_viewDlg->show();
         } else {
             // If it's already open, just bring it to the front
@@ -2319,7 +2322,7 @@ void MainWindow::pauseLiveButton_clicked() {
         m_liveState = State_Paused;
         m_viewDlg->pauseAnalyBtn->setText("Resume");
         setLiveViewMode(false);
-        m_viewDlg->onGrabClicked();
+
 
     } else if (m_liveState == State_Paused) {
         m_liveState = State_Running;

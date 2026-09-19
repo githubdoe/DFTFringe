@@ -95,44 +95,46 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
     }, Qt::QueuedConnection);
 
     // Kick off the thread start safely after checking user preferences
-        QTimer::singleShot(50, this, [this, savedUrl]() {
-            QSettings settings;
-            bool skipPrompt = settings.value("LiveView/skipUSBStartupPrompt", false).toBool();
-            bool autoConnect = settings.value("LiveView/autoConnectUSB", true).toBool();
+    QTimer::singleShot(50, this, [this, savedUrl]() {
+        QSettings settings;
+        bool skipPrompt = settings.value("LiveView/skipUSBStartupPrompt", false).toBool();
+        bool autoConnect = settings.value("LiveView/autoConnectUSB", true).toBool();
 
-            // If it targets default USB device "0" and the user hasn't suppressed prompts
-            if (!skipPrompt) {
-                QMessageBox msgBox(this);
-                msgBox.setWindowTitle("USB Camera Connection");
-                msgBox.setText(QString("Attempt to connect to device %1 on startup?").arg(savedUrl));
-                msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        // If it targets default USB device "0" and the user hasn't suppressed prompts
+        if (!skipPrompt) {
+            QMessageBox msgBox(this);
+            msgBox.setWindowTitle("USB Camera Connection");
+            msgBox.setText(QString("Attempt to connect to device %1 on startup?").arg(savedUrl));
+            msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
 
-                QCheckBox dontAskBox("Never ask me again", &msgBox);
-                msgBox.setCheckBox(&dontAskBox);
+            QCheckBox dontAskBox("Never ask me again", &msgBox);
+            msgBox.setCheckBox(&dontAskBox);
 
-                int ret = msgBox.exec();
-                if (dontAskBox.isChecked()) {
-                    settings.setValue("LiveView/skipUSBStartupPrompt", true);
-                }
-                if (ret == QMessageBox::Yes) {
-                    settings.setValue("LiveView/autoConnectUSB", true);
-                    autoConnect = true;
-                } else {
-                    settings.setValue("LiveView/autoConnectUSB", false);
-                    autoConnect = false;
-                }
+            int ret = msgBox.exec();
+            if (dontAskBox.isChecked()) {
+                settings.setValue("LiveView/skipUSBStartupPrompt", true);
             }
-
-            // Only start the thread if allowed
-            if ((savedUrl != "0") || autoConnect) {
-                if (m_thread && !m_thread->isRunning()) {
-                    m_thread->start();
-                }
+            if (ret == QMessageBox::Yes) {
+                settings.setValue("LiveView/autoConnectUSB", true);
+                autoConnect = true;
             } else {
-                statusLeft->setText("<span style='color: black; background-color: yellow'>USB connection skipped. Open settings to connect.</span>");
+                settings.setValue("LiveView/autoConnectUSB", false);
+                autoConnect = false;
             }
-        });
-        m_throttle.start(10);
+        }
+
+        // Only start the thread if allowed
+        if ((savedUrl != "0") || autoConnect) {
+            if (m_thread && !m_thread->isRunning()) {
+                m_thread->start();
+            }
+        } else {
+            statusLeft->setText("<span style='color: black; background-color: yellow'>USB connection skipped. Open settings to connect.</span>");
+        }
+    });
+    m_throttle.start(10);
+    if (m_fitToWindow)
+         setFitToWindowZoom();
 }
 
 LiveViewDialog::~LiveViewDialog() {
@@ -426,8 +428,16 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     grabButton->setStyleSheet("background-color: #2e7d32; color: white; font-weight: bold;");
     connect(grabButton, &QPushButton::clicked, this, &LiveViewDialog::onGrabClicked);
 
+    OutlineBtn = new QPushButton("Auto outline", this);
+    OutlineBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
+
+    OutlineOkBtn = new QPushButton("Outline is ok",this);
+    OutlineOkBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
+
+
     startAnalysisBtn = new QPushButton("Start Loop", this);
     startAnalysisBtn->setStyleSheet("background-color: #1976d2; color: white; font-weight: bold;");
+    startAnalysisBtn->hide();
 
     pauseAnalyBtn = new QPushButton("Pause", this);
     pauseAnalyBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
@@ -443,12 +453,23 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     connect(saveAverageBtn, &QPushButton::clicked, this, [this](){
         this->saveAverage = true;
     });
+    connect(OutlineBtn, &QPushButton::clicked, this,[this](){
+        emit autoOutLine();
+    });
+    connect(OutlineOkBtn, &QPushButton::clicked, this,[this](){
+        emit outlineOk();
+        startAnalysisBtn->show();
+        OutlineBtn->hide();
+        OutlineOkBtn->hide();
+
+    });
 
     dftCheckBox = new QCheckBox("Show DFT", this);
     dftCheckBox->setChecked(false);
     connect(dftCheckBox, &QCheckBox::toggled, this, &LiveViewDialog::renderCurrentFrame);
-
     bottomControlLayout->addWidget(grabButton);
+    bottomControlLayout->addWidget(OutlineBtn);
+    bottomControlLayout->addWidget(OutlineOkBtn);
     bottomControlLayout->addWidget(startAnalysisBtn);
     bottomControlLayout->addWidget(pauseAnalyBtn);
     bottomControlLayout->addWidget(stopAnalysisBtn);
@@ -581,10 +602,12 @@ void LiveViewDialog::initSettingsDialog() {
     });
 
     showHistory = new QCheckBox("Show bestFit conic instead of SA in history Trend graph",m_settingsDlg);
+    showHistory->setChecked(true);
     connect(showHistory, &QCheckBox::toggled, this, [this](bool checked){
         m_showBestFit = checked;
         history->showBestFit(checked);
     });
+
     settingsLayout->addWidget(urlLineEdit);
     settingsLayout->addWidget(urlListWidget);
     settingsLayout->addWidget(rmsGroup);
@@ -637,6 +660,9 @@ void LiveViewDialog::onApplySettings() {
 void LiveViewDialog::onGrabClicked() {
     if (!m_latestFrame.empty()) {
         emit igramCaptured(); // Emit a safe deep copy of the frame
+        OutlineBtn->show();
+        OutlineOkBtn->show();
+        startAnalysisBtn->hide();
     }
 }
 
