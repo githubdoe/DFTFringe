@@ -148,6 +148,7 @@ private:
     double m_DFTscale = 1.;
     bool m_hasActiveCircle = false;
     bool m_fitToWindow = true;
+    bool m_outlineChanging = false;
 private:
     QPointF m_mirrorOutlineCenter;
     double m_mirrorOutlineRadius = 0.;

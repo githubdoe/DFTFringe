@@ -47,38 +47,68 @@ void VideoStreamWorker::startStream() {
     emit streamStarted();
 }
 
+
+
 void VideoStreamWorker::captureLoop() {
-    int consecutiveErrors = 0;
-    const int maxStartupRetries = 100; // Allow a few empty frames on startup
+    int errorCount = 0;
+    const int maxErrorLimit = 15; // Number of failed attempts before giving up
 
     while (m_running) {
         cv::Mat frame;
+        bool success = false;
 
-        // Read from camera
-        if (!m_cap.isOpened() || !m_cap.read(frame) || frame.empty()) {
-            consecutiveErrors++;
-
-            // If it's just starting up, webcams often send a few blank/empty frames.
-            // Give it a moment instead of dying immediately.
-            if (consecutiveErrors < maxStartupRetries) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                continue;
+        {
+            if (m_cap.isOpened()) {
+                success = m_cap.read(frame) && !frame.empty();
             }
-
-            if (m_running) {
-                emit streamError("Stream error or connection lost.");
-                m_running = false;
-            }
-            break;
         }
 
-        // Reset error count once we successfully get a real frame
-        consecutiveErrors = 0;
-
-        // Quickly update the latest frame buffer
-        {
+        if (success) {
+            // Successful read: reset error counter and update live frame
+            errorCount = 0;
             QMutexLocker locker(&m_frameMutex);
             m_latestFrame = frame.clone();
+        } else {
+            errorCount++;
+
+            // Create a status/error image canvas (e.g., 800x600 dark background)
+            cv::Mat errorFrame(600, 800, CV_8UC3, cv::Scalar(30, 30, 30));
+
+            std::string msg = "Connecting / Waiting for Stream...";
+            std::string countMsg = "Attempt: " + std::to_string(errorCount) + " of " + std::to_string(maxErrorLimit);
+
+            int baseline = 0;
+            double fontScale = 0.8;
+            int thickness = 2;
+
+            // Draw primary warning message (Centered, Orange/Yellow)
+            cv::Size textSize = cv::getTextSize(msg, cv::FONT_HERSHEY_SIMPLEX, fontScale, thickness, &baseline);
+            cv::Point textOrg((errorFrame.cols - textSize.width) / 2, (errorFrame.rows / 2) - 20);
+            cv::putText(errorFrame, msg, textOrg, cv::FONT_HERSHEY_SIMPLEX, fontScale, cv::Scalar(0, 165, 255), thickness);
+
+            // Draw error count below it (Centered, White)
+            double countScale = 0.6;
+            cv::Size countSize = cv::getTextSize(countMsg, cv::FONT_HERSHEY_SIMPLEX, countScale, 1, &baseline);
+            cv::Point countOrg((errorFrame.cols - countSize.width) / 2, (errorFrame.rows / 2) + 25);
+            cv::putText(errorFrame, countMsg, countOrg, cv::FONT_HERSHEY_SIMPLEX, countScale, cv::Scalar(255, 255, 255), 1);
+
+            // Publish the status frame so the client UI can show it
+            {
+                QMutexLocker locker(&m_frameMutex);
+                m_latestFrame = errorFrame;
+            }
+
+            // If we've exceeded the limit, give up and close the stream
+            if (errorCount >= maxErrorLimit) {
+                if (m_running) {
+                    emit streamError("Stream connection failed after multiple attempts.");
+                    m_running = false;
+                }
+                break;
+            }
+
+            // Sleep briefly between retry attempts so it doesn't spin at 100% CPU
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 }

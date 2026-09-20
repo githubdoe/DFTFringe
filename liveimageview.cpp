@@ -1,7 +1,7 @@
 #include "liveimageview.h"
 #include <QCursor>
 #include <cmath>
-
+#include <QDebug>
 LiveImageView::LiveImageView(QWidget *parent) : QLabel(parent) {}
 
 void LiveImageView::setZoomFactor(double zoom) {
@@ -58,6 +58,7 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
             m_dragOffsetImg = clickImg - m_nativeCenter.toPoint();
             setCursor(Qt::ClosedHandCursor);
             event->accept();
+            emit outlineChanging(true);
             return;
         }
 
@@ -69,12 +70,13 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
         m_state = InteractionState::DrawingGreenRadius;
         setCursor(Qt::CrossCursor);
         event->accept();
+        emit outlineChanging(true);
     }
 }
 
 void LiveImageView::mouseMoveEvent(QMouseEvent *event) {
     QPoint currentPoint = mapToImageCoordinates(event->pos());
-
+qDebug() << "move";
     if (m_state == InteractionState::ResizingYellowRadius) {
         double dx = currentPoint.x() - m_yellowCenter.x();
         double dy = currentPoint.y() - m_yellowCenter.y();
@@ -115,6 +117,8 @@ void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
         }
         else if (m_state == InteractionState::DraggingGreenCenter) {
             emit mirrorDefined(m_nativeCenter, m_nativeRadius);
+            qDebug() << "release1";
+            emit outlineChanging(false);
         }
         else if (m_state == InteractionState::DrawingGreenRadius) {
             if (m_nativeRadius > 5.0) {
@@ -123,6 +127,8 @@ void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
                 m_hasCircle = false;
             }
             emit mirrorDefined(m_nativeCenter, m_nativeRadius);
+            qDebug() << "release2";
+            emit outlineChanging(false);
         }
 
         m_state = InteractionState::None;

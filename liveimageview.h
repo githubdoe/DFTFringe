@@ -19,6 +19,7 @@ signals:
     void mirrorDefined(QPointF center, double radius);
     void yellowRadiusChanged(double radius);
     void requestZoomChange(double newZoom);
+    void outlineChanging(bool isManip);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

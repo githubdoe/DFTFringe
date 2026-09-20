@@ -240,6 +240,18 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     connect(imageLabel, &LiveImageView::mirrorDefined, this, &LiveViewDialog::setOutsidecircle);
     connect(imageLabel, &LiveImageView::yellowRadiusChanged, this, &LiveViewDialog::onYellowRadiusChanged);
     connect(imageLabel, &LiveImageView::requestZoomChange, this, &LiveViewDialog::onRequestZoomChange);
+    connect(imageLabel, &LiveImageView::outlineChanging, this, [this](bool changing){
+        qDebug() << "changing" << changing;
+        if (changing){
+            this->m_outlineChanging = changing;
+            m_userMirrorRect = QRect(0,0,0,0);
+            setFitToWindowZoom();
+        }
+        else{
+            setFitToWindowZoom();
+        }
+        this->m_outlineChanging = changing;
+    });
 
     scrollArea = new ResizableScrollArea(this);
     scrollArea->setWidget(imageLabel);
@@ -711,7 +723,7 @@ void LiveViewDialog::setFitToWindowZoom() {
     int imgH = m_latestFrame.rows;
 
     // Match the cropping logic from renderCurrentFrame()
-    if (m_mirrorOutlineRadius > 0) {
+    if (!m_outlineChanging && m_mirrorOutlineRadius > 0) {
         int pad = 10;
         int xMin = static_cast<int>(m_mirrorOutlineCenter.x() - m_mirrorOutlineRadius - pad);
         int yMin = static_cast<int>(m_mirrorOutlineCenter.y() - m_mirrorOutlineRadius - pad);
@@ -755,6 +767,14 @@ void LiveViewDialog::setFitToWindowZoom() {
 }
 void LiveViewDialog::setCenterFilter(double spatialFreqBin) {
     m_centerFilterRadius = spatialFreqBin ;
+
+    int centerx = m_userMirrorRect.width() / 2;
+    int centery = m_userMirrorRect.height() / 2;
+
+    double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
+    double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (effectiveMirrorRadius * 2.0));
+    int bin = static_cast<int>(binDftSpace * m_DFTscale);
+    imageLabel->setYellowCircle(QPointF(centerx,centery),bin);
 }
 
 void LiveViewDialog::onResolutionChanged(int index) {
@@ -773,45 +793,21 @@ void LiveViewDialog::onRequestZoomChange(double){
 
 }
 
-void LiveViewDialog::onYellowRadiusChanged(double){
-
+void LiveViewDialog::onYellowRadiusChanged(double rad){
+    m_centerFilterRadius = rad;
+    // next frame will use this yellow circle radius.  I may need scaling.
 }
 
-cv::Mat computeFringeModulation(const cv::Mat& src, int kernelSize) {
-    cv::Mat gray, floatImg;
 
-    // Ensure single-channel grayscale input
-    if (src.channels() == 3) {
-        cv::cvtColor(src, gray, cv::COLOR_BGR2GRAY);
-    } else {
-        gray = src;
-    }
 
-    // Convert to 32-bit float for division and precision
-    gray.convertTo(floatImg, CV_32F);
-
-    // Define local neighborhood structuring element (must match fringe frequency scale)
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
-
-    cv::Mat iMax, iMin;
-    cv::dilate(floatImg, iMax, kernel); // Local maximum intensity
-    cv::erode(floatImg, iMin, kernel);  // Local minimum intensity
-
-    // Modulation formula: (I_max - I_min) / (I_max + I_min)
-    cv::Mat numerator, denominator, modulation;
-    cv::subtract(iMax, iMin, numerator);
-    cv::add(iMax, iMin, denominator);
-
-    // Prevent division by zero in dark background regions outside the aperture
-    denominator += 1e-5f;
-
-    cv::divide(numerator, denominator, modulation);
-
-    return modulation;
-}
+#include <QElapsedTimer> // Make sure this is included in your cpp file if not already
 
 void LiveViewDialog::renderCurrentFrame() {
     if (m_latestFrame.empty()) return;
+
+    // Start the high-resolution timer
+    QElapsedTimer timer;
+    timer.start();
 
     static int cnt = 0;
     cv::Mat displayMat = m_latestFrame.clone();
@@ -821,7 +817,7 @@ void LiveViewDialog::renderCurrentFrame() {
 
     // 1. Determine ROI around the mirror outline + 10 pixel padding if outline exists
     cv::Rect cropRoi(0, 0, displayMat.cols, displayMat.rows);
-    bool hasOutline = (m_mirrorOutlineRadius > 0);
+    bool hasOutline = (m_mirrorOutlineRadius > 0) && !m_outlineChanging;
 
     if (hasOutline) {
         int pad = 10;
@@ -831,7 +827,6 @@ void LiveViewDialog::renderCurrentFrame() {
         int yMax = static_cast<int>(m_mirrorOutlineCenter.y() + m_mirrorOutlineRadius + pad);
 
         cv::Rect desiredRoi(xMin, yMin, xMax - xMin, yMax - yMin);
-        // Safely clip to displayMat bounds
         cropRoi = desiredRoi & cv::Rect(0, 0, displayMat.cols, displayMat.rows);
 
         if (cropRoi.width > 0 && cropRoi.height > 0) {
@@ -839,11 +834,10 @@ void LiveViewDialog::renderCurrentFrame() {
         } else {
             cropRoi = cv::Rect(0, 0, displayMat.cols, displayMat.rows);
         }
-        m_userMirrorRect =  QRect(0, 0, displayMat.cols, displayMat.rows);
     }
 
     if (dftCheckBox->isChecked()) {
-        // 2. Compute raw DFT (computed from the full m_latestFrame / user rect as before)
+        // 2. Compute raw DFT
         cv::Mat dftRaw = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
         if (dftRaw.empty()) return;
 
@@ -852,9 +846,8 @@ void LiveViewDialog::renderCurrentFrame() {
         dftRaw.convertTo(dftFloat, CV_32F);
 
         cv::Mat dftLog = dftFloat;
-        //cv::log(dftFloat + 1.0, dftLog);
 
-        // 4. Compute statistics on the true DFT data (ignoring empty display padding)
+        // 4. Compute statistics on the true DFT data
         double minVal, maxVal;
         cv::minMaxLoc(dftLog, &minVal, &maxVal);
 
@@ -885,7 +878,6 @@ void LiveViewDialog::renderCurrentFrame() {
         cv::Mat dftColorSquare;
         cv::applyColorMap(dftNorm, dftColorSquare, cv::COLORMAP_JET);
 
-        // Create a normalized float alpha mask from dftNorm (0.0 to 1.0)
         cv::Mat alphaMaskSquare;
         dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
 
@@ -902,7 +894,6 @@ void LiveViewDialog::renderCurrentFrame() {
         int y = (displayMat.rows - newHeight) / 2;
         cv::Rect roi(x, y, newWidth, newHeight);
 
-        // Ensure ROI safely fits within displayMat bounds
         roi &= cv::Rect(0, 0, displayMat.cols, displayMat.rows);
         if (roi.width <= 0 || roi.height <= 0) return;
 
@@ -910,7 +901,7 @@ void LiveViewDialog::renderCurrentFrame() {
         cv::resize(dftColorSquare, resizedColor, roi.size(), 0, 0, cv::INTER_LINEAR);
         cv::resize(alphaMaskSquare, resizedAlpha, roi.size(), 0, 0, cv::INTER_LINEAR);
 
-        // 8. Localized Alpha Blending (Restricted strictly to the ROI)
+        // 8. Localized Alpha Blending
         cv::Mat scaledAlpha;
         cv::multiply(resizedAlpha, 2.7, scaledAlpha);
         cv::threshold(scaledAlpha, scaledAlpha, 1.0, 1.0, cv::THRESH_TRUNC);
@@ -935,8 +926,7 @@ void LiveViewDialog::renderCurrentFrame() {
     QImage img = matToQImage(displayMat);
     QPainter dftpainter(&img);
 
-    if (dftCheckBox->isChecked()) {
-        // Draw center filter circle in the middle of the cropped display view
+    if (!m_outlineChanging && dftCheckBox->isChecked()) {
         dftpainter.setBrush(QColor(0, 0, 100, 70));
         dftpainter.setPen(QPen(Qt::yellow, 2));
         int centerx = img.width() / 2;
@@ -951,7 +941,6 @@ void LiveViewDialog::renderCurrentFrame() {
 
     if (m_mirrorOutlineRadius != 0) {
         dftpainter.setPen(QPen(Qt::green, 2));
-        // Shift outline center by the crop offset so it aligns properly on the cropped image view
         QPointF adjustedCenter(m_mirrorOutlineCenter.x() - cropRoi.x, m_mirrorOutlineCenter.y() - cropRoi.y);
         dftpainter.drawEllipse(adjustedCenter, m_mirrorOutlineRadius, m_mirrorOutlineRadius);
     }
@@ -966,6 +955,15 @@ void LiveViewDialog::renderCurrentFrame() {
 
     imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     imageLabel->resize(targetWidth, targetHeight);
+
+    // Calculate elapsed time (in milliseconds with fractional decimal places)
+    double elapsedMs = static_cast<double>(timer.nsecsElapsed()) / 1000000.0;
+
+    // Append the render time to statusLeft text
+    if (statusLeft) {
+        QString baseStatus = statusLeft->text(); // Or whatever base text statusLeft normally holds
+        statusLeft->setText(QString("  Time: %1 ms").arg(elapsedMs, 0, 'f', 2));
+    }
 
     m_throttle.start(10);
 }
