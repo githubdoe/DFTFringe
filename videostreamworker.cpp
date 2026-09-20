@@ -49,7 +49,7 @@ void VideoStreamWorker::startStream() {
 
 void VideoStreamWorker::captureLoop() {
     int consecutiveErrors = 0;
-    const int maxStartupRetries = 10; // Allow a few empty frames on startup
+    const int maxStartupRetries = 100; // Allow a few empty frames on startup
 
     while (m_running) {
         cv::Mat frame;

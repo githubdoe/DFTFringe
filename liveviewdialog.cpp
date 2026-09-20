@@ -705,8 +705,37 @@ void LiveViewDialog::setFitToWindowZoom() {
     if (m_latestFrame.empty()) return;
 
     QSize viewportSize = scrollArea->viewport()->size();
-    int imgW =  m_latestFrame.cols;
-    int imgH =  m_latestFrame.rows;
+
+    // Default to full frame dimensions
+    int imgW = m_latestFrame.cols;
+    int imgH = m_latestFrame.rows;
+
+    // Match the cropping logic from renderCurrentFrame()
+    if (m_mirrorOutlineRadius > 0) {
+        int pad = 10;
+        int xMin = static_cast<int>(m_mirrorOutlineCenter.x() - m_mirrorOutlineRadius - pad);
+        int yMin = static_cast<int>(m_mirrorOutlineCenter.y() - m_mirrorOutlineRadius - pad);
+        int xMax = static_cast<int>(m_mirrorOutlineCenter.x() + m_mirrorOutlineRadius + pad);
+        int yMax = static_cast<int>(m_mirrorOutlineCenter.y() + m_mirrorOutlineRadius + pad);
+
+        cv::Rect desiredRoi(xMin, yMin, xMax - xMin, yMax - yMin);
+        cv::Rect cropRoi = desiredRoi & cv::Rect(0, 0, m_latestFrame.cols, m_latestFrame.rows);
+
+        if (cropRoi.width > 0 && cropRoi.height > 0) {
+            imgW = cropRoi.width;
+            imgH = cropRoi.height;
+        }
+    } else if (m_userMirrorRect.width() > 0 && m_userMirrorRect.height() > 0) {
+        int pad = 10;
+        cv::Rect desiredRoi(m_userMirrorRect.x() - pad, m_userMirrorRect.y() - pad,
+                            m_userMirrorRect.width() + 2 * pad, m_userMirrorRect.height() + 2 * pad);
+        cv::Rect cropRoi = desiredRoi & cv::Rect(0, 0, m_latestFrame.cols, m_latestFrame.rows);
+
+        if (cropRoi.width > 0 && cropRoi.height > 0) {
+            imgW = cropRoi.width;
+            imgH = cropRoi.height;
+        }
+    }
 
     if (imgW <= 0 || imgH <= 0) return;
 
@@ -716,10 +745,10 @@ void LiveViewDialog::setFitToWindowZoom() {
     m_zoomFactor = std::min(scaleX, scaleY);
     // Clamp to a reasonable minimum
     m_zoomFactor = std::max(0.1, m_zoomFactor);
+
     // Re-apply scaled circle if we have one active
     if (m_hasActiveCircle) {
-
-        imageLabel->setGreenCircle(m_mirrorOutlineCenter , m_mirrorOutlineRadius );
+        imageLabel->setGreenCircle(m_mirrorOutlineCenter, m_mirrorOutlineRadius);
     }
     imageLabel->setZoomFactor(m_zoomFactor);
     renderCurrentFrame();
@@ -789,132 +818,143 @@ void LiveViewDialog::renderCurrentFrame() {
     if (displayMat.channels() == 1) {
         cv::cvtColor(displayMat, displayMat, cv::COLOR_GRAY2BGR);
     }
+
+    // 1. Determine ROI around the mirror outline + 10 pixel padding if outline exists
+    cv::Rect cropRoi(0, 0, displayMat.cols, displayMat.rows);
+    bool hasOutline = (m_mirrorOutlineRadius > 0);
+
+    if (hasOutline) {
+        int pad = 10;
+        int xMin = static_cast<int>(m_mirrorOutlineCenter.x() - m_mirrorOutlineRadius - pad);
+        int yMin = static_cast<int>(m_mirrorOutlineCenter.y() - m_mirrorOutlineRadius - pad);
+        int xMax = static_cast<int>(m_mirrorOutlineCenter.x() + m_mirrorOutlineRadius + pad);
+        int yMax = static_cast<int>(m_mirrorOutlineCenter.y() + m_mirrorOutlineRadius + pad);
+
+        cv::Rect desiredRoi(xMin, yMin, xMax - xMin, yMax - yMin);
+        // Safely clip to displayMat bounds
+        cropRoi = desiredRoi & cv::Rect(0, 0, displayMat.cols, displayMat.rows);
+
+        if (cropRoi.width > 0 && cropRoi.height > 0) {
+            displayMat = displayMat(cropRoi).clone();
+        } else {
+            cropRoi = cv::Rect(0, 0, displayMat.cols, displayMat.rows);
+        }
+        m_userMirrorRect =  QRect(0, 0, displayMat.cols, displayMat.rows);
+    }
+
     if (dftCheckBox->isChecked()) {
-            // 1. Compute raw DFT
-            cv::Mat dftRaw = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
-            if (dftRaw.empty()) return;
+        // 2. Compute raw DFT (computed from the full m_latestFrame / user rect as before)
+        cv::Mat dftRaw = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
+        if (dftRaw.empty()) return;
 
-            // 2. Convert to float and apply logarithmic scaling on the raw DFT directly
-            cv::Mat dftFloat;
-            dftRaw.convertTo(dftFloat, CV_32F);
+        // 3. Convert to float and apply logarithmic scaling on the raw DFT directly
+        cv::Mat dftFloat;
+        dftRaw.convertTo(dftFloat, CV_32F);
 
-            cv::Mat dftLog = dftFloat;
-            //cv::log(dftFloat + 1.0, dftLog);
+        cv::Mat dftLog = dftFloat;
+        //cv::log(dftFloat + 1.0, dftLog);
 
-            // 3. Compute statistics on the true DFT data (ignoring empty display padding)
-            double minVal, maxVal;
-            cv::minMaxLoc(dftLog, &minVal, &maxVal);
+        // 4. Compute statistics on the true DFT data (ignoring empty display padding)
+        double minVal, maxVal;
+        cv::minMaxLoc(dftLog, &minVal, &maxVal);
 
-            cv::Scalar meanVal, stdDevVal;
-            cv::meanStdDev(dftLog, meanVal, stdDevVal);
+        cv::Scalar meanVal, stdDevVal;
+        cv::meanStdDev(dftLog, meanVal, stdDevVal);
 
-            // 4. Clip dynamic range based on statistics
-            double floorVal = meanVal[0] + 2 * stdDevVal[0];
+        // 5. Clip dynamic range based on statistics
+        double floorVal = meanVal[0] + 2 * stdDevVal[0];
 
-            int val = DFTLowThreshold->value();
-            if (val != -1) {
-                floorVal = val;
-            }
-
-            double ceilVal = meanVal[0] + (maxVal - meanVal[0])/vivid->value();
-
-            cv::Mat dftClamped;
-            cv::threshold(dftLog, dftClamped, floorVal, 0, cv::THRESH_TOZERO);
-
-            cv::Mat dftShifted = dftClamped - floorVal;
-            double range = ceilVal - floorVal;
-            if (range < 1e-5) range = 1.0;
-
-            cv::Mat dftNorm;
-            dftShifted.convertTo(dftNorm, CV_8U, 255.0 / range);
-
-            // 5. Apply Jet colormap to the square DFT
-            cv::Mat dftColorSquare;
-            cv::applyColorMap(dftNorm, dftColorSquare, cv::COLORMAP_JET);
-
-            // Create a normalized float alpha mask from dftNorm (0.0 to 1.0)
-            cv::Mat alphaMaskSquare;
-            dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
-
-            // 6. Resize and center to fit displayMat while keeping aspect ratio
-            m_DFTscale = std::min(
-                static_cast<double>(displayMat.cols) / dftColorSquare.cols,
-                static_cast<double>(displayMat.rows) / dftColorSquare.rows
-            );
-
-            int newWidth = static_cast<int>(dftColorSquare.cols * m_DFTscale);
-            int newHeight = static_cast<int>(dftColorSquare.rows * m_DFTscale);
-
-            int x = (displayMat.cols - newWidth) / 2;
-            int y = (displayMat.rows - newHeight) / 2;
-            cv::Rect roi(x, y, newWidth, newHeight);
-
-            // Ensure ROI safely fits within displayMat bounds
-            roi &= cv::Rect(0, 0, displayMat.cols, displayMat.rows);
-            if (roi.width <= 0 || roi.height <= 0) return;
-
-            cv::Mat resizedColor, resizedAlpha;
-            cv::resize(dftColorSquare, resizedColor, roi.size(), 0, 0, cv::INTER_LINEAR);
-            cv::resize(alphaMaskSquare, resizedAlpha, roi.size(), 0, 0, cv::INTER_LINEAR);
-
-            // 7. Localized Alpha Blending (Restricted strictly to the ROI)
-            // Scale alpha to punch up the DFT peaks, capped at 1.0 max
-            cv::Mat scaledAlpha;
-
-            cv::multiply(resizedAlpha, 2.7, scaledAlpha);
-            cv::threshold(scaledAlpha, scaledAlpha, 1.0, 1.0, cv::THRESH_TRUNC);
-
-            // Convert ONLY the background ROI and foreground to float for precise blending
-            cv::Mat bgFloat, fgFloat;
-            displayMat(roi).convertTo(bgFloat, CV_32FC3);
-            resizedColor.convertTo(fgFloat, CV_32FC3);
-
-            // Split alpha into 3 channels matching the ROI size
-            std::vector<cv::Mat> alphaChannels(3, scaledAlpha);
-            cv::Mat alpha3C;
-            cv::merge(alphaChannels, alpha3C);
-
-            // Standard Alpha Blending Formula: blended = bg * (1 - alpha) + fg * alpha
-            // Mathematically equivalent to: bg + alpha * (fg - bg)
-            cv::Mat blended;
-            cv::multiply(fgFloat, alpha3C, fgFloat);
-            cv::multiply(bgFloat, cv::Scalar::all(1.0) - alpha3C, bgFloat);
-            cv::add(bgFloat, fgFloat, blended);
-
-            // Convert back to 8-bit BGR and write directly back into displayMat's ROI
-            blended.convertTo(displayMat(roi), CV_8UC3);
+        int val = DFTLowThreshold->value();
+        if (val != -1) {
+            floorVal = val;
         }
 
+        double ceilVal = meanVal[0] + (maxVal - meanVal[0])/vivid->value();
+
+        cv::Mat dftClamped;
+        cv::threshold(dftLog, dftClamped, floorVal, 0, cv::THRESH_TOZERO);
+
+        cv::Mat dftShifted = dftClamped - floorVal;
+        double range = ceilVal - floorVal;
+        if (range < 1e-5) range = 1.0;
+
+        cv::Mat dftNorm;
+        dftShifted.convertTo(dftNorm, CV_8U, 255.0 / range);
+
+        // 6. Apply Jet colormap to the square DFT
+        cv::Mat dftColorSquare;
+        cv::applyColorMap(dftNorm, dftColorSquare, cv::COLORMAP_JET);
+
+        // Create a normalized float alpha mask from dftNorm (0.0 to 1.0)
+        cv::Mat alphaMaskSquare;
+        dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
+
+        // 7. Resize and center to fit the cropped displayMat while keeping aspect ratio
+        m_DFTscale = std::min(
+            static_cast<double>(displayMat.cols) / dftColorSquare.cols,
+            static_cast<double>(displayMat.rows) / dftColorSquare.rows
+        );
+
+        int newWidth = static_cast<int>(dftColorSquare.cols * m_DFTscale);
+        int newHeight = static_cast<int>(dftColorSquare.rows * m_DFTscale);
+
+        int x = (displayMat.cols - newWidth) / 2;
+        int y = (displayMat.rows - newHeight) / 2;
+        cv::Rect roi(x, y, newWidth, newHeight);
+
+        // Ensure ROI safely fits within displayMat bounds
+        roi &= cv::Rect(0, 0, displayMat.cols, displayMat.rows);
+        if (roi.width <= 0 || roi.height <= 0) return;
+
+        cv::Mat resizedColor, resizedAlpha;
+        cv::resize(dftColorSquare, resizedColor, roi.size(), 0, 0, cv::INTER_LINEAR);
+        cv::resize(alphaMaskSquare, resizedAlpha, roi.size(), 0, 0, cv::INTER_LINEAR);
+
+        // 8. Localized Alpha Blending (Restricted strictly to the ROI)
+        cv::Mat scaledAlpha;
+        cv::multiply(resizedAlpha, 2.7, scaledAlpha);
+        cv::threshold(scaledAlpha, scaledAlpha, 1.0, 1.0, cv::THRESH_TRUNC);
+
+        cv::Mat bgFloat, fgFloat;
+        displayMat(roi).convertTo(bgFloat, CV_32FC3);
+        resizedColor.convertTo(fgFloat, CV_32FC3);
+
+        std::vector<cv::Mat> alphaChannels(3, scaledAlpha);
+        cv::Mat alpha3C;
+        cv::merge(alphaChannels, alpha3C);
+
+        cv::Mat blended;
+        cv::multiply(fgFloat, alpha3C, fgFloat);
+        cv::multiply(bgFloat, cv::Scalar::all(1.0) - alpha3C, bgFloat);
+        cv::add(bgFloat, fgFloat, blended);
+
+        blended.convertTo(displayMat(roi), CV_8UC3);
+    }
 
     // Display via OpenCV conversion
     QImage img = matToQImage(displayMat);
     QPainter dftpainter(&img);
+
     if (dftCheckBox->isChecked()) {
-            // draw center filter circle
-            dftpainter.setBrush(QColor(0,0,100,70));
-            dftpainter.setPen(QPen(Qt::yellow, 2));
-            int centerx = img.width()/2;
-            int centery = img.height()/2;
+        // Draw center filter circle in the middle of the cropped display view
+        dftpainter.setBrush(QColor(0, 0, 100, 70));
+        dftpainter.setPen(QPen(Qt::yellow, 2));
+        int centerx = img.width() / 2;
+        int centery = img.height() / 2;
 
-            // The effective radius of the mirror inside the DFT buffer's coordinate system
-            double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
+        double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
+        double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (effectiveMirrorRadius * 2.0));
+        int bin = static_cast<int>(binDftSpace * m_DFTscale);
 
-            // Map filter radius (in mirror/spatial units) to DFT frequency bins
-            // (DFT resolution scales with the buffer size relative to the feature size)
-            double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (effectiveMirrorRadius * 2.0));
-            int bin = static_cast<int>(binDftSpace * m_DFTscale);
-
-            dftpainter.drawEllipse(QPointF(centerx, centery), bin, bin);
-//            statusLeft->setText(QString(" A Bin: %1 B Bin %2")
-//                                        .arg(m_centerFilterRadius)
-//                                        .arg(bin));
-        }
-    if (m_mirrorOutlineRadius != 0) {
-        dftpainter.setPen(QPen(Qt::green,2));
-        dftpainter.drawEllipse(m_mirrorOutlineCenter, m_mirrorOutlineRadius,m_mirrorOutlineRadius);
-
+        dftpainter.drawEllipse(QPointF(centerx, centery), bin, bin);
     }
 
+    if (m_mirrorOutlineRadius != 0) {
+        dftpainter.setPen(QPen(Qt::green, 2));
+        // Shift outline center by the crop offset so it aligns properly on the cropped image view
+        QPointF adjustedCenter(m_mirrorOutlineCenter.x() - cropRoi.x, m_mirrorOutlineCenter.y() - cropRoi.y);
+        dftpainter.drawEllipse(adjustedCenter, m_mirrorOutlineRadius, m_mirrorOutlineRadius);
+    }
 
     int targetWidth = static_cast<int>(img.width() * m_zoomFactor);
     int targetHeight = static_cast<int>(img.height() * m_zoomFactor);
@@ -928,7 +968,6 @@ void LiveViewDialog::renderCurrentFrame() {
     imageLabel->resize(targetWidth, targetHeight);
 
     m_throttle.start(10);
-
 }
 
 cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize, const QRect &roi) {
@@ -1048,6 +1087,6 @@ void LiveViewDialog::setOutsidecircle(QPointF center, double radius) {
 
 
     imageLabel->setGreenCircle(center, radius);
-
+    setFitToWindowZoom();
 }
 
