@@ -172,7 +172,7 @@ qDebug() << "Processing loop start";
     double elapsedMs = static_cast<double>(timer.nsecsElapsed()) / 1000000.0;
 
     // 3. Emit the finished product back to the GUI thread
-    emit frameProcessed(finalPixmap, elapsedMs, img.size(), m_scale, DFTscale);
+    emit frameProcessed(finalPixmap, elapsedMs, m_DftResizedScale, DFTscale);
 }
 
 cv::Mat FrameProcessorWorker::computeLiveDFT(const cv::Mat &inputFrame, int targetSize, const QRect &roi) {
@@ -201,16 +201,18 @@ cv::Mat FrameProcessorWorker::computeLiveDFT(const cv::Mat &inputFrame, int targ
     } else {
         workingArea = gray;
     }
+    //The DFT needs to fit inisde the image so it may be scaled so that the hight fits into the image height.
+    //It only down scales and never upscales.
 
     // 1. Calculate uniform scale, ensuring we ONLY scale down (cap scale at 1.0)
     int maxDim = std::max(workingArea.cols, workingArea.rows);
-    m_scale = static_cast<double>(targetSize) / maxDim;
-    if (m_scale > 1.0) {
-        m_scale = 1.0;
+    m_DftResizedScale = static_cast<double>(targetSize) / maxDim;
+    if (m_DftResizedScale > 1.0) {
+        m_DftResizedScale = 1.0;
     }
 
-    int newW = std::round(workingArea.cols * m_scale);
-    int newH = std::round(workingArea.rows * m_scale);
+    int newW = std::round(workingArea.cols * m_DftResizedScale);
+    int newH = std::round(workingArea.rows * m_DftResizedScale);
 
     // Safety fallback if dimensions are somehow invalid
     if (newW <= 0) newW = 1;

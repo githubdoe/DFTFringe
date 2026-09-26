@@ -794,8 +794,8 @@ void LiveViewDialog::setCenterFilter(double spatialFreqBin) {
     int centerx = m_userMirrorRect.width() / 2;
     int centery = m_userMirrorRect.height() / 2;
 
-    double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
-    double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (effectiveMirrorRadius * 2.0));
+    double scaledMirrorRadius = m_mirrorOutlineRadius * m_DftToimageDownScale;
+    double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (scaledMirrorRadius * 2.0));
     int bin = static_cast<int>(binDftSpace * m_DFTscale);
     imageLabel->setYellowCircle(QPointF(centerx,centery),bin);
 }
@@ -818,7 +818,7 @@ void LiveViewDialog::onRequestZoomChange(double){
 
 void LiveViewDialog::onYellowRadiusChanged(double rad){
     m_centerFilterRadius = rad;
-    double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
+    double effectiveMirrorRadius = m_mirrorOutlineRadius * m_DftToimageDownScale;
     emit blueCircle(effectiveMirrorRadius);
 }
 
@@ -956,7 +956,7 @@ void LiveViewDialog::renderCurrentFrame() {
         int centerx = img.width() / 2;
         int centery = img.height() / 2;
 
-        double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
+        double effectiveMirrorRadius = m_mirrorOutlineRadius * m_DftToimageDownScale;
         double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (effectiveMirrorRadius * 2.0));
         int bin = static_cast<int>(binDftSpace * m_DFTscale);
 
@@ -989,7 +989,7 @@ void LiveViewDialog::renderCurrentFrame() {
         QString baseStatus = statusLeft->text(); // Or whatever base text statusLeft normally holds
         statusLeft->setText(QString("  Time: %1 ms").arg(elapsedMs, 0, 'f', 2));
     }
-
+qDebug() << "dftScale" << m_DFTscale << m_DftToimageDownScale;
     m_throttle.start(10);
 }
 
@@ -1021,14 +1021,14 @@ cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize
     }
 
     // 1. Calculate uniform scale, ensuring we ONLY scale down (cap scale at 1.0)
-    int maxDim = std::max(workingArea.cols, workingArea.rows);
+    int maxDim = std::min(workingArea.cols, workingArea.rows);
     double scale = static_cast<double>(targetSize) / maxDim;
     if (scale > 1.0) {
         scale = 1.0;
     }
 
-    // Save to your member variable so display code can use it for PPM/circle scaling
-    m_imageDownScale = scale;
+    // Save to member variable so display code can use it for PPM/circle scaling
+    m_DftToimageDownScale = scale;
 
     int newW = std::round(workingArea.cols * scale);
     int newH = std::round(workingArea.rows * scale);

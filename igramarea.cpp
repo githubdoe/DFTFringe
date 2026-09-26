@@ -2514,6 +2514,7 @@ void IgramArea::shiftoutline(QPointF p) {
         m_innerP2 = m_center.m_p2;
         m_centerHist.push(igramGray, m_center);
     }
+    emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
     drawBoundary();
 
 }

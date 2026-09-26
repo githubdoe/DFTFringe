@@ -23,7 +23,7 @@ Q_DECLARE_METATYPE(LiveViewParams)
 class FrameProcessorWorker : public QObject {
     Q_OBJECT
 private:
-    double m_scale;
+    double m_DftResizedScale; // How much the DFT was scaled down if at all to fit over the image.
 public:
     FrameProcessorWorker(QObject *parent = nullptr) : QObject(parent) {};
 
@@ -34,7 +34,7 @@ public slots:
 void processFrame(const cv::Mat frame, LiveViewParams params);
 
 signals:
-    void frameProcessed(const QPixmap &pixmap, double elapsedMs, QSize originalSized, double m_scale, double DFTScale);
+    void frameProcessed(const QPixmap &pixmap, double elapsedMs, double m_scale, double DFTScale);
 
 private:
     // Local cached copies of parameters to avoid race conditions with GUI widgets
