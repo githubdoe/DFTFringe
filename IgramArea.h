@@ -188,7 +188,7 @@ signals:
     void dftCenterFilter(double);
     void imageSize(QString);
     void doDFT();
-    void boundary(CircleOutline outside, CircleOutline inside);
+    void boundary(CircleOutline outside, bool hasBeenCropped, QPointF cropVal, CircleOutline inside);
 protected:
     bool eventFilter(QObject *object, QEvent *event);
     void wheelEvent(QWheelEvent * event);
@@ -271,8 +271,7 @@ private:
     QPointF dragStart;
     int crop_dx;
     int crop_dy;
-    int cropTotalDx, cropTotalDy;
-    double cropScale;
+
     dftThumb *m_dftThumb;
     QTimer *m_outlineTimer;
     bool hasBeenCropped;
@@ -292,6 +291,7 @@ private:
 public:
    QImage getBestChannel(QImage &img);
    int m_current_boundry;
+   int cropTotalDx, cropTotalDy;
 public slots:
    void addregion();
    void deleteregion(int);

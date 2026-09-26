@@ -14,6 +14,11 @@
 #include <QDialogButtonBox>
 #include <QMessageBox>
 #include <liveviewhistory.h>
+
+
+
+
+
 // ==========================================
 // LiveViewDialog Implementation
 // ==========================================
@@ -152,27 +157,16 @@ void LiveViewDialog::closeEvent(QCloseEvent *event) {
             if (loopRunning) {
                 // 1. Tell the main window/loop to stop
                 m_stopRequested = true;
-
-                // 2. Hide immediately so the UI feels responsive and closed to the user
-                hide();
-
-                // 3. Ignore the close event so the object isn't destroyed out from under the loop yet
-                event->ignore();
             } else {
-
                 // Safe to close normally
                 loopRunning = false;
                 QSettings set; // Or use existing app settings key
-
                 set.setValue("LiveViewDialog/splitterGeometry", leftSplitter->saveState());
-
                 set.setValue("LiveViewDialog/geometry", saveGeometry());
-                event->accept();
-
             }
-
-
-
+            hide();
+            // ignore the close event so the object isn't destroyed out from under the loop yet
+            event->ignore();
 }
 
 void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
@@ -272,13 +266,14 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     leftSplitter->addWidget(history);
     leftSplitter->setSizes({2000, 10});
 
-    leftSplitter->setHandleWidth(8); // Sets the handle width to 8 pixels
+    leftSplitter->setHandleWidth(4); // Sets the handle width to 8 pixels
     leftSplitter->setStyleSheet(
         "QSplitter::handle {"
-        "    background-color: #005c5c;" // A clear, contrasting gray color
-        "    border: 2px solid #333333;"
+        "    background-color: #ccffff;" // A clear, contrasting gray color
+        "    border: 3px outset #004545;"
         "}"
     );
+
     leftLayout->addWidget(leftSplitter);
 
     // --- Right Side: Scrollable Control Sidebar ---
@@ -437,30 +432,44 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     QHBoxLayout *bottomControlLayout = new QHBoxLayout();
 
     grabButton = new QPushButton("Grab Igram", this);
-    grabButton->setStyleSheet("background-color: #2e7d32; color: white; font-weight: bold;");
+    grabButton->setToolTip("Load igram from video stream");
+    grabButton->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                              "QPushButton QWidget { color: black; }");
     connect(grabButton, &QPushButton::clicked, this, &LiveViewDialog::onGrabClicked);
 
     OutlineBtn = new QPushButton("Auto outline", this);
-    OutlineBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
+    OutlineBtn->setStyleSheet(        "QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                      "QPushButton QWidget { color: black; }");
+    OutlineBtn->setToolTip("auto outline the igram");
 
     OutlineOkBtn = new QPushButton("Outline is ok",this);
-    OutlineOkBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
-
+    OutlineOkBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                "QPushButton QWidget { color: black; }");
+    OutlineOkBtn->setToolTip("Same as pressing the 'done' button on the igram outline control\n"
+                           "Causes the DFT to be displayed in the usual analysis.");
 
     startAnalysisBtn = new QPushButton("Start Loop", this);
-    startAnalysisBtn->setStyleSheet("background-color: #1976d2; color: white; font-weight: bold;");
+    startAnalysisBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                     "QPushButton QWidget { color: black; }");
+    startAnalysisBtn->setToolTip("Run loop that processes current video frame and then the next one");
     startAnalysisBtn->hide();
 
     pauseAnalyBtn = new QPushButton("Pause", this);
-    pauseAnalyBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
+    pauseAnalyBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                  "QPushButton QWidget { color: black; }");
+    pauseAnalyBtn->setToolTip("Pause the processing loop to makee some change without loosing the current average if averaging was enabled");
     pauseAnalyBtn->hide();
 
     stopAnalysisBtn = new QPushButton("Stop Loop", this);
-    stopAnalysisBtn->setStyleSheet("background-color: #d32f2f; color: white; font-weight: bold;");
+    stopAnalysisBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                    "QPushButton QWidget { color: black; }");
+    stopAnalysisBtn->setToolTip("Stop the loop and save the average if averaging was being computed");
     stopAnalysisBtn->hide();
 
     saveAverageBtn = new QPushButton("Save average", this);
-    saveAverageBtn->setStyleSheet("background-color: #f39c12; color: white; font-weight: bold;");
+    saveAverageBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                  "QPushButton QWidget { color: black; }");
+    saveAverageBtn->setToolTip("save current average to wavefront list and continue looping");
     saveAverageBtn->hide();
     connect(saveAverageBtn, &QPushButton::clicked, this, [this](){
         this->saveAverage = true;
@@ -497,11 +506,13 @@ void LiveViewDialog::initSettingsDialog() {
     m_settingsDlg = new QDialog(this);
     m_settingsDlg->setWindowTitle("Live View Settings");
     QVBoxLayout *settingsLayout = new QVBoxLayout(m_settingsDlg);
+    QGroupBox *connectGroup = new QGroupBox("connecton",m_settingsDlg);
+    QVBoxLayout *connectLayout = new QVBoxLayout(connectGroup);
+    connectLayout->addWidget(new QLabel("Select or Manage Recent Streams / Camera IDs:", connectGroup));
 
-    settingsLayout->addWidget(new QLabel("Select or Manage Recent Streams / Camera IDs:", m_settingsDlg));
-
-    urlListWidget = new QListWidget(m_settingsDlg);
+    urlListWidget = new QListWidget(connectGroup);
     urlListWidget->setMaximumHeight(120);
+    connectLayout->addWidget(urlListWidget);
 
     QSettings settings;
     QStringList urlHistory = settings.value("LiveView/urlHistory").toStringList();
@@ -518,9 +529,11 @@ void LiveViewDialog::initSettingsDialog() {
         urlListWidget->setCurrentRow(0);
     }
 
-    urlLineEdit = new QLineEdit(m_settingsDlg);
+
+    urlLineEdit = new QLineEdit(connectGroup);
     urlLineEdit->setPlaceholderText("Or type a new URL / ID here...");
     urlLineEdit->setText(currentUrl);
+    connectLayout->addWidget(urlLineEdit);
 
     connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::restartStream);
     connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
@@ -534,7 +547,18 @@ void LiveViewDialog::initSettingsDialog() {
             onApplySettings();
         }
     });
+    QHBoxLayout *connectTimeoutLayout = new QHBoxLayout(connectGroup);
+    connectTimeoutLayout->addWidget(new QLabel("number of blank frames before connect failes:"));
+    QSpinBox *frameTimeout = new QSpinBox(connectGroup);
+    frameTimeout->setValue(settings.value("liveViewConnectFrames",15).toInt());
+    connectTimeoutLayout->addWidget(frameTimeout);
+    connectLayout->addLayout(connectTimeoutLayout);
 
+    connect(frameTimeout, QOverload<int>::of (&QSpinBox::valueChanged), this, [this](int val){
+        QSettings set;
+        set.setValue("liveViewConnectFrames",val);
+        restartStream();
+    });
     QGroupBox *rmsGroup = new QGroupBox("RMS settings", m_settingsDlg);
     QVBoxLayout *rmsLayout = new QVBoxLayout(rmsGroup);
 
@@ -620,8 +644,7 @@ void LiveViewDialog::initSettingsDialog() {
         history->showBestFit(checked);
     });
 
-    settingsLayout->addWidget(urlLineEdit);
-    settingsLayout->addWidget(urlListWidget);
+    settingsLayout->addWidget(connectGroup);
     settingsLayout->addWidget(rmsGroup);
     settingsLayout->addLayout(resLayout);
     settingsLayout->addWidget(deleteIgramAfter);
@@ -795,7 +818,8 @@ void LiveViewDialog::onRequestZoomChange(double){
 
 void LiveViewDialog::onYellowRadiusChanged(double rad){
     m_centerFilterRadius = rad;
-    // next frame will use this yellow circle radius.  I may need scaling.
+    double effectiveMirrorRadius = m_mirrorOutlineRadius * m_imageDownScale;
+    emit blueCircle(effectiveMirrorRadius);
 }
 
 
@@ -955,6 +979,7 @@ void LiveViewDialog::renderCurrentFrame() {
 
     imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     imageLabel->resize(targetWidth, targetHeight);
+    imageLabel->repaint();
 
     // Calculate elapsed time (in milliseconds with fractional decimal places)
     double elapsedMs = static_cast<double>(timer.nsecsElapsed()) / 1000000.0;

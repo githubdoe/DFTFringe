@@ -2241,8 +2241,11 @@ void MainWindow::on_actionLive_view_triggered()
                     m_viewDlg->m_tmpShowLive = false;
 
             });
-            connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, CircleOutline inside) {
+            connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, bool cropped, QPointF offset, CircleOutline inside) {
 
+                if (cropped){
+                    outside.translate(offset);
+                }
 
                 m_viewDlg->setOutsidecircle(outside.m_center, outside.m_radius);
             });
@@ -2577,6 +2580,7 @@ void MainWindow::runLiveAnalysisLoop() {
         if (discardFrame) {
             m_surfaceManager->m_wavefronts.removeLast();
             m_surfTools->deleteLast();
+            m_surfaceManager->m_wf = nullptr;
         }
 
         // Free our local temporary wavefront

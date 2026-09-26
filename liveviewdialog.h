@@ -18,7 +18,7 @@
 #include <QCheckBox>
 #include "liveviewhistory.h"
 #include <QSplitter>
-
+class FrameProcessorWorker;
 enum class CameraProperty {
     Brightness,
     Contrast,
@@ -75,7 +75,7 @@ signals:
     void requestFrame();
     void requestCameraSetting(CameraProperty prop , int val);
     void outline(QPointF center, double rad);
-    void blueCircle(QPointF center, double rad);
+    void blueCircle(double rad);
     void autoOutLine();
     void outlineOk();
 public:
@@ -107,6 +107,8 @@ public:
 private:
     VideoStreamWorker *m_worker;
     QThread *m_thread;
+    QThread *m_procThread;
+    FrameProcessorWorker *m_processor;
 
     ResizableScrollArea *scrollArea;
     QCheckBox *dftCheckBox;

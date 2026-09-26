@@ -76,7 +76,7 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
 
 void LiveImageView::mouseMoveEvent(QMouseEvent *event) {
     QPoint currentPoint = mapToImageCoordinates(event->pos());
-qDebug() << "move";
+
     if (m_state == InteractionState::ResizingYellowRadius) {
         double dx = currentPoint.x() - m_yellowCenter.x();
         double dy = currentPoint.y() - m_yellowCenter.y();

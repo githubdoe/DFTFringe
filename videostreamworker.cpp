@@ -1,7 +1,7 @@
 #include "videostreamworker.h"
 #include <QDebug>
 #include <QFileDialog>
-
+#include <QSettings>
 VideoStreamWorker::VideoStreamWorker(const QString &source, QObject *parent)
     : QObject(parent), m_source(source) {}
 
@@ -51,7 +51,8 @@ void VideoStreamWorker::startStream() {
 
 void VideoStreamWorker::captureLoop() {
     int errorCount = 0;
-    const int maxErrorLimit = 15; // Number of failed attempts before giving up
+    QSettings set;
+    int maxErrorLimit = set.value("liveViewConnectFrames",15).toInt(); // Number of failed attempts before giving up
 
     while (m_running) {
         cv::Mat frame;
