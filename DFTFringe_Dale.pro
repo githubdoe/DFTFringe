@@ -512,6 +512,7 @@ DISTFILES += \
     COPYING.txt \
     RevisionHistory.html \
     README.md \
+    liveViewHelp.md
 
 
     TRANSLATIONS    = dftfringe_fr.ts
