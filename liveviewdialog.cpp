@@ -487,7 +487,7 @@ void LiveViewDialog::initSettingsDialog() {
 
     urlListWidget = new QListWidget(connectGroup);
     urlListWidget->setMaximumHeight(120);
-    connectLayout->addWidget(urlListWidget);
+
 
     QSettings settings;
     QStringList urlHistory = settings.value("LiveView/urlHistory").toStringList();
@@ -505,11 +505,11 @@ void LiveViewDialog::initSettingsDialog() {
     }
 
 
-    urlLineEdit = new QLineEdit(connectGroup);
+    urlLineEdit = new QLineEdit();
     urlLineEdit->setPlaceholderText("Or type a new URL / ID here...");
     urlLineEdit->setText(currentUrl);
     connectLayout->addWidget(urlLineEdit);
-
+    connectLayout->addWidget(urlListWidget);
     connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::restartStream);
     connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
         statusLeft->setText("<span style='color: black  ;background-color: yellow'>Connecting to camera/stream... Please wait.</span>");
@@ -597,10 +597,9 @@ void LiveViewDialog::initSettingsDialog() {
     settingsLayout->addWidget(connectGroup);
     settingsLayout->addWidget(rmsGroup);
     settingsLayout->addLayout(resLayout);
-    settingsLayout->addWidget(deleteIgramAfter);
     settingsLayout->addWidget(deleteIntermidiateWaveFront);
     settingsLayout->addStretch();
-    settingsLayout->addWidget(showHistory);
+
     QDialogButtonBox *btnBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, m_settingsDlg);
     connect(btnBox, &QDialogButtonBox::accepted, m_settingsDlg, &QDialog::accept);
     connect(btnBox, &QDialogButtonBox::rejected, m_settingsDlg, &QDialog::reject);

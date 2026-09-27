@@ -2242,7 +2242,7 @@ void MainWindow::on_actionLive_view_triggered()
 
             });
             connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, bool cropped, QPointF offset, CircleOutline inside) {
-
+qDebug() << "was cropped" << cropped;
                 if (cropped){
                     outside.translate(offset);
                 }

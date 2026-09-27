@@ -94,7 +94,7 @@ public:
     QCheckBox *autoRMSatStarup;
     QDoubleSpinBox *RMSMargin;
     QCheckBox *deleteIntermidiateWaveFront = nullptr;
-    QCheckBox *showHistory;
+
     bool FirstWaveFrontSeen = false;
     bool saveAverage = false;
     QPushButton *saveAverageBtn;
@@ -130,7 +130,7 @@ private:
     QComboBox *resolutionCombo;
     QComboBox *dftresolutionCombo;
     QComboBox *zoomCombo;
-    QDoubleSpinBox *dftDisplaySize;
+
     cv::VideoCapture cap;
 
     int m_dftSize = 1024;
