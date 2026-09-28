@@ -194,6 +194,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     lensetablemodel.cpp \
     liveimageview.cpp \
     liveviewdialog.cpp \
+    liveviewhistory.cpp \
     main.cpp \
     mainwindow.cpp \
     messagereceiver.cpp \
@@ -320,6 +321,7 @@ HEADERS += bezier/bezier.h \
     lensetablemodel.h \
     liveimageview.h \
     liveviewdialog.h \
+    liveviewhistory.h \
     mainwindow.h \
     messagereceiver.h \
     metricsdisplay.h \
