@@ -83,6 +83,8 @@ unix: !mac {
     LIBS += -lopencv_highgui
     LIBS += -lopencv_imgcodecs
     LIBS += -lopencv_imgproc
+    LIBS += -lopencv_video
+    LIBS += -lopencv_videoio
     LIBS += -L/usr/local/qwt-6.3.0/lib -lqwt
     LIBS += -lz       # zip compression library needed for cnpy.cpp
 }
@@ -125,6 +127,8 @@ macx {
     LIBS += -lopencv_highgui
     LIBS += -lopencv_imgcodecs
     LIBS += -lopencv_imgproc
+    LIBS += -lopencv_video
+    LIBS += -lopencv_videoio
 
     QWT_FRAMEWORK_HEADERS = $$system(pkg-config --variable=libdir Qt6Qwt6)/qwt.framework/Headers
     exists($$QWT_FRAMEWORK_HEADERS): INCLUDEPATH += $$QWT_FRAMEWORK_HEADERS
