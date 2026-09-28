@@ -557,4 +557,5 @@ DISTFILES += buildingDFTFringe64.txt \
     COPYING.LESSER.txt \
     COPYING.txt \
     README.md \
-    RevisionHistory.html
+    RevisionHistory.html \
+    liveViewHelp.md

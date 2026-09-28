@@ -55,6 +55,8 @@ win32 {
     LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_highgui460
     LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgcodecs460
     LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_imgproc460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_video460
+    LIBS += -L..\build_openCV\install\x64\mingw\bin -llibopencv_videoio460
     LIBS += -ldbghelp # for SetUnhandledExceptionFilter
     LIBS += -lz       # zip compression library needed for cnpy.cpp
 
@@ -194,6 +196,9 @@ SOURCES += SingleApplication/singleapplication.cpp \
     intensityplot.cpp \
     jitteroutlinedlg.cpp \
     lensetablemodel.cpp \
+    liveimageview.cpp \
+    liveviewdialog.cpp \
+    liveviewhistory.cpp \
     main.cpp \
     mainwindow.cpp \
     messagereceiver.cpp \
@@ -254,6 +259,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     usercolormapdlg.cpp \
     userdrawnprofiledlg.cpp \
     utils.cpp \
+    videostreamworker.cpp \
     vortexdebug.cpp \
     wavefront.cpp \
     wavefrontaveragefilterdlg.cpp \
@@ -317,6 +323,9 @@ HEADERS += bezier/bezier.h \
     intensityplot.h \
     jitteroutlinedlg.h \
     lensetablemodel.h \
+    liveimageview.h \
+    liveviewdialog.h \
+    liveviewhistory.h \
     mainwindow.h \
     messagereceiver.h \
     metricsdisplay.h \
@@ -377,6 +386,7 @@ HEADERS += bezier/bezier.h \
     usercolormapdlg.h \
     userdrawnprofiledlg.h \
     utils.h \
+    videostreamworker.h \
     vortexdebug.h \
     wavefront.h \
     wavefrontaveragefilterdlg.h \
@@ -551,7 +561,8 @@ DISTFILES += buildingDFTFringe64.txt \
     COPYING.LESSER.txt \
     COPYING.txt \
     README.md \
-    RevisionHistory.html
+    RevisionHistory.html \
+    liveViewHelp.md
 
 
 
