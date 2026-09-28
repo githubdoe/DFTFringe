@@ -80,7 +80,8 @@ unix: !mac {
     LIBS += -lopencv_highgui
     LIBS += -lopencv_imgcodecs
     LIBS += -lopencv_imgproc
-    LIBS += -lopencv_imgproc
+    LIBS += -lopencv_video
+    LIBS += -lopencv_videoio
     LIBS += -lqwt-qt5
     LIBS += -lz       # zip compression library needed for cnpy.cpp
 
