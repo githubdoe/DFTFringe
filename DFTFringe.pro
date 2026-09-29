@@ -83,6 +83,8 @@ unix: !mac {
     LIBS += -lopencv_highgui
     LIBS += -lopencv_imgcodecs
     LIBS += -lopencv_imgproc
+    LIBS += -lopencv_video
+    LIBS += -lopencv_videoio
     LIBS += -L/usr/local/qwt-6.3.0/lib -lqwt
     LIBS += -lz       # zip compression library needed for cnpy.cpp
 }
@@ -125,6 +127,8 @@ macx {
     LIBS += -lopencv_highgui
     LIBS += -lopencv_imgcodecs
     LIBS += -lopencv_imgproc
+    LIBS += -lopencv_video
+    LIBS += -lopencv_videoio
 
     QWT_FRAMEWORK_HEADERS = $$system(pkg-config --variable=libdir Qt6Qwt6)/qwt.framework/Headers
     exists($$QWT_FRAMEWORK_HEADERS): INCLUDEPATH += $$QWT_FRAMEWORK_HEADERS
@@ -194,6 +198,7 @@ SOURCES += SingleApplication/singleapplication.cpp \
     lensetablemodel.cpp \
     liveimageview.cpp \
     liveviewdialog.cpp \
+    liveviewhistory.cpp \
     main.cpp \
     mainwindow.cpp \
     messagereceiver.cpp \
@@ -320,6 +325,7 @@ HEADERS += bezier/bezier.h \
     lensetablemodel.h \
     liveimageview.h \
     liveviewdialog.h \
+    liveviewhistory.h \
     mainwindow.h \
     messagereceiver.h \
     metricsdisplay.h \
@@ -555,4 +561,5 @@ DISTFILES += buildingDFTFringe64.txt \
     COPYING.LESSER.txt \
     COPYING.txt \
     README.md \
-    RevisionHistory.html
+    RevisionHistory.html \
+    liveViewHelp.md

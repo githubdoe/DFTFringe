@@ -15,7 +15,7 @@
 #include <QMessageBox>
 #include <liveviewhistory.h>
 #include <QTextBrowser>
-
+#include <QFile>
 
 
 
@@ -1008,7 +1008,7 @@ cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize
     padded.convertTo(floatImg, CV_32F);
 
     cv::Mat complexImg;
-    cv::dft(floatImg, complexImg, CV_DXT_FORWARD | cv::DFT_COMPLEX_OUTPUT);
+    cv::dft(floatImg, complexImg, cv::DFT_COMPLEX_OUTPUT); // removed CV_DXT_FORWARD as it's default in QT6 and in QT5 it's set to zero so doesn't affect the bitwise OR
 
     std::vector<cv::Mat> planes;
     cv::split(complexImg, planes);
