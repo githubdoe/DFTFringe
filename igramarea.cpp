@@ -2025,6 +2025,7 @@ void IgramArea::saveRegions(){
 }
 
 
+
 void IgramArea::crop() {
     // add current bounds to crop history.
 
@@ -2037,8 +2038,8 @@ void IgramArea::crop() {
     QSettings set;
 
     set.setValue("lastOutsideRad", radx);
-    set.setValue("lastOutsideCx",cx);
-    set.setValue("lastOutsideCy",cy);
+    set.setValue("lastOutsideCx",cx+cropTotalDx);
+    set.setValue("lastOutsideCy",cy+cropTotalDy);
 
     int width = igramGray.width();
     int height = igramGray.height();
@@ -2069,7 +2070,6 @@ void IgramArea::crop() {
     cropTotalDx += x;
     cropTotalDy += y;
 
-    x = igramGray.width()/2;
     y = igramGray.height()/2;
 
 
@@ -2082,14 +2082,12 @@ void IgramArea::crop() {
     }
 
     m_outside.translate(QPointF(-crop_dx,-crop_dy));
-    cx = m_outside.m_center.x() + crop_dx;
-    cy = m_outside.m_center.y() + crop_dy;
 
 
     set.setValue("lastinsideRad", m_center.m_radius);
     m_center.translate(QPointF(-crop_dx,-crop_dy));
-    set.setValue("lastinsideCx", m_center.m_center.x() + crop_dx);
-    set.setValue("lastInsideCy", m_center.m_center.y() + crop_dy);
+    set.setValue("lastinsideCx", m_center.m_center.x() + cropTotalDx);
+    set.setValue("lastInsideCy", m_center.m_center.y() + cropTotalDy);
     // need to rescale p1 and p2 because of the crop
     scale = (double)(this->height())/y;
     m_OutterP1 = m_outside.m_p1;
@@ -2543,8 +2541,7 @@ void IgramArea::nextStep(){
             writeOutlines(makeOutlineName());
         }
     }
-    if (!hasBeenCropped)
-        crop();
+    crop();
     emit doDFT();
     m_current_boundry = OutSideOutline;
     m_regionEdit->hide();

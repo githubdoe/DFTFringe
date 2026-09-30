@@ -8,6 +8,10 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+QT_CHARTS_USE_NAMESPACE
+#endif
+
 class liveViewHistory : public QWidget {
     Q_OBJECT
 public:
@@ -21,13 +25,13 @@ private slots:
 private:
     double computeRunningAverage(const QVector<double> &data, int windowSize);
 
-    QtCharts::QChart *chart;
-    QtCharts::QChartView *chartView;
-    QtCharts::QLineSeries *rmsSeries;
-    QtCharts::QLineSeries *saSeries;
-    QtCharts::QValueAxis *axisX;
-    QtCharts::QValueAxis *axisY_RMS;
-    QtCharts::QValueAxis *axisY_SA;
+    QChart *chart;
+    QChartView *chartView;
+    QLineSeries *rmsSeries;
+    QLineSeries *saSeries;
+    QValueAxis *axisX;
+    QValueAxis *axisY_RMS;
+    QValueAxis *axisY_SA;
 
     QVector<double> rawRmsData;
     QVector<double> rawSaData;

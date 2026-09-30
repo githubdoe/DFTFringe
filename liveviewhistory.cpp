@@ -17,7 +17,7 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
     mainLayout->setSpacing(4);
 
     // Setup Chart
-    chart = new QtCharts::QChart();
+    chart = new QChart();
     chart->setTitle("Trend (Avg RMS & Live best Fit conic)");
     chart->setMargins(QMargins(0, 0, 0, 0));
     // Configure Legend Appearance for High Contrast
@@ -32,13 +32,13 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
     chart->setTitleBrush(QBrush(QColor(220, 220, 220)));
 
     // Series Setup
-    rmsSeries = new QtCharts::QLineSeries();
+    rmsSeries = new QLineSeries();
     rmsSeries->setName("Avg RMS");
     QPen rmsPen(QColor(51, 181, 229));
     rmsPen.setWidth(2);
     rmsSeries->setPen(rmsPen);
 
-    saSeries = new QtCharts::QLineSeries();
+    saSeries = new QLineSeries();
     saSeries->setName("Live Best Conic");
     QPen saPen(QColor(255, 187, 51));
     saPen.setWidth(2);
@@ -48,20 +48,20 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
     chart->addSeries(saSeries);
 
     // Axes Setup
-    axisX = new QtCharts::QValueAxis();
+    axisX = new QValueAxis();
     axisX->setTitleText("minutes");
     axisX->setRange(0, 1);
     chart->addAxis(axisX, Qt::AlignBottom);
     rmsSeries->attachAxis(axisX);
     saSeries->attachAxis(axisX);
 
-    axisY_RMS = new QtCharts::QValueAxis();
+    axisY_RMS = new QValueAxis();
     axisY_RMS->setTitleText("Avg RMS");
     axisY_RMS->setRange(0, 1);
     chart->addAxis(axisY_RMS, Qt::AlignLeft);
     rmsSeries->attachAxis(axisY_RMS);
 
-    axisY_SA = new QtCharts::QValueAxis();
+    axisY_SA = new QValueAxis();
     axisY_SA->setTitleText("live Best Conic");
     axisY_SA->setRange(-100, 100);
     chart->addAxis(axisY_SA, Qt::AlignRight);
@@ -71,7 +71,7 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
     QColor axisColor(180, 180, 180);
     QColor gridColor(60, 60, 60);
 
-    auto styleAxis = [axisColor, gridColor](QtCharts::QValueAxis *axis) {
+    auto styleAxis = [axisColor, gridColor](QValueAxis *axis) {
         axis->setLabelsColor(axisColor);
         axis->setTitleBrush(QBrush(axisColor));
         axis->setLinePen(QPen(axisColor));
@@ -82,7 +82,7 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
     styleAxis(axisY_RMS);
     styleAxis(axisY_SA);
 
-    chartView = new QtCharts::QChartView(chart);
+    chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
     chartView->setFrameShape(QFrame::NoFrame);
     mainLayout->addWidget(chartView);
@@ -162,7 +162,7 @@ void liveViewHistory::onResetClicked() {
 }
 
 double liveViewHistory::computeRunningAverage(const QVector<double> &data, int windowSize) {
-    int start = std::max(0, data.size() - windowSize);
+    int start = std::max(0, (int)(data.size() - windowSize));
     int count = data.size() - start;
     double sum = 0.0;
     for (int i = start; i < data.size(); ++i) {
