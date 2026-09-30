@@ -2242,7 +2242,7 @@ void MainWindow::on_actionLive_view_triggered()
 
             });
             connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, bool cropped, QPointF offset, CircleOutline inside) {
-qDebug() << "was cropped" << cropped;
+
                 if (cropped){
                     outside.translate(offset);
                 }
@@ -2276,6 +2276,7 @@ qDebug() << "was cropped" << cropped;
                 m_igramArea->blockSignals(false);
 
             });
+            connect(m_viewDlg, &LiveViewDialog::blueCircle, m_dftArea,&DFTArea::mouseMovedExternal);
             connect(m_dftArea, &DFTArea::filterSizeScale, m_viewDlg, &LiveViewDialog::setCenterFilter );
             connect(m_viewDlg, &LiveViewDialog::autoOutLine, m_igramArea, &IgramArea::autoTraceOutline);
             connect(m_viewDlg, &LiveViewDialog::outlineOk, this,[this](){

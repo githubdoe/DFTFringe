@@ -111,7 +111,7 @@ void liveViewHistory::addSample(double rawRms, double rawSa) {
     rawSaData.append(rawSa);
 
     double avgRms = computeRunningAverage(rawRmsData, 5);
-    double avgSa = computeRunningAverage(rawSaData, 5);
+    double avgSa = computeRunningAverage(rawSaData, 10);
 
     rmsSeries->append(elapsedMinutes, avgRms);
     saSeries->append(elapsedMinutes, avgSa);

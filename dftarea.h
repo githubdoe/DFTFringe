@@ -85,6 +85,7 @@ public slots:
     void zoomPlus();
     void zoomMinus();
     void zoomFit();
+    void mouseMovedExternal(int rad);
 signals:
     void setDftSizeVal(int);
     void selectDFTTab();

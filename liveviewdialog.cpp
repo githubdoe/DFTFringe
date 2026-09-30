@@ -66,6 +66,7 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
             statusLeft->setText(QString("<span style='color: white; background-color: red;'>%1</span>")
                                 .arg(msg + " Go to settings to set the stream number. You may have to close and restart this dialog."));
             imageLabel->adjustSize();
+            m_settingsDlg->exec();
         }
         emit streamDisconnected();
     });
@@ -708,6 +709,7 @@ void LiveViewDialog::setFitToWindowZoom() {
             imgW = cropRoi.width;
             imgH = cropRoi.height;
         }
+        m_userMirrorRect = QRect(cropRoi.x, cropRoi.y, cropRoi.width, cropRoi.height);
     } else if (m_userMirrorRect.width() > 0 && m_userMirrorRect.height() > 0) {
         int pad = 10;
         cv::Rect desiredRoi(m_userMirrorRect.x() - pad, m_userMirrorRect.y() - pad,
@@ -745,6 +747,8 @@ void LiveViewDialog::setCenterFilter(double spatialFreqBin) {
     double scaledMirrorRadius = m_mirrorOutlineRadius * m_DftToimageDownScale;
     double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (scaledMirrorRadius * 2.0));
     int bin = static_cast<int>(binDftSpace * m_DFTscale);
+
+    m_binToBinScale = spatialFreqBin/ static_cast<double>(bin);
     imageLabel->setYellowCircle(QPointF(centerx,centery),bin);
 }
 
@@ -765,9 +769,8 @@ void LiveViewDialog::onRequestZoomChange(double){
 }
 
 void LiveViewDialog::onYellowRadiusChanged(double rad){
-    m_centerFilterRadius = rad;
-    double effectiveMirrorRadius = m_mirrorOutlineRadius * m_DftToimageDownScale;
-    emit blueCircle(effectiveMirrorRadius);
+    int outbin = rad  * m_binToBinScale;
+    emit blueCircle(outbin);
 }
 
 
@@ -937,7 +940,7 @@ void LiveViewDialog::renderCurrentFrame() {
         QString baseStatus = statusLeft->text(); // Or whatever base text statusLeft normally holds
         statusLeft->setText(QString("  Time: %1 ms").arg(elapsedMs, 0, 'f', 2));
     }
-qDebug() << "dftScale" << m_DFTscale << m_DftToimageDownScale;
+
     m_throttle.start(10);
 }
 

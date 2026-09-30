@@ -17,7 +17,7 @@ public:
 
 signals:
     void mirrorDefined(QPointF center, double radius);
-    void yellowRadiusChanged(double radius);
+    void yellowRadiusChanged(int rad);
     void requestZoomChange(double newZoom);
     void outlineChanging(bool isManip);
 

@@ -229,6 +229,7 @@ void DFTArea::dftCenterFilter(double v){
     emit updateFilterSize(v);
     //setCenterFilter(double radius, double roiCols, double matrixSizeA, double scaleA)
     double frequencyBin = v * (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
+    qDebug() << "DFT BIN" << v << frequencyBin;
     emit filterSizeScale(frequencyBin);
 
     update();
@@ -497,6 +498,7 @@ void DFTArea::doDFT(){
     QApplication::restoreOverrideCursor();
     //setCenterFilter(double radius, double roiCols, double matrixSizeA, double scaleA)
     double frequencyBin = m_center_filter * (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
+
     emit filterSizeScale(frequencyBin);
 
 }
@@ -1084,7 +1086,11 @@ void DFTArea::mouseMoveEvent(QMouseEvent *event){
     //emit centerFilterPercent(percent);
 
 }
-
+void DFTArea::mouseMovedExternal(int rad){
+   double frequencyBin = rad / (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
+    qDebug() << "DFT Received rad bin" << rad << frequencyBin << zoom;
+    emit updateFilterSize(rad);
+}
 
 void DFTArea::mousePressEvent(QMouseEvent *event)
 {

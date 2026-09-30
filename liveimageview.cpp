@@ -39,17 +39,22 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
         return;
     }
 
-    if (event->button() == Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton && !(event->modifiers() & Qt::ShiftModifier)) {
         // 1. Check if clicking inside the yellow circle (radius-only resizing)
         if (m_hasYellowCircle) {
-            double distToYellow = std::hypot(clickImg.x() - m_yellowCenter.x(), clickImg.y() - m_yellowCenter.y());
-            if (distToYellow <= m_yellowRadius) {
-                m_state = InteractionState::ResizingYellowRadius;
-                setCursor(Qt::SizeFDiagCursor);
-                event->accept();
-                return;
-            }
+
+            m_state = InteractionState::ResizingYellowRadius;
+            setCursor(Qt::BlankCursor);
+            double dx = clickImg.x() - m_yellowCenter.x();
+            double dy = clickImg.y() - m_yellowCenter.y();
+            m_yellowRadius = std::hypot(dx, dy);
+
+            emit yellowRadiusChanged(m_yellowRadius);
+            event->accept();
+            return;
+
         }
+    }
 
         // 2. Shift-click or clicking inside green circle to drag its center
         double distToGreen = m_hasCircle ? std::hypot(clickImg.x() - m_nativeCenter.x(), clickImg.y() - m_nativeCenter.y()) : 99999.0;
@@ -58,6 +63,7 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
             m_dragOffsetImg = clickImg - m_nativeCenter.toPoint();
             setCursor(Qt::ClosedHandCursor);
             event->accept();
+
             emit outlineChanging(true);
             return;
         }
@@ -71,7 +77,7 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
         setCursor(Qt::CrossCursor);
         event->accept();
         emit outlineChanging(true);
-    }
+
 }
 
 void LiveImageView::mouseMoveEvent(QMouseEvent *event) {
@@ -81,55 +87,26 @@ void LiveImageView::mouseMoveEvent(QMouseEvent *event) {
         double dx = currentPoint.x() - m_yellowCenter.x();
         double dy = currentPoint.y() - m_yellowCenter.y();
         m_yellowRadius = std::hypot(dx, dy);
+        qDebug() << "Rad" << m_yellowRadius;
         emit yellowRadiusChanged(m_yellowRadius);
     }
-    else if (m_state == InteractionState::DrawingGreenRadius) {
-        double dx = currentPoint.x() - m_firstEdgePoint.x();
-        double dy = currentPoint.y() - m_firstEdgePoint.y();
-        m_nativeRadius = std::hypot(dx, dy) / 2.0;
-        m_nativeCenter.setX((currentPoint.x() + m_firstEdgePoint.x()) / 2);
-        m_nativeCenter.setY((currentPoint.y() + m_firstEdgePoint.y()) / 2);
-        emit mirrorDefined(m_nativeCenter, m_nativeRadius);
-    }
+
     else if (m_state == InteractionState::DraggingGreenCenter) {
         m_nativeCenter = currentPoint - m_dragOffsetImg;
         emit mirrorDefined(m_nativeCenter, m_nativeRadius);
     }
-    else {
-        // Cursor feedback for hovering
-        bool overYellow = m_hasYellowCircle && (std::hypot(currentPoint.x() - m_yellowCenter.x(), currentPoint.y() - m_yellowCenter.y()) <= m_yellowRadius);
-        bool overGreen = m_hasCircle && (std::hypot(currentPoint.x() - m_nativeCenter.x(), currentPoint.y() - m_nativeCenter.y()) <= m_nativeRadius);
 
-        if (overYellow) {
-            setCursor(Qt::SizeFDiagCursor);
-        } else if (overGreen) {
-            setCursor(Qt::OpenHandCursor);
-        } else {
-            setCursor(Qt::ArrowCursor);
-        }
-    }
 }
 
 void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
-        if (m_state == InteractionState::ResizingYellowRadius) {
-            emit yellowRadiusChanged(m_yellowRadius);
-        }
-        else if (m_state == InteractionState::DraggingGreenCenter) {
+
+        if (m_state == InteractionState::DraggingGreenCenter) {
             emit mirrorDefined(m_nativeCenter, m_nativeRadius);
             qDebug() << "release1";
             emit outlineChanging(false);
         }
-        else if (m_state == InteractionState::DrawingGreenRadius) {
-            if (m_nativeRadius > 5.0) {
-                m_hasCircle = true;
-            } else {
-                m_hasCircle = false;
-            }
-            emit mirrorDefined(m_nativeCenter, m_nativeRadius);
-            qDebug() << "release2";
-            emit outlineChanging(false);
-        }
+
 
         m_state = InteractionState::None;
         setCursor(Qt::ArrowCursor);

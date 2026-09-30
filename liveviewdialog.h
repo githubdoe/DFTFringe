@@ -64,7 +64,6 @@ private slots:
 public slots:
     void setOutsidecircle(QPointF center, double radius);
     void onGrabClicked();
-    //void setCenterFilter(double radius, double scale, int DFTSize);
     void setCenterFilter(double freqBin) ;
 signals:
     void igramCaptured();
@@ -156,4 +155,5 @@ private:
     double m_mirrorOutlineRadius = 0.;
     double m_DftToimageDownScale;
     QTimer m_throttle;
+    double m_binToBinScale = 1.;
 };
