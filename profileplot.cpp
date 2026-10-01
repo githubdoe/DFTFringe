@@ -981,7 +981,7 @@ void ProfilePlot::saveXscaleSettings(){
 }
 void ProfilePlot::toggleShow16(){
     m_show_16_diameters = !m_show_16_diameters;
-qDebug() << "show 16";
+
     populate();
     m_plot->replot();
 }
@@ -993,7 +993,7 @@ void ProfilePlot::toggleShowAvg(){
 }
 void ProfilePlot::toggleOneAngle(){
     m_show_oneAngle = !m_show_oneAngle;
-qDebug() << "show one";
+
     populate();
     m_plot->replot();
 }

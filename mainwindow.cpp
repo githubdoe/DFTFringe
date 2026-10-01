@@ -2312,6 +2312,9 @@ void MainWindow::startLiveButton_clicked() {
     m_viewDlg->pauseAnalyBtn->show();
     m_viewDlg->stopAnalysisBtn->show();
     m_viewDlg->saveAverageBtn->hide();
+    m_viewDlg->grabButton->hide();
+    m_viewDlg->OutlineBtn->hide();
+    m_viewDlg->OutlineOkBtn->hide();
 
 
 
@@ -2325,6 +2328,9 @@ void MainWindow::pauseLiveButton_clicked() {
     if (m_liveState == State_Running) {
         m_liveState = State_Paused;
         m_viewDlg->pauseAnalyBtn->setText("Resume");
+        m_viewDlg->grabButton->show();
+        m_viewDlg->OutlineBtn->show();
+        m_viewDlg->OutlineOkBtn->show();
         setLiveViewMode(false);
 
 
@@ -2334,6 +2340,9 @@ void MainWindow::pauseLiveButton_clicked() {
         m_viewDlg->saveAverageBtn->hide();
         m_igramArea->hide();
         m_dftArea->hide();
+        m_viewDlg->grabButton->hide();
+        m_viewDlg->OutlineBtn->hide();
+        m_viewDlg->OutlineOkBtn->hide();
 
         setLiveViewMode(true);
 
@@ -2349,6 +2358,9 @@ void MainWindow::stopLiveButton_clicked() {
     m_viewDlg->stopAnalysisBtn->hide();
     m_viewDlg->startAnalysisBtn->show();
     m_viewDlg->saveAverageBtn->hide();
+    m_viewDlg->grabButton->show();
+    m_viewDlg->OutlineBtn->show();
+    m_viewDlg->OutlineOkBtn->show();
     setLiveViewMode(false);
 
 }

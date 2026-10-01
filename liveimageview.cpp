@@ -2,7 +2,13 @@
 #include <QCursor>
 #include <cmath>
 #include <QDebug>
-LiveImageView::LiveImageView(QWidget *parent) : QLabel(parent) {}
+#include <QTimer>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QShowEvent>
+LiveImageView::LiveImageView(QWidget *parent) : QLabel(parent) {
+    setFocusPolicy(Qt::StrongFocus);
+}
 
 void LiveImageView::setZoomFactor(double zoom) {
     m_zoomFactor = zoom;
@@ -34,13 +40,6 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
     QPoint clickImg = mapToImageCoordinates(event->pos());
 
     if (event->button() == Qt::RightButton) {
-        m_hasCircle = false;
-        emit mirrorDefined(m_nativeCenter, m_nativeRadius);
-        return;
-    }
-
-    if (event->button() == Qt::LeftButton && !(event->modifiers() & Qt::ShiftModifier)) {
-        // 1. Check if clicking inside the yellow circle (radius-only resizing)
         if (m_hasYellowCircle) {
 
             m_state = InteractionState::ResizingYellowRadius;
@@ -50,15 +49,15 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
             m_yellowRadius = std::hypot(dx, dy);
 
             emit yellowRadiusChanged(m_yellowRadius);
-            event->accept();
-            return;
-
+         return;
         }
     }
 
-        // 2. Shift-click or clicking inside green circle to drag its center
+    if (event->button() == Qt::LeftButton) {
+        if (m_helpOverlay)
+            m_helpOverlay->hide();
         double distToGreen = m_hasCircle ? std::hypot(clickImg.x() - m_nativeCenter.x(), clickImg.y() - m_nativeCenter.y()) : 99999.0;
-        if ((event->modifiers() & Qt::ShiftModifier) && m_hasCircle && distToGreen <= m_nativeRadius) {
+        if ( m_hasCircle && distToGreen <= m_nativeRadius) {
             m_state = InteractionState::DraggingGreenCenter;
             m_dragOffsetImg = clickImg - m_nativeCenter.toPoint();
             setCursor(Qt::ClosedHandCursor);
@@ -66,18 +65,9 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
 
             emit outlineChanging(true);
             return;
+
         }
-
-        // 3. Default: Start drawing a new green circle edge-to-edge
-        m_nativeCenter = clickImg;
-        m_firstEdgePoint = clickImg;
-        m_nativeRadius = 0.0;
-        m_hasCircle = false;
-        m_state = InteractionState::DrawingGreenRadius;
-        setCursor(Qt::CrossCursor);
-        event->accept();
-        emit outlineChanging(true);
-
+    }
 }
 
 void LiveImageView::mouseMoveEvent(QMouseEvent *event) {
@@ -102,11 +92,8 @@ void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
 
         if (m_state == InteractionState::DraggingGreenCenter) {
-            emit mirrorDefined(m_nativeCenter, m_nativeRadius);
-            qDebug() << "release1";
-            emit outlineChanging(false);
-        }
 
+        }
 
         m_state = InteractionState::None;
         setCursor(Qt::ArrowCursor);
@@ -114,15 +101,74 @@ void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
     }
 }
 
+void LiveImageView::keyPressEvent(QKeyEvent *event) {
+    // Determine step size (e.g., hold Shift for a larger step, say 10 pixels)
+    double step = (event->modifiers() & Qt::ShiftModifier) ? 10.0 : 1.0;
+
+    bool handled = true;
+    switch (event->key()) {
+    case Qt::Key_Left:
+        m_nativeCenter.rx() -= step;
+        break;
+    case Qt::Key_Right:
+        m_nativeCenter.rx() += step;
+        break;
+    case Qt::Key_Up:
+        m_nativeCenter.ry() -= step;
+        break;
+    case Qt::Key_Down:
+        m_nativeCenter.ry() += step;
+        break;
+    case Qt::Key_Shift:
+        if (!event->isAutoRepeat()) {
+            emit shiftStateChanged(true);
+        }
+    case Qt::Key_Control:
+        if (m_helpOverlay && m_helpOverlay->isVisible()) {
+            m_helpOverlay->hide();
+        }else if (m_helpOverlay){
+            m_helpOverlay->show();
+        }
+
+
+        break;
+        handled = false; // Let default handling run if needed
+        break;
+    default:
+        handled = false;
+        break;
+    }
+
+    if (handled) {
+        update(); // Redraw the label to show the new point position
+        emit mirrorDefined(m_nativeCenter, m_nativeRadius); // Notify listeners
+        event->accept();
+    } else {
+        QLabel::keyPressEvent(event);
+    }
+}
+
+void LiveImageView::keyReleaseEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key_Shift) {
+        if (!event->isAutoRepeat()) {
+            emit shiftStateChanged(false);
+            emit mirrorDefined(m_nativeCenter, m_nativeRadius);
+            emit outlineChanging(false);
+
+        }
+    }
+    QWidget::keyReleaseEvent(event);
+}
+
 void LiveImageView::wheelEvent(QWheelEvent *event) {
     QPoint imgPos = mapToImageCoordinates(event->position().toPoint());
-    int numDegrees = event->angleDelta().y() / 8;
-    int numSteps = numDegrees / 15;
+    int numDegres = event->angleDelta().y() / 8;
+    int numSteps = -numDegres / 15;
 
     if (numSteps == 0) return;
 
-    // 1. Check Yellow Circle Hover
-    if (m_hasYellowCircle && (std::hypot(imgPos.x() - m_yellowCenter.x(), imgPos.y() - m_yellowCenter.y()) <= m_yellowRadius)) {
+    // Check Yellow Circle Hover
+    if (m_hasYellowCircle) {
         double scaleFactor = 1.0 + (numSteps * 0.05);
         m_yellowRadius = std::max(5.0, m_yellowRadius * scaleFactor);
         emit yellowRadiusChanged(m_yellowRadius);
@@ -130,18 +176,54 @@ void LiveImageView::wheelEvent(QWheelEvent *event) {
         return;
     }
 
-    // 2. Check Green Circle Hover
-    if (m_hasCircle && (std::hypot(imgPos.x() - m_nativeCenter.x(), imgPos.y() - m_nativeCenter.y()) <= m_nativeRadius)) {
-        double scaleFactor = 1.0 + (numSteps * 0.05);
-        m_nativeRadius = std::max(10.0, m_nativeRadius * scaleFactor);
-        emit mirrorDefined(m_nativeCenter, m_nativeRadius);
-        event->accept();
-        return;
+}
+
+
+#include <QTimer>
+#include <QLabel>
+#include <QShowEvent>
+
+void LiveImageView::showEvent(QShowEvent *event) {
+    QLabel::showEvent(event);
+
+    // If you only want this to happen the *first* time it's opened:
+    if (m_hasShownHelp) return;
+    m_hasShownHelp = true;
+
+    // 1. Create the overlay lazily as a single QLabel if it doesn't exist yet
+    if (!m_helpOverlay) {
+        QLabel *helpLbl = new QLabel(this);
+        helpLbl->setAttribute(Qt::WA_TransparentForMouseEvents); // Let clicks pass through
+
+        // Single stylesheet handles background, text color, rounded corners, and larger padding/font
+                helpLbl->setStyleSheet(
+                    "background-color: rgba(0, 100, 100, 70);" // Slightly more opaque
+                    "color: #ffffff;"
+                    "border-radius: 8px;"
+                    "padding: 16px;"                         // More padding for breathing room
+                    "font-size: 20px;"                       // Increased base font size
+                );
+
+                // Use HTML formatting with a larger title
+                helpLbl->setText(
+                    "• <b>Left Click + Drag:</b> Adjust mirror outline green circle<br>"
+                    "• <b>Right Click</b> Set filter diameter.<br>"
+                    "• <b>Mouse Wheel:</b> Increase\\decrease filter<br>"
+                    "• <b>Arrow Keys:</b> Nudge green outline<br>"
+                    "• <b>Hold Shift:</b> Toggle fullscreen view"
+                    "<br><br><b>ctrl</b> Toggle to display\\hide this"
+                );
+
+
+
+        m_helpOverlay = helpLbl;
     }
 
-    // 3. Fallback: Window Zoom / Resize Request to Parent
-    double zoomFactorChange = (numSteps > 0) ? 1.15 : 1.0 / 1.15;
-    double newZoom = std::max(0.2, std::min(m_zoomFactor * zoomFactorChange, 8.0));
-    emit requestZoomChange(newZoom);
-    event->accept();
+    // 2. Position and size it appropriately (auto-sizes to content, but we can set a fixed width/height)
+    m_helpOverlay->adjustSize();
+    m_helpOverlay->move(10, 10); // Top-left corner with a 10px margin
+    m_helpOverlay->show();
+    m_helpOverlay->raise();
+
+
 }

@@ -229,7 +229,6 @@ void DFTArea::dftCenterFilter(double v){
     emit updateFilterSize(v);
     //setCenterFilter(double radius, double roiCols, double matrixSizeA, double scaleA)
     double frequencyBin = v * (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
-    qDebug() << "DFT BIN" << v << frequencyBin;
     emit filterSizeScale(frequencyBin);
 
     update();
@@ -1088,7 +1087,6 @@ void DFTArea::mouseMoveEvent(QMouseEvent *event){
 }
 void DFTArea::mouseMovedExternal(int rad){
    double frequencyBin = rad / (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
-    qDebug() << "DFT Received rad bin" << rad << frequencyBin << zoom;
     emit updateFilterSize(rad);
 }
 
@@ -1447,7 +1445,7 @@ void DFTArea::doPSIstep4(const cv::Mat &images, QVector<double> phases){
             qDebug() << "outline name" << outlineName;
             igramArea->writeOutlines(outlineName);
         }
-qDebug() << "dlg" << dlg.m_x << dlg.m_rad;
+
         int left = dlg.m_x - dlg.m_rad;
         int right = dlg.m_x + dlg.m_rad;
         int top = dlg.m_y - dlg.m_rad;
@@ -1459,7 +1457,7 @@ qDebug() << "dlg" << dlg.m_x << dlg.m_rad;
             right = mag2d.cols-1;
         if (top < 0)
             top = 0;
-qDebug() << "rec" << left << top << width << height;
+
         cv::Mat roi = surface(cv::Rect(left,top, width,height));
 
         surface = roi.clone();

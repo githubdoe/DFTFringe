@@ -81,7 +81,9 @@ public:
     QPushButton *startAnalysisBtn;
     QPushButton *stopAnalysisBtn;
     QPushButton *pauseAnalyBtn;
-
+    QPushButton *grabButton;
+    QPushButton *OutlineBtn;
+    QPushButton *OutlineOkBtn;
     QSlider *brightnessSlider;
     QCheckBox *deleteIgramAfter;
     QDoubleSpinBox *maxRMS;
@@ -111,9 +113,7 @@ private:
 
     ResizableScrollArea *scrollArea;
     QCheckBox *dftCheckBox;
-    QPushButton *grabButton;
-    QPushButton *OutlineBtn;
-    QPushButton *OutlineOkBtn;
+
 
     QListWidget *urlListWidget;
     QLineEdit *urlLineEdit;
@@ -156,4 +156,5 @@ private:
     double m_DftToimageDownScale;
     QTimer m_throttle;
     double m_binToBinScale = 1.;
+    QRect m_normalGeometry;
 };

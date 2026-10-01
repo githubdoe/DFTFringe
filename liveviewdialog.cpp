@@ -15,7 +15,7 @@
 #include <QMessageBox>
 #include <liveviewhistory.h>
 #include <QTextBrowser>
-#include <QFile>
+
 
 
 
@@ -62,7 +62,6 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
     connect(m_worker, &VideoStreamWorker::streamError, this, [this](const QString &msg) {
         if (imageLabel) {
             statusLeft->setWordWrap(true);
-            imageLabel->setText(msg);
             statusLeft->setText(QString("<span style='color: white; background-color: red;'>%1</span>")
                                 .arg(msg + " Go to settings to set the stream number. You may have to close and restart this dialog."));
             imageLabel->adjustSize();
@@ -235,19 +234,22 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     connect(imageLabel, &LiveImageView::mirrorDefined, this, &LiveViewDialog::setOutsidecircle);
     connect(imageLabel, &LiveImageView::yellowRadiusChanged, this, &LiveViewDialog::onYellowRadiusChanged);
     connect(imageLabel, &LiveImageView::requestZoomChange, this, &LiveViewDialog::onRequestZoomChange);
-    connect(imageLabel, &LiveImageView::outlineChanging, this, [this](bool changing){
-        qDebug() << "changing" << changing;
-        if (changing){
-            this->m_outlineChanging = changing;
+
+
+    connect(imageLabel, &LiveImageView::shiftStateChanged, this, [this](bool pressed) {
+        if (pressed) {
+            this->m_outlineChanging = true;
             m_userMirrorRect = QRect(0,0,0,0);
             setFitToWindowZoom();
-        }
-        else{
+            m_normalGeometry = geometry(); // Save current size right before expanding
+            showFullScreen();
+        } else {
+            this->m_outlineChanging = false;
+            showNormal();
+            setGeometry(m_normalGeometry); // Restore exact default size and position
             setFitToWindowZoom();
         }
-        this->m_outlineChanging = changing;
     });
-
     scrollArea = new ResizableScrollArea(this);
     scrollArea->setWidget(imageLabel);
     scrollArea->setWidgetResizable(false);
@@ -901,7 +903,7 @@ void LiveViewDialog::renderCurrentFrame() {
     QImage img = matToQImage(displayMat);
     QPainter dftpainter(&img);
 
-    if (!m_outlineChanging && dftCheckBox->isChecked()) {
+    if (dftCheckBox->isChecked() && !m_outlineChanging) {
         dftpainter.setBrush(QColor(0, 0, 100, 70));
         dftpainter.setPen(QPen(Qt::yellow, 2));
         int centerx = img.width() / 2;
@@ -1011,7 +1013,7 @@ cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize
     padded.convertTo(floatImg, CV_32F);
 
     cv::Mat complexImg;
-    cv::dft(floatImg, complexImg, cv::DFT_COMPLEX_OUTPUT); // removed CV_DXT_FORWARD as it's default in QT6 and in QT5 it's set to zero so doesn't affect the bitwise OR
+    cv::dft(floatImg, complexImg, CV_DXT_FORWARD | cv::DFT_COMPLEX_OUTPUT);
 
     std::vector<cv::Mat> planes;
     cv::split(complexImg, planes);

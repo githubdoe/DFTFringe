@@ -386,7 +386,7 @@ void SurfaceGraph::adjustXMin(int min)
 //        m_axisMaxSliderX->setValue(max);
 //    }
 
-qDebug() << "range" << minX << maxX;
+
     m_graph->axisX()->setRange(minX, maxX);
 }
 

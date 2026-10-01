@@ -5,7 +5,7 @@
 #include <QPointF>
 #include <QMouseEvent>
 #include <QWheelEvent>
-
+#include <QDebug>
 class LiveImageView : public QLabel {
     Q_OBJECT
 public:
@@ -20,16 +20,20 @@ signals:
     void yellowRadiusChanged(int rad);
     void requestZoomChange(double newZoom);
     void outlineChanging(bool isManip);
+    void shiftStateChanged(bool pressed);
 
 protected:
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
-
+    void showEvent(QShowEvent *event)override;
 private:
     QPoint mapToImageCoordinates(const QPoint &widgetPos) const;
-
+    bool m_hasShownHelp = false;
+    QWidget * m_helpOverlay = nullptr;
     enum class InteractionState {
         None,
         DrawingGreenRadius,

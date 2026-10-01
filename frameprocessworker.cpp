@@ -4,7 +4,7 @@
 #include <QDebug>
 void FrameProcessorWorker::processFrame(const cv::Mat frame, LiveViewParams params) {
     if (frame.empty()) return;
-qDebug() << "Processing loop start";
+
     QElapsedTimer timer;
     timer.start();
 
