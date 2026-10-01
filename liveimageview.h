@@ -52,7 +52,7 @@ private:
 
     // Yellow Circle Cache (Radius-only adjustment, fixed center from parent)
     QPointF m_yellowCenter;
-    double m_yellowRadius = 0.0;
+    int m_yellowRadius = 10;
     bool m_hasYellowCircle = false;
 
     QPoint m_dragOffsetImg;

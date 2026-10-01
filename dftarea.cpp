@@ -1087,7 +1087,7 @@ void DFTArea::mouseMoveEvent(QMouseEvent *event){
 }
 void DFTArea::mouseMovedExternal(int rad){
    double frequencyBin = rad / (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
-    emit updateFilterSize(rad);
+   emit updateFilterSize(rad);
 }
 
 void DFTArea::mousePressEvent(QMouseEvent *event)

@@ -331,7 +331,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
         s.setValue("liveViewDFTLow", val);
     });
     dftLayout->addWidget(DFTLowThreshold);
-    dftLayout->addLayout(dftLayout);
+
     // DFT Contrast
     dftLayout->addWidget(new QLabel("DFT Contrast:", this));
     vivid = new QDoubleSpinBox(this);
@@ -525,7 +525,7 @@ void LiveViewDialog::initSettingsDialog() {
             onApplySettings();
         }
     });
-    QHBoxLayout *connectTimeoutLayout = new QHBoxLayout(connectGroup);
+    QHBoxLayout *connectTimeoutLayout = new QHBoxLayout();
     connectTimeoutLayout->addWidget(new QLabel("number of blank frames before connect failes:"));
     QSpinBox *frameTimeout = new QSpinBox(connectGroup);
     frameTimeout->setValue(settings.value("liveViewConnectFrames",15).toInt());
@@ -770,7 +770,7 @@ void LiveViewDialog::onRequestZoomChange(double){
 
 }
 
-void LiveViewDialog::onYellowRadiusChanged(double rad){
+void LiveViewDialog::onYellowRadiusChanged(int rad){
     int outbin = rad  * m_binToBinScale;
     emit blueCircle(outbin);
 }

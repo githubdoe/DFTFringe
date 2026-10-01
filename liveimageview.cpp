@@ -47,26 +47,26 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
             double dx = clickImg.x() - m_yellowCenter.x();
             double dy = clickImg.y() - m_yellowCenter.y();
             m_yellowRadius = std::hypot(dx, dy);
-
             emit yellowRadiusChanged(m_yellowRadius);
          return;
         }
     }
+    if (m_helpOverlay)
+        m_helpOverlay->hide();
 
-    if (event->button() == Qt::LeftButton) {
-        if (m_helpOverlay)
-            m_helpOverlay->hide();
-        double distToGreen = m_hasCircle ? std::hypot(clickImg.x() - m_nativeCenter.x(), clickImg.y() - m_nativeCenter.y()) : 99999.0;
-        if ( m_hasCircle && distToGreen <= m_nativeRadius) {
-            m_state = InteractionState::DraggingGreenCenter;
-            m_dragOffsetImg = clickImg - m_nativeCenter.toPoint();
-            setCursor(Qt::ClosedHandCursor);
-            event->accept();
+    if (event->button() == Qt::LeftButton and m_hasCircle) {
 
-            emit outlineChanging(true);
-            return;
+        double distToGreen = std::hypot(clickImg.x() - m_nativeCenter.x(), clickImg.y() - m_nativeCenter.y());
 
-        }
+        m_state = InteractionState::DraggingGreenCenter;
+        m_dragOffsetImg = clickImg - m_nativeCenter.toPoint();
+        setCursor(Qt::ClosedHandCursor);
+        event->accept();
+
+        emit outlineChanging(true);
+        return;
+
+
     }
 }
 
@@ -77,7 +77,6 @@ void LiveImageView::mouseMoveEvent(QMouseEvent *event) {
         double dx = currentPoint.x() - m_yellowCenter.x();
         double dy = currentPoint.y() - m_yellowCenter.y();
         m_yellowRadius = std::hypot(dx, dy);
-        qDebug() << "Rad" << m_yellowRadius;
         emit yellowRadiusChanged(m_yellowRadius);
     }
 
@@ -103,7 +102,8 @@ void LiveImageView::mouseReleaseEvent(QMouseEvent *event) {
 
 void LiveImageView::keyPressEvent(QKeyEvent *event) {
     // Determine step size (e.g., hold Shift for a larger step, say 10 pixels)
-    double step = (event->modifiers() & Qt::ShiftModifier) ? 10.0 : 1.0;
+    double step = 1;
+
 
     bool handled = true;
     switch (event->key()) {
@@ -118,19 +118,23 @@ void LiveImageView::keyPressEvent(QKeyEvent *event) {
         break;
     case Qt::Key_Down:
         m_nativeCenter.ry() += step;
+    case Qt::Key_Plus:
+        m_nativeRadius += 1;
+        break;
+    case Qt::Key_Minus:
+        m_nativeRadius -= 1;
         break;
     case Qt::Key_Shift:
         if (!event->isAutoRepeat()) {
             emit shiftStateChanged(true);
         }
+        break;
     case Qt::Key_Control:
         if (m_helpOverlay && m_helpOverlay->isVisible()) {
             m_helpOverlay->hide();
         }else if (m_helpOverlay){
             m_helpOverlay->show();
         }
-
-
         break;
         handled = false; // Let default handling run if needed
         break;
@@ -210,8 +214,9 @@ void LiveImageView::showEvent(QShowEvent *event) {
                     "• <b>Right Click</b> Set filter diameter.<br>"
                     "• <b>Mouse Wheel:</b> Increase\\decrease filter<br>"
                     "• <b>Arrow Keys:</b> Nudge green outline<br>"
+                    "• <b>+\\-</b> enlarge \\ decrease mirror outline<br>"
                     "• <b>Hold Shift:</b> Toggle fullscreen view"
-                    "<br><br><b>ctrl</b> Toggle to display\\hide this"
+                    "<br><br><b>ctrl</b> Toggle to display\\hide this or left mouse click to remove."
                 );
 
 

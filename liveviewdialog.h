@@ -56,7 +56,7 @@ private slots:
     void onResolutionChanged(int index);
     void onZoomChanged(int index);
     void setFitToWindowZoom();
-    void onYellowRadiusChanged(double radius);
+    void onYellowRadiusChanged(int radius);
     void onRequestZoomChange(double newZoom);
     void onApplySettings();
     void onDFTSizeChanged(int index);
@@ -153,7 +153,7 @@ private:
 private:
     QPointF m_mirrorOutlineCenter;
     double m_mirrorOutlineRadius = 0.;
-    double m_DftToimageDownScale;
+    double m_DftToimageDownScale = 1.;
     QTimer m_throttle;
     double m_binToBinScale = 1.;
     QRect m_normalGeometry;
