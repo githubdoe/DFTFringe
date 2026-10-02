@@ -19,7 +19,7 @@ A selection for a URL stream might look like this:  'http://192.168.50.5:5000/vi
 ###
 **Connection problem**
 ___
-Some cameras take several blank frames to start with.  The code things that so many blank frames indicate a connection problem.  The default is 15.  You can set how many blank frames to allow to get your camera connected in the settings.
+Some cameras take several blank frames to start with.  The code thinks that so many blank frames indicate a connection problem.  The default is 15.  You can set how many blank frames to allow to get your camera connected in the settings.
 
 When a connection was working but drops for some reason you will get a status message stating that.  You must go to settings and click on the device once again to get it to start.
 
@@ -66,10 +66,10 @@ The average is saved  you press Stop or press the "Save Average" button.
 ###
 ### Trend View
 ___
-The trend view below the live view show a graph of two values computed from each analysis over time.
+The trend view below the live view shows a graph of two values computed from each analysis over time.
 * RMS - shows the average RMS value.  It scale is on the left side.
 
-* Best Fit Conic or SA - Show either of those values as a running average of the last 5 samples.  It's scale is on the left side of the graph.  You can select what it shows in the settings.
+* Best Fit Conic or SA - Show either of those values as a running average of the last 5 samples.  It's scale is on the right side of the graph.  You can select either of the two values it will show in the settings.
 
 * Split bar - the Trend view has a border line between it and the live view that can be moved to change the size of the live view and Trend view.  You can drag that bar all the way down to show only the Live view or all the way up to show only the Trend graph.
 
@@ -87,7 +87,7 @@ The panel on the right has several controls.
 ___
 
 Other settings values in the settings menu.
-* Camera Resolution - you can change some camera's resolution.  If the camera does not accept this or one of the values it is ignored.  
+* Camera Resolution - you can change some camera's resolution.  If the camera does not accept this or one of the values it is ignored.  Typically you can set this to a resolution much higher than your camera's ability and your camera will pick it's highest resolution and inform DFTF.
 * Do not add wave front to wave front list - If not set it Will save each analyzed wave front while in the analysis loop to the wave front list.
 * Show Best fit conic in trend display - if not set it will display the SA value after the null is removed.
 
