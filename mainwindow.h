@@ -48,7 +48,7 @@
 #include "outlineplots.h"
 #include "cameracalibwizard.h"
 #include "liveviewdialog.h"
-
+#include <QShowEvent>
 enum LiveLoopState {
     State_Stopped,
     State_Running,
@@ -133,6 +133,7 @@ private slots:
 
     void on_actionPreferences_triggered();
     void mainTabChanged(int);
+    QString getCurrentHotKeyHelp() const ;
     void on_actionMirror_triggered();
 
     void on_saveOutline_clicked();
@@ -345,7 +346,8 @@ private:
     bool m_batchMakeSurfaceReady;
     bool m_liveLoopActive = false;
     astigStatsDlg *m_astigStatsDlg;
-
+    bool m_hasShownHelp = false;
+    QDialog *m_helpOverlay = nullptr;
     enum { MaxRecentFiles = 5 };
     QAction *recentFileActs[MaxRecentFiles];
 

@@ -33,7 +33,7 @@ protected:
 private:
     QPoint mapToImageCoordinates(const QPoint &widgetPos) const;
     bool m_hasShownHelp = false;
-    QWidget * m_helpOverlay = nullptr;
+    QLabel * m_helpOverlay = nullptr;
     enum class InteractionState {
         None,
         DrawingGreenRadius,

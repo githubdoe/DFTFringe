@@ -223,12 +223,52 @@ MainWindow::MainWindow(QWidget *parent) :
     shortcut = new QShortcut(QKeySequence(Qt::Key_U), this);
     QObject::connect(shortcut, &QShortcut::activated, this, &MainWindow::load_from_url);
 
+    // Create the dialog once as a top-level, non-modal window
+    m_helpOverlay = new QDialog(nullptr);
+    m_helpOverlay->setWindowTitle("Hot key Help");
+    m_helpOverlay->setWindowFlags(Qt::Window | Qt::WindowStaysOnTopHint); // Stays above 3D views, has native minimize/close/drag
+
+    QVBoxLayout *dialogLayout = new QVBoxLayout(m_helpOverlay);
+    dialogLayout->setContentsMargins(16, 16, 16, 16);
+
+    QLabel *helpTextLbl = new QLabel(m_helpOverlay);
+    helpTextLbl->setStyleSheet(
+        "color: #ffffff;"
+        "font-size: 32px;"
+    );
+    dialogLayout->addWidget(helpTextLbl);
+
+    // Style the dialog background to match your teal theme
+    m_helpOverlay->setStyleSheet("QDialog { background-color: rgb(46,137,137); }");
+    m_helpOverlay->hide();
+    // Wire up the '/' shortcut
+    QShortcut *shortcuth = new QShortcut(QKeySequence(Qt::Key_Slash), this);
+    QObject::connect(shortcuth, &QShortcut::activated, this, [this](){
+        if (m_helpOverlay->isVisible()) {
+            m_helpOverlay->hide();
+        } else {
+            // Find the label inside the dialog and update text
+            QLabel *lbl = m_helpOverlay->findChild<QLabel*>();
+            if (lbl) {
+                lbl->setText(getCurrentHotKeyHelp());
+            }
+
+            m_helpOverlay->adjustSize();
+
+            // Center on screen
+            QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
+            int x = (screenGeometry.width() - m_helpOverlay->width()) / 2;
+            int y = (screenGeometry.height() - m_helpOverlay->height()) / 2;
+            m_helpOverlay->move(x, y);
+
+            m_helpOverlay->show();
+            m_helpOverlay->raise();
+        }
+    });
+
+
     QShortcut *shortcutl = new QShortcut(QKeySequence(Qt::Key_L), this);
     QObject::connect(shortcutl, &QShortcut::activated, this, &MainWindow::on_actionLoad_Interferogram_triggered);
-
-    QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_O), this);
-    QObject::connect(shortcut1, &QShortcut::activated, this, &MainWindow::on_actionLoad_Interferogram_triggered);
-
 
     QShortcut *shortcut2 = new QShortcut(QKeySequence(Qt::Key_S), this);
     QObject::connect(shortcut2, &QShortcut::activated, this, &MainWindow::on_actionSave_Wavefront_triggered);
@@ -293,7 +333,25 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->showColorIgram->setChecked(settings.value("colorChannelShowColor", false).toBool());
 
     openWaveFrontonInit(args);
+    // Display the help overlay automatically on startup
+    // Find the label inside the dialog and update text
+    QLabel *lbl = m_helpOverlay->findChild<QLabel*>();
+    if (lbl) {
+        lbl->setText(getCurrentHotKeyHelp());
+    }
+    m_helpOverlay->adjustSize();
 
+    QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
+    int x = (screenGeometry.width() - m_helpOverlay->width()) / 2;
+    int y = (screenGeometry.height() - m_helpOverlay->height()) / 2;
+    m_helpOverlay->move(x, y);
+
+    m_helpOverlay->show();
+    m_helpOverlay->raise();
+
+    QTimer::singleShot(5000, this, [this]() {
+        m_helpOverlay->hide();
+    });
 }
 void MainWindow::importIgram() {
     QSettings set;
@@ -316,7 +374,67 @@ void MainWindow::importIgram() {
     else on_actionLoad_Interferogram_triggered();
 
 }
+QString MainWindow::getCurrentHotKeyHelp() const {
+    int currentTab = ui->tabWidget->currentIndex();
 
+    auto row = [](const QString &key, const QString &desc) {
+        return QString("<tr><td> <b>%1</b></td><td align=\"center\">&nbsp;&nbsp;%3&nbsp;&nbsp;</td><td>%2</td></tr>")
+               .arg(key, desc)
+                .arg((key == "") ? "":"-");
+    };
+
+    if (currentTab == 2) {
+        return R"(<h1>Hot Keys - for result tab</h1>)"
+               "<table cellspacing=\"0\" cellpadding=\"4\">" +
+                   row("i", "Load most recent igram from URL Directory.") +
+                   row("l", "Load igram from file system.") +
+                   row("u", "Load igram from url stream.") +
+                   row("s", "Save selected wave fronts.") +
+               "</table>"
+               "<br><br>"
+               "<b>/</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Toggle to display\\hide this";
+    }
+    if (currentTab == 1){
+        return R"(<h1>Hot Keys - for Analysis (DFT) tab</h1>)"
+               "<table cellspacing=\"0\" cellpadding=\"4\">" +
+                   row("f", "fit to window") +
+                   row("+", "zoom in") +
+                   row("-", "zoom out") +
+                   row("","")+
+                   row("mouse wheel", "zoom in\\out")+
+
+               "</table>"
+               "<br><br>"
+               "<b>/</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Toggle to display\\hide this";
+    }
+
+    else if (currentTab == 0) {
+        return R"(<h1>Hot Keys - for igram tab</h1>)"
+               "<table cellspacing=\"0\" cellpadding=\"4\">" +
+                row("e", "show Edge zoom")+
+                row("f", "show zoomed out") +
+                row("h", "Toggle outline display") +
+
+                row("","")+
+                row("i", "Load most recent igram from URL Directory.") +
+                row("l", "Load igram from file system.") +
+                row("u", "Load igram from url stream.") +
+                row("arrow keys", "move outline one pixel")+
+
+               "</table>"
+               "<br>"
+                "<h2>Mouse Controls</h2>"
+                "<table cellspacing=\"0\" cellpadding=\"4\">" +
+                row("left click drag","start outline and drag to other side of mirror")+
+                row("shift left click drag", "move outline")+
+                row("ctrl wheel"," increse \\ decrease outline diameter")+
+                row("wheel", "zoom igram image")+
+               "<br><br>"
+               "<b>/</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Toggle to display\\hide this";
+    }
+
+    return "<h1>Hot Keys</h1><p>No active hot keys for this view.</p>";
+}
 int showmem(const QString &t);
 void MainWindow::openWaveFrontonInit(QStringList args){
     QProgressDialog pd("    Loading wavefronts in progress.", "Cancel", 0, 100);
@@ -2581,13 +2699,6 @@ void MainWindow::runLiveAnalysisLoop() {
         m_viewDlg->statusRight->setText(statusRightText);
 
 
-
-//        // File cleanup if requested
-//        if (m_viewDlg->deleteIgramAfter->isChecked()) {
-//            QFile::remove(savedFilePath);
-//            QFile::remove(savedFilePath.replace("jpg", "oln"));
-//        }
-
         // Wavefront list cleanup & memory management
         bool discardFrame = (wf->std > m_viewDlg->maxRMS->value()) || m_viewDlg->deleteIntermidiateWaveFront->isChecked();
         if (discardFrame) {
@@ -2614,7 +2725,6 @@ void MainWindow::runLiveAnalysisLoop() {
         savedAvg->wasSmoothed = false;
         savedAvg->dirtyZerns = true;
 
-
         savedAvg->regions.clear();
         m_surfaceManager->makeMask(savedAvg);
         m_surfaceManager->generateSurfacefromWavefront(savedAvg);
@@ -2636,3 +2746,5 @@ void MainWindow::runLiveAnalysisLoop() {
     m_liveState = State_Stopped;
 
 }
+
+

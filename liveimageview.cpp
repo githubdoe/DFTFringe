@@ -183,8 +183,8 @@ void LiveImageView::wheelEvent(QWheelEvent *event) {
 }
 
 
-#include <QTimer>
-#include <QLabel>
+
+
 #include <QShowEvent>
 
 void LiveImageView::showEvent(QShowEvent *event) {
