@@ -1,4 +1,5 @@
 #include "custom3dinputhandler.h"
+// required only with Qt5 build
 #include <QtMath>
 Custom3DInputHandler::Custom3DInputHandler(QAbstract3DGraph *graph)
     : Q3DInputHandler(graph), m_isRightDragging(false), m_graphRef(graph) {
@@ -28,7 +29,6 @@ void Custom3DInputHandler::mousePressEvent(QMouseEvent *event, const QPoint &mou
                              mappedButton, mappedButtons, event->modifiers());
 #endif
     Q3DInputHandler::mousePressEvent(&customEvent, mousePos);
-    Q3DInputHandler::mousePressEvent(&customEvent, mousePos);
 }
 
 void Custom3DInputHandler::mouseReleaseEvent(QMouseEvent *event, const QPoint &mousePos) {
@@ -51,7 +51,6 @@ void Custom3DInputHandler::mouseReleaseEvent(QMouseEvent *event, const QPoint &m
     QMouseEvent customEvent(event->type(), event->localPos(), event->globalPos(),
                              mappedButton, mappedButtons, event->modifiers());
 #endif
-    Q3DInputHandler::mousePressEvent(&customEvent, mousePos);
     Q3DInputHandler::mouseReleaseEvent(&customEvent, mousePos);
 }
 
@@ -72,22 +71,22 @@ void Custom3DInputHandler::mouseMoveEvent(QMouseEvent *event, const QPoint &mous
             float xRotRad = qDegreesToRadians(camera->xRotation()); // Yaw (horizontal orbit)
             float yRotRad = qDegreesToRadians(camera->yRotation()); // Pitch (vertical tilt)
 
-            float cosX = qCos(xRotRad);
-            float sinX = qSin(xRotRad);
-            float cosY = qCos(yRotRad);
-            float sinY = qSin(yRotRad);
 
-            // Invert Y delta (flipped back so dragging down moves the scene down)
-            float invertedDeltaY = -delta.y();
+            // Right vector: horizontal, unaffected by pitch
+            QVector3D right(qCos(xRotRad), 0.0f, -qSin(xRotRad));
 
-            float dx = (-delta.x() * cosX - invertedDeltaY * sinX * cosY) * panScale;
-            float dy = (invertedDeltaY * sinY) * panScale;
-            float dz = (delta.x() * sinX - invertedDeltaY * cosX * cosY) * panScale;
+            // Forward vector: direction the camera is looking
+            QVector3D forward(qSin(xRotRad) * qCos(yRotRad),
+                              -qSin(yRotRad),
+                              qCos(xRotRad) * qCos(yRotRad));
 
-            target.setX(target.x() + dx);
-            target.setY(target.y() + dy);
-            target.setZ(target.z() + dz);
+            // True camera-up = right × forward, always orthogonal to both
+            QVector3D up = QVector3D::crossProduct(forward, right).normalized();
 
+            float dxScreen = -delta.x() * panScale;
+            float dyScreen =  delta.y() * panScale * 2;
+
+            target += right * dxScreen + up * dyScreen;
             camera->setTarget(target);
         }
         event->accept();

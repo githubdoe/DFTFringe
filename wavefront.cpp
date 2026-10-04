@@ -18,35 +18,35 @@
 #include "wavefront.h"
 
 wavefront::wavefront():
-    gaussian_diameter(0.),gbEnabled(false),gbValue(20.),wasSmoothed(false),useSANull(true),GBSmoothingValue(0.),m_origin(WavefrontOrigin::Unknown),m_manuallyInverted(false),dirtyZerns(true),regions_have_been_expanded(false)
+    zernEnablesApplied(),gaussian_diameter(0.),gbEnabled(false),gbValue(20.),wasSmoothed(false),useSANull(true),GBSmoothingValue(0.),m_origin(WavefrontOrigin::Unknown),m_manuallyInverted(false),dirtyZerns(true),regions_have_been_expanded(false)
 {
 }
 
-wavefront::~wavefront()
+void wavefront::cloneMatricesFrom(const wavefront &wf)
 {
-
-    data.release();
-    mask.release();
-    workData.release();
-    workMask.release();
-    InputZerns.clear();
-    nulledData.release();
-
+    data = wf.data.clone();
+    nulledData = wf.nulledData.clone();
+    mask = wf.mask.clone();
+    workData = wf.workData.clone();
+    workMask = wf.workMask.clone();
 }
-wavefront::wavefront( const wavefront &wf): 
+
+wavefront::wavefront( const wavefront &wf):
     data(wf.data.clone()),
     nulledData(wf.nulledData.clone()),
     mask(wf.mask.clone()),
     workData(wf.workData.clone()),
     workMask(wf.workMask.clone()),
     InputZerns(wf.InputZerns),
+    regions(wf.regions),
+    zernEnablesApplied(wf.zernEnablesApplied),
     gaussian_diameter(wf.gaussian_diameter),
     m_outside(wf.m_outside),
     m_inside(wf.m_inside),
-
     GBSmoothingValue(wf.GBSmoothingValue),
     gbValue(wf.gbValue),
     m_origin(wf.m_origin),
+    name(wf.name),
     lambda(wf.lambda),
     diameter(wf.diameter),
     roc(wf.roc),
@@ -55,9 +55,9 @@ wavefront::wavefront( const wavefront &wf):
     std(wf.std),
     mean(wf.mean),
     dirtyZerns(wf.dirtyZerns),
+    regions_have_been_expanded(wf.regions_have_been_expanded),
     gbEnabled(wf.gbEnabled),
     wasSmoothed(wf.wasSmoothed),
     useSANull(wf.useSANull),
     m_manuallyInverted(wf.m_manuallyInverted)
 {}
-

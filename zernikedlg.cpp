@@ -48,11 +48,41 @@ void ZernTableModel::setValues(const std::vector<double> &vals, bool nulled){
     emit dataChanged(topLeft, bottomRight);
 }
 
+void ZernTableModel::setAppliedEnables(const std::vector<bool> *appliedEnables){
+    if (appliedEnables == nullptr) return;
+    if (appliedEnables->size() > m_appliedEnables.size())
+        m_appliedEnables.resize(appliedEnables->size());
+    for (size_t i = 0; i < appliedEnables->size(); ++i) {
+        if ((*appliedEnables)[i])
+            m_appliedEnables[i] = enEnables::Enabled;
+        else
+            m_appliedEnables[i] = enEnables::Disabled;
+    }
+    update();
+}
+
+void ZernTableModel::addAppliedEnables(const std::vector<bool> *appliedEnables){
+    if (appliedEnables == nullptr) return;
+    if (appliedEnables->size() > m_appliedEnables.size())
+        m_appliedEnables.resize(appliedEnables->size());
+    for (size_t i = 0; i < appliedEnables->size(); ++i) {
+        if ((*appliedEnables)[i]) {
+            // new zernike is enabled
+            if (m_appliedEnables[i] == enEnables::Disabled)
+                m_appliedEnables[i] = enEnables::Mixed;
+        } else {
+            // new zernike is disabled
+            if (m_appliedEnables[i] == enEnables::Enabled)
+                m_appliedEnables[i] = enEnables::Mixed;
+        }
+    }
+    update();
+}
+
 void ZernTableModel::update(){
     QModelIndex topLeft = index(0, 0);
     QModelIndex bottomRight = index(rowCount() - 1, columnCount() - 1);
     emit dataChanged(topLeft, bottomRight);
-
 }
 
 void ZernTableModel::resizeRows(const int rowCnt){
@@ -103,13 +133,24 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole)
     {
         if (index.column() == 0){
+            QString marker;
+            if (index.row() < (int)m_appliedEnables.size() &&
+                index.row() < (int)m_enables->size()) {
+                const bool floatingEnabled = m_enables->at(index.row());
+                const enEnables appliedEnabled = m_appliedEnables[index.row()];
+                if (floatingEnabled && appliedEnabled != enEnables::Enabled) {
+                    marker = "[+] ";
+                } else if (!floatingEnabled && appliedEnabled != enEnables::Disabled) {
+                    marker = "[-] ";
+                }
+            }
             if (index.row() <= 48)
-                return zernsNames[index.row()];
+                return marker + zernsNames[index.row()];
             else {
                 int row = index.row();
                 int sr = floor(sqrt(row+1));
 
-                return (QString("%1 %2").arg(index.row()).arg(
+                return marker + (QString("%1 %2").arg(index.row()).arg(
                       ( sr * sr == index.row()+1)? "Spherical" : ""));
             }
         }
@@ -137,6 +178,20 @@ QVariant ZernTableModel::data(const QModelIndex &index, int role) const
             return m_enables->at(index.row()) ? Qt::Checked : Qt::Unchecked;
         }
     }
+    if (role == Qt::ToolTipRole && index.column() == 0 &&
+        index.row() < (int)m_appliedEnables.size() && index.row() < (int)m_enables->size()) {
+        const bool floatingEnabled = m_enables->at(index.row());
+        const enEnables appliedEnabled = m_appliedEnables[index.row()];
+        if (floatingEnabled && appliedEnabled != enEnables::Enabled) {
+            return QString("Will be enabled on recompute for this wavefront.");
+        }
+        if (!floatingEnabled && appliedEnabled != enEnables::Disabled) {
+            return QString("Will be disabled on recompute for this wavefront.");
+        }
+        if (floatingEnabled == false)
+            return QString("This Zernike has been subtracted out from the wavefront.");
+        return QString("Uncheck to remove this component from the wavefront.");
+    }
     return QVariant();
 }
 bool ZernTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
@@ -152,6 +207,7 @@ bool ZernTableModel::setData(const QModelIndex & index, const QVariant & value, 
     if (role == Qt::CheckStateRole){
         m_enables->at(index.row()) = value.toBool();
     }
+    emit dataChanged(this->index(index.row(), 0), this->index(index.row(), 1));
     return true;
 }
 

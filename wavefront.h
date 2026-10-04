@@ -34,11 +34,12 @@ enum class WavefrontOrigin : std::uint8_t {
 };
 class wavefront { public:
     wavefront();
-    ~wavefront();
-    wavefront( const wavefront &wf); // copy constructor doing deep copy of cv::Mat
-    wavefront( wavefront && ) = delete;	// move constructor, deleted because unused
-    wavefront& operator=( const wavefront & ) = default; // copy operator not doing deep copy of cv::mat
-    wavefront& operator=(wavefront &&) = delete; // move operator, deleted because unused
+    ~wavefront() = default;
+    wavefront( const wavefront &wf);
+    wavefront( wavefront && );
+    wavefront& operator=( const wavefront & ) = default;
+    wavefront& operator=(wavefront &&) = default;
+    void cloneMatricesFrom(const wavefront &wf);
 
     cv::Mat_<double> data;
     cv::Mat_<double> nulledData;
@@ -46,7 +47,11 @@ class wavefront { public:
     cv::Mat_<double> workData;
     cv::Mat_<uint8_t> workMask;
     std::vector<double> InputZerns;
+
     QVector<std::vector<cv::Point> > regions;
+
+    std::vector<bool> zernEnablesApplied;
+
     double gaussian_diameter;
                   CircleOutline m_outside;
                   CircleOutline m_inside;

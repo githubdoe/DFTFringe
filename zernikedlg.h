@@ -21,7 +21,6 @@
 #include <QDialog>
 #include <QtCore>
 #include <QtGui>
-#include "zernikedlg.h"
 #include <QAbstractTableModel>
 #include <opencv2/opencv.hpp>
 #include <vector>
@@ -44,6 +43,8 @@ public:
     void resizeRows(const int rowCnt);
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     void setValues(const std::vector<double> &vals, bool nulled);
+    void setAppliedEnables(const std::vector<bool> *appliedEnables);
+    void addAppliedEnables(const std::vector<bool> *appliedEnables);
     bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
     Qt::ItemFlags flags(const QModelIndex & index) const ;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
@@ -54,8 +55,10 @@ public:
 signals:
     void zernChanged();
 private:
+    enum class enEnables {Enabled, Disabled, Mixed};
     bool canEdit;
     bool m_nulled;
+    std::vector<enEnables> m_appliedEnables;
 
 };
 
