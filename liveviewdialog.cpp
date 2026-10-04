@@ -15,6 +15,7 @@
 #include <QMessageBox>
 #include <liveviewhistory.h>
 #include <QTextBrowser>
+#include <QFile>
 
 
 
@@ -1013,7 +1014,7 @@ cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize
     padded.convertTo(floatImg, CV_32F);
 
     cv::Mat complexImg;
-    cv::dft(floatImg, complexImg, CV_DXT_FORWARD | cv::DFT_COMPLEX_OUTPUT);
+    cv::dft(floatImg, complexImg, cv::DFT_COMPLEX_OUTPUT);
 
     std::vector<cv::Mat> planes;
     cv::split(complexImg, planes);
