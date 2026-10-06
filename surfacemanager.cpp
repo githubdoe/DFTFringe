@@ -381,7 +381,6 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 
             return;
         }
-
         //compute zernike values
 
         mirrorDlg *md = mirrorDlg::get_Instance();
@@ -441,7 +440,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         //cv::Mat tiltremoved = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables, 0,3);
         //wf->data = tiltremoved;
         //zp.unwrap_to_zernikes(*wf);
-        wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, wf->zernEnablesApplied,0,Z_TERMS   );
+        wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables,0,Z_TERMS   );
         wf->dirtyZerns = false;
     }
 
@@ -466,7 +465,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             //int duration = ms2.count() - ms.count();
             //spdlog::get("logger")->trace("guassian blur time in ms: {}", duration);
     }
-
+qDebug() << "gen3";
     wf->nulledData.release();
 }
 cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector<double> &zerns, QVector<int> zernsToUse){
@@ -549,7 +548,6 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_applyFloatingZernEnables(false), m_wftStats(0)
 {
 
-    okToUpdateSurfacesOnGenerateComplete = true;
     m_simView = SimulationsView::getInstance(0);
 
     pd = new QProgressDialog();
@@ -745,6 +743,7 @@ void SurfaceManager::wftNameChanged(int ndx, const QString &name){
 }
 
 void SurfaceManager::sendSurface(wavefront* wf){
+qDebug() << "sending surface" << wf->name;
     emit currentNdxChanged(m_currentNdx);
     computeMetrics(wf);
 
@@ -1646,9 +1645,10 @@ void SurfaceManager::surfaceGenFinished() {
         emit progress(++workProgress);
 
     m_surface_finished = true;
-    if (okToUpdateSurfacesOnGenerateComplete){
-        loadComplete();
-    }
+qDebug() << "surfaceFinished";
+
+    loadComplete();
+
     if (workProgress == workToDo)
         workToDo = 0;
 
@@ -1661,7 +1661,7 @@ void SurfaceManager::loadComplete(){
         computeMetrics(m_wavefronts[m_currentNdx]);
     }
 }
-
+int cnt = 0;
 // Update all surfaces since some control has changed.  Skip current surface it has already been done
 void SurfaceManager::backGroundUpdate(){
 
@@ -1676,6 +1676,7 @@ void SurfaceManager::backGroundUpdate(){
     const bool applyFloatingZerns = m_applyFloatingZernEnables;
     m_applyFloatingZernEnables = false;
     foreach (int i, doThese){
+qDebug() << "updating these" << doThese << i << ++cnt;
         if (applyFloatingZerns) {
             m_wavefronts[i]->zernEnablesApplied = zernEnables;
         }
@@ -1691,8 +1692,9 @@ void SurfaceManager::backGroundUpdate(){
             break;
         }
     }
+qDebug() << "done with these";
     m_ignoreInverse = false;
-    loadComplete();
+    //loadComplete();
 }
 
 

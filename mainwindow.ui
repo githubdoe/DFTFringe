@@ -104,6 +104,9 @@
     </property>
     <addaction name="actionMirror"/>
     <addaction name="actionPreferences"/>
+    <addaction name="actionSave_settomgs_to_a_file"/>
+    <addaction name="actionRestore_settings_from_a_file"/>
+    <addaction name="actionReset_to_Factory_Defaults"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -1524,6 +1527,21 @@ em;
   <action name="actionLive_view">
    <property name="text">
     <string> Capture from Video device</string>
+   </property>
+  </action>
+  <action name="actionReset_to_Factory_Defaults">
+   <property name="text">
+    <string>Reset to Factory Defaults</string>
+   </property>
+  </action>
+  <action name="actionSave_settomgs_to_a_file">
+   <property name="text">
+    <string>Export settings</string>
+   </property>
+  </action>
+  <action name="actionRestore_settings_from_a_file">
+   <property name="text">
+    <string>Import settings</string>
    </property>
   </action>
  </widget>

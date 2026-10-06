@@ -240,6 +240,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Style the dialog background to match your teal theme
     m_helpOverlay->setStyleSheet("QDialog { background-color: rgb(46,137,137); }");
+    m_helpOverlay->installEventFilter(this);
     m_helpOverlay->hide();
     // Wire up the '/' shortcut
     QShortcut *shortcuth = new QShortcut(QKeySequence(Qt::Key_Slash), this);
@@ -353,6 +354,18 @@ MainWindow::MainWindow(QWidget *parent) :
         m_helpOverlay->hide();
     });
 }
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
+    if (obj == m_helpOverlay && event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        // If the user hits '/' or 'Escape' while the help is open, hide it!
+        if (keyEvent->key() == Qt::Key_Slash || keyEvent->key() == Qt::Key_Escape) {
+            m_helpOverlay->hide();
+            return true; // Event handled
+        }
+    }
+    return QMainWindow::eventFilter(obj, event);
+}
 void MainWindow::importIgram() {
     QSettings set;
 
@@ -384,7 +397,7 @@ QString MainWindow::getCurrentHotKeyHelp() const {
     };
 
     if (currentTab == 2) {
-        return R"(<h1>Hot Keys - for result tab</h1>)"
+        return R"(<h1>Hot Keys - for results tab</h1>)"
                "<table cellspacing=\"0\" cellpadding=\"4\">" +
                    row("i", "Load most recent igram from URL Directory.") +
                    row("l", "Load igram from file system.") +
@@ -2747,4 +2760,100 @@ void MainWindow::runLiveAnalysisLoop() {
 
 }
 
+
+
+void MainWindow::on_actionReset_to_Factory_Defaults_triggered()
+{
+    // 1. Show the confirmation warning box
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::warning(this,
+                                      "Reset Settings",
+                                      "Do you really want to reset all settings to factory defaults?\nThis cannot be undone.",
+                                      QMessageBox::Yes | QMessageBox::No);
+
+        // 2. Proceed only if the user clicks "Yes"
+        if (reply == QMessageBox::Yes) {
+            QSettings settings;
+            QString filePath = settings.fileName();
+
+            // Clear all keys
+            settings.clear();
+            settings.sync();
+
+            // Optional: Delete the underlying file for a complete hard reset
+            if (QFile::exists(filePath)) {
+                QFile::remove(filePath);
+            }
+
+            qDebug() << "Settings have been reset to factory defaults.";
+
+            // Optional: Notify the user or prompt them to restart the app
+            QMessageBox::information(this, "Reset Complete", "Settings have been reset. Please restart the application.");
+        }
+}
+
+// Helper to copy keys between any two QSettings instances
+void copySettingsData(QSettings &src, QSettings &dest) {
+    QStringListIterator it(src.allKeys());
+    while (it.hasNext()) {
+        QString key = it.next();
+        dest.setValue(key, src.value(key));
+    }
+}
+
+
+void MainWindow::on_actionSave_settomgs_to_a_file_triggered()
+{
+    QString filePath = QFileDialog::getSaveFileName(this,
+                                                    "Export Settings",
+                                                    "my_app_settings.ini",
+                                                    "Settings Files (*.ini)");
+    if (filePath.isEmpty()) {
+        return; // User cancelled
+    }
+
+    QSettings liveSettings;
+    liveSettings.sync();
+
+    // Open an INI file target
+    QSettings exportFile(filePath, QSettings::IniFormat);
+    exportFile.clear(); // Clear old content in the target file if it exists
+
+    copySettingsData(liveSettings, exportFile);
+    exportFile.sync();
+
+    QMessageBox::information(this, "Export Successful", "Your settings have been successfully exported.");
+
+}
+
+
+void MainWindow::on_actionRestore_settings_from_a_file_triggered()
+{
+    QString filePath = QFileDialog::getOpenFileName(this,
+                                                    "Import Settings",
+                                                    "",
+                                                    "Settings Files (*.ini)");
+    if (filePath.isEmpty()) {
+        return; // User cancelled
+    }
+
+    QMessageBox::StandardButton reply = QMessageBox::warning(this,
+                                  "Import Settings",
+                                  "Importing settings will overwrite your current configuration. Continue?",
+                                  QMessageBox::Yes | QMessageBox::No);
+
+    if (reply != QMessageBox::Yes) {
+        return;
+    }
+
+    QSettings importFile(filePath, QSettings::IniFormat);
+    QSettings liveSettings;
+
+    // Clear current registry settings and replace with imported ones
+    liveSettings.clear();
+    copySettingsData(importFile, liveSettings);
+    liveSettings.sync();
+
+    QMessageBox::information(this, "Import Complete", "Settings have been restored. Please restart the application for all changes to take effect.");
+}
 

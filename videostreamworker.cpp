@@ -60,7 +60,9 @@ void VideoStreamWorker::captureLoop() {
 
         {
             if (m_cap.isOpened()) {
+
                 success = m_cap.read(frame) && !frame.empty();
+
             }
         }
 
@@ -71,7 +73,7 @@ void VideoStreamWorker::captureLoop() {
             m_latestFrame = frame.clone();
         } else {
             errorCount++;
-
+qDebug() << "errorCount" << errorCount;
             // Create a status/error image canvas (e.g., 800x600 dark background)
             cv::Mat errorFrame(600, 800, CV_8UC3, cv::Scalar(30, 30, 30));
 
@@ -216,8 +218,14 @@ void VideoStreamWorker::changeSource(QString newSource) {
 void VideoStreamWorker::setResolution(int width, int height) {
     QMutexLocker locker(&m_controlMutex);
     if (m_cap.isOpened() && width > 0 && height > 0) {
-        m_cap.set(cv::CAP_PROP_FRAME_WIDTH, width);
-        m_cap.set(cv::CAP_PROP_FRAME_HEIGHT, height);
-        qDebug() << "VideoStreamWorker: Resolution requested to set ->" << width << "x" << height;
+        bool isInt = false;
+        m_source.toInt(&isInt);
+
+        // Only apply resolution changes to local USB cameras, not URL streams
+        if (isInt) {
+            m_cap.set(cv::CAP_PROP_FRAME_WIDTH, width);
+            m_cap.set(cv::CAP_PROP_FRAME_HEIGHT, height);
+            qDebug() << "VideoStreamWorker: Resolution requested to set ->" << width << "x" << height;
+        }
     }
 }

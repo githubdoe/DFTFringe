@@ -118,7 +118,6 @@ public:
     configRESPONSE rocResp;
     configRESPONSE lambdResp;
     int okToContinue;
-    bool okToUpdateSurfacesOnGenerateComplete;
     void makeMask(wavefront* wf, bool useInsideCircle = true);
     void generateSurfacefromWavefront(int ndx);
     void generateSurfacefromWavefront(wavefront *wf);

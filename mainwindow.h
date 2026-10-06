@@ -66,11 +66,12 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
     void updateMetrics(wavefront& wf);
     int addTab(QWidget* w, const QString &name);
     mirrorDlg *m_mirrorDlg;
@@ -288,6 +289,12 @@ private slots:
     QString load_from_url();
 
     void on_actionLive_view_triggered();
+
+    void on_actionReset_to_Factory_Defaults_triggered();
+
+    void on_actionSave_settomgs_to_a_file_triggered();
+
+    void on_actionRestore_settings_from_a_file_triggered();
 
 private:
 

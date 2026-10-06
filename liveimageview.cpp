@@ -118,6 +118,7 @@ void LiveImageView::keyPressEvent(QKeyEvent *event) {
         break;
     case Qt::Key_Down:
         m_nativeCenter.ry() += step;
+        break;
     case Qt::Key_Plus:
         m_nativeRadius += 1;
         break;
@@ -129,7 +130,7 @@ void LiveImageView::keyPressEvent(QKeyEvent *event) {
             emit shiftStateChanged(true);
         }
         break;
-    case Qt::Key_Control:
+    case Qt::Key_Slash:
         if (m_helpOverlay && m_helpOverlay->isVisible()) {
             m_helpOverlay->hide();
         }else if (m_helpOverlay){
@@ -210,13 +211,13 @@ void LiveImageView::showEvent(QShowEvent *event) {
 
                 // Use HTML formatting with a larger title
                 helpLbl->setText(
-                    "• <b>Left Click + Drag:</b> Adjust mirror outline green circle<br>"
-                    "• <b>Right Click</b> Set filter diameter.<br>"
-                    "• <b>Mouse Wheel:</b> Increase\\decrease filter<br>"
-                    "• <b>Arrow Keys:</b> Nudge green outline<br>"
-                    "• <b>+\\-</b> enlarge \\ decrease mirror outline<br>"
-                    "• <b>Hold Shift:</b> Toggle fullscreen view"
-                    "<br><br><b>ctrl</b> Toggle to display\\hide this or left mouse click to remove."
+                    " <b>Left Click + Drag:</b> Adjust mirror outline green circle<br>"
+                    " <b>Right Click</b> Set filter diameter.<br>"
+                    " <b>Mouse Wheel:</b> Increase\\decrease filter<br>"
+                    " <b>Arrow Keys:</b> Nudge green outline<br>"
+                    " <b>+\\-</b> enlarge \\ decrease mirror outline<br>"
+                    " <b>Hold Shift:</b> Toggle fullscreen view"
+                    "<br><br><b>/</b> Toggle to display\\hide this or left mouse click to remove."
                 );
 
 
