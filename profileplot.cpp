@@ -656,12 +656,12 @@ void ProfilePlot::populate()
     if (m_wf == 0)
         return;
     QSettings settings;
-    double smoothing = settings.value("GBValue", 20).toInt();
     m_plot->detachItems(QwtPlotItem::Rtti_PlotTextLabel);
 
+    SurfaceManager *sm = SurfaceManager::get_instance();
+    double smoothing = sm->getGaussBlurOfSelectedWavefronts();
 
-
-    if (m_wf->m_outside.m_radius > 0 && settings.value("GBlur", false).toBool()){
+    if (smoothing > 0){
         double val = .01 * (m_wf->diameter) * smoothing;
         QString t = QString("Surface Smoothing diameter %1% of surface diameter %2 mm")
                         .arg(smoothing, 6, 'f', 2)

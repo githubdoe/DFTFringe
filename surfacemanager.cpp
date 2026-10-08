@@ -355,8 +355,10 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     } else if (wf->zernEnablesApplied.size() != zernEnables.size()) {
         wf->zernEnablesApplied.resize(zernEnables.size(), true);
     }
-    m_GB_enabled = wf->gbEnabled;
-    m_gbValue = wf->gbValue;
+
+    wf->gbEnabled = m_GB_enabled;
+    wf->gbValue = m_gbValue;
+
     if (wf->dirtyZerns){
         if (mirrorDlg::get_Instance()->isEllipse()){
             wf->nulledData = wf->data.clone();
@@ -752,6 +754,7 @@ qDebug() << "sending surface" << wf->name;
     m_SurfaceGraph->setSurface(wf);
     m_simView->setSurface(wf);
     foucaultView::get_Instance()->setSurface(wf);
+    updateBlurText();
 
     QFile fn(wf->name);
     QFileInfo fileInfo(fn.fileName());
@@ -832,7 +835,6 @@ void SurfaceManager::waveFrontClickedSlot(int ndx)
 {
 
     m_currentNdx = ndx;
-    syncGaussianStateForWavefront(m_wavefronts[ndx]);
     QString msg = QString(" %1x%2 ").arg(m_wavefronts[ndx]->data.cols).arg(m_wavefronts[ndx]->data.rows);
     ((MainWindow*)parent())->statusBar()->showMessage(msg);
     sendSurface(m_wavefronts[ndx]);
@@ -852,11 +854,46 @@ void SurfaceManager::wavefrontDClicked(const QString & name){
     for (int i = 0; i < m_wavefronts.size(); ++i){
         if (m_wavefronts[i]->name.endsWith(name)){ //TODO JST 2023/09/11 this does not work on some name combinations. To be fixed
             m_currentNdx = i;
-            syncGaussianStateForWavefront(m_wavefronts[i]);
             sendSurface(m_wavefronts[i]);
             break;
         }
     }
+}
+
+double SurfaceManager::getGaussBlurOfSelectedWavefronts(){
+    // returns:
+    // blur value if all selected wavefronts are the same blur value
+    // 0 if all wavefronts have gauss blur disabled
+    // -1 different wavefronts have different amounts of blur
+    // -2 if nothing selected
+    QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
+    double blur = -2;
+    foreach(int ndx , doThese){
+        wavefront * wf = m_wavefronts[ndx];
+        double val = (wf->gbEnabled ? wf->gbValue : 0);
+        if (blur < 0) {
+            blur = val;
+            continue;
+        }
+        if (blur != val)
+            return -1;
+    }
+    return blur;
+}
+
+void SurfaceManager::updateBlurText(){
+    if (m_surfaceTools == nullptr)
+        return;
+
+    double blur = getGaussBlurOfSelectedWavefronts();
+    if (blur == -2) // nothing selected
+        m_surfaceTools->setGaussianStateText("");
+    else if (blur == -1) // mixed
+        m_surfaceTools->setGaussianStateText("Multiple Blur Amounts");
+    else if (blur == 0) // Gaussian blur disabled
+        m_surfaceTools->setGaussianStateText("Currently No Blurring");
+    else
+        m_surfaceTools->setGaussianStateText("Current Gaussian Blur "+QString("%1").arg(blur, 5, 'f', 1)+" %");
 }
 
 void SurfaceManager::surfaceSmoothGBValue(double value){
@@ -900,19 +937,6 @@ void SurfaceManager::surfaceSmoothGBEnabled(bool b){
         return;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
     m_waveFrontTimer->start(500);
-}
-
-void SurfaceManager::syncGaussianStateForWavefront(wavefront *wf){
-    if (wf == nullptr) {
-        return;
-    }
-
-    m_GB_enabled = wf->gbEnabled;
-    m_gbValue = wf->gbValue;
-    m_surfaceTools->setGaussianControls(wf->gbEnabled, wf->gbValue);
-
-    mirrorDlg *md = mirrorDlg::get_Instance();
-    m_surfaceTools->setBlurText(QString("%1 mm").arg(.01 * wf->gbValue * md->diameter, 6, 'f', 2));
 }
 
 void SurfaceManager::computeMetrics(wavefront *wf){
@@ -1588,7 +1612,6 @@ void SurfaceManager::next(){
         ++m_currentNdx;
     else
         m_currentNdx = 0;
-    syncGaussianStateForWavefront(m_wavefronts[m_currentNdx]);
     sendSurface(m_wavefronts[m_currentNdx]);
 
 
@@ -1603,7 +1626,6 @@ void SurfaceManager::previous(){
     else
         m_currentNdx = m_wavefronts.length()-1;
 
-    syncGaussianStateForWavefront(m_wavefronts[m_currentNdx]);
     sendSurface(m_wavefronts[m_currentNdx]);
 }
 QVector<int> histo(const std::vector<double> &data, int bins, double min, double max){
@@ -1694,7 +1716,6 @@ qDebug() << "updating these" << doThese << i << ++cnt;
     }
 qDebug() << "done with these";
     m_ignoreInverse = false;
-    //loadComplete();
 }
 
 
