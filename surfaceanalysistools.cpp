@@ -61,7 +61,6 @@ surfaceAnalysisTools::surfaceAnalysisTools(QWidget *parent) :
 }
 
 void surfaceAnalysisTools::enableControls(bool flag){
-
     setEnabled(flag);
 }
 
@@ -77,6 +76,11 @@ void surfaceAnalysisTools::setGaussianControls(bool enabled, double value){
     ui->surfaceSmoothGausianBlurr->setValue(value);
     ui->surfaceSmoothGausianBlurr->setEnabled(enabled);
 }
+
+void surfaceAnalysisTools::setGaussianStateText(const QString & str){
+    ui->lblGaussState->setText(str);
+}
+
 
 void surfaceAnalysisTools::addWaveFront(const QString &name){
 

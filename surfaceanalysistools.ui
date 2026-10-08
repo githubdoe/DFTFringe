@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>250</width>
-    <height>497</height>
+    <height>501</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -265,6 +265,17 @@
        <string>Surface Filter</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
+       <item row="1" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QLabel" name="lblGaussState">
+           <property name="text">
+            <string>Currently 20.00%</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
        <item row="0" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="4,0">
          <item>
@@ -313,7 +324,7 @@
        <item row="0" column="1">
         <widget class="QLabel" name="blurMm">
          <property name="text">
-          <string/>
+          <string>--</string>
          </property>
         </widget>
        </item>
