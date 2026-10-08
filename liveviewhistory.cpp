@@ -7,7 +7,7 @@
 #include <QtCharts/QValueAxis>
 #include <QDateTime>
 #include <algorithm>
-
+#include <cmath>
 liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
     // Force the widget's background color to match the dark theme edge-to-edge
     setStyleSheet("background-color: #2D2D30; color: #DCDCDC;");
@@ -34,6 +34,7 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
     // Series Setup
     rmsSeries = new QLineSeries();
     rmsSeries->setName("Avg RMS");
+
     QPen rmsPen(QColor(51, 181, 229));
     rmsPen.setWidth(2);
     rmsSeries->setPen(rmsPen);
@@ -57,12 +58,15 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
 
     axisY_RMS = new QValueAxis();
     axisY_RMS->setTitleText("Avg RMS");
+    axisY_RMS->setTickCount(5);
     axisY_RMS->setRange(0, 1);
+
     chart->addAxis(axisY_RMS, Qt::AlignLeft);
     rmsSeries->attachAxis(axisY_RMS);
 
     axisY_SA = new QValueAxis();
     axisY_SA->setTitleText(m_itemName);
+    axisY_SA->setTickCount(5);
     axisY_SA->setRange(-100, 100);
     chart->addAxis(axisY_SA, Qt::AlignRight);
     saSeries->attachAxis(axisY_SA);
@@ -99,12 +103,10 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
 void liveViewHistory::addSample(double rawRms, double rawSa) {
     QDateTime currentTime = QDateTime::currentDateTime();
 
-    // Save the time of the first sample upon reset or start
     if (!firstSampleTime.isValid()) {
         firstSampleTime = currentTime;
     }
 
-    // Calculate time delta in minutes from the first sample
     double elapsedMinutes = static_cast<double>(firstSampleTime.msecsTo(currentTime)) / 60000.0;
 
     rawRmsData.append(rawRms);
@@ -114,17 +116,23 @@ void liveViewHistory::addSample(double rawRms, double rawSa) {
     double avgSa = computeRunningAverage(rawSaData, 10);
 
     rmsSeries->append(elapsedMinutes, avgRms);
-    saSeries->append(elapsedMinutes, avgSa);
+    saSeries->append(elapsedMinutes, avgSa); // fixed syntax
 
-    // Dynamically adjust X-axis range based on elapsed time (at least 1 minute range)
     axisX->setRange(0, std::max(1.0, elapsedMinutes));
 
-    double maxRms = 0.0;
+    // --- Rounded RMS Axis Range ---
+    double maxRms = 0.001; // prevent zero bounds
     for (const auto &point : rmsSeries->points()) {
         if (point.y() > maxRms) maxRms = point.y();
     }
-    axisY_RMS->setRange(0, std::max(.04, maxRms * 1.1));
 
+    // Snap maxRms to a clean upper bound (e.g., multiples of 0.05 or 0.1)
+    double targetRmsMax = maxRms * 1.15;
+    double rmsUpper = std::ceil(targetRmsMax * 20.0) / 20.0; // Snaps to nearest 0.05
+    if (rmsUpper < 0.05) rmsUpper = 0.05;
+    axisY_RMS->setRange(0, rmsUpper);
+
+    // --- Rounded SA / Zernike Axis Range ---
     if (!saSeries->points().isEmpty()) {
         double minSa = saSeries->points().at(0).y();
         double maxSa = saSeries->points().at(0).y();
@@ -132,20 +140,29 @@ void liveViewHistory::addSample(double rawRms, double rawSa) {
             if (point.y() < minSa) minSa = point.y();
             if (point.y() > maxSa) maxSa = point.y();
         }
-        double saSpan = maxSa - minSa;
-        double saPadding = saSpan == 0 ? 10.0 : saSpan * 0.1;
-        axisY_SA->setRange(minSa - saPadding, maxSa + saPadding);
+
+        double span = std::max(0.01, maxSa - minSa);
+        double padding = span * 0.15;
+
+        // Snap min/max to clean decimals
+        double saMin = std::floor((minSa - padding) * 10.0) / 10.0;
+        double saMax = std::ceil((maxSa + padding) * 10.0) / 10.0;
+        if (saMin == saMax) { saMin -= 1.0; saMax += 1.0; }
+
+        axisY_SA->setRange(saMin, saMax);
     }
 }
 
 void liveViewHistory::setItem(QString name) {
+    m_itemName = name; // ensure member variable updates if you track it
     saSeries->setName(name);
     axisY_SA->setTitleText(QString("live %1").arg(name));
+
     if (name == "Best Fit Conic"){
-        axisY_SA->setRange(-2, 2);
+        axisY_SA->setRange(-2.0, 2.0); // Clean bounds
     }
     else{
-        axisY_SA->setRange(-10, 10);
+        axisY_SA->setRange(-10.0, 10.0); // Clean bounds
     }
     onResetClicked();
 }

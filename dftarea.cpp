@@ -1056,7 +1056,7 @@ void DFTArea::makeSurface(){
 
         showData("result surface", result.clone());
     }
-
+//qDebug() << "dftarea make surface (wavefront) uses igram and emits newWavefront  mainwindow calls make wavefront from phase map";
     emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName(), WavefrontOrigin::Igram,
                         m_poly);
     QApplication::restoreOverrideCursor();

@@ -192,7 +192,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView,
                                           m_ogl->m_surface, metrics);
     connect(m_contourView, &contourView::showAllContours, m_surfaceManager, &SurfaceManager::showAllContours);
-    connect(m_dftArea, &DFTArea::newWavefront, m_surfaceManager, &SurfaceManager::createSurfaceFromPhaseMap);
+    connect(m_dftArea, &DFTArea::newWavefront, m_surfaceManager, &SurfaceManager::createWaveFrontFromPhaseMap);
     connect(m_surfaceManager, &SurfaceManager::diameterChanged,this,&MainWindow::diameterChanged);
     connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
     connect(m_surfTools, &surfaceAnalysisTools::updateSelected, m_surfaceManager, &SurfaceManager::backGroundUpdate);
@@ -999,7 +999,7 @@ void MainWindow::on_actionWavefront_triggered()
 
     rad -= border;
     cv::Mat result = zernikeProcess::get_Instance()->makeSurfaceFromZerns(border, false);
-    m_surfaceManager->createSurfaceFromPhaseMap(result,
+    m_surfaceManager->createWaveFrontFromPhaseMap(result,
                                                 CircleOutline(QPointF(xcen,ycen),rad),
                                                 CircleOutline(QPointF(0,0),0),
                                                 QString("Simulated_Wavefront"), WavefrontOrigin::Simulation);
@@ -2602,6 +2602,7 @@ void MainWindow::runLiveAnalysisLoop() {
         // 5. Switch to DFT tab and generate surface
         ui->tabWidget->setCurrentIndex(2);
         m_dftTools->wasPressed = true;
+
         m_dftArea->makeSurface();
 
         QApplication::processEvents();
@@ -2700,22 +2701,19 @@ void MainWindow::runLiveAnalysisLoop() {
                     .arg(totalFrames)
                     .arg(wf->std, 0, 'f', 3);
         }
-        double value = 1;
+        double value = 1.;
 
         int ndx = m_viewDlg->zernListWidget->currentRow() -1;
-        qDebug() << "Ndx" << ndx;
-        if (ndx == -1){
+
+        if (ndx == -1){ // do best fit conic
             value = wf->InputZerns[8]/m_mirrorDlg->z8;
-            qDebug() << "value" << value;
         }
         else value = wf->InputZerns[ndx];
-        if (ndx == 9){
-            value = wf->InputZerns[8] - z8Null;
-
+        if (ndx == 8){  // if primary SA then remove null if needed
             if (m_mirrorDlg->doNull){
-                value = wf->InputZerns[8]/m_mirrorDlg->z8;
+                value -= z8Null;
+                qDebug() << "sa" << value;
             }
-
         }
          m_viewDlg->history->addSample(m_liveAverageWf->std,value);
         m_viewDlg->statusRight->setText(statusRightText);

@@ -609,7 +609,18 @@ void LiveViewDialog::initSettingsDialog() {
         zernListWidget->addItem(QString::fromUtf8(zernsNames[i]));
     }
 
-    history->setItem(settings.value("LiveView/TrendName","Best Fit Connic").toString());
+    // Get the saved trend name
+        QString savedTrend = settings.value("LiveView/TrendName", "Best Fit Conic").toString();
+        history->setItem(savedTrend);
+
+        // Find the item matching the saved text and set it as current/selected
+        QList<QListWidgetItem*> matchingItems = zernListWidget->findItems(savedTrend, Qt::MatchExactly);
+        if (!matchingItems.isEmpty()) {
+            zernListWidget->setCurrentItem(matchingItems.first());
+        } else {
+            zernListWidget->setCurrentRow(0); // Fallback to "Best Fit Conic" if not found
+        }
+
     connect(zernListWidget, &QListWidget::currentTextChanged, this, [this](QString name){
         history->setItem(name);
         QSettings set;

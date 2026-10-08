@@ -1178,7 +1178,7 @@ void ProfilePlot::CreateWaveFrontFromAverage(){
     }
     cv::Mat result = createInterpolatedCircularSurface(avgRadius);
     SurfaceManager *sm = SurfaceManager::get_instance();
-    sm->createSurfaceFromPhaseMap(result,
+    sm->createWaveFrontFromPhaseMap(result,
                               m_wf->m_outside,
                               m_wf->m_inside,
                               QString(m_wf->name.replace(".wft","")  + "_avg"), WavefrontOrigin::Average);

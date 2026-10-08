@@ -344,7 +344,6 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
 
     wavefront *wf = m_wavefronts[wavefrontNdx];
     generateSurfacefromWavefront(wf);
-
     surfaceGenFinished();
 }
 
@@ -467,7 +466,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
             //int duration = ms2.count() - ms.count();
             //spdlog::get("logger")->trace("guassian blur time in ms: {}", duration);
     }
-qDebug() << "gen3";
+
     wf->nulledData.release();
 }
 cv::Mat SurfaceManager::computeWaveFrontFromZernikes(int wx, int wy, std::vector<double> &zerns, QVector<int> zernsToUse){
@@ -745,7 +744,7 @@ void SurfaceManager::wftNameChanged(int ndx, const QString &name){
 }
 
 void SurfaceManager::sendSurface(wavefront* wf){
-qDebug() << "sending surface" << wf->name;
+//qDebug() << "sending surface" << wf->name;
     emit currentNdxChanged(m_currentNdx);
     computeMetrics(wf);
 
@@ -825,7 +824,7 @@ void SurfaceManager::useDemoWaveFront(){
 
 
 
-    createSurfaceFromPhaseMap(result,
+    createWaveFrontFromPhaseMap(result,
                               CircleOutline(QPointF(xcen,ycen),rad),
                               CircleOutline(QPointF(0,0),0),
                               QString("Demo"), WavefrontOrigin::Demo);
@@ -1140,7 +1139,7 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
     }
     QApplication::restoreOverrideCursor();
 }
-void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
+void SurfaceManager::createWaveFrontFromPhaseMap(cv::Mat phase, CircleOutline outside,
                                                CircleOutline center,
                                                const QString &name, WavefrontOrigin origin,
                                                QVector<std::vector<cv::Point> > polyArea){
@@ -1199,9 +1198,10 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     m_currentNdx = m_wavefronts.size()-1;
 
     makeMask(m_currentNdx);
-
+    //qDebug() << "surface manager create wave front from phasee map calling generate surface from wave front";
     generateSurfacefromWavefront(m_currentNdx);
-    loadComplete();
+
+    //loadComplete();
     m_surfaceTools->select(m_currentNdx);
     emit showTab(2);
 }
@@ -1572,7 +1572,7 @@ void SurfaceManager::deleteCurrent(){
         if (m_currentNdx > 0)
             --m_currentNdx;
     }
-    showmem("After delete");
+
     if (m_wavefronts.length() > 0) {
 
         sendSurface(m_wavefronts[m_currentNdx]);
@@ -1667,8 +1667,6 @@ void SurfaceManager::surfaceGenFinished() {
         emit progress(++workProgress);
 
     m_surface_finished = true;
-qDebug() << "surfaceFinished";
-
     loadComplete();
 
     if (workProgress == workToDo)
@@ -1677,6 +1675,7 @@ qDebug() << "surfaceFinished";
 }
 
 void SurfaceManager::loadComplete(){
+
     m_toolsEnableTimer->start(1000);
     if (m_wavefronts.size() > 0){
         sendSurface(m_wavefronts[m_currentNdx]);

@@ -133,7 +133,7 @@ void ZernikeSmoothingDlg::on_createWaveFront_clicked()
     l.back().replace(".wft","");
     l.back().append(QString("_sm%1").arg(m_noOfTerms));
 
-    m_sm->createSurfaceFromPhaseMap(result, m_wf.m_outside, m_wf.m_inside
+    m_sm->createWaveFrontFromPhaseMap(result, m_wf.m_outside, m_wf.m_inside
                                                ,l.back(), WavefrontOrigin::Smoothed);
 
     if (ui->showResidual->isChecked()){
