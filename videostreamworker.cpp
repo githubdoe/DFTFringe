@@ -216,6 +216,7 @@ void VideoStreamWorker::changeSource(QString newSource) {
 }
 
 void VideoStreamWorker::setResolution(int width, int height) {
+
     QMutexLocker locker(&m_controlMutex);
     if (m_cap.isOpened() && width > 0 && height > 0) {
         bool isInt = false;

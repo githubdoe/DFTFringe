@@ -31,7 +31,7 @@ const char* const zernsNames[] =
   "X Coma",
   "Y Coma",
   "Spherical",
-  "X Trefoi",
+  "X Trefoil",
   "Y Trefoil",
   "X 2nd Astig",
   "Y 2nd Astig",

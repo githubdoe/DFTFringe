@@ -2700,15 +2700,24 @@ void MainWindow::runLiveAnalysisLoop() {
                     .arg(totalFrames)
                     .arg(wf->std, 0, 'f', 3);
         }
-        double bestSC;
-        if (m_mirrorDlg->doNull){
-            bestSC = wf->InputZerns[8]/m_mirrorDlg->z8;
-        }
-        else {
-            bestSC = m_mirrorDlg->cc +wf->InputZerns[8]/m_mirrorDlg->z8;
-        }
-        m_viewDlg->history->addSample(m_liveAverageWf->std,(m_viewDlg->m_showBestFit) ? bestSC: wf->InputZerns[8] - z8Null);
+        double value = 1;
 
+        int ndx = m_viewDlg->zernListWidget->currentRow() -1;
+        qDebug() << "Ndx" << ndx;
+        if (ndx == -1){
+            value = wf->InputZerns[8]/m_mirrorDlg->z8;
+            qDebug() << "value" << value;
+        }
+        else value = wf->InputZerns[ndx];
+        if (ndx == 9){
+            value = wf->InputZerns[8] - z8Null;
+
+            if (m_mirrorDlg->doNull){
+                value = wf->InputZerns[8]/m_mirrorDlg->z8;
+            }
+
+        }
+         m_viewDlg->history->addSample(m_liveAverageWf->std,value);
         m_viewDlg->statusRight->setText(statusRightText);
 
 

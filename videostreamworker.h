@@ -20,6 +20,7 @@ public slots:
     void changeSource(QString newSource);
     void setResolution(int width, int height);
 
+
 signals:
     void streamStarted();
     void streamError(const QString &errorStr);

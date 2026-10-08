@@ -18,7 +18,7 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
 
     // Setup Chart
     chart = new QChart();
-    chart->setTitle("Trend (Avg RMS & Live best Fit conic)");
+    chart->setTitle(QString("Trend"));
     chart->setMargins(QMargins(0, 0, 0, 0));
     // Configure Legend Appearance for High Contrast
         chart->legend()->setVisible(true);
@@ -39,7 +39,7 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
     rmsSeries->setPen(rmsPen);
 
     saSeries = new QLineSeries();
-    saSeries->setName("Live Best Conic");
+    saSeries->setName(m_itemName);
     QPen saPen(QColor(255, 187, 51));
     saPen.setWidth(2);
     saSeries->setPen(saPen);
@@ -62,7 +62,7 @@ liveViewHistory::liveViewHistory(QWidget *parent) : QWidget(parent) {
     rmsSeries->attachAxis(axisY_RMS);
 
     axisY_SA = new QValueAxis();
-    axisY_SA->setTitleText("live Best Conic");
+    axisY_SA->setTitleText(m_itemName);
     axisY_SA->setRange(-100, 100);
     chart->addAxis(axisY_SA, Qt::AlignRight);
     saSeries->attachAxis(axisY_SA);
@@ -138,14 +138,14 @@ void liveViewHistory::addSample(double rawRms, double rawSa) {
     }
 }
 
-void liveViewHistory::showBestFit(bool show) {
-    saSeries->setName((show)? "Best Fit" : "Live SA");
-    axisY_SA->setTitleText((show)? "Live Best Fit": "live SA");
-    if (show){
+void liveViewHistory::setItem(QString name) {
+    saSeries->setName(name);
+    axisY_SA->setTitleText(QString("live %1").arg(name));
+    if (name == "Best Fit Conic"){
         axisY_SA->setRange(-2, 2);
     }
     else{
-        axisY_SA->setRange(-100, 100);
+        axisY_SA->setRange(-10, 10);
     }
     onResetClicked();
 }

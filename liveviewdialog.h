@@ -105,6 +105,7 @@ public:
     LiveImageView *imageLabel;
     liveViewHistory *history;
     bool m_showBestFit = true;
+    QListWidget *zernListWidget;
 private:
     VideoStreamWorker *m_worker;
     QThread *m_thread;
@@ -130,6 +131,7 @@ private:
     QComboBox *dftresolutionCombo;
     QComboBox *zoomCombo;
 
+
     cv::VideoCapture cap;
 
     int m_dftSize = 1024;
@@ -150,7 +152,7 @@ private:
     bool m_hasActiveCircle = false;
     bool m_fitToWindow = true;
     bool m_outlineChanging = false;
-private:
+
     QPointF m_mirrorOutlineCenter;
     double m_mirrorOutlineRadius = 0.;
     double m_DftToimageDownScale = 1.;

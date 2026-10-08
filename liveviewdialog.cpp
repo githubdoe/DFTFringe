@@ -16,7 +16,7 @@
 #include <liveviewhistory.h>
 #include <QTextBrowser>
 #include <QFile>
-
+#include "zernikes.h"
 
 
 
@@ -38,6 +38,8 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
         resize(600, 600);
     }
     QString savedUrl = settings.value("LiveView/streamUrl", 0).toString();
+    // history plot
+    history  = new liveViewHistory();
     initSettingsDialog();
 
 
@@ -172,6 +174,7 @@ void LiveViewDialog::closeEvent(QCloseEvent *event) {
 
 void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     setWindowTitle("DFTFringe - Live View");
+
     QSettings set;
     // Root layout for the dialog (Vertical)
     QVBoxLayout *rootLayout = new QVBoxLayout(this);
@@ -263,8 +266,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
         }
     };
 
-    // history plot
-    history  = new liveViewHistory();
+
 
     leftSplitter->addWidget(scrollArea);
     leftSplitter->addWidget(history);
@@ -590,18 +592,38 @@ void LiveViewDialog::initSettingsDialog() {
     });
 
 
-        deleteIntermidiateWaveFront = new QCheckBox("Do not add Wave fronts to list except for averages", m_settingsDlg);
-        deleteIntermidiateWaveFront->setChecked(settings.value("LiveView/deleteIntermittent", false).toBool());
-        connect(deleteIntermidiateWaveFront, &QCheckBox::toggled, this, [](bool checked) {
-            QSettings s;
-            s.setValue("LiveView/deleteIntermittent", checked);
-        });
+    deleteIntermidiateWaveFront = new QCheckBox("Do not add Wave fronts to list except for averages", m_settingsDlg);
+    deleteIntermidiateWaveFront->setChecked(settings.value("LiveView/deleteIntermittent", false).toBool());
+    connect(deleteIntermidiateWaveFront, &QCheckBox::toggled, this, [](bool checked) {
+        QSettings s;
+        s.setValue("LiveView/deleteIntermittent", checked);
+    });
 
+    // History trend setup
+    QHBoxLayout *zernlayout = new QHBoxLayout();
+    zernListWidget = new QListWidget();
+    zernListWidget->addItem("Best Fit Conic");
+    int count = sizeof(zernsNames) / sizeof(zernsNames[0]);
+    // Populate the list widget directly from your array
+    for (int i = 0; i < count; ++i) {
+        zernListWidget->addItem(QString::fromUtf8(zernsNames[i]));
+    }
+
+    history->setItem(settings.value("LiveView/TrendName","Best Fit Connic").toString());
+    connect(zernListWidget, &QListWidget::currentTextChanged, this, [this](QString name){
+        history->setItem(name);
+        QSettings set;
+        set.setValue("LiveView/TrendName", name);
+    });
+
+    zernlayout->addWidget(new QLabel("Item to Track in trend graph:"));
+    zernlayout->addWidget(zernListWidget);
 
     settingsLayout->addWidget(connectGroup);
     settingsLayout->addWidget(rmsGroup);
     settingsLayout->addLayout(resLayout);
     settingsLayout->addWidget(deleteIntermidiateWaveFront);
+    settingsLayout->addLayout(zernlayout);
     settingsLayout->addStretch();
 
     QDialogButtonBox *btnBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, m_settingsDlg);

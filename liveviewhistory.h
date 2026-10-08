@@ -17,8 +17,8 @@ class liveViewHistory : public QWidget {
 public:
     explicit liveViewHistory(QWidget *parent = nullptr);
     void addSample(double rawRms, double rawSa);
-    void showBestFit(bool show);
-
+    void setItem(QString name);
+    QString m_itemName;
 private slots:
     void onResetClicked();
 
