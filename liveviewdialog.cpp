@@ -969,12 +969,12 @@ void LiveViewDialog::renderCurrentFrame() {
     imageLabel->repaint();
 
     // Calculate elapsed time (in milliseconds with fractional decimal places)
-    double elapsedMs = static_cast<double>(timer.nsecsElapsed()) / 1000000.0;
+    //double elapsedMs = static_cast<double>(timer.nsecsElapsed()) / 1000000.0;
 
     // Append the render time to statusLeft text
     if (statusLeft) {
-        QString baseStatus = statusLeft->text(); // Or whatever base text statusLeft normally holds
-        statusLeft->setText(QString("  Time: %1 ms").arg(elapsedMs, 0, 'f', 2));
+        //QString baseStatus = statusLeft->text(); // Or whatever base text statusLeft normally holds
+        //statusLeft->setText(QString("  Time: %1 ms").arg(elapsedMs, 0, 'f', 2));
     }
 
     m_throttle.start(10);
