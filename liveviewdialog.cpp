@@ -17,7 +17,7 @@
 #include <QTextBrowser>
 #include <QFile>
 #include "zernikes.h"
-
+#include <QInputDialog>
 
 
 // ==========================================
@@ -76,6 +76,8 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
     connect(this, &LiveViewDialog::requestChangeSource, m_worker, &VideoStreamWorker::changeSource, Qt::QueuedConnection);
     connect(this, &LiveViewDialog::requestSetResolution, m_worker, &VideoStreamWorker::setResolution, Qt::QueuedConnection);
     connect(this, &LiveViewDialog::requestFrame, m_worker, &VideoStreamWorker::fetchNextFrame, Qt::QueuedConnection);
+    connect(this, &LiveViewDialog::requestCameraSetting, m_worker, &VideoStreamWorker::requestCameraSetting);
+
 
     // Trigger the very first frame pull once the worker confirms the stream is open
     connect(m_worker, &VideoStreamWorker::streamStarted, this, [this]() {
@@ -85,6 +87,49 @@ LiveViewDialog::LiveViewDialog(QWidget *parent)
                                   Q_ARG(int, selectedRes.width()),
                                   Q_ARG(int, selectedRes.height()));
         statusLeft->setText("Stream Connected");
+
+        //
+        // brightness/gain slider
+        //
+
+        double gain;
+        bool bAvailable;
+        bAvailable = m_worker->getCameraGainRange(m_gain_mode, m_gainMinimum, m_gainMaximum, gain);
+        if (m_gainMaximum != m_gainMinimum)
+            m_gain_scale = 20/(m_gainMaximum - m_gainMinimum);
+
+        m_brightnessSlider->blockSignals(true);
+        m_brightnessSlider->setEnabled(bAvailable);
+        m_brightnessSlider->setRange(floor(m_gainMinimum * m_gain_scale), ceil(m_gainMaximum * m_gain_scale));
+        m_brightnessSlider->setValue(round(gain * m_gain_scale));
+        m_brightnessSlider->blockSignals(false);
+
+
+        //
+        // exposure slider
+        //
+
+        double exp;
+        bAvailable = m_worker->getCameraExposureRange(m_exposureMinimum, m_exposureMaximum,exp);
+        if (m_exposureMaximum != m_exposureMinimum)
+            m_exposure_scale = 20/(m_exposureMaximum - m_exposureMinimum);
+        m_exposureSlider->blockSignals(true);
+        m_exposureSlider->setEnabled(bAvailable);
+        m_exposureSlider->setRange(floor(m_exposureMinimum * m_exposure_scale), ceil(m_exposureMaximum * m_exposure_scale));
+        m_exposureSlider->setValue(round(exp * m_exposure_scale));
+        m_exposureSlider->blockSignals(false);
+
+        // auto exposure checkbox
+        bool bAuto;
+        m_worker->getAutoExpSetting(bAvailable, bAuto);
+        m_autoExposureCheck->blockSignals(true);
+        if (bAvailable == false) {
+            m_autoExposureCheck->setEnabled(false);
+        } else {
+            m_autoExposureCheck->setChecked(bAuto);
+        }
+        m_autoExposureCheck->blockSignals(false);
+
 
         //emit requestFrame();
         // Configure it once during initialization
@@ -172,6 +217,10 @@ void LiveViewDialog::closeEvent(QCloseEvent *event) {
             event->ignore();
 }
 
+double clamp_within(double val, double _min, double _max) {
+    return fmin(fmax(val, _min), _max); // keep val between min and max
+}
+
 void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     setWindowTitle("DFTFringe - Live View");
 
@@ -190,9 +239,9 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
 
     averageMode = new QCheckBox("Compute and show average when loop is running", this);
     averageMode->setChecked(set.value("liveViewAverageMode", false).toBool());
-    connect(averageMode, &QCheckBox::stateChanged, this,[](int val){
+    connect(averageMode, &QCheckBox::checkStateChanged, this,[](int val){
         QSettings set;
-        set.setValue("liveViewAverageMode",val);
+        set.setValue("liveViewAverageMode", (val==Qt::Checked));
     });
 
     maxRMS = new QDoubleSpinBox(this);
@@ -343,23 +392,89 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
     dftLayout->addWidget(vivid);
     sidebarLayout->addWidget(DFTGroup);
     // Camera Hardware Sliders (Brightness / Exposure)
-    sidebarLayout->addWidget(new QLabel("Brightness:", this));
-    brightnessSlider = new QSlider(Qt::Horizontal, this);
-    brightnessSlider->setRange(-64, 64);
-    brightnessSlider->setValue(0);
-    connect(brightnessSlider, &QSlider::valueChanged, this, [this](int val) {
-        emit requestCameraSetting(CameraProperty::Brightness, val);
+    sidebarLayout->addWidget(new QLabel("Gain:", this));
+
+    //
+    // brightness slider
+    //
+
+    m_brightnessSlider = new QSlider(Qt::Horizontal, this);
+    m_brightnessSlider->setRange(-64, 64);
+    m_brightnessSlider->setValue(0);
+    connect(m_brightnessSlider, &QSlider::valueChanged, this, [this](int val) {
+        // this was too slow: emit requestCameraSetting("Gain", clamp_within(val / m_gain_scale, m_gainMinimum, m_gainMaximum));
+        m_worker->requestCameraSetting("Gain", clamp_within(val / m_gain_scale, m_gainMinimum, m_gainMaximum));
     });
-    sidebarLayout->addWidget(brightnessSlider);
+    m_brightnessSlider->installEventFilter(this);
+    connect(this, &LiveViewDialog::gainSliderRightClicked, this, [this]() {
+        // User right clicked slider
+        bool ok;
+        QString currentVal="";
+        struct VideoStreamWorker::CameraConfiguration config;
+        if (m_worker != nullptr && m_worker->getCameraConfiguration(config))
+            currentVal = QString("%1").arg(config.gain);
+        QString text = QInputDialog::getText(this, "Gain",
+                                             QString("Gain (%1 to %2)").arg(m_gainMinimum).arg(m_gainMaximum),
+                                             QLineEdit::Normal,
+                                             currentVal, &ok);
+        if (ok && !text.isEmpty()) {
+            // User clicked OK and entered a value, use 'text' here
+            bool ok;
+            double val = text.toDouble(&ok);
+            if (ok)
+                emit requestCameraSetting("Gain", val);
+        }
+    });
+
+
+    sidebarLayout->addWidget(m_brightnessSlider);
+
+    QHBoxLayout *exposureGroupLayout = new QHBoxLayout();
+
+    //
+    // exposure slider
+    //
 
     sidebarLayout->addWidget(new QLabel("Exposure / Shutter:", this));
-    QSlider *exposureSlider = new QSlider(Qt::Horizontal, this);
-    exposureSlider->setRange(-13, 0);
-    exposureSlider->setValue(-6);
-    connect(exposureSlider, &QSlider::valueChanged, this, [this](int val) {
-        emit requestCameraSetting(CameraProperty::Exposure, val);
+    m_exposureSlider = new QSlider(Qt::Horizontal, this);
+    m_exposureSlider->setRange(-16, 0);
+    m_exposureSlider->setValue(-6);
+    connect(m_exposureSlider, &QSlider::valueChanged, this, [this](int val) {
+        // this was too slow: emit requestCameraSetting("Exposure", clamp_within(val / m_exposure_scale, m_exposureMinimum, m_exposureMaximum));
+        m_worker->requestCameraSetting("Exposure", clamp_within(val / m_exposure_scale, m_exposureMinimum, m_exposureMaximum));
     });
-    sidebarLayout->addWidget(exposureSlider);
+    m_exposureSlider->installEventFilter(this);
+    connect(this, &LiveViewDialog::expSliderRightClicked, this, [this]() {
+        // User right clicked slider
+        bool ok;
+        QString currentVal="";
+        struct VideoStreamWorker::CameraConfiguration config;
+        if (m_worker != nullptr && m_worker->getCameraConfiguration(config))
+            currentVal = QString("%1").arg(config.exposure);
+        QString text = QInputDialog::getText(this, "Exposure",
+                                             QString("Exposure (%1 to %2)").arg(m_exposureMinimum).arg(m_exposureMaximum),
+                                             QLineEdit::Normal,
+                                             currentVal, &ok);
+        if (ok && !text.isEmpty()) {
+            // User clicked OK and entered a value, use 'text' here
+            bool ok;
+            double val = text.toDouble(&ok);
+            if (ok)
+                emit requestCameraSetting("Exposure", val);
+        }
+    });
+    exposureGroupLayout->addWidget(m_exposureSlider, 1);
+
+    // auto exposure checkbox
+    m_autoExposureCheck = new QCheckBox("Auto", this);
+    connect(m_autoExposureCheck, &QCheckBox::checkStateChanged, this, [this]() {
+        m_worker->setAutoExpSetting(m_autoExposureCheck->isChecked());
+    });
+
+    exposureGroupLayout->addWidget(m_autoExposureCheck,0);
+
+    sidebarLayout->addLayout(exposureGroupLayout);
+
 
     sidebarLayout->addStretch(1);
 
@@ -529,7 +644,7 @@ void LiveViewDialog::initSettingsDialog() {
         }
     });
     QHBoxLayout *connectTimeoutLayout = new QHBoxLayout();
-    connectTimeoutLayout->addWidget(new QLabel("number of blank frames before connect failes:"));
+    connectTimeoutLayout->addWidget(new QLabel("number of blank frames before connect fails:"));
     QSpinBox *frameTimeout = new QSpinBox(connectGroup);
     frameTimeout->setValue(settings.value("liveViewConnectFrames",15).toInt());
     connectTimeoutLayout->addWidget(frameTimeout);
@@ -661,7 +776,6 @@ void LiveViewDialog::onApplySettings() {
     // Tell the worker thread to switch sources safely
 
     if (m_worker) {
-
             qDebug() << "apply emitting requestChangeSource:" << newUrl;
                     emit requestChangeSource(newUrl);
     }
@@ -1100,3 +1214,22 @@ void LiveViewDialog::setOutsidecircle(QPointF center, double radius) {
     setFitToWindowZoom();
 }
 
+bool LiveViewDialog::eventFilter(QObject *obj, QEvent *event) {
+    // Check if the event comes from an object we care about
+    if (event->type() == QEvent::MouseButtonPress) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+
+        // Check if it was a right-click
+        if (mouseEvent->button() == Qt::RightButton) {
+            if (obj == m_exposureSlider)
+                emit expSliderRightClicked();
+            if (obj == m_brightnessSlider)
+                emit gainSliderRightClicked();
+
+            return true; // Handled the event, don't pass it further
+        }
+    }
+
+    // Pass unhandled events to the base class
+    return QWidget::eventFilter(obj, event);
+}

@@ -2,6 +2,8 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QSettings>
+#include "spdlog/spdlog.h"
+
 VideoStreamWorker::VideoStreamWorker(const QString &source, QObject *parent)
     : QObject(parent), m_source(source) {}
 
@@ -38,7 +40,8 @@ void VideoStreamWorker::startStream() {
         return;
     }
 
-    qDebug() << "Stream started successfully";
+    spdlog::get("logger")->trace("Stream started successfully");
+
     m_running = true;
 
     // Launch the background capture loop in a dedicated std::thread
@@ -59,6 +62,7 @@ void VideoStreamWorker::captureLoop() {
         bool success = false;
 
         {
+            QMutexLocker locker(&m_controlMutex);
             if (m_cap.isOpened()) {
 
                 success = m_cap.read(frame) && !frame.empty();
@@ -73,7 +77,7 @@ void VideoStreamWorker::captureLoop() {
             m_latestFrame = frame.clone();
         } else {
             errorCount++;
-qDebug() << "errorCount" << errorCount;
+            spdlog::get("logger")->trace("errorCount {}", errorCount);
             // Create a status/error image canvas (e.g., 800x600 dark background)
             cv::Mat errorFrame(600, 800, CV_8UC3, cv::Scalar(30, 30, 30));
 
@@ -207,7 +211,8 @@ void VideoStreamWorker::changeSource(QString newSource) {
 
     {
         QMutexLocker locker(&m_controlMutex);
-        qDebug() << "Changing source to:" << newSource;
+        spdlog::get("logger")->trace("Changing source to: {}", newSource.toStdString());
+
         m_source = newSource;
     }
 
@@ -226,7 +231,329 @@ void VideoStreamWorker::setResolution(int width, int height) {
         if (isInt) {
             m_cap.set(cv::CAP_PROP_FRAME_WIDTH, width);
             m_cap.set(cv::CAP_PROP_FRAME_HEIGHT, height);
-            qDebug() << "VideoStreamWorker: Resolution requested to set ->" << width << "x" << height;
+            spdlog::get("logger")->trace("VideoStreamWorker: Resolution requested to set -> {} x {}", width, height);
         }
     }
+}
+
+void VideoStreamWorker::requestCameraSetting(QString prop , double val) {
+    spdlog::get("logger")->trace("setting camera property");
+
+    QMutexLocker locker(&m_controlMutex);
+    bool isInt = false;
+    m_source.toInt(&isInt);
+    if (isInt == false)
+        return;
+
+    if (prop == "Exposure") {
+        setAutoExpSetting(false, false);
+        m_cap.set(cv::CAP_PROP_EXPOSURE, val);
+    }
+
+    if (prop == "Gain") {
+        setAutoExpSetting(false, false);
+        int prop_id = cv::CAP_PROP_GAIN;
+        if (m_gain_mode == false)
+            prop_id = cv::CAP_PROP_BRIGHTNESS;
+        m_cap.set(prop_id, val);
+    }
+}
+
+void VideoStreamWorker::dumpAll() {
+    // send all camera properties to debug stream
+    QMutexLocker locker(&m_controlMutex);
+    if (m_cap.isOpened()) {
+        bool isInt = false;
+        m_source.toInt(&isInt);
+
+        // Only apply resolution changes to local USB cameras, not URL streams
+        if (isInt) {
+            struct PropertyMap {
+                cv::VideoCaptureProperties id;
+                const char* name;
+            };
+            const std::vector<PropertyMap> properties = {
+                { cv::CAP_PROP_POS_MSEC,      "CAP_PROP_POS_MSEC" },
+                { cv::CAP_PROP_POS_FRAMES,    "CAP_PROP_POS_FRAMES" },
+                { cv::CAP_PROP_POS_AVI_RATIO, "CAP_PROP_POS_AVI_RATIO" },
+                { cv::CAP_PROP_FRAME_WIDTH,   "CAP_PROP_FRAME_WIDTH" },
+                { cv::CAP_PROP_FRAME_HEIGHT,  "CAP_PROP_FRAME_HEIGHT" },
+                { cv::CAP_PROP_FPS,           "CAP_PROP_FPS" },
+                { cv::CAP_PROP_FOURCC,        "CAP_PROP_FOURCC" },
+                { cv::CAP_PROP_FRAME_COUNT,   "CAP_PROP_FRAME_COUNT" },
+                { cv::CAP_PROP_FORMAT,        "CAP_PROP_FORMAT" },
+                { cv::CAP_PROP_MODE,          "CAP_PROP_MODE" },
+                { cv::CAP_PROP_BRIGHTNESS,    "CAP_PROP_BRIGHTNESS" },
+                { cv::CAP_PROP_CONTRAST,      "CAP_PROP_CONTRAST" },
+                { cv::CAP_PROP_SATURATION,    "CAP_PROP_SATURATION" },
+                { cv::CAP_PROP_HUE,           "CAP_PROP_HUE" },
+                { cv::CAP_PROP_GAIN,          "CAP_PROP_GAIN" },
+                { cv::CAP_PROP_EXPOSURE,      "CAP_PROP_EXPOSURE" },
+                { cv::CAP_PROP_CONVERT_RGB,   "CAP_PROP_CONVERT_RGB" },
+                { cv::CAP_PROP_WHITE_BALANCE_BLUE_U, "CAP_PROP_WHITE_BALANCE_BLUE_U" },
+                { cv::CAP_PROP_RECTIFICATION, "CAP_PROP_RECTIFICATION" },
+                { cv::CAP_PROP_MONOCHROME,    "CAP_PROP_MONOCHROME" },
+                { cv::CAP_PROP_SHARPNESS,     "CAP_PROP_SHARPNESS" },
+                { cv::CAP_PROP_AUTO_EXPOSURE, "CAP_PROP_AUTO_EXPOSURE" },
+                { cv::CAP_PROP_GAMMA,         "CAP_PROP_GAMMA" },
+                { cv::CAP_PROP_TEMPERATURE,   "CAP_PROP_TEMPERATURE" },
+                { cv::CAP_PROP_TRIGGER,       "CAP_PROP_TRIGGER" },
+                { cv::CAP_PROP_TRIGGER_DELAY, "CAP_PROP_TRIGGER_DELAY" },
+                { cv::CAP_PROP_WHITE_BALANCE_RED_V, "CAP_PROP_WHITE_BALANCE_RED_V" },
+                { cv::CAP_PROP_ZOOM,          "CAP_PROP_ZOOM" },
+                { cv::CAP_PROP_FOCUS,         "CAP_PROP_FOCUS" },
+                { cv::CAP_PROP_GUID,          "CAP_PROP_GUID" },
+                { cv::CAP_PROP_ISO_SPEED,     "CAP_PROP_ISO_SPEED" },
+                { cv::CAP_PROP_BACKLIGHT,     "CAP_PROP_BACKLIGHT" },
+                { cv::CAP_PROP_PAN,           "CAP_PROP_PAN" },
+                { cv::CAP_PROP_TILT,          "CAP_PROP_TILT" },
+                { cv::CAP_PROP_ROLL,          "CAP_PROP_ROLL" },
+                { cv::CAP_PROP_IRIS,          "CAP_PROP_IRIS" },
+                { cv::CAP_PROP_SETTINGS,      "CAP_PROP_SETTINGS" },
+                { cv::CAP_PROP_BUFFERSIZE,    "CAP_PROP_BUFFERSIZE" },
+                { cv::CAP_PROP_AUTOFOCUS,     "CAP_PROP_AUTOFOCUS" }
+            };
+
+            for (const auto& prop : properties) {
+                double value = m_cap.get(prop.id);
+
+                // OpenCV returns -1 or 0 for unsupported properties depending on the backend
+                if (value == -1) {
+                    qDebug().noquote() << QString("%1: NOT SUPPORTED").arg(prop.name, -30);
+                } else {
+                    // Special formatting for FOURCC to make it readable
+                    if (prop.id == cv::CAP_PROP_FOURCC && value > 0) {
+                        int fourcc = static_cast<int>(value);
+                        char fcc[] = {
+                            static_cast<char>(fourcc & 0XFF),
+                            static_cast<char>((fourcc >> 8) & 0XFF),
+                            static_cast<char>((fourcc >> 16) & 0XFF),
+                            static_cast<char>((fourcc >> 24) & 0XFF),
+                            0
+                        };
+                        qDebug().noquote() << QString("%1: %2 (Raw: %3)").arg(prop.name, -30).arg(fcc).arg(value);
+                    } else {
+                        qDebug().noquote() << QString("%1: %2").arg(prop.name, -30).arg(value);
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+bool VideoStreamWorker::getCameraConfiguration(CameraConfiguration &config) {
+    // meant to be called only from Ui thread - return false if config is invalid
+
+    spdlog::get("logger")->trace("getCameraConfiguration");
+
+    QMutexLocker locker(&m_controlMutex);
+    if (m_cap.isOpened() == false)
+        return false;
+    bool isInt = false;
+    m_source.toInt(&isInt);
+    if (isInt == false)
+        return false;
+    config.auto_exposure = m_cap.get(cv::CAP_PROP_AUTO_EXPOSURE);
+    config.exposure = m_cap.get(cv::CAP_PROP_EXPOSURE);
+    config.brightness = m_cap.get(cv::CAP_PROP_BRIGHTNESS);
+    config.gain = m_cap.get(cv::CAP_PROP_GAIN);
+    config.resolution.setHeight(m_cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    config.resolution.setWidth(m_cap.get(cv::CAP_PROP_FRAME_WIDTH));
+
+    return true;
+}
+
+void findMinMaxBinarySearch(cv::VideoCapture &m_cap, int propid, double &min, double &max, double &val) {
+    double high = 10000;
+    double low = val;
+    double guess;
+    double actual;
+
+    //
+    // search for max
+    //
+
+    while(true) {
+        if (high-low <= 1) {
+            max = low;
+            break;
+        }
+
+        guess = (high+low)/2;
+        guess = std::round(guess);
+        m_cap.set(propid, guess);
+        actual = m_cap.get(propid);
+        if (guess == actual)
+            low = guess;
+        else
+            high = guess;
+
+    }
+
+    //
+    // search for min
+    //
+
+    high = val;
+    low = -10000;
+    while(true) {
+        if (high-low <= 1) {
+            min = high;
+            break;
+        }
+
+        guess = (high+low)/2;
+        guess = std::round(guess);
+        m_cap.set(propid, guess);
+        actual = m_cap.get(propid);
+        if (guess == actual)
+            high = guess;
+        else
+            low = guess;
+    }
+    m_cap.set(propid, val);
+}
+
+bool VideoStreamWorker::getCameraGainRange(bool &bGain, double &min, double &max, double &gain) {
+    QMutexLocker locker(&m_controlMutex);
+    if (m_cap.isOpened() == false)
+        return false;
+    bool isInt = false;
+    m_source.toInt(&isInt);
+    if (isInt == false)
+        return false;
+    spdlog::get("logger")->trace("getCameraGainRange");
+    bGain = true;
+    gain = m_cap.get(cv::CAP_PROP_GAIN);
+    if (gain == -1) {
+        bGain = false;
+        gain = m_cap.get(cv::CAP_PROP_BRIGHTNESS);
+    }
+    m_gain_mode = gain;
+
+    // now set to -10,000 and 10,000 to find min and max
+    int propid = cv::CAP_PROP_GAIN;
+    if (bGain == false)
+        propid = cv::CAP_PROP_BRIGHTNESS;
+
+    m_cap.set(propid,-10000.0);
+    min = m_cap.get(propid);
+    m_cap.set(propid,10000.0);
+    max = m_cap.get(propid);
+    m_cap.set(propid,gain);
+
+
+    if (max != min) {
+        return true;
+    }
+
+    // max is min.  We need to do a binary search.
+    findMinMaxBinarySearch(m_cap, propid, min, max, gain);
+
+    return true;
+}
+
+void VideoStreamWorker::setCameraGain(bool bGain, double gain) {
+    spdlog::get("logger")->trace("setCameraGain");
+
+    QMutexLocker locker(&m_controlMutex);
+    if (m_cap.isOpened() == false)
+        return;
+    bool isInt = false;
+    m_source.toInt(&isInt);
+    if (isInt == false)
+        return;
+    int propid = cv::CAP_PROP_GAIN;
+    if (bGain == false)
+        propid = cv::CAP_PROP_BRIGHTNESS;
+    m_cap.set(propid,gain);
+}
+
+
+bool VideoStreamWorker::getCameraExposureRange(double &min, double &max, double &exposure) {
+    spdlog::get("logger")->trace("getCameraExposureRange");
+    QMutexLocker locker(&m_controlMutex);
+    if (m_cap.isOpened() == false)
+        return false;
+    bool isInt = false;
+    m_source.toInt(&isInt);
+    if (isInt == false)
+        return false;
+
+    exposure = m_cap.get(cv::CAP_PROP_EXPOSURE);
+
+    m_cap.set(cv::CAP_PROP_EXPOSURE,-10000.0);
+    min = m_cap.get(cv::CAP_PROP_EXPOSURE);
+    m_cap.set(cv::CAP_PROP_EXPOSURE,10000.0);
+    max = m_cap.get(cv::CAP_PROP_EXPOSURE);
+    m_cap.set(cv::CAP_PROP_EXPOSURE,exposure);
+
+    if (max != min) {
+        return true;
+    }
+
+    // max is min.  We need to do a binary search.
+    findMinMaxBinarySearch(m_cap, cv::CAP_PROP_EXPOSURE, min, max, exposure);
+
+    return true;
+}
+
+void VideoStreamWorker::getAutoExpSetting(bool &bFeatureAvailable, bool &bAuto) {
+    // .75 auto on, .25 auto off  alternately 3=auto on and 1 auto off; -1 means unavailable
+    QMutexLocker locker(&m_controlMutex);
+    if (m_cap.isOpened() == false)
+        return;
+    bool isInt = false;
+    m_source.toInt(&isInt);
+    if (isInt == false) {
+        bFeatureAvailable=false;
+        return;
+    }
+    double val = m_cap.get(cv::CAP_PROP_AUTO_EXPOSURE);
+    if (val == -1) {
+        bFeatureAvailable = false;
+        return;
+    }
+    bFeatureAvailable = true;
+    if (val == .25 || val == 1) {
+        bAuto = false;
+        return;
+    }
+    if (val == 0.75 || val == 3) {
+        bAuto = true;
+        return;
+    }
+    bFeatureAvailable = false;
+    spdlog::get("logger")->error("strange auto exp value: {}", val);
+
+}
+
+void VideoStreamWorker::setAutoExpSetting(bool bAuto, bool bLockMutex) {
+    if (bLockMutex)
+        QMutexLocker locker(&m_controlMutex);
+    if (m_cap.isOpened() == false)
+        return;
+    bool isInt = false;
+    m_source.toInt(&isInt);
+    if (isInt == false)
+        return;
+    double val = m_cap.get(cv::CAP_PROP_AUTO_EXPOSURE);
+    if (bAuto && val == .25) {
+        m_cap.set(cv::CAP_PROP_AUTO_EXPOSURE, .75);
+        return;
+    }
+    if (bAuto && val == 1) {
+        m_cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 3);
+        return;
+    }
+    if (!bAuto && val == .75) {
+        m_cap.set(cv::CAP_PROP_AUTO_EXPOSURE, .25);
+        return;
+    }
+    if (!bAuto && val == 3) {
+        m_cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 1);
+        return;
+    }
+    // if we get here, either we don't know what value to use or the feature is unavailable
 }
