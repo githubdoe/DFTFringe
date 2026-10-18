@@ -239,9 +239,9 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
 
     averageMode = new QCheckBox("Compute and show average when loop is running", this);
     averageMode->setChecked(set.value("liveViewAverageMode", false).toBool());
-    connect(averageMode, &QCheckBox::checkStateChanged, this,[](int val){
+    connect(averageMode, &QCheckBox::stateChanged, this,[](int val){
         QSettings set;
-        set.setValue("liveViewAverageMode", (val==Qt::Checked));
+        set.setValue("liveViewAverageMode", val);
     });
 
     maxRMS = new QDoubleSpinBox(this);
@@ -467,7 +467,7 @@ void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
 
     // auto exposure checkbox
     m_autoExposureCheck = new QCheckBox("Auto", this);
-    connect(m_autoExposureCheck, &QCheckBox::checkStateChanged, this, [this]() {
+    connect(m_autoExposureCheck, &QCheckBox::stateChanged, this, [this]() {
         m_worker->setAutoExpSetting(m_autoExposureCheck->isChecked());
     });
 
