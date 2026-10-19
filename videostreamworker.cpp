@@ -321,20 +321,7 @@ void VideoStreamWorker::dumpAll() {
                 if (value == -1) {
                     qDebug().noquote() << QString("%1: NOT SUPPORTED").arg(prop.name, -30);
                 } else {
-                    // Special formatting for FOURCC to make it readable
-                    if (prop.id == cv::CAP_PROP_FOURCC && value > 0) {
-                        int fourcc = static_cast<int>(value);
-                        char fcc[] = {
-                            static_cast<char>(fourcc & 0XFF),
-                            static_cast<char>((fourcc >> 8) & 0XFF),
-                            static_cast<char>((fourcc >> 16) & 0XFF),
-                            static_cast<char>((fourcc >> 24) & 0XFF),
-                            0
-                        };
-                        qDebug().noquote() << QString("%1: %2 (Raw: %3)").arg(prop.name, -30).arg(fcc).arg(value);
-                    } else {
-                        qDebug().noquote() << QString("%1: %2").arg(prop.name, -30).arg(value);
-                    }
+                     qDebug().noquote() << QString("%1: %2").arg(prop.name, -30).arg(value);
                 }
             }
 
