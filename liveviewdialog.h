@@ -19,13 +19,7 @@
 #include "liveviewhistory.h"
 #include <QSplitter>
 class FrameProcessorWorker;
-enum class CameraProperty {
-    Brightness,
-    Contrast,
-    Exposure, // Shutter speed
-    Gain
-};
-Q_DECLARE_METATYPE(CameraProperty)
+
 class ResizableScrollArea : public QScrollArea {
     Q_OBJECT
 public:
@@ -51,8 +45,8 @@ public:
 protected:
     void closeEvent(QCloseEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
 private slots:
-
     void onResolutionChanged(int index);
     void onZoomChanged(int index);
     void setFitToWindowZoom();
@@ -66,13 +60,15 @@ public slots:
     void onGrabClicked();
     void setCenterFilter(double freqBin) ;
 signals:
+    void gainSliderRightClicked();
+    void expSliderRightClicked();
     void igramCaptured();
     void streamDisconnected();
     void requestChangeSource(QString newSource);
     void requestSetResolution(int width, int height);
     void stopLiveLoopRequested();
     void requestFrame();
-    void requestCameraSetting(CameraProperty prop , int val);
+    void requestCameraSetting(QString prop , double val);
     void outline(QPointF center, double rad);
     void blueCircle(double rad);
     void autoOutLine();
@@ -159,4 +155,14 @@ private:
     QTimer m_throttle;
     double m_binToBinScale = 1.;
     QRect m_normalGeometry;
+    double m_exposureMinimum=-16;
+    double m_exposureMaximum=3;
+    double m_gainMinimum=0;
+    double m_gainMaximum=255;
+    bool m_gain_mode;
+    double m_gain_scale=1;
+    double m_exposure_scale=1;
+    QSlider * m_exposureSlider = nullptr;
+    QSlider * m_brightnessSlider = nullptr;
+    QCheckBox * m_autoExposureCheck = nullptr;
 };

@@ -86,8 +86,8 @@ QImage cvMatToImage(const cv::Mat &out){
 }
 IgramArea::IgramArea(QWidget *parent, void *mw)
     : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0),
-      zoomIndex(1),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
-      m_zoomMode(NORMALZOOM),m_current_boundry(OutSideOutline)
+      zoomIndex(1),dragMode(false),hasBeenCropped(false), m_zoomMode(NORMALZOOM), m_current_boundry(OutSideOutline),
+      cropTotalDx(0),cropTotalDy(0)
 {
     leftMargin = 0;
     searchOutlineScale = 1.;

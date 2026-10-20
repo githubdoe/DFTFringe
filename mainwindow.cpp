@@ -2109,7 +2109,6 @@ void MainWindow::on_autoOutlineHelp_clicked()
     QString link = qApp->applicationDirPath() + "/res/Help/outlineing.html";
     QDesktopServices::openUrl(QUrl(link));
 }
-#include "transformwavefrontdlg.h"
 void MainWindow::on_actionwave_front_transforms_triggered()
 {
    m_surfaceManager->transform();
@@ -2372,7 +2371,7 @@ void MainWindow::on_actionLive_view_triggered()
                     m_viewDlg->m_tmpShowLive = false;
 
             });
-            connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, bool cropped, QPointF offset, CircleOutline inside) {
+            connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, bool cropped, QPointF offset) {
 
                 if (cropped){
                     outside.translate(offset);
