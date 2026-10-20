@@ -75,8 +75,38 @@ void VideoStreamWorker::captureLoop() {
             errorCount = 0;
             QMutexLocker locker(&m_frameMutex);
             m_latestFrame = frame.clone();
+
+            cv::Scalar meanValue = cv::mean(frame);
+            double averagePixel = meanValue[0];
+            //qDebug() << "avg: " << averagePixel;
+            if (averagePixel > 0)
+                continue;
+
+            // error! - we need to reconnect
+            spdlog::get("logger")->error("resetting connection because frame is blank");
+            {
+                QMutexLocker locker2(&m_controlMutex);
+                m_cap.release();
+                bool isInt = false;
+                int camId = m_source.toInt(&isInt);
+                m_source.toInt(&isInt);
+                if (isInt) {
+                    #if defined(_WIN32) || defined(_WIN64)
+                    m_cap.open(camId, cv::CAP_DSHOW);
+                    #else
+                    m_cap.open(camId);
+                    #endif
+                } else {
+                    m_cap.open(m_source.toStdString());
+                }
+            }
+            if (m_cap.isOpened()) {
+                setResolution(savedResolutionWidth, savedResolutionHeight);
+            }
+
         } else {
             errorCount++;
+
             spdlog::get("logger")->trace("errorCount {}", errorCount);
             // Create a status/error image canvas (e.g., 800x600 dark background)
             cv::Mat errorFrame(600, 800, CV_8UC3, cv::Scalar(30, 30, 30));
@@ -232,6 +262,8 @@ void VideoStreamWorker::setResolution(int width, int height) {
             m_cap.set(cv::CAP_PROP_FRAME_WIDTH, width);
             m_cap.set(cv::CAP_PROP_FRAME_HEIGHT, height);
             spdlog::get("logger")->trace("VideoStreamWorker: Resolution requested to set -> {} x {}", width, height);
+            savedResolutionWidth = width;
+            savedResolutionHeight = height;
         }
     }
 }

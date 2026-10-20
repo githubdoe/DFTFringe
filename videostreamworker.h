@@ -56,5 +56,7 @@ private:
     std::unique_ptr<std::thread> m_captureThread;
 
     bool m_gain_mode=true; // this is set to false if gain is unavailable and we will be using brightness settings in lieu of gain
+    int savedResolutionWidth = 640;
+    int savedResolutionHeight = 480;
 
 };
