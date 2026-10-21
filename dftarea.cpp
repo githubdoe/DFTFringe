@@ -227,7 +227,6 @@ void DFTArea::dftCenterFilter(double v){
     QSettings set;
     set.setValue("DFT Center Filter", v);
     emit updateFilterSize(v);
-    //setCenterFilter(double radius, double roiCols, double matrixSizeA, double scaleA)
     double frequencyBin = v * (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
     emit filterSizeScale(frequencyBin);
 
@@ -495,7 +494,6 @@ void DFTArea::doDFT(){
     //if (Settings2::showDFT())
         //emit dftReady(magIImage);     //Creates a thumbnail dft area
     QApplication::restoreOverrideCursor();
-    //setCenterFilter(double radius, double roiCols, double matrixSizeA, double scaleA)
     double frequencyBin = m_center_filter * (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
 
     emit filterSizeScale(frequencyBin);
