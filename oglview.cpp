@@ -76,7 +76,6 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool) :
 
 
     QGroupBox *heightMapGroupBox = new QGroupBox(QStringLiteral("Waves 550nm"));
-    //heightMapGroupBox->setStyleSheet({"background: grey;"});
     QVBoxLayout *colorMapVBox = new QVBoxLayout;
     colorMapVBox->addWidget(colorLedgend);
     heightMapGroupBox->setLayout(colorMapVBox);

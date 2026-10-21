@@ -438,9 +438,6 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         zp.fillVoid(*wf);
         makeMask(wf, true);
         // null out desired terms.
-        //cv::Mat tiltremoved = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables, 0,3);
-        //wf->data = tiltremoved;
-        //zp.unwrap_to_zernikes(*wf);
         wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables,0,Z_TERMS   );
         wf->dirtyZerns = false;
     }

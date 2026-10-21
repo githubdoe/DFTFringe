@@ -56,8 +56,6 @@ void LiveImageView::mousePressEvent(QMouseEvent *event) {
 
     if (event->button() == Qt::LeftButton and m_hasCircle) {
 
-        double distToGreen = std::hypot(clickImg.x() - m_nativeCenter.x(), clickImg.y() - m_nativeCenter.y());
-
         m_state = InteractionState::DraggingGreenCenter;
         m_dragOffsetImg = clickImg - m_nativeCenter.toPoint();
         setCursor(Qt::ClosedHandCursor);
@@ -166,7 +164,6 @@ void LiveImageView::keyReleaseEvent(QKeyEvent *event) {
 }
 
 void LiveImageView::wheelEvent(QWheelEvent *event) {
-    QPoint imgPos = mapToImageCoordinates(event->position().toPoint());
     int numDegres = event->angleDelta().y() / 8;
     int numSteps = -numDegres / 15;
 
