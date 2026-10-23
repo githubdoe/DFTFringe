@@ -333,7 +333,7 @@ void SurfaceGraph::yOffsetChanged(int val){
 void SurfaceGraph::scaleY(int d){
 
     m_yGridHeight = maxHeightSelections[d];
-    qDebug() << "yscale" << m_yGridHeight <<  m_gradientScale << d;
+
     m_graph->axisY()->setRange(0.0f, m_yGridHeight);
     setSurface(m_wf);
 }
@@ -386,7 +386,7 @@ void SurfaceGraph::adjustXMin(int min)
 //        m_axisMaxSliderX->setValue(max);
 //    }
 
-qDebug() << "range" << minX << maxX;
+
     m_graph->axisX()->setRange(minX, maxX);
 }
 
@@ -483,11 +483,6 @@ QSize SurfaceGraph::Size(){
     return  m_graph->size();
 }
 QImage SurfaceGraph::render(int width, int height){
-    QSize orgsize = m_graph->size();
-    if (orgsize.width() < width){
-        m_graph->resize(width, height);
-    }
-    QImage result = m_graph->renderToImage(0, QSize(width,height));
-    m_graph->resize(orgsize);
-    return result;
+    // Render directly at the widget's current display size without resizing the live view
+    return m_graph->renderToImage(0, m_graph->size());
 }

@@ -18,5 +18,6 @@
     <qresource prefix="/">
         <file>res/wats2.png</file>
         <file>res/mirror_stand.png</file>
+        <file>liveViewHelp.md</file>
     </qresource>
 </RCC>

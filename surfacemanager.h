@@ -77,7 +77,9 @@ public:
     void initWaveFrontLoad();
     void averageWavefrontFiles(const QStringList &files);
     void downSizeWf(wavefront *wf);
-    void syncGaussianStateForWavefront(wavefront *wf);
+    void updateBlurText();
+    double getGaussBlurOfSelectedWavefronts();
+
     void process(int wavefront_index, SurfaceManager *sm);
     wavefront *readWaveFront(const QString &fileName);
     inline wavefront *getCurrent(){
@@ -118,7 +120,6 @@ public:
     configRESPONSE rocResp;
     configRESPONSE lambdResp;
     int okToContinue;
-    bool okToUpdateSurfacesOnGenerateComplete;
     void makeMask(wavefront* wf, bool useInsideCircle = true);
     void generateSurfacefromWavefront(int ndx);
     void generateSurfacefromWavefront(wavefront *wf);
@@ -177,7 +178,7 @@ private slots:
 
 public slots:
     void rotateThese(double angle, QList<int> list);
-    void createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
+    void createWaveFrontFromPhaseMap(cv::Mat phase, CircleOutline outside,
                                    CircleOutline center, const QString &name, WavefrontOrigin origin,
                                    QVector<std::vector<cv::Point> > polyArea= QVector<std::vector<cv::Point> >());
     void invert(QList<int> list);

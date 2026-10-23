@@ -58,6 +58,7 @@ public:
     QString dftSizeStr;
     QImage magIImage;
     double m_center_filter;
+    double m_scaleFactor = 1.;
     cv::Mat vortex(QImage &img,
                double low);
     QVector<double> getPhases();
@@ -84,14 +85,17 @@ public slots:
     void zoomPlus();
     void zoomMinus();
     void zoomFit();
+    void mouseMovedExternal(int rad);
 signals:
     void setDftSizeVal(int);
     void selectDFTTab();
-    void updateFilterSize(int);
+    void updateFilterSize(double);
+    void filterSizeScale(double frequencyBin);
     void newWavefront(cv::Mat, CircleOutline, CircleOutline, const QString &, WavefrontOrigin origin,
                       QVector<std::vector<cv::Point> >);
     void dftReady(QImage);
     void statusBarUpdate(QString, int);
+    void centerFilterSize(double radius, double scale, int DFTSize);
 private:
     static DFTArea *m_Instance;
     Ui::DFTArea *ui;
@@ -127,6 +131,10 @@ private:
     int m_psiRows;
     int m_psiCols;
     double zoom;
+    int m_dftsize = 1000;
+    int m_roiSize;
+public:
+
 };
 
 

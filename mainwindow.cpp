@@ -56,7 +56,8 @@
 
 #include "zapm_interface.h"
 #include "zernikeprocess.h"
-
+#include "liveimageview.h"
+#include "liveviewdialog.h"
 
 using namespace QtConcurrent;
 std::vector<wavefront*> g_wavefronts;
@@ -76,7 +77,6 @@ MainWindow::MainWindow(QWidget *parent) :
         a->menu()->setToolTipsVisible(true);
     }
     spdlog::get("logger")->info("DFTFringe {} started", APP_VERSION);
-
     //const QString toolButtonStyle("QToolButton {"
     //                                "border-style: outset;"
     //                                "border-width: 3px;"
@@ -192,7 +192,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_surfaceManager = SurfaceManager::get_instance(this,m_surfTools, m_profilePlot, m_contourView,
                                           m_ogl->m_surface, metrics);
     connect(m_contourView, &contourView::showAllContours, m_surfaceManager, &SurfaceManager::showAllContours);
-    connect(m_dftArea, &DFTArea::newWavefront, m_surfaceManager, &SurfaceManager::createSurfaceFromPhaseMap);
+    connect(m_dftArea, &DFTArea::newWavefront, m_surfaceManager, &SurfaceManager::createWaveFrontFromPhaseMap);
     connect(m_surfaceManager, &SurfaceManager::diameterChanged,this,&MainWindow::diameterChanged);
     connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
     connect(m_surfTools, &surfaceAnalysisTools::updateSelected, m_surfaceManager, &SurfaceManager::backGroundUpdate);
@@ -223,12 +223,53 @@ MainWindow::MainWindow(QWidget *parent) :
     shortcut = new QShortcut(QKeySequence(Qt::Key_U), this);
     QObject::connect(shortcut, &QShortcut::activated, this, &MainWindow::load_from_url);
 
+    // Create the dialog once as a top-level, non-modal window
+    m_helpOverlay = new QDialog(nullptr);
+    m_helpOverlay->setWindowTitle("Hot key Help");
+    m_helpOverlay->setWindowFlags(Qt::Window | Qt::WindowStaysOnTopHint); // Stays above 3D views, has native minimize/close/drag
+
+    QVBoxLayout *dialogLayout = new QVBoxLayout(m_helpOverlay);
+    dialogLayout->setContentsMargins(16, 16, 16, 16);
+
+    QLabel *helpTextLbl = new QLabel(m_helpOverlay);
+    helpTextLbl->setStyleSheet(
+        "color: #ffffff;"
+        "font-size: 32px;"
+    );
+    dialogLayout->addWidget(helpTextLbl);
+
+    // Style the dialog background to match your teal theme
+    m_helpOverlay->setStyleSheet("QDialog { background-color: rgb(46,137,137); }");
+    m_helpOverlay->installEventFilter(this);
+    m_helpOverlay->hide();
+    // Wire up the '/' shortcut
+    QShortcut *shortcuth = new QShortcut(QKeySequence(Qt::Key_Slash), this);
+    QObject::connect(shortcuth, &QShortcut::activated, this, [this](){
+        if (m_helpOverlay->isVisible()) {
+            m_helpOverlay->hide();
+        } else {
+            // Find the label inside the dialog and update text
+            QLabel *lbl = m_helpOverlay->findChild<QLabel*>();
+            if (lbl) {
+                lbl->setText(getCurrentHotKeyHelp());
+            }
+
+            m_helpOverlay->adjustSize();
+
+            // Center on screen
+            QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
+            int x = (screenGeometry.width() - m_helpOverlay->width()) / 2;
+            int y = (screenGeometry.height() - m_helpOverlay->height()) / 2;
+            m_helpOverlay->move(x, y);
+
+            m_helpOverlay->show();
+            m_helpOverlay->raise();
+        }
+    });
+
+
     QShortcut *shortcutl = new QShortcut(QKeySequence(Qt::Key_L), this);
     QObject::connect(shortcutl, &QShortcut::activated, this, &MainWindow::on_actionLoad_Interferogram_triggered);
-
-    QShortcut *shortcut1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_O), this);
-    QObject::connect(shortcut1, &QShortcut::activated, this, &MainWindow::on_actionLoad_Interferogram_triggered);
-
 
     QShortcut *shortcut2 = new QShortcut(QKeySequence(Qt::Key_S), this);
     QObject::connect(shortcut2, &QShortcut::activated, this, &MainWindow::on_actionSave_Wavefront_triggered);
@@ -293,7 +334,37 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->showColorIgram->setChecked(settings.value("colorChannelShowColor", false).toBool());
 
     openWaveFrontonInit(args);
+    // Display the help overlay automatically on startup
+    // Find the label inside the dialog and update text
+    QLabel *lbl = m_helpOverlay->findChild<QLabel*>();
+    if (lbl) {
+        lbl->setText(getCurrentHotKeyHelp());
+    }
+    m_helpOverlay->adjustSize();
 
+    QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
+    int x = (screenGeometry.width() - m_helpOverlay->width()) / 2;
+    int y = (screenGeometry.height() - m_helpOverlay->height()) / 2;
+    m_helpOverlay->move(x, y);
+
+    m_helpOverlay->show();
+    m_helpOverlay->raise();
+
+    QTimer::singleShot(5000, this, [this]() {
+        m_helpOverlay->hide();
+    });
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
+    if (obj == m_helpOverlay && event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+        // If the user hits '/' or 'Escape' while the help is open, hide it!
+        if (keyEvent->key() == Qt::Key_Slash || keyEvent->key() == Qt::Key_Escape) {
+            m_helpOverlay->hide();
+            return true; // Event handled
+        }
+    }
+    return QMainWindow::eventFilter(obj, event);
 }
 void MainWindow::importIgram() {
     QSettings set;
@@ -316,7 +387,67 @@ void MainWindow::importIgram() {
     else on_actionLoad_Interferogram_triggered();
 
 }
+QString MainWindow::getCurrentHotKeyHelp() const {
+    int currentTab = ui->tabWidget->currentIndex();
 
+    auto row = [](const QString &key, const QString &desc) {
+        return QString("<tr><td> <b>%1</b></td><td align=\"center\">&nbsp;&nbsp;%3&nbsp;&nbsp;</td><td>%2</td></tr>")
+               .arg(key, desc)
+                .arg((key == "") ? "":"-");
+    };
+
+    if (currentTab == 2) {
+        return R"(<h1>Hot Keys - for results tab</h1>)"
+               "<table cellspacing=\"0\" cellpadding=\"4\">" +
+                   row("i", "Load most recent igram from URL Directory.") +
+                   row("l", "Load igram from file system.") +
+                   row("u", "Load igram from url stream.") +
+                   row("s", "Save selected wave fronts.") +
+               "</table>"
+               "<br><br>"
+               "<b>/</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Toggle to display\\hide this";
+    }
+    if (currentTab == 1){
+        return R"(<h1>Hot Keys - for Analysis (DFT) tab</h1>)"
+               "<table cellspacing=\"0\" cellpadding=\"4\">" +
+                   row("f", "fit to window") +
+                   row("+", "zoom in") +
+                   row("-", "zoom out") +
+                   row("","")+
+                   row("mouse wheel", "zoom in\\out")+
+
+               "</table>"
+               "<br><br>"
+               "<b>/</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Toggle to display\\hide this";
+    }
+
+    else if (currentTab == 0) {
+        return R"(<h1>Hot Keys - for igram tab</h1>)"
+               "<table cellspacing=\"0\" cellpadding=\"4\">" +
+                row("e", "show Edge zoom")+
+                row("f", "show zoomed out") +
+                row("h", "Toggle outline display") +
+
+                row("","")+
+                row("i", "Load most recent igram from URL Directory.") +
+                row("l", "Load igram from file system.") +
+                row("u", "Load igram from url stream.") +
+                row("arrow keys", "move outline one pixel")+
+
+               "</table>"
+               "<br>"
+                "<h2>Mouse Controls</h2>"
+                "<table cellspacing=\"0\" cellpadding=\"4\">" +
+                row("left click drag","start outline and drag to other side of mirror")+
+                row("shift left click drag", "move outline")+
+                row("ctrl wheel"," increse \\ decrease outline diameter")+
+                row("wheel", "zoom igram image")+
+               "<br><br>"
+               "<b>/</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Toggle to display\\hide this";
+    }
+
+    return "<h1>Hot Keys</h1><p>No active hot keys for this view.</p>";
+}
 int showmem(const QString &t);
 void MainWindow::openWaveFrontonInit(QStringList args){
     QProgressDialog pd("    Loading wavefronts in progress.", "Cancel", 0, 100);
@@ -868,7 +999,7 @@ void MainWindow::on_actionWavefront_triggered()
 
     rad -= border;
     cv::Mat result = zernikeProcess::get_Instance()->makeSurfaceFromZerns(border, false);
-    m_surfaceManager->createSurfaceFromPhaseMap(result,
+    m_surfaceManager->createWaveFrontFromPhaseMap(result,
                                                 CircleOutline(QPointF(xcen,ycen),rad),
                                                 CircleOutline(QPointF(0,0),0),
                                                 QString("Simulated_Wavefront"), WavefrontOrigin::Simulation);
@@ -1978,7 +2109,6 @@ void MainWindow::on_autoOutlineHelp_clicked()
     QString link = qApp->applicationDirPath() + "/res/Help/outlineing.html";
     QDesktopServices::openUrl(QUrl(link));
 }
-#include "transformwavefrontdlg.h"
 void MainWindow::on_actionwave_front_transforms_triggered()
 {
    m_surfaceManager->transform();
@@ -2150,30 +2280,66 @@ void MainWindow::on_actionStop_auto_invert_triggered()
 }
 
 /*
-    This is called iwth shortcut Qt::Key_U
+    This is called With shortcut Qt::Key_U or by the live view automation loop
     It's a sort of easter egg for people using skysolve camera with their Bath setup.
  */
-void MainWindow::load_from_url(){
+QString MainWindow::load_from_url(){
+    // if live view is open use it
+    QImage image;
 
-    // Construct the URL with IP address and port
-    QUrl url;
-    url.setScheme("http"); // or "https" if using SSL
-    url.setHost("192.168.50.5"); // Replace with your IP address
-    url.setPort(5000); // Specify the port
-    url.setPath("/downloadImage");
-    showMessage("Connecting to " + url.toString(),1);
-    //downloader.startDownload(url);
+    //if live view is not available.
+    if (!m_viewDlg || !m_viewDlg->isVisible()){
 
-    QEventLoop loop;
-    QNetworkAccessManager nam;
-    QNetworkRequest req(url);
-    QNetworkReply *reply = nam.get(req);
-    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    //connect(reply, &QNetworkReply::downloadProgress, this, [&](qint64 bytesReceived, qint64 bytesTotal){
-    //    showMessage(QString("byes received %1").arg( bytesReceived) + QString(" total %1").arg(bytesTotal),1);
-    //});
-    loop.exec();
-    QByteArray buffer = reply->readAll();
+
+        // Construct the URL with IP address and port
+        QUrl url;
+        url.setScheme("http"); // or "https" if using SSL
+        url.setHost("192.168.50.5"); // Replace with your IP address
+        url.setPort(5000); // Specify the port
+        url.setPath("/downloadImage");
+        showMessage("Connecting to " + url.toString(),1);
+        //downloader.startDownload(url);
+
+        QEventLoop loop;
+        QNetworkAccessManager nam;
+        QNetworkRequest req(url);
+        QNetworkReply *reply = nam.get(req);
+        connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        //connect(reply, &QNetworkReply::downloadProgress, this, [&](qint64 bytesReceived, qint64 bytesTotal){
+        //    showMessage(QString("byes received %1").arg( bytesReceived) + QString(" total %1").arg(bytesTotal),1);
+        //});
+        loop.exec();
+        QByteArray buffer = reply->readAll();
+        QSettings set;
+        QString dirPath = set.value("importIgramPath",".").toString();
+        // Get the current date and time
+        QDateTime currentDateTime = QDateTime::currentDateTime();
+
+        // Format the date and time into a string suitable for a filename
+        // Using "yyyyMMdd_HHmmss" for a clear, sortable format without illegal characters
+        QString dateTimeString = currentDateTime.toString("yyyyMMdd_HHmmss");
+
+        // Construct the full filename
+        QString fileName = dirPath + "/" + dateTimeString +".jpg";
+        // Create a QImage from the QByteArray
+
+        if (image.loadFromData(buffer, "jpg")) { // Specify format if known, otherwise omit
+            showMessage("Image loaded successfully " + fileName,1);
+            // Now you can use the 'image' QImage object
+            // Example: Save it to another file
+            image.save(fileName, "JPG");
+            importIgram();
+        } else {
+            showMessage("Failed to load image!",2);
+        }
+    }
+    else {
+       image =  m_viewDlg->getFrame();
+       if (image.isNull()){
+           return ("");
+
+       }
+    }
     QSettings set;
     QString dirPath = set.value("importIgramPath",".").toString();
     // Get the current date and time
@@ -2185,17 +2351,515 @@ void MainWindow::load_from_url(){
 
     // Construct the full filename
     QString fileName = dirPath + "/" + dateTimeString +".jpg";
-    qDebug() << "download filename" << fileName;
-    // Create a QImage from the QByteArray
-    QImage image;
-    if (image.loadFromData(buffer, "jpg")) { // Specify format if known, otherwise omit
-        showMessage("Image loaded successfully " + fileName,1);
-        // Now you can use the 'image' QImage object
-        // Example: Save it to another file
-        image.save(fileName, "JPG");
-        importIgram();
-    } else {
-        showMessage("Failed to load image!",2);
+
+    image.save(fileName, "JPG");
+    importIgram();
+    return fileName;
+}
+
+void MainWindow::on_actionLive_view_triggered()
+{
+    if (!m_viewDlg) {
+            if (!m_liveViewRMSTimer){
+                m_liveViewRMSTimer = new QTimer();
+            }
+
+            m_viewDlg = new LiveViewDialog(this);//("http://192.168.50.5:5000/video_feed");
+            // compute the size of the current filter circle and set it to the viewDLG
+            connect(m_liveViewRMSTimer, &QTimer::timeout, this, [this](){
+                if (m_viewDlg)
+                    m_viewDlg->m_tmpShowLive = false;
+
+            });
+            connect(m_igramArea, &IgramArea::boundary, this, [this](CircleOutline outside, bool cropped, QPointF offset) {
+
+                if (cropped){
+                    outside.translate(offset);
+                }
+
+                m_viewDlg->setOutsidecircle(outside.m_center, outside.m_radius);
+            });
+
+            // Automatically nullify the pointer when Qt deletes the dialog on close
+            connect(m_viewDlg, &QObject::destroyed, this, [this]() {
+                m_viewDlg = nullptr;
+            });
+
+            connect(m_viewDlg, &LiveViewDialog::igramCaptured, this, &MainWindow::load_from_url);
+            // Connect the Start button on the dialog to trigger your analysis loop
+            connect(m_viewDlg->startAnalysisBtn, &QPushButton::clicked, this, [this]() {
+                // Using single-shot timer ensures the click event finishes before entering the loop
+                QTimer::singleShot(0, this, &MainWindow::startLiveButton_clicked);
+            });
+
+            // Connect the Stop button to signal the loop to terminate
+            connect(m_viewDlg->stopAnalysisBtn, &QPushButton::clicked, this,&MainWindow::stopLiveButton_clicked);
+
+            // Connect the Stop button to signal the loop to terminate
+            connect(m_viewDlg, &LiveViewDialog::streamDisconnected, this, &MainWindow::stopLiveButton_clicked);
+            connect(m_viewDlg->pauseAnalyBtn, &QPushButton::clicked,this,  &MainWindow::pauseLiveButton_clicked);
+
+            connect(m_viewDlg->imageLabel, &LiveImageView::mirrorDefined, this, [this](const QPointF center, double radius){
+
+                m_igramArea->blockSignals(true);
+                m_igramArea->setOutsideOutline(center,radius);
+                m_igramArea->blockSignals(false);
+
+            });
+            connect(m_viewDlg, &LiveViewDialog::blueCircle, m_dftArea,&DFTArea::mouseMovedExternal);
+            connect(m_dftArea, &DFTArea::filterSizeScale, m_viewDlg, &LiveViewDialog::setCenterFilter );
+            connect(m_viewDlg, &LiveViewDialog::autoOutLine, m_igramArea, &IgramArea::autoTraceOutline);
+            connect(m_viewDlg, &LiveViewDialog::outlineOk, this,[this](){
+                m_igramArea->nextStep();
+            });
+            m_viewDlg->show();
+        } else {
+            // If it's already open, just bring it to the front
+            m_viewDlg->raise();
+            m_viewDlg->activateWindow();
+        }
+
+    m_viewDlg->show();
+}
+
+void MainWindow::startLiveButton_clicked() {
+
+    // If already running, do nothing or treat as restart
+    if (m_liveState == State_Running) return;
+
+    if (m_liveState == State_Stopped) {
+        // Fresh start: clear previous average data
+        m_liveValidCount = 0;
+        m_liveSum.release();
+        if (!m_liveAverageWf) {
+            m_liveAverageWf = new wavefront;
+        }
     }
+    setLiveViewMode(true);
+    m_liveState = State_Running;
+    m_viewDlg->startAnalysisBtn->hide();
+    m_viewDlg->pauseAnalyBtn->setText("Pause");
+    m_viewDlg->pauseAnalyBtn->show();
+    m_viewDlg->stopAnalysisBtn->show();
+    m_viewDlg->saveAverageBtn->hide();
+    m_viewDlg->grabButton->hide();
+    m_viewDlg->OutlineBtn->hide();
+    m_viewDlg->OutlineOkBtn->hide();
+
+
+
+    // If the loop was completely stopped, start the execution flow again
+    if (!m_liveLoopActive) {
+        runLiveAnalysisLoop();
+    }
+}
+
+void MainWindow::pauseLiveButton_clicked() {
+    if (m_liveState == State_Running) {
+        m_liveState = State_Paused;
+        m_viewDlg->pauseAnalyBtn->setText("Resume");
+        m_viewDlg->grabButton->show();
+        m_viewDlg->OutlineBtn->show();
+        m_viewDlg->OutlineOkBtn->show();
+        setLiveViewMode(false);
+
+
+    } else if (m_liveState == State_Paused) {
+        m_liveState = State_Running;
+        m_viewDlg->pauseAnalyBtn->setText("Pause");
+        m_viewDlg->saveAverageBtn->hide();
+        m_igramArea->hide();
+        m_dftArea->hide();
+        m_viewDlg->grabButton->hide();
+        m_viewDlg->OutlineBtn->hide();
+        m_viewDlg->OutlineOkBtn->hide();
+
+        setLiveViewMode(true);
+
+
+    }
+}
+
+void MainWindow::stopLiveButton_clicked() {
+    m_liveState = State_Stopped;
+    m_liveLoopActive = false;
+    m_viewDlg->pauseAnalyBtn->setText("Pause");
+    m_viewDlg->pauseAnalyBtn->hide();
+    m_viewDlg->stopAnalysisBtn->hide();
+    m_viewDlg->startAnalysisBtn->show();
+    m_viewDlg->saveAverageBtn->hide();
+    m_viewDlg->grabButton->show();
+    m_viewDlg->OutlineBtn->show();
+    m_viewDlg->OutlineOkBtn->show();
+    setLiveViewMode(false);
 
 }
+
+void MainWindow::setLiveViewMode(bool active) {
+    if (active) {
+        // --- LOCKDOWN: Enter Live Mode ---
+        ui->tabWidget->setCurrentIndex(2);
+        m_igramArea->setUpdatesEnabled(false);
+        scrollAreaDft->setUpdatesEnabled(false);
+
+        // Sever automatic tab-switching signals during loop execution
+        disconnect(m_igramArea, &IgramArea::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
+        disconnect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
+
+        m_ogl->setLivePreviewMode(true);
+    } else {
+        // --- RESTORATION: Exit Live Mode ---
+        m_igramArea->show();
+        connect(m_igramArea, &IgramArea::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
+        connect(m_surfaceManager, &SurfaceManager::showTab, ui->tabWidget, &QTabWidget::setCurrentIndex);
+
+        m_dftArea->show();
+
+        ui->tabWidget->blockSignals(false);
+        ui->tabWidget->setUpdatesEnabled(true);
+
+        scrollAreaDft->setUpdatesEnabled(true);
+        m_igramArea->setUpdatesEnabled(true);
+
+        m_ogl->setLivePreviewMode(false);
+
+    }
+}
+void MainWindow::runLiveAnalysisLoop() {
+    if (m_liveLoopActive) return;
+    static mirrorDlg *md = mirrorDlg::get_Instance();
+    m_liveLoopActive = true;
+    double z8Null = md->z8 * md->cc;
+    cv::Scalar mean;
+    cv::Scalar stddev;
+    QFont tFont("Serif", 18);
+
+    // Reset average tracking for the start of the session
+    m_liveValidCount = 1;
+    m_liveSum.release();
+
+    int totalFrames = 1; // Local frame counter for non-averaged views
+    m_viewDlg->loopRunning = true;
+   // have the 3D view switch to a widget that does not blink
+
+    bool computeAverage = m_viewDlg->averageMode->isChecked();
+    while (m_liveState != State_Stopped && !m_viewDlg->m_stopRequested) {
+
+        computeAverage = m_viewDlg->averageMode->isChecked();
+        bool displayAverage = computeAverage;
+        QApplication::processEvents();
+
+        // ---------------------------------------------------------------------
+        // PAUSED STATE HANDLER
+        // ---------------------------------------------------------------------
+        if (m_liveState == State_Paused) {
+            QApplication::processEvents();
+
+            if (m_liveAverageWf && computeAverage) {
+                m_viewDlg->saveAverageBtn->show();
+            }
+
+            if (m_viewDlg->saveAverage && m_liveAverageWf) {
+                // Store a DEEP COPY snapshot so future frame accumulation won't alter this saved record
+                wavefront *savedAvg = new wavefront(*m_liveAverageWf);
+                savedAvg->name = QString("Average_%1").arg(m_liveValidCount - 1);
+
+                m_surfaceManager->m_wavefronts << savedAvg;
+                m_surfTools->addWaveFront(savedAvg->name);
+                m_viewDlg->saveAverage = false;
+            }
+            continue;
+        }
+
+        if (m_liveState == State_Stopped) break;
+
+
+
+        // 2. Open the saved image in the pipeline
+        QImage img = m_viewDlg->getFrame();
+
+        m_igramArea->openImage(img, true, QString("stream%1").arg(m_liveValidCount));
+        QApplication::processEvents();
+        if (m_liveState == State_Stopped) break;
+
+        // 3. Check outline validity
+        if (m_igramArea->m_outside.m_radius == 0) {
+            m_viewDlg->statusLeft->setText(
+                        "<span style='color: white; background-color: red;'>  The outline is NOT valid for this image    </span>"
+                        );
+            break;
+        }
+
+        QApplication::processEvents();
+        if (m_liveState == State_Stopped) break;
+
+        // 4. Advance through processing steps
+        m_igramArea->nextStep();
+        QApplication::processEvents();
+        if (m_liveState == State_Stopped) break;
+
+        // 5. Switch to DFT tab and generate surface
+        ui->tabWidget->setCurrentIndex(2);
+        m_dftTools->wasPressed = true;
+
+        m_dftArea->makeSurface();
+
+        QApplication::processEvents();
+        if (!m_dftArea->success || m_surfaceManager->m_wavefronts.isEmpty()) {
+            qDebug() << "Warning: Surface generation failed or wavefront list empty. Skipping frame.";
+            continue;
+        }
+
+        // Deep copy the newly generated wavefront from m_wavefronts.back()
+        wavefront *wf = new wavefront(*m_surfaceManager->m_wavefronts.back());
+
+        if (!(m_viewDlg->FirstWaveFrontSeen) && m_viewDlg->autoRMSatStarup->isChecked()) {
+            m_viewDlg->maxRMS->setValue(wf->std * m_viewDlg->RMSMargin->value());
+            m_viewDlg->FirstWaveFrontSeen = true;
+        }
+
+        // Defensive check: Ensure matrix data is allocated
+        if (wf->workData.empty() || wf->workData.rows <= 0 || wf->workData.cols <= 0) {
+            qDebug() << "Error: Wavefront workData is empty or invalid!";
+            delete wf;
+            continue;
+        }
+
+
+        // ---------------------------------------------------------------------
+        // ACCUMULATION / AVERAGE CALCULATION
+        // ---------------------------------------------------------------------
+        m_viewDlg->m_tmpShowLive = false;
+        if (computeAverage) {
+            if (wf->std > m_viewDlg->maxRMS->value()) {
+                m_viewDlg->m_tmpShowLive = true;
+                m_liveViewRMSTimer->start(2000); // Display live for 2 seconds
+            } else {
+                // First valid frame in the averaging run
+                if (m_liveValidCount == 1 || m_liveSum.empty()) {
+                    m_liveSum = cv::Mat::zeros(wf->workData.rows, wf->workData.cols, wf->workData.type());
+                    m_liveDataSum = cv::Mat::zeros(wf->workData.rows, wf->workData.cols, wf->data.type());
+                    if (m_liveAverageWf) {
+                        delete m_liveAverageWf;
+                    }
+                    m_liveAverageWf = new wavefront(*wf); // Deep copy initial wavefront properties
+                    m_liveAverageWf->m_origin = WavefrontOrigin::Average;
+                }
+
+                // Verify dimensions before accumulating
+                if (m_liveSum.rows == wf->workData.rows && m_liveSum.cols == wf->workData.cols) {
+                    m_liveSum += wf->workData;
+                    m_liveDataSum += wf->data;
+
+                    cv::Mat result = m_liveSum / static_cast<double>(m_liveValidCount);
+
+                    // Compute statistics strictly inside the pupil mask
+                    cv::meanStdDev(result, mean, stddev, m_liveAverageWf->mask);
+
+                    // Update surface matrices and calculated statistics
+                    m_liveAverageWf->workData = result.clone();
+                    m_liveAverageWf->data = result.clone();
+                    m_liveAverageWf->nulledData = result.clone();
+                    m_liveAverageWf->std = stddev[0] * md->lambda / outputLambda;
+                    m_liveAverageWf->mean = mean[0];
+                    if (!m_viewDlg->m_tmpShowLive) {
+                        m_ogl->m_surface->setSurface(m_liveAverageWf);
+                    }
+
+                    m_liveValidCount++;
+                } else {
+                    m_viewDlg->statusRight->setText( "Error: Mismatched matrix dimensions during live accumulation!");
+                    stopLiveButton_clicked();  // cancel loop
+                }
+            } // end RMS check
+        }
+
+        // If displaying current frame, update 3D view
+        if (!displayAverage || m_viewDlg->m_tmpShowLive) {
+            m_ogl->m_surface->setSurface(wf);
+        }
+
+        // 6. RENDER SURFACE
+        img = m_ogl->m_surface->render(1000, 1000);
+        m_ogl->m_liveLabel->setPixmap(QPixmap::fromImage(img));
+        // Update UI Status Bar
+        QString statusRightText;
+
+        if (computeAverage) {
+            QString liveMsg = "";
+            if (m_viewDlg->m_tmpShowLive) {
+                liveMsg = "<span style='color: white; background-color: red;'>  &nbsp;RMS too big &nbsp;  </span>";
+            }
+            statusRightText = QString("Averaged: %1 | Avg RMS: %2  %3")
+                    .arg(m_liveValidCount - 1)
+                    .arg(m_liveAverageWf->std, 0, 'f', 3)
+                    .arg(liveMsg);
+        } else {
+            qDebug() << "rms" << wf->std;
+            statusRightText = QString("Frame: %1 | RMS: %2")
+                    .arg(totalFrames)
+                    .arg(wf->std, 0, 'f', 3);
+        }
+        double value = 1.;
+
+        int ndx = m_viewDlg->zernListWidget->currentRow() -1;
+
+        if (ndx == -1){ // do best fit conic
+            value = wf->InputZerns[8]/m_mirrorDlg->z8;
+        }
+        else value = wf->InputZerns[ndx];
+        if (ndx == 8){  // if primary SA then remove null if needed
+            if (m_mirrorDlg->doNull){
+                value -= z8Null;
+                qDebug() << "sa" << value;
+            }
+        }
+         m_viewDlg->history->addSample(m_liveAverageWf->std,value);
+        m_viewDlg->statusRight->setText(statusRightText);
+
+
+        // Wavefront list cleanup & memory management
+        bool discardFrame = (wf->std > m_viewDlg->maxRMS->value()) || m_viewDlg->deleteIntermidiateWaveFront->isChecked();
+        if (discardFrame) {
+            m_surfaceManager->m_wavefronts.removeLast();
+            m_surfTools->deleteLast();
+            m_surfaceManager->m_wf = nullptr;
+        }
+
+        // Free our local temporary wavefront
+        delete wf;
+
+        QThread::msleep(200);
+        totalFrames++;
+    }
+
+    // -------------------------------------------------------------------------
+    // LOOP EXIT: SAVE FINAL AVERAGE IF APPLICABLE
+    // -------------------------------------------------------------------------
+    if (computeAverage  && m_liveAverageWf && m_liveValidCount > 1) {
+        wavefront *savedAvg = new wavefront(*m_liveAverageWf);
+        m_liveDataSum /= m_liveValidCount;
+        savedAvg->data = m_liveDataSum.clone();
+        savedAvg->m_origin = WavefrontOrigin::Average;
+        savedAvg->wasSmoothed = false;
+        savedAvg->dirtyZerns = true;
+
+        savedAvg->regions.clear();
+        m_surfaceManager->makeMask(savedAvg);
+        m_surfaceManager->generateSurfacefromWavefront(savedAvg);
+
+        savedAvg->name = QString("Average_%1").arg(m_liveValidCount - 1);
+
+        m_surfaceManager->m_wavefronts << savedAvg;
+        m_surfTools->addWaveFront(savedAvg->name);
+        m_viewDlg->saveAverage = false;
+        m_surfaceManager->m_currentNdx = m_surfaceManager->m_wavefronts.size()-1;
+
+        m_surfaceManager->m_surfaceTools->select(m_surfaceManager->m_currentNdx);
+    }
+
+    // Reset UI & Loop State Flags
+    m_liveLoopActive = false;
+    m_viewDlg->m_stopRequested = false;
+    m_viewDlg->loopRunning = false;
+    m_liveState = State_Stopped;
+
+}
+
+
+
+void MainWindow::on_actionReset_to_Factory_Defaults_triggered()
+{
+    // 1. Show the confirmation warning box
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::warning(this,
+                                      "Reset Settings",
+                                      "Do you really want to reset all settings to factory defaults?\nThis cannot be undone.",
+                                      QMessageBox::Yes | QMessageBox::No);
+
+        // 2. Proceed only if the user clicks "Yes"
+        if (reply == QMessageBox::Yes) {
+            QSettings settings;
+            QString filePath = settings.fileName();
+
+            // Clear all keys
+            settings.clear();
+            settings.sync();
+
+            // Optional: Delete the underlying file for a complete hard reset
+            if (QFile::exists(filePath)) {
+                QFile::remove(filePath);
+            }
+
+            qDebug() << "Settings have been reset to factory defaults.";
+
+            // Optional: Notify the user or prompt them to restart the app
+            QMessageBox::information(this, "Reset Complete", "Settings have been reset. Please restart the application.");
+        }
+}
+
+// Helper to copy keys between any two QSettings instances
+void copySettingsData(QSettings &src, QSettings &dest) {
+    QStringListIterator it(src.allKeys());
+    while (it.hasNext()) {
+        QString key = it.next();
+        dest.setValue(key, src.value(key));
+    }
+}
+
+
+void MainWindow::on_actionSave_settomgs_to_a_file_triggered()
+{
+    QString filePath = QFileDialog::getSaveFileName(this,
+                                                    "Export Settings",
+                                                    "my_app_settings.ini",
+                                                    "Settings Files (*.ini)");
+    if (filePath.isEmpty()) {
+        return; // User cancelled
+    }
+
+    QSettings liveSettings;
+    liveSettings.sync();
+
+    // Open an INI file target
+    QSettings exportFile(filePath, QSettings::IniFormat);
+    exportFile.clear(); // Clear old content in the target file if it exists
+
+    copySettingsData(liveSettings, exportFile);
+    exportFile.sync();
+
+    QMessageBox::information(this, "Export Successful", "Your settings have been successfully exported.");
+
+}
+
+
+void MainWindow::on_actionRestore_settings_from_a_file_triggered()
+{
+    QString filePath = QFileDialog::getOpenFileName(this,
+                                                    "Import Settings",
+                                                    "",
+                                                    "Settings Files (*.ini)");
+    if (filePath.isEmpty()) {
+        return; // User cancelled
+    }
+
+    QMessageBox::StandardButton reply = QMessageBox::warning(this,
+                                  "Import Settings",
+                                  "Importing settings will overwrite your current configuration. Continue?",
+                                  QMessageBox::Yes | QMessageBox::No);
+
+    if (reply != QMessageBox::Yes) {
+        return;
+    }
+
+    QSettings importFile(filePath, QSettings::IniFormat);
+    QSettings liveSettings;
+
+    // Clear current registry settings and replace with imported ones
+    liveSettings.clear();
+    copySettingsData(importFile, liveSettings);
+    liveSettings.sync();
+
+    QMessageBox::information(this, "Import Complete", "Settings have been restored. Please restart the application for all changes to take effect.");
+}
+

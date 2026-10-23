@@ -45,9 +45,12 @@ public:
     QPushButton *backgroundPb;
     QColor m_background;
     QWidget *m_container;
+    QLabel *m_liveLabel;
 
     QSize sizeHint() const;
     int m_spinRate;
+
+    void setLivePreviewMode(bool liveActive);
 signals:
     void fullScreen();
 public slots:

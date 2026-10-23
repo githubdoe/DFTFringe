@@ -1,0 +1,1235 @@
+#include "liveviewdialog.h"
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QCloseEvent>
+#include <QTextEdit>
+#include <QFormLayout>
+#include <QSettings>
+#include <QApplication>
+#include <QPainter>
+#include "videostreamworker.h"
+#include <QGroupBox>
+#include <QSplitter>
+#include <QDialogButtonBox>
+#include <QMessageBox>
+#include <liveviewhistory.h>
+#include <QTextBrowser>
+#include <QFile>
+#include "zernikes.h"
+#include <QInputDialog>
+
+
+// ==========================================
+// LiveViewDialog Implementation
+// ==========================================
+
+LiveViewDialog::LiveViewDialog(QWidget *parent)
+    : QDialog(parent), tabWidget(nullptr) {
+
+    setWindowTitle("DFTFringe - Live View");
+    setAttribute(Qt::WA_DeleteOnClose, true);
+    setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
+    QSettings settings;
+
+    if (settings.contains("LiveViewDialog/geometry")) {
+        restoreGeometry(settings.value("LiveViewDialog/geometry").toByteArray());
+    } else {
+        resize(600, 600);
+    }
+    QString savedUrl = settings.value("LiveView/streamUrl", 0).toString();
+    // history plot
+    history  = new liveViewHistory();
+    initSettingsDialog();
+
+
+    setupUI(savedUrl);
+    statusLeft->setText("<span style='color: black  ;background-color: yellow'>Connecting to camera/stream... Please wait.</span>");
+    // Initialize video stream thread and worker
+    m_thread = new QThread(this);
+    m_worker = new VideoStreamWorker(savedUrl);
+    m_worker->moveToThread(m_thread);
+
+    connect(m_thread, &QThread::started, m_worker, &VideoStreamWorker::startStream);
+    connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
+
+    qRegisterMetaType<cv::Mat>("cv::Mat");
+
+    // Single unified connection for frame handling and pulling the next frame
+    connect(m_worker, &VideoStreamWorker::frameReady, this, [this](cv::Mat frame) {
+        m_latestFrame = frame;
+        renderCurrentFrame();
+    // Pull the next frame only after rendering finishes
+    }, Qt::QueuedConnection);
+
+    connect(m_worker, &VideoStreamWorker::streamError, this, [this](const QString &msg) {
+        if (imageLabel) {
+            statusLeft->setWordWrap(true);
+            statusLeft->setText(QString("<span style='color: white; background-color: red;'>%1</span>")
+                                .arg(msg + " Go to settings to set the stream number. You may have to close and restart this dialog."));
+            imageLabel->adjustSize();
+            m_settingsDlg->exec();
+        }
+        emit streamDisconnected();
+    });
+
+    connect(this, &LiveViewDialog::requestChangeSource, m_worker, &VideoStreamWorker::changeSource, Qt::QueuedConnection);
+    connect(this, &LiveViewDialog::requestSetResolution, m_worker, &VideoStreamWorker::setResolution, Qt::QueuedConnection);
+    connect(this, &LiveViewDialog::requestFrame, m_worker, &VideoStreamWorker::fetchNextFrame, Qt::QueuedConnection);
+    connect(this, &LiveViewDialog::requestCameraSetting, m_worker, &VideoStreamWorker::requestCameraSetting);
+
+
+    // Trigger the very first frame pull once the worker confirms the stream is open
+    connect(m_worker, &VideoStreamWorker::streamStarted, this, [this]() {
+
+        QSize selectedRes = resolutionCombo->currentData().toSize();
+        QMetaObject::invokeMethod(m_worker, "setResolution", Qt::QueuedConnection,
+                                  Q_ARG(int, selectedRes.width()),
+                                  Q_ARG(int, selectedRes.height()));
+        statusLeft->setText("Stream Connected");
+
+        //
+        // brightness/gain slider
+        //
+
+        double gain;
+        bool bAvailable;
+        bAvailable = m_worker->getCameraGainRange(m_gain_mode, m_gainMinimum, m_gainMaximum, gain);
+        if (m_gainMaximum != m_gainMinimum)
+            m_gain_scale = 20/(m_gainMaximum - m_gainMinimum);
+
+        m_brightnessSlider->blockSignals(true);
+        m_brightnessSlider->setEnabled(bAvailable);
+        m_brightnessSlider->setRange(floor(m_gainMinimum * m_gain_scale), ceil(m_gainMaximum * m_gain_scale));
+        m_brightnessSlider->setValue(round(gain * m_gain_scale));
+        m_brightnessSlider->blockSignals(false);
+
+
+        //
+        // exposure slider
+        //
+
+        double exp;
+        bAvailable = m_worker->getCameraExposureRange(m_exposureMinimum, m_exposureMaximum,exp);
+        if (m_exposureMaximum != m_exposureMinimum)
+            m_exposure_scale = 20/(m_exposureMaximum - m_exposureMinimum);
+        m_exposureSlider->blockSignals(true);
+        m_exposureSlider->setEnabled(bAvailable);
+        m_exposureSlider->setRange(floor(m_exposureMinimum * m_exposure_scale), ceil(m_exposureMaximum * m_exposure_scale));
+        m_exposureSlider->setValue(round(exp * m_exposure_scale));
+        m_exposureSlider->blockSignals(false);
+
+        // auto exposure checkbox
+        bool bAuto;
+        m_worker->getAutoExpSetting(bAvailable, bAuto);
+        m_autoExposureCheck->blockSignals(true);
+        if (bAvailable == false) {
+            m_autoExposureCheck->setEnabled(false);
+        } else {
+            m_autoExposureCheck->setChecked(bAuto);
+        }
+        m_autoExposureCheck->blockSignals(false);
+
+
+        //emit requestFrame();
+        // Configure it once during initialization
+        m_throttle.setSingleShot(true);
+        connect(&m_throttle, &QTimer::timeout, this, [this]() {
+            emit requestFrame();
+        });
+        m_throttle.start(10);
+        // Clear the status message after 5 seconds (5000 milliseconds)
+        QTimer::singleShot(5000, this, [this]() {
+            // Only clear if it still says "Stream Connected" so we don't overwrite a newer message
+            if (statusLeft->text() == "Stream Connected") {
+                statusLeft->clear();
+            }
+        });
+    }, Qt::QueuedConnection);
+
+    // Kick off the thread start safely after checking user preferences
+    QTimer::singleShot(50, this, [this, savedUrl]() {
+        QSettings settings;
+        bool skipPrompt = settings.value("LiveView/skipUSBStartupPrompt", false).toBool();
+        bool autoConnect = settings.value("LiveView/autoConnectUSB", true).toBool();
+
+        // If it targets default USB device "0" and the user hasn't suppressed prompts
+        if (!skipPrompt) {
+            QMessageBox msgBox(this);
+            msgBox.setWindowTitle("USB Camera Connection");
+            msgBox.setText(QString("Attempt to connect to device %1 on startup?").arg(savedUrl));
+            msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+
+            QCheckBox dontAskBox("Never ask me again", &msgBox);
+            msgBox.setCheckBox(&dontAskBox);
+
+            int ret = msgBox.exec();
+            if (dontAskBox.isChecked()) {
+                settings.setValue("LiveView/skipUSBStartupPrompt", true);
+            }
+            if (ret == QMessageBox::Yes) {
+                settings.setValue("LiveView/autoConnectUSB", true);
+                autoConnect = true;
+            } else {
+                settings.setValue("LiveView/autoConnectUSB", false);
+                autoConnect = false;
+            }
+        }
+
+        // Only start the thread if allowed
+        if ((savedUrl != "0") || autoConnect) {
+            if (m_thread && !m_thread->isRunning()) {
+                m_thread->start();
+            }
+        } else {
+            statusLeft->setText("<span style='color: black; background-color: yellow'>USB connection skipped. Open settings to connect.</span>");
+        }
+    });
+    m_throttle.start(10);
+    if (m_fitToWindow)
+         setFitToWindowZoom();
+}
+
+LiveViewDialog::~LiveViewDialog() {
+    if (m_worker) {
+            m_worker->stop();
+        }
+        if (m_thread) {
+            m_thread->quit();
+            m_thread->wait(); // Wait safely for the background loop to exit
+        }
+}
+
+void LiveViewDialog::closeEvent(QCloseEvent *event) {
+
+            if (loopRunning) {
+                // 1. Tell the main window/loop to stop
+                m_stopRequested = true;
+            } else {
+                // Safe to close normally
+                loopRunning = false;
+                QSettings set; // Or use existing app settings key
+                set.setValue("LiveViewDialog/splitterGeometry", leftSplitter->saveState());
+                set.setValue("LiveViewDialog/geometry", saveGeometry());
+            }
+            hide();
+            // ignore the close event so the object isn't destroyed out from under the loop yet
+            event->ignore();
+}
+
+double clamp_within(double val, double _min, double _max) {
+    return fmin(fmax(val, _min), _max); // keep val between min and max
+}
+
+void LiveViewDialog::setupUI(const QString &defaultStreamUrl) {
+    setWindowTitle("DFTFringe - Live View");
+
+    QSettings set;
+    // Root layout for the dialog (Vertical)
+    QVBoxLayout *rootLayout = new QVBoxLayout(this);
+    rootLayout->setContentsMargins(8, 8, 8, 8);
+    rootLayout->setSpacing(6);
+
+    // ==========================================
+    // TOP HEADER BAR (RMS & Average Mode)
+    // ==========================================
+    QWidget *headerWidget = new QWidget(this);
+    QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(0, 0, 0, 0);
+
+    averageMode = new QCheckBox("Compute and show average when loop is running", this);
+    averageMode->setChecked(set.value("liveViewAverageMode", false).toBool());
+    connect(averageMode, &QCheckBox::stateChanged, this,[](int val){
+        QSettings set;
+        set.setValue("liveViewAverageMode", val);
+    });
+
+    maxRMS = new QDoubleSpinBox(this);
+    maxRMS->setRange(0.0, 100.0);
+    maxRMS->setValue(.4);
+    maxRMS->setSingleStep(.05);
+
+    headerLayout->addWidget(averageMode);
+
+    headerLayout->addWidget(new QLabel("Delete if RMS >", this));
+    headerLayout->addWidget(maxRMS);
+    headerLayout->addSpacing(100);
+
+    rootLayout->addWidget(headerWidget);
+
+    // ==========================================
+    // CENTER SPLITTER (Video Feed vs Sidebar)
+    // ==========================================
+    QSplitter *mainSplitter = new QSplitter(Qt::Horizontal, this);
+    leftSplitter = new QSplitter(Qt::Vertical, this);
+    if (set.contains("LiveViewDialog/splitterGeometry")) {
+        leftSplitter->restoreState(set.value("LiveViewDialog/splitterGeometry").toByteArray());
+    }
+    // --- Left Side: Live Image View ---
+    QWidget *leftContainer = new QWidget(this);
+    QVBoxLayout *leftLayout = new QVBoxLayout(leftContainer);
+    leftLayout->setContentsMargins(0, 0, 0, 0);
+    imageSize = new QLabel(this);
+    statusRight = new QLabel(this);
+    statusLeft = new QLabel(this);
+    QHBoxLayout *statusLayout = new QHBoxLayout();
+    statusLayout->addWidget(imageSize,0);
+    statusLayout->addWidget(statusLeft,10);
+    statusLeft->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    statusLayout->addWidget(statusRight,0);
+    statusLayout->addStretch(1);
+    leftLayout->addLayout(statusLayout);
+    imageLabel = new LiveImageView(this);
+    imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    imageLabel->setStyleSheet("background-color: black;");
+    imageLabel->setAlignment(Qt::AlignCenter);
+
+    connect(imageLabel, &LiveImageView::mirrorDefined, this, &LiveViewDialog::setOutsidecircle);
+    connect(imageLabel, &LiveImageView::yellowRadiusChanged, this, &LiveViewDialog::onYellowRadiusChanged);
+    connect(imageLabel, &LiveImageView::requestZoomChange, this, &LiveViewDialog::onRequestZoomChange);
+
+
+    connect(imageLabel, &LiveImageView::shiftStateChanged, this, [this](bool pressed) {
+        if (pressed) {
+            this->m_outlineChanging = true;
+            m_userMirrorRect = QRect(0,0,0,0);
+            setFitToWindowZoom();
+            m_normalGeometry = geometry(); // Save current size right before expanding
+            showFullScreen();
+        } else {
+            this->m_outlineChanging = false;
+            showNormal();
+            setGeometry(m_normalGeometry); // Restore exact default size and position
+            setFitToWindowZoom();
+        }
+    });
+    scrollArea = new ResizableScrollArea(this);
+    scrollArea->setWidget(imageLabel);
+    scrollArea->setWidgetResizable(false);
+    scrollArea->setBackgroundRole(QPalette::Dark);
+
+    // Wire up the resize callback to trigger your view update
+    scrollArea->onResized = [this]() {
+        if (zoomCombo && zoomCombo->currentData().toDouble() < 0) { // Check if "Fit to Window" is active (-1.0)
+            onZoomChanged(zoomCombo->currentIndex()); // Re-triggers your zoom adjustment with the new dimensions
+        }
+    };
+
+
+
+    leftSplitter->addWidget(scrollArea);
+    leftSplitter->addWidget(history);
+    leftSplitter->setSizes({2000, 10});
+
+    leftSplitter->setHandleWidth(4); // Sets the handle width to 8 pixels
+    leftSplitter->setStyleSheet(
+        "QSplitter::handle {"
+        "    background-color: #ccffff;" // A clear, contrasting gray color
+        "    border: 3px outset #004545;"
+        "}"
+    );
+
+    leftLayout->addWidget(leftSplitter);
+
+    // --- Right Side: Scrollable Control Sidebar ---
+    QScrollArea *sidebarScrollArea = new QScrollArea(this);
+    sidebarScrollArea->setWidgetResizable(true);
+    sidebarScrollArea->setMinimumWidth(260);
+    sidebarScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    QWidget *sidebarContent = new QWidget(sidebarScrollArea);
+    QVBoxLayout *sidebarLayout = new QVBoxLayout(sidebarContent);
+    sidebarLayout->setContentsMargins(6, 6, 6, 6);
+
+    // Zoom Control
+    sidebarLayout->addWidget(new QLabel("Zoom:", this));
+    zoomCombo = new QComboBox(this);
+    zoomCombo->addItem("Fit to Window", -1.0);
+    zoomCombo->addItem("50%", 0.5);
+    zoomCombo->addItem("100%", 1.0);
+    zoomCombo->addItem("150%", 1.5);
+    zoomCombo->addItem("200%", 2.0);
+    zoomCombo->addItem("300%", 3.0);
+    zoomCombo->addItem("400%", 4.0);
+    zoomCombo->setCurrentIndex(set.value("liveViewZoom",1).toInt());
+    onZoomChanged(zoomCombo->currentIndex());
+    connect(zoomCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &LiveViewDialog::onZoomChanged);
+    sidebarLayout->addWidget(zoomCombo);
+
+    // DFT Resolution Combo
+    sidebarLayout->addWidget(new QLabel("DFT Size:", this));
+    dftresolutionCombo = new QComboBox(this);
+    dftresolutionCombo->addItem("256 x 256", 256);
+    dftresolutionCombo->addItem("512 x 512", 512);
+    dftresolutionCombo->addItem("1024 x 1024", 1024);
+
+    dftresolutionCombo->setCurrentIndex(set.value("liveViewDftSize", 1).toInt());
+    onDFTSizeChanged(dftresolutionCombo->currentIndex());
+    connect(dftresolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &LiveViewDialog::onDFTSizeChanged);
+    sidebarLayout->addWidget(dftresolutionCombo);
+    QGroupBox *DFTGroup = new QGroupBox("DFTColor", this);
+    QVBoxLayout *dftLayout = new QVBoxLayout(DFTGroup);
+    // DFT Floor  values below this lever are transparent.
+    dftLayout->addWidget(new QLabel("DFT Transparancy:", this));
+    DFTLowThreshold = new QSpinBox(this);
+    DFTLowThreshold->setRange(-1, 255);
+    DFTLowThreshold->setSpecialValueText("Auto");
+
+    DFTLowThreshold->setValue(set.value("liveViewDFTLow", -1).toInt());
+    connect(DFTLowThreshold, QOverload<int>::of(&QSpinBox::valueChanged), this, [=](int val) {
+        QSettings s;
+        s.setValue("liveViewDFTLow", val);
+    });
+    dftLayout->addWidget(DFTLowThreshold);
+
+    // DFT Contrast
+    dftLayout->addWidget(new QLabel("DFT Contrast:", this));
+    vivid = new QDoubleSpinBox(this);
+    vivid->setValue(.7);
+    vivid->setSingleStep(.05);
+    dftLayout->addWidget(vivid);
+    sidebarLayout->addWidget(DFTGroup);
+    // Camera Hardware Sliders (Brightness / Exposure)
+    sidebarLayout->addWidget(new QLabel("Gain:", this));
+
+    //
+    // brightness slider
+    //
+
+    m_brightnessSlider = new QSlider(Qt::Horizontal, this);
+    m_brightnessSlider->setRange(-64, 64);
+    m_brightnessSlider->setValue(0);
+    connect(m_brightnessSlider, &QSlider::valueChanged, this, [this](int val) {
+        // this was too slow: emit requestCameraSetting("Gain", clamp_within(val / m_gain_scale, m_gainMinimum, m_gainMaximum));
+        m_worker->requestCameraSetting("Gain", clamp_within(val / m_gain_scale, m_gainMinimum, m_gainMaximum));
+    });
+    m_brightnessSlider->installEventFilter(this);
+    connect(this, &LiveViewDialog::gainSliderRightClicked, this, [this]() {
+        // User right clicked slider
+        bool ok;
+        QString currentVal="";
+        struct VideoStreamWorker::CameraConfiguration config;
+        if (m_worker != nullptr && m_worker->getCameraConfiguration(config))
+            currentVal = QString("%1").arg(config.gain);
+        QString text = QInputDialog::getText(this, "Gain",
+                                             QString("Gain (%1 to %2)").arg(m_gainMinimum).arg(m_gainMaximum),
+                                             QLineEdit::Normal,
+                                             currentVal, &ok);
+        if (ok && !text.isEmpty()) {
+            // User clicked OK and entered a value, use 'text' here
+            bool ok;
+            double val = text.toDouble(&ok);
+            if (ok)
+                emit requestCameraSetting("Gain", val);
+        }
+    });
+
+
+    sidebarLayout->addWidget(m_brightnessSlider);
+
+    QHBoxLayout *exposureGroupLayout = new QHBoxLayout();
+
+    //
+    // exposure slider
+    //
+
+    sidebarLayout->addWidget(new QLabel("Exposure / Shutter:", this));
+    m_exposureSlider = new QSlider(Qt::Horizontal, this);
+    m_exposureSlider->setRange(-16, 0);
+    m_exposureSlider->setValue(-6);
+    connect(m_exposureSlider, &QSlider::valueChanged, this, [this](int val) {
+        // this was too slow: emit requestCameraSetting("Exposure", clamp_within(val / m_exposure_scale, m_exposureMinimum, m_exposureMaximum));
+        m_worker->requestCameraSetting("Exposure", clamp_within(val / m_exposure_scale, m_exposureMinimum, m_exposureMaximum));
+    });
+    m_exposureSlider->installEventFilter(this);
+    connect(this, &LiveViewDialog::expSliderRightClicked, this, [this]() {
+        // User right clicked slider
+        bool ok;
+        QString currentVal="";
+        struct VideoStreamWorker::CameraConfiguration config;
+        if (m_worker != nullptr && m_worker->getCameraConfiguration(config))
+            currentVal = QString("%1").arg(config.exposure);
+        QString text = QInputDialog::getText(this, "Exposure",
+                                             QString("Exposure (%1 to %2)").arg(m_exposureMinimum).arg(m_exposureMaximum),
+                                             QLineEdit::Normal,
+                                             currentVal, &ok);
+        if (ok && !text.isEmpty()) {
+            // User clicked OK and entered a value, use 'text' here
+            bool ok;
+            double val = text.toDouble(&ok);
+            if (ok)
+                emit requestCameraSetting("Exposure", val);
+        }
+    });
+    exposureGroupLayout->addWidget(m_exposureSlider, 1);
+
+    // auto exposure checkbox
+    m_autoExposureCheck = new QCheckBox("Auto", this);
+    connect(m_autoExposureCheck, &QCheckBox::stateChanged, this, [this]() {
+        m_worker->setAutoExpSetting(m_autoExposureCheck->isChecked());
+    });
+
+    exposureGroupLayout->addWidget(m_autoExposureCheck,0);
+
+    sidebarLayout->addLayout(exposureGroupLayout);
+
+
+    sidebarLayout->addStretch(1);
+
+    // Popup Settings & Help Buttons
+    QPushButton *settingsBtn = new QPushButton("Settings...", this);
+    QPushButton *helpBtn = new QPushButton("Help & Instructions...", this);
+
+    connect(settingsBtn, &QPushButton::clicked, this, [this, defaultStreamUrl]() {
+        m_settingsDlg->exec(); // Just show the persistent dialog
+    });
+
+    connect(helpBtn, &QPushButton::clicked, this, [this]() {
+        QDialog helpDlg(this);
+        helpDlg.setWindowTitle("Live View Help");
+
+        QVBoxLayout *dlgLayout = new QVBoxLayout(&helpDlg);
+        QTextBrowser *helpText = new QTextBrowser(&helpDlg);
+        helpText->setOpenExternalLinks(true);
+
+        // Load cleanly from the Qt Resource System
+        QFile file(":/liveViewHelp.md");
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            helpText->setMarkdown(QString::fromUtf8(file.readAll()));
+        } else {
+            helpText->setPlainText("Error: Could not load help documentation.");
+        }
+
+        dlgLayout->addWidget(helpText);
+        helpDlg.resize(1000, 800);
+        helpDlg.exec();
+    });
+
+
+    sidebarLayout->addWidget(settingsBtn);
+    sidebarLayout->addWidget(helpBtn);
+
+    sidebarContent->setLayout(sidebarLayout);
+    sidebarScrollArea->setWidget(sidebarContent);
+
+    mainSplitter->addWidget(leftContainer);
+    mainSplitter->addWidget(sidebarScrollArea);
+
+    mainSplitter->setStretchFactor(0, 4);
+    mainSplitter->setStretchFactor(1, 1);
+
+    rootLayout->addWidget(mainSplitter, 1);
+
+    // ==========================================
+    // BOTTOM ACTION BAR
+    // ==========================================
+    QHBoxLayout *bottomControlLayout = new QHBoxLayout();
+
+    grabButton = new QPushButton("Grab Igram", this);
+    grabButton->setToolTip("Load igram from video stream");
+    grabButton->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                              "QPushButton QWidget { color: black; }");
+    connect(grabButton, &QPushButton::clicked, this, &LiveViewDialog::onGrabClicked);
+
+    OutlineBtn = new QPushButton("Auto outline", this);
+    OutlineBtn->setStyleSheet(        "QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                      "QPushButton QWidget { color: black; }");
+    OutlineBtn->setToolTip("auto outline the igram");
+
+    OutlineOkBtn = new QPushButton("Outline is ok",this);
+    OutlineOkBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                "QPushButton QWidget { color: black; }");
+    OutlineOkBtn->setToolTip("Same as pressing the 'done' button on the igram outline control\n"
+                           "Causes the DFT to be displayed in the usual analysis.");
+
+    startAnalysisBtn = new QPushButton("Start Loop", this);
+    startAnalysisBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                     "QPushButton QWidget { color: black; }");
+    startAnalysisBtn->setToolTip("Run loop that processes current video frame and then the next one");
+    startAnalysisBtn->hide();
+
+    pauseAnalyBtn = new QPushButton("Pause", this);
+    pauseAnalyBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                  "QPushButton QWidget { color: black; }");
+    pauseAnalyBtn->setToolTip("Pause the processing loop to makee some change without loosing the current average if averaging was enabled");
+    pauseAnalyBtn->hide();
+
+    stopAnalysisBtn = new QPushButton("Stop Loop", this);
+    stopAnalysisBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                    "QPushButton QWidget { color: black; }");
+    stopAnalysisBtn->setToolTip("Stop the loop and save the average if averaging was being computed");
+    stopAnalysisBtn->hide();
+
+    saveAverageBtn = new QPushButton("Save average", this);
+    saveAverageBtn->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }"
+                                  "QPushButton QWidget { color: black; }");
+    saveAverageBtn->setToolTip("save current average to wavefront list and continue looping");
+    saveAverageBtn->hide();
+    connect(saveAverageBtn, &QPushButton::clicked, this, [this](){
+        this->saveAverage = true;
+    });
+    connect(OutlineBtn, &QPushButton::clicked, this,[this](){
+        emit autoOutLine();
+    });
+    connect(OutlineOkBtn, &QPushButton::clicked, this,[this](){
+        emit outlineOk();
+        startAnalysisBtn->show();
+        OutlineBtn->hide();
+        OutlineOkBtn->hide();
+
+    });
+
+    dftCheckBox = new QCheckBox("Show DFT", this);
+    dftCheckBox->setChecked(false);
+    connect(dftCheckBox, &QCheckBox::toggled, this, &LiveViewDialog::renderCurrentFrame);
+    bottomControlLayout->addWidget(grabButton);
+    bottomControlLayout->addWidget(OutlineBtn);
+    bottomControlLayout->addWidget(OutlineOkBtn);
+    bottomControlLayout->addWidget(startAnalysisBtn);
+    bottomControlLayout->addWidget(pauseAnalyBtn);
+    bottomControlLayout->addWidget(stopAnalysisBtn);
+    bottomControlLayout->addWidget(saveAverageBtn);
+    bottomControlLayout->addSpacing(20);
+    bottomControlLayout->addWidget(dftCheckBox);
+    bottomControlLayout->addStretch(1);
+
+    rootLayout->addLayout(bottomControlLayout);
+    setLayout(rootLayout);
+}
+void LiveViewDialog::initSettingsDialog() {
+    m_settingsDlg = new QDialog(this);
+    m_settingsDlg->setWindowTitle("Live View Settings");
+    QVBoxLayout *settingsLayout = new QVBoxLayout(m_settingsDlg);
+    QGroupBox *connectGroup = new QGroupBox("connecton",m_settingsDlg);
+    QVBoxLayout *connectLayout = new QVBoxLayout(connectGroup);
+    connectLayout->addWidget(new QLabel("Select or Manage Recent Streams / Camera IDs:", connectGroup));
+
+    urlListWidget = new QListWidget(connectGroup);
+    urlListWidget->setMaximumHeight(120);
+
+
+    QSettings settings;
+    QStringList urlHistory = settings.value("LiveView/urlHistory").toStringList();
+    if (urlHistory.isEmpty()) {
+        urlHistory << "0" << "1" << "http://192.168.50.5:5000/video_feed";
+    }
+    urlListWidget->addItems(urlHistory);
+
+    QString currentUrl = settings.value("LiveView/streamUrl", urlHistory.first()).toString();
+    QList<QListWidgetItem*> matches = urlListWidget->findItems(currentUrl, Qt::MatchExactly);
+    if (!matches.isEmpty()) {
+        urlListWidget->setCurrentItem(matches.first());
+    } else if (urlListWidget->count() > 0) {
+        urlListWidget->setCurrentRow(0);
+    }
+
+
+    urlLineEdit = new QLineEdit();
+    urlLineEdit->setPlaceholderText("Or type a new URL / ID here...");
+    urlLineEdit->setText(currentUrl);
+    connectLayout->addWidget(urlLineEdit);
+    connectLayout->addWidget(urlListWidget);
+    connect(urlLineEdit, &QLineEdit::editingFinished, this, &LiveViewDialog::restartStream);
+    connect(urlListWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *item) {
+        statusLeft->setText("<span style='color: black  ;background-color: yellow'>Connecting to camera/stream... Please wait.</span>");
+
+        if (m_thread && !m_thread->isRunning()) {
+            m_thread->start();
+        }
+        if (item) {
+            urlLineEdit->setText(item->text().trimmed());
+            onApplySettings();
+        }
+    });
+    QHBoxLayout *connectTimeoutLayout = new QHBoxLayout();
+    connectTimeoutLayout->addWidget(new QLabel("number of blank frames before connect fails:"));
+    QSpinBox *frameTimeout = new QSpinBox(connectGroup);
+    frameTimeout->setValue(settings.value("liveViewConnectFrames",15).toInt());
+    connectTimeoutLayout->addWidget(frameTimeout);
+    connectLayout->addLayout(connectTimeoutLayout);
+
+    connect(frameTimeout, QOverload<int>::of (&QSpinBox::valueChanged), this, [this](int val){
+        QSettings set;
+        set.setValue("liveViewConnectFrames",val);
+        restartStream();
+    });
+    QGroupBox *rmsGroup = new QGroupBox("RMS settings", m_settingsDlg);
+    QVBoxLayout *rmsLayout = new QVBoxLayout(rmsGroup);
+
+
+    autoRMSatStarup = new QCheckBox("Compute Max rms as a percentage of first analysis", rmsGroup);
+    connect(autoRMSatStarup, &QCheckBox::toggled, this, [](bool checked) {
+        QSettings settings;
+        settings.setValue("liveViewAutoRMSCheckBox", checked);
+    });
+    autoRMSatStarup->setChecked(settings.value("liveViewAutoRMSCheckBox", false).toBool());
+    rmsLayout->addWidget(autoRMSatStarup);
+
+    // make RMS margin settings;
+    QHBoxLayout *percentLayout = new QHBoxLayout();
+    percentLayout->addWidget(new QLabel("Percent above RMS of first analysis:"));
+
+    RMSMargin = new QDoubleSpinBox();
+    connect(RMSMargin, QOverload<double>::of (&QDoubleSpinBox::valueChanged), this, [](double val){
+        QSettings settings;
+        settings.setValue("liveViewAutoRMSValue", val);
+    });
+    RMSMargin->setSingleStep(.25);
+    RMSMargin->setValue(settings.value("liveViewAutoRMSValue", 1.5).toDouble());
+    percentLayout->addWidget(RMSMargin);
+    percentLayout->addStretch((1));
+    rmsLayout->addLayout(percentLayout);
+
+    QHBoxLayout *resLayout = new QHBoxLayout();
+    resLayout->addWidget(new QLabel("Camera Resolution:", m_settingsDlg));
+
+    resolutionCombo = new QComboBox(m_settingsDlg);
+    resolutionCombo->addItem("Default (Auto)", QSize(0, 0));
+    resolutionCombo->addItem("640 x 480 (VGA)", QSize(640, 480));
+    resolutionCombo->addItem("1280 x 720 (HD)", QSize(1280, 720));
+    resolutionCombo->addItem("1280 x 960 (4:3)", QSize( 1280, 960));
+    resolutionCombo->addItem("1920 x 1080 (FHD)", QSize(1920, 1080));
+    resolutionCombo->addItem("2560 x 1440 (QHD)", QSize(2560, 1440));
+    resolutionCombo->addItem("3840 x 2160 (4K)", QSize(3840, 2160));
+
+    QString savedResStr = settings.value("LiveView/resolution", "Default (Auto)").toString();
+    int resIndex = resolutionCombo->findText(savedResStr);
+    if (resIndex != -1) {
+        resolutionCombo->setCurrentIndex(resIndex);
+    }
+    resLayout->addWidget(resolutionCombo);
+    resLayout->addStretch(1);
+
+    connect(resolutionCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int){
+        onApplySettings();
+    });
+
+
+    deleteIntermidiateWaveFront = new QCheckBox("Do not add Wave fronts to list except for averages", m_settingsDlg);
+    deleteIntermidiateWaveFront->setChecked(settings.value("LiveView/deleteIntermittent", false).toBool());
+    connect(deleteIntermidiateWaveFront, &QCheckBox::toggled, this, [](bool checked) {
+        QSettings s;
+        s.setValue("LiveView/deleteIntermittent", checked);
+    });
+
+    // History trend setup
+    QHBoxLayout *zernlayout = new QHBoxLayout();
+    zernListWidget = new QListWidget();
+    zernListWidget->addItem("Best Fit Conic");
+    int count = sizeof(zernsNames) / sizeof(zernsNames[0]);
+    // Populate the list widget directly from your array
+    for (int i = 0; i < count; ++i) {
+        zernListWidget->addItem(QString::fromUtf8(zernsNames[i]));
+    }
+
+    // Get the saved trend name
+        QString savedTrend = settings.value("LiveView/TrendName", "Best Fit Conic").toString();
+        history->setItem(savedTrend);
+
+        // Find the item matching the saved text and set it as current/selected
+        QList<QListWidgetItem*> matchingItems = zernListWidget->findItems(savedTrend, Qt::MatchExactly);
+        if (!matchingItems.isEmpty()) {
+            zernListWidget->setCurrentItem(matchingItems.first());
+        } else {
+            zernListWidget->setCurrentRow(0); // Fallback to "Best Fit Conic" if not found
+        }
+
+    connect(zernListWidget, &QListWidget::currentTextChanged, this, [this](QString name){
+        history->setItem(name);
+        QSettings set;
+        set.setValue("LiveView/TrendName", name);
+    });
+
+    zernlayout->addWidget(new QLabel("Item to Track in trend graph:"));
+    zernlayout->addWidget(zernListWidget);
+
+    settingsLayout->addWidget(connectGroup);
+    settingsLayout->addWidget(rmsGroup);
+    settingsLayout->addLayout(resLayout);
+    settingsLayout->addWidget(deleteIntermidiateWaveFront);
+    settingsLayout->addLayout(zernlayout);
+    settingsLayout->addStretch();
+
+    QDialogButtonBox *btnBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, m_settingsDlg);
+    connect(btnBox, &QDialogButtonBox::accepted, m_settingsDlg, &QDialog::accept);
+    connect(btnBox, &QDialogButtonBox::rejected, m_settingsDlg, &QDialog::reject);
+    settingsLayout->addWidget(btnBox);
+
+    m_settingsDlg->resize(550, 450);
+}
+
+void LiveViewDialog::restartStream(){
+    onApplySettings();
+
+}
+
+void LiveViewDialog::onApplySettings() {
+    QString newUrl = urlLineEdit->text().trimmed();
+    if (newUrl.isEmpty()) return;
+
+    QSettings settings;
+    settings.setValue("LiveView/streamUrl", newUrl);
+    settings.setValue("LiveView/resolution", resolutionCombo->currentText());
+
+    // Tell the worker thread to switch sources safely
+
+    if (m_worker) {
+            qDebug() << "apply emitting requestChangeSource:" << newUrl;
+                    emit requestChangeSource(newUrl);
+    }
+
+    // Apply selected resolution if valid
+    QSize selectedRes = resolutionCombo->currentData().toSize();
+
+
+    if (m_worker && selectedRes.width() > 0 && selectedRes.height() > 0) {
+        QMetaObject::invokeMethod(m_worker, "setResolution", Qt::QueuedConnection,
+                                  Q_ARG(int, selectedRes.width()),
+                                  Q_ARG(int, selectedRes.height()));
+        setFitToWindowZoom();
+    }
+}
+void LiveViewDialog::onGrabClicked() {
+    if (!m_latestFrame.empty()) {
+        emit igramCaptured(); // Emit a safe deep copy of the frame
+        OutlineBtn->show();
+        OutlineOkBtn->show();
+        startAnalysisBtn->hide();
+    }
+}
+
+
+void LiveViewDialog::onDFTSizeChanged(int index){
+    int data = dftresolutionCombo->itemData(index).toDouble();
+    QSettings set;
+    set.setValue("liveViewDFTSize",index );
+    m_dftSize = data;
+}
+
+void LiveViewDialog::onZoomChanged(int index) {
+    double data = zoomCombo->itemData(index).toDouble();
+    QSettings set;
+    set.setValue("liveViewZoom", index);
+    if (data < 0) {
+        m_fitToWindow = true;
+        setFitToWindowZoom();
+    } else {
+        m_fitToWindow = false;
+        m_zoomFactor = data;
+        imageLabel->setZoomFactor(m_zoomFactor);
+
+        // Re-apply scaled circle if we have one active
+        if (m_hasActiveCircle) {
+
+            imageLabel->setGreenCircle(m_mirrorOutlineCenter , m_mirrorOutlineRadius);
+        }
+
+        renderCurrentFrame();
+    }
+}
+void LiveViewDialog::resizeEvent(QResizeEvent *event) {
+    QDialog::resizeEvent(event);
+    if (m_fitToWindow)
+         setFitToWindowZoom(); // Your custom routine
+}
+
+void LiveViewDialog::setFitToWindowZoom() {
+    if (m_latestFrame.empty()) return;
+
+    QSize viewportSize = scrollArea->viewport()->size();
+
+    // Default to full frame dimensions
+    int imgW = m_latestFrame.cols;
+    int imgH = m_latestFrame.rows;
+
+    // Match the cropping logic from renderCurrentFrame()
+    if (!m_outlineChanging && m_mirrorOutlineRadius > 0) {
+        int pad = 10;
+        int xMin = static_cast<int>(m_mirrorOutlineCenter.x() - m_mirrorOutlineRadius - pad);
+        int yMin = static_cast<int>(m_mirrorOutlineCenter.y() - m_mirrorOutlineRadius - pad);
+        int xMax = static_cast<int>(m_mirrorOutlineCenter.x() + m_mirrorOutlineRadius + pad);
+        int yMax = static_cast<int>(m_mirrorOutlineCenter.y() + m_mirrorOutlineRadius + pad);
+
+        cv::Rect desiredRoi(xMin, yMin, xMax - xMin, yMax - yMin);
+        cv::Rect cropRoi = desiredRoi & cv::Rect(0, 0, m_latestFrame.cols, m_latestFrame.rows);
+
+        if (cropRoi.width > 0 && cropRoi.height > 0) {
+            imgW = cropRoi.width;
+            imgH = cropRoi.height;
+        }
+        m_userMirrorRect = QRect(cropRoi.x, cropRoi.y, cropRoi.width, cropRoi.height);
+    } else if (m_userMirrorRect.width() > 0 && m_userMirrorRect.height() > 0) {
+        int pad = 10;
+        cv::Rect desiredRoi(m_userMirrorRect.x() - pad, m_userMirrorRect.y() - pad,
+                            m_userMirrorRect.width() + 2 * pad, m_userMirrorRect.height() + 2 * pad);
+        cv::Rect cropRoi = desiredRoi & cv::Rect(0, 0, m_latestFrame.cols, m_latestFrame.rows);
+
+        if (cropRoi.width > 0 && cropRoi.height > 0) {
+            imgW = cropRoi.width;
+            imgH = cropRoi.height;
+        }
+    }
+
+    if (imgW <= 0 || imgH <= 0) return;
+
+    double scaleX = static_cast<double>(viewportSize.width()) / imgW;
+    double scaleY = static_cast<double>(viewportSize.height()) / imgH;
+
+    m_zoomFactor = std::min(scaleX, scaleY);
+    // Clamp to a reasonable minimum
+    m_zoomFactor = std::max(0.1, m_zoomFactor);
+
+    // Re-apply scaled circle if we have one active
+    if (m_hasActiveCircle) {
+        imageLabel->setGreenCircle(m_mirrorOutlineCenter, m_mirrorOutlineRadius);
+    }
+    imageLabel->setZoomFactor(m_zoomFactor);
+    renderCurrentFrame();
+}
+void LiveViewDialog::setCenterFilter(double spatialFreqBin) {
+    m_centerFilterRadius = spatialFreqBin ;
+
+    int centerx = m_userMirrorRect.width() / 2;
+    int centery = m_userMirrorRect.height() / 2;
+
+    double scaledMirrorRadius = m_mirrorOutlineRadius * m_DftToimageDownScale;
+    double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (scaledMirrorRadius * 2.0));
+    int bin = static_cast<int>(binDftSpace * m_DFTscale);
+
+    m_binToBinScale = spatialFreqBin/ static_cast<double>(bin);
+    imageLabel->setYellowCircle(QPointF(centerx,centery),bin);
+}
+
+void LiveViewDialog::onResolutionChanged(int index) {
+    m_dftSize = resolutionCombo->itemData(index).toInt();
+}
+
+QRect LiveViewDialog::getMirrorRect(){
+    int radius = m_mirrorOutlineRadius + 1;
+    int left = m_mirrorOutlineCenter.x() - radius;
+    int top = m_mirrorOutlineCenter.y() - radius;
+    return QRect(left, top, radius * 2, radius * 2);
+}
+
+
+void LiveViewDialog::onRequestZoomChange(double){
+
+}
+
+void LiveViewDialog::onYellowRadiusChanged(int rad){
+    int outbin = rad  * m_binToBinScale;
+    emit blueCircle(outbin);
+}
+
+
+
+#include <QElapsedTimer> // Make sure this is included in your cpp file if not already
+
+void LiveViewDialog::renderCurrentFrame() {
+    if (m_latestFrame.empty()) return;
+
+    // Start the high-resolution timer
+    QElapsedTimer timer;
+    timer.start();
+
+    static int cnt = 0;
+    cv::Mat displayMat = m_latestFrame.clone();
+    if (displayMat.channels() == 1) {
+        cv::cvtColor(displayMat, displayMat, cv::COLOR_GRAY2BGR);
+    }
+
+    // 1. Determine ROI around the mirror outline + 10 pixel padding if outline exists
+    cv::Rect cropRoi(0, 0, displayMat.cols, displayMat.rows);
+    bool hasOutline = (m_mirrorOutlineRadius > 0) && !m_outlineChanging;
+
+    if (hasOutline) {
+        int pad = 10;
+        int xMin = static_cast<int>(m_mirrorOutlineCenter.x() - m_mirrorOutlineRadius - pad);
+        int yMin = static_cast<int>(m_mirrorOutlineCenter.y() - m_mirrorOutlineRadius - pad);
+        int xMax = static_cast<int>(m_mirrorOutlineCenter.x() + m_mirrorOutlineRadius + pad);
+        int yMax = static_cast<int>(m_mirrorOutlineCenter.y() + m_mirrorOutlineRadius + pad);
+
+        cv::Rect desiredRoi(xMin, yMin, xMax - xMin, yMax - yMin);
+        cropRoi = desiredRoi & cv::Rect(0, 0, displayMat.cols, displayMat.rows);
+
+        if (cropRoi.width > 0 && cropRoi.height > 0) {
+            displayMat = displayMat(cropRoi).clone();
+        } else {
+            cropRoi = cv::Rect(0, 0, displayMat.cols, displayMat.rows);
+        }
+    }
+
+    if (dftCheckBox->isChecked()) {
+        // 2. Compute raw DFT
+        cv::Mat dftRaw = computeLiveDFT(m_latestFrame, m_dftSize, m_userMirrorRect);
+        if (dftRaw.empty()) return;
+
+        // 3. Convert to float and apply logarithmic scaling on the raw DFT directly
+        cv::Mat dftFloat;
+        dftRaw.convertTo(dftFloat, CV_32F);
+
+        cv::Mat dftLog = dftFloat;
+
+        // 4. Compute statistics on the true DFT data
+        double minVal, maxVal;
+        cv::minMaxLoc(dftLog, &minVal, &maxVal);
+
+        cv::Scalar meanVal, stdDevVal;
+        cv::meanStdDev(dftLog, meanVal, stdDevVal);
+
+        // 5. Clip dynamic range based on statistics
+        double floorVal = meanVal[0] + 2 * stdDevVal[0];
+
+        int val = DFTLowThreshold->value();
+        if (val != -1) {
+            floorVal = val;
+        }
+
+        double ceilVal = meanVal[0] + (maxVal - meanVal[0])/vivid->value();
+
+        cv::Mat dftClamped;
+        cv::threshold(dftLog, dftClamped, floorVal, 0, cv::THRESH_TOZERO);
+
+        cv::Mat dftShifted = dftClamped - floorVal;
+        double range = ceilVal - floorVal;
+        if (range < 1e-5) range = 1.0;
+
+        cv::Mat dftNorm;
+        dftShifted.convertTo(dftNorm, CV_8U, 255.0 / range);
+
+        // 6. Apply Jet colormap to the square DFT
+        cv::Mat dftColorSquare;
+        cv::applyColorMap(dftNorm, dftColorSquare, cv::COLORMAP_JET);
+
+        cv::Mat alphaMaskSquare;
+        dftNorm.convertTo(alphaMaskSquare, CV_32F, 1.0 / 255.0);
+
+        // 7. Resize and center to fit the cropped displayMat while keeping aspect ratio
+        m_DFTscale = std::min(
+            static_cast<double>(displayMat.cols) / dftColorSquare.cols,
+            static_cast<double>(displayMat.rows) / dftColorSquare.rows
+        );
+
+        int newWidth = static_cast<int>(dftColorSquare.cols * m_DFTscale);
+        int newHeight = static_cast<int>(dftColorSquare.rows * m_DFTscale);
+
+        int x = (displayMat.cols - newWidth) / 2;
+        int y = (displayMat.rows - newHeight) / 2;
+        cv::Rect roi(x, y, newWidth, newHeight);
+
+        roi &= cv::Rect(0, 0, displayMat.cols, displayMat.rows);
+        if (roi.width <= 0 || roi.height <= 0) return;
+
+        cv::Mat resizedColor, resizedAlpha;
+        cv::resize(dftColorSquare, resizedColor, roi.size(), 0, 0, cv::INTER_LINEAR);
+        cv::resize(alphaMaskSquare, resizedAlpha, roi.size(), 0, 0, cv::INTER_LINEAR);
+
+        // 8. Localized Alpha Blending
+        cv::Mat scaledAlpha;
+        cv::multiply(resizedAlpha, 2.7, scaledAlpha);
+        cv::threshold(scaledAlpha, scaledAlpha, 1.0, 1.0, cv::THRESH_TRUNC);
+
+        cv::Mat bgFloat, fgFloat;
+        displayMat(roi).convertTo(bgFloat, CV_32FC3);
+        resizedColor.convertTo(fgFloat, CV_32FC3);
+
+        std::vector<cv::Mat> alphaChannels(3, scaledAlpha);
+        cv::Mat alpha3C;
+        cv::merge(alphaChannels, alpha3C);
+
+        cv::Mat blended;
+        cv::multiply(fgFloat, alpha3C, fgFloat);
+        cv::multiply(bgFloat, cv::Scalar::all(1.0) - alpha3C, bgFloat);
+        cv::add(bgFloat, fgFloat, blended);
+
+        blended.convertTo(displayMat(roi), CV_8UC3);
+    }
+
+    // Display via OpenCV conversion
+    QImage img = matToQImage(displayMat);
+    QPainter dftpainter(&img);
+
+    if (dftCheckBox->isChecked() && !m_outlineChanging) {
+        dftpainter.setBrush(QColor(0, 0, 100, 70));
+        dftpainter.setPen(QPen(Qt::yellow, 2));
+        int centerx = img.width() / 2;
+        int centery = img.height() / 2;
+
+        double effectiveMirrorRadius = m_mirrorOutlineRadius * m_DftToimageDownScale;
+        double binDftSpace = m_centerFilterRadius * (static_cast<double>(m_dftSize) / (effectiveMirrorRadius * 2.0));
+        int bin = static_cast<int>(binDftSpace * m_DFTscale);
+
+        dftpainter.drawEllipse(QPointF(centerx, centery), bin, bin);
+    }
+
+    if (m_mirrorOutlineRadius != 0) {
+        dftpainter.setPen(QPen(Qt::green, 2));
+        QPointF adjustedCenter(m_mirrorOutlineCenter.x() - cropRoi.x, m_mirrorOutlineCenter.y() - cropRoi.y);
+        dftpainter.drawEllipse(adjustedCenter, m_mirrorOutlineRadius, m_mirrorOutlineRadius);
+    }
+
+    int targetWidth = static_cast<int>(img.width() * m_zoomFactor);
+    int targetHeight = static_cast<int>(img.height() * m_zoomFactor);
+
+    imageSize->setText(QString("%1 x %2 frame:%3")
+                       .arg(img.size().width())
+                       .arg(img.size().height())
+                       .arg(cnt++));
+
+    imageLabel->setPixmap(QPixmap::fromImage(img).scaled(targetWidth, targetHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    imageLabel->resize(targetWidth, targetHeight);
+    imageLabel->repaint();
+
+    // Calculate elapsed time (in milliseconds with fractional decimal places)
+    //double elapsedMs = static_cast<double>(timer.nsecsElapsed()) / 1000000.0;
+
+    // Append the render time to statusLeft text
+    if (statusLeft) {
+        //QString baseStatus = statusLeft->text(); // Or whatever base text statusLeft normally holds
+        //statusLeft->setText(QString("  Time: %1 ms").arg(elapsedMs, 0, 'f', 2));
+    }
+
+    m_throttle.start(10);
+}
+
+cv::Mat LiveViewDialog::computeLiveDFT(const cv::Mat &inputFrame, int targetSize, const QRect &roi) {
+    cv::Mat gray;
+    if (inputFrame.channels() == 3) {
+        cv::cvtColor(inputFrame, gray, cv::COLOR_BGR2GRAY);
+    } else {
+        gray = inputFrame;
+    }
+
+    cv::Mat workingArea;
+    if (roi.isValid() && roi.width() > 10 && roi.height() > 10) {
+        QRect clamped = roi.intersected(QRect(0, 0, gray.cols, gray.rows));
+        if (!clamped.isEmpty()) {
+            cv::Rect cvRoi(clamped.x(), clamped.y(), clamped.width(), clamped.height());
+            workingArea = gray(cvRoi).clone();
+
+            cv::Point center(workingArea.cols / 2, workingArea.rows / 2);
+            int radius = std::min(center.x, center.y);
+            cv::Mat mask = cv::Mat::zeros(workingArea.size(), CV_8UC1);
+            cv::circle(mask, center, radius, cv::Scalar(255), -1);
+            workingArea.setTo(0, mask == 0);
+        } else {
+            workingArea = gray;
+        }
+    } else {
+        workingArea = gray;
+    }
+
+    // 1. Calculate uniform scale, ensuring we ONLY scale down (cap scale at 1.0)
+    int maxDim = std::min(workingArea.cols, workingArea.rows);
+    double scale = static_cast<double>(targetSize) / maxDim;
+    if (scale > 1.0) {
+        scale = 1.0;
+    }
+
+    // Save to member variable so display code can use it for PPM/circle scaling
+    m_DftToimageDownScale = scale;
+
+    int newW = std::round(workingArea.cols * scale);
+    int newH = std::round(workingArea.rows * scale);
+
+    // Safety fallback if dimensions are somehow invalid
+    if (newW <= 0) newW = 1;
+    if (newH <= 0) newH = 1;
+
+    cv::Mat resized;
+    cv::resize(workingArea, resized, cv::Size(newW, newH), 0, 0, cv::INTER_AREA);
+
+    // 2. Create target canvas and center the resized image with strict bounds protection
+    cv::Mat padded = cv::Mat::zeros(targetSize, targetSize, workingArea.type());
+
+    int xOffset = std::max(0, (targetSize - newW) / 2);
+    int yOffset = std::max(0, (targetSize - newH) / 2);
+
+    int copyW = std::min(newW, targetSize - xOffset);
+    int copyH = std::min(newH, targetSize - yOffset);
+
+    if (copyW > 0 && copyH > 0 && xOffset >= 0 && yOffset >= 0 &&
+        (xOffset + copyW) <= targetSize && (yOffset + copyH) <= targetSize) {
+        cv::Rect targetRoi(xOffset, yOffset, copyW, copyH);
+        cv::Rect sourceRoi(0, 0, copyW, copyH);
+        resized(sourceRoi).copyTo(padded(targetRoi));
+    }
+
+    cv::Mat floatImg;
+    padded.convertTo(floatImg, CV_32F);
+
+    cv::Mat complexImg;
+    cv::dft(floatImg, complexImg, cv::DFT_COMPLEX_OUTPUT);
+
+    std::vector<cv::Mat> planes;
+    cv::split(complexImg, planes);
+    cv::Mat mag;
+    cv::magnitude(planes[0], planes[1], mag);
+
+    mag += cv::Scalar::all(1);
+    cv::log(mag, mag);
+
+    mag = mag(cv::Rect(0, 0, mag.cols & -2, mag.rows & -2));
+    int cx = mag.cols / 2;
+    int cy = mag.rows / 2;
+
+    cv::Mat q0(mag, cv::Rect(0, 0, cx, cy));
+    cv::Mat q1(mag, cv::Rect(cx, 0, cx, cy));
+    cv::Mat q2(mag, cv::Rect(0, cy, cx, cy));
+    cv::Mat q3(mag, cv::Rect(cx, cy, cx, cy));
+
+    cv::Mat tmp;
+    q0.copyTo(tmp);
+    q3.copyTo(q0);
+    tmp.copyTo(q3);
+
+    q1.copyTo(tmp);
+    q2.copyTo(q1);
+    tmp.copyTo(q2);
+
+    cv::normalize(mag, mag, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    return mag;
+}
+
+QImage LiveViewDialog::matToQImage(const cv::Mat &mat) {
+    if (mat.type() == CV_8UC3) {
+        cv::Mat rgb;
+        cv::cvtColor(mat, rgb, cv::COLOR_BGR2RGB);
+        return QImage(rgb.data, rgb.cols, rgb.rows, rgb.step, QImage::Format_RGB888).copy();
+    } else if (mat.type() == CV_8UC1) {
+        return QImage(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_Grayscale8).copy();
+    }
+    return QImage();
+}
+
+void LiveViewDialog::setOutsidecircle(QPointF center, double radius) {
+    m_mirrorOutlineCenter = center;
+    m_mirrorOutlineRadius = radius;
+    m_hasActiveCircle = true;
+
+
+    imageLabel->setGreenCircle(center, radius);
+    setFitToWindowZoom();
+}
+
+bool LiveViewDialog::eventFilter(QObject *obj, QEvent *event) {
+    // Check if the event comes from an object we care about
+    if (event->type() == QEvent::MouseButtonPress) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+
+        // Check if it was a right-click
+        if (mouseEvent->button() == Qt::RightButton) {
+            if (obj == m_exposureSlider)
+                emit expSliderRightClicked();
+            if (obj == m_brightnessSlider)
+                emit gainSliderRightClicked();
+
+            return true; // Handled the event, don't pass it further
+        }
+    }
+
+    // Pass unhandled events to the base class
+    return QWidget::eventFilter(obj, event);
+}

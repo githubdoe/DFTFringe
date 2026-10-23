@@ -112,6 +112,7 @@ public:
     IgramArea(QWidget *parent = 0, void *mwp = 0 );
 
     void *m_mw;
+    bool openImage(QImage img,  bool showBoundary, QString = "stream");
     bool openImage(const QString &fileName, bool showBoundary = true);
     bool saveImage(const QString &fileName, const char *fileFormat);
     void setPenColor(const QColor &newColor);
@@ -127,12 +128,13 @@ public:
     void deleteOutline();
     void readOutlines();
     void autoTraceOutline();
-
+    void setOutsideOutline(QPointF center, double radius);
     void SideOutLineActive(bool checked);
     void CenterOutlineActive(bool checked);
     void PolyAreaActive(bool checked);
     void edgeMaskOutLineActive(bool checked);
-    void save();    void nextStep();
+    void save();
+    void nextStep();
     bool sideOutlineIsActive;
 
 
@@ -176,6 +178,7 @@ public slots:
     void zoomFull();
     void toggleHideOutline();
     void edgeMode();
+
 signals:
     void enableShiftButtons(bool);
     void statusBarUpdate(QString, int);
@@ -185,6 +188,7 @@ signals:
     void dftCenterFilter(double);
     void imageSize(QString);
     void doDFT();
+    void boundary(CircleOutline outside, bool hasBeenCropped, QPointF cropVal, CircleOutline inside);
 protected:
     bool eventFilter(QObject *object, QEvent *event);
     void wheelEvent(QWheelEvent * event);
@@ -201,7 +205,7 @@ private:
     QPushButton *m_demo;
     QWidget *outlinePlotWindow;
     QDockWidget *dock;
-    void drawBoundary();
+
     void resizeImage();
     void zoom(int del, QPointF zoompt);
     bool modified;
@@ -225,6 +229,7 @@ private:
     double m_edgeMaskWidth;
     void saveRegions();
 public:
+    void drawBoundary();
     void deleteRegions();
     QImage igramColor;
     QImage igramDisplay;    // gray with outlines
@@ -266,8 +271,7 @@ private:
     QPointF dragStart;
     int crop_dx;
     int crop_dy;
-    int cropTotalDx, cropTotalDy;
-    double cropScale;
+
     dftThumb *m_dftThumb;
     QTimer *m_outlineTimer;
     bool hasBeenCropped;
@@ -287,6 +291,7 @@ private:
 public:
    QImage getBestChannel(QImage &img);
    int m_current_boundry;
+   int cropTotalDx, cropTotalDy;
 public slots:
    void addregion();
    void deleteregion(int);

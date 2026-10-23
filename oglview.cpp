@@ -66,10 +66,16 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool) :
 
     QLabel *colorLedgend = new QLabel(this);
 
+    m_liveLabel = new QLabel(this);
+    m_liveLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    m_liveLabel->setScaledContents(true);
+    m_liveLabel->hide(); // Hidden by default
+
     m_surface->setLegend(colorLedgend);
 
+
+
     QGroupBox *heightMapGroupBox = new QGroupBox(QStringLiteral("Waves 550nm"));
-    //heightMapGroupBox->setStyleSheet({"background: grey;"});
     QVBoxLayout *colorMapVBox = new QVBoxLayout;
     colorMapVBox->addWidget(colorLedgend);
     heightMapGroupBox->setLayout(colorMapVBox);
@@ -91,6 +97,7 @@ OGLView::OGLView(QWidget *parent, ContourTools *m_tool) :
     connect(m_fullScreenPb, &QAbstractButton::pressed, this, &OGLView::fullScreenPressed);
     lh->addStretch();
     lv->addWidget(m_container);
+    lv->addWidget(m_liveLabel); //  will show when live view is looping analysis
     topH->addLayout(lv,10);
     topH->addLayout(rightcontrols,1);
     setLayout(topH);
@@ -231,4 +238,14 @@ void OGLView::showSelected()    // show all selected wavefronts as 3D plots
     SurfaceManager::get_instance()->m_allContours = m_allContours;
     w->show();
     QApplication::restoreOverrideCursor();
+}
+
+void OGLView::setLivePreviewMode(bool liveActive) {
+    if (liveActive) {
+        m_container->hide();
+        m_liveLabel->show();
+    } else {
+        m_liveLabel->hide();
+        m_container->show();
+    }
 }

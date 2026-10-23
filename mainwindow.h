@@ -47,6 +47,15 @@
 #include "wavefrontfilterdlg.h"
 #include "outlineplots.h"
 #include "cameracalibwizard.h"
+#include "liveviewdialog.h"
+#include <QShowEvent>
+enum LiveLoopState {
+    State_Stopped,
+    State_Running,
+    State_Paused
+};
+
+
 
 class regionEditTools;
 class jitterOutlineDlg;
@@ -57,11 +66,12 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
     void updateMetrics(wavefront& wf);
     int addTab(QWidget* w, const QString &name);
     mirrorDlg *m_mirrorDlg;
@@ -124,6 +134,7 @@ private slots:
 
     void on_actionPreferences_triggered();
     void mainTabChanged(int);
+    QString getCurrentHotKeyHelp() const ;
     void on_actionMirror_triggered();
 
     void on_saveOutline_clicked();
@@ -275,7 +286,15 @@ private slots:
 
     void on_actionStop_auto_invert_triggered();
 
-    void load_from_url();
+    QString load_from_url();
+
+    void on_actionLive_view_triggered();
+
+    void on_actionReset_to_Factory_Defaults_triggered();
+
+    void on_actionSave_settomgs_to_a_file_triggered();
+
+    void on_actionRestore_settings_from_a_file_triggered();
 
 private:
 
@@ -287,8 +306,10 @@ private:
     void updateRecentFileActions();
     QString strippedName(const QString &fullFileName);
     QMenu* m_view_menu;
+    QTimer *m_liveViewRMSTimer = NULL;
     void createActions();
     void createDockWindows();
+    void runLiveAnalysisLoop();
 public:
     IgramArea *m_igramArea;
     DFTTools *m_dftTools;
@@ -330,14 +351,17 @@ private:
     bool m_skipItem;
     bool m_OutlineDoneInBatch;
     bool m_batchMakeSurfaceReady;
+    bool m_liveLoopActive = false;
     astigStatsDlg *m_astigStatsDlg;
-
+    bool m_hasShownHelp = false;
+    QDialog *m_helpOverlay = nullptr;
     enum { MaxRecentFiles = 5 };
     QAction *recentFileActs[MaxRecentFiles];
 
     ColorChannelDisplay *m_colorChannels;
     igramIntensity *m_intensityPlot;
     vortexDebug    *m_vortexDebugTool;
+    QPointer<LiveViewDialog> m_viewDlg;
     batchIgramWizard *batchWiz;
     QStringList m_igramsToProcess;
     QWidget *oglFv;
@@ -347,6 +371,20 @@ private:
     QVector<QVector<QString> > batchZerns;
 
     QPointer<cameraCalibWizard> m_cameraCalibWizard;
+
+    // Live view variables
+    // Average tracking variables (persists across pause/resume, resets on fresh start)
+    wavefront *m_liveAverageWf = nullptr;
+    cv::Mat m_liveSum;      //Sum used to make the live display
+    cv::Mat m_liveDataSum;  // The sum used to make the actual wavefront.
+    int m_liveValidCount = 0;
+    LiveLoopState m_liveState = State_Stopped;
+    void setLiveViewMode(bool active);
+public slots:
+    void startLiveButton_clicked();
+    void pauseLiveButton_clicked();
+    void stopLiveButton_clicked();
+
 };
 
 #endif // MAINWINDOW_H

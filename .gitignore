@@ -6,6 +6,7 @@ moc_*
 qrc_*
 ui_*
 build
+*.user
 
 # Linux build
 DFTFringe

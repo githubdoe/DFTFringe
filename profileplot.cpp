@@ -656,12 +656,12 @@ void ProfilePlot::populate()
     if (m_wf == 0)
         return;
     QSettings settings;
-    double smoothing = settings.value("GBValue", 20).toInt();
     m_plot->detachItems(QwtPlotItem::Rtti_PlotTextLabel);
 
+    SurfaceManager *sm = SurfaceManager::get_instance();
+    double smoothing = sm->getGaussBlurOfSelectedWavefronts();
 
-
-    if (m_wf->m_outside.m_radius > 0 && settings.value("GBlur", false).toBool()){
+    if (smoothing > 0){
         double val = .01 * (m_wf->diameter) * smoothing;
         QString t = QString("Surface Smoothing diameter %1% of surface diameter %2 mm")
                         .arg(smoothing, 6, 'f', 2)
@@ -794,7 +794,6 @@ void ProfilePlot::populate()
               g_angle = startAngle;
             }
           if (m_showAvg){
-              qDebug() << "inside avg" << y_offset;
               QColor penColor = QColor(Settings2::m_profile->getColor(i%10));
               // plot the average profile
               std::vector<double> avgRadius = compute_average_radial_profile(wf->workData,
@@ -868,7 +867,7 @@ void ProfilePlot::populate()
     muY->setLabel( QString::fromLatin1( " 1/8 wave on wavefront" ) );
     muY->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
     muY->setLineStyle( QwtPlotMarker::HLine );
-    muY->setLinePen( Qt::red, 0, Qt::DashDotLine );
+    muY->setLinePen( Qt::red, 3, Qt::DashDotLine );
     muY->setYValue( 0.125 * mul );
     muY->attach( m_plot );
 
@@ -877,7 +876,7 @@ void ProfilePlot::populate()
     mlY->setLabel( QString::fromLatin1( " -1/8 wave on wavefront" ) );
     mlY->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
     mlY->setLineStyle( QwtPlotMarker::HLine );
-    mlY->setLinePen( Qt::red, 0, Qt::DashDotLine );
+    mlY->setLinePen( Qt::red, 3, Qt::DashDotLine );
     mlY->setYValue( -0.125 * mul );
     mlY->attach( m_plot );
 
@@ -982,7 +981,7 @@ void ProfilePlot::saveXscaleSettings(){
 }
 void ProfilePlot::toggleShow16(){
     m_show_16_diameters = !m_show_16_diameters;
-qDebug() << "show 16";
+
     populate();
     m_plot->replot();
 }
@@ -994,7 +993,7 @@ void ProfilePlot::toggleShowAvg(){
 }
 void ProfilePlot::toggleOneAngle(){
     m_show_oneAngle = !m_show_oneAngle;
-qDebug() << "show one";
+
     populate();
     m_plot->replot();
 }
@@ -1179,7 +1178,7 @@ void ProfilePlot::CreateWaveFrontFromAverage(){
     }
     cv::Mat result = createInterpolatedCircularSurface(avgRadius);
     SurfaceManager *sm = SurfaceManager::get_instance();
-    sm->createSurfaceFromPhaseMap(result,
+    sm->createWaveFrontFromPhaseMap(result,
                               m_wf->m_outside,
                               m_wf->m_inside,
                               QString(m_wf->name.replace(".wft","")  + "_avg"), WavefrontOrigin::Average);

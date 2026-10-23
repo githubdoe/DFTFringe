@@ -31,6 +31,7 @@
 #include <QTextStream>
 #include "colormapviewerdlg.h"
 #include "plotcolor.h"
+#include <QImage>
 /*
 m_listeWidget->setViewMode(QListWidget::IconMode);
 

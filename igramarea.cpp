@@ -86,8 +86,8 @@ QImage cvMatToImage(const cv::Mat &out){
 }
 IgramArea::IgramArea(QWidget *parent, void *mw)
     : QWidget(parent),m_mw(mw),m_hideOutlines(false),scale(1.),outterPcount(0), innerPcount(0),
-      zoomIndex(1),dragMode(false),cropTotalDx(0), cropTotalDy(0), hasBeenCropped(false),
-      m_zoomMode(NORMALZOOM),m_current_boundry(OutSideOutline)
+      zoomIndex(1),dragMode(false),hasBeenCropped(false), m_zoomMode(NORMALZOOM), m_current_boundry(OutSideOutline),
+      cropTotalDx(0),cropTotalDy(0)
 {
     leftMargin = 0;
     searchOutlineScale = 1.;
@@ -260,10 +260,10 @@ void IgramArea::doGamma(double gammaV){
 }
 
 cv::Mat IgramArea::qImageToMat(QImage &img){
-    QImage::Format f = img.format();
+
     int depth = img.depth();
-    int planesCnt = img.bitPlaneCount();
-    qDebug() << "format " << f << depth << planesCnt;
+
+
     cv::Mat iMat;
     switch (depth){
         case 24:
@@ -935,7 +935,7 @@ void IgramArea::useLastOutline(){
             drawBoundary();
         }
     }
-        qDebug() << "uselastoutline" << m_outside.m_center.x();
+
 }
 void IgramArea::adjustCenterandRegions(){
     double xoffset , yoffset = 0;
@@ -977,26 +977,7 @@ void IgramArea::adjustCenterandRegions(){
         }
     }
 }
-
-bool IgramArea::openImage(const QString &fileName, bool showBoundary)
-
-{
-    cropTotalDx = cropTotalDy = 0;
-    foreach(QWidget *widget, QApplication::topLevelWidgets()) {
-      if(widget->objectName() == "MainWindow")
-        widget->setWindowTitle(fileName);
-    }
-
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    QImage loadedImage;
-    if (!loadedImage.load(fileName)) {
-        QMessageBox::warning(NULL,"","Image "+fileName + " could not be read.");
-        QApplication::restoreOverrideCursor();
-        return false;
-    }
-    // convert image to 3 channel image
-    if (loadedImage.format() != QImage::Format_RGB888)
-        loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
+bool IgramArea::openImage(QImage loadedImage,  bool showBoundary, QString fileName){
 
     if (Settings2::getInstance()->m_igram->m_removeDistortion){
         cv::Mat raw = cv::imread(fileName.toStdString().c_str());
@@ -1076,12 +1057,11 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
     m_polygons.clear();
     m_regionEdit->clear();
     m_regionEdit->hide();
-    qDebug() << "Checking for ouline file";
     // check for an outline file
     QFileInfo finfo(makeOutlineName());
     emit showTab(0);
     qApp->processEvents();
-    if (finfo.exists()){
+    if (!fileName.startsWith("stream") and finfo.exists()){
         qDebug() << "file exists";
         deleteRegions();
         qDebug() << "del regions";
@@ -1106,6 +1086,8 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
     }
 
 
+    emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
     cropTotalDx = cropTotalDy = 0;
     SideOutLineActive(true);
 
@@ -1115,6 +1097,30 @@ bool IgramArea::openImage(const QString &fileName, bool showBoundary)
 
     QApplication::restoreOverrideCursor();
     return true;
+}
+
+bool IgramArea::openImage(const QString &fileName, bool showBoundary)
+
+{
+    cropTotalDx = cropTotalDy = 0;
+    foreach(QWidget *widget, QApplication::topLevelWidgets()) {
+      if(widget->objectName() == "MainWindow")
+        widget->setWindowTitle(fileName);
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QImage loadedImage;
+    if (!loadedImage.load(fileName)) {
+        QMessageBox::warning(NULL,"","Image "+fileName + " could not be read.");
+        QApplication::restoreOverrideCursor();
+        return false;
+    }
+    // convert image to 3 channel image
+    if (loadedImage.format() != QImage::Format_RGB888)
+        loadedImage = loadedImage.convertToFormat(QImage::Format_RGB888);
+    return openImage(loadedImage, showBoundary,fileName);
+
+
 }
 void IgramArea::syncRegions(){
     // copy m_polygons to region editor
@@ -1267,6 +1273,8 @@ void IgramArea::increaseValue(int i) {
     else if (m_current_boundry == PolyArea && m_polygons.size() > 0){
         increaseRegion(polyndx,1.1);
     }
+    emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
     drawBoundary();
 }
 
@@ -1289,6 +1297,8 @@ void IgramArea::decrease(){
     else if (m_current_boundry == PolyArea && m_polygons.size() > 0){
         increaseRegion(polyndx, .9);
     }
+    emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
     drawBoundary();
 }
 void IgramArea::zoomIn(){
@@ -1341,6 +1351,9 @@ void IgramArea::zoom(int del, QPointF zoompt){
         gscrollArea->setWidgetResizable(true);
     }
     drawBoundary();
+    emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
+
 }
 
 void IgramArea::wheelEvent (QWheelEvent *e)
@@ -1367,6 +1380,8 @@ void IgramArea::wheelEvent (QWheelEvent *e)
         }
 
         drawBoundary();
+        emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
         return;
     }
     QPointF pos = e->position();
@@ -1407,7 +1422,10 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
             dragMode = true;
             cntrlPressed = event->modifiers() & Qt::ControlModifier;
             lastPoint = Raw/scale;
+
             drawBoundary();
+            emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
             return;
         }
         if (m_current_boundry == OutSideOutline) m_outside.m_radius = 0;
@@ -1523,6 +1541,8 @@ void IgramArea::mousePressEvent(QMouseEvent *event)
         }
 
         drawBoundary();
+        emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
     }
 
 }
@@ -1546,6 +1566,8 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
         mirrorDlg &md = *mirrorDlg::get_Instance();
         md.m_verticalAxis = md.diameter * e;
         drawBoundary();
+        emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
         return;
     }
     if ((event->buttons() & Qt::LeftButton) && scribbling) {
@@ -1570,6 +1592,8 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
 
         }
         drawBoundary();
+        emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
     }
     if ( regionMode){
         if (m_regionEdit->m_doFreeform && event->buttons() & Qt::LeftButton){
@@ -1577,6 +1601,8 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
         }
         lastPoint = scaledPos;
         drawBoundary();
+        emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
     }
     else if ((event->buttons() & Qt::LeftButton) & dragMode){
         if( outterPcount == 2) {
@@ -1612,6 +1638,8 @@ void IgramArea::mouseMoveEvent(QMouseEvent *event)
             }
         }
         drawBoundary();
+        emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
         lastPoint = scaledPos;
     }
 }
@@ -1652,6 +1680,8 @@ void IgramArea::mouseReleaseEvent(QMouseEvent *event)
     }
 
     drawBoundary();
+    emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
     scribbling = false;
     verticalTracking = false;
     dragMode = false;
@@ -1938,7 +1968,7 @@ void IgramArea::paintEvent(QPaintEvent *event)
             topy = 0;
         }
 
-        qDebug() << "viewW" << viewW << "scale"<< zoomIndex;
+
         QImage roi = m_withOutlines.copy(topx,topy, viewW * 2, viewW);
         smallPainter.drawImage(viewW ,0, roi);
 
@@ -1995,6 +2025,7 @@ void IgramArea::saveRegions(){
 }
 
 
+
 void IgramArea::crop() {
     // add current bounds to crop history.
 
@@ -2007,8 +2038,8 @@ void IgramArea::crop() {
     QSettings set;
 
     set.setValue("lastOutsideRad", radx);
-    set.setValue("lastOutsideCx",cx);
-    set.setValue("lastOutsideCy",cy);
+    set.setValue("lastOutsideCx",cx+cropTotalDx);
+    set.setValue("lastOutsideCy",cy+cropTotalDy);
 
     int width = igramGray.width();
     int height = igramGray.height();
@@ -2039,7 +2070,6 @@ void IgramArea::crop() {
     cropTotalDx += x;
     cropTotalDy += y;
 
-    x = igramGray.width()/2;
     y = igramGray.height()/2;
 
 
@@ -2052,14 +2082,12 @@ void IgramArea::crop() {
     }
 
     m_outside.translate(QPointF(-crop_dx,-crop_dy));
-    cx = m_outside.m_center.x() + crop_dx;
-    cy = m_outside.m_center.y() + crop_dy;
 
 
     set.setValue("lastinsideRad", m_center.m_radius);
     m_center.translate(QPointF(-crop_dx,-crop_dy));
-    set.setValue("lastinsideCx", m_center.m_center.x() + crop_dx);
-    set.setValue("lastInsideCy", m_center.m_center.y() + crop_dy);
+    set.setValue("lastinsideCx", m_center.m_center.x() + cropTotalDx);
+    set.setValue("lastInsideCy", m_center.m_center.y() + cropTotalDy);
     // need to rescale p1 and p2 because of the crop
     scale = (double)(this->height())/y;
     m_OutterP1 = m_outside.m_p1;
@@ -2077,6 +2105,8 @@ void IgramArea::crop() {
         igramGray.size().width()).arg(
             igramGray.size() .height()));
     emit upateColorChannels(qImageToMat(igramColor));
+    emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
+
 
 }
 void IgramArea::dftReady(const QImage &img){
@@ -2113,7 +2143,17 @@ void IgramArea::CenterOutlineActive(bool checked){
     drawBoundary();
     update();
 }
+void IgramArea::setOutsideOutline(QPointF center, double radius){
+    m_outside = CircleOutline(center,radius);
+    if (hasBeenCropped){
+        m_outside.translate(QPointF(-cropTotalDx, -cropTotalDy));
+    }
 
+    m_OutterP1 = m_outside.m_p1;
+    m_OutterP2 = m_outside.m_p2;
+    drawBoundary();
+    update();
+}
 void IgramArea::loadOutlineFile(const QString &fileName){
     QFile loadFile(fileName);
 
@@ -2404,7 +2444,6 @@ void IgramArea::writeOutlines(QString fileName){
         return;
     }
     QFileInfo info(saveFile);
-    qDebug() << info.absoluteFilePath();
     saveFile.write(jsondoc.toJson());
     saveFile.close();
 
@@ -2473,6 +2512,7 @@ void IgramArea::shiftoutline(QPointF p) {
         m_innerP2 = m_center.m_p2;
         m_centerHist.push(igramGray, m_center);
     }
+    emit  boundary( m_outside, hasBeenCropped, QPointF(cropTotalDx, cropTotalDy), m_center);
     drawBoundary();
 
 }
@@ -2501,8 +2541,7 @@ void IgramArea::nextStep(){
             writeOutlines(makeOutlineName());
         }
     }
-    if (!hasBeenCropped)
-        crop();
+    crop();
     emit doDFT();
     m_current_boundry = OutSideOutline;
     m_regionEdit->hide();

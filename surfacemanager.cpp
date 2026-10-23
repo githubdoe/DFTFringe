@@ -344,7 +344,6 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
 
     wavefront *wf = m_wavefronts[wavefrontNdx];
     generateSurfacefromWavefront(wf);
-
     surfaceGenFinished();
 }
 
@@ -355,8 +354,10 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     } else if (wf->zernEnablesApplied.size() != zernEnables.size()) {
         wf->zernEnablesApplied.resize(zernEnables.size(), true);
     }
-    m_GB_enabled = wf->gbEnabled;
-    m_gbValue = wf->gbValue;
+
+    wf->gbEnabled = m_GB_enabled;
+    wf->gbValue = m_gbValue;
+
     if (wf->dirtyZerns){
         if (mirrorDlg::get_Instance()->isEllipse()){
             wf->nulledData = wf->data.clone();
@@ -381,7 +382,6 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
 
             return;
         }
-
         //compute zernike values
 
         mirrorDlg *md = mirrorDlg::get_Instance();
@@ -438,10 +438,7 @@ void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
         zp.fillVoid(*wf);
         makeMask(wf, true);
         // null out desired terms.
-        //cv::Mat tiltremoved = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables, 0,3);
-        //wf->data = tiltremoved;
-        //zp.unwrap_to_zernikes(*wf);
-        wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, wf->zernEnablesApplied,0,Z_TERMS   );
+        wf->nulledData = zp.null_unwrapped(*wf, wf->InputZerns, zernEnables,0,Z_TERMS   );
         wf->dirtyZerns = false;
     }
 
@@ -549,7 +546,6 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_applyFloatingZernEnables(false), m_wftStats(0)
 {
 
-    okToUpdateSurfacesOnGenerateComplete = true;
     m_simView = SimulationsView::getInstance(0);
 
     pd = new QProgressDialog();
@@ -745,6 +741,7 @@ void SurfaceManager::wftNameChanged(int ndx, const QString &name){
 }
 
 void SurfaceManager::sendSurface(wavefront* wf){
+//qDebug() << "sending surface" << wf->name;
     emit currentNdxChanged(m_currentNdx);
     computeMetrics(wf);
 
@@ -753,6 +750,7 @@ void SurfaceManager::sendSurface(wavefront* wf){
     m_SurfaceGraph->setSurface(wf);
     m_simView->setSurface(wf);
     foucaultView::get_Instance()->setSurface(wf);
+    updateBlurText();
 
     QFile fn(wf->name);
     QFileInfo fileInfo(fn.fileName());
@@ -823,7 +821,7 @@ void SurfaceManager::useDemoWaveFront(){
 
 
 
-    createSurfaceFromPhaseMap(result,
+    createWaveFrontFromPhaseMap(result,
                               CircleOutline(QPointF(xcen,ycen),rad),
                               CircleOutline(QPointF(0,0),0),
                               QString("Demo"), WavefrontOrigin::Demo);
@@ -833,7 +831,6 @@ void SurfaceManager::waveFrontClickedSlot(int ndx)
 {
 
     m_currentNdx = ndx;
-    syncGaussianStateForWavefront(m_wavefronts[ndx]);
     QString msg = QString(" %1x%2 ").arg(m_wavefronts[ndx]->data.cols).arg(m_wavefronts[ndx]->data.rows);
     ((MainWindow*)parent())->statusBar()->showMessage(msg);
     sendSurface(m_wavefronts[ndx]);
@@ -853,11 +850,46 @@ void SurfaceManager::wavefrontDClicked(const QString & name){
     for (int i = 0; i < m_wavefronts.size(); ++i){
         if (m_wavefronts[i]->name.endsWith(name)){ //TODO JST 2023/09/11 this does not work on some name combinations. To be fixed
             m_currentNdx = i;
-            syncGaussianStateForWavefront(m_wavefronts[i]);
             sendSurface(m_wavefronts[i]);
             break;
         }
     }
+}
+
+double SurfaceManager::getGaussBlurOfSelectedWavefronts(){
+    // returns:
+    // blur value if all selected wavefronts are the same blur value
+    // 0 if all wavefronts have gauss blur disabled
+    // -1 different wavefronts have different amounts of blur
+    // -2 if nothing selected
+    QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
+    double blur = -2;
+    foreach(int ndx , doThese){
+        wavefront * wf = m_wavefronts[ndx];
+        double val = (wf->gbEnabled ? wf->gbValue : 0);
+        if (blur < 0) {
+            blur = val;
+            continue;
+        }
+        if (blur != val)
+            return -1;
+    }
+    return blur;
+}
+
+void SurfaceManager::updateBlurText(){
+    if (m_surfaceTools == nullptr)
+        return;
+
+    double blur = getGaussBlurOfSelectedWavefronts();
+    if (blur == -2) // nothing selected
+        m_surfaceTools->setGaussianStateText("");
+    else if (blur == -1) // mixed
+        m_surfaceTools->setGaussianStateText("Multiple Blur Amounts");
+    else if (blur == 0) // Gaussian blur disabled
+        m_surfaceTools->setGaussianStateText("Currently No Blurring");
+    else
+        m_surfaceTools->setGaussianStateText("Current Gaussian Blur "+QString("%1").arg(blur, 5, 'f', 1)+" %");
 }
 
 void SurfaceManager::surfaceSmoothGBValue(double value){
@@ -901,19 +933,6 @@ void SurfaceManager::surfaceSmoothGBEnabled(bool b){
         return;
     //emit generateSurfacefromWavefront(m_currentNdx, this);
     m_waveFrontTimer->start(500);
-}
-
-void SurfaceManager::syncGaussianStateForWavefront(wavefront *wf){
-    if (wf == nullptr) {
-        return;
-    }
-
-    m_GB_enabled = wf->gbEnabled;
-    m_gbValue = wf->gbValue;
-    m_surfaceTools->setGaussianControls(wf->gbEnabled, wf->gbValue);
-
-    mirrorDlg *md = mirrorDlg::get_Instance();
-    m_surfaceTools->setBlurText(QString("%1 mm").arg(.01 * wf->gbValue * md->diameter, 6, 'f', 2));
 }
 
 void SurfaceManager::computeMetrics(wavefront *wf){
@@ -1117,7 +1136,7 @@ void SurfaceManager::SaveWavefronts(bool saveNulled){
     }
     QApplication::restoreOverrideCursor();
 }
-void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outside,
+void SurfaceManager::createWaveFrontFromPhaseMap(cv::Mat phase, CircleOutline outside,
                                                CircleOutline center,
                                                const QString &name, WavefrontOrigin origin,
                                                QVector<std::vector<cv::Point> > polyArea){
@@ -1176,9 +1195,10 @@ void SurfaceManager::createSurfaceFromPhaseMap(cv::Mat phase, CircleOutline outs
     m_currentNdx = m_wavefronts.size()-1;
 
     makeMask(m_currentNdx);
-
+    //qDebug() << "surface manager create wave front from phasee map calling generate surface from wave front";
     generateSurfacefromWavefront(m_currentNdx);
-    loadComplete();
+
+    //loadComplete();
     m_surfaceTools->select(m_currentNdx);
     emit showTab(2);
 }
@@ -1549,7 +1569,7 @@ void SurfaceManager::deleteCurrent(){
         if (m_currentNdx > 0)
             --m_currentNdx;
     }
-    showmem("After delete");
+
     if (m_wavefronts.length() > 0) {
 
         sendSurface(m_wavefronts[m_currentNdx]);
@@ -1589,7 +1609,6 @@ void SurfaceManager::next(){
         ++m_currentNdx;
     else
         m_currentNdx = 0;
-    syncGaussianStateForWavefront(m_wavefronts[m_currentNdx]);
     sendSurface(m_wavefronts[m_currentNdx]);
 
 
@@ -1604,7 +1623,6 @@ void SurfaceManager::previous(){
     else
         m_currentNdx = m_wavefronts.length()-1;
 
-    syncGaussianStateForWavefront(m_wavefronts[m_currentNdx]);
     sendSurface(m_wavefronts[m_currentNdx]);
 }
 QVector<int> histo(const std::vector<double> &data, int bins, double min, double max){
@@ -1646,22 +1664,22 @@ void SurfaceManager::surfaceGenFinished() {
         emit progress(++workProgress);
 
     m_surface_finished = true;
-    if (okToUpdateSurfacesOnGenerateComplete){
-        loadComplete();
-    }
+    loadComplete();
+
     if (workProgress == workToDo)
         workToDo = 0;
 
 }
 
 void SurfaceManager::loadComplete(){
+
     m_toolsEnableTimer->start(1000);
     if (m_wavefronts.size() > 0){
         sendSurface(m_wavefronts[m_currentNdx]);
         computeMetrics(m_wavefronts[m_currentNdx]);
     }
 }
-
+int cnt = 0;
 // Update all surfaces since some control has changed.  Skip current surface it has already been done
 void SurfaceManager::backGroundUpdate(){
 
@@ -1676,6 +1694,7 @@ void SurfaceManager::backGroundUpdate(){
     const bool applyFloatingZerns = m_applyFloatingZernEnables;
     m_applyFloatingZernEnables = false;
     foreach (int i, doThese){
+qDebug() << "updating these" << doThese << i << ++cnt;
         if (applyFloatingZerns) {
             m_wavefronts[i]->zernEnablesApplied = zernEnables;
         }
@@ -1691,8 +1710,8 @@ void SurfaceManager::backGroundUpdate(){
             break;
         }
     }
+qDebug() << "done with these";
     m_ignoreInverse = false;
-    loadComplete();
 }
 
 

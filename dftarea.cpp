@@ -137,11 +137,12 @@ DFTArea::DFTArea(QWidget *mparent, IgramArea *ip, DFTTools * tools, vortexDebug 
     tools->connectTo(this);
     capture = false;
     QSettings set;
-    m_center_filter = set.value("DFT Center Filter", 10).toDouble();
-    qDebug() << "init center" << m_center_filter;
-    // TODO I muted clazy warning as this is a false positive.
-    // It might be good to find a different way to call setCenterFilterValue
-    emit updateFilterSize(m_center_filter); // clazy:exclude=incorrect-emit
+
+    QTimer::singleShot(0, this, [this]() {
+        emit updateFilterSize(m_center_filter);
+        });
+
+
     installEventFilter(this);
 
     /*
@@ -226,6 +227,9 @@ void DFTArea::dftCenterFilter(double v){
     QSettings set;
     set.setValue("DFT Center Filter", v);
     emit updateFilterSize(v);
+    double frequencyBin = v * (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
+    emit filterSizeScale(frequencyBin);
+
     update();
 }
 
@@ -282,38 +286,38 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
     cv::Mat iMat(img.height(), img.width(), CV_8UC3, img.bits(), img.bytesPerLine());
     cv::Mat tmp = iMat.clone();
     cv::Mat roi = iMat(cv::Rect((int)left,(int)top,(int)width,(int)height)).clone();
-
+    m_roiSize = roi.cols;   // save to send to live view if it is watching so it can compute the true filter circle size
     double centerDx = centerX - igramArea->m_center.m_center.x();
     double centerDy = centerY - igramArea->m_center.m_center.y();
 
     roi.convertTo(roi,CV_32FC3);
     QSettings set;
     int dftSize = set.value("DFTSize", 640).toInt();
-    double scaleFactor = (double)dftSize/roi.cols;
+     m_scaleFactor = (double)dftSize/roi.cols;
 
     m_outside = CircleOutline(QPointF(xCenterShift,yCenterShift), rad);
     m_center = CircleOutline(QPointF(xCenterShift - centerDx, yCenterShift - centerDy),
                              igramArea->m_center.m_radius);
 
     //scaleFactor = 1;
-    if (scaleFactor < 1.){
+    if (m_scaleFactor < 1.){
 
-        cv::resize(roi,roi, cv::Size(0,0), scaleFactor, scaleFactor,INTER_AREA);
+        cv::resize(roi,roi, cv::Size(0,0), m_scaleFactor, m_scaleFactor,INTER_AREA);
         double roicx = (roi.cols-1)/2.;
         double roicy = (roi.rows-1)/2.;
         m_outside = CircleOutline(QPointF(roicx,roicy),roicx);
-        m_center = CircleOutline(QPointF((roicx - centerDx * scaleFactor), (roicy - centerDy * scaleFactor)),
-                                 m_center.m_radius * scaleFactor);
+        m_center = CircleOutline(QPointF((roicx - centerDx * m_scaleFactor), (roicy - centerDy * m_scaleFactor)),
+                                 m_center.m_radius * m_scaleFactor);
     }
     else {
-        scaleFactor = 1.;
+        m_scaleFactor = 1.;
     }
     m_poly.clear();
     for (int n = 0; n < igramArea->m_polygons.size(); ++n){
         m_poly.append(std::vector< cv::Point>());
         for (unsigned int i = 0; i < igramArea->m_polygons[n].size(); ++i){
-            int x = round((igramArea->m_polygons[n][i].x - left) * scaleFactor);
-            int y = round((igramArea->m_polygons[n][i].y - top) * scaleFactor);
+            int x = round((igramArea->m_polygons[n][i].x - left) * m_scaleFactor);
+            int y = round((igramArea->m_polygons[n][i].y - top) * m_scaleFactor);
 
             // make sure x and y values of regions are inside our matrix
             if (x < 0)
@@ -357,7 +361,7 @@ cv::Mat DFTArea::grayComplexMatfromImage(QImage &img){
 
     Mat  complexI;
     merge(planes, 2, complexI);         // Add to the expanded another plane with zeros
-    if (scaleFactor == 1.){
+    if (m_scaleFactor == 1.){
         tools->imageSize(QString("DFT Size will be %1").arg(width));
     }
     else
@@ -447,7 +451,7 @@ void DFTArea::doDFT(){
     QImage img = igramArea->igramGray;
 
     cv::Mat complexI = grayComplexMatfromImage(img);
-
+    m_dftsize = complexI.size().width;
     cv::Mat planes[2];
 
     split(complexI,planes);
@@ -470,8 +474,6 @@ void DFTArea::doDFT(){
     m_dft = complexI/complexI.size().area();
     magIImage = showMag(complexI,false,"", true, m_gamma);
 
-
-    magIImage = magIImage.scaled(magIImage.width() , magIImage.height() );
     setMinimumSize(magIImage.size());
 
     emit selectDFTTab();
@@ -492,6 +494,10 @@ void DFTArea::doDFT(){
     //if (Settings2::showDFT())
         //emit dftReady(magIImage);     //Creates a thumbnail dft area
     QApplication::restoreOverrideCursor();
+    double frequencyBin = m_center_filter * (static_cast<double>(m_dftsize)/(m_outside.m_radius * 2 * m_scaleFactor));
+
+    emit filterSizeScale(frequencyBin);
+
 }
 void DFTArea::gamma(int i){
     double v = 1. + 5. * (double)i/99.;
@@ -1048,7 +1054,7 @@ void DFTArea::makeSurface(){
 
         showData("result surface", result.clone());
     }
-
+//qDebug() << "dftarea make surface (wavefront) uses igram and emits newWavefront  mainwindow calls make wavefront from phase map";
     emit newWavefront(result, m_outside, m_center, QFileInfo(igramArea->m_filename).baseName(), WavefrontOrigin::Igram,
                         m_poly);
     QApplication::restoreOverrideCursor();
@@ -1073,8 +1079,13 @@ void DFTArea::mouseMoveEvent(QMouseEvent *event){
     int ydel = pos.y() - ycenter;
     int rad = sqrt(pow(xdel,2)+pow(ydel,2));
     emit updateFilterSize(rad/zoom);
-}
+    //double percent = double(rad/zoom)/(magIImage.size().width()/2.);
+    //emit centerFilterPercent(percent);
 
+}
+void DFTArea::mouseMovedExternal(int rad){
+    emit updateFilterSize(rad);
+}
 
 void DFTArea::mousePressEvent(QMouseEvent *event)
 {
@@ -1431,7 +1442,7 @@ void DFTArea::doPSIstep4(const cv::Mat &images, QVector<double> phases){
             qDebug() << "outline name" << outlineName;
             igramArea->writeOutlines(outlineName);
         }
-qDebug() << "dlg" << dlg.m_x << dlg.m_rad;
+
         int left = dlg.m_x - dlg.m_rad;
         int right = dlg.m_x + dlg.m_rad;
         int top = dlg.m_y - dlg.m_rad;
@@ -1443,7 +1454,7 @@ qDebug() << "dlg" << dlg.m_x << dlg.m_rad;
             right = mag2d.cols-1;
         if (top < 0)
             top = 0;
-qDebug() << "rec" << left << top << width << height;
+
         cv::Mat roi = surface(cv::Rect(left,top, width,height));
 
         surface = roi.clone();
