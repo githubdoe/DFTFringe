@@ -132,8 +132,6 @@ private:
     QPointer<standAstigWizard> m_standAstigWizard;
     int workToDo;
     int workProgress;
-    bool m_applyFloatingZernEnables;
-
     wftStats *m_wftStats;
 
     explicit SurfaceManager(QObject *parent=0, surfaceAnalysisTools *tools = 0, ProfilePlot *profilePlot =0,
