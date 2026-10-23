@@ -349,12 +349,10 @@ void SurfaceManager::generateSurfacefromWavefront(int wavefrontNdx) {
 
 void SurfaceManager::generateSurfacefromWavefront(wavefront * wf){
     zernikeProcess &zp = *zernikeProcess::get_Instance();
-    if (wf->zernEnablesApplied.empty()) {
-        wf->zernEnablesApplied = zernEnables;
-    } else if (wf->zernEnablesApplied.size() != zernEnables.size()) {
+    if (wf->zernEnablesApplied.size() != zernEnables.size()) {
         wf->zernEnablesApplied.resize(zernEnables.size(), true);
     }
-
+    wf->zernEnablesApplied = zernEnables;
     wf->gbEnabled = m_GB_enabled;
     wf->gbValue = m_gbValue;
 
@@ -543,7 +541,7 @@ SurfaceManager::SurfaceManager(QObject *parent, surfaceAnalysisTools *tools,
     m_surfaceTools(tools),m_profilePlot(profilePlot), m_contourView(contourView),
     m_SurfaceGraph(glPlot), m_metrics(mets),m_gbValue(21),
     m_GB_enabled(false),m_currentNdx(-1),m_standAvg(0),insideOffset(0),outsideOffset(0),
-    m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_applyFloatingZernEnables(false), m_wftStats(0)
+    m_inverseMode(invNOTSET),m_ignoreInverse(false), m_standAstigWizard(nullptr), workToDo(0), m_wftStats(0)
 {
 
     m_simView = SimulationsView::getInstance(0);
@@ -1002,7 +1000,6 @@ void SurfaceManager::computeZerns()
 {
     QList<int> doThese =  m_surfaceTools->SelectedWaveFronts();
     workToDo = doThese.size();
-    m_applyFloatingZernEnables = !doThese.isEmpty();
     mirrorDlg &md = *mirrorDlg::get_Instance();
     foreach(int ndx , doThese){
         wavefront &wf = *m_wavefronts[ndx];
@@ -1691,13 +1688,8 @@ void SurfaceManager::backGroundUpdate(){
     workToDo = doThese.size();
     pd->setLabelText("Updating Selected Surfaces");
     pd->setRange(0,doThese.size());
-    const bool applyFloatingZerns = m_applyFloatingZernEnables;
-    m_applyFloatingZernEnables = false;
     foreach (int i, doThese){
-qDebug() << "updating these" << doThese << i << ++cnt;
-        if (applyFloatingZerns) {
-            m_wavefronts[i]->zernEnablesApplied = zernEnables;
-        }
+        qDebug() << "updating these" << doThese << i << ++cnt;
         m_wavefronts[i]->dirtyZerns = true;
         m_wavefronts[i]->wasSmoothed = false;
         makeMask(i);
