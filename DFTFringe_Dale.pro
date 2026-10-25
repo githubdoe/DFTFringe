@@ -37,7 +37,6 @@ SOURCES += main.cpp \
     custom3dinputhandler.cpp \
     defocusdlg.cpp \
     edgeplot.cpp \
-    frameprocessworker.cpp \
     hotkeysdlg.cpp \
     liveimageview.cpp \
     liveviewdialog.cpp \
@@ -166,7 +165,6 @@ HEADERS  += mainwindow.h \
     IgramArea.h \
     circleoutline.h \
     cnpy/cnpy.h \
-    frameprocessworker.h \
     graphicsutilities.h \
     dfttools.h \
     dftarea.h \
