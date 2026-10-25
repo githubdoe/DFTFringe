@@ -251,8 +251,7 @@ HEADERS  += mainwindow.h \
     myutils.h \
     pixelstats.h \
     utils.h \
-    circleutils.h \
-    circle.h \
+    circlefit.h \
     astigstatsdlg.h \
     averagewavefrontfilesdlg.h \
     astigscatterplot.h \

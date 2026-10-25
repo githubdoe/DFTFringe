@@ -1,7 +1,6 @@
 #include "astigstatsdlg.h"
 #include "ui_astigstatsdlg.h"
-#include "circleutils.h"
-#include "circle.h"
+#include "circlefit.h"
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_grid.h>

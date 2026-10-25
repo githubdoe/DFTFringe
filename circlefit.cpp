@@ -1,5 +1,4 @@
-#include "circleutils.h"
-#include "circle.h"
+#include "circlefit.h"
 
 
 /************************************************************************
