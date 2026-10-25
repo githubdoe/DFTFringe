@@ -55,7 +55,7 @@ public:
     bool fliph;
     bool m_useAnnular;
     bool m_connectAnnulusToObs;
-    double m_annularObsPercent; // a value from 0 to 1 (not 0 to 100)
+    double m_annularObsPercent; // obstruction ratio vs full mirror diameter, from 0 to 1
     double m_clearAperature;
     double aperatureReduction;
     static QString m_projectPath;
@@ -73,6 +73,8 @@ public:
     void setMinorAxis(double val);
     bool m_aperatureReductionEnabled;
     void setObsPercent(double obs);
+    double annularObstructionDiameter() const;
+    double annularFitEpsilon() const;
 private slots:
     void on_ReadBtn_clicked();
 
