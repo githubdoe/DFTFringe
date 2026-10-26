@@ -229,7 +229,7 @@ void nullVariationDlg::on_ComputeSim_clicked()
         }
         cv::Mat_<double> b(histData.size(),1);
         for (int i = 0; i < histData.size(); ++i){
-            b(i,1) = histData[i];
+            b(i,0) = histData[i];
         }
         cv::Scalar mean, std;
         cv::meanStdDev(b, mean,std);
