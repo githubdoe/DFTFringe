@@ -375,7 +375,7 @@ jobs:
         run: .\${{env.QT_version}}\mingw_64\bin\windeployqt.exe DFTFringe\DFTFringeInstaller\packages\com.githubdoe.DFTFringe\data\DFTFringe.exe
 
       - name: make installer using QT installer framework
-        run: Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringeInstaller_${{env.WORKFLOW_VERSION}}
+        run: Tools\QtInstallerFramework\4.7\bin\binarycreator.exe -c DFTFringe\DFTFringeInstaller\config\config.xml -p DFTFringe\DFTFringeInstaller\packages DFTFringe-${{env.WORKFLOW_VERSION}}-Windows
 
       - name: Upload Artifact
         id: upload_artifact
@@ -383,7 +383,7 @@ jobs:
         with:
           name: DFTFringe-windows-build-artifact
           path: |
-            DFTFringeInstaller_${{env.WORKFLOW_VERSION}}.exe
+            DFTFringe-${{env.WORKFLOW_VERSION}}-Windows.exe
             Z_DFTFringe.exe.debug
 
       - name: Get short SHA

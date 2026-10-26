@@ -106,6 +106,7 @@ jobs:
             --icon-file dftfringe.png \
             --plugin qt \
             --output appimage
+            mv *.AppImage DFTFringe-${{ env.WORKFLOW_VERSION }}-Linux.AppImage
       - name: Smoke test AppImage
         if: matrix.os == 'ubuntu-22.04'
         run: |
