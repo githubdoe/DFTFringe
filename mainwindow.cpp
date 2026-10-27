@@ -1049,7 +1049,7 @@ void MainWindow::on_actionSave_screen_triggered()
     QImage image( this->size(), QImage::Format_ARGB32 );
 
 
-    QImage SurfaceImage = m_ogl->m_surface->render(1000,1000);
+    QImage SurfaceImage = m_ogl->m_surface->render();
 
     QPainter painter( &image );
 
@@ -1399,7 +1399,7 @@ void MainWindow::batchProcess(QStringList fileList){
                     //::reviewFileName = videoFileName;
                 }
                 QImage img = QImage(width,height,QImage::Format_RGB32);
-                QImage d3 = m_ogl->m_surface->render(1000,1000).scaled(width/2,height/2);
+                QImage d3 = m_ogl->m_surface->render().scaled(width/2,height/2);
                 QImage dft = m_dftArea->grab().toImage().scaled(width/2, height/2);
                 QImage igram = m_igramArea->grab().toImage().scaled(width/2, height/2);
                 QImage contour = m_contourView->getPlot()->grab().toImage().scaled(width/2, height/2);
@@ -1857,7 +1857,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
     QSettings set;
     QString lastPath = set.value("lastPath",".").toString();
     //int memThreshold = set.value("lowMemoryThreshold",300).toInt();
-    QImage img = m_ogl->m_surface->render(1000,1000);
+    QImage img = m_ogl->m_surface->render();
 
     int width = img.width();
     int height = img.height();
@@ -1895,7 +1895,7 @@ void MainWindow::on_actionCreate_Movie_of_wavefronts_triggered()
                 delete wf;
                 QApplication::processEvents();
                 if (dowavefront){
-                    QImage img = m_ogl->m_surface->render(1000,1000);
+                    QImage img = m_ogl->m_surface->render();
                     QPainter painter(&img);
                     painter.setPen(Qt::yellow);
                     painter.setBrush(Qt::yellow);
@@ -2680,7 +2680,7 @@ void MainWindow::runLiveAnalysisLoop() {
         }
 
         // 6. RENDER SURFACE
-        img = m_ogl->m_surface->render(1000, 1000);
+        img = m_ogl->m_surface->render();
         m_ogl->m_liveLabel->setPixmap(QPixmap::fromImage(img));
         // Update UI Status Bar
         QString statusRightText;
