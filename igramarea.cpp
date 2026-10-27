@@ -2443,7 +2443,7 @@ void IgramArea::writeOutlines(QString fileName){
         qWarning("Couldn't save .OLN (outline) file.");
         return;
     }
-    QFileInfo info(saveFile);
+    
     saveFile.write(jsondoc.toJson());
     saveFile.close();
 
