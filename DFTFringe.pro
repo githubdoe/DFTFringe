@@ -111,6 +111,10 @@ macx {
     RCC_DIR = $$DESTDIR/.qrc
     UI_DIR = $$DESTDIR/.ui
 
+    APP_PLIST = $$OUT_PWD/$$DESTDIR/$${TARGET}.app/Contents/Info.plist
+    QMAKE_POST_LINK += /usr/libexec/PlistBuddy -c \"Set :NSCameraUsageDescription DFTFringe uses the camera to capture live interferograms.\" \"$$APP_PLIST\" 2>/dev/null \
+        || /usr/libexec/PlistBuddy -c \"Add :NSCameraUsageDescription string DFTFringe uses the camera to capture live interferograms.\" \"$$APP_PLIST\";
+
     PKGCONFIG += armadillo Qt6Qwt6
 
     packagesExist(opencv4) {
