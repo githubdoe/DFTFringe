@@ -18,7 +18,17 @@
 #include "wavefront.h"
 
 wavefront::wavefront():
-    zernEnablesApplied(),gaussian_diameter(0.),gbEnabled(false),gbValue(20.),wasSmoothed(false),useSANull(true),GBSmoothingValue(0.),m_origin(WavefrontOrigin::Unknown),m_manuallyInverted(false),dirtyZerns(true),regions_have_been_expanded(false)
+    zernEnablesApplied(),
+    gaussian_diameter(0.),
+    GBSmoothingValue(0.),
+    gbValue(20.),
+    m_origin(WavefrontOrigin::Unknown),
+    dirtyZerns(true),
+    regions_have_been_expanded(false),
+    gbEnabled(false),
+    wasSmoothed(false),
+    useSANull(true),
+    m_manuallyInverted(false)
 {
 }
 
