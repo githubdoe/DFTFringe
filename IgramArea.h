@@ -112,7 +112,7 @@ public:
     IgramArea(QWidget *parent = 0, void *mwp = 0 );
 
     void *m_mw;
-    bool openImage(QImage img,  bool showBoundary, QString = "stream");
+    bool openImage(QImage img,  bool showBoundary, const QString &fileName = "stream");
     bool openImage(const QString &fileName, bool showBoundary = true);
     bool saveImage(const QString &fileName, const char *fileFormat);
     void setPenColor(const QColor &newColor);

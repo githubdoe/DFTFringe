@@ -977,7 +977,7 @@ void IgramArea::adjustCenterandRegions(){
         }
     }
 }
-bool IgramArea::openImage(QImage loadedImage,  bool showBoundary, QString fileName){
+bool IgramArea::openImage(QImage loadedImage,  bool showBoundary, const QString &fileName){
 
     if (Settings2::getInstance()->m_igram->m_removeDistortion){
         cv::Mat raw = cv::imread(fileName.toStdString().c_str());
@@ -2639,5 +2639,4 @@ void IgramArea::setZoomMode(zoomMode mode){
         zoomIndex = 1;
     zoomFull();
 }
-
 
