@@ -134,7 +134,6 @@ private slots:
 
     void on_actionPreferences_triggered();
     void mainTabChanged(int);
-    QString getCurrentHotKeyHelp() const ;
     void on_actionMirror_triggered();
 
     void on_saveOutline_clicked();
@@ -305,6 +304,7 @@ private:
     void setCurrentFile(const QString &fileName);
     void updateRecentFileActions();
     QString strippedName(const QString &fullFileName);
+    QString getCurrentHotKeyHelp() const;
     QMenu* m_view_menu;
     QTimer *m_liveViewRMSTimer = NULL;
     void createActions();
