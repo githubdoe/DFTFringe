@@ -86,7 +86,7 @@ public:
     void setSurface(wavefront *wf);
     void setGraphColors();
     void setLegend(QLabel * legend) {m_legend = legend;}
-    QImage render(int width, int height);
+    QImage render();
     QSize Size();
 public slots:
     void changeTheme(int theme);

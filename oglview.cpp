@@ -167,7 +167,7 @@ void OGLView::saveImage(){
     if (fName.isEmpty())
         return;
 
-    QImage img = m_surface->render(1000,1000);
+    QImage img = m_surface->render();
     img.save(fName);
 }
 #include <QApplication>
@@ -198,7 +198,7 @@ void OGLView::showSelected()    // show all selected wavefronts as 3D plots
     {
         wavefront * wf = m_wavefronts[list[i]];
         m_surface->setSurface(wf);
-        QImage glImage = m_surface->render(width,width);
+        QImage glImage = m_surface->render();
         QPainter p2(&glImage);
         p2.setFont(serifFont);
         p2.setPen(QPen(QColor(Qt::white)));

@@ -3224,7 +3224,7 @@ void SurfaceManager::report(){
     if (dlg.ui->show3D->isChecked()){
         // assemble the surface metrics from the OG 3D view and the color map legend
         // put into the OGLW window that will provide the titles and placement.
-        QImage SurfaceImage =m_SurfaceGraph->render(1000, 1000);
+        QImage SurfaceImage =m_SurfaceGraph->render();
         const QPixmap pm = m_SurfaceGraph->m_legend->pixmap(Qt::ReturnByValue);
         QSize lsize = pm.size();
         QImage legend(lsize, QImage::Format_ARGB32);
