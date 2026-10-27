@@ -142,9 +142,9 @@ jobs:
           cp -R DFTFringe.app "$STAGE/"
           ln -s /Applications "$STAGE/Applications"
           hdiutil create -volname "DFTFringe" -srcfolder "$STAGE" -ov -format UDZO \
-            "DFTFringe-${WORKFLOW_VERSION}.dmg"
+            "DFTFringe-${WORKFLOW_VERSION}-macOS.dmg"
 
       - uses: actions/upload-artifact@v7
         with:
           name: DFTFringe-macos-build-artifact
-          path: DFTFringe-${{ env.WORKFLOW_VERSION }}.dmg
+          path: DFTFringe-${{ env.WORKFLOW_VERSION }}-macOS.dmg

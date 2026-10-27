@@ -71,7 +71,7 @@ jobs:
           # an automated release note is generated based on PRs to master
           generate_release_notes: true
           files: |
-            DFTFringeInstaller_${{github.ref_name}}.exe
+            DFTFringe-${{github.ref_name}}-Windows.exe
             Z_DFTFringe.exe.debug
-            DFTFringe-${{github.ref_name}}.dmg
-            DFTFringe-${{github.ref_name}}-x86_64.AppImage
+            DFTFringe-${{github.ref_name}}-macOS.dmg
+            DFTFringe-${{github.ref_name}}-Linux.AppImage
