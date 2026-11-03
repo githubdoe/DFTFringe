@@ -482,7 +482,7 @@ void SurfaceGraph::setGreenToRedGradient()
 QSize SurfaceGraph::Size(){
     return  m_graph->size();
 }
-QImage SurfaceGraph::render(int width, int height){
+QImage SurfaceGraph::render(){
     // Render directly at the widget's current display size without resizing the live view
     return m_graph->renderToImage(0, m_graph->size());
 }
