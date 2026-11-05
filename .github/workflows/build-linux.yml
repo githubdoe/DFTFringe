@@ -29,7 +29,7 @@ jobs:
           mkdir -p build/tests
           cd build/tests
           /usr/lib/qt6/bin/qmake ../../tests/tests.pro CONFIG+=release
-          make -j4
+          bear --output ../../compile_commands.json -- make -j4
           ./tst_circlefit
       - run: wget -O qwt-${{env.QWT_version}}.zip https://sourceforge.net/projects/qwt/files/qwt/${{env.QWT_version}}/qwt-${{env.QWT_version}}.zip/download?use_mirror=pilotfiber
       - run: 7z x qwt-${{env.QWT_version}}.zip
@@ -54,7 +54,7 @@ jobs:
       - run: echo "::add-matcher::.github/matcher/uic_matcher.json"
 
       - name: capture compile_commands.json from build
-        run: bear -- make -j4
+        run: bear --append -- make -j4
       - run: echo "::remove-matcher owner=uic-problem-matcher::"
 
       - name: Run C++ Linter (clang-tidy)
