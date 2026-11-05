@@ -60,6 +60,12 @@ chmod +x DFTFringe-*-x86_64.AppImage
 ./DFTFringe-*-x86_64.AppImage
 ```
 
+# Testing
+
+See the [testing guidance](docs/testing.md) for standalone circle-fit tests and
+focused application checks. The test target can run without OpenCV or Qwt;
+it does not replace a full application build or user-workflow validation.
+
 # How to build DFTFringe on Linux
 
 
