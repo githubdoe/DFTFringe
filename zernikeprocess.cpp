@@ -667,7 +667,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
             arma::rowvec r(rhov),t(thetav);
 
             // now that we have the points in rho and theta get the zernike terms at each of those points
-            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->m_annularObsPercent, 12);
+            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->annularFitEpsilon(), 12);
             // compute the surface at each point by using the zernike poly at each point.
             for (arma::uword i = 0; i < r.size(); ++i){
                 double S1 = 0.0;
@@ -748,7 +748,7 @@ void zernikeProcess::fillVoid(wavefront &wf){
             arma::rowvec r(rhov),t(thetav);
 
             // now that we have the points in rho and theta get the zernike terms at each of those points
-            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->m_annularObsPercent, 12);
+            arma::mat zerns = zapm( r.as_col(), t.as_col(), md->annularFitEpsilon(), 12);
             // compute the surface at each point by using the zernike poly at each point.
             for (arma::uword i = 0; i < r.size(); ++i){
                 double S1 = 0.0;
@@ -949,7 +949,7 @@ arma::mat zernikeProcess::rhotheta( int width, double radius, double cx, double 
     double centerR = 0.0;
     mirrorDlg *md = mirrorDlg::get_Instance();
     if (md->m_useAnnular){
-        centerR = md->m_annularObsPercent;
+        centerR = md->annularFitEpsilon();
     }
     if (wf != 0){
         useMask = true;
@@ -1080,7 +1080,7 @@ void zernikeProcess::initGrid(int width, double radius, double cx, double cy, in
     bool shouldUseAnnulus = false;
     mirrorDlg *md = mirrorDlg::get_Instance();
     if (md->m_useAnnular){
-        obsPercent = md->m_annularObsPercent;
+        obsPercent = md->annularFitEpsilon();
         shouldUseAnnulus = true;
     }
 
