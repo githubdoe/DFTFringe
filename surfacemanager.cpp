@@ -2449,14 +2449,13 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
         wf->max =  smax;
         wf->name = QString("%1").arg(list[i]->angle, 6, 'f', 2, QLatin1Char('0'));
 
+        cp->resize(Width, Height);
         cp->setSurface(wf);
-        cp->resize(Width,.8 * Height);
         cp->replot();
         astigSample sample(wf->name, wf->InputZerns[4], wf->InputZerns[5]);
         samples << sample;
-        QSize s = cp->size();
         contour.fill( QColor( Qt::white ).rgb() );
-        renderer.render( cp, &painter, QRect(0,0,s.width(),s.height() ));
+        renderer.render( cp, &painter, QRect(0,0,Width,Height));
 
         QString imageName = QString("mydata://zern%1.png").arg(wf->name);
         imageName.replace("-","CCW");
@@ -2495,8 +2494,8 @@ textres SurfaceManager::Phase2(QList<rotationDef *> list, QList<wavefront *> inp
     wf2->name = QString("Average Stand zernike based");
     ContourPlot *cp1 = new ContourPlot();
 
+    cp1->resize(Width, Height);
     cp1->setSurface(wf2);
-    cp1->resize(Width, .8 * Height);
     cp1->replot();
     QImage contour2(Width, Width, QImage::Format_ARGB32 );
     contour2.fill( QColor( Qt::white ).rgb() );
@@ -2722,6 +2721,7 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
     renderer.setDiscardFlag(QwtPlotRenderer::DiscardLegend);
     ContourPlot *plot =new ContourPlot(0,0,true);//m_contourPlot;
     plot->m_minimal = true;
+    plot->resize(Width, Width);
     QList<int> unrotatedNdxs;
 
     QString html = ("<html><head/><body><h1><center>Test Stand Astig Removal</center></h1>"
@@ -2762,9 +2762,8 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
         inputs.append(wf);
         unrotatedNdxs.append(m_currentNdx);
         plot->setSurface(wf);
-        plot->resize(Width, .8 * Width);
         plot->replot();
-        renderer.render( plot, &painter, QRect(0,0,Width,.8 * Width) );
+        renderer.render( plot, &painter, QRect(0,0,Width,Width) );
 
         QString imageName = QString("mydata://%1.png").arg(list[i]->fname);
         QString angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
@@ -2786,11 +2785,10 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
 
         loadComplete();
         plot->setSurface(wf);
-        plot->resize(Width, .8 * Width);
         plot->replot();
 
         contour.fill( QColor( Qt::white ).rgb() );
-        renderer.render( plot, &painter, QRect(0,0,Width, .8 * Width) );
+        renderer.render( plot, &painter, QRect(0,0,Width, Width) );
         angle = QString("%1 Deg").arg(-list[i]->angle, 6, 'f', 2);
         imageName = QString("mydata://CR%1%2.png").arg(list[i]->fname).arg(angle); // clazy:exclude=qstring-arg
 
@@ -2831,12 +2829,12 @@ void SurfaceManager::computeStandAstig(define_input *wizPage, QList<rotationDef 
             "<h3>Step 2. Averaged surface with stand induced terms removed:</h3>");
     ContourPlot *plotAvg =new ContourPlot(0,0,false);//m_contourPlot;
 
-    plotAvg->setSurface(m_wavefronts[m_currentNdx]);
     contour = QImage(1.5 * Width,1.5 * Width, QImage::Format_ARGB32 );
     contour.fill( QColor( Qt::white ).rgb() );
     QPainter painter( &contour );
-    plotAvg->resize(1.5 * Width, 1.5 * .8 * Width);
-    renderer.render( plotAvg, &painter, QRect(0,0,1.5 * Width, 1.5 *  Width) );
+    plotAvg->resize(1.5 * Width, 1.5 * Width);
+    plotAvg->setSurface(m_wavefronts[m_currentNdx]);
+    renderer.render( plotAvg, &painter, QRect(0,0,1.5 * Width, 1.5 * Width) );
 
     QString imageName = "mydata://AvgAstigremoved.png";
     doc2->addResource(QTextDocument::ImageResource,  QUrl(imageName), QVariant(contour));
