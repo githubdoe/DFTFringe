@@ -18,9 +18,15 @@ jobs:
       - uses: actions/checkout@v6
       - run: sudo apt update
       - run: sudo apt install -y apt-utils build-essential wget qt5-qmake qt5-qmake-bin qt5-assistant qtbase5-dev qtmultimedia5-dev libqt5charts5 libqt5charts5-dev libqt5multimedia* libqt5datavisualization5-dev libqt5datavisualization5 libopencv-core-dev libopencv-dev libqwt-qt5-6 libqwt-qt5-dev libarmadillo-dev
+      - name: Run focused numerical tests
+        run: |
+          mkdir -p build/tests
+          cd build/tests
+          qmake ../../tests/tests.pro CONFIG+=release
+          make -j4
+          ./tst_circlefit
       - run: qmake DFTFringe_QT5.pro
       #- uses: ammaraskar/gcc-problem-matcher@master
       #- run: echo "::add-matcher::.github/matcher/uic_matcher.json"
       - run: make -j4
       #- run: echo "::remove-matcher owner=uic-problem-matcher::"
-
