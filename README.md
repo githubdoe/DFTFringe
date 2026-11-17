@@ -364,6 +364,12 @@ aqt install-tool windows desktop tools_ifw
 
 :building_construction: Under construction :building_construction:
 
+# Contributing
+
+See the [contribution guide](CONTRIBUTING.md) for focused changes and validation
+expectations, and the [architecture map](docs/architecture.md) for code navigation.
+No particular editor or AI tool is required.
+
 # How to analyse crashlog
 
 :warning: This method is for Windows only.
